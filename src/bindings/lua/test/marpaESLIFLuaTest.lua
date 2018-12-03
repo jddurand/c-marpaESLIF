@@ -592,6 +592,7 @@ end
 
 local i = 0
 for _, localstring in pairs(strings) do
+   local context = "main loop"
    logger:noticef('Testing scan/resume on %s', localstring)
    local eslifRecognizer = marpaESLIFGrammarp:marpaESLIFRecognizer_new(recognizerInterface)
    recognizerInterface:init(localstring)
