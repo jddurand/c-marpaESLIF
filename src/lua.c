@@ -928,6 +928,13 @@ static short marpaESLIFLua_luaL_requiref(lua_State *L, const char *modname, lua_
 }
 
 /****************************************************************************/
+static short marpaESLIFLua_lua_touserdata(void **rcpp, lua_State *L, int idx)
+/****************************************************************************/
+{
+  return ! luaunpanic_touserdata(rcpp, L, idx);
+}
+
+/****************************************************************************/
 static short _marpaESLIF_lua_representationb(void *userDatavp, marpaESLIFValueResult_t *marpaESLIFValueResultp, char **inputcpp, size_t *inputlp)
 /****************************************************************************/
 {
