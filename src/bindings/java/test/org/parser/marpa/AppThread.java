@@ -34,7 +34,7 @@ public class AppThread implements Runnable {
 	
 			final String grammar = 
 					    ":start   ::= Object2\n"
-					  + "Object2  ::= Object action => ::concat\n"
+					  + "Object2  ::= Object action => ::convert[UTF-32]\n"
 					  + "Object   ::= Expression action => ::concat\n"
 					  + ":default ::=             action => do_op\n"
 					  + ":discard ::= whitespaces event  => discard_whitespaces$\n"

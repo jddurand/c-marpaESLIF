@@ -1596,20 +1596,47 @@ static short marpaESLIF_TransformBoolb(void *userDatavp, void *contextp, marpaES
 static short marpaESLIF_TransformStringb(void *userDatavp, void *contextp, marpaESLIFValueResultString_t s)
 /*****************************************************************************/
 {
-  static const char    *funcs                    = "marpaESLIF_TransformStringb";
-  MarpaX_ESLIF_Value_t *Perl_MarpaX_ESLIF_Valuep = (MarpaX_ESLIF_Value_t *) userDatavp;
+  static const char      *funcs                    = "marpaESLIF_TransformStringb";
+  MarpaX_ESLIF_Value_t   *Perl_MarpaX_ESLIF_Valuep = (MarpaX_ESLIF_Value_t *) userDatavp;
+  MarpaX_ESLIF_Grammar_t *MarpaX_ESLIF_Grammarp;
+  marpaESLIF_t           *marpaESLIFp;
+  char                   *utf8s;
+  char                   *utf8noboms;
+  size_t                  dstl;
+  size_t                  dstnoboml;
   dMYTHX(Perl_MarpaX_ESLIF_Valuep);
 
   if (contextp == ESLIF_PERL_CONTEXT) {
     /* We never push a string */
     MARPAESLIF_CROAK("Got STRING on the stack that pretend to come from perl");
   } else {
-    /* Like the array transformer, except for the UTF-8 flag */
-    Perl_MarpaX_ESLIF_Valuep->svp = newSVpvn(s.p, s.sizel);
-    /* Check the UTF-8 flag eventually */
-    if ((s.encodingasciis != NULL) && MARPAESLIF_ENCODING_IS_UTF8(s.encodingasciis, strlen(s.encodingasciis)) && is_utf8_string((const U8 *) s.p, (STRLEN) s.sizel)) {
-      SvUTF8_on(Perl_MarpaX_ESLIF_Valuep->svp);
+    /* Instead of relying on Encoding::XS, marpaESLIF exports the method marpaESLIF_charconvb(), we */
+    /* use it to inject a (native) perl string in the UTF-8 format. This will also validate the string per se. */
+    /* Get marpaESLIF: take care, only the grammar SV is guaranteed to not be NULL. */
+    MarpaX_ESLIF_Grammarp = INT2PTR(MarpaX_ESLIF_Grammar_t *, SvIV((SV*)SvRV(Perl_MarpaX_ESLIF_Valuep->Perl_MarpaX_ESLIF_Grammarp)));
+    marpaESLIFp = marpaESLIFGrammar_eslifp(MarpaX_ESLIF_Grammarp->marpaESLIFGrammarp);
+    /* The big advantage of marpaESLIF_charconvb() is that s.encodingasciis == NULL is supported -; Then marpaESLIF_charconv() will guess. */
+    utf8s = marpaESLIF_charconvb(marpaESLIFp, "UTF-8", s.encodingasciis, s.p, s.sizel, &dstl);
+    if (utf8s == NULL) {
+      MARPAESLIF_CROAKF("marpaESLIF_charconvb failure, %s", strerror(errno));
     }
+    /* Remove the UTF-8 BOM if any */
+    if ((dstl >= 3)                                         &&
+	(((unsigned char) utf8s[0] == (unsigned char) 0xEF) &&
+	 ((unsigned char) utf8s[1] == (unsigned char) 0xBB) &&
+	 ((unsigned char) utf8s[2] == (unsigned char) 0xBF))) {
+      utf8noboms = utf8s + 3;
+      dstnoboml = dstl - 3;
+    } else {
+      utf8noboms = utf8s;
+      dstnoboml = dstl;
+    }
+    /* Like the array transformer, except for the UTF-8 flag */
+    Perl_MarpaX_ESLIF_Valuep->svp = newSVpvn(utf8noboms, dstnoboml);
+    /* This is UTF-8 in any case */
+    SvUTF8_on(Perl_MarpaX_ESLIF_Valuep->svp);
+    /* We want to use C's free, not perl's free */
+    marpaESLIF_SYSTEM_FREE(utf8s);
   }
 
   return 1;

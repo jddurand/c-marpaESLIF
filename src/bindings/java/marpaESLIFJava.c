@@ -5187,32 +5187,59 @@ static short marpaESLIF_TransformString(void *userDatavp, void *contextp, marpaE
   JNIEnv                   *envp                    = marpaESLIFValueContextp->envp;
   jstring                   encodingasciip          = NULL;
   jbyteArray                byteArrayp              = NULL;
+  jobject                   eslifGrammarp           = marpaESLIFValueContextp->eslifGrammarp;
+  char                     *utf8s                   = NULL;
+  char                     *utf8noboms;
+  size_t                    dstl;
+  size_t                    dstnoboml;
+  marpaESLIF_t             *marpaESLIFp;
   short                     rcb;
   jobject                   objectp;
 
   if (s.p != NULL) {
-    /* Note: ok if bytel is zero, then it is an empty string */
-    byteArrayp = (*envp)->NewByteArray(envp, (jsize) s.sizel);
+    /* Whatever the encoding, marpaESLIF_charconv() is used to produce UTF-8 */
+    /* Take care, only eslifGrammarp is guaranteed to be not NULL */
+    if (! ESLIFGrammar_contextb(envp, eslifGrammarp, eslifGrammarp, MARPAESLIF_ESLIFGRAMMAR_CLASS_getLoggerInterfacep_METHODP,
+				NULL /* genericLoggerpp */,
+				&marpaESLIFp,
+				NULL /* marpaESLIFGrammarpp */)) {
+      goto err;
+    }
+    /* The big advantage of marpaESLIF_charconvb() is that s.encodingasciis == NULL is supported -; Then marpaESLIF_charconv() will guess. */
+    utf8s = marpaESLIF_charconvb(marpaESLIFp, "UTF-8", s.encodingasciis, s.p, s.sizel, &dstl);
+    if (utf8s == NULL) {
+      RAISEEXCEPTIONF(envp, "marpaESLIF_charconvb failure, %s", strerror(errno));
+    }
+    /* Remove the UTF-8 BOM if any */
+    if ((dstl >= 3)                                         &&
+	(((unsigned char) utf8s[0] == (unsigned char) 0xEF) &&
+	 ((unsigned char) utf8s[1] == (unsigned char) 0xBB) &&
+	 ((unsigned char) utf8s[2] == (unsigned char) 0xBF))) {
+      utf8noboms = utf8s + 3;
+      dstnoboml = dstl - 3;
+    } else {
+      utf8noboms = utf8s;
+      dstnoboml = dstl;
+    }
+
+    /* Note: ok if dstnoboml is zero, then it is an empty string */
+    byteArrayp = (*envp)->NewByteArray(envp, (jsize) dstnoboml);
     if (byteArrayp == NULL) {
       goto err;
     }
-    if (s.sizel > 0) {
-      (*envp)->SetByteArrayRegion(envp, byteArrayp, (jsize) 0, (jsize) s.sizel, (jbyte *) s.p);
+    if (dstnoboml > 0) {
+      (*envp)->SetByteArrayRegion(envp, byteArrayp, (jsize) 0, (jsize) dstnoboml, (jbyte *) utf8noboms);
       if (HAVEEXCEPTION(envp)) {
         goto err;
       }
     }
-    if (s.encodingasciis != NULL) {
-      /* As per IANA this is in ASCII, thus compatible with Java's modified UTF-8 */
-      encodingasciip = (*envp)->NewStringUTF(envp, (const char *) s.encodingasciis);
-      if (encodingasciip == NULL) {
-        /* We want OUR exception to be raised */
-        RAISEEXCEPTION(envp, "NewStringUTF(\"ASCII\") failure");
-      }
-      objectp = (*envp)->NewObject(envp, JAVA_LANG_STRING_CLASSP, JAVA_LANG_STRING_CLASS_init_byteArray_String_METHODP, byteArrayp, encodingasciip);
-    } else {
-      objectp = (*envp)->NewObject(envp, JAVA_LANG_STRING_CLASSP, JAVA_LANG_STRING_CLASS_init_byteArray_METHODP, byteArrayp);
+    encodingasciip = (*envp)->NewStringUTF(envp, "UTF-8");
+    if (encodingasciip == NULL) {
+      /* We want OUR exception to be raised */
+      RAISEEXCEPTION(envp, "NewStringUTF(\"UTF-8\") failure");
     }
+    objectp = (*envp)->NewObject(envp, JAVA_LANG_STRING_CLASSP, JAVA_LANG_STRING_CLASS_init_byteArray_String_METHODP, byteArrayp, encodingasciip);
+
     if (objectp == NULL) {
       RAISEEXCEPTION(envp, "NewObject failure");
     }
@@ -5226,6 +5253,17 @@ static short marpaESLIF_TransformString(void *userDatavp, void *contextp, marpaE
   rcb = 0;
 
  done:
+  if (utf8s != NULL) {
+    free(utf8s);
+  }
+  if (envp != NULL) {
+    if (byteArrayp != NULL) {
+      (*envp)->DeleteLocalRef(envp, byteArrayp);
+    }
+    if (encodingasciip != NULL) {
+      (*envp)->DeleteLocalRef(envp, encodingasciip);
+    }
+  }
   return rcb;
 }
 
