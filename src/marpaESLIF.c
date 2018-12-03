@@ -9347,23 +9347,28 @@ static short _marpaESLIFValue_ruleCallbackWrapperb(void *userDatavp, int rulei, 
       argni = j;
     }
     
-    /* If the rule have a skipped elements, eventually remove them */
+    /* If the rule have a skipped elements, eventually remove them (starting at the latest indice) */
     if (rulep->skipbp != NULL) {
-      for (i = arg0i, k = 0; i <= argni; i++, k++) {
-        if (rulep->skipbp[k]) {
+      k = 0; /* k is the number of arguments to shift */
+      for (i = argni; i >= arg0i; i--) {
+        if (rulep->skipbp[i - arg0i]) {
           /* Shift remaining values - last element is naturally skipped with argni-- */
-          if (i < argni) {
-            for (j = i + 1; j <= argni; j++) {
-              if (! _marpaESLIF_generic_action_copyb(marpaESLIFValueOption.userDatavp, marpaESLIFValuep, arg0i, argni, j - 1, j, 0 /* nullable */)) {
+          if (k > 0) {
+	    /* There are k unhiden values scanned and we want to shift them. Current argument being skipped is at indice i. */
+            for (j = i; j < i + k; j++) {
+              if (! _marpaESLIF_generic_action_copyb(marpaESLIFValueOption.userDatavp, marpaESLIFValuep, arg0i, argni, j, j + 1, 0 /* nullable */)) {
                 goto err;
               }
             }
-          }
+	  }
+	  /* Number of arguments to the callback decreases (note that the first part of the for (i = argni; ...) loop is NOT reevaluated) */
           argni--;
-        }
+        } else {
+	  k++; /* This element is not skipped */
+	}
       }
     }
-    
+
     if (! ruleCallbackp(marpaESLIFValueOption.userDatavp, marpaESLIFValuep, arg0i, argni, resulti, 0 /* nullableb */)) {
       /* marpaWrapper logging will not give rule description, so do we */
       MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "Action %s failed for rule: %s", marpaESLIFValuep->actions, rulep->asciishows);
