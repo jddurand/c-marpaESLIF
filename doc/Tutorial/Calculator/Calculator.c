@@ -53,7 +53,7 @@ const static char *grammars =
   ":discard ::= comment\n"
   "Expression ::=\n"
   "    /[\\d]+/                          action => do_int\n"
-  "    | '(' Expression ')'              assoc => group action => ::copy[1]\n"
+  "    | ('(') Expression (')')          assoc => group action => ::shift\n"
   "   ||     Expression '**' Expression  assoc => right\n"
   "   ||     Expression  '*' Expression\n"
   "    |     Expression  '/' Expression\n"
@@ -133,6 +133,7 @@ int main() {
     perror("fgets");
     exit(1);
   }
+
   reader_context.inputs = inputs;
   reader_context.inputl = strlen(inputs);
   if (! marpaESLIFRecognizer_scanb(marpaESLIFRecognizerp,
