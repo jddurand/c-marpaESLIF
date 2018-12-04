@@ -9340,6 +9340,7 @@ static short _marpaESLIFValue_ruleCallbackWrapperb(void *userDatavp, int rulei, 
         if (i == j) {
           continue;
         }
+        MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Hide separator: Copy [%d] to [%d]", i, 1 + j);
         if (! _marpaESLIF_generic_action_copyb(marpaESLIFValueOption.userDatavp, marpaESLIFValuep, arg0i, argni, i, ++j, 0 /* nullable */)) {
           goto err;
         }
@@ -9356,7 +9357,8 @@ static short _marpaESLIFValue_ruleCallbackWrapperb(void *userDatavp, int rulei, 
           if (k > 0) {
 	    /* There are k unhiden values scanned and we want to shift them. Current argument being skipped is at indice i. */
             for (j = i; j < i + k; j++) {
-              if (! _marpaESLIF_generic_action_copyb(marpaESLIFValueOption.userDatavp, marpaESLIFValuep, arg0i, argni, j, j + 1, 0 /* nullable */)) {
+              MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Hide value: Copy [%d] to [%d]", j + 1, j);
+              if (! _marpaESLIF_generic_action_copyb(marpaESLIFValueOption.userDatavp, marpaESLIFValuep, arg0i, argni, j + 1, j, 0 /* nullable */)) {
                 goto err;
               }
             }
@@ -9367,6 +9369,7 @@ static short _marpaESLIFValue_ruleCallbackWrapperb(void *userDatavp, int rulei, 
 	  k++; /* This element is not skipped */
 	}
       }
+      MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Hide value changed stack indices: [%d] = [%d-%d]", resulti, arg0i, argni);
     }
 
     if (! ruleCallbackp(marpaESLIFValueOption.userDatavp, marpaESLIFValuep, arg0i, argni, resulti, 0 /* nullableb */)) {
@@ -13102,7 +13105,7 @@ static void _marpaESLIF_rule_freeCallbackv(void *userDatavp, marpaESLIFValueResu
     _marpaESLIF_string_freev(&string, 1 /* onStackb */);
     break;
   default:
-    MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "type is not PTR, ARRAY nor STRING (got %d, %s)", type, _marpaESLIF_value_types(type));
+    MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "type is not PTR, ARRAY nor STRING (got %d, %s)", marpaESLIFValueResultp->type, _marpaESLIF_value_types(marpaESLIFValueResultp->type));
     break;
   }
 
