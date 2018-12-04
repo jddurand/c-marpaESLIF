@@ -3294,7 +3294,7 @@ static inline short _marpaESLIF_bootstrap_G1_action_priority_loosen_ruleb(marpaE
             goto err;
           }
           prioritizedRhsPrimaryp->type  = MARPAESLIF_BOOTSTRAP_RHS_PRIMARY_TYPE_SINGLE_SYMBOL;
-          prioritizedRhsPrimaryp->skipb = 0;
+          prioritizedRhsPrimaryp->skipb = rhsPrimaryp->skipb;
           prioritizedRhsPrimaryp->u.singleSymbolp = (marpaESLIF_bootstrap_single_symbol_t *) malloc(sizeof(marpaESLIF_bootstrap_single_symbol_t));
           if (prioritizedRhsPrimaryp->u.singleSymbolp == NULL) {
             MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "malloc failure, %s", strerror(errno));
