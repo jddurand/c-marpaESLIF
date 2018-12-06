@@ -537,6 +537,10 @@ marpaESLIF BNF can be expressed in itself:
    * Meta-grammar settings:
    * **********************
    */
+  :discard                       ::= <whitespace>
+  :discard                       ::= <perl comment>
+  :discard                       ::= <cplusplus comment>
+
   :start                         ::= statements
   :desc                          ::= 'G1'
   
@@ -699,9 +703,6 @@ marpaESLIF BNF can be expressed in itself:
   <grammar reference>            ::= <quoted string>
                                    | <signed integer>
                                    | '=' <unsigned integer>
-  :discard                       ::= <whitespace>
-                                   | <perl comment>
-                                   | <cplusplus comment>
   <string literal>               ::= <string literal unit>+ proper => 1
   <string literal unit>          ::= '::u8"' <discard off> <string literal inside any> '"' <discard on>
   <discard off>                  ::=
