@@ -680,7 +680,7 @@ static SV *marpaESLIF_call_actionp(pTHX_ SV *interfacep, char *methods, AV *avp,
   for (aviteratorl = 0; aviteratorl < avsizel; aviteratorl++) {
     SV **svpp = av_fetch(avp, aviteratorl, 0); /* We manage ourself the avp, SV's are real */
     if (svpp == NULL) {
-      MARPAESLIF_CROAK("av_fetch returned NULL");
+      MARPAESLIF_CROAKF("av_fetch returned NULL during arguments preparation for method %s", (methods != NULL) ? methods : "undef");
     }
     PUSHs(sv_2mortal(newSVsv(*svpp)));
   }
