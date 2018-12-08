@@ -19,6 +19,14 @@
 #include "c-symbolPropertyBitSet-types.inc"
 #include "c-symbol-types.inc"
 
+/* Built-in extensions */
+static const char *actionsArrayp[] = {
+  "'::[@_]'",          /* Array ref of all RHSs */
+  "'::{@_}'",          /* Hash ref of all RHSs */
+  "'::eval\"' <discard off> <string literal inside any> '\"' <discard on>"          /* eval */
+};
+
+
 /* Use the inc and dec macros that fit the best our code */
 #ifdef SvREFCNT_dec_NN
 #  define MARPAESLIF_SvREFCNT_dec(svp) SvREFCNT_dec_NN(svp)
@@ -257,6 +265,8 @@ static marpaESLIFValueSymbolCallback_t marpaESLIF_valueSymbolActionResolver(void
 static marpaESLIFValueFreeCallback_t   marpaESLIF_valueFreeActionResolver(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, char *actions);
 static void                            marpaESLIF_getSvp(pTHX_ MarpaX_ESLIF_Value_t *Perl_MarpaX_ESLIF_Valuep, marpaESLIFValue_t *marpaESLIFValuep, int stackindicei, char *bytep, size_t bytel);
 static short                           marpaESLIF_valueRuleCallbackb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
+static short                           marpaESLIF_valueRuleCallbackArrayb(pTHX_ void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
+static short                           marpaESLIF_valueRuleCallbackHashb(pTHX_ void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
 static short                           marpaESLIF_valueSymbolCallbackb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, char *bytep, size_t bytel, int resulti);
 static void                            marpaESLIF_valueFreeCallbackv(void *userDatavp, marpaESLIFValueResult_t *marpaESLIFValueResultp);
 static void                            marpaESLIF_ContextFreev(pTHX_ MarpaX_ESLIF_Engine_t *Perl_MarpaX_ESLIF_Enginep);
@@ -986,9 +996,15 @@ static short marpaESLIF_valueRuleCallbackb(void *userDatavp, marpaESLIFValue_t *
   SV                       *Perl_valueInterfacep     = Perl_MarpaX_ESLIF_Valuep->Perl_valueInterfacep;
   AV                       *list                     = NULL;
   SV                       *actionResult;
-  SV                       *svp;
   int                       i;
   dMYTHX(Perl_MarpaX_ESLIF_Valuep);
+
+  /* Built-in action? */
+  if (strcmp(Perl_MarpaX_ESLIF_Valuep->actions, "::[@_]") == 0) {
+    return marpaESLIF_valueRuleCallbackArrayb(aTHX_ userDatavp, marpaESLIFValuep, arg0i, argni, resulti, nullableb);
+  } else if (strcmp(Perl_MarpaX_ESLIF_Valuep->actions, "::{@_}") == 0) {
+    return marpaESLIF_valueRuleCallbackHashb(aTHX_ userDatavp, marpaESLIFValuep, arg0i, argni, resulti, nullableb);
+  }
 
   /* Get value context */
   if (! marpaESLIFValue_contextb(marpaESLIFValuep, &(Perl_MarpaX_ESLIF_Valuep->symbols), &(Perl_MarpaX_ESLIF_Valuep->symboli), &(Perl_MarpaX_ESLIF_Valuep->rules), &(Perl_MarpaX_ESLIF_Valuep->rulei))) {
@@ -999,21 +1015,97 @@ static short marpaESLIF_valueRuleCallbackb(void *userDatavp, marpaESLIFValue_t *
     list = newAV();
     for (i = arg0i; i <= argni; i++) {
       marpaESLIF_getSvp(aTHX_ Perl_MarpaX_ESLIF_Valuep, marpaESLIFValuep, i, NULL /* bytep */, 0 /* bytel */);
-      /*
-        sv_dump(svp);
-      */
       /* One reference count ownership is transfered to the array */
       av_push(list, Perl_MarpaX_ESLIF_Valuep->svp);
     }
   }
 
   actionResult = marpaESLIF_call_actionp(aTHX_ Perl_valueInterfacep, Perl_MarpaX_ESLIF_Valuep->actions, list, Perl_MarpaX_ESLIF_Valuep);
+
   if (list != NULL) {
     /* This will decrement all elements reference count */
     av_undef(list);
   }
 
   MARPAESLIF_SET_PTR(marpaESLIFValuep, resulti, marpaESLIF_representationb, actionResult);
+
+  return 1;
+}
+
+/*****************************************************************************/
+static short marpaESLIF_valueRuleCallbackArrayb(pTHX_ void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb)
+/*****************************************************************************/
+{
+  static const char        *funcs                    = "marpaESLIF_valueRuleCallbackArrayb";
+  MarpaX_ESLIF_Value_t     *Perl_MarpaX_ESLIF_Valuep = (MarpaX_ESLIF_Value_t *) userDatavp;
+  AV                       *listp;
+  SV                       *resultp;
+  int                       i;
+
+  /* Get value context */
+  if (! marpaESLIFValue_contextb(marpaESLIFValuep, &(Perl_MarpaX_ESLIF_Valuep->symbols), &(Perl_MarpaX_ESLIF_Valuep->symboli), &(Perl_MarpaX_ESLIF_Valuep->rules), &(Perl_MarpaX_ESLIF_Valuep->rulei))) {
+    MARPAESLIF_CROAKF("marpaESLIFValue_contextb failure, %s", strerror(errno));
+  }
+
+  listp = newAV();
+
+  if (! nullableb) {
+    for (i = arg0i; i <= argni; i++) {
+      marpaESLIF_getSvp(aTHX_ Perl_MarpaX_ESLIF_Valuep, marpaESLIFValuep, i, NULL /* bytep */, 0 /* bytel */);
+      /* One reference count ownership is transfered to the array */
+      av_push(listp, Perl_MarpaX_ESLIF_Valuep->svp);
+    }
+  }
+
+  resultp = newRV_inc((SV *) listp);
+
+  MARPAESLIF_SET_PTR(marpaESLIFValuep, resulti, marpaESLIF_representationb, resultp);
+
+  return 1;
+}
+
+/*****************************************************************************/
+static short marpaESLIF_valueRuleCallbackHashb(pTHX_ void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb)
+/*****************************************************************************/
+{
+  static const char        *funcs                    = "marpaESLIF_valueRuleCallbackHashb";
+  MarpaX_ESLIF_Value_t     *Perl_MarpaX_ESLIF_Valuep = (MarpaX_ESLIF_Value_t *) userDatavp;
+  HV                       *hashp;
+  SV                       *keyp;
+  SV                       *valuep;
+  HE                       *hep;
+  SV                       *resultp;
+  int                       i;
+
+  /* Get value context */
+  if (! marpaESLIFValue_contextb(marpaESLIFValuep, &(Perl_MarpaX_ESLIF_Valuep->symbols), &(Perl_MarpaX_ESLIF_Valuep->symboli), &(Perl_MarpaX_ESLIF_Valuep->rules), &(Perl_MarpaX_ESLIF_Valuep->rulei))) {
+    MARPAESLIF_CROAKF("marpaESLIFValue_contextb failure, %s", strerror(errno));
+  }
+
+  hashp = newHV();
+
+  if (! nullableb) {
+    if (((argni - arg0i + 1) % 2) != 0) {
+      MARPAESLIF_CROAKF("\"%s\" requires a even number of arguments, but got %d", funcs, argni - arg0i + 1);
+    }
+    for (i = arg0i; i <= argni; i += 2) {
+      marpaESLIF_getSvp(aTHX_ Perl_MarpaX_ESLIF_Valuep, marpaESLIFValuep, i, NULL /* bytep */, 0 /* bytel */);
+      keyp = Perl_MarpaX_ESLIF_Valuep->svp;
+      marpaESLIF_getSvp(aTHX_ Perl_MarpaX_ESLIF_Valuep, marpaESLIFValuep, i + 1, NULL /* bytep */, 0 /* bytel */);
+      valuep = Perl_MarpaX_ESLIF_Valuep->svp;
+
+      /* Value reference count ownership is transfered to the hash */
+      MARPAESLIF_REFCNT_INC(valuep);
+      hep = hv_store_ent(hashp, keyp, valuep, 0);
+      if (hep == NULL) {
+        MARPAESLIF_REFCNT_DEC(valuep);
+      }
+    }
+  }
+
+  resultp = newRV_inc((SV *) hashp);
+
+  MARPAESLIF_SET_PTR(marpaESLIFValuep, resulti, marpaESLIF_representationb, resultp);
 
   return 1;
 }
@@ -1453,7 +1545,7 @@ static short marpaESLIF_TransformUndefb(void *userDatavp, void *contextp)
   MarpaX_ESLIF_Value_t *Perl_MarpaX_ESLIF_Valuep = (MarpaX_ESLIF_Value_t *) userDatavp;
   dMYTHX(Perl_MarpaX_ESLIF_Valuep);
 
-  Perl_MarpaX_ESLIF_Valuep->svp = &PL_sv_undef;
+  Perl_MarpaX_ESLIF_Valuep->svp = newSVsv(&PL_sv_undef);
 
   return 1;
 }
@@ -1587,7 +1679,7 @@ static short marpaESLIF_TransformBoolb(void *userDatavp, void *contextp, marpaES
   MarpaX_ESLIF_Value_t *Perl_MarpaX_ESLIF_Valuep = (MarpaX_ESLIF_Value_t *) userDatavp;
   dMYTHX(Perl_MarpaX_ESLIF_Valuep);
 
-  Perl_MarpaX_ESLIF_Valuep->svp = (y == MARPAESLIFVALUERESULTBOOL_FALSE) ? &PL_sv_no : &PL_sv_yes;
+  Perl_MarpaX_ESLIF_Valuep->svp = (y == MARPAESLIFVALUERESULTBOOL_FALSE) ? newSVsv(&PL_sv_no) : newSVsv(&PL_sv_yes);
 
   return 1;
 }
@@ -1704,6 +1796,15 @@ CODE:
     int save_errno = errno;
     marpaESLIF_ContextFreev(aTHX_ Perl_MarpaX_ESLIF_Enginep);
     MARPAESLIF_CROAKF("marpaESLIF_newp failure, %s", strerror(save_errno));
+  }
+
+  /* ---------- */
+  /* Extensions */
+  /* ---------- */
+  if (! marpaESLIF_extend_builtin_actionb(Perl_MarpaX_ESLIF_Enginep->marpaESLIFp, (char **) actionsArrayp, sizeof(actionsArrayp) / sizeof(actionsArrayp[0]))) {
+    int save_errno = errno;
+    marpaESLIF_ContextFreev(aTHX_ Perl_MarpaX_ESLIF_Enginep);
+    MARPAESLIF_CROAKF("marpaESLIF_extend_builtin_actionb, %s", strerror(save_errno));
   }
 
   RETVAL = Perl_MarpaX_ESLIF_Enginep;
@@ -2913,7 +3014,7 @@ CODE:
         SvUTF8_on(svp);
       }
     } else {
-      svp = &PL_sv_undef;
+      svp = newSVsv(&PL_sv_undef);
     }
     if (hv_store(hv, "symbol", strlen("symbol"), svp, 0) == NULL) {
       MARPAESLIF_CROAKF("hv_store failure for symbol => %s", (eventArrayp[i].symbols != NULL) ? eventArrayp[i].symbols : "");
@@ -2925,7 +3026,7 @@ CODE:
         SvUTF8_on(svp);
       }
     } else {
-      svp = &PL_sv_undef;
+      svp = newSVsv(&PL_sv_undef);
     }
     if (hv_store(hv, "event",  strlen("event"),  svp, 0) == NULL) {
       MARPAESLIF_CROAKF("hv_store failure for event => %s", (eventArrayp[i].events != NULL) ? eventArrayp[i].events : "");
@@ -3181,7 +3282,7 @@ CODE:
           SvUTF8_on(svp);
         }
       } else {
-        svp = &PL_sv_undef;
+        svp = newSVsv(&PL_sv_undef);
       }
       av_push(list, svp);
     }
@@ -3216,7 +3317,7 @@ CODE:
       SvUTF8_on(svp);
     }
   } else {
-    svp = &PL_sv_undef;
+    svp = newSVsv(&PL_sv_undef);
   }
   RETVAL = svp;
 OUTPUT:
@@ -3248,7 +3349,7 @@ CODE:
       SvUTF8_on(svp);
     }
   } else {
-    svp = &PL_sv_undef;
+    svp = newSVsv(&PL_sv_undef);
   }
   RETVAL = svp;
 OUTPUT:
@@ -3279,7 +3380,7 @@ CODE:
       SvUTF8_on(svp);
     }
   } else {
-    svp = &PL_sv_undef;
+    svp = newSVsv(&PL_sv_undef);
   }
   RETVAL = svp;
 OUTPUT:
@@ -3347,7 +3448,7 @@ CODE:
       SvUTF8_on(svp);
     }
   } else {
-    svp = &PL_sv_undef;
+    svp = newSVsv(&PL_sv_undef);
   }
   RETVAL = svp;
 OUTPUT:
