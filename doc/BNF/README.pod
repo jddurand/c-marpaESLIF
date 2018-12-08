@@ -537,12 +537,11 @@ marpaESLIF BNF can be expressed in itself:
    * Meta-grammar settings:
    * **********************
    */
+  :start                         ::= statements
+  :desc                          ::= 'G1'
   :discard                       ::= <whitespace>
   :discard                       ::= <perl comment>
   :discard                       ::= <cplusplus comment>
-
-  :start                         ::= statements
-  :desc                          ::= 'G1'
   
   /*
    * ***************
@@ -593,9 +592,6 @@ marpaESLIF BNF can be expressed in itself:
                                    | 'event' <event initialization> <op declare> 'predicted' <symbol name>
   <inaccessible statement>       ::= 'inaccessible' 'is' <inaccessible treatment> 'by' 'default'
   <inaccessible treatment>       ::= 'warn'
-  <inaccessible treatment>       ::= 'ok'
-  <inaccessible treatment>       ::= 'fatal'
-                                   | 'warn'
                                    | 'ok'
                                    | 'fatal'
   <exception statement>          ::= <lhs> <op declare> <rhs primary> '-' <rhs primary> <adverb list>
@@ -718,7 +714,7 @@ marpaESLIF BNF can be expressed in itself:
   
   <whitespace>                     ~ /[\s]+/
   <perl comment>                   ~ /(?:(?:#)(?:[^\n]*)(?:\n|\z))/u
-  <cplusplus comment>              ~ /(?:(?:(?://)(?:[^\n]*)(?:\n|\z))|(?:(?:/\*)(?:(?:[^\*]+|\*(?!/))*)(?:\*/)))/u
+  <cplusplus comment>              ~ /(?:(?:(?:\/\/)(?:[^\n]*)(?:\n|\z))|(?:(?:\/\*)(?:(?:[^\*]+|\*(?!\/))*)(?:\*\/)))/u
   <op declare any grammar>         ~ /:\[\d+\]:=/
   <op declare top grammar>         ~ '::='
   <op declare lex grammar>         ~ '~'
@@ -729,7 +725,7 @@ marpaESLIF BNF can be expressed in itself:
   <word character>                 ~ /[\w]/
   <one or more word characters>    ~ <word character>+ proper => 1
   <zero or more word characters>   ~ <word character>* proper => 1
-  <restricted ascii graph name>    ~ /[!#$%&()*+./;?@\[\\\]^_`|~A-Za-z0-9][!#$%&()*+./;?@\[\\\]^_`|~A-Za-z0-9]*/
+  <restricted ascii graph name>    ~ /[!#$%&()*+.\/;?@\[\\\]^_`|~A-Za-z0-9][!#$%&()*+.\/;?@\[\\\]^_`|~A-Za-z0-9]*/
   <lua action name>                ~ /::lua->[a-zA-Z_][a-zA-Z0-9_]*/
   <bare name>                      ~ <word character>+ proper => 1
   <standard name>                  ~ /[a-zA-Z]/ <zero or more word characters>
@@ -740,8 +736,8 @@ marpaESLIF BNF can be expressed in itself:
   <quoted name>                    ~ /(?:(?|(?:')(?:[^\\']*(?:\\.[^\\']*)*)(?:')|(?:")(?:[^\\"]*(?:\\.[^\\"]*)*)(?:")|(?:\x{201C})(?:[^\\\x{201D}]*(?:\\.[^\\\x{201D}]*)*)(?:\x{201D})))/su
   <character class>                ~ /((?:\[(?:(?>[^\[\]]+)|(?-1))*\]))/
                                    | /((?:\[(?:(?>[^\[\]]+)|(?-1))*\]))/ ':' /[eijmnsxDJUuaNbcA]+/
-  <regular expression>             ~ /(?:(?|(?:/(?![*/]))(?:[^\\/]*(?:\\.[^\\/]*)*)(?:/)))/su
-                                   | /(?:(?|(?:/(?![*/]))(?:[^\\/]*(?:\\.[^\\/]*)*)(?:/)))/su /[eijmnsxDJUuaNbcA]+/
+  <regular expression>             ~ /(?:(?|(?:\/(?![*\/]))(?:[^\\\/]*(?:\\.[^\\\/]*)*)(?:\/)))/su
+                                   | /(?:(?|(?:\/(?![*\/]))(?:[^\\\/]*(?:\\.[^\\\/]*)*)(?:\/)))/su /[eijmnsxDJUuaNbcA]+/
 
 =head1 SEE ALSO
 
