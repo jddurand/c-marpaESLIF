@@ -111,6 +111,8 @@
 #define G1_RULE_RHS_ALTERNATIVE_2                "G1_rule_rhs_alternative_2"
 #define G1_RULE_RHS_ALTERNATIVE_3                "G1_rule_rhs_alternative_3"
 #define G1_RULE_RHS_ALTERNATIVE_4                "G1_rule_rhs_alternative_4"
+#define G1_RULE_RHS_ALTERNATIVE_5                "G1_rule_rhs_alternative_5"
+#define G1_RULE_RHS_ALTERNATIVE_6                "G1_rule_rhs_alternative_6"
 #define G1_RULE_RHS_PRIMARY_1                    "G1_rule_rhs_primary_1"
 #define G1_RULE_RHS_PRIMARY_2                    "G1_rule_rhs_primary_2"
 #define G1_RULE_SINGLE_SYMBOL_1                  "G1_rule_single_symbol_1"
@@ -273,6 +275,8 @@
 #define G1_ACTION_RHS_ALTERNATIVE_2                "G1_action_rhs_alternative_2"                /* done */
 #define G1_ACTION_RHS_ALTERNATIVE_3                "G1_action_rhs_alternative_3"                /* done */
 #define G1_ACTION_RHS_ALTERNATIVE_4                "G1_action_rhs_alternative_4"                /* done */
+#define G1_ACTION_RHS_ALTERNATIVE_5                "G1_action_rhs_alternative_5"                /* done */
+#define G1_ACTION_RHS_ALTERNATIVE_6                "G1_action_rhs_alternative_6"                /* done */
 #define G1_ACTION_RHS_PRIMARY_1                    "G1_action_rhs_primary_1"                    /* done */
 #define G1_ACTION_RHS_PRIMARY_2                    "G1_action_rhs_primary_2"                    /* done */
 #define G1_ACTION_SINGLE_SYMBOL_1                  "G1_action_single_symbol_1"                  /* done */
