@@ -105,6 +105,7 @@ typedef struct marpaESLIF_bootstrap_grammar_reference         marpaESLIF_bootstr
 typedef struct marpaESLIF_bootstrap_symbol_name_and_reference marpaESLIF_bootstrap_symbol_name_and_reference_t;
 typedef struct marpaESLIF_bootstrap_rhs_primary               marpaESLIF_bootstrap_rhs_primary_t;
 typedef struct marpaESLIF_bootstrap_rhs_primary_exception     marpaESLIF_bootstrap_rhs_primary_exception_t;
+typedef struct marpaESLIF_bootstrap_rhs_primary_quantified    marpaESLIF_bootstrap_rhs_primary_quantified_t;
 typedef struct marpaESLIF_bootstrap_alternative               marpaESLIF_bootstrap_alternative_t;
 typedef struct marpaESLIF_bootstrap_event_initialization      marpaESLIF_bootstrap_event_initialization_t;
 
@@ -185,7 +186,8 @@ enum marpaESLIF_bootstrap_rhs_primary_type {
   MARPAESLIF_BOOTSTRAP_RHS_PRIMARY_TYPE_SINGLE_SYMBOL,
   MARPAESLIF_BOOTSTRAP_RHS_PRIMARY_TYPE_SYMBOL_NAME_AND_REFERENCE,
   MARPAESLIF_BOOTSTRAP_RHS_PRIMARY_TYPE_PRIORITIES,
-  MARPAESLIF_BOOTSTRAP_RHS_PRIMARY_TYPE_EXCEPTION
+  MARPAESLIF_BOOTSTRAP_RHS_PRIMARY_TYPE_EXCEPTION,
+  MARPAESLIF_BOOTSTRAP_RHS_PRIMARY_TYPE_QUANTIFIED
 };
 
 enum marpaESLIF_bootstrap_grammar_reference_type {
@@ -221,6 +223,12 @@ struct marpaESLIF_bootstrap_rhs_primary_exception {
   genericStack_t                     *adverbListItemStackp;
 };
 
+struct marpaESLIF_bootstrap_rhs_primary_quantified {
+  marpaESLIF_bootstrap_rhs_primary_t *rhsPrimaryp;
+  int                                 minimumi;
+  genericStack_t                     *adverbListItemStackp;
+};
+
 struct marpaESLIF_bootstrap_rhs_primary {
   short                                    skipb;
   marpaESLIF_symbol_t                     *symbolShallowp;
@@ -230,6 +238,7 @@ struct marpaESLIF_bootstrap_rhs_primary {
     marpaESLIF_bootstrap_symbol_name_and_reference_t *symbolNameAndReferencep;
     genericStack_t                                   *alternativesStackp;
     marpaESLIF_bootstrap_rhs_primary_exception_t      exception;
+    marpaESLIF_bootstrap_rhs_primary_quantified_t     quantified;
   } u;
 };
 
