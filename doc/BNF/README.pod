@@ -664,6 +664,8 @@ marpaESLIF BNF can be expressed in itself:
                                    | <symbol name> '@' <grammar reference>
                                    | '(-' <priorities> '-)'
                                    | '(' <priorities> ')'
+                                   | '(-' <rhs primary> '-' <rhs primary> <adverb list> '-)'
+                                   | '(' <rhs primary> '-' <rhs primary> <adverb list> ')'
   <rhs primary>                  ::= <single symbol>
                                    | <symbol name> '@' <grammar reference>
   <single symbol>                ::= <symbol>
