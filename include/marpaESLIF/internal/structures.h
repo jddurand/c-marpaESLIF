@@ -248,17 +248,18 @@ struct marpaESLIF {
 struct marpaESLIFGrammar {
   marpaESLIF_t              *marpaESLIFp;
   marpaESLIFGrammarOption_t  marpaESLIFGrammarOption;
-  genericStack_t             _grammarStack;     /* Stack of grammars */
-  genericStack_t            *grammarStackp;     /* Pointer to stack of grammars */
-  marpaESLIF_grammar_t      *grammarp;          /* This is a SHALLOW copy of current grammar in grammarStackp, defaulting to the top grammar */
-  short                      warningIsErrorb;   /* Current warningIsErrorb setting (used when parsing grammars ) */
-  short                      warningIsIgnoredb; /* Current warningIsErrorb setting (used when parsing grammars ) */
-  short                      autorankb;         /* Current autorank setting */
-  char                      *luabytep;          /* Lua script source */
-  size_t                     luabytel;          /* Lua script source length in byte */
-  char                      *luaprecompiledp;   /* Lua script source precompiled */
-  size_t                     luaprecompiledl;   /* Lua script source precompiled length in byte */
-  marpaESLIF_string_t       *luadescp;          /* Delayed until show is requested */
+  genericStack_t             _grammarStack;      /* Stack of grammars */
+  genericStack_t            *grammarStackp;      /* Pointer to stack of grammars */
+  marpaESLIF_grammar_t      *grammarp;           /* This is a SHALLOW copy of current grammar in grammarStackp, defaulting to the top grammar */
+  short                      warningIsErrorb;    /* Current warningIsErrorb setting (used when parsing grammars ) */
+  short                      warningIsIgnoredb;  /* Current warningIsErrorb setting (used when parsing grammars ) */
+  short                      autorankb;          /* Current autorank setting */
+  char                      *luabytep;           /* Lua script source */
+  size_t                     luabytel;           /* Lua script source length in byte */
+  char                      *luaprecompiledp;    /* Lua script source precompiled */
+  size_t                     luaprecompiledl;    /* Lua script source precompiled length in byte */
+  marpaESLIF_string_t       *luadescp;           /* Delayed until show is requested */
+  int                        internalRuleCounti; /* Internal counter when creating internal rules (groups '(-...-)' and '(...)' */
 };
 
 struct marpaESLIF_meta {

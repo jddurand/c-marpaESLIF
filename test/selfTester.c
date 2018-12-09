@@ -146,7 +146,8 @@ const static char *selfs = "\n"
   "<rhs>                          ::= <rhs alternative>+\n"
   "<rhs alternative>              ::= <single symbol>\n"
   "                                 | <symbol name> '@' <grammar reference>\n"
-  "                                 | '(' <rhs alternative> ')'\n"
+  "                                 | '(-' <priorities> '-)'\n"
+  "                                 | '(' <priorities> ')'\n"
   "<rhs primary>                  ::= <single symbol>\n"
   "                                 | <symbol name> '@' <grammar reference>\n"
   "<single symbol>                ::= <symbol>\n"
@@ -222,6 +223,8 @@ const static char *selfs = "\n"
   "                                 | /((?:\\[(?:(?>[^\\[\\]]+)|(?-1))*\\]))/ ':' /[eijmnsxDJUuaNbcA]+/\n"
   "<regular expression>             ~ /(?:(?|(?:\\/(?![*\\/]))(?:[^\\\\\\/]*(?:\\\\.[^\\\\\\/]*)*)(?:\\/)))/su\n"
   "                                 | /(?:(?|(?:\\/(?![*\\/]))(?:[^\\\\\\/]*(?:\\\\.[^\\\\\\/]*)*)(?:\\/)))/su /[eijmnsxDJUuaNbcA]+/\n"
+  "\n"
+  "test_group                     ::= 'X' ( 'Y' action => ::convert[UTF-8] | 'Z' || (-'yy'-) | 'zz' )\n"
   "\n";
 
 int main() {

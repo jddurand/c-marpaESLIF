@@ -1312,14 +1312,15 @@ static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *mar
   {
     marpaESLIFGrammar_t     marpaESLIFGrammar;
 
-    marpaESLIFGrammar.marpaESLIFp      = marpaESLIFp;
-    marpaESLIFGrammar.grammarStackp    = NULL;
-    marpaESLIFGrammar.grammarp         = grammarp;
-    marpaESLIFGrammar.luabytep         = NULL;
-    marpaESLIFGrammar.luabytel         = 0;
-    marpaESLIFGrammar.luaprecompiledp  = NULL;
-    marpaESLIFGrammar.luaprecompiledl  = 0;
-    marpaESLIFGrammar.luadescp         = NULL;
+    marpaESLIFGrammar.marpaESLIFp        = marpaESLIFp;
+    marpaESLIFGrammar.grammarStackp      = NULL;
+    marpaESLIFGrammar.grammarp           = grammarp;
+    marpaESLIFGrammar.luabytep           = NULL;
+    marpaESLIFGrammar.luabytel           = 0;
+    marpaESLIFGrammar.luaprecompiledp    = NULL;
+    marpaESLIFGrammar.luaprecompiledl    = 0;
+    marpaESLIFGrammar.luadescp           = NULL;
+    marpaESLIFGrammar.internalRuleCounti = 0;
 
     /* Fake a recognizer. EOF flag will be set automatically in fake mode */
     marpaESLIFRecognizerTestp = _marpaESLIFRecognizer_newp(&marpaESLIFGrammar,
@@ -3793,6 +3794,7 @@ static inline marpaESLIF_t *_marpaESLIF_newp(marpaESLIFOption_t *marpaESLIFOptio
   marpaESLIFp->marpaESLIFGrammarp->luaprecompiledp         = NULL;
   marpaESLIFp->marpaESLIFGrammarp->luaprecompiledl         = 0;
   marpaESLIFp->marpaESLIFGrammarp->luadescp                = NULL;
+  marpaESLIFp->marpaESLIFGrammarp->internalRuleCounti      = 0;
 
   marpaESLIFp->marpaESLIFGrammarp->grammarStackp = &(marpaESLIFp->marpaESLIFGrammarp->_grammarStack);
   GENERICSTACK_INIT(marpaESLIFp->marpaESLIFGrammarp->grammarStackp);
@@ -5013,6 +5015,7 @@ static inline marpaESLIFGrammar_t *_marpaESLIFGrammar_newp(marpaESLIF_t *marpaES
     marpaESLIFGrammarp->luaprecompiledp         = NULL;
     marpaESLIFGrammarp->luaprecompiledl         = 0;
     marpaESLIFGrammarp->luadescp                = NULL;
+    marpaESLIFGrammarp->internalRuleCounti      = 0;
   } else {
     marpaESLIFGrammarp = marpaESLIfGrammarPreviousp;
   }

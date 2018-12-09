@@ -182,7 +182,8 @@ struct marpaESLIF_bootstrap_adverb_list_item {
 enum marpaESLIF_bootstrap_rhs_primary_type {
   MARPAESLIF_BOOTSTRAP_RHS_PRIMARY_TYPE_NA = 0,
   MARPAESLIF_BOOTSTRAP_RHS_PRIMARY_TYPE_SINGLE_SYMBOL,
-  MARPAESLIF_BOOTSTRAP_RHS_PRIMARY_TYPE_SYMBOL_NAME_AND_REFERENCE
+  MARPAESLIF_BOOTSTRAP_RHS_PRIMARY_TYPE_SYMBOL_NAME_AND_REFERENCE,
+  MARPAESLIF_BOOTSTRAP_RHS_PRIMARY_TYPE_PRIORITIES
 };
 
 enum marpaESLIF_bootstrap_grammar_reference_type {
@@ -218,6 +219,7 @@ struct marpaESLIF_bootstrap_rhs_primary {
   union {
     marpaESLIF_bootstrap_single_symbol_t             *singleSymbolp;
     marpaESLIF_bootstrap_symbol_name_and_reference_t *symbolNameAndReferencep;
+    genericStack_t                                   *alternativesStackp;
   } u;
 };
 
