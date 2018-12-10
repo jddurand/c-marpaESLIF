@@ -533,7 +533,7 @@ As a consequence the definition of a C<:discard> symbol is incompatible with L<M
 
 =item built-in actions and adverb lists
 
-Any L<Marpa::R2|https://metacpan.org/pod/distribution/Marpa-R2/pod/Scanless/DSL.pod>'s action or adverb list that require the Perl langage has been removed, for example C<::array>, C<bless>
+Any L<Marpa::R2|https://metacpan.org/pod/distribution/Marpa-R2/pod/Scanless/DSL.pod>'s action or adverb list that require the Perl langage has been removed, for example C<::array>, C<::bless>
 
 =item LATM is true by default
 
@@ -552,16 +552,6 @@ LATM (Longest Acceptable Token Match) is preventing the scanner to push alternat
 =item native regular expression support (via L<PCRE2|http://www.pcre.org/>)
 
 =item comments are extended to C<C++>/C<C> styles
-
-=item there is B<no> notion of I<mask>
-
-In L<Marpa::R2|https://metacpan.org/pod/distribution/Marpa-R2/pod/Scanless/DSL.pod>, it is possible to get actions called with masked RHS (they are enclosed in parenthesis). This is quite highly coupled with how Perl is strong at managing arrays, and this feature has been removed
-
-=item I<proper> symbol separators are B<not> hiden when calling actions
-
-Sequence rules can have a I<separator symbol>, and it is hiden by L<Marpa::R2|https://metacpan.org/pod/distribution/Marpa-R2/pod/Scanless/DSL.pod> when calling the actions. This add-on has been removed, in favour of the native L<libmarpa|https://jeffreykegler.github.io/Marpa-web-site/libmarpa.html> implementation, in which a stack contain everything: symbols and their separator between each of them.
-
-=item etc -;
 
 =back
 
