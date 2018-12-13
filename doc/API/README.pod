@@ -931,15 +931,15 @@ No representation callback: The following default rules apply:
 
 =over
 
-=item 1. Float
+=item (1) Float
 
 Best effort formatting, using a string format that takes into account C's C<FLT_DIG> constant if any.
 
-=item 1. Double
+=item (2) Double
 
 Best effort formatting, using a string format that takes into account C's C<DBL_DIG> constant if any.
 
-=item 1. String
+=item (3) String
 
 String transcoding, result is appended as if it was a binary concat.
 
