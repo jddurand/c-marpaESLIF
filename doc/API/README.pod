@@ -917,6 +917,7 @@ No representation callback: The following default rules apply:
   |-------------------------------------------------------------------------------|
   | Value type                    | ::concat              | ::convert[ENCODING]   |
   |-------------------------------------------------------------------------------|
+  | undefined                     | N/A                   | N/A                   |
   | marpaESLIFValueResultChar_t   | binary value          | formatted as %c       |
   | marpaESLIFValueResultShort_t  | binary value          | formatted as %d       |
   | marpaESLIFValueResultInt_t    | binary value          | formatted as %d       |
@@ -1943,6 +1944,28 @@ where C<p> is a pointer to the memory holding previous value at stack indice C<0
 Nothing differentiate symbol actions v.s. rule action except that there is no range of indices in input, only a single indice.
 
 Returns C<NULL> is no valuation is possible at this stage, else return a non-C<NULL> value.
+
+=item Final result
+
+ESLIF never keeps in memory the I<final> result. Before freeing its internal stack, it will ask the user to do a <transformation> using C<transformerp>. If a transformer is C<NULL> for a given value type, it will raise an error.
+
+The goal of the transformer is to get into user's space a managable equivalent to an ESLIF value. For example, the provided bindings are doing this transformation:
+
+  |------------------------------------------------------------------------------------------|
+  | value type                    | perl (XS)            | java       | lua (C)              |
+  |------------------------------------------------------------------------------------------|
+  | undefined                     | &PL_sv_undef         | null       | LUA_TNIL             |
+  | marpaESLIFValueResultChar_t   | PV                   | Character  | LUA_TSTRING          |
+  | marpaESLIFValueResultShort_t  | IV                   | Short      | LUA_TNUMBER          |
+  | marpaESLIFValueResultInt_t    | IV                   | Integer    | LUA_TNUMBER          |
+  | marpaESLIFValueResultLong_t   | IV                   | Long       | LUA_TNUMBER          |
+  | marpaESLIFValueResultFloat_t  | NV                   | Float      | LUA_TNUMBER          |
+  | marpaESLIFValueResultDouble_t | NV                   | Double     | LUA_TNUMBER          |
+  | marpaESLIFValueResultPtr_t    | IV                   | Long       | LUA_TLIGHTUSERDATA   |
+  | marpaESLIFValueResultArray_t  | PV                   | byte[]     | LUA_TSTRING          |
+  | marpaESLIFValueResultBool_t   | &PL_sv_no/&PL_sv_yes | Boolean    | LUA_TBOOLEAN         |
+  | marpaESLIFValueResultString_t | UTF-8'ed PV          | String     | UTF-8'ed LUA_TSTRING |
+  |------------------------------------------------------------------------------------------|
 
 =back
 
