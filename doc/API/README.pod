@@ -73,6 +73,38 @@ A pointer to a L<genericLogger|https://github.com/jddurand/c-genericLogger> inst
 
 =back
 
+=head3 C<marpaESLIF_versionb>
+
+  short marpaESLIF_versionb(marpaESLIF_t *marpaESLIFp, char **versionsp);
+
+Puts in C<versionsp>, if not C<NULL>, a pointer to a string containing ESLIF version.
+
+Returns a true value on failure, a false value on failure.
+
+=head3 C<marpaESLIF_versionMajorb>
+
+  short marpaESLIF_versionMajorb(marpaESLIF_t *marpaESLIFp, int *versionMajorip);
+
+Puts in C<versionMajorip>, if not C<NULL>, the major version of ESLIF.
+
+Returns a true value on failure, a false value on failure.
+
+=head3 C<marpaESLIF_versionMinorb>
+
+  short marpaESLIF_versionMinorb(marpaESLIF_t *marpaESLIFp, int *versionMinorip);
+
+Puts in C<versionMinorip>, if not C<NULL>, the minor version of ESLIF.
+
+Returns a true value on failure, a false value on failure.
+
+=head3 C<marpaESLIF_versionPatchb>
+
+  short marpaESLIF_versionPatchb(marpaESLIF_t *marpaESLIFp, int *versionPatchip);
+
+Puts in C<versionPatchip>, if not C<NULL>, the patch version of ESLIF.
+
+Returns a true value on failure, a false value on failure.
+
 =head3 C<marpaESLIF_extend_builtin_actionb>
 
   short marpaESLIF_extend_builtin_actionb(marpaESLIF_t *marpaESLIFp,
@@ -729,6 +761,14 @@ is the eventual explicit description, ignored if C<NULL>.
 C<descp> have precedence of C<leveli>.
 
 This is very exhaustive, and give internal information about all symbols and rules. See the NOTES section.
+
+Return a true value on failure, a false value on failure.
+
+=head3 C<marpaESLIFGrammar_grammarshowscriptb>
+
+  short marpaESLIFGrammar_grammarshowscriptb(marpaESLIFGrammar_t *marpaESLIFGrammarp, char **grammarscriptsp);
+
+Put in the value pointed by C<grammarscriptsp>, which can be C<NULL>, a NUL-terminated ASCII string containing all lua statements.
 
 Return a true value on failure, a false value on failure.
 

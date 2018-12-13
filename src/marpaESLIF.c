@@ -5561,7 +5561,7 @@ short marpaESLIFGrammar_grammarshowform_by_levelb(marpaESLIFGrammar_t *marpaESLI
 }
 
 /*****************************************************************************/
-short marpaESLIFGrammar_grammarshowscripb(marpaESLIFGrammar_t *marpaESLIFGrammarp, char **grammarscriptsp)
+short marpaESLIFGrammar_grammarshowscriptb(marpaESLIFGrammar_t *marpaESLIFGrammarp, char **grammarscriptsp)
 /*****************************************************************************/
 {
   char *grammarscripts;

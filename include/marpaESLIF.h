@@ -327,7 +327,7 @@ extern "C" {
   marpaESLIF_EXPORT short                         marpaESLIFGrammar_ruleshowform_by_levelb(marpaESLIFGrammar_t *marpaESLIFGrammarp, int rulei, char **ruleshowsp, int leveli, marpaESLIFString_t *descp);
   marpaESLIF_EXPORT short                         marpaESLIFGrammar_grammarshowform_currentb(marpaESLIFGrammar_t *marpaESLIFGrammarp, char **grammarshowsp);
   marpaESLIF_EXPORT short                         marpaESLIFGrammar_grammarshowform_by_levelb(marpaESLIFGrammar_t *marpaESLIFGrammarp, char **grammarshowsp, int leveli, marpaESLIFString_t *descp);
-  marpaESLIF_EXPORT short                         marpaESLIFGrammar_grammarshowscripb(marpaESLIFGrammar_t *marpaESLIFGrammarp, char **grammarscriptsp);
+  marpaESLIF_EXPORT short                         marpaESLIFGrammar_grammarshowscriptb(marpaESLIFGrammar_t *marpaESLIFGrammarp, char **grammarscriptsp);
   marpaESLIF_EXPORT short                         marpaESLIFGrammar_parseb(marpaESLIFGrammar_t *marpaESLIFGrammarp, marpaESLIFRecognizerOption_t *marpaESLIFRecognizerOptionp, marpaESLIFValueOption_t *marpaESLIFValueOptionp, short *exhaustedbp);
   marpaESLIF_EXPORT short                         marpaESLIFGrammar_parse_by_levelb(marpaESLIFGrammar_t *marpaESLIFGrammarp, marpaESLIFRecognizerOption_t *marpaESLIFRecognizerOptionp, marpaESLIFValueOption_t *marpaESLIFValueOptionp, short *exhaustedbp, int leveli, marpaESLIFString_t *descp);
   marpaESLIF_EXPORT void                          marpaESLIFGrammar_freev(marpaESLIFGrammar_t *marpaESLIFGrammarp);
