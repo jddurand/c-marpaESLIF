@@ -13372,7 +13372,7 @@ static short _marpaESLIFRecognizer_concat_valueResultCallbackb(void *userDatavp,
         srcl = marpaESLIF_stringGenerator.l;
       } else {
         srcs = &(marpaESLIFValueResultp->u.c);
-        srcl = sizeof(char);
+        srcl = sizeof(marpaESLIFValueResultChar_t);
       }
       break;
     case MARPAESLIF_VALUE_TYPE_SHORT:
@@ -13393,7 +13393,7 @@ static short _marpaESLIFRecognizer_concat_valueResultCallbackb(void *userDatavp,
         srcl = marpaESLIF_stringGenerator.l;
       } else {
         srcs = (char *) &(marpaESLIFValueResultp->u.b);
-        srcl = sizeof(short);
+        srcl = sizeof(marpaESLIFValueResultShort_t);
       }
       break;
     case MARPAESLIF_VALUE_TYPE_INT:
@@ -13414,7 +13414,7 @@ static short _marpaESLIFRecognizer_concat_valueResultCallbackb(void *userDatavp,
         srcl = marpaESLIF_stringGenerator.l;
       } else {
         srcs = (char *) &(marpaESLIFValueResultp->u.i);
-        srcl = sizeof(int);
+        srcl = sizeof(marpaESLIFValueResultInt_t);
       }
       break;
     case MARPAESLIF_VALUE_TYPE_LONG:
@@ -13435,7 +13435,7 @@ static short _marpaESLIFRecognizer_concat_valueResultCallbackb(void *userDatavp,
         srcl = marpaESLIF_stringGenerator.l;
       } else {
         srcs = (char *) &(marpaESLIFValueResultp->u.l);
-        srcl = sizeof(long);
+        srcl = sizeof(marpaESLIFValueResultLong_t);
       }
       break;
     case MARPAESLIF_VALUE_TYPE_FLOAT:
@@ -13456,7 +13456,7 @@ static short _marpaESLIFRecognizer_concat_valueResultCallbackb(void *userDatavp,
         srcl = marpaESLIF_stringGenerator.l;
       } else {
         srcs = (char *) &(marpaESLIFValueResultp->u.f);
-        srcl = sizeof(float);
+        srcl = sizeof(marpaESLIFValueResultFloat_t);
       }
       break;
     case MARPAESLIF_VALUE_TYPE_DOUBLE:
@@ -13477,7 +13477,7 @@ static short _marpaESLIFRecognizer_concat_valueResultCallbackb(void *userDatavp,
         srcl = marpaESLIF_stringGenerator.l;
       } else {
         srcs = (char *) &(marpaESLIFValueResultp->u.d);
-        srcl = sizeof(double);
+        srcl = sizeof(marpaESLIFValueResultDouble_t);
       }
       break;
     case MARPAESLIF_VALUE_TYPE_PTR:
@@ -13524,7 +13524,7 @@ static short _marpaESLIFRecognizer_concat_valueResultCallbackb(void *userDatavp,
         srcl = marpaESLIF_stringGenerator.l;
       } else {
         srcs = (char *) &(marpaESLIFValueResultp->u.y);
-        srcl = sizeof(short);
+        srcl = sizeof(marpaESLIFValueResultBool_t);
       }
       break;
     case MARPAESLIF_VALUE_TYPE_STRING:
