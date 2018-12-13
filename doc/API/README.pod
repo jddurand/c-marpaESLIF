@@ -914,9 +914,9 @@ Representation callback exists: The binary content of the representation is take
 
 No representation callback: The following default rules apply:
 
-   -------------------------------------------------------------------------------
+  |-------------------------------------------------------------------------------|
   | Value type                    | ::concat              | ::convert[ENCODING]   |
-   -------------------------------------------------------------------------------
+  |-------------------------------------------------------------------------------|
   | marpaESLIFValueResultChar_t   | binary value          | formatted as %c       |
   | marpaESLIFValueResultShort_t  | binary value          | formatted as %d       |
   | marpaESLIFValueResultInt_t    | binary value          | formatted as %d       |
@@ -927,7 +927,7 @@ No representation callback: The following default rules apply:
   | marpaESLIFValueResultArray_t  | u.a.p, size u.a.sizel | u.a.p, size u.a.sizel |
   | marpaESLIFValueResultBool_t   | binary value          | formatted as %d       |
   | marpaESLIFValueResultString_t | u.s.p, size u.s.sizel | %s in ENCODING (3)    |
-   -------------------------------------------------------------------------------
+  |-------------------------------------------------------------------------------|
 
 =over
 
@@ -1854,13 +1854,13 @@ The value result itself is also not under marpaESLIF control, though the later r
 
 could be called with output stack indice C<0> and input stack indices C<0> for C<I>, C<1> for C<J>, and C<2> for C<K>. It is the end user that knows what it is all about, through the famous I<context>. Suppose that types of data would be a pointer (C<PTR> below) with context value C<0x12>, an integer (C<INT> below) with context value C<0x34>, and a short (C<SHORT> below) with context value C<0x56>, and that the end user decided that the result is a long with context C<0x78>, then a representation of the stack is:
 
-   ----------------------------------------------------------
+  |----------------------------------------------------------|
   |            | my_rule     =    I     J   'string terminal'|
-   ----------------------------------------------------------
+  |----------------------------------------------------------|
   |Stack indice|       0     =    0     1                   2|
   |        Type|    LONG        PTR   INT              SHORT |
   |     Context|    0x78       0x12  0x34               0x56 |
-   ----------------------------------------------------------
+  |----------------------------------------------------------|
 
 You will note that:
 
