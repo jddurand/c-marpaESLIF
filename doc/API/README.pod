@@ -227,7 +227,8 @@ Returns a true value on failure, a false value on failure.
 
   typedef enum marpaESLIFActionType {
     MARPAESLIF_ACTION_TYPE_NAME = 0,
-    MARPAESLIF_ACTION_TYPE_STRING
+    MARPAESLIF_ACTION_TYPE_STRING,
+    MARPAESLIF_ACTION_TYPE_LUA,
   } marpaESLIFActionType_t;
 
   typedef struct marpaESLIFAction {
@@ -235,6 +236,7 @@ Returns a true value on failure, a false value on failure.
     union {
       char               *names;
       marpaESLIFString_t *stringp;
+      char               *luas;
     } u;
   } marpaESLIFAction_t;
 
@@ -258,6 +260,17 @@ A named action, that the end-user will be responsible to resolve to valid a func
 =item C<MARPAESLIF_ACTION_TYPE_STRING>
 
 A string literal. Then the action result is forced to be the UTF-8 corresponding string, always pushed with type C<MARPAESLIF_VALUE_TYPE_ARRAY> on the stack. String literals are illegals for the free action, legal for rule and symbol actions. String itself is a C<marpaESLIFString_t> structure pointer accessible in C<u.stringp>.
+
+=item C<MARPAESLIF_ACTION_TYPE_LUA>
+
+A string literal. Then the action result is forced to be a lua function, using an embedded lua interpreter that ESLIF provides. Such function should be enclosed in a statement like e.g.:
+
+  <luascript>
+    function thefunction(arguments)
+    end
+  </luascript>
+
+where there will be as many arguments as there are Right-Hand side values.
 
 =back
 
