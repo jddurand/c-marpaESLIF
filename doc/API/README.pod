@@ -1967,6 +1967,8 @@ The goal of the transformer is to get into user's space a managable equivalent t
   | marpaESLIFValueResultString_t | UTF-8'ed PV          | String     | UTF-8'ed LUA_TSTRING |
   |------------------------------------------------------------------------------------------|
 
+The transformer callbacks are really helpers that do not depend on valuation context, i.e. it is perfectly legal to call them outside valuation.
+
 =back
 
 =head3 C<marpaESLIFValue_recognizerp>
