@@ -1826,8 +1826,6 @@ is:
 
 and nothing impose that the valuation result of C<my_rule> would be same as C<'string terminal'> valuation result.
 
-=back
-
 The functions holding valuation results are totally unknown from marpaESLIF, which is always asking to user-space for a function pointer of the correct type, whenever needed. For that it is using I<action resolvers>. An action resolver is always called for a given I<action name> C<actions>, guaranteed to a NUL-terminated ASCII string. In other terms marpaESLIF will always call the actions resolver like this:
 
 =over
@@ -1896,7 +1894,7 @@ Full history of our example rule C<my_rule> action is then:
 
 =over
 
-=item 1 - Call the action resolver for C<"my_action">
+=item 1. Call the action resolver for C<"my_action">
 
 The function call is equivalent to
 
@@ -1904,7 +1902,7 @@ The function call is equivalent to
 
 We suppose that it returned a function pointer to C<my_actionp>, a function that exist in user-space.
 
-=item 2 - Call C<my_actionp>
+=item 2. Call C<my_actionp>
 
 The function call is
 
@@ -1924,7 +1922,7 @@ Then, and only in these cases, the C<nullableb> flag is a true value, C<arg0i> a
 
 Ok, so finally C<my_actionp> is called, and it decided to return a value of type I<long> and context C<0x78>.
 
-=item 3 - Call the free resolver for C<"my_free_action">
+=item 3. Call the free resolver for C<"my_free_action">
 
 The function call is equivalent to
 
@@ -1932,19 +1930,21 @@ The function call is equivalent to
 
 Suppose that it returned a function pointer to C<my_free_actionp>, a function that exist in user-space.
 
-=item 4 - Call C<my_free_actionp>
+=item 4. Call C<my_free_actionp>
 
   my_free_actionp(userDatavp, 17, p, l)
 
 where C<p> is a pointer to the memory holding previous value at stack indice C<0>. C<l> is zero in this case, we explain later when it can be different than zero. C<17> is the context, so that the function pointer C<my_free_actionp> knows what we are talking about.
 
-=item 5 - Put user data at stack indice C<0> and context C<0x78>
+=item 5. Put user data at stack indice C<0> and context C<0x78>
 
 =back
 
 Nothing differentiate symbol actions v.s. rule action except that there is no range of indices in input, only a single indice.
 
 Returns C<NULL> is no valuation is possible at this stage, else return a non-C<NULL> value.
+
+=back
 
 =head3 C<marpaESLIFValue_recognizerp>
 
