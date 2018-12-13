@@ -808,10 +808,12 @@ Supported value types are in the enumeration C<marpaESLIFValueType_t>:
     MARPAESLIF_VALUE_TYPE_FLOAT,
     MARPAESLIF_VALUE_TYPE_DOUBLE,
     MARPAESLIF_VALUE_TYPE_PTR,
-    MARPAESLIF_VALUE_TYPE_ARRAY
+    MARPAESLIF_VALUE_TYPE_ARRAY,
+    MARPAESLIF_VALUE_TYPE_BOOL,
+    MARPAESLIF_VALUE_TYPE_STRING
   } marpaESLIFValueType_t;
 
-The names are quite explicit and map all ANSI-C types, with the notion of array, i.e.:
+The names are quite explicit:
 
 =over
 
@@ -821,58 +823,67 @@ Value is undefined.
 
 =item MARPAESLIF_VALUE_TYPE_CHAR
 
-Value is a C's C<char>.
+Value type is C<marpaESLIFValueResultChar_t>, typedef'ed to: C<char>.
 
 =item MARPAESLIF_VALUE_TYPE_SHORT
 
-Value is a C's C<short>.
+Value type is C<marpaESLIFValueResultShort_t>, typedef'ed to: C<short>.
 
 =item MARPAESLIF_VALUE_TYPE_INT
 
-Value is a C's C<int>.
+Value type is C<marpaESLIFValueResultInt_t>, typedef'ed to: C<int>.
 
 =item MARPAESLIF_VALUE_TYPE_LONG
 
-Value is a C's C<long>.
+Value type is C<marpaESLIFValueResultLong_t>, typedef'ed to: C<long>.
 
 =item MARPAESLIF_VALUE_TYPE_FLOAT
 
-Value is a C's C<float>.
+Value type is C<marpaESLIFValueResultFloat_t>, typedef'ed to: C<float>.
 
 =item MARPAESLIF_VALUE_TYPE_DOUBLE
 
-Value is a C's C<double>.
+Value type is C<marpaESLIFValueResultDouble_t>, typedef'ed to: C<double>.
 
 =item MARPAESLIF_VALUE_TYPE_PTR
 
-Value is a C's C<void *>.
+Value type is C<marpaESLIFValueResultPtr_t>, typedef'ed to: C<struct { void *p; short shallowb; }>.
 
 =item MARPAESLIF_VALUE_TYPE_ARRAY
 
-Value is a C's C<void *> with an associated length.
+Value type is C<marpaESLIFValueResultArray_t>, typedef'ed to: C<struct { void *p; short shallowb; size_t sizel; }>.
+
+=item MARPAESLIF_VALUE_TYPE_BOOL
+
+Value type is C<marpaESLIFValueResultBool_t>, typedef'ed to: C<enum>. Recommended values should be C<MARPAESLIFVALUERESULTBOOL_FALSE> (i.e. C<0>) or C<MARPAESLIFVALUERESULTBOOL_TRUE> (i.e. C<1>).
+
+=item MARPAESLIF_VALUE_TYPE_STRING
+
+Value type is C<marpaESLIFValueResultString_t>, typedef'ed to: C<struct { unsigned char *p; short shallowb; size_t sizel; char *encodingasciis; }>.
 
 =back
 
-A Value result is a value type C<marpaESLIFValueResult_t> with more meta data:
+A Value result is of type C<marpaESLIFValueResult_t> with more meta data:
 
   typedef short (*marpaESLIFRepresentation_t)(void *userDatavp,
                                               marpaESLIFValueResult_t *marpaESLIFValueResultp,
                                               char **inputcpp,
                                               size_t *inputlp);
   typedef struct marpaESLIFValueResult {
-    int                        contexti;          /* Free value meaningful only to the user */
-    size_t                     sizel;             /* Length of data in case value is an ARRAY */
-    marpaESLIFRepresentation_t representationp;   /* Value result representation */
-    short                      shallowb;          /* Shallow flag In case of PTR or ARRAY */
+    void                      *contextp;          /* Free value meaningful only to the user */
+    marpaESLIFRepresentation_t representationp;   /* How a user-land alternative is represented if it was in the input */
     marpaESLIFValueType_t      type;              /* Type for tagging the following union */
     union {
-      char    c;                                  /* Value is a char */
-      short   b;                                  /* Value is a short */
-      int     i;                                  /* Value is an int */
-      long    l;                                  /* Value is a long */
-      float   f;                                  /* Value is a float */
-      double  d;                                  /* Value is a double */
-      void   *p;                                  /* Value is a pointer */
+      marpaESLIFValueResultChar_t   c;            /* Value is a char */
+      marpaESLIFValueResultShort_t  b;            /* Value is a short */
+      marpaESLIFValueResultInt_t    i;            /* Value is an int */
+      marpaESLIFValueResultLong_t   l;            /* Value is a long */
+      marpaESLIFValueResultFloat_t  f;            /* Value is a float */
+      marpaESLIFValueResultDouble_t d;            /* Value is a double */
+      marpaESLIFValueResultPtr_t    p;            /* Value is a pointer */
+      marpaESLIFValueResultArray_t  a;            /* Value is an array */
+      marpaESLIFValueResultBool_t   y;            /* Value is a boolean */
+      marpaESLIFValueResultString_t s;            /* Value is a string */
     } u;
   } marpaESLIFValueResult_t;
 
@@ -880,59 +891,61 @@ which means:
 
 =over
 
-=item contexti
+=item contextp
 
-This can be anything that is meaningul for the end-user. It must be greater than zero, zero and lower values are reserved by marpaESLIF engine.
-
-=item sizel
-
-Length of data when the type is C<MARPAESLIF_VALUE_TYPE_ARRAY>.
+This can be anything that is meaningul for the end-user. It must be different than C<NULL>, reserved to the marpaESLIF engine.
 
 =item representationp
 
-Associated representation in terms of input: this has an immediate impact on any valuation that depend on the data that has been automatically seen by ESLIF (i.e. I<explicit terminals> and I<lexemes>), or injected by the user (i.e. I<alternatives>). The exhaustive list of rules depending on the input are:
+Associated representation in terms of input: this has an immediate impact on the C<::concat> and C<::convert[ENCODING]> actions:
+
+  A ::= B C action => ::concat
+  D ::= E F action => ::convert[ENCODING]
+
+where C<::concat> is a binary concatenation, and C<::convert[ENCODING]> is a string conversion:
 
 =over
 
-=item C<::concat>
+=item
 
-For example, consider the rule:
+Representation callback exists: The binary content of the representation is taken as-is.
 
-  X ::= A B C action => ::concat
+=item
 
-The C<::concat> action is doing a I<binary concatenation> of all items on the right-hand side. The implementation is the following:
+No representation callback: The following default rules apply:
 
-For every item, if it has no representation callback, then only items of type C<MARPAESLIF_VALUE_TYPE_ARRAY> are accepted for concatenation. Otherwise, the representation callback is used i.e.:
+   -------------------------------------------------------------------------------
+  | Value type                    | ::concat              | ::convert[ENCODING]   |
+   -------------------------------------------------------------------------------
+  | marpaESLIFValueResultChar_t   | binary value          | formatted as %c       |
+  | marpaESLIFValueResultShort_t  | binary value          | formatted as %d       |
+  | marpaESLIFValueResultInt_t    | binary value          | formatted as %d       |
+  | marpaESLIFValueResultLong_t   | binary value          | formatted as %ld      |
+  | marpaESLIFValueResultFloat_t  | binary value          | formatted as %f (1)   |
+  | marpaESLIFValueResultDouble_t | binary value          | formatted as %f (2)   |
+  | marpaESLIFValueResultPtr_t    | u.p.p, size void*     | formatted as %p       |
+  | marpaESLIFValueResultArray_t  | u.a.p, size u.a.sizel | u.a.p, size u.a.sizel |
+  | marpaESLIFValueResultBool_t   | binary value          | formatted as %d       |
+  | marpaESLIFValueResultString_t | u.s.p, size u.s.sizel | %s in ENCODING (3)    |
+   -------------------------------------------------------------------------------
 
-  
-  representationp(userDatavp /* User-specific valuation context */,
-                  marpaESLIFValueResultp /* Pointer to the current value */,
-                  &srcs, /* char ** pointer - to be filled by the user */
-                  &srcl /* size_t * pointer - to be filled bu the user */)
+=over
 
-and if C<srcs> and C<srcs> are not C<NULL> and C<0>, respectively, the corresponding area will be copied I<as-is>.
+=item 1. Float
 
-Explicit terminals are never under the user's control: the matched input is what will be appended as-is.
+Best effort formatting, using a string format that takes into account C's C<FLT_DIG> constant if any.
 
-Lexemes discovered automatically by ESLIF are always in the form of an array: matched input will be appended as-is.
+=item 1. Double
 
-Alternatives pushed by the end-user will follow the upper rules: if the user gives a representation callback, the later is used. Else only values of type C<MARPAESLIF_VALUE_TYPE_ARRAY> will be considered and appended as-is.
+Best effort formatting, using a string format that takes into account C's C<DBL_DIG> constant if any.
 
-The notion of I<matched input> refers to the ESLIF I<internal input buffer>: character chunks are always converted to their UTF-8 encoded equivalent data, and it is the UTF-8 version of data that is appended as-is. Binary chunks are taken as-is.
+=item 1. String
 
-=item C<::convert[THIS]>
-
-This rule is nothing else but a conversion of the C<::concat> result into C<THIS> encoding.
-
-=item C<::ascii>
-
-This rule is nothing else but an alias for C<::convert[ASCII]>.
+String transcoding, result is appended as if it was a binary concat.
 
 =back
 
-=item shallowb
-
-Meaningful only when type is C<MARPAESLIF_VALUE_TYPE_PTR> or C<MARPAESLIF_VALUE_TYPE_ARRAY>. This has an impact on internal value stack manipulation: everytime ESLIF tries to set a value, it is looking if this is going to replace something at the same stack indice. If the value to be replaced as this stack indice has been declared of type C<MARPAESLIF_VALUE_TYPE_PTR> or C<MARPAESLIF_VALUE_TYPE_ARRAY> and has a true C<shallowb> flag value, the user's free callback, when defined, is called.
+=back
 
 =item type
 
@@ -940,13 +953,13 @@ This is the type itself, and has an impact on the C's C<union> that follows. Ple
 
 =over
 
-=item C<MARPAESLIF_VALUE_TYPE_PTR>
+=item sizel
 
-is using only the C<u.p> pointer.
+Some value type are containers, and C<sizel> gives the size in byte unit.
 
-=item C<MARPAESLIF_VALUE_TYPE_ARRAY>
+=item shallowb
 
-is using both the C<u.p> pointer and the C<sizel> element.
+This has an impact on internal value stack manipulation: everytime ESLIF tries to set a value, it is looking if this is going to replace something at the same stack indice. If the value to be replaced as this stack indice is not shallowed, free callback is called.
 
 =back
 
