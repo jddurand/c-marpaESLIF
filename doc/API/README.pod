@@ -2134,15 +2134,6 @@ Puts the C<marpaESLIFValueResultp> pointer at stack number C<indicei>.
 
 Returns a true value on success, a false value otherwise.
 
-=head3 C<marpaESLIFValue_stack_forgetb>
-
-  short marpaESLIFValue_stack_forgetb(marpaESLIFValue_t *marpaESLIFValuep,
-                                      int indicei);
-
-Says to ESLIF to forget about any eventual value result at indice C<indicei>.
-
-Returns a true value on success, a false value otherwise.
-
 =head3 C<marpaESLIFValue_stack_getb>
 
   marpaESLIFValue_stack_getb(marpaESLIFValue_t *marpaESLIFValuep,
@@ -2162,6 +2153,15 @@ Gets a direct pointer to the value result at indice C<indicei> within the value 
 
 Returns a non-C<NULL> value on success, C<NULL> otherwise.
 
+=head3 C<marpaESLIFValue_stack_forgetb>
+
+  short marpaESLIFValue_stack_forgetb(marpaESLIFValue_t *marpaESLIFValuep,
+                                      int indicei);
+
+Says to ESLIF to forget about any eventual value result at indice C<indicei>.
+
+Returns a true value on success, a false value otherwise.
+
 =head3 C<marpaESLIFValue_stack_getAndForgetb>
 
   short marpaESLIFValue_stack_getAndForgetb(marpaESLIFValue_t *marpaESLIFValuep,
@@ -2171,6 +2171,24 @@ Returns a non-C<NULL> value on success, C<NULL> otherwise.
 Copies the value result at indice C<indicei> into the C<marpaESLIFValueResultp> pointer and tells <marpaESLIF> to forget about it.
 
 Returns a true value on success, a false value otherwise.
+
+=head3 C<marpaESLIFValue_transformb>
+
+  short marpaESLIFValue_stack_get_transformb(marpaESLIFValue_t *marpaESLIFValuep, int indicei);
+
+During valuation, the caller can call for transformation of value at stack C<indicei>.
+
+Returns a true value on success, a false value otherwise.
+
+=head3 C<marpaESLIFValue_charconvb>
+
+  char *marpaESLIF_charconvb(marpaESLIF_t *marpaESLIFp, char *toEncodings, char *fromEncodings, char *srcs, size_t srcl, size_t *dstlp);
+
+Helper function that is doing character translation of a buffer starting at C<srcs> and of size C<srcl> bytes. Initial encoding is C<toEncodings>, if C<NULL> it will be guessed. Final encoding is C<toEncodings> and must be set. Final number of bytes is stored if C<dstlp> if it is not NULL.
+
+Please note that the transcoded result I<may> contain a BOM, it is up to the caller to check that.
+
+Returns a pointer to the transcoded string on success, C<NULL> on failure.
 
 =head1 NOTES
 
