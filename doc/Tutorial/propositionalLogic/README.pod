@@ -56,50 +56,51 @@ Indeed, this will because we will inject everything by hand using I<alternatives
 
 =over
 
-=item Context is any value greater than 0
+=item Context is any value not C<NULL>
 
-  #define MY_CONTEXT 1 /* Any value > 0 */
+  static char myContext;
+  #define MY_CONTEXT &myContext
 
 =item Lexemes that are not of interest for valuation
 
 We will inject an UNDEF value on the stack for the keywords C<AND>, C<OR>, C<IMPLIES> and C<EQUIVALENT>:
 
-  #define DO_ALTERNATIVE_UNDEF(names) do {                                \
-      marpaESLIFAlternative_t  marpaESLIFAlternative;                     \
-                                                                          \
-      marpaESLIFAlternative.lexemes        = names;                       \
-      marpaESLIFAlternative.value.type     = MARPAESLIF_VALUE_TYPE_UNDEF; \
-      marpaESLIFAlternative.value.contexti = MY_CONTEXT;                  \
-      marpaESLIFAlternative.value.sizel    = 0;                           \
-      marpaESLIFAlternative.grammarLengthl = 1;                           \
-                                                                          \
-      if (! marpaESLIFRecognizer_lexeme_readb(marpaESLIFRecognizerp,      \
-                                              &marpaESLIFAlternative,     \
-                                              0)) {                       \
-        goto err;                                                         \
-      }                                                                   \
-    } while (0)
+#define DO_ALTERNATIVE_UNDEF(names) do {                                \
+    marpaESLIFAlternative_t  marpaESLIFAlternative;                     \
+                                                                        \
+    marpaESLIFAlternative.lexemes        = names;                       \
+    marpaESLIFAlternative.value.type     = MARPAESLIF_VALUE_TYPE_UNDEF; \
+    marpaESLIFAlternative.value.contextp = MY_CONTEXT;                  \
+    marpaESLIFAlternative.grammarLengthl = 1;                           \
+                                                                        \
+    GENERICLOGGER_DEBUGF(genericLoggerp, "Injecting <%s>", names);      \
+    if (! marpaESLIFRecognizer_lexeme_readb(marpaESLIFRecognizerp, &marpaESLIFAlternative, 0)) { \
+      GENERICLOGGER_ERRORF(genericLoggerp, "Failure to set <%s> alternative", names); \
+      marpaESLIFRecognizer_progressLogb(marpaESLIFRecognizerp, -1, -1, GENERICLOGGER_LOGLEVEL_ERROR); \
+      goto err;                                                         \
+    }                                                                   \
+  } while (0)
 
 =item Lexemes that are of interest for valuation
 
 We insert booleans, expressed using the SHORT value type, for the keywords C<P>, C<Q> and C<R>:
 
-  #define DO_ALTERNATIVE_CHAR(names, boolval) do {                        \
-      marpaESLIFAlternative_t  marpaESLIFAlternative;                     \
-                                                                          \
-      marpaESLIFAlternative.lexemes        = names;                       \
-      marpaESLIFAlternative.value.type     = MARPAESLIF_VALUE_TYPE_CHAR;  \
-      marpaESLIFAlternative.value.u.c      = boolval;                     \
-      marpaESLIFAlternative.value.contexti = MY_CONTEXT;                  \
-      marpaESLIFAlternative.value.sizel    = 0;                           \
-      marpaESLIFAlternative.grammarLengthl = 1;                           \
-                                                                          \
-      if (! marpaESLIFRecognizer_lexeme_readb(marpaESLIFRecognizerp,      \
-                                              &marpaESLIFAlternative,     \
-                                              0)) {                       \
-        goto err;                                                         \
-      }                                                                   \
-    } while (0)
+#define DO_ALTERNATIVE_CHAR(names, boolval) do {                        \
+    marpaESLIFAlternative_t  marpaESLIFAlternative;                     \
+                                                                        \
+    marpaESLIFAlternative.lexemes        = names;                       \
+    marpaESLIFAlternative.value.type     = MARPAESLIF_VALUE_TYPE_CHAR;  \
+    marpaESLIFAlternative.value.u.c      = boolval;                     \
+    marpaESLIFAlternative.value.contextp = MY_CONTEXT;                  \
+    marpaESLIFAlternative.grammarLengthl = 1;                           \
+                                                                        \
+    GENERICLOGGER_DEBUGF(genericLoggerp, "Injecting <%s> with value '%c'", names, boolval); \
+    if (! marpaESLIFRecognizer_lexeme_readb(marpaESLIFRecognizerp, &marpaESLIFAlternative, 0)) { \
+      GENERICLOGGER_ERRORF(genericLoggerp, "Failure to set <%s> alternative", names); \
+      marpaESLIFRecognizer_progressLogb(marpaESLIFRecognizerp, -1, -1, GENERICLOGGER_LOGLEVEL_ERROR); \
+      goto err;                                                         \
+    }                                                                   \
+  } while (0)
 
 =back
 
@@ -157,41 +158,36 @@ We will test all combinaisons of C<P>, C<Q> and C<R> values. In the user valuati
     for (valueContext.q = 0; valueContext.q < 2; valueContext.q++) {
       for (valueContext.r = 0; valueContext.r < 2; valueContext.r++) {
 
-        /* User context is a void pointer */
         marpaESLIFValueOption.userDatavp             = &valueContext;
-
-        /* action names are resolved to a function pointer with the ruleActionResolverp callback: */
         marpaESLIFValueOption.ruleActionResolverp    = ruleActionResolverp;
-
-        /* We use the default value for what is coming from input recognition, i.e. an array of bytes: */
-        marpaESLIFValueOption.symbolActionResolverp  = NULL;
-
-        /* Our actions will only push values of type SHORT on the stack: no need for a special free callback */
-        marpaESLIFValueOption.freeActionResolverp    = NULL;
-
-        /* To get the final value a transformer is required. This transformer can also, and will, be used inside */
-        /* rule actions */
+        marpaESLIFValueOption.symbolActionResolverp  = NULL; /* No symbol action resolver... Okay we use the default */
+        marpaESLIFValueOption.freeActionResolverp    = NULL; /* No free action resolver... Okay if we generate no pointer */
         marpaESLIFValueOption.transformerp           = &marpaESLIFValueResultTransformDefault;
+        marpaESLIFValueOption.highRankOnlyb          = 1;    /* Recommended value */
+        marpaESLIFValueOption.orderByRankb           = 1;    /* Recommended value */
+        marpaESLIFValueOption.ambiguousb             = 0;    /* our BNF is not ambiguous thanks to loosen operator and group association */
+        marpaESLIFValueOption.maxParsesi             = 0;    /* Meaningless here since we say it is not ambiguous */
+        marpaESLIFValueOption.nullb                  = 0;    /* Recommended value */
 
-        /* There is no "ranking" associated to rules in the grammar, nevertheless it is good practice */
-        /* to always ask explicitly the valuation to consider only the rules with the higher rank */
-        marpaESLIFValueOption.highRankOnlyb          = 1;
-
-        /* Similarly, it is good practice to ask the valuation to order valuation results by rank */
-        marpaESLIFValueOption.orderByRankb           = 1;
-
-        /* Our BNF is not ambiguous, though one can say to the engine to reject valuation if it was ambiguous! */
-        marpaESLIFValueOption.ambiguousb             = 0;
-
-        /* When the grammar is ambiguous, one can ask to not have more than "maxParsesi" values, 0 means that all values can be retreived */
-        marpaESLIFValueOption.maxParsesi             = 0;
-
-        /* It is rare to accept a null valuation result, 0 is a recommended value */
-        marpaESLIFValueOption.nullb                  = 0;
+        GENERICLOGGER_INFOF(genericLoggerp, "Valuation with {P, Q, R} = {%d, %d, %d} of %s ", (int) valueContext.p, (int) valueContext.q, (int) valueContext.r, examples);
 
         marpaESLIFValuep = marpaESLIFValue_newp(marpaESLIFRecognizerp, &marpaESLIFValueOption);
-        marpaESLIFValue_valueb(marpaESLIFValuep, &marpaESLIFValueResult);
-        /* Result is in marpaESLIFValueResult.u.b */
+        if (marpaESLIFValuep == NULL) {
+          goto err;
+        }
+
+        if (marpaESLIFValue_valueb(marpaESLIFValuep) <= 0) {
+          goto err;
+        }
+
+        marpaESLIFValue_freev(marpaESLIFValuep);
+        marpaESLIFValuep = NULL;
+
+        GENERICLOGGER_INFOF(genericLoggerp, ".............. {P, Q, R} = {%d, %d, %d}... %d ", (int) valueContext.p, (int) valueContext.q, (int) valueContext.r, (int) valueContext.result);
+        if (valueContext.result != 0) {
+          GENERICLOGGER_ERROR(genericLoggerp, "Valuation result is not zero !?");
+          goto err;
+        }
       }
     }
   }
