@@ -690,7 +690,15 @@ where C<userDatavp> is the end-user valuation context, C<contextp> is a free con
 
 =head2 FINAL VERSION
 
-Here is the final version as can be found in the marpaESLIF repository:
+Here is the final version as can be found in the marpaESLIF repository, where we changed:
+
+  '(' Expression ')'              assoc => group action => ::copy[1]
+
+to
+
+   # Parenthesis are scanned but skipped during valuation
+   ('(') Expression (')')         assoc => group action => ::shift\n"
+
 
   #include <stdio.h>
   #include <stdlib.h>
