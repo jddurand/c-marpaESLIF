@@ -5185,7 +5185,6 @@ static short marpaESLIF_TransformString(void *userDatavp, void *contextp, marpaE
   static const char        *funcs                   = "marpaESLIF_TransformString";
   marpaESLIFValueContext_t *marpaESLIFValueContextp = (marpaESLIFValueContext_t *) userDatavp;
   JNIEnv                   *envp                    = marpaESLIFValueContextp->envp;
-  jstring                   encodingasciip          = NULL;
   jbyteArray                byteArrayp              = NULL;
   jobject                   eslifGrammarp           = marpaESLIFValueContextp->eslifGrammarp;
   char                     *utf8s                   = NULL;
@@ -5233,12 +5232,7 @@ static short marpaESLIF_TransformString(void *userDatavp, void *contextp, marpaE
         goto err;
       }
     }
-    encodingasciip = (*envp)->NewStringUTF(envp, "UTF-8");
-    if (encodingasciip == NULL) {
-      /* We want OUR exception to be raised */
-      RAISEEXCEPTION(envp, "NewStringUTF(\"UTF-8\") failure");
-    }
-    objectp = (*envp)->NewObject(envp, JAVA_LANG_STRING_CLASSP, JAVA_LANG_STRING_CLASS_init_byteArray_String_METHODP, byteArrayp, encodingasciip);
+    objectp = (*envp)->NewObject(envp, JAVA_LANG_STRING_CLASSP, JAVA_LANG_STRING_CLASS_init_byteArray_String_METHODP, byteArrayp, marpaESLIF_UTF8p);
 
     if (objectp == NULL) {
       RAISEEXCEPTION(envp, "NewObject failure");
@@ -5259,9 +5253,6 @@ static short marpaESLIF_TransformString(void *userDatavp, void *contextp, marpaE
   if (envp != NULL) {
     if (byteArrayp != NULL) {
       (*envp)->DeleteLocalRef(envp, byteArrayp);
-    }
-    if (encodingasciip != NULL) {
-      (*envp)->DeleteLocalRef(envp, encodingasciip);
     }
   }
   return rcb;
