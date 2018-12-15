@@ -309,8 +309,8 @@ int main() {
   }
 
   /* Grammar script */
-  if (! marpaESLIFGrammar_grammarshowscripb(marpaESLIF_grammarp(marpaESLIFp), &grammarscripts)) {
-    GENERICLOGGER_ERRORF(marpaESLIFOption.genericLoggerp, "marpaESLIFGrammar_grammarshowscripb failure, %s", strerror(errno));
+  if (! marpaESLIFGrammar_grammarshowscriptb(marpaESLIF_grammarp(marpaESLIFp), &grammarscripts)) {
+    GENERICLOGGER_ERRORF(marpaESLIFOption.genericLoggerp, "marpaESLIFGrammar_grammarshowscriptb failure, %s", strerror(errno));
     goto err;
   }
   GENERICLOGGER_INFO (marpaESLIFOption.genericLoggerp, "-------------------------");
@@ -340,8 +340,8 @@ int main() {
   }
 
   /* Grammar script */
-  if (! marpaESLIFGrammar_grammarshowscripb(marpaESLIFGrammarp, &grammarscripts)) {
-    GENERICLOGGER_ERRORF(marpaESLIFOption.genericLoggerp, "marpaESLIFGrammar_grammarshowscripb failure, %s", strerror(errno));
+  if (! marpaESLIFGrammar_grammarshowscriptb(marpaESLIFGrammarp, &grammarscripts)) {
+    GENERICLOGGER_ERRORF(marpaESLIFOption.genericLoggerp, "marpaESLIFGrammar_grammarshowscriptb failure, %s", strerror(errno));
     goto err;
   }
   GENERICLOGGER_INFO (marpaESLIFOption.genericLoggerp, "-------------------------");

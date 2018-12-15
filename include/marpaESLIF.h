@@ -78,7 +78,8 @@ typedef enum marpaESLIFValueType {
   MARPAESLIF_VALUE_TYPE_PTR,
   MARPAESLIF_VALUE_TYPE_ARRAY,
   MARPAESLIF_VALUE_TYPE_BOOL,
-  MARPAESLIF_VALUE_TYPE_STRING
+  MARPAESLIF_VALUE_TYPE_STRING,
+  MARPAESLIF_VALUE_TYPE_ORDEREDCOLLECTION
 } marpaESLIFValueType_t;
 
 typedef short (*marpaESLIFValueRuleCallback_t)(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
@@ -93,31 +94,33 @@ typedef marpaESLIFValueFreeCallback_t   (*marpaESLIFValueFreeActionResolver_t)(v
 /* The representation returns a sequence of bytes and is appended AS-IS */
 /* It is legal to return NULL in *inputcpp or 0 in *inputlp: representation will be ignored */
 typedef short (*marpaESLIFRepresentation_t)(void *userDatavp, marpaESLIFValueResult_t *marpaESLIFValueResultp, char **inputcpp, size_t *inputlp);
-typedef char                                                                                                         marpaESLIFValueResultChar_t;
-typedef short                                                                                                        marpaESLIFValueResultShort_t;
-typedef int                                                                                                          marpaESLIFValueResultInt_t;
-typedef long                                                                                                         marpaESLIFValueResultLong_t;
-typedef float                                                                                                        marpaESLIFValueResultFloat_t;
-typedef double                                                                                                       marpaESLIFValueResultDouble_t;
-typedef struct marpaESLIFValueResultPtr    { void          *p; short shallowb; }                                     marpaESLIFValueResultPtr_t;
-typedef struct marpaESLIFValueResultArray  { char          *p; short shallowb; size_t sizel; }                       marpaESLIFValueResultArray_t;
-typedef enum { MARPAESLIFVALUERESULTBOOL_FALSE = 0, MARPAESLIFVALUERESULTBOOL_TRUE = 1 }                                     marpaESLIFValueResultBool_t;
-typedef struct marpaESLIFValueResultString { unsigned char *p; short shallowb; size_t sizel; char *encodingasciis; } marpaESLIFValueResultString_t;
+typedef char                                                                                                                               marpaESLIFValueResultChar_t;
+typedef short                                                                                                                              marpaESLIFValueResultShort_t;
+typedef int                                                                                                                                marpaESLIFValueResultInt_t;
+typedef long                                                                                                                               marpaESLIFValueResultLong_t;
+typedef float                                                                                                                              marpaESLIFValueResultFloat_t;
+typedef double                                                                                                                             marpaESLIFValueResultDouble_t;
+typedef struct marpaESLIFValueResultPtr               { void                     *p; short shallowb; }                                     marpaESLIFValueResultPtr_t;
+typedef struct marpaESLIFValueResultArray             { char                     *p; short shallowb; size_t sizel; }                       marpaESLIFValueResultArray_t;
+typedef enum { MARPAESLIFVALUERESULTBOOL_FALSE = 0, MARPAESLIFVALUERESULTBOOL_TRUE = 1 }                                                   marpaESLIFValueResultBool_t;
+typedef struct marpaESLIFValueResultString            { unsigned char            *p; short shallowb; size_t sizel; char *encodingasciis; } marpaESLIFValueResultString_t;
+typedef struct marpaESLIFValueResultOrderedCollection { marpaESLIFValueResult_t **p; short shallowb; size_t sizel; }                       marpaESLIFValueResultOrderedCollection_t;
 struct marpaESLIFValueResult {
   void                      *contextp;          /* Free value meaningful only to the user */
   marpaESLIFRepresentation_t representationp;   /* How a user-land alternative is represented if it was in the input */
   marpaESLIFValueType_t      type;              /* Type for tagging the following union */
   union {
-    marpaESLIFValueResultChar_t   c;            /* Value is a char */
-    marpaESLIFValueResultShort_t  b;            /* Value is a short */
-    marpaESLIFValueResultInt_t    i;            /* Value is an int */
-    marpaESLIFValueResultLong_t   l;            /* Value is a long */
-    marpaESLIFValueResultFloat_t  f;            /* Value is a float */
-    marpaESLIFValueResultDouble_t d;            /* Value is a double */
-    marpaESLIFValueResultPtr_t    p;            /* Value is a pointer */
-    marpaESLIFValueResultArray_t  a;            /* Value is an array */
-    marpaESLIFValueResultBool_t   y;            /* Value is a boolean */
-    marpaESLIFValueResultString_t s;            /* Value is a string */
+    marpaESLIFValueResultChar_t              c; /* Value is a char */
+    marpaESLIFValueResultShort_t             b; /* Value is a short */
+    marpaESLIFValueResultInt_t               i; /* Value is an int */
+    marpaESLIFValueResultLong_t              l; /* Value is a long */
+    marpaESLIFValueResultFloat_t             f; /* Value is a float */
+    marpaESLIFValueResultDouble_t            d; /* Value is a double */
+    marpaESLIFValueResultPtr_t               p; /* Value is a pointer */
+    marpaESLIFValueResultArray_t             a; /* Value is an array */
+    marpaESLIFValueResultBool_t              y; /* Value is a boolean */
+    marpaESLIFValueResultString_t            s; /* Value is a string */
+    marpaESLIFValueResultOrderedCollection_t o; /* Value is an ordered collection of values */
   } u;
 };
 
@@ -129,29 +132,31 @@ typedef struct marpaESLIFAlternative {
 } marpaESLIFAlternative_t;
 
 /* Value result transformer helper */
-typedef short (*marpaESLIFValueResultTransformUndef_t)(void *userDatavp, void *contextp);
-typedef short (*marpaESLIFValueResultTransformChar_t)(void *userDatavp, void *contextp, marpaESLIFValueResultChar_t c);
-typedef short (*marpaESLIFValueResultTransformShort_t)(void *userDatavp, void *contextp, marpaESLIFValueResultShort_t b);
-typedef short (*marpaESLIFValueResultTransformInt_t)(void *userDatavp, void *contextp, marpaESLIFValueResultInt_t i);
-typedef short (*marpaESLIFValueResultTransformLong_t)(void *userDatavp, void *contextp, marpaESLIFValueResultLong_t l);
-typedef short (*marpaESLIFValueResultTransformFloat_t)(void *userDatavp, void *contextp, marpaESLIFValueResultFloat_t f);
-typedef short (*marpaESLIFValueResultTransformDouble_t)(void *userDatavp, void *contextp, marpaESLIFValueResultDouble_t d);
-typedef short (*marpaESLIFValueResultTransformPtr_t)(void *userDatavp, void *contextp, marpaESLIFValueResultPtr_t p);
-typedef short (*marpaESLIFValueResultTransformArray_t)(void *userDatavp, void *contextp, marpaESLIFValueResultArray_t a);
-typedef short (*marpaESLIFValueResultTransformBool_t)(void *userDatavp, void *contextp, marpaESLIFValueResultBool_t b);
-typedef short (*marpaESLIFValueResultTransformString_t)(void *userDatavp, void *contextp, marpaESLIFValueResultString_t s);
+typedef short (*marpaESLIFValueResultTransformUndef_t)(marpaESLIFValue_t *marpaESLIFValuep, void *userDatavp, void *contextp);
+typedef short (*marpaESLIFValueResultTransformChar_t)(marpaESLIFValue_t *marpaESLIFValuep, void *userDatavp, void *contextp, marpaESLIFValueResultChar_t c);
+typedef short (*marpaESLIFValueResultTransformShort_t)(marpaESLIFValue_t *marpaESLIFValuep, void *userDatavp, void *contextp, marpaESLIFValueResultShort_t b);
+typedef short (*marpaESLIFValueResultTransformInt_t)(marpaESLIFValue_t *marpaESLIFValuep, void *userDatavp, void *contextp, marpaESLIFValueResultInt_t i);
+typedef short (*marpaESLIFValueResultTransformLong_t)(marpaESLIFValue_t *marpaESLIFValuep, void *userDatavp, void *contextp, marpaESLIFValueResultLong_t l);
+typedef short (*marpaESLIFValueResultTransformFloat_t)(marpaESLIFValue_t *marpaESLIFValuep, void *userDatavp, void *contextp, marpaESLIFValueResultFloat_t f);
+typedef short (*marpaESLIFValueResultTransformDouble_t)(marpaESLIFValue_t *marpaESLIFValuep, void *userDatavp, void *contextp, marpaESLIFValueResultDouble_t d);
+typedef short (*marpaESLIFValueResultTransformPtr_t)(marpaESLIFValue_t *marpaESLIFValuep, void *userDatavp, void *contextp, marpaESLIFValueResultPtr_t p);
+typedef short (*marpaESLIFValueResultTransformArray_t)(marpaESLIFValue_t *marpaESLIFValuep, void *userDatavp, void *contextp, marpaESLIFValueResultArray_t a);
+typedef short (*marpaESLIFValueResultTransformBool_t)(marpaESLIFValue_t *marpaESLIFValuep, void *userDatavp, void *contextp, marpaESLIFValueResultBool_t b);
+typedef short (*marpaESLIFValueResultTransformString_t)(marpaESLIFValue_t *marpaESLIFValuep, void *userDatavp, void *contextp, marpaESLIFValueResultString_t s);
+typedef short (*marpaESLIFValueResultTransformOrderedCollection_t)(marpaESLIFValue_t *marpaESLIFValuep, void *userDatavp, void *contextp, marpaESLIFValueResultOrderedCollection_t l);
 typedef struct marpaESLIFValueResultTransform {
-  marpaESLIFValueResultTransformUndef_t undefTransformerp;
-  marpaESLIFValueResultTransformChar_t charTransformerp;
-  marpaESLIFValueResultTransformShort_t shortTransformerp;
-  marpaESLIFValueResultTransformInt_t intTransformerp;
-  marpaESLIFValueResultTransformLong_t longTransformerp;
-  marpaESLIFValueResultTransformFloat_t floatTransformerp;
-  marpaESLIFValueResultTransformDouble_t doubleTransformerp;
-  marpaESLIFValueResultTransformPtr_t ptrTransformerp;
-  marpaESLIFValueResultTransformArray_t arrayTransformerp;
-  marpaESLIFValueResultTransformBool_t boolTransformerp;
-  marpaESLIFValueResultTransformString_t stringTransformerp;
+  marpaESLIFValueResultTransformUndef_t             undefTransformerp;
+  marpaESLIFValueResultTransformChar_t              charTransformerp;
+  marpaESLIFValueResultTransformShort_t             shortTransformerp;
+  marpaESLIFValueResultTransformInt_t               intTransformerp;
+  marpaESLIFValueResultTransformLong_t              longTransformerp;
+  marpaESLIFValueResultTransformFloat_t             floatTransformerp;
+  marpaESLIFValueResultTransformDouble_t            doubleTransformerp;
+  marpaESLIFValueResultTransformPtr_t               ptrTransformerp;
+  marpaESLIFValueResultTransformArray_t             arrayTransformerp;
+  marpaESLIFValueResultTransformBool_t              boolTransformerp;
+  marpaESLIFValueResultTransformString_t            stringTransformerp;
+  marpaESLIFValueResultTransformOrderedCollection_t orderedCollectionTransformerp;
 } marpaESLIFValueResultTransform_t;
 
 typedef struct marpaESLIFValueOption {

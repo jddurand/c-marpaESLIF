@@ -623,17 +623,18 @@ static jobject marpaESLIFRuleProperties(JNIEnv *envp, marpaESLIFRuleProperty_t *
 static jobject marpaESLIFSymbolProperties(JNIEnv *envp, marpaESLIFSymbolProperty_t *symbolPropertyp);
 static short marpaESLIFGetObjectp(marpaESLIFValueContext_t *marpaESLIFValueContextp, marpaESLIFValue_t *marpaESLIFValuep, int stackindicei, char *bytep, size_t bytel, marpaESLIFValueResult_t *marpaESLIFValueResultp);
 /* marpaESLIFValueResult transformers */
-static short                           marpaESLIF_TransformUndef(void *userDatavp, void *contextp);
-static short                           marpaESLIF_TransformChar(void *userDatavp, void *contextp, marpaESLIFValueResultChar_t c);
-static short                           marpaESLIF_TransformShort(void *userDatavp, void *contextp, marpaESLIFValueResultShort_t b);
-static short                           marpaESLIF_TransformInt(void *userDatavp, void *contextp, marpaESLIFValueResultInt_t i);
-static short                           marpaESLIF_TransformLong(void *userDatavp, void *contextp, marpaESLIFValueResultLong_t l);
-static short                           marpaESLIF_TransformFloat(void *userDatavp, void *contextp, marpaESLIFValueResultFloat_t f);
-static short                           marpaESLIF_TransformDouble(void *userDatavp, void *contextp, marpaESLIFValueResultDouble_t d);
-static short                           marpaESLIF_TransformPtr(void *userDatavp, void *contextp, marpaESLIFValueResultPtr_t p);
-static short                           marpaESLIF_TransformArray(void *userDatavp, void *contextp, marpaESLIFValueResultArray_t a);
-static short                           marpaESLIF_TransformBool(void *userDatavp, void *contextp, marpaESLIFValueResultBool_t y);
-static short                           marpaESLIF_TransformString(void *userDatavp, void *contextp, marpaESLIFValueResultString_t s);
+static short                           marpaESLIF_TransformUndef(marpaESLIFValue_t *marpaESLIFValuep, void *userDatavp, void *contextp);
+static short                           marpaESLIF_TransformChar(marpaESLIFValue_t *marpaESLIFValuep, void *userDatavp, void *contextp, marpaESLIFValueResultChar_t c);
+static short                           marpaESLIF_TransformShort(marpaESLIFValue_t *marpaESLIFValuep, void *userDatavp, void *contextp, marpaESLIFValueResultShort_t b);
+static short                           marpaESLIF_TransformInt(marpaESLIFValue_t *marpaESLIFValuep, void *userDatavp, void *contextp, marpaESLIFValueResultInt_t i);
+static short                           marpaESLIF_TransformLong(marpaESLIFValue_t *marpaESLIFValuep, void *userDatavp, void *contextp, marpaESLIFValueResultLong_t l);
+static short                           marpaESLIF_TransformFloat(marpaESLIFValue_t *marpaESLIFValuep, void *userDatavp, void *contextp, marpaESLIFValueResultFloat_t f);
+static short                           marpaESLIF_TransformDouble(marpaESLIFValue_t *marpaESLIFValuep, void *userDatavp, void *contextp, marpaESLIFValueResultDouble_t d);
+static short                           marpaESLIF_TransformPtr(marpaESLIFValue_t *marpaESLIFValuep, void *userDatavp, void *contextp, marpaESLIFValueResultPtr_t p);
+static short                           marpaESLIF_TransformArray(marpaESLIFValue_t *marpaESLIFValuep, void *userDatavp, void *contextp, marpaESLIFValueResultArray_t a);
+static short                           marpaESLIF_TransformBool(marpaESLIFValue_t *marpaESLIFValuep, void *userDatavp, void *contextp, marpaESLIFValueResultBool_t y);
+static short                           marpaESLIF_TransformString(marpaESLIFValue_t *marpaESLIFValuep, void *userDatavp, void *contextp, marpaESLIFValueResultString_t s);
+static short                           marpaESLIF_TransformOrderedCollection(marpaESLIFValue_t *marpaESLIFValuep, void *userDatavp, void *contextp, marpaESLIFValueResultOrderedCollection_t o);
 static jstring                         marpaESLIF_marpaESLIFStringToJavap(JNIEnv *envp, marpaESLIFString_t *marpaESLIFStringp);
 static jstring                         marpaESLIF_marpaESLIFASCIIToJavap(JNIEnv *envp, char *asciis);
 static jstring                         marpaESLIF_marpaESLIFActionToJavap(JNIEnv *envp, marpaESLIFAction_t *actionp);
@@ -650,7 +651,8 @@ static marpaESLIFValueResultTransform_t marpaESLIFValueResultTransformDefault = 
   marpaESLIF_TransformPtr,
   marpaESLIF_TransformArray,
   marpaESLIF_TransformBool,
-  marpaESLIF_TransformString
+  marpaESLIF_TransformString,
+  marpaESLIF_TransformOrderedCollection
 };
 
 /* --------------- */
@@ -4888,7 +4890,7 @@ static short marpaESLIFGetObjectp(marpaESLIFValueContext_t *marpaESLIFValueConte
 }
 
 /*****************************************************************************/
-static short marpaESLIF_TransformUndef(void *userDatavp, void *contextp)
+static short marpaESLIF_TransformUndef(marpaESLIFValue_t *marpaESLIFValuep, void *userDatavp, void *contextp)
 /*****************************************************************************/
 {
   static const char        *funcs                   = "marpaESLIF_TransformUndef";
@@ -4900,7 +4902,7 @@ static short marpaESLIF_TransformUndef(void *userDatavp, void *contextp)
 }
 
 /*****************************************************************************/
-static short marpaESLIF_TransformChar(void *userDatavp, void *contextp, marpaESLIFValueResultChar_t c)
+static short marpaESLIF_TransformChar(marpaESLIFValue_t *marpaESLIFValuep, void *userDatavp, void *contextp, marpaESLIFValueResultChar_t c)
 /*****************************************************************************/
 {
   static const char        *funcs                   = "marpaESLIF_TransformChar";
@@ -4931,7 +4933,7 @@ static short marpaESLIF_TransformChar(void *userDatavp, void *contextp, marpaESL
 }
 
 /*****************************************************************************/
-static short marpaESLIF_TransformShort(void *userDatavp, void *contextp, marpaESLIFValueResultShort_t b)
+static short marpaESLIF_TransformShort(marpaESLIFValue_t *marpaESLIFValuep, void *userDatavp, void *contextp, marpaESLIFValueResultShort_t b)
 /*****************************************************************************/
 {
   static const char        *funcs                   = "marpaESLIF_TransformShort";
@@ -4961,7 +4963,7 @@ static short marpaESLIF_TransformShort(void *userDatavp, void *contextp, marpaES
 }
 
 /*****************************************************************************/
-static short marpaESLIF_TransformInt(void *userDatavp, void *contextp, marpaESLIFValueResultInt_t i)
+static short marpaESLIF_TransformInt(marpaESLIFValue_t *marpaESLIFValuep, void *userDatavp, void *contextp, marpaESLIFValueResultInt_t i)
 /*****************************************************************************/
 {
   static const char        *funcs                   = "marpaESLIF_TransformInt";
@@ -4991,7 +4993,7 @@ static short marpaESLIF_TransformInt(void *userDatavp, void *contextp, marpaESLI
 }
 
 /*****************************************************************************/
-static short marpaESLIF_TransformLong(void *userDatavp, void *contextp, marpaESLIFValueResultLong_t l)
+static short marpaESLIF_TransformLong(marpaESLIFValue_t *marpaESLIFValuep, void *userDatavp, void *contextp, marpaESLIFValueResultLong_t l)
 /*****************************************************************************/
 {
   static const char        *funcs                   = "marpaESLIF_TransformLong";
@@ -5021,7 +5023,7 @@ static short marpaESLIF_TransformLong(void *userDatavp, void *contextp, marpaESL
 }
 
 /*****************************************************************************/
-static short marpaESLIF_TransformFloat(void *userDatavp, void *contextp, marpaESLIFValueResultFloat_t f)
+static short marpaESLIF_TransformFloat(marpaESLIFValue_t *marpaESLIFValuep, void *userDatavp, void *contextp, marpaESLIFValueResultFloat_t f)
 /*****************************************************************************/
 {
   static const char        *funcs                   = "marpaESLIF_TransformFloat";
@@ -5051,7 +5053,7 @@ static short marpaESLIF_TransformFloat(void *userDatavp, void *contextp, marpaES
 }
 
 /*****************************************************************************/
-static short marpaESLIF_TransformDouble(void *userDatavp, void *contextp, marpaESLIFValueResultDouble_t d)
+static short marpaESLIF_TransformDouble(marpaESLIFValue_t *marpaESLIFValuep, void *userDatavp, void *contextp, marpaESLIFValueResultDouble_t d)
 /*****************************************************************************/
 {
   static const char        *funcs                   = "marpaESLIF_TransformDouble";
@@ -5081,7 +5083,7 @@ static short marpaESLIF_TransformDouble(void *userDatavp, void *contextp, marpaE
 }
 
 /*****************************************************************************/
-static short marpaESLIF_TransformPtr(void *userDatavp, void *contextp, marpaESLIFValueResultPtr_t p)
+static short marpaESLIF_TransformPtr(marpaESLIFValue_t *marpaESLIFValuep, void *userDatavp, void *contextp, marpaESLIFValueResultPtr_t p)
 /*****************************************************************************/
 {
   static const char        *funcs                   = "marpaESLIF_TransformPtr";
@@ -5095,7 +5097,7 @@ static short marpaESLIF_TransformPtr(void *userDatavp, void *contextp, marpaESLI
     objectp = (*envp)->NewLocalRef(envp, (jobject) p.p);
   } else {
     /* This is a pointer coming from another source - we express that as a jlong */
-    return marpaESLIF_TransformLong(userDatavp, contextp, (long) p.p);
+    return marpaESLIF_TransformLong(marpaESLIFValuep, userDatavp, contextp, (long) p.p);
   }
   if (objectp == NULL) {
     goto err;
@@ -5113,7 +5115,7 @@ static short marpaESLIF_TransformPtr(void *userDatavp, void *contextp, marpaESLI
 }
 
 /*****************************************************************************/
-static short marpaESLIF_TransformArray(void *userDatavp, void *contextp, marpaESLIFValueResultArray_t a)
+static short marpaESLIF_TransformArray(marpaESLIFValue_t *marpaESLIFValuep, void *userDatavp, void *contextp, marpaESLIFValueResultArray_t a)
 /*****************************************************************************/
 {
   static const char        *funcs                   = "marpaESLIF_TransformArray";
@@ -5148,7 +5150,7 @@ static short marpaESLIF_TransformArray(void *userDatavp, void *contextp, marpaES
 }
 
 /*****************************************************************************/
-static short marpaESLIF_TransformBool(void *userDatavp, void *contextp, marpaESLIFValueResultBool_t y)
+static short marpaESLIF_TransformBool(marpaESLIFValue_t *marpaESLIFValuep, void *userDatavp, void *contextp, marpaESLIFValueResultBool_t y)
 /*****************************************************************************/
 {
   static const char        *funcs                   = "marpaESLIF_TransformBool";
@@ -5179,31 +5181,24 @@ static short marpaESLIF_TransformBool(void *userDatavp, void *contextp, marpaESL
 }
 
 /*****************************************************************************/
-static short marpaESLIF_TransformString(void *userDatavp, void *contextp, marpaESLIFValueResultString_t s)
+static short marpaESLIF_TransformString(marpaESLIFValue_t *marpaESLIFValuep, void *userDatavp, void *contextp, marpaESLIFValueResultString_t s)
 /*****************************************************************************/
 {
   static const char        *funcs                   = "marpaESLIF_TransformString";
   marpaESLIFValueContext_t *marpaESLIFValueContextp = (marpaESLIFValueContext_t *) userDatavp;
   JNIEnv                   *envp                    = marpaESLIFValueContextp->envp;
+  marpaESLIF_t             *marpaESLIFp             = marpaESLIFGrammar_eslifp(marpaESLIFRecognizer_grammarp(marpaESLIFValue_recognizerp(marpaESLIFValuep)));
   jbyteArray                byteArrayp              = NULL;
-  jobject                   eslifGrammarp           = marpaESLIFValueContextp->eslifGrammarp;
   char                     *utf8s                   = NULL;
   char                     *utf8noboms;
   size_t                    dstl;
   size_t                    dstnoboml;
-  marpaESLIF_t             *marpaESLIFp;
   short                     rcb;
   jobject                   objectp;
 
   if (s.p != NULL) {
     /* Whatever the encoding, marpaESLIF_charconv() is used to produce UTF-8 */
-    /* Take care, only eslifGrammarp is guaranteed to be not NULL */
-    if (! ESLIFGrammar_contextb(envp, eslifGrammarp, eslifGrammarp, MARPAESLIF_ESLIFGRAMMAR_CLASS_getLoggerInterfacep_METHODP,
-				NULL /* genericLoggerpp */,
-				&marpaESLIFp,
-				NULL /* marpaESLIFGrammarpp */)) {
-      goto err;
-    }
+
     /* The big advantage of marpaESLIF_charconvb() is that s.encodingasciis == NULL is supported -; Then marpaESLIF_charconv() will guess. */
     utf8s = marpaESLIF_charconvb(marpaESLIFp, "UTF-8", s.encodingasciis, s.p, s.sizel, &dstl);
     if (utf8s == NULL) {
@@ -5255,6 +5250,45 @@ static short marpaESLIF_TransformString(void *userDatavp, void *contextp, marpaE
       (*envp)->DeleteLocalRef(envp, byteArrayp);
     }
   }
+  return rcb;
+}
+
+/*****************************************************************************/
+static short marpaESLIF_TransformOrderedCollection(marpaESLIFValue_t *marpaESLIFValuep, void *userDatavp, void *contextp, marpaESLIFValueResultOrderedCollection_t o)
+/*****************************************************************************/
+{
+  static const char        *funcs                   = "marpaESLIF_TransformOrderedCollection";
+  marpaESLIFValueContext_t *marpaESLIFValueContextp = (marpaESLIFValueContext_t *) userDatavp;
+  JNIEnv                   *envp                    = marpaESLIFValueContextp->envp;
+  jobjectArray              list;
+  short                     rcb;
+  size_t                    collectionl;
+
+  /* This is very similar to marpaESLIFValueRuleCallback() where we create an array of objects */
+  if ((*envp)->EnsureLocalCapacity(envp, (jint) o.sizel) != 0) {
+    RAISEEXCEPTION(envp, "EnsureLocalCapacity failure");
+  }
+
+  list = (*envp)->NewObjectArray(envp, (jsize) o.sizel, JAVA_LANG_OBJECT_CLASSP, NULL /* initialElement */);
+  if (list == NULL) {
+    RAISEEXCEPTION(envp, "NewObjectArray failure");
+  }
+
+  for (collectionl = 0; collectionl < o.sizel; collectionl++) {
+    if (! marpaESLIFGetObjectp(marpaESLIFValueContextp, marpaESLIFValuep, -1 /* stackindicei */, NULL /* bytep */, 0 /* bytel */, o.p[collectionl])) {
+      goto err;
+    }
+    (*envp)->SetObjectArrayElement(envp, list, (jsize) collectionl, marpaESLIFValueContextp->objectp);
+  }
+
+  marpaESLIFValueContextp->objectp = list;
+  rcb = 1;
+  goto done;
+
+ err:
+  rcb = 0;
+
+ done:
   return rcb;
 }
 
