@@ -5097,7 +5097,11 @@ static short marpaESLIF_TransformPtr(marpaESLIFValue_t *marpaESLIFValuep, void *
     objectp = (*envp)->NewLocalRef(envp, (jobject) p.p);
   } else {
     /* This is a pointer coming from another source - we express that as a jlong */
-    return marpaESLIF_TransformLong(marpaESLIFValuep, userDatavp, contextp, (long) p.p);
+    if (JAVA_LANG_LONG_CLASS_valueOf_METHODP != NULL) {
+      objectp = (*envp)->CallStaticObjectMethod(envp, JAVA_LANG_LONG_CLASSP, JAVA_LANG_LONG_CLASS_valueOf_METHODP, PTR_TO_JLONG(p.p));
+    } else {
+      objectp = (*envp)->NewObject(envp, JAVA_LANG_LONG_CLASSP, JAVA_LANG_LONG_CLASS_init_METHODP, PTR_TO_JLONG(p.p));
+    }
   }
   if (objectp == NULL) {
     goto err;
