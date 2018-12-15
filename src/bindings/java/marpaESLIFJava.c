@@ -5124,12 +5124,7 @@ static short marpaESLIF_TransformArray(marpaESLIFValue_t *marpaESLIFValuep, void
   short                     rcb;
   jbyteArray                byteArrayp;
 
-  if (contextp == MARPAESLIF_JNI_CONTEXT) {
-    RAISEEXCEPTION(envp, "Got ARRAY on the stack that pretend to come from java");
-  } else {
-    /* This is a pointer coming from another source */
-    byteArrayp = (*envp)->NewByteArray(envp, (jsize) a.sizel);
-  }
+  byteArrayp = (*envp)->NewByteArray(envp, (jsize) a.sizel);
   if (byteArrayp == NULL) {
     goto err;
   }
