@@ -479,18 +479,22 @@ static short _marpaESLIFValue_lua_actionb(void *userDatavp, marpaESLIFValue_t *m
     MARPAESLIF_ERROR(marpaESLIFValuep->marpaESLIFp, "Lua bindings returned no rule callback");
     goto err; /* Lua will shutdown anyway */
   }
-  /* Take care about transformers that are specific to lua */
-  transformerBackupp = marpaESLIFValuep->marpaESLIFValueOption.transformerp;
-  marpaESLIFValuep->marpaESLIFValueOption.transformerp = &marpaESLIFLuaValueResultTransformDefault;
-  /* And about userDatavp that is marpaESLIFLuaValueContextp in lua bindings */
-  userDataBackupvp = marpaESLIFValuep->marpaESLIFValueOption.userDatavp;
-  marpaESLIFValuep->marpaESLIFValueOption.userDatavp = marpaESLIFLuaValueContextp;
 
-  rcb = ruleCallbackp((void *) marpaESLIFLuaValueContextp /* userDatavp */, marpaESLIFValuep, arg0i, argni, resulti, nullableb);
+  {
+    /* Take care about transformers that are specific to lua */
+    transformerBackupp = marpaESLIFValuep->marpaESLIFValueOption.transformerp;
+    marpaESLIFValuep->marpaESLIFValueOption.transformerp = &marpaESLIFLuaValueResultTransformDefault;
+    /* And about userDatavp that is marpaESLIFLuaValueContextp in lua bindings */
+    userDataBackupvp = marpaESLIFValuep->marpaESLIFValueOption.userDatavp;
+    marpaESLIFValuep->marpaESLIFValueOption.userDatavp = marpaESLIFLuaValueContextp;
+
+    rcb = ruleCallbackp((void *) marpaESLIFLuaValueContextp /* userDatavp */, marpaESLIFValuep, arg0i, argni, resulti, nullableb);
+
+    marpaESLIFValuep->marpaESLIFValueOption.transformerp = transformerBackupp;
+    marpaESLIFValuep->marpaESLIFValueOption.userDatavp = userDataBackupvp;
+  }
+
   if (! rcb) goto err;
-
-  marpaESLIFValuep->marpaESLIFValueOption.transformerp = transformerBackupp;
-  marpaESLIFValuep->marpaESLIFValueOption.userDatavp = userDataBackupvp;
 
   goto done;
 
@@ -544,18 +548,21 @@ static short _marpaESLIFValue_lua_symbolb(void *userDatavp, marpaESLIFValue_t *m
     MARPAESLIF_ERROR(marpaESLIFValuep->marpaESLIFp, "Lua bindings returned no symbol callback");
     goto err; /* Lua will shutdown anyway */
   }
-  /* Take care about transformers that are specific to lua */
-  transformerBackupp = marpaESLIFValuep->marpaESLIFValueOption.transformerp;
-  marpaESLIFValuep->marpaESLIFValueOption.transformerp = &marpaESLIFLuaValueResultTransformDefault;
-  /* And about userDatavp that is marpaESLIFLuaValueContextp in lua bindings */
-  userDataBackupvp = marpaESLIFValuep->marpaESLIFValueOption.userDatavp;
-  marpaESLIFValuep->marpaESLIFValueOption.userDatavp = marpaESLIFLuaValueContextp;
+  {
+    /* Take care about transformers that are specific to lua */
+    transformerBackupp = marpaESLIFValuep->marpaESLIFValueOption.transformerp;
+    marpaESLIFValuep->marpaESLIFValueOption.transformerp = &marpaESLIFLuaValueResultTransformDefault;
+    /* And about userDatavp that is marpaESLIFLuaValueContextp in lua bindings */
+    userDataBackupvp = marpaESLIFValuep->marpaESLIFValueOption.userDatavp;
+    marpaESLIFValuep->marpaESLIFValueOption.userDatavp = marpaESLIFLuaValueContextp;
 
-  rcb = symbolCallbackp((void *) marpaESLIFLuaValueContextp /* userDatavp */, marpaESLIFValuep, bytep, bytel, resulti);
+    rcb = symbolCallbackp((void *) marpaESLIFLuaValueContextp /* userDatavp */, marpaESLIFValuep, bytep, bytel, resulti);
+
+    marpaESLIFValuep->marpaESLIFValueOption.transformerp = transformerBackupp;
+    marpaESLIFValuep->marpaESLIFValueOption.userDatavp = userDataBackupvp;
+  }
+
   if (! rcb) goto err;
-
-  marpaESLIFValuep->marpaESLIFValueOption.transformerp = transformerBackupp;
-  marpaESLIFValuep->marpaESLIFValueOption.userDatavp = userDataBackupvp;
 
   goto done;
 
