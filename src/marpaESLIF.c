@@ -14752,6 +14752,9 @@ static short _marpaESLIFRecognizer_value_validb(marpaESLIFRecognizer_t *marpaESL
     break;
   case MARPAESLIF_VALUE_TYPE_STRING:
     break;
+  case MARPAESLIF_VALUE_TYPE_ORDEREDCOLLECTION:
+    /* TO DO : it is illegal to have a recursive collection */
+    break;
   default:
     MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "marpaESLIFValueResultp->type is not ARRAY (got %d, %s)", marpaESLIFValueResultp->type, _marpaESLIF_value_types(marpaESLIFValueResultp->type));
     goto err;

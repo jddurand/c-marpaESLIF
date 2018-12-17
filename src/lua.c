@@ -942,6 +942,48 @@ static short marpaESLIFLua_lua_touserdata(void **rcpp, lua_State *L, int idx)
 }
 
 /****************************************************************************/
+static short marpaESLIFLua_lua_tointeger(lua_Integer *rcip, lua_State *L, int idx)
+/****************************************************************************/
+{
+  return ! luaunpanic_tointeger(rcip, L, idx);
+}
+
+/****************************************************************************/
+static short marpaESLIFLua_lua_tointegerx(lua_Integer *rcip, lua_State *L, int idx, int *isnum)
+/****************************************************************************/
+{
+  return ! luaunpanic_tointegerx(rcip, L, idx, isnum);
+}
+
+/****************************************************************************/
+static short marpaESLIFLua_lua_tonumber(lua_Number *rcdp, lua_State *L, int idx)
+/****************************************************************************/
+{
+  return ! luaunpanic_tonumber(rcdp, L, idx);
+}
+
+/****************************************************************************/
+static short marpaESLIFLua_lua_tonumberx(lua_Number *rcdp, lua_State *L, int idx, int *isnum)
+/****************************************************************************/
+{
+  return ! luaunpanic_tonumberx(rcdp, L, idx, isnum);
+}
+
+/****************************************************************************/
+static short marpaESLIFLua_lua_toboolean(int *rcip, lua_State *L, int idx)
+/****************************************************************************/
+{
+  return ! luaunpanic_toboolean(rcip, L, idx);
+}
+
+/****************************************************************************/
+static short marpaESLIFLua_lua_tolstring(const char **rcpp, lua_State *L, int idx, size_t *len)
+/****************************************************************************/
+{
+  return ! luaunpanic_tolstring(rcpp, L, idx, len);
+}
+
+/****************************************************************************/
 static short _marpaESLIF_lua_representationb(void *userDatavp, marpaESLIFValueResult_t *marpaESLIFValueResultp, char **inputcpp, size_t *inputlp)
 /****************************************************************************/
 {
