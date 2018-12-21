@@ -15737,8 +15737,8 @@ static inline marpaESLIF_string_t *_marpaESLIF_string2utf8p(marpaESLIF_t *marpaE
 	/* can fail. We protect against this case in known situations. */
 	fromencodingasciis = stringp->encodingasciis;
 	if (fromencodingasciis == NULL) {
-	  p = stringp->bytep + stringp->bytel;
-	  maxp = stringp->bytep + stringp->bytel;
+	  p = stringp->bytep;
+	  maxp = p + stringp->bytel;
 	  utf8b = 1;
 	  while (p < maxp) {
 	    utf82ordi = _marpaESLIF_utf82ordi((PCRE2_SPTR8) p, &codepointi);
@@ -15746,6 +15746,7 @@ static inline marpaESLIF_string_t *_marpaESLIF_string2utf8p(marpaESLIF_t *marpaE
 	      utf8b = 0;
 	      break;
 	    }
+	    p += utf82ordi;
 	  }
 	  if (utf8b) {
 	    MARPAESLIF_TRACE(marpaESLIFp, funcs, "UTF-8 string detected using byte lookup");
