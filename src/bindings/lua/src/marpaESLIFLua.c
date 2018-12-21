@@ -614,7 +614,9 @@ static short marpaESLIFLua_lua_tolstring(const char **rcpp, lua_State *L, int id
     case LUA_TSTRING:                                                   \
       fprintf(stderr, "JDD CASE 04\n");                                 \
       if (! marpaESLIFLua_lua_tolstring(&_tmps, L, -1, &_tmpl)) goto err; \
-      fprintf(stderr, "JDD CASE 04 01\n");                                 \
+      /* Native type is LUA_TSTRING, so it is illegal to have a NULL value here */ \
+      /* We nevertheless handle this case by setting _eslifb to 0 */    \
+      fprintf(stderr, "JDD CASE 04 01\n");                              \
       if (_tmps != NULL) {                                              \
         /* Take care: _tmps may be garbage collected later */           \
         /* This is not important though because a string in Lua is */   \
