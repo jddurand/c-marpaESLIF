@@ -653,7 +653,23 @@ static short marpaESLIFLua_stack_setb(marpaESLIFLuaValueContext_t *marpaESLIFLua
         _eslifb = 0;                                                    \
       }                                                                 \
       break;                                                            \
+    case LUA_TTABLE:                                                    \
+      marpaESLIFLua_luaL_error(L, "LUA_TTABLE type not mapped");        \ /* TO DO */
+      goto err;                                                         \
+    case LUA_TFUNCTION:                                                 \
+      marpaESLIFLua_luaL_error(L, "LUA_TFUNCTION type not mapped");     \ /* TO DO */
+      goto err;                                                         \
+    case LUA_TUSERDATA:                                                 \
+      marpaESLIFLua_luaL_error(L, "LUA_TUSERDATA type not mapped");     \ /* TO DO */
+      goto err;                                                         \
+    case LUA_TTHREAD:                                                   \
+      marpaESLIFLua_luaL_error(L, "LUA_TTHREAD type not mapped");       \ /* TO DO */
+      goto err;                                                         \
+    case LUA_TLIGHTUSERDATA:                                            \
+      marpaESLIFLua_luaL_error(L, "LUA_TLIGHTUSERDATA type not mapped"); \ /* TO DO */
+      goto err;                                                         \
     default:                                                            \
+      marpaESLIFLua_luaL_errorf(L, "%d lua type not mapped", _typei);   \
       goto err;                                                         \
     }                                                                   \
   } while (0)
