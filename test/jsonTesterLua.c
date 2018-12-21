@@ -6,17 +6,18 @@
 #include <marpaESLIF.h>
 
 static short inputReaderb(void *userDatavp, char **inputsp, size_t *inputlp, short *eofbp, short *characterStreambp, char **encodingsp, size_t *encodinglp);
-static short transformUndefb(void *userDatavp, void *contextp);
-static short transformCharb(void *userDatavp, void *contextp, char c);
-static short transformShortb(void *userDatavp, void *contextp, short b);
-static short transformIntb(void *userDatavp, void *contextp, int i);
-static short transformLongb(void *userDatavp, void *contextp, long l);
-static short transformFloatb(void *userDatavp, void *contextp, float f);
-static short transformDoubleb(void *userDatavp, void *contextp, double d);
-static short transformPtrb(void *userDatavp, void *contextp, marpaESLIFValueResultPtr_t p);
-static short transformArrayb(void *userDatavp, void *contextp, marpaESLIFValueResultArray_t a);
-static short transformBoolb(void *userDatavp, void *contextp, marpaESLIFValueResultBool_t b);
-static short transformStringb(void *userDatavp, void *contextp, marpaESLIFValueResultString_t s);
+static short transformUndefb(marpaESLIFValue_t *marpaESLIFValuep, void *userDatavp, void *contextp);
+static short transformCharb(marpaESLIFValue_t *marpaESLIFValuep, void *userDatavp, void *contextp, char c);
+static short transformShortb(marpaESLIFValue_t *marpaESLIFValuep, void *userDatavp, void *contextp, short b);
+static short transformIntb(marpaESLIFValue_t *marpaESLIFValuep, void *userDatavp, void *contextp, int i);
+static short transformLongb(marpaESLIFValue_t *marpaESLIFValuep, void *userDatavp, void *contextp, long l);
+static short transformFloatb(marpaESLIFValue_t *marpaESLIFValuep, void *userDatavp, void *contextp, float f);
+static short transformDoubleb(marpaESLIFValue_t *marpaESLIFValuep, void *userDatavp, void *contextp, double d);
+static short transformPtrb(marpaESLIFValue_t *marpaESLIFValuep, void *userDatavp, void *contextp, marpaESLIFValueResultPtr_t p);
+static short transformArrayb(marpaESLIFValue_t *marpaESLIFValuep, void *userDatavp, void *contextp, marpaESLIFValueResultArray_t a);
+static short transformBoolb(marpaESLIFValue_t *marpaESLIFValuep, void *userDatavp, void *contextp, marpaESLIFValueResultBool_t b);
+static short transformStringb(marpaESLIFValue_t *marpaESLIFValuep, void *userDatavp, void *contextp, marpaESLIFValueResultString_t s);
+static short transformOrderedCollectionb(marpaESLIFValue_t *marpaESLIFValuep, void *userDatavp, void *contextp, marpaESLIFValueResultOrderedCollection_t l);
 
 static marpaESLIFValueResultTransform_t transformDefault = {
   transformUndefb,
@@ -65,8 +66,8 @@ const static char *dsl = "\n"
   "           | number                               action => ::convert[UTF-8] ##                             # ::shift (default action)\n"
   "           | object                               action => ::convert[UTF-8] ##                             # ::shift (default action)\n"
   "           | array                                action => ::convert[UTF-8] ##                             # ::shift (default action)\n"
-  "           | 'true'                               action         => ::true      # built-in true action\n"
-  "           | 'false'                              action         => ::false     # built-in false action\n"
+  "           | 'true'                               action => ::true      # built-in true action\n"
+  "           | 'false'                              action => ::false     # built-in false action\n"
   "           | 'null'\n"
   "\n"
   "# -----------\n"
@@ -78,7 +79,7 @@ const static char *dsl = "\n"
   "                                                  proper         => 1         # ... with no trailing separator\n"
   "                                                  hide-separator => 1         # ... and hide separator in the action\n"
   "                                                  \n"
-  "pairs    ::= string (':') value                   action         => ::lua->lua_pairs     # Returns [ string, value ]\n"
+  "pairs    ::= string (-':'-) value                 action         => ::lua->lua_pairs     # Returns [ string, value ]\n"
   "\n"
   "# -----------\n"
   "# JSON Arrays\n"
@@ -114,18 +115,18 @@ const static char *dsl = "\n"
   "# JSON String\n"
   "# -----------\n"
   "string     ::= '\"' discardOff chars '\"' discardOn action => ::copy[2]               # Only chars is of interest\n"
-  "discardOff ::=                                    action => ::undef                 # Nullable rule used to disable discard\n"
-  "discardOn  ::=                                    action => ::undef                 # Nullable rule used to enable discard\n"
+  "discardOff ::=                                      action => ::undef                 # Nullable rule used to disable discard\n"
+  "discardOn  ::=                                      action => ::undef                 # Nullable rule used to enable discard\n"
   "\n"
-  "event :discard[on]  = nulled discardOn                                                           # Implementation of discard disabing using reserved ':discard[on]' keyword\n"
-  "event :discard[off] = nulled discardOff                                                          # Implementation of discard enabling using reserved ':discard[off]' keyword\n"
+  "event :discard[on]  = nulled discardOn                                                # Implementation of discard disabing using reserved ':discard[on]' keyword\n"
+  "event :discard[off] = nulled discardOff                                               # Implementation of discard enabling using reserved ':discard[off]' keyword\n"
   "\n"
-  "chars   ::= filled                                                                               # ::shift (default action)\n"
-  "filled  ::= char+                                 action => ::concat                # Returns join('', char1, ..., charn)\n"
-  "chars   ::=                                       action => ::lua->lua_empty_string            # Prefering empty string instead of undef\n"
-  "char    ::= [^\"\\\\\\x00-\\x1F]                                                         # ::shift (default action) - take care PCRE2 [:cntrl:] includes DEL character\n"
-  "          | '\\\\' '\"'                              action => ::copy[1]               # Returns double quote, already ok in data\n"
-  "          | '\\\\' '\\\\'                             action => ::copy[1]               # Returns backslash, already ok in data\n"
+  "chars   ::= filled                                                                    # ::shift (default action)\n"
+  "filled  ::= char+                                   action => ::concat                # Returns join('', char1, ..., charn)\n"
+  "chars   ::=                                         action => ::lua->lua_empty_string # Prefering empty string instead of undef\n"
+  "char    ::= [^\"\\\\\\x00-\\x1F]                                                      # ::shift (default action) - take care PCRE2 [:cntrl:] includes DEL character\n"
+  "          | '\\\\' '\"'                             action => ::copy[1]               # Returns double quote, already ok in data\n"
+  "          | '\\\\' '\\\\'                           action => ::copy[1]               # Returns backslash, already ok in data\n"
   "          | '\\\\' '/'                              action => ::copy[1]               # Returns slash, already ok in data\n"
   "          | '\\\\' 'b'                              action => ::u8\"\\x{08}\"\n"
   "          | '\\\\' 'f'                              action => ::u8\"\\x{0C}\"\n"
@@ -196,6 +197,7 @@ const static char *dsl = "\n"
   "# Lua actions      \n"
   "# -----------------\n"
   "<luascript>\n"
+  "  io.stdout:setvbuf('no')\n"
   "  -----------------------------------\n"
   "  function lua_true(string)\n"
   "    return true\n"
@@ -542,7 +544,7 @@ static short inputReaderb(void *userDatavp, char **inputsp, size_t *inputlp, sho
 }
 
 /*****************************************************************************/
-static short transformUndefb(void *userDatavp, void *contextp)
+static short transformUndefb(marpaESLIFValue_t *marpaESLIFValuep, void *userDatavp, void *contextp)
 /*****************************************************************************/
 {
   valueContext_t *valueContextp = (valueContext_t *) userDatavp;
@@ -553,7 +555,7 @@ static short transformUndefb(void *userDatavp, void *contextp)
 }
 
 /*****************************************************************************/
-static short transformCharb(void *userDatavp, void *contextp, char c)
+static short transformCharb(marpaESLIFValue_t *marpaESLIFValuep, void *userDatavp, void *contextp, char c)
 /*****************************************************************************/
 {
   valueContext_t *valueContextp = (valueContext_t *) userDatavp;
@@ -564,7 +566,7 @@ static short transformCharb(void *userDatavp, void *contextp, char c)
 }
 
 /*****************************************************************************/
-static short transformShortb(void *userDatavp, void *contextp, short b)
+static short transformShortb(marpaESLIFValue_t *marpaESLIFValuep, void *userDatavp, void *contextp, short b)
 /*****************************************************************************/
 {
   valueContext_t *valueContextp = (valueContext_t *) userDatavp;
@@ -575,7 +577,7 @@ static short transformShortb(void *userDatavp, void *contextp, short b)
 }
 
 /*****************************************************************************/
-static short transformIntb(void *userDatavp, void *contextp, int i)
+static short transformIntb(marpaESLIFValue_t *marpaESLIFValuep, void *userDatavp, void *contextp, int i)
 /*****************************************************************************/
 {
   valueContext_t *valueContextp = (valueContext_t *) userDatavp;
@@ -586,7 +588,7 @@ static short transformIntb(void *userDatavp, void *contextp, int i)
 }
 
 /*****************************************************************************/
-static short transformLongb(void *userDatavp, void *contextp, long l)
+static short transformLongb(marpaESLIFValue_t *marpaESLIFValuep, void *userDatavp, void *contextp, long l)
 /*****************************************************************************/
 {
   valueContext_t *valueContextp = (valueContext_t *) userDatavp;
@@ -597,7 +599,7 @@ static short transformLongb(void *userDatavp, void *contextp, long l)
 }
 
 /*****************************************************************************/
-static short transformFloatb(void *userDatavp, void *contextp, float f)
+static short transformFloatb(marpaESLIFValue_t *marpaESLIFValuep, void *userDatavp, void *contextp, float f)
 /*****************************************************************************/
 {
   valueContext_t *valueContextp = (valueContext_t *) userDatavp;
@@ -608,7 +610,7 @@ static short transformFloatb(void *userDatavp, void *contextp, float f)
 }
 
 /*****************************************************************************/
-static short transformDoubleb(void *userDatavp, void *contextp, double d)
+static short transformDoubleb(marpaESLIFValue_t *marpaESLIFValuep, void *userDatavp, void *contextp, double d)
 /*****************************************************************************/
 {
   valueContext_t *valueContextp = (valueContext_t *) userDatavp;
@@ -619,7 +621,7 @@ static short transformDoubleb(void *userDatavp, void *contextp, double d)
 }
 
 /*****************************************************************************/
-static short transformPtrb(void *userDatavp, void *contextp, marpaESLIFValueResultPtr_t p)
+static short transformPtrb(marpaESLIFValue_t *marpaESLIFValuep, void *userDatavp, void *contextp, marpaESLIFValueResultPtr_t p)
 /*****************************************************************************/
 {
   valueContext_t *valueContextp = (valueContext_t *) userDatavp;
@@ -630,7 +632,7 @@ static short transformPtrb(void *userDatavp, void *contextp, marpaESLIFValueResu
 }
 
 /*****************************************************************************/
-static short transformArrayb(void *userDatavp, void *contextp, marpaESLIFValueResultArray_t a)
+static short transformArrayb(marpaESLIFValue_t *marpaESLIFValuep, void *userDatavp, void *contextp, marpaESLIFValueResultArray_t a)
 /*****************************************************************************/
 {
   valueContext_t *valueContextp = (valueContext_t *) userDatavp;
@@ -641,7 +643,7 @@ static short transformArrayb(void *userDatavp, void *contextp, marpaESLIFValueRe
 }
 
 /*****************************************************************************/
-static short transformBoolb(void *userDatavp, void *contextp, marpaESLIFValueResultBool_t b)
+static short transformBoolb(marpaESLIFValue_t *marpaESLIFValuep, void *userDatavp, void *contextp, marpaESLIFValueResultBool_t b)
 /*****************************************************************************/
 {
   valueContext_t *valueContextp = (valueContext_t *) userDatavp;
@@ -652,12 +654,23 @@ static short transformBoolb(void *userDatavp, void *contextp, marpaESLIFValueRes
 }
 
 /*****************************************************************************/
-static short transformStringb(void *userDatavp, void *contextp, marpaESLIFValueResultString_t s)
+static short transformStringb(marpaESLIFValue_t *marpaESLIFValuep, void *userDatavp, void *contextp, marpaESLIFValueResultString_t s)
 /*****************************************************************************/
 {
   valueContext_t *valueContextp = (valueContext_t *) userDatavp;
 
   GENERICLOGGER_NOTICEF(valueContextp->genericLoggerp, "Result type is string: %s", s.p);
+
+  return 1;
+}
+
+/*****************************************************************************/
+static short transformOrderedCollectionb(marpaESLIFValue_t *marpaESLIFValuep, void *userDatavp, void *contextp, marpaESLIFValueResultOrderedCollection_t l)
+/*****************************************************************************/
+{
+  valueContext_t *valueContextp = (valueContext_t *) userDatavp;
+
+  GENERICLOGGER_NOTICEF(valueContextp->genericLoggerp, "Result type is ordered collection: %s", l.p);
 
   return 1;
 }
