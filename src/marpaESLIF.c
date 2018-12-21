@@ -15697,7 +15697,14 @@ static inline marpaESLIF_string_t *_marpaESLIF_string2utf8p(marpaESLIF_t *marpaE
 /* Take care: this method can return stringp */
 /*****************************************************************************/
 {
-  marpaESLIF_string_t *rcp = NULL;
+  static const char   *funcs = "_marpaESLIF_string2utf8p";
+  marpaESLIF_string_t *rcp   = NULL;
+  char                *fromencodingasciis;
+  int                  utf82ordi;
+  char                *maxp;
+  char                *p;
+  marpaESLIF_uint32_t  codepointi;
+  short                utf8b;
 
   if ((stringp == NULL) || (stringp->bytep == NULL)) {
     errno = EINVAL;
@@ -15726,8 +15733,28 @@ static inline marpaESLIF_string_t *_marpaESLIF_string2utf8p(marpaESLIF_t *marpaE
 	rcp->encodingasciis = NULL;
 	rcp->asciis         = NULL;
 
+	/* When there is no encoding, we know that if the buffer is too small charset detection */
+	/* can fail. We protect against this case in known situations. */
+	fromencodingasciis = stringp->encodingasciis;
+	if (fromencodingasciis == NULL) {
+	  p = stringp->bytep + stringp->bytel;
+	  maxp = stringp->bytep + stringp->bytel;
+	  utf8b = 1;
+	  while (p < maxp) {
+	    utf82ordi = _marpaESLIF_utf82ordi((PCRE2_SPTR8) p, &codepointi);
+	    if (utf82ordi <= 0) {
+	      utf8b = 0;
+	      break;
+	    }
+	  }
+	  if (utf8b) {
+	    MARPAESLIF_TRACE(marpaESLIFp, funcs, "UTF-8 string detected using byte lookup");
+	    fromencodingasciis = (char *) MARPAESLIF_UTF8_STRING;
+	  }
+	}
+
 	/* No need of rcp->asciis, this is why we do not use _marpaESLIF_string_newp() */
-	if ((rcp->bytep = _marpaESLIF_charconvb(marpaESLIFp, (char *) MARPAESLIF_UTF8_STRING, stringp->encodingasciis, stringp->bytep, stringp->bytel, &(rcp->bytel), &(rcp->encodingasciis), NULL /* tconvpp */, 1 /* eofb */, NULL /* byteleftsp */, NULL /* byteleftlp */, NULL /* byteleftalloclp */, tconvsilentb)) == NULL) {
+	if ((rcp->bytep = _marpaESLIF_charconvb(marpaESLIFp, (char *) MARPAESLIF_UTF8_STRING, fromencodingasciis, stringp->bytep, stringp->bytel, &(rcp->bytel), &(rcp->encodingasciis), NULL /* tconvpp */, 1 /* eofb */, NULL /* byteleftsp */, NULL /* byteleftlp */, NULL /* byteleftalloclp */, tconvsilentb)) == NULL) {
 	  goto err;
 	}
 
