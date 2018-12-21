@@ -630,7 +630,7 @@ static short marpaESLIFLua_lua_tolstring(const char **rcpp, lua_State *L, int id
         _string.asciis         = NULL;                                  \
         /* Remember: case of _tmpl == 0 is handled by the following call */ \
       fprintf(stderr, "JDD CASE 04 02\n");                                 \
-        _utf8p = _marpaESLIF_string2utf8p(marpaESLIFValuep->marpaESLIFp, &_string); \
+        _utf8p = _marpaESLIF_string2utf8p(marpaESLIFValuep->marpaESLIFp, &_string, 1 /* tconvsilentb */); \
         if (_utf8p != NULL) {                                           \
       fprintf(stderr, "JDD CASE 04 03\n");                                 \
           _marpaESLIFValueResult.contextp           = NULL;             \
@@ -6166,7 +6166,7 @@ static short marpaESLIFLua_stack_setb(marpaESLIFLuaValueContext_t *marpaESLIFLua
       string.encodingasciis = NULL;
       string.asciis         = NULL;
       /* Case of lual == 0 is handled by the following call */
-      utf8p = _marpaESLIF_string2utf8p(marpaESLIFValuep->marpaESLIFp, &string);
+      utf8p = _marpaESLIF_string2utf8p(marpaESLIFValuep->marpaESLIFp, &string, 1 /* tconvsilentb */);
       if (utf8p != NULL) {
         marpaESLIFValueResult.contextp           = NULL;
         marpaESLIFValueResult.representationp    = NULL;
