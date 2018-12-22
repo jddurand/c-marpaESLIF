@@ -117,7 +117,7 @@ struct marpaESLIFValueResult {
     marpaESLIFValueResultFloat_t             f; /* Value is a float */
     marpaESLIFValueResultDouble_t            d; /* Value is a double */
     marpaESLIFValueResultPtr_t               p; /* Value is a pointer */
-    marpaESLIFValueResultArray_t             a; /* Value is an array */
+    marpaESLIFValueResultArray_t             a; /* Value is a byte array */
     marpaESLIFValueResultBool_t              y; /* Value is a boolean */
     marpaESLIFValueResultString_t            s; /* Value is a string */
     marpaESLIFValueResultOrderedCollection_t o; /* Value is an ordered collection of values */
