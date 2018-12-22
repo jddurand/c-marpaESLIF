@@ -280,7 +280,7 @@ const static char *dsl = "\n"
   "      _result = _result..utf8.char(_codepoint)\n"
   "    end\n"
   "\n"
-  "    return _result\n"
+  "    return _result, 'UTF-8'\n"
   "  end\n"
   "</luascript>\n"
   ;
@@ -311,6 +311,7 @@ int main() {
   valueContext_t               valueContext;
 
   const static char           *inputs[] = {
+    "[\"\"]",
     "[\"\\uD801\\udc37\"]",
     "[\"\\ud83d\\ude39\\ud83d\\udc8d\"]",
     "{\"test\":\"\\u1234\"}",

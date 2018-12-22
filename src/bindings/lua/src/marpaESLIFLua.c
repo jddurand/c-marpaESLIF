@@ -160,6 +160,7 @@ static marpaESLIFValueSymbolCallback_t marpaESLIFLua_valueSymbolActionResolver(v
 static marpaESLIFValueFreeCallback_t   marpaESLIFLua_valueFreeActionResolver(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, char *actions);
 static short                           marpaESLIFLua_valueRuleCallbackb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
 static short                           marpaESLIFLua_valueSymbolCallbackb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, char *bytep, size_t bytel, int resulti);
+static short                           marpaESLIFLua_valueCallbackb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, char *bytep, size_t bytel, int resulti, short nullableb, short symbolb);
 static void                            marpaESLIFLua_valueFreeCallbackv(void *userDatavp, marpaESLIFValueResult_t *marpaESLIFValueResultp);
 static short                           marpaESLIFLua_transformUndefb(marpaESLIFValue_t *marpaESLIFValuep, void *userDatavp, void *contextp);
 static short                           marpaESLIFLua_transformCharb(marpaESLIFValue_t *marpaESLIFValuep, void *userDatavp, void *contextp, marpaESLIFValueResultChar_t c);
@@ -522,7 +523,8 @@ static short marpaESLIFLua_lua_tolstring(const char **rcpp, lua_State *L, int id
 /* Take care: we will call _marpaESLIFValue_stack_setb() and NOT marpaESLIFValue_stack_setb() */
 /* because this is the only way to set a NULL context. This is ok because we ARE in the embedded mode */
 /* i.e. part of marpaESLIF -; */
-#define MARPAESLIFLUA_SET_PTR(marpaESLIFLuaValueContextp, marpaESLIFValuep, indicei, stringificationp) do { \
+#define MARPAESLIFLUA_SET_PTR(marpaESLIFLuaValueContextp, marpaESLIFValuep, indicei, stringificationp, encodings) do { \
+    const char *_encodings = (encodings);                               \
     short _eslifb;                                                      \
     int _typei;                                                         \
     marpaESLIFValueResult_t _marpaESLIFValueResult;                     \
@@ -541,14 +543,12 @@ static short marpaESLIFLua_lua_tolstring(const char **rcpp, lua_State *L, int id
                                                                         \
     switch (_typei) {                                                   \
     case LUA_TNIL:                                                      \
-      fprintf(stderr, "JDD CASE 01\n");                                 \
       _marpaESLIFValueResult.contextp        = NULL;                    \
       _marpaESLIFValueResult.representationp = NULL;                    \
       _marpaESLIFValueResult.type            = MARPAESLIF_VALUE_TYPE_UNDEF; \
       _eslifb = 1;                                                      \
       break;                                                            \
     case LUA_TNUMBER:                                                   \
-      fprintf(stderr, "JDD CASE 02\n");                                 \
       /* Is is a lua integer ? */                                       \
       if (! marpaESLIFLua_lua_tointegerx(&_tmpi, L, -1, &_isNumi)) goto err; \
       if (_isNumi) {                                                    \
@@ -603,7 +603,6 @@ static short marpaESLIFLua_lua_tolstring(const char **rcpp, lua_State *L, int id
       }                                                                 \
       break;                                                            \
     case LUA_TBOOLEAN:                                                  \
-      fprintf(stderr, "JDD CASE 03\n");                                 \
       if (! marpaESLIFLua_lua_toboolean(&_tmpb, L, -1)) goto err;       \
       _marpaESLIFValueResult.contextp        = NULL;                    \
       _marpaESLIFValueResult.representationp = NULL;                    \
@@ -612,65 +611,49 @@ static short marpaESLIFLua_lua_tolstring(const char **rcpp, lua_State *L, int id
       _eslifb = 1;                                                      \
       break;                                                            \
     case LUA_TSTRING:                                                   \
-      fprintf(stderr, "JDD CASE 04\n");                                 \
       if (! marpaESLIFLua_lua_tolstring(&_tmps, L, -1, &_tmpl)) goto err; \
-      /* Native type is LUA_TSTRING, so it is illegal to have a NULL value here */ \
-      /* We nevertheless handle this case by setting _eslifb to 0 */    \
-      fprintf(stderr, "JDD CASE 04 01\n");                              \
-      if (_tmps != NULL) {                                              \
-        /* Take care: _tmps may be garbage collected later */           \
-        /* This is not important though because a string in Lua is */   \
-        /* a very vague thing...: */                                    \
-        /* We support only the empty string and convertd UTF-8, the */  \
-        /* later case being explicitely malloced thanks to */           \
-        /* _marpaESLIF_string2utf8p() */                                \
+      if (_tmps == NULL) {                                              \
+        /* Impossible since we checked the type */                      \
+        marpaESLIFLua_luaL_error(L, "lua_tolstring() returned NULL on a LUA_TSTRING thingy"); \
+        goto err;                                                       \
+      }                                                                 \
+                                                                        \
+      if ((_tmpl == 0) || (_encodings != NULL)) {                       \
         _string.bytep          = (char *) _tmps;                        \
         _string.bytel          = _tmpl;                                 \
-        _string.encodingasciis = NULL;                                  \
+        _string.encodingasciis = (char *) _encodings;                   \
         _string.asciis         = NULL;                                  \
-        /* Remember: case of _tmpl == 0 is handled by the following call */ \
-      fprintf(stderr, "JDD CASE 04 02\n");                                 \
-        _utf8p = _marpaESLIF_string2utf8p(marpaESLIFValuep->marpaESLIFp, &_string, 1 /* tconvsilentb */); \
-        if (_utf8p != NULL) {                                           \
-      fprintf(stderr, "JDD CASE 04 03\n");                                 \
-          _marpaESLIFValueResult.contextp           = NULL;             \
-          _marpaESLIFValueResult.representationp    = NULL;             \
-          _marpaESLIFValueResult.type               = MARPAESLIF_VALUE_TYPE_STRING; \
-          _marpaESLIFValueResult.u.s.p              = (unsigned char *) _utf8p->bytep; \
-          _marpaESLIFValueResult.u.s.shallowb       = 0;                \
-          _marpaESLIFValueResult.u.s.sizel          = _utf8p->bytel;    \
-          _marpaESLIFValueResult.u.s.encodingasciis = _utf8p->encodingasciis; \
-          _eslifb = 1;                                                  \
-        } else if (_tmpl > 0) {                                         \
-      fprintf(stderr, "JDD CASE 04 04 %p %ld\n", _tmps, (unsigned long) _tmpl); \
-          /* Protection against _tmpl <= 0 anyway */                    \
-      _p = (char *) malloc(_tmpl + 1);                                  \
-          if (_p == NULL) {                                             \
-            marpaESLIFLua_luaL_errorf(L, "malloc failure, %s", strerror(errno)); \
-            goto err;                                                   \
-          }                                                             \
-          memcpy(_p, _tmps, _tmpl);                                     \
-          _p[_tmpl] = '\0';                                             \
-          _marpaESLIFValueResult.contextp           = NULL;             \
-          _marpaESLIFValueResult.representationp    = NULL;             \
-          _marpaESLIFValueResult.type               = MARPAESLIF_VALUE_TYPE_ARRAY; \
-          _marpaESLIFValueResult.u.a.p              = _p;               \
-          _marpaESLIFValueResult.u.a.shallowb       = 0;                \
-          _marpaESLIFValueResult.u.a.sizel          = _tmpl;            \
-          _eslifb = 1;                                                  \
-        } else {                                                        \
-          _eslifb = 0;                                                  \
+        _utf8p = _marpaESLIF_string2utf8p(marpaESLIFValuep->marpaESLIFp, &_string, 0 /* tconvsilentb */); \
+        if (_utf8p == NULL) goto err;                                   \
+        _marpaESLIFValueResult.contextp           = NULL;               \
+        _marpaESLIFValueResult.representationp    = NULL;               \
+        _marpaESLIFValueResult.type               = MARPAESLIF_VALUE_TYPE_STRING; \
+        _marpaESLIFValueResult.u.s.p              = (unsigned char *) _utf8p->bytep; \
+        _marpaESLIFValueResult.u.s.shallowb       = 0;                  \
+        _marpaESLIFValueResult.u.s.sizel          = _utf8p->bytel;      \
+        _marpaESLIFValueResult.u.s.encodingasciis = _utf8p->encodingasciis; \
+      } else {                                                          \
+        _p = (char *) malloc(_tmpl + 1);                                \
+        if (_p == NULL) {                                               \
+          marpaESLIFLua_luaL_errorf(L, "malloc failure, %s", strerror(errno)); \
+          goto err;                                                     \
         }                                                               \
-        _eslifb = 0;                                                    \
+        memcpy(_p, _tmps, _tmpl);                                       \
+        _p[_tmpl] = '\0';                                               \
+        _marpaESLIFValueResult.contextp           = NULL;               \
+        _marpaESLIFValueResult.representationp    = NULL;               \
+        _marpaESLIFValueResult.type               = MARPAESLIF_VALUE_TYPE_ARRAY; \
+        _marpaESLIFValueResult.u.a.p              = _p;                 \
+        _marpaESLIFValueResult.u.a.shallowb       = 0;                  \
+        _marpaESLIFValueResult.u.a.sizel          = _tmpl;              \
       }                                                                 \
+      _eslifb = 1;                                                      \
       break;                                                            \
     case LUA_TTABLE:                                                    \
-      fprintf(stderr, "JDD CASE 05\n");                                 \
       marpaESLIFLua_luaL_error(L, "LUA_TTABLE type not mapped");        \
       /* TO DO */                                                       \
       goto err;                                                         \
     case LUA_TLIGHTUSERDATA:                                            \
-      fprintf(stderr, "JDD CASE 06\n");                                 \
       if (! marpaESLIFLua_lua_touserdata(&_luap, L, -1)) goto err;      \
       _marpaESLIFValueResult.contextp           = NULL;                 \
       _marpaESLIFValueResult.representationp    = NULL;                 \
@@ -685,7 +668,6 @@ static short marpaESLIFLua_lua_tolstring(const char **rcpp, lua_State *L, int id
     }                                                                   \
                                                                         \
     if (_eslifb) {                                                      \
-      fprintf(stderr, "JDD _eslifb\n");                                 \
       /* Calling _marpaESLIFValue_stack_setb(), i.e. say it comes from */ \
       /* marpaESLIF itself. */                                          \
       if (! _marpaESLIFValue_stack_setb(marpaESLIFValuep, indicei, &_marpaESLIFValueResult)) { \
@@ -693,7 +675,6 @@ static short marpaESLIFLua_lua_tolstring(const char **rcpp, lua_State *L, int id
         goto err;                                                       \
       }                                                                 \
     }  else {                                                           \
-      fprintf(stderr, "JDD !_eslifb\n");                                 \
       /* This will call marpaESLIFValue_stack_setb(), i.e. say it comes from */ \
       /* an "external" world, in this case the lua interpreter. */      \
       _MARPAESLIFLUA_SET_PTR(marpaESLIFLuaValueContextp, marpaESLIFValuep, indicei, stringificationp); \
@@ -3395,55 +3376,36 @@ static marpaESLIFValueFreeCallback_t marpaESLIFLua_valueFreeActionResolver(void 
 static short marpaESLIFLua_valueRuleCallbackb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb)
 /*****************************************************************************/
 {
-  static const char           *funcs                      = "marpaESLIFLua_valueRuleCallbackb";
-  marpaESLIFLuaValueContext_t *marpaESLIFLuaValueContextp = (marpaESLIFLuaValueContext_t *) userDatavp;
-  lua_State                   *L                          = marpaESLIFLuaValueContextp->L;
-  int                          topi;
-  int                          newtopi;
-  int                          i;
-
-  /* Get value context */
-  if (! marpaESLIFValue_contextb(marpaESLIFValuep, &(marpaESLIFLuaValueContextp->symbols), &(marpaESLIFLuaValueContextp->symboli), &(marpaESLIFLuaValueContextp->rules), &(marpaESLIFLuaValueContextp->rulei))) {
-    marpaESLIFLua_luaL_errorf(L, "marpaESLIFValue_contextb failure, %s", strerror(errno));
-    goto err;
-  }
-
-  topi = lua_gettop(L);
-  MARPAESLIFLUA_CALLBACK(L, marpaESLIFLuaValueContextp->valueInterface_r, marpaESLIFLuaValueContextp->actions, nullableb ? 0 : (argni - arg0i + 1) /* nargs */, 
-                         if (! nullableb) {
-                           for (i = arg0i; i <= argni; i++) {
-                             if (! marpaESLIFLua_pushValueb(marpaESLIFLuaValueContextp, marpaESLIFValuep, i, NULL /* bytep */, 0 /* bytel */)) goto err;
-                           }
-                         }
-                         );
-  newtopi = lua_gettop(L);
-  if (newtopi == topi) {
-    if (! marpaESLIFLua_lua_pushnil(L)) goto err;
-  } else {
-    if (newtopi != (topi + 1)) {
-      marpaESLIFLua_luaL_errorf(L, "Function %s must return exactly one or zero value", marpaESLIFLuaValueContextp->actions);
-      goto err;
-    }
-  }
-
-  MARPAESLIFLUA_SET_PTR(marpaESLIFLuaValueContextp, marpaESLIFValuep, resulti, marpaESLIFLua_representationb);
-  if (! marpaESLIFLua_lua_pop(L, 1)) goto err;
-
-  return 1;
-
- err:
-  return 0;
+  return marpaESLIFLua_valueCallbackb(userDatavp, marpaESLIFValuep, arg0i, argni, NULL /* bytep */, 0 /* bytel */, resulti, nullableb, 0 /* symbolb */);
 }
 
 /*****************************************************************************/
 static short marpaESLIFLua_valueSymbolCallbackb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, char *bytep, size_t bytel, int resulti)
 /*****************************************************************************/
 {
-  static const char           *funcs                      = "marpaESLIFLua_valueSymbolCallbackb";
+  return marpaESLIFLua_valueCallbackb(userDatavp, marpaESLIFValuep, -1 /* arg0i */, -1 /* argni */, bytep, bytel, resulti, 0 /* nullableb */, 1 /* symbolb */);
+}
+
+/*****************************************************************************/
+static short marpaESLIFLua_valueCallbackb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, char *bytep, size_t bytel, int resulti, short nullableb, short symbolb)
+/*****************************************************************************/
+/* The code doing rule and symbol callback to lua is shared. */
+/* We distinguish the symbol case v.s. the rule case by testing bytep. */
+/*****************************************************************************/
+{
+  static const char           *funcs                      = "marpaESLIFLua_valueCallbackb";
   marpaESLIFLuaValueContext_t *marpaESLIFLuaValueContextp = (marpaESLIFLuaValueContext_t *) userDatavp;
   lua_State                   *L                          = marpaESLIFLuaValueContextp->L;
+  char                        *encodings                  = NULL;
+  size_t                       encodingl;
+  const char                  *tmps;
+  size_t                       tmpl;
   int                          topi;
   int                          newtopi;
+  int                          i;
+  int                          encodingtypei;
+  int                          valuetypei;
+  short                        rcb;
 
   /* Get value context */
   if (! marpaESLIFValue_contextb(marpaESLIFValuep, &(marpaESLIFLuaValueContextp->symbols), &(marpaESLIFLuaValueContextp->symboli), &(marpaESLIFLuaValueContextp->rules), &(marpaESLIFLuaValueContextp->rulei))) {
@@ -3452,24 +3414,73 @@ static short marpaESLIFLua_valueSymbolCallbackb(void *userDatavp, marpaESLIFValu
   }
 
   topi = lua_gettop(L);
-  MARPAESLIFLUA_CALLBACK(L, marpaESLIFLuaValueContextp->valueInterface_r, marpaESLIFLuaValueContextp->actions, 1 /* nargs */, if (! marpaESLIFLua_pushValueb(marpaESLIFLuaValueContextp, marpaESLIFValuep, -1 /* stackindicei */, bytep, bytel)) goto err;);
+  if (symbolb) {
+    MARPAESLIFLUA_CALLBACK(L, marpaESLIFLuaValueContextp->valueInterface_r, marpaESLIFLuaValueContextp->actions, 1 /* nargs */,
+                           if (! marpaESLIFLua_pushValueb(marpaESLIFLuaValueContextp, marpaESLIFValuep, -1 /* stackindicei */, bytep, bytel)) goto err;
+                           );
+  } else {
+    MARPAESLIFLUA_CALLBACK(L, marpaESLIFLuaValueContextp->valueInterface_r, marpaESLIFLuaValueContextp->actions, nullableb ? 0 : (argni - arg0i + 1) /* nargs */, 
+                           if (! nullableb) {
+                             for (i = arg0i; i <= argni; i++) {
+                               if (! marpaESLIFLua_pushValueb(marpaESLIFLuaValueContextp, marpaESLIFValuep, i, NULL /* bytep */, 0 /* bytel */)) goto err;
+                             }
+                           }
+                           );
+  }
+
   newtopi = lua_gettop(L);
   if (newtopi == topi) {
     if (! marpaESLIFLua_lua_pushnil(L)) goto err;
   } else {
     if (newtopi != (topi + 1)) {
-      marpaESLIFLua_luaL_errorf(L, "Function %s must return exactly one or zero value", marpaESLIFLuaValueContextp->actions);
-      goto err;
+      /* It is legal in only one specific case: */
+      /* return value is a string and next value is also a string (used as encoding hint) */
+      if (newtopi == (topi + 2)) {
+        if (! marpaESLIFLua_lua_type(&encodingtypei, L, -1)) goto err;
+        if (! marpaESLIFLua_lua_type(&valuetypei, L, -2)) goto err;
+        if ((valuetypei != LUA_TSTRING) || (encodingtypei != LUA_TSTRING)) {
+          marpaESLIFLua_luaL_errorf(L, "Function %s can return two values when they are both strings, e.g.: return string, encoding", marpaESLIFLuaValueContextp->actions);
+          goto err;
+        }
+        /* Duplicate the encoding and pop it */
+        if (! marpaESLIFLua_lua_tolstring(&tmps, L, -1, &tmpl)) goto err;
+        if (tmps == NULL) {
+          marpaESLIFLua_luaL_error(L, "lua_tolstring() returned NULL on a LUA_TSTRING thingy");
+          goto err;
+        }
+        /* here encodings is owned by lua - make a version that we own */
+        encodings = (char *) malloc(tmpl + 1);
+        if (encodings == NULL) {
+          marpaESLIFLua_luaL_errorf(L, "malloc failure, %s", strerror(errno));
+          goto err;
+        }
+        if (tmpl > 0) {
+          memcpy(encodings, tmps, tmpl);
+        }
+        encodings[tmpl] = '\0';
+        /* Pop the encoding */
+        if (! marpaESLIFLua_lua_pop(L, 1)) goto err;
+      } else {
+        marpaESLIFLua_luaL_errorf(L, "Function %s must return exactly either (string, encoding), either one value, either nothing", marpaESLIFLuaValueContextp->actions);
+        goto err;
+      }
     }
   }
 
-  MARPAESLIFLUA_SET_PTR(marpaESLIFLuaValueContextp, marpaESLIFValuep, resulti, marpaESLIFLua_representationb);
+  MARPAESLIFLUA_SET_PTR(marpaESLIFLuaValueContextp, marpaESLIFValuep, resulti, marpaESLIFLua_representationb, encodings);
   if (! marpaESLIFLua_lua_pop(L, 1)) goto err;
 
-  return 1;
+  rcb = 1;
+  goto done;
 
  err:
-  return 0;
+  rcb = 0;
+
+ done:
+  if (encodings != NULL) {
+    free(encodings);
+  }
+  return rcb;
 }
 
 /*****************************************************************************/
