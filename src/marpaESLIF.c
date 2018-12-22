@@ -246,7 +246,6 @@ static const char *MARPAESLIF_VALUE_TYPE_ARRAY_STRING             = "ARRAY";
 static const char *MARPAESLIF_VALUE_TYPE_BOOL_STRING              = "BOOL";
 static const char *MARPAESLIF_VALUE_TYPE_STRING_STRING            = "STRING";
 static const char *MARPAESLIF_VALUE_TYPE_ORDEREDCOLLECTION_STRING = "ORDEREDCOLLECTION";
-static const char *MARPAESLIF_VALUE_TYPE_MATRIX_STRING            = "MATRIX";
 static const char *MARPAESLIF_VALUE_TYPE_UNKNOWN_STRING           = "UNKNOWN";
 
 static const size_t copyl    = 6; /* strlen("::copy"); */
@@ -9720,9 +9719,6 @@ static inline const char *_marpaESLIF_value_types(int typei)
   case MARPAESLIF_VALUE_TYPE_ORDEREDCOLLECTION:
     s = MARPAESLIF_VALUE_TYPE_ORDEREDCOLLECTION_STRING;
     break;
-  case MARPAESLIF_VALUE_TYPE_MATRIX:
-    s = MARPAESLIF_VALUE_TYPE_MATRIX_STRING;
-    break;
   default:
     s = MARPAESLIF_VALUE_TYPE_UNKNOWN_STRING;
     break;
@@ -12470,16 +12466,6 @@ static inline short _marpaESLIFValue_transformb(marpaESLIFValue_t *marpaESLIFVal
       goto err;
     }
     break;
-  case MARPAESLIF_VALUE_TYPE_MATRIX:
-    if ((transformerp == NULL) || (transformerp->matrixTransformerp == NULL)) {
-      MARPAESLIF_ERROR(marpaESLIFValuep->marpaESLIFp, "transformerp->matrixTransformerp is undefined");
-      errno = EINVAL;
-      goto err;
-    }
-    if (! transformerp->matrixTransformerp(marpaESLIFValuep, userDatavp, marpaESLIFValueResultp->contextp, marpaESLIFValueResultp->u.m)) {
-      goto err;
-    }
-    break;
   default:
     errno = ENOSYS;
     goto err;
@@ -12600,30 +12586,29 @@ static inline short _marpaESLIFValue_stack_forgetb(marpaESLIFValue_t *marpaESLIF
 static inline short _marpaESLIFValue_stack_i_resetb(marpaESLIFValue_t *marpaESLIFValuep, int indicei, marpaESLIFValueResult_t *marpaESLIFValueResultp, short forgetb)
 /*****************************************************************************/
 {
-  static const char                   *funcs                 = "_marpaESLIFValue_stack_i_resetb";
-  marpaESLIFValueOption_t              marpaESLIFValueOption = marpaESLIFValuep->marpaESLIFValueOption;
-  marpaESLIFRecognizer_t              *marpaESLIFRecognizerp = marpaESLIFValuep->marpaESLIFRecognizerp;
-  marpaESLIFGrammar_t                 *marpaESLIFGrammarp    = marpaESLIFRecognizerp->marpaESLIFGrammarp;
-  marpaESLIF_grammar_t                *grammarp              = marpaESLIFGrammarp->grammarp;
-  marpaESLIF_action_t                 *defaultFreeActionp    = grammarp->defaultFreeActionp;
-  marpaESLIFValueFreeActionResolver_t  freeActionResolverp   = marpaESLIFValueOption.freeActionResolverp;
-  genericStack_t                      _marpaESLIFValueToResetStack;
-  genericStack_t                      *marpaESLIFValueToResetStackp = &_marpaESLIFValueToResetStack;
-  marpaESLIFValueResult_t             *marpaESLIFValueResultOrigp;
-  marpaESLIFValueResult_t              marpaESLIFValueResultOrig;
-  char                                *actions;
-  marpaESLIFValueFreeCallback_t        freeCallbackp;
-  short                                rcb;
-  short                                freeb;
-  void                                *userDatavp;
-  short                                origshallowb;
-  short                                shallowb;
-  void                                *origp;
-  void                                *newp;
-  void                                *origcontextp;
-  marpaESLIFValueType_t                origtype;
-  size_t                               collectionl;
-  size_t                               matrixl;
+  static const char                  *funcs                 = "_marpaESLIFValue_stack_i_resetb";
+  marpaESLIFValueOption_t             marpaESLIFValueOption = marpaESLIFValuep->marpaESLIFValueOption;
+  marpaESLIFRecognizer_t             *marpaESLIFRecognizerp = marpaESLIFValuep->marpaESLIFRecognizerp;
+  marpaESLIFGrammar_t                *marpaESLIFGrammarp    = marpaESLIFRecognizerp->marpaESLIFGrammarp;
+  marpaESLIF_grammar_t               *grammarp              = marpaESLIFGrammarp->grammarp;
+  marpaESLIF_action_t                *defaultFreeActionp    = grammarp->defaultFreeActionp;
+  marpaESLIFValueFreeActionResolver_t freeActionResolverp   = marpaESLIFValueOption.freeActionResolverp;
+  genericStack_t                     _marpaESLIFValueToResetStack;
+  genericStack_t                     *marpaESLIFValueToResetStackp = &_marpaESLIFValueToResetStack;
+  marpaESLIFValueResult_t            *marpaESLIFValueResultOrigp;
+  marpaESLIFValueResult_t             marpaESLIFValueResultOrig;
+  char                               *actions;
+  marpaESLIFValueFreeCallback_t       freeCallbackp;
+  short                               rcb;
+  short                               freeb;
+  void                               *userDatavp;
+  short                               origshallowb;
+  short                               shallowb;
+  void                               *origp;
+  void                               *newp;
+  void                               *origcontextp;
+  marpaESLIFValueType_t               origtype;
+  size_t                              collectionl;
 
   MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_INC;
   MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "start indice=%d forgetb=%d", indicei, (int) forgetb);
@@ -12680,10 +12665,6 @@ static inline short _marpaESLIFValue_stack_i_resetb(marpaESLIFValue_t *marpaESLI
       shallowb  = marpaESLIFValueResultp->u.o.shallowb;
       newp      = marpaESLIFValueResultp->u.o.p;
       break;
-    case MARPAESLIF_VALUE_TYPE_MATRIX:
-      shallowb  = marpaESLIFValueResultp->u.m.shallowb;
-      newp      = marpaESLIFValueResultp->u.m.p;
-      break;
     default:
       newp      = NULL;
       break;
@@ -12733,10 +12714,6 @@ static inline short _marpaESLIFValue_stack_i_resetb(marpaESLIFValue_t *marpaESLI
       origshallowb = marpaESLIFValueResultOrig.u.o.shallowb;
       origp        = marpaESLIFValueResultOrig.u.o.p;
       break;
-    case MARPAESLIF_VALUE_TYPE_MATRIX:
-      origshallowb = marpaESLIFValueResultOrig.u.m.shallowb;
-      origp        = marpaESLIFValueResultOrig.u.m.p;
-      break;
     default:
       /* origshallowb = 0; */ /* Not used - no need for this instruction */
       origp      = NULL;
@@ -12764,9 +12741,6 @@ static inline short _marpaESLIFValue_stack_i_resetb(marpaESLIFValue_t *marpaESLI
             break;
           case MARPAESLIF_VALUE_TYPE_ORDEREDCOLLECTION:
             marpaESLIFValueResultp->u.o.shallowb = origshallowb;
-            break;
-          case MARPAESLIF_VALUE_TYPE_MATRIX:
-            marpaESLIFValueResultp->u.m.shallowb = origshallowb;
             break;
           default:
             break;
@@ -12831,9 +12805,8 @@ static inline short _marpaESLIFValue_stack_i_resetb(marpaESLIFValue_t *marpaESLI
           }
         }
 
-        /* In case this is a container (ordered collection, matrix) */
-        switch (marpaESLIFValueResultOrig.type) {
-        case MARPAESLIF_VALUE_TYPE_ORDEREDCOLLECTION:
+        /* In case this is an ordered collection, keep track of the inner values to free them as well */
+        if (marpaESLIFValueResultOrig.type == MARPAESLIF_VALUE_TYPE_ORDEREDCOLLECTION) {
           for (collectionl = 0; collectionl < marpaESLIFValueResultOrig.u.o.sizel; collectionl++) {
             GENERICSTACK_PUSH_PTR(marpaESLIFValueToResetStackp, marpaESLIFValueResultOrig.u.o.p[collectionl]);
             if (GENERICSTACK_ERROR(marpaESLIFValueToResetStackp)) {
@@ -12841,18 +12814,6 @@ static inline short _marpaESLIFValue_stack_i_resetb(marpaESLIFValue_t *marpaESLI
               goto err;
             }
           }
-          break;
-        case MARPAESLIF_VALUE_TYPE_MATRIX:
-          for (matrixl = 0; matrixl < marpaESLIFValueResultOrig.u.m.sizel; matrixl++) {
-            GENERICSTACK_PUSH_PTR(marpaESLIFValueToResetStackp, marpaESLIFValueResultOrig.u.m.p[matrixl]);
-            if (GENERICSTACK_ERROR(marpaESLIFValueToResetStackp)) {
-              MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "marpaESLIFValueToResetStackp push failure, %s", strerror(errno));
-              goto err;
-              }
-          }
-          break;
-        default:
-          break;
         }
 
         /* No test on freeCallbackp here because the upper code guarantees it cannot be NULL */
@@ -13219,12 +13180,8 @@ static void _marpaESLIF_rule_freeCallbackv(void *userDatavp, marpaESLIFValueResu
     MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Freeing ORDEREDCOLLECTION {%p,%ld}", marpaESLIFValueResultp->u.o.p, (unsigned long) marpaESLIFValueResultp->u.o.sizel);
     free(marpaESLIFValueResultp->u.o.p);
     break;
-  case MARPAESLIF_VALUE_TYPE_MATRIX:
-    MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Freeing MATRIX {%p,%ld}", marpaESLIFValueResultp->u.m.p, (unsigned long) marpaESLIFValueResultp->u.m.sizel);
-    free(marpaESLIFValueResultp->u.m.p);
-    break;
   default:
-    MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "type is not PTR, ARRAY, STRING, ORDEREDCOLLECTION nor MATRIX (got %d, %s)", marpaESLIFValueResultp->type, _marpaESLIF_value_types(marpaESLIFValueResultp->type));
+    MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "type is not PTR, ARRAY nor STRING (got %d, %s)", marpaESLIFValueResultp->type, _marpaESLIF_value_types(marpaESLIFValueResultp->type));
     break;
   }
 
@@ -14754,7 +14711,6 @@ static short _marpaESLIFRecognizer_value_validb(marpaESLIFRecognizer_t *marpaESL
   short              marpaESLIFValueResultb;
   short              findResultb;
   size_t             collectionl;
-  size_t             matrixl;
 
   MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_INC;
   MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "start");
@@ -14856,51 +14812,11 @@ static short _marpaESLIFRecognizer_value_validb(marpaESLIFRecognizer_t *marpaESL
 
       /* Push ordered collection children */
       for (collectionl = 0; collectionl < marpaESLIFValueResultp->u.o.sizel; collectionl++) {
-        /* It is illegal to have a NULL collection member (the user should use a marpaESLIFValueResultUndef type */
-        if (marpaESLIFValueResultp->u.o.p[collectionl] == NULL) {
-	  MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "Collection member at indice %ld is NULL", (unsigned long) collectionl);
-	  goto err;
-        }
 	GENERICSTACK_PUSH_PTR(marpaESLIFValueResultStackp, marpaESLIFValueResultp->u.o.p[collectionl]);
 	if (GENERICSTACK_ERROR(marpaESLIFValueResultStackp)) {
 	  MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "marpaESLIFValueResultStackp push failure, %s", strerror(errno));
 	  goto err;
 	}
-      }
-
-      break;
-    case MARPAESLIF_VALUE_TYPE_MATRIX:
-      /* Check current marpaESLIFValueResultp has not yet been seen */
-      findResultb = 0;
-      GENERICHASH_FIND(marpaESLIFValueResultHashp,
-		       NULL, /* userDatavp */
-		       PTR,
-		       marpaESLIFValueResultp,
-		       SHORT,
-		       &marpaESLIFValueResultb,
-		       findResultb);
-      if (findResultb) {
-	MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "Duplicate marpaESLIFValueResult %p (type %d, %s)", marpaESLIFValueResultp, marpaESLIFValueResultp->type, _marpaESLIF_value_types(marpaESLIFValueResultp->type));
-	goto err;
-      }
-      GENERICHASH_SET(marpaESLIFValueResultHashp, NULL, PTR, marpaESLIFValueResultp, SHORT, 1);
-      if (GENERICHASH_ERROR(marpaESLIFValueResultHashp)) {
-	MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "marpaESLIFValueResultHashp failure, %s", strerror(errno));
-	goto err;
-      }
-
-      /* Push matrix ordered collection children */
-      for (matrixl = 0; matrixl < marpaESLIFValueResultp->u.m.sizel; matrixl++) {
-        /* It is illegal to have a NULL matrix member (the user should use a marpaESLIFValueResultUndef type */
-        if (marpaESLIFValueResultp->u.m.p[matrixl] == NULL) {
-          MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "Matrix collection at indice %ld is NULL", (unsigned long) matrixl);
-          goto err;
-        }
-        GENERICSTACK_PUSH_PTR(marpaESLIFValueResultStackp, marpaESLIFValueResultp->u.m.p[matrixl]);
-        if (GENERICSTACK_ERROR(marpaESLIFValueResultStackp)) {
-          MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "marpaESLIFValueResultStackp push failure, %s", strerror(errno));
-          goto err;
-        }
       }
 
       break;
