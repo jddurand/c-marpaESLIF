@@ -13170,6 +13170,7 @@ static void _marpaESLIF_rule_freeCallbackv(void *userDatavp, marpaESLIFValueResu
     break;
   case MARPAESLIF_VALUE_TYPE_STRING:
     MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Freeing STRING {%p,%ld,encoding=%s}", marpaESLIFValueResultp->u.s.p, (unsigned long) marpaESLIFValueResultp->u.s.sizel, marpaESLIFValueResultp->u.s.encodingasciis != NULL ? marpaESLIFValueResultp->u.s.encodingasciis : "(null)");
+    fprintf(stderr, "Freeing STRING {%p \"%s\",%ld,encoding=%s}\n", marpaESLIFValueResultp->u.s.p, marpaESLIFValueResultp->u.s.p, (unsigned long) marpaESLIFValueResultp->u.s.sizel, marpaESLIFValueResultp->u.s.encodingasciis != NULL ? marpaESLIFValueResultp->u.s.encodingasciis : "(null)");
     string.bytep          = marpaESLIFValueResultp->u.s.p;
     string.bytel          = marpaESLIFValueResultp->u.s.sizel;
     string.encodingasciis = marpaESLIFValueResultp->u.s.encodingasciis;

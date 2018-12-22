@@ -809,6 +809,13 @@ static short marpaESLIFLua_lua_rawgeti(int *luaip, lua_State *L, int index, lua_
 }
 
 /****************************************************************************/
+static short marpaESLIFLua_lua_rawget(int *luaip, lua_State *L, int index)
+/****************************************************************************/
+{
+  return ! luaunpanic_rawget(luaip, L, index);
+}
+
+/****************************************************************************/
 static short marpaESLIFLua_lua_remove(lua_State *L, int index)
 /****************************************************************************/
 {
@@ -981,6 +988,41 @@ static short marpaESLIFLua_lua_tolstring(const char **rcpp, lua_State *L, int id
 /****************************************************************************/
 {
   return ! luaunpanic_tolstring(rcpp, L, idx, len);
+}
+
+/****************************************************************************/
+static short marpaESLIFLua_lua_compare(int *rcip, lua_State *L, int idx1, int idx2, int op)
+/****************************************************************************/
+{
+  return ! luaunpanic_compare(rcip, L, idx1, idx2, op);
+}
+
+/****************************************************************************/
+static short marpaESLIFLua_lua_rawequal(int *rcip, lua_State *L, int idx1, int idx2)
+/****************************************************************************/
+{
+  return ! luaunpanic_rawequal(rcip, L, idx1, idx2);
+}
+
+/****************************************************************************/
+static short marpaESLIFLua_lua_isnil(int *rcip, lua_State *L, int n)
+/****************************************************************************/
+{
+  return ! luaunpanic_isnil(rcip, L, n);
+}
+
+/****************************************************************************/
+static short marpaESLIFLua_lua_gettop(int *rcip, lua_State *L)
+/****************************************************************************/
+{
+  return ! luaunpanic_gettop(rcip, L);
+}
+
+/****************************************************************************/
+static short marpaESLIFLua_lua_absindex(int *rcip, lua_State *L, int idx)
+/****************************************************************************/
+{
+  return ! luaunpanic_absindex(rcip, L, idx);
 }
 
 /****************************************************************************/
