@@ -651,7 +651,8 @@ static short marpaESLIFLua_lua_absindex(int *rcip, lua_State *L, int idx);
         _marpaESLIFValueResult.u.s.shallowb       = 0;                  \
         _marpaESLIFValueResult.u.s.sizel          = _utf8p->bytel;      \
         _marpaESLIFValueResult.u.s.encodingasciis = _utf8p->encodingasciis; \
-        fprintf(stderr, "ALLOCED STRING {%p \"%s\",%ld,encoding=%s}\n", _marpaESLIFValueResult.u.s.p, _marpaESLIFValueResult.u.s.p, (unsigned long) _marpaESLIFValueResult.u.s.sizel, _marpaESLIFValueResult.u.s.encodingasciis != NULL ? _marpaESLIFValueResult.u.s.encodingasciis : "(null)"); \
+        /* All pointers are in _marpaESLIFValueResult */                \
+        free(_utf8p);                                                   \
       } else {                                                          \
         _p = (char *) malloc(_tmpl + 1);                                \
         if (_p == NULL) {                                               \
