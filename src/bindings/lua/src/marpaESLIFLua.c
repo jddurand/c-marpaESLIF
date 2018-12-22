@@ -553,7 +553,6 @@ static short marpaESLIFLua_lua_absindex(int *rcip, lua_State *L, int idx);
     char                     *_p;                                       \
     void                     *_luap;                                    \
     table_callback_context_t  _table_context;                           \
-    short                     _rcb;                                     \
                                                                         \
     if (! marpaESLIFLua_lua_type(&_typei, L, -1)) goto err;             \
                                                                         \
@@ -684,10 +683,7 @@ static short marpaESLIFLua_lua_absindex(int *rcip, lua_State *L, int idx);
       if (! marpaESLIFLua_lua_copy(L, -3, -1)) goto err;                        /* stack: table, parentsTable, table */ \
       if (! marpaESLIFLua_lua_pushboolean(L, 1)) goto err;                      /* stack: table, parentsTable, table, true */ \
       if (! marpaESLIFLua_lua_rawset(L, _table_context.parentsi)) goto err;     /* stack: table, parentsTable */ \
-      _rcb = marpaESLIFLua_iterateb(L, -2, &_table_context, marpaESLIFLua_table_set_stack_callbackb); \
-      if (! marpaESLIFLua_lua_pop(L, 1)) goto err;                              /* stack: table */ \
-      /* Get out in case we get here but it failed */                   \
-      if (! _rcb) goto err;                                             \
+      if (! marpaESLIFLua_iterateb(L, -2, &_table_context, marpaESLIFLua_table_set_stack_callbackb)) goto err; \
       _marpaESLIFValueResult.contextp           = NULL;                 \
       _marpaESLIFValueResult.representationp    = NULL;                 \
       _marpaESLIFValueResult.type               = MARPAESLIF_VALUE_TYPE_ORDEREDCOLLECTION; \
