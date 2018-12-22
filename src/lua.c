@@ -893,6 +893,13 @@ static short marpaESLIFLua_lua_rawsetp(lua_State *L, int index, const void *p)
 }
 
 /****************************************************************************/
+static short marpaESLIFLua_lua_rawset(lua_State *L, int index)
+/****************************************************************************/
+{
+  return ! luaunpanic_rawset(L, index);
+}
+
+/****************************************************************************/
 static short marpaESLIFLua_lua_pushboolean(lua_State *L, int b)
 /****************************************************************************/
 {

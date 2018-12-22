@@ -266,6 +266,7 @@ static short marpaESLIFLua_lua_call(lua_State *L, int nargs, int nresults);
 static short marpaESLIFLua_lua_settop(lua_State *L, int index);
 static short marpaESLIFLua_lua_copy(lua_State *L, int fromidx, int toidx);
 static short marpaESLIFLua_lua_rawsetp(lua_State *L, int index, const void *p);
+static short marpaESLIFLua_lua_rawset(lua_State *L, int index);
 static short marpaESLIFLua_lua_pushboolean(lua_State *L, int b);
 static short marpaESLIFLua_lua_pushnumber(lua_State *L, lua_Number n);
 static short marpaESLIFLua_lua_pushlightuserdata(lua_State *L, void *p);
@@ -675,11 +676,16 @@ static short marpaESLIFLua_lua_absindex(int *rcip, lua_State *L, int idx);
       _table_context.o.sizel = 0;                                       \
       _table_context.o.shallowb = 0;                                    \
       /* Push a table in which we will store all the parents. */        \
-      /* We use that to detect recursivity because this is not supported */ \
-      if (! marpaESLIFLua_lua_newtable(L)) goto err;                    \
+      /* We use that to detect recursivity because this is not supported */     /* stack: table */ \
+      if (! marpaESLIFLua_lua_newtable(L)) goto err;                            /* stack: table, parentsTable */ \
       if (! marpaESLIFLua_lua_gettop(&(_table_context.parentsi), L)) goto err; \
+      /* Set parentsTable[table] = true */                              \
+      if (! marpaESLIFLua_lua_pushnil(L)) goto err;                             /* stack: table, parentsTable, nil */ \
+      if (! marpaESLIFLua_lua_copy(L, -3, -1)) goto err;                        /* stack: table, parentsTable, table */ \
+      if (! marpaESLIFLua_lua_pushboolean(L, 1)) goto err;                      /* stack: table, parentsTable, table, true */ \
+      if (! marpaESLIFLua_lua_rawset(L, _table_context.parentsi)) goto err;     /* stack: table, parentsTable */ \
       _rcb = marpaESLIFLua_iterateb(L, -2, &_table_context, marpaESLIFLua_table_set_stack_callbackb); \
-      if (! marpaESLIFLua_lua_pop(L, 1)) goto err;                      \
+      if (! marpaESLIFLua_lua_pop(L, 1)) goto err;                              /* stack: table */ \
       /* Get out in case we get here but it failed */                   \
       if (! _rcb) goto err;                                             \
       _marpaESLIFValueResult.contextp           = NULL;                 \
@@ -6101,6 +6107,15 @@ static short marpaESLIFLua_lua_rawsetp(lua_State *L, int index, const void *p)
 }
 
 /****************************************************************************/
+static short marpaESLIFLua_lua_rawset(lua_State *L, int index)
+/****************************************************************************/
+{
+  lua_rawset(L, index); /* Native lua call */
+
+  return 1;
+}
+
+/****************************************************************************/
 static short marpaESLIFLua_lua_pushboolean(lua_State *L, int b)
 /****************************************************************************/
 {
@@ -6537,12 +6552,16 @@ static short marpaESLIFLua_table_set_stack_callbackb(void *contextp, lua_State *
     if (! marpaESLIFLua_lua_pushnil(L)) goto err;                                                             /* stack: key, value, nil */
     if (! marpaESLIFLua_lua_copy(L, -3, -1)) goto err;                                                        /* stack: key, value, key */
     if (! marpaESLIFLua_lua_rawget(NULL, L, table_contextp->parentsi)) goto err;                              /* stack: key, value, parentsTable[key] */
-    if (! marpaESLIFLua_lua_toboolean(&truei, L, -1)) goto err;                                               /* stack: key, value, parentsTable[key] */
+    if (! marpaESLIFLua_lua_toboolean(&truei, L, -1)) goto err;
     if (! marpaESLIFLua_lua_pop(L, 1)) goto err;                                                              /* stack: key, value */
     if (truei) {
-      marpaESLIFLua_luaL_error(L, "A key is a child of itself");
+      marpaESLIFLua_luaL_error(L, "A table's key is a child of itself");
       goto err;
     }
+    if (! marpaESLIFLua_lua_pushnil(L)) goto err;                                                             /* stack: key, value, nil */
+    if (! marpaESLIFLua_lua_copy(L, -3, -1)) goto err;                                                        /* stack: key, value, key */
+    if (! marpaESLIFLua_lua_pushboolean(L, 1)) goto err;                                                      /* stack: key, value, key, true */
+    if (! marpaESLIFLua_lua_rawset(L, table_contextp->parentsi)) goto err;                                    /* stack: key, value */
   }
   
   /* Will value trigger recursivity ? */
@@ -6551,12 +6570,16 @@ static short marpaESLIFLua_table_set_stack_callbackb(void *contextp, lua_State *
     if (! marpaESLIFLua_lua_pushnil(L)) goto err;                                                             /* stack: key, value, nil */
     if (! marpaESLIFLua_lua_copy(L, -2, -1)) goto err;                                                        /* stack: key, value, value */
     if (! marpaESLIFLua_lua_rawget(NULL, L, table_contextp->parentsi)) goto err;                              /* stack: key, value, parentsTable[value] */
-    if (! marpaESLIFLua_lua_toboolean(&truei, L, -1)) goto err;                                               /* stack: key, value, parentsTable[value] */
+    if (! marpaESLIFLua_lua_toboolean(&truei, L, -1)) goto err;
     if (! marpaESLIFLua_lua_pop(L, 1)) goto err;                                                              /* stack: key, value */
     if (truei) {
-      marpaESLIFLua_luaL_error(L, "A value is a child of itself");
+      marpaESLIFLua_luaL_error(L, "A table's value is a child of itself");
       goto err;
     }
+    if (! marpaESLIFLua_lua_pushnil(L)) goto err;                                                             /* stack: key, value, nil */
+    if (! marpaESLIFLua_lua_copy(L, -2, -1)) goto err;                                                        /* stack: key, value, value */
+    if (! marpaESLIFLua_lua_pushboolean(L, 1)) goto err;                                                      /* stack: key, value, value, true */
+    if (! marpaESLIFLua_lua_rawset(L, table_contextp->parentsi)) goto err;                                    /* stack: key, value */
   }
 
   rcb = 1;
@@ -6568,4 +6591,3 @@ static short marpaESLIFLua_table_set_stack_callbackb(void *contextp, lua_State *
  done:
   return rcb;
 }
-
