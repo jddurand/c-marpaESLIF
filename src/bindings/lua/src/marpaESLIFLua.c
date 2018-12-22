@@ -3945,8 +3945,6 @@ static short marpaESLIFLua_iterateb(lua_State *L, int index, void *contextp, sho
   while (lua_next(L, -2)) {                                                         /* stack: ..., table, key, value */
     if (callbackb != NULL) {
       if (! callbackb(contextp, L)) {
-        /* If that fails we go to err label anyway */
-        marpaESLIFLua_lua_pop(L, 3);                                                /* stack: ... */
         goto err;
       }
     }
