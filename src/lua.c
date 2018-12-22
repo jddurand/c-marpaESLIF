@@ -739,14 +739,14 @@ static short marpaESLIFLua_lua_pushinteger(lua_State *L, lua_Integer n)
 }
 
 /****************************************************************************/
-static short marpaESLIFLua_lua_setglobal (lua_State *L, const char *name)
+static short marpaESLIFLua_lua_setglobal(lua_State *L, const char *name)
 /****************************************************************************/
 {
   return ! luaunpanic_setglobal(L, name);
 }
 
 /****************************************************************************/
-static short marpaESLIFLua_lua_getglobal (int *luaip, lua_State *L, const char *name)
+static short marpaESLIFLua_lua_getglobal(int *luaip, lua_State *L, const char *name)
 /****************************************************************************/
 {
   return ! luaunpanic_getglobal(luaip, L, name);
