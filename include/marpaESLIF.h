@@ -400,7 +400,7 @@ extern "C" {
   marpaESLIF_EXPORT short                         marpaESLIFValue_stack_get_transformb(marpaESLIFValue_t *marpaESLIFValuep, int indicei);
 
   /* Utility charset convertion helper */
-  marpaESLIF_EXPORT char                         *marpaESLIF_charconvb(marpaESLIF_t *marpaESLIFp, char *toEncodings, char *fromEncodings, char *srcs, size_t srcl, size_t *dstlp);
+  marpaESLIF_EXPORT char                         *marpaESLIF_charconvp(marpaESLIF_t *marpaESLIFp, char *toEncodings, char *fromEncodings, char *srcs, size_t srcl, size_t *dstlp);
 
   marpaESLIF_EXPORT void                          marpaESLIF_freev(marpaESLIF_t *marpaESLIFp);
 #ifdef __cplusplus

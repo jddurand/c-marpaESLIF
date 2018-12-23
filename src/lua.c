@@ -5,17 +5,15 @@
 #include <errno.h>
 #include <limits.h>
 
-/* Revisit lua context */
+/* Revisit lua context that refers to values inside the lua interpreter */
 #undef MARPAESLIFLUA_CONTEXT
 #define MARPAESLIFLUA_CONTEXT MARPAESLIF_EMBEDDED_CONTEXT_LUA
+
+/* Revisit some lua macros */
 #undef marpaESLIFLua_luaL_error
-#define marpaESLIFLua_luaL_error(L, string) do {        \
-    luaunpanicL_error(NULL, L, string);                 \
-  } while (0)
+#define marpaESLIFLua_luaL_error(L, string) luaunpanicL_error(NULL, L, string)
 #undef marpaESLIFLua_luaL_errorf
-#define marpaESLIFLua_luaL_errorf(L, formatstring, ...) do {    \
-    luaunpanicL_error(NULL, L, formatstring, __VA_ARGS__);      \
-  } while (0)
+#define marpaESLIFLua_luaL_errorf(L, formatstring, ...) luaunpanicL_error(NULL, L, formatstring, __VA_ARGS__)
 #undef marpaESLIFLua_luaL_newlib
 #define marpaESLIFLua_luaL_newlib(L, l) (! luaunpanicL_newlib(L, l))
 #include "../src/bindings/lua/src/marpaESLIFLua.c"
