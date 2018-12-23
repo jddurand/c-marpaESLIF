@@ -12474,7 +12474,7 @@ static inline short _marpaESLIFValue_transformb(marpaESLIFValue_t *marpaESLIFVal
 short marpaESLIFValue_transformb(marpaESLIFValue_t *marpaESLIFValuep, marpaESLIFValueResult_t *marpaESLIFValueResultp, marpaESLIFValueResult_t *marpaESLIFValueResultResolvedp)
 /*****************************************************************************/
 {
-  static const char *funcs = "marpaESLIFValueResult_transformb";
+  static const char *funcs = "marpaESLIFValue_transformb";
 
   /* Generic transformation helper of a marpaESLIFValueResult during valuation */
   if (marpaESLIFValuep == NULL) {
