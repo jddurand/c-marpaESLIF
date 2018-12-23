@@ -634,7 +634,6 @@ static short                           marpaESLIF_TransformPtr(marpaESLIFValue_t
 static short                           marpaESLIF_TransformArray(marpaESLIFValue_t *marpaESLIFValuep, void *userDatavp, void *contextp, marpaESLIFValueResultArray_t a);
 static short                           marpaESLIF_TransformBool(marpaESLIFValue_t *marpaESLIFValuep, void *userDatavp, void *contextp, marpaESLIFValueResultBool_t y);
 static short                           marpaESLIF_TransformString(marpaESLIFValue_t *marpaESLIFValuep, void *userDatavp, void *contextp, marpaESLIFValueResultString_t s);
-static short                           marpaESLIF_TransformOrderedCollection(marpaESLIFValue_t *marpaESLIFValuep, void *userDatavp, void *contextp, marpaESLIFValueResultOrderedCollection_t o);
 static jstring                         marpaESLIF_marpaESLIFStringToJavap(JNIEnv *envp, marpaESLIFString_t *marpaESLIFStringp);
 static jstring                         marpaESLIF_marpaESLIFASCIIToJavap(JNIEnv *envp, char *asciis);
 static jstring                         marpaESLIF_marpaESLIFActionToJavap(JNIEnv *envp, marpaESLIFAction_t *actionp);
@@ -651,8 +650,7 @@ static marpaESLIFValueResultTransform_t marpaESLIFValueResultTransformDefault = 
   marpaESLIF_TransformPtr,
   marpaESLIF_TransformArray,
   marpaESLIF_TransformBool,
-  marpaESLIF_TransformString,
-  marpaESLIF_TransformOrderedCollection
+  marpaESLIF_TransformString
 };
 
 /* --------------- */
@@ -5188,49 +5186,30 @@ static short marpaESLIF_TransformString(marpaESLIFValue_t *marpaESLIFValuep, voi
   JNIEnv                   *envp                    = marpaESLIFValueContextp->envp;
   marpaESLIF_t             *marpaESLIFp             = marpaESLIFGrammar_eslifp(marpaESLIFRecognizer_grammarp(marpaESLIFValue_recognizerp(marpaESLIFValuep)));
   jbyteArray                byteArrayp              = NULL;
-  char                     *utf8s                   = NULL;
-  char                     *utf8noboms;
-  size_t                    dstl;
-  size_t                    dstnoboml;
+  static jstring            encodingp               = NULL;
   short                     rcb;
   jobject                   objectp;
 
-  if (s.p != NULL) {
-    /* Whatever the encoding, marpaESLIF_charconv() is used to produce UTF-8 */
-
-    /* The big advantage of marpaESLIF_charconvb() is that s.encodingasciis == NULL is supported -; Then marpaESLIF_charconv() will guess. */
-    utf8s = marpaESLIF_charconvb(marpaESLIFp, "UTF-8", s.encodingasciis, s.p, s.sizel, &dstl);
-    if (utf8s == NULL) {
-      RAISEEXCEPTIONF(envp, "marpaESLIF_charconvb failure, %s", strerror(errno));
-    }
-    /* Remove the UTF-8 BOM if any */
-    if ((dstl >= 3)                                         &&
-	(((unsigned char) utf8s[0] == (unsigned char) 0xEF) &&
-	 ((unsigned char) utf8s[1] == (unsigned char) 0xBB) &&
-	 ((unsigned char) utf8s[2] == (unsigned char) 0xBF))) {
-      utf8noboms = utf8s + 3;
-      dstnoboml = dstl - 3;
-    } else {
-      utf8noboms = utf8s;
-      dstnoboml = dstl;
-    }
-
-    /* Note: ok if dstnoboml is zero, then it is an empty string */
-    byteArrayp = (*envp)->NewByteArray(envp, (jsize) dstnoboml);
-    if (byteArrayp == NULL) {
+  encodingp = marpaESLIF_marpaESLIFASCIIToJavap(envp, s.encodingasciis);
+  if (encodingp == NULL) {
+    /* We want OUR exception to be raised */
+    RAISEEXCEPTION(envp, "marpaESLIF_marpaESLIFASCIIToJavap failure");
+  }
+  byteArrayp = (*envp)->NewByteArray(envp, (jsize) s.sizel);
+  if (byteArrayp == NULL) {
+    goto err;
+  }
+  if (s.sizel > 0) {
+    /* An empty string have non NULL pointers but a zero size */
+    (*envp)->SetByteArrayRegion(envp, byteArrayp, (jsize) 0, (jsize) s.sizel, (jbyte *) s.p);
+    if (HAVEEXCEPTION(envp)) {
       goto err;
     }
-    if (dstnoboml > 0) {
-      (*envp)->SetByteArrayRegion(envp, byteArrayp, (jsize) 0, (jsize) dstnoboml, (jbyte *) utf8noboms);
-      if (HAVEEXCEPTION(envp)) {
-        goto err;
-      }
-    }
-    objectp = (*envp)->NewObject(envp, JAVA_LANG_STRING_CLASSP, JAVA_LANG_STRING_CLASS_init_byteArray_String_METHODP, byteArrayp, marpaESLIF_UTF8p);
+  }
+  objectp = (*envp)->NewObject(envp, JAVA_LANG_STRING_CLASSP, JAVA_LANG_STRING_CLASS_init_byteArray_String_METHODP, byteArrayp, encodingp);
 
-    if (objectp == NULL) {
-      RAISEEXCEPTION(envp, "NewObject failure");
-    }
+  if (objectp == NULL) {
+    RAISEEXCEPTION(envp, "NewObject failure");
   }
 
   marpaESLIFValueContextp->objectp = objectp;
@@ -5241,53 +5220,14 @@ static short marpaESLIF_TransformString(marpaESLIFValue_t *marpaESLIFValuep, voi
   rcb = 0;
 
  done:
-  if (utf8s != NULL) {
-    free(utf8s);
-  }
   if (envp != NULL) {
     if (byteArrayp != NULL) {
       (*envp)->DeleteLocalRef(envp, byteArrayp);
     }
-  }
-  return rcb;
-}
-
-/*****************************************************************************/
-static short marpaESLIF_TransformOrderedCollection(marpaESLIFValue_t *marpaESLIFValuep, void *userDatavp, void *contextp, marpaESLIFValueResultOrderedCollection_t o)
-/*****************************************************************************/
-{
-  static const char        *funcs                   = "marpaESLIF_TransformOrderedCollection";
-  marpaESLIFValueContext_t *marpaESLIFValueContextp = (marpaESLIFValueContext_t *) userDatavp;
-  JNIEnv                   *envp                    = marpaESLIFValueContextp->envp;
-  jobjectArray              list;
-  short                     rcb;
-  size_t                    collectionl;
-
-  /* This is very similar to marpaESLIFValueRuleCallback() where we create an array of objects */
-  if ((*envp)->EnsureLocalCapacity(envp, (jint) o.sizel) != 0) {
-    RAISEEXCEPTION(envp, "EnsureLocalCapacity failure");
-  }
-
-  list = (*envp)->NewObjectArray(envp, (jsize) o.sizel, JAVA_LANG_OBJECT_CLASSP, NULL /* initialElement */);
-  if (list == NULL) {
-    RAISEEXCEPTION(envp, "NewObjectArray failure");
-  }
-
-  for (collectionl = 0; collectionl < o.sizel; collectionl++) {
-    if (! marpaESLIFGetObjectp(marpaESLIFValueContextp, marpaESLIFValuep, -1 /* stackindicei */, NULL /* bytep */, 0 /* bytel */, o.p[collectionl])) {
-      goto err;
+    if (encodingp != NULL) {
+      (*envp)->DeleteLocalRef(envp, encodingp);
     }
-    (*envp)->SetObjectArrayElement(envp, list, (jsize) collectionl, marpaESLIFValueContextp->objectp);
   }
-
-  marpaESLIFValueContextp->objectp = list;
-  rcb = 1;
-  goto done;
-
- err:
-  rcb = 0;
-
- done:
   return rcb;
 }
 

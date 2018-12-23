@@ -13,7 +13,7 @@ static short                           inputReaderb(void *userDatavp, char **inp
 static short                           eventManagerb(int *eventCountip, marpaESLIFRecognizer_t *marpaESLIFRecognizerp, genericLogger_t *genericLoggerp);
 static void                            genericLoggerCallback(void *userDatavp, genericLoggerLevel_t logLeveli, const char *msgs);
 static short                           alternativeRepresentation(void *userDatavp, marpaESLIFValueResult_t *valueResultp, char **inputcpp, size_t *inputlp, short *characterStreambp, char **encodingsp, size_t *encodinglp);
-static short                           arrayTransformer(void *userDatavp, void *contextp, marpaESLIFValueResultArray_t a);
+static short                           arrayTransformer(marpaESLIFValue_t *marpaESLIFValuep, void *userDatavp, void *contextp, marpaESLIFValueResultArray_t a);
 
 static marpaESLIFValueResultTransform_t transformer = {
   NULL, /* undefTransformerp */
@@ -717,7 +717,7 @@ static short alternativeRepresentation(void *userDatavp, marpaESLIFValueResult_t
 }
 
 /*****************************************************************************/
-static short arrayTransformer(void *userDatavp, void *contextp, marpaESLIFValueResultArray_t a)
+static short arrayTransformer(marpaESLIFValue_t *marpaESLIFValuep, void *userDatavp, void *contextp, marpaESLIFValueResultArray_t a)
 /*****************************************************************************/
 {
   marpaESLIFTester_context_t *marpaESLIFTester_contextp = (marpaESLIFTester_context_t *) userDatavp;

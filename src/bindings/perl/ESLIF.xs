@@ -288,7 +288,6 @@ static short                           marpaESLIF_TransformPtrb(marpaESLIFValue_
 static short                           marpaESLIF_TransformArrayb(marpaESLIFValue_t *marpaESLIFValuep, void *userDatavp, void *contextp, marpaESLIFValueResultArray_t a);
 static short                           marpaESLIF_TransformBoolb(marpaESLIFValue_t *marpaESLIFValuep, void *userDatavp, void *contextp, marpaESLIFValueResultBool_t y);
 static short                           marpaESLIF_TransformStringb(marpaESLIFValue_t *marpaESLIFValuep, void *userDatavp, void *contextp, marpaESLIFValueResultString_t s);
-static short                           marpaESLIF_TransformOrderedCollectionb(marpaESLIFValue_t *marpaESLIFValuep, void *userDatavp, void *contextp, marpaESLIFValueResultOrderedCollection_t s);
 
 /* Transformers */
 static marpaESLIFValueResultTransform_t marpaESLIFValueResultTransformDefault = {
@@ -302,8 +301,7 @@ static marpaESLIFValueResultTransform_t marpaESLIFValueResultTransformDefault = 
   marpaESLIF_TransformPtrb,
   marpaESLIF_TransformArrayb,
   marpaESLIF_TransformBoolb,
-  marpaESLIF_TransformStringb,
-  marpaESLIF_TransformOrderedCollectionb
+  marpaESLIF_TransformStringb
 };
 /* Static constants */
 static const char   *UTF8s = "UTF-8";
@@ -1594,74 +1592,19 @@ static short marpaESLIF_TransformStringb(marpaESLIFValue_t *marpaESLIFValuep, vo
 {
   static const char      *funcs                    = "marpaESLIF_TransformStringb";
   MarpaX_ESLIF_Value_t   *Perl_MarpaX_ESLIF_Valuep = (MarpaX_ESLIF_Value_t *) userDatavp;
-  marpaESLIF_t           *marpaESLIFp              = marpaESLIFGrammar_eslifp(marpaESLIFRecognizer_grammarp(marpaESLIFValue_recognizerp(marpaESLIFValuep)));
-  char                   *utf8s;
-  char                   *utf8noboms;
-  size_t                  dstl;
-  size_t                  dstnoboml;
   dMYTHX(Perl_MarpaX_ESLIF_Valuep);
 
-  /* Instead of relying on Encoding::XS, marpaESLIF exports the method marpaESLIF_charconvb(), we */
-  /* use it to inject a (native) perl string in the UTF-8 format. This will also validate the string per se. */
-  /* The big advantage of marpaESLIF_charconvb() is that s.encodingasciis == NULL is supported -; Then marpaESLIF_charconv() will guess. */
-  utf8s = marpaESLIF_charconvb(marpaESLIFp, "UTF-8", s.encodingasciis, s.p, s.sizel, &dstl);
-  if (utf8s == NULL) {
-    MARPAESLIF_CROAKF("marpaESLIF_charconvb failure, %s", strerror(errno));
+  /* No big difference with an array. We just make the utf8 flag is user claimed it is */
+  Perl_MarpaX_ESLIF_Valuep->svp = newSVpvn(s.p, s.sizel);
+
+  if (MARPAESLIF_ENCODING_IS_UTF8(s.encodingasciis, strlen(s.encodingasciis))) {
+    /* Cross-check */
+    if (is_utf8_string((const U8 *) s.p, (STRLEN) s.sizel)) {
+      SvUTF8_on(Perl_MarpaX_ESLIF_Valuep->svp);
+    }
   }
-  /* Remove the UTF-8 BOM if any */
-  if ((dstl >= 3)                                         &&
-      (((unsigned char) utf8s[0] == (unsigned char) 0xEF) &&
-       ((unsigned char) utf8s[1] == (unsigned char) 0xBB) &&
-       ((unsigned char) utf8s[2] == (unsigned char) 0xBF))) {
-    utf8noboms = utf8s + 3;
-    dstnoboml = dstl - 3;
-  } else {
-    utf8noboms = utf8s;
-    dstnoboml = dstl;
-  }
-  /* Like the array transformer, except for the UTF-8 flag */
-  Perl_MarpaX_ESLIF_Valuep->svp = newSVpvn(utf8noboms, dstnoboml);
-  /* This is UTF-8 in any case */
-  SvUTF8_on(Perl_MarpaX_ESLIF_Valuep->svp);
-  /* We want to use C's free, not perl's free */
-  marpaESLIF_SYSTEM_FREE(utf8s);
 
   return 1;
-}
-
-/*****************************************************************************/
-static short marpaESLIF_TransformOrderedCollectionb(marpaESLIFValue_t *marpaESLIFValuep, void *userDatavp, void *contextp, marpaESLIFValueResultOrderedCollection_t o)
-/*****************************************************************************/
-{
-  static const char      *funcs                    = "marpaESLIF_TransformOrderedCollectionb";
-  MarpaX_ESLIF_Value_t   *Perl_MarpaX_ESLIF_Valuep = (MarpaX_ESLIF_Value_t *) userDatavp;
-  AV                     *avp;
-  size_t                  collectionl;
-  short                   rcb;
-  dMYTHX(Perl_MarpaX_ESLIF_Valuep);
-
-  if (contextp == ESLIF_PERL_CONTEXT) {
-    /* We never push an ordered collection */
-    MARPAESLIF_CROAK("Got ORDEREDCOLLECTION on the stack that pretend to come from perl");
-  } else {
-    avp = newAV();
-    for (collectionl = 0; collectionl < o.sizel; collectionl++) {
-      if (! marpaESLIFValue_transformb(marpaESLIFValuep, o.p[collectionl], NULL /* marpaESLIFValueResultResolvedp */)) goto err; /* In reality this will croak */
-      /* One reference count ownership is transfered to the array */
-      av_push(avp, Perl_MarpaX_ESLIF_Valuep->svp);
-    }
-    
-    Perl_MarpaX_ESLIF_Valuep->svp = newRV_inc((SV *) avp);
-  }
-
-  rcb = 1;
-  goto done;
-
- err:
-  rcb = 0;
-
- done:
-  return rcb;
 }
 
 =for comment

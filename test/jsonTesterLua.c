@@ -17,7 +17,6 @@ static short transformPtrb(marpaESLIFValue_t *marpaESLIFValuep, void *userDatavp
 static short transformArrayb(marpaESLIFValue_t *marpaESLIFValuep, void *userDatavp, void *contextp, marpaESLIFValueResultArray_t a);
 static short transformBoolb(marpaESLIFValue_t *marpaESLIFValuep, void *userDatavp, void *contextp, marpaESLIFValueResultBool_t b);
 static short transformStringb(marpaESLIFValue_t *marpaESLIFValuep, void *userDatavp, void *contextp, marpaESLIFValueResultString_t s);
-static short transformOrderedCollectionb(marpaESLIFValue_t *marpaESLIFValuep, void *userDatavp, void *contextp, marpaESLIFValueResultOrderedCollection_t l);
 
 static marpaESLIFValueResultTransform_t transformDefault = {
   transformUndefb,
@@ -663,17 +662,6 @@ static short transformStringb(marpaESLIFValue_t *marpaESLIFValuep, void *userDat
   valueContext_t *valueContextp = (valueContext_t *) userDatavp;
 
   GENERICLOGGER_NOTICEF(valueContextp->genericLoggerp, "Result type is string: %s", s.p);
-
-  return 1;
-}
-
-/*****************************************************************************/
-static short transformOrderedCollectionb(marpaESLIFValue_t *marpaESLIFValuep, void *userDatavp, void *contextp, marpaESLIFValueResultOrderedCollection_t l)
-/*****************************************************************************/
-{
-  valueContext_t *valueContextp = (valueContext_t *) userDatavp;
-
-  GENERICLOGGER_NOTICEF(valueContextp->genericLoggerp, "Result type is ordered collection: %s", l.p);
 
   return 1;
 }

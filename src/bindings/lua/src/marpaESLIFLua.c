@@ -94,13 +94,6 @@ typedef struct marpaESLIFLuaValueContext {
   int                result_r;              /* Reference to last result */
 } marpaESLIFLuaValueContext_t;
 
-typedef struct table_callback_context {
-  marpaESLIFLuaValueContext_t              *marpaESLIFLuaValueContextp;
-  marpaESLIFValue_t                        *marpaESLIFValuep;
-  int                                       parentsi;
-  marpaESLIFValueResultOrderedCollection_t  o;
-} table_callback_context_t;
-
 static short                           marpaESLIFLua_paramIsLoggerInterfaceOrNilb(lua_State *L, int stacki);
 static short                           marpaESLIFLua_paramIsRecognizerInterfacev(lua_State *L, int stacki);
 static short                           marpaESLIFLua_paramIsValueInterfacev(lua_State *L, int stacki);
@@ -180,7 +173,6 @@ static short                           marpaESLIFLua_transformPtrb(marpaESLIFVal
 static short                           marpaESLIFLua_transformArrayb(marpaESLIFValue_t *marpaESLIFValuep, void *userDatavp, void *contextp, marpaESLIFValueResultArray_t a);
 static short                           marpaESLIFLua_transformBoolb(marpaESLIFValue_t *marpaESLIFValuep, void *userDatavp, void *contextp, marpaESLIFValueResultBool_t b);
 static short                           marpaESLIFLua_transformStringb(marpaESLIFValue_t *marpaESLIFValuep, void *userDatavp, void *contextp, marpaESLIFValueResultString_t);
-static short                           marpaESLIFLua_transformOrderedCollectionb(marpaESLIFValue_t *marpaESLIFValuep, void *userDatavp, void *contextp, marpaESLIFValueResultOrderedCollection_t);
 static short                           marpaESLIFLua_pushValueb(marpaESLIFLuaValueContext_t *marpaESLIFLuaValueContextp, marpaESLIFValue_t *marpaESLIFValuep, int stackindicei, char *bytep, size_t bytel);
 static short                           marpaESLIFLua_representationb(void *userDatavp, marpaESLIFValueResult_t *marpaESLIFValueResultp, char **inputcpp, size_t *inputlp);
 static short                           marpaESLIFLua_iterateb(lua_State *L, int index, void *contextp, short (*callbackb)(void *contextp, lua_State *L));
@@ -224,8 +216,7 @@ static int                             marpaESLIFLua_marpaESLIFValue_newFromUnma
 #endif
 static int                             marpaESLIFLua_marpaESLIFValue_freei(lua_State *L);
 static int                             marpaESLIFLua_marpaESLIFValue_valuei(lua_State *L);
-static short                           marpaESLIFLua_table_set_stack_callbackb(void *contextp, lua_State *L);
-static short                           marpaESLIFLua_stack_setb(lua_State *L, marpaESLIFLuaValueContext_t *marpaESLIFLuaValueContextp, marpaESLIFValue_t *marpaESLIFValuep, int resulti, char *encodings, marpaESLIFValueResult_t *marpaESLIFValueResultp, table_callback_context_t *table_callback_contextp);
+static short                           marpaESLIFLua_stack_setb(lua_State *L, marpaESLIFLuaValueContext_t *marpaESLIFLuaValueContextp, marpaESLIFValue_t *marpaESLIFValuep, int resulti, char *encodings);
 
 /* Transformers */
 static marpaESLIFValueResultTransform_t marpaESLIFLuaValueResultTransformDefault = {
@@ -239,8 +230,7 @@ static marpaESLIFValueResultTransform_t marpaESLIFLuaValueResultTransformDefault
   marpaESLIFLua_transformPtrb,
   marpaESLIFLua_transformArrayb,
   marpaESLIFLua_transformBoolb,
-  marpaESLIFLua_transformStringb,
-  marpaESLIFLua_transformOrderedCollectionb
+  marpaESLIFLua_transformStringb
 };
 
 #define MARPAESLIFLUA_NOOP
@@ -3364,7 +3354,7 @@ static short marpaESLIFLua_valueCallbackb(void *userDatavp, marpaESLIFValue_t *m
     }
   }
 
-  if (! marpaESLIFLua_stack_setb(L, marpaESLIFLuaValueContextp, marpaESLIFValuep, resulti, encodings, NULL /* marpaESLIFValueResultp */, NULL /* table_callback_contextp */)) goto err;
+  if (! marpaESLIFLua_stack_setb(L, marpaESLIFLuaValueContextp, marpaESLIFValuep, resulti, encodings)) goto err;
   if (! marpaESLIFLua_lua_pop(L, 1)) goto err;
 
   rcb = 1;
@@ -3586,32 +3576,6 @@ static short marpaESLIFLua_transformStringb(marpaESLIFValue_t *marpaESLIFValuep,
 }
 
 /*****************************************************************************/
-static short marpaESLIFLua_transformOrderedCollectionb(marpaESLIFValue_t *marpaESLIFValuep, void *userDatavp, void *contextp, marpaESLIFValueResultOrderedCollection_t o)
-/*****************************************************************************/
-{
-  static const char           *funcs                      = "marpaESLIFLua_transformOrderedCollectionb";
-  marpaESLIFLuaValueContext_t *marpaESLIFLuaValueContextp = (marpaESLIFLuaValueContext_t *) userDatavp;
-  lua_State                   *L                          = marpaESLIFLuaValueContextp->L;
-  size_t                       collectionl;
-  short                        rcb;
-
-  if (! marpaESLIFLua_lua_createtable(L, (int) o.sizel, 0)) goto err;                                                          /* stack: {} */
-  for (collectionl = 1; collectionl <= o.sizel; collectionl++) {
-    if (! marpaESLIFValue_transformb(marpaESLIFValuep, o.p[collectionl], NULL /* marpaESLIFValueResultResolvedp */)) goto err; /* stack: {}, value */
-    if (! marpaESLIFLua_lua_rawseti(L, -2, (lua_Integer) collectionl)) goto err;                                               /* stack: { collectionl => value } */
-  }
-
-  rcb = 1;
-  goto done;
-
- err:
-  rcb = 0;
-
- done:
-  return rcb;
-}
-
-/*****************************************************************************/
 static short marpaESLIFLua_pushValueb(marpaESLIFLuaValueContext_t *marpaESLIFLuaValueContextp, marpaESLIFValue_t *marpaESLIFValuep, int stackindicei, char *bytep, size_t bytel)
 /*****************************************************************************/
 {
@@ -3787,7 +3751,7 @@ static int marpaESLIFLua_marpaESLIFRecognizer_newi(lua_State *L)
 
   /* We need a lexeme stack in this mode (in contrary to the parse() method that never calls back) */
   GENERICSTACK_NEW(marpaESLIFLuaRecognizerContextp->lexemeStackp);
-  if (marpaESLIFLuaRecognizerContextp->lexemeStackp == NULL) {
+  if (GENERICSTACK_ERROR(marpaESLIFLuaRecognizerContextp->lexemeStackp)) {
     int save_errno = errno;
     marpaESLIFLua_recognizerContextFreev(marpaESLIFLuaRecognizerContextp, 0 /* onStackb */);
     marpaESLIFLua_luaL_errorf(L, "GENERICSTACK_NEW failure, %s", strerror(save_errno));
@@ -3919,7 +3883,7 @@ static int marpaESLIFLua_marpaESLIFRecognizer_newFromi(lua_State *L)
 
   /* We need a lexeme stack in this mode (in contrary to the parse() method that never calls back) */
   GENERICSTACK_NEW(marpaESLIFLuaRecognizerContextp->lexemeStackp);
-  if (marpaESLIFLuaRecognizerContextp->lexemeStackp == NULL) {
+  if (GENERICSTACK_ERROR(marpaESLIFLuaRecognizerContextp->lexemeStackp)) {
     int save_errno = errno;
     marpaESLIFLua_recognizerContextFreev(marpaESLIFLuaRecognizerContextp, 0 /* onStackb */);
     marpaESLIFLua_luaL_errorf(L, "GENERICSTACK_NEW failure, %s", strerror(save_errno));
@@ -6117,7 +6081,7 @@ static short marpaESLIFLua_lua_absindex(int *rcip, lua_State *L, int idx)
 #endif /* MARPAESLIFLUA_EMBEDDED */
 
 /****************************************************************************/
-static short marpaESLIFLua_stack_setb(lua_State *L, marpaESLIFLuaValueContext_t *marpaESLIFLuaValueContextp, marpaESLIFValue_t *marpaESLIFValuep, int resulti, char *encodings, marpaESLIFValueResult_t *marpaESLIFValueResultp, table_callback_context_t *table_callback_contextp)
+static short marpaESLIFLua_stack_setb(lua_State *L, marpaESLIFLuaValueContext_t *marpaESLIFLuaValueContextp, marpaESLIFValue_t *marpaESLIFValuep, int resulti, char *encodings)
 /****************************************************************************/
 {
   char                     *p              = NULL;
@@ -6134,7 +6098,6 @@ static short marpaESLIFLua_stack_setb(lua_State *L, marpaESLIFLuaValueContext_t 
   const char               *tmps;
   size_t                    tmpl;
   void                     *luap;
-  table_callback_context_t  table_callback_context;
 
   if (! marpaESLIFLua_lua_type(&typei, L, -1)) goto err;
 
@@ -6248,35 +6211,6 @@ static short marpaESLIFLua_stack_setb(lua_State *L, marpaESLIFLuaValueContext_t 
       eslifb = 0;
     }
     break;
-  case LUA_TTABLE:
-    if (table_callback_contextp == NULL) {
-      table_callback_context.marpaESLIFLuaValueContextp = marpaESLIFLuaValueContextp;
-      table_callback_context.marpaESLIFValuep           = marpaESLIFValuep;
-      table_callback_context.o.p                        = NULL;
-      table_callback_context.o.sizel                    = 0;
-      table_callback_context.o.shallowb                 = 0;
-      table_callback_contextp                           = &table_callback_context;
-      /* Create a table in which we will store all the parents. */
-      /* We use that to detect recursivity because this is not supported */             /* stack: table */
-      if (! marpaESLIFLua_lua_newtable(L)) goto err;                                    /* stack: table, parentsTable */
-      if (! marpaESLIFLua_lua_gettop(&(table_callback_contextp->parentsi), L)) goto err;
-      /* Set parentsTable[table] = true */
-      if (! marpaESLIFLua_lua_pushnil(L)) goto err;                                     /* stack: table, parentsTable, nil */
-      if (! marpaESLIFLua_lua_copy(L, -3, -1)) goto err;                                /* stack: table, parentsTable, table */
-      if (! marpaESLIFLua_lua_pushboolean(L, 1)) goto err;                              /* stack: table, parentsTable, table, true */
-      if (! marpaESLIFLua_lua_rawset(L, table_callback_contextp->parentsi)) goto err;   /* stack: table, parentsTable */
-      /* Table to inspect is at indice -2 */
-      if (! marpaESLIFLua_iterateb(L, -2, table_callback_contextp, marpaESLIFLua_table_set_stack_callbackb)) goto err;
-    } else {
-      /* We are in a recursive call. Table to inspect is at indice -1 */
-      if (! marpaESLIFLua_iterateb(L, -1, table_callback_contextp, marpaESLIFLua_table_set_stack_callbackb)) goto err;
-    }
-    marpaESLIFValueResult.contextp           = MARPAESLIFLUA_CONTEXT;
-    marpaESLIFValueResult.representationp    = NULL;
-    marpaESLIFValueResult.type               = MARPAESLIF_VALUE_TYPE_ORDEREDCOLLECTION;
-    marpaESLIFValueResult.u.o                = table_callback_contextp->o;
-    eslifb = 1;
-    break;
   default:
     eslifb = 0;
     break;
@@ -6301,14 +6235,9 @@ static short marpaESLIFLua_stack_setb(lua_State *L, marpaESLIFLuaValueContext_t 
     marpaESLIFValueResult.u.p.shallowb    = 0;
   }
 
-  if (marpaESLIFValueResultp != NULL) {
-    /* Caller wants to get the result, not to set the stack */
-    *marpaESLIFValueResultp = marpaESLIFValueResult;
-  } else {
-    if (! marpaESLIFValue_stack_setb(marpaESLIFValuep, resulti, &marpaESLIFValueResult)) {
-      marpaESLIFLua_luaL_errorf(L, "marpaESLIFValue_stack_setb failure, %s", strerror(errno));
-      goto err;
-    }
+  if (! marpaESLIFValue_stack_setb(marpaESLIFValuep, resulti, &marpaESLIFValueResult)) {
+    marpaESLIFLua_luaL_errorf(L, "marpaESLIFValue_stack_setb failure, %s", strerror(errno));
+    goto err;
   }
 
   rcb = 1;
@@ -6323,134 +6252,6 @@ static short marpaESLIFLua_stack_setb(lua_State *L, marpaESLIFLuaValueContext_t 
   }
   if (ip != NULL) {
     free(ip);
-  }
-  rcb = 0;
-
- done:
-  return rcb;
-}
-
-/****************************************************************************/
-static short marpaESLIFLua_table_set_stack_callbackb(void *contextp, lua_State *L)
-/****************************************************************************/
-/* stack contains: table, key, value                                        */
-/* This callback is executing on the top table that we are serializing.     */
-/* We use a stack-free model in case key or value would also be a table.    */
-/****************************************************************************/
-{
-  table_callback_context_t    *table_callback_contextp = (table_callback_context_t *) contextp;
-  marpaESLIFLuaValueContext_t *marpaESLIFLuaValueContextp = table_callback_contextp->marpaESLIFLuaValueContextp;
-  marpaESLIFValue_t           *marpaESLIFValuep        = table_callback_contextp->marpaESLIFValuep;
-  short                        rcb;
-  int                          keytypei;
-  int                          valuetypei;
-  int                          truei;
-  marpaESLIFValueResult_t    **marpaESLIFValueResultpp;
-  marpaESLIFValueResult_t     *marpaESLIFValueResultp;
-  size_t                       sizel;
-  int                         *ip;
-
-  /* Parents table is at indice table_callback_contextp->parentsi */
-
-  /* Prepare marpaESLIFValueResult containers */
-  if (table_callback_contextp->o.sizel <= 0) {
-    sizel = 2;
-    marpaESLIFValueResultpp = table_callback_contextp->o.p = (marpaESLIFValueResult_t **) malloc(sizel * sizeof(marpaESLIFValueResult_t *));
-    if (marpaESLIFValueResultpp == NULL) {
-      marpaESLIFLua_luaL_errorf(L, "malloc failure, %s", strerror(errno));
-      goto err;
-    }
-  } else {
-    sizel = table_callback_contextp->o.sizel + 2;
-    marpaESLIFValueResultpp = (marpaESLIFValueResult_t **) realloc(table_callback_contextp->o.p, sizel * sizeof(marpaESLIFValueResult_t *));
-    if (marpaESLIFValueResultpp == NULL) {
-      marpaESLIFLua_luaL_errorf(L, "realloc failure, %s", strerror(errno));
-      goto err;
-    }
-  }
-
-  marpaESLIFValueResultpp[sizel - 2] = NULL;
-  marpaESLIFValueResultpp[sizel - 1] = NULL;
-  table_callback_contextp->o.p       = marpaESLIFValueResultpp;
-  table_callback_contextp->o.sizel   = sizel;
-
-  marpaESLIFValueResultp = marpaESLIFValueResultpp[sizel - 2] = (marpaESLIFValueResult_t *) malloc(sizeof(marpaESLIFValueResult_t));
-  if (marpaESLIFValueResultp == NULL) {
-    marpaESLIFLua_luaL_errorf(L, "malloc failure, %s", strerror(errno));
-    goto err;
-  }
-  marpaESLIFValueResultp->type = MARPAESLIF_VALUE_TYPE_UNDEF;
-  
-  marpaESLIFValueResultp = marpaESLIFValueResultpp[sizel - 1] = (marpaESLIFValueResult_t *) malloc(sizeof(marpaESLIFValueResult_t));
-  if (marpaESLIFValueResultp == NULL) {
-    marpaESLIFLua_luaL_errorf(L, "malloc failure, %s", strerror(errno));
-    goto err;
-  }
-  marpaESLIFValueResultp->type = MARPAESLIF_VALUE_TYPE_UNDEF;
-  
-  /* Will key trigger recursivity ? */
-  if (! marpaESLIFLua_lua_type(&keytypei, L, -2)) goto err;
-  if (keytypei == LUA_TTABLE) {
-    if (! marpaESLIFLua_lua_pushnil(L)) goto err;                                                             /* stack: table, key, value, nil */
-    if (! marpaESLIFLua_lua_copy(L, -3, -1)) goto err;                                                        /* stack: table, key, value, key */
-    if (! marpaESLIFLua_lua_rawget(NULL, L, table_callback_contextp->parentsi)) goto err;                     /* stack: table, key, value, parentsTable[key] */
-    if (! marpaESLIFLua_lua_toboolean(&truei, L, -1)) goto err;
-    if (! marpaESLIFLua_lua_pop(L, 1)) goto err;                                                              /* stack: table, key, value */
-    if (truei) {
-      marpaESLIFLua_luaL_error(L, "A table's key is a child of itself");
-      goto err;
-    }
-    if (! marpaESLIFLua_lua_pushnil(L)) goto err;                                                             /* stack: table, key, value, nil */
-    if (! marpaESLIFLua_lua_copy(L, -3, -1)) goto err;                                                        /* stack: table, key, value, key */
-    if (! marpaESLIFLua_lua_pushboolean(L, 1)) goto err;                                                      /* stack: table, key, value, key, true */
-    if (! marpaESLIFLua_lua_rawset(L, table_callback_contextp->parentsi)) goto err;                           /* stack: table, key, value */
-  }
-  /* Serialize key in table_callback_contextp->o.p[sizel - 2] */
-  if (! marpaESLIFLua_lua_pushnil(L)) goto err;                                                               /* stack: table, key, value, nil */
-  if (! marpaESLIFLua_lua_copy(L, -3, -1)) goto err;                                                          /* stack: table, key, value, key */
-  marpaESLIFValueResultp = table_callback_contextp->o.p[sizel - 2];
-  if (! marpaESLIFLua_stack_setb(L, marpaESLIFLuaValueContextp, marpaESLIFValuep, -1 /* resulti */, NULL /* encodings */, marpaESLIFValueResultp, table_callback_contextp)) goto err;
-  if (! marpaESLIFLua_lua_pop(L, 1)) goto err;                                                                /* stack: table, key, value */
-  
-  /* Will value trigger recursivity ? */
-  if (! marpaESLIFLua_lua_type(&valuetypei, L, -1)) goto err;
-  if (valuetypei == LUA_TTABLE) {
-    if (! marpaESLIFLua_lua_pushnil(L)) goto err;                                                             /* stack: table, key, value, nil */
-    if (! marpaESLIFLua_lua_copy(L, -2, -1)) goto err;                                                        /* stack: table, key, value, value */
-    if (! marpaESLIFLua_lua_rawget(NULL, L, table_callback_contextp->parentsi)) goto err;                     /* stack: table, key, value, parentsTable[value] */
-    if (! marpaESLIFLua_lua_toboolean(&truei, L, -1)) goto err;
-    if (! marpaESLIFLua_lua_pop(L, 1)) goto err;                                                              /* stack: table, key, value */
-    if (truei) {
-      marpaESLIFLua_luaL_error(L, "A table's value is a child of itself");
-      goto err;
-    }
-    if (! marpaESLIFLua_lua_pushnil(L)) goto err;                                                             /* stack: table, key, value, nil */
-    if (! marpaESLIFLua_lua_copy(L, -2, -1)) goto err;                                                        /* stack: table, key, value, value */
-    if (! marpaESLIFLua_lua_pushboolean(L, 1)) goto err;                                                      /* stack: table, key, value, value, true */
-    if (! marpaESLIFLua_lua_rawset(L, table_callback_contextp->parentsi)) goto err;                           /* stack: table, key, value */
-  }
-  /* Serialize value in table_callback_contextp->o.p[sizel - 1] */
-  if (! marpaESLIFLua_lua_pushnil(L)) goto err;                                                               /* stack: table, key, value, nil */
-  if (! marpaESLIFLua_lua_copy(L, -2, -1)) goto err;                                                          /* stack: table, key, value, value */
-  marpaESLIFValueResultp = table_callback_contextp->o.p[sizel - 1];
-  if (! marpaESLIFLua_stack_setb(L, marpaESLIFLuaValueContextp, marpaESLIFValuep, -1 /* resulti */, NULL /* encodings */, marpaESLIFValueResultp, table_callback_contextp)) goto err;
-  if (! marpaESLIFLua_lua_pop(L, 1)) goto err;                                                                /* stack: table, key, value */
-
-  rcb = 1;
-  goto done;
-
- err:
-  if (table_callback_contextp->o.p != NULL) {
-    for (sizel = 0; sizel < table_callback_contextp->o.sizel; sizel++) {
-      marpaESLIFValueResultp = table_callback_contextp->o.p[sizel];
-      if (marpaESLIFValueResultp != NULL) {
-        marpaESLIFLua_valueFreeCallbackv(marpaESLIFLuaValueContextp, marpaESLIFValueResultp);
-        free(marpaESLIFValueResultp);
-      }
-    }
-    free(table_callback_contextp->o.p);
-    table_callback_contextp->o.p = NULL; /* Important because we may have recursed */
-    table_callback_contextp->o.sizel = 0;
   }
   rcb = 0;
 
