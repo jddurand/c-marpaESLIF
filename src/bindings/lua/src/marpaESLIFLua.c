@@ -6087,8 +6087,8 @@ static short marpaESLIFLua_stack_setb(lua_State *L, marpaESLIFLuaValueContext_t 
   char                     *p              = NULL;
   char                     *encodingasciis = NULL;
   int                      *ip             = NULL;
+  short                     eslifb         = 0;
   short                     rcb;
-  short                     eslifb;
   int                       typei;
   marpaESLIFValueResult_t   marpaESLIFValueResult;
   lua_Integer               tmpi;
@@ -6133,34 +6133,34 @@ static short marpaESLIFLua_stack_setb(lua_State *L, marpaESLIFLuaValueContext_t 
         marpaESLIFValueResult.type            = MARPAESLIF_VALUE_TYPE_LONG;
         marpaESLIFValueResult.u.l             = (long) tmpi;
         eslifb = 1;
-      } else {
-        eslifb = 0;
       }
+#if defined(LUA_FLOAT_TYPE)
+      /* Knowing which float type is used by lua is not that easy if we want to be */
+      /* portable. From code introspection, IF the following defines exists: */
+      /* LUA_FLOAT_FLOAT, LUA_FLOAT_DOUBLE, then, IF the following defines exists: */
+      /* LUA_FLOAT_TYPE, then this give the internal representation. */
     } else {
-      /* Try to get it into a double */
       if (! marpaESLIFLua_lua_tonumberx(&tmpd, L, -1, &isNumi)) goto err;
       if (isNumi) {
-        if ((tmpd >= FLT_MIN) && (tmpd <= FLT_MAX)) {
-          /* Does it fit in a native C float ? */
-          marpaESLIFValueResult.contextp        = MARPAESLIFLUA_CONTEXT;
-          marpaESLIFValueResult.representationp = NULL;
-          marpaESLIFValueResult.type            = MARPAESLIF_VALUE_TYPE_FLOAT;
-          marpaESLIFValueResult.u.f             = (float) tmpd;
-          eslifb = 1;
-        } else if ((tmpd >= DBL_MIN) && (tmpd <= DBL_MAX)) {
-          /* Does it fit in a native C long ? */
-          marpaESLIFValueResult.contextp        = MARPAESLIFLUA_CONTEXT;
-          marpaESLIFValueResult.representationp = NULL;
-          marpaESLIFValueResult.type            = MARPAESLIF_VALUE_TYPE_LONG;
-          marpaESLIFValueResult.u.d             = (long) tmpd;
-          eslifb = 1;
-        } else {
-          eslifb = 0;
-        }
-      } else {
-        eslifb = 0;
+#  if defined(LUA_FLOAT_FLOAT) && (LUA_FLOAT_FLOAT == LUA_FLOAT_TYPE)
+        /* Lua uses native C float */
+        marpaESLIFValueResult.contextp        = MARPAESLIFLUA_CONTEXT;
+        marpaESLIFValueResult.representationp = NULL;
+        marpaESLIFValueResult.type            = MARPAESLIF_VALUE_TYPE_FLOAT;
+        marpaESLIFValueResult.u.f             = tmpd; /* We volontarily do not typecast, there should be no warning */
+        eslifb = 1;
+#  else
+#    if defined(LUA_FLOAT_FLOAT) && (LUA_FLOAT_FLOAT == LUA_FLOAT_TYPE)
+        marpaESLIFValueResult.contextp        = MARPAESLIFLUA_CONTEXT;
+        marpaESLIFValueResult.representationp = NULL;
+        marpaESLIFValueResult.type            = MARPAESLIF_VALUE_TYPE_LONG;
+        marpaESLIFValueResult.u.d             = tmpd; /* We volontarily do not typecast, there should be no warning */
+        eslifb = 1;
+#    endif
+#  endif /* defined(LUA_FLOAT_FLOAT) && (LUA_FLOAT_FLOAT == LUA_FLOAT_TYPE) */
       }
     }
+#endif /* defined(LUA_FLOAT_TYPE) */
     break;
   case LUA_TBOOLEAN:
     if (! marpaESLIFLua_lua_toboolean(&tmpb, L, -1)) goto err;
@@ -6207,12 +6207,9 @@ static short marpaESLIFLua_stack_setb(lua_State *L, marpaESLIFLuaValueContext_t 
       marpaESLIFValueResult.u.s.encodingasciis = encodingasciis;
 
       eslifb = 1;
-    } else {
-      eslifb = 0;
     }
     break;
   default:
-    eslifb = 0;
     break;
   }
 
