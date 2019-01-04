@@ -989,10 +989,24 @@ static short marpaESLIFLua_lua_toboolean(int *rcip, lua_State *L, int idx)
 }
 
 /****************************************************************************/
+static short marpaESLIFLua_luaL_tolstring(const char **rcp, lua_State *L, int idx, size_t *len)
+/****************************************************************************/
+{
+  return ! luaunpanicL_tolstring(rcp, L, idx, len);
+}
+
+/****************************************************************************/
 static short marpaESLIFLua_lua_tolstring(const char **rcpp, lua_State *L, int idx, size_t *len)
 /****************************************************************************/
 {
   return ! luaunpanic_tolstring(rcpp, L, idx, len);
+}
+
+/****************************************************************************/
+static short marpaESLIFLua_lua_tostring(const char **rcpp, lua_State *L, int idx)
+/****************************************************************************/
+{
+  return ! luaunpanic_tostring(rcpp, L, idx);
 }
 
 /****************************************************************************/
@@ -1031,7 +1045,56 @@ static short marpaESLIFLua_lua_absindex(int *rcip, lua_State *L, int idx)
 }
 
 /****************************************************************************/
-static short _marpaESLIF_lua_representationb(void *userDatavp, marpaESLIFValueResult_t *marpaESLIFValueResultp, char **inputcpp, size_t *inputlp)
+static short marpaESLIFLua_lua_next(int *rcip, lua_State *L, int idx)
+/****************************************************************************/
+{
+  return ! luaunpanic_next(rcip, L, idx);
+}
+
+/****************************************************************************/
+static short marpaESLIFLua_luaL_checklstring(const char **rcp, lua_State *L, int arg, size_t *l)
+/****************************************************************************/
+{
+  return ! luaunpanicL_checklstring(rcp, L, arg, l);
+}
+
+/****************************************************************************/
+static short marpaESLIFLua_luaL_checkstring(const char **rcp, lua_State *L, int arg)
+/****************************************************************************/
+{
+  return ! luaunpanicL_checkstring(rcp, L, arg);
+}
+
+/****************************************************************************/
+static short marpaESLIFLua_luaL_checkinteger(lua_Integer *rcp, lua_State *L, int arg)
+/****************************************************************************/
+{
+  return ! luaunpanicL_checkinteger(rcp, L, arg);
+}
+
+/****************************************************************************/
+static short marpaESLIFLua_lua_getmetatable(int *rcip, lua_State *L, int index)
+/****************************************************************************/
+{
+  return ! luaunpanic_getmetatable(rcip, L, index);
+}
+
+/****************************************************************************/
+static short marpaESLIFLua_luaL_callmeta(int *rcp, lua_State *L, int obj, const char *e)
+/****************************************************************************/
+{
+  return ! luaunpanicL_callmeta(rcp, L, obj, e);
+}
+
+/****************************************************************************/
+static short marpaESLIFLua_luaL_getmetafield(int *rcp, lua_State *L, int obj, const char *e)
+/****************************************************************************/
+{
+  return ! luaunpanicL_getmetafield(rcp, L, obj, e);
+}
+
+/****************************************************************************/
+static short _marpaESLIF_lua_representationb(void *userDatavp, marpaESLIFValueResult_t *marpaESLIFValueResultp, char **inputcpp, size_t *inputlp, char **encodingasciisp)
 /****************************************************************************/
 {
   static const char                *funcs = "_marpaESLIF_lua_representationb";
@@ -1056,7 +1119,7 @@ static short _marpaESLIF_lua_representationb(void *userDatavp, marpaESLIFValueRe
     MARPAESLIF_ERROR(marpaESLIFValuep->marpaESLIFp, "Lua marpaESLIFValue global is not a table");
     goto err; /* Lua will shutdown anyway */
   }
-  /* And this marpaESLIFValue is a table with a key "marpaESLIFValueContext" */
+  /* And this marpaESLIFValue is a table with a key "marpaESLIFValueContextp" */
   LUA_GETFIELDI(&typei, marpaESLIFValuep, -1, "marpaESLIFLuaValueContextp");     /* stack: ..., marpaESLIFValueTable, marpaESLIFLuaValueContextp */
   if (typei != LUA_TLIGHTUSERDATA) {
     MARPAESLIF_ERROR(marpaESLIFValuep->marpaESLIFp, "Lua marpaESLIFLuaValueContextp is not a light userdata");
@@ -1068,7 +1131,7 @@ static short _marpaESLIF_lua_representationb(void *userDatavp, marpaESLIFValueRe
   /* Proxy to the lua representation callback action - then userDatavp has to be marpaESLIFLuaValueContextp */
   representationCallbackp = marpaESLIFLua_representationb;
 
-  rcb = representationCallbackp((void *) marpaESLIFLuaValueContextp /* userDatavp */, marpaESLIFValueResultp, inputcpp, inputlp);
+  rcb = representationCallbackp((void *) marpaESLIFLuaValueContextp /* userDatavp */, marpaESLIFValueResultp, inputcpp, inputlp, encodingasciisp);
   if (! rcb) goto err;
 
   goto done;

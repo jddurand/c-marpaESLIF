@@ -17,6 +17,7 @@ typedef struct marpaESLIFSymbol      marpaESLIFSymbol_t;
 typedef struct marpaESLIFValueResult marpaESLIFValueResult_t;
 
 /* A string */
+typedef struct marpaESLIFStringHelper marpaESLIFStringHelper_t; 
 typedef struct marpaESLIFString {
   char   *bytep;            /* pointer bytes */
   size_t  bytel;            /* number of bytes */
@@ -78,7 +79,9 @@ typedef enum marpaESLIFValueType {
   MARPAESLIF_VALUE_TYPE_PTR,
   MARPAESLIF_VALUE_TYPE_ARRAY,
   MARPAESLIF_VALUE_TYPE_BOOL,
-  MARPAESLIF_VALUE_TYPE_STRING
+  MARPAESLIF_VALUE_TYPE_STRING,
+  MARPAESLIF_VALUE_TYPE_ROW,
+  MARPAESLIF_VALUE_TYPE_TABLE
 } marpaESLIFValueType_t;
 
 typedef short (*marpaESLIFValueRuleCallback_t)(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
@@ -90,34 +93,60 @@ typedef marpaESLIFValueSymbolCallback_t (*marpaESLIFValueSymbolActionResolver_t)
 typedef marpaESLIFValueFreeCallback_t   (*marpaESLIFValueFreeActionResolver_t)(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, char *actions);
 
 /* Valuation result */
-/* The representation returns a sequence of bytes and is appended AS-IS */
+/* The representation returns a sequence of bytes, eventually meaning a string */
 /* It is legal to return NULL in *inputcpp or 0 in *inputlp: representation will be ignored */
-typedef short (*marpaESLIFRepresentation_t)(void *userDatavp, marpaESLIFValueResult_t *marpaESLIFValueResultp, char **inputcpp, size_t *inputlp);
-typedef char                                                                                                                               marpaESLIFValueResultChar_t;
-typedef short                                                                                                                              marpaESLIFValueResultShort_t;
-typedef int                                                                                                                                marpaESLIFValueResultInt_t;
-typedef long                                                                                                                               marpaESLIFValueResultLong_t;
-typedef float                                                                                                                              marpaESLIFValueResultFloat_t;
-typedef double                                                                                                                             marpaESLIFValueResultDouble_t;
-typedef struct marpaESLIFValueResultPtr               { void                     *p; short shallowb; }                                     marpaESLIFValueResultPtr_t;
-typedef struct marpaESLIFValueResultArray             { char                     *p; short shallowb; size_t sizel; }                       marpaESLIFValueResultArray_t;
-typedef enum { MARPAESLIFVALUERESULTBOOL_FALSE = 0, MARPAESLIFVALUERESULTBOOL_TRUE = 1 }                                                   marpaESLIFValueResultBool_t;
-typedef struct marpaESLIFValueResultString            { unsigned char            *p; short shallowb; size_t sizel; char *encodingasciis; } marpaESLIFValueResultString_t;
+/* It is legal to return NULL in encodingmaybesp, then this is an opaque sequence of bytes, else */
+/* this is considered as a string in this given encoding. */
+/* Note that it is the responsibility of the caller to make sure that *inputcpp and **encodingmaybesp points to valid memory area when the call returns */
+typedef short (*marpaESLIFRepresentation_t)(void *userDatavp, marpaESLIFValueResult_t *marpaESLIFValueResultp, char **inputcpp, size_t *inputlp, char **encodingasciisp);
+typedef char marpaESLIFValueResultChar_t;
+typedef short marpaESLIFValueResultShort_t;
+typedef int marpaESLIFValueResultInt_t;
+typedef long marpaESLIFValueResultLong_t;
+typedef float marpaESLIFValueResultFloat_t;
+typedef double marpaESLIFValueResultDouble_t;
+typedef struct marpaESLIFValueResultPtr {
+  void *p;
+  short shallowb;
+} marpaESLIFValueResultPtr_t;
+typedef struct marpaESLIFValueResultArray {
+  char *p;
+  short shallowb;
+  size_t sizel;
+} marpaESLIFValueResultArray_t;
+typedef enum marpaESLIFValueResultBool {
+  MARPAESLIFVALUERESULTBOOL_FALSE = 0,
+  MARPAESLIFVALUERESULTBOOL_TRUE = 1
+} marpaESLIFValueResultBool_t;
+typedef struct marpaESLIFValueResultString {
+  unsigned char *p;
+  short          shallowb;
+  size_t         sizel;
+  char          *encodingasciis;
+} marpaESLIFValueResultString_t;
+typedef struct marpaESLIFValueResultRow {
+  marpaESLIFValueResult_t    *p;
+  short                       shallowb;
+  size_t                      sizel;
+} marpaESLIFValueResultRow_t;
+typedef marpaESLIFValueResultRow_t marpaESLIFValueResultTable_t;
 struct marpaESLIFValueResult {
   void                      *contextp;          /* Free value meaningful only to the user */
   marpaESLIFRepresentation_t representationp;   /* How a user-land alternative is represented if it was in the input */
   marpaESLIFValueType_t      type;              /* Type for tagging the following union */
   union {
-    marpaESLIFValueResultChar_t   c; /* Value is a char */
-    marpaESLIFValueResultShort_t  b; /* Value is a short */
-    marpaESLIFValueResultInt_t    i; /* Value is an int */
-    marpaESLIFValueResultLong_t   l; /* Value is a long */
-    marpaESLIFValueResultFloat_t  f; /* Value is a float */
-    marpaESLIFValueResultDouble_t d; /* Value is a double */
-    marpaESLIFValueResultPtr_t    p; /* Value is a pointer */
-    marpaESLIFValueResultArray_t  a; /* Value is a byte array */
-    marpaESLIFValueResultBool_t   y; /* Value is a boolean */
-    marpaESLIFValueResultString_t s; /* Value is a string */
+    marpaESLIFValueResultChar_t       c; /* Value is a char */
+    marpaESLIFValueResultShort_t      b; /* Value is a short */
+    marpaESLIFValueResultInt_t        i; /* Value is an int */
+    marpaESLIFValueResultLong_t       l; /* Value is a long */
+    marpaESLIFValueResultFloat_t      f; /* Value is a float */
+    marpaESLIFValueResultDouble_t     d; /* Value is a double */
+    marpaESLIFValueResultPtr_t        p; /* Value is a pointer */
+    marpaESLIFValueResultArray_t      a; /* Value is a byte array */
+    marpaESLIFValueResultBool_t       y; /* Value is a boolean */
+    marpaESLIFValueResultString_t     s; /* Value is a string */
+    marpaESLIFValueResultRow_t        r; /* Value is a row of values */
+    marpaESLIFValueResultTable_t      t; /* Value is a row of values, where sizel is even */
   } u;
 };
 
@@ -140,6 +169,8 @@ typedef short (*marpaESLIFValueResultTransformPtr_t)(marpaESLIFValue_t *marpaESL
 typedef short (*marpaESLIFValueResultTransformArray_t)(marpaESLIFValue_t *marpaESLIFValuep, void *userDatavp, void *contextp, marpaESLIFValueResultArray_t a);
 typedef short (*marpaESLIFValueResultTransformBool_t)(marpaESLIFValue_t *marpaESLIFValuep, void *userDatavp, void *contextp, marpaESLIFValueResultBool_t b);
 typedef short (*marpaESLIFValueResultTransformString_t)(marpaESLIFValue_t *marpaESLIFValuep, void *userDatavp, void *contextp, marpaESLIFValueResultString_t s);
+typedef short (*marpaESLIFValueResultTransformRow_t)(marpaESLIFValue_t *marpaESLIFValuep, void *userDatavp, void *contextp, marpaESLIFValueResultRow_t r);
+typedef short (*marpaESLIFValueResultTransformTable_t)(marpaESLIFValue_t *marpaESLIFValuep, void *userDatavp, void *contextp, marpaESLIFValueResultTable_t t);
 typedef struct marpaESLIFValueResultTransform {
   marpaESLIFValueResultTransformUndef_t             undefTransformerp;
   marpaESLIFValueResultTransformChar_t              charTransformerp;
@@ -152,6 +183,8 @@ typedef struct marpaESLIFValueResultTransform {
   marpaESLIFValueResultTransformArray_t             arrayTransformerp;
   marpaESLIFValueResultTransformBool_t              boolTransformerp;
   marpaESLIFValueResultTransformString_t            stringTransformerp;
+  marpaESLIFValueResultTransformRow_t               rowTransformerp;
+  marpaESLIFValueResultTransformTable_t             tableTransformerp;
 } marpaESLIFValueResultTransform_t;
 
 typedef struct marpaESLIFValueOption {
@@ -395,6 +428,14 @@ extern "C" {
   marpaESLIF_EXPORT short                         marpaESLIFValue_stack_get_transformb(marpaESLIFValue_t *marpaESLIFValuep, int indicei);
 
   marpaESLIF_EXPORT void                          marpaESLIF_freev(marpaESLIF_t *marpaESLIFp);
+
+  /* Some languages may NOT have a proper string representation (lua for example). These methods are helpers for a correct string implementation */
+  /* bytep and encodingasciis can be on the stack: marpaESLIFString_newp will always duplicate the data */
+  marpaESLIF_EXPORT marpaESLIFStringHelper_t     *marpaESLIFStringHelper_newp(marpaESLIF_t *marpaESLIFp, char *bytep, size_t bytel, char *encodingasciis);
+  /* marpaESLIFStringHelper_convertp returns a NEW instance of marpaESLIFStringHelper_t */
+  marpaESLIF_EXPORT marpaESLIFStringHelper_t     *marpaESLIFStringHelper_convertp(marpaESLIFStringHelper_t *marpaESLIFStringHelperp, char *newencodingasciis);
+  marpaESLIF_EXPORT marpaESLIFString_t           *marpaESLIFStringHelper_stringp(marpaESLIFStringHelper_t *marpaESLIFStringHelperp);
+  marpaESLIF_EXPORT void                          marpaESLIFStringHelper_freev(marpaESLIFStringHelper_t *marpaESLIFStringHelperp);
 #ifdef __cplusplus
 }
 #endif

@@ -48,10 +48,11 @@ const static char *dsl = "\n"
   "                   # >>>>>>>>>>>>>>>> Strict JSON Grammar <<<<<<<<<<<<<<<<\n"
   "                   #######################################################\n"
   "\n"
-  "# ----------------\n"
-  "# Start is a value\n"
-  "# ----------------\n"
-  ":start ::= value\n"
+  "# -----------------------------------------\n"
+  "# Start is a value that we want stringified\n"
+  "# -----------------------------------------\n"
+  ":start ::= value2string\n"
+  "value2string ::= value action => ::json\n"
   "\n"
   "# -------------------\n"
   "# Composite separator\n"
@@ -61,18 +62,18 @@ const static char *dsl = "\n"
   "# ----------\n"
   "# JSON value\n"
   "# ----------\n"
-  "value    ::= string                              action => ::lua->lua_string  # Just say this is an UTF-8 string\n"
+  "value    ::= string                                                           # ::shift (default action)\n"
   "           | number                                                           # ::shift (default action)\n"
-  "           | object                                                           # ::shift (default action)\n"
+  "           | object                               action => ::lua->lua_object\n"
   "           | array                                                            # ::shift (default action)\n"
   "           | 'true'                               action => ::true            # built-in true action\n"
   "           | 'false'                              action => ::false           # built-in false action\n"
-  "           | 'null'\n"
+  "           | 'null'                               action => ::undef           # built-in undef action\n"
   "\n"
   "# -----------\n"
   "# JSON object\n"
   "# -----------\n"
-  "object   ::= '{' inc members '}' dec              action         => ::copy[2] # Returns members\n"
+  "object   ::= (-'{'-) members (-'}'-)                                          # ::shift (default action)\n"
   "members  ::= pairs*                               action         => ::lua->lua_members   # Returns { @{pairs1}, ..., @{pair2} }\n"
   "                                                  separator      => comma     # ... separated by comma\n"
   "                                                  proper         => 1         # ... with no trailing separator\n"
@@ -83,8 +84,8 @@ const static char *dsl = "\n"
   "# -----------\n"
   "# JSON Arrays\n"
   "# -----------\n"
-  "array    ::= '[' inc elements ']' dec             action         => ::copy[2] # Returns elements\n"
-  "elements ::= value*                               action => ::lua->lua_elements          # Returns [ value1, ..., valuen ]\n"
+  "array    ::= (-'['-) elements (-']'-)                                         # ::shift (default action)\n"
+  "elements ::= value*                               action => ::lua->lua_elements # Returns [ value1, ..., valuen ]\n"
   "                                                  separator      => comma     # ... separated by comma\n"
   "                                                  proper         => 1         # ... with no trailing separator\n"
   "                                                  hide-separator => 1         # ... and hide separator in the action\n"
@@ -114,13 +115,13 @@ const static char *dsl = "\n"
   "# JSON String\n"
   "# -----------\n"
   "string     ::= '\"' discardOff chars '\"' discardOn action => ::copy[2]\n"
-  "discardOff ::=                                      action => ::undef                 # Nullable rule used to disable discard\n"
-  "discardOn  ::=                                      action => ::undef                 # Nullable rule used to enable discard\n"
+  "discardOff ::=                                                                        # Nullable rule used to disable discard\n"
+  "discardOn  ::=                                                                        # Nullable rule used to enable discard\n"
   "\n"
   "event :discard[on]  = nulled discardOn                                                # Implementation of discard disabing using reserved ':discard[on]' keyword\n"
   "event :discard[off] = nulled discardOff                                               # Implementation of discard enabling using reserved ':discard[off]' keyword\n"
   "\n"
-  "chars   ::= filled                                                                    # ::shift (default action)\n"
+  "chars   ::= filled                                  action => ::lua->lua_chars\n"
   "filled  ::= char+                                   action => ::concat                # Returns join('', char1, ..., charn)\n"
   "chars   ::=                                         action => ::lua->lua_empty_string # Prefering empty string instead of undef\n"
   "char    ::= /[^\"\\\\\\x00-\\x1F]+/                                                   # ::shift (default action) - take care PCRE2 [:cntrl:] includes DEL character\n"
@@ -140,12 +141,6 @@ const static char *dsl = "\n"
   "# -------------------------\n"
   ":discard ::= /[\\x{9}\\x{A}\\x{D}\\x{20}]+/\n"
   "\n"
-  "# ------------------------------------------------------\n"
-  "# Needed for eventual depth extension - no op by default\n"
-  "# ------------------------------------------------------\n"
-  "inc ::=                                                        action => ::undef\n"
-  "dec ::=                                                        action => ::undef\n"
-  "\n"
   "                   #######################################################\n"
   "                   # >>>>>>>>>>>>>>>>>> JSON Extensions <<<<<<<<<<<<<<<<<<\n"
   "                   #######################################################\n"
@@ -164,12 +159,6 @@ const static char *dsl = "\n"
   "# C++ comment extension\n"
   "# --------------------------\n"
   "# /* C++ comment */:discard ::= /(?:(?:(?:\\/\\/)(?:[^\\n]*)(?:\\n|\\z))|(?:(?:\\/\\*)(?:(?:[^\\*]+|\\*(?!\\/))*)(?:\\*\\/)))/\n"
-  "\n"
-  "# --------------------------\n"
-  "# Max depth extension\n"
-  "# --------------------------\n"
-  "# /* max_depth */event inc[] = nulled inc                                                        # Increment depth\n"
-  "# /* max_depth */event dec[] = nulled dec                                                        # Decrement depth\n"
   "\n"
   "# ----------------\n"
   "# Number extension\n"
@@ -196,42 +185,54 @@ const static char *dsl = "\n"
   "# Lua actions      \n"
   "# -----------------\n"
   "<luascript>\n"
+  "  function table_print (tt, indent, done)\n"
+  "    done = done or {}\n"
+  "    indent = indent or 0\n"
+  "    if type(tt) == \"table\" then\n"
+  "      for key, value in pairs (tt) do\n"
+  "        io.write(string.rep (\" \", indent)) -- indent it\n"
+  "        if type (value) == \"table\" and not done [value] then\n"
+  "          done [value] = true\n"
+  "          io.write(string.format(\"[%s] => table\\n\", tostring (key)));\n"
+  "          io.write(string.rep (\" \", indent+4)) -- indent it\n"
+  "          io.write(\"(\\n\");\n"
+  "          table_print (value, indent + 7, done)\n"
+  "          io.write(string.rep (\" \", indent+4)) -- indent it\n"
+  "          io.write(\")\\n\");\n"
+  "        else\n"
+  "          io.write(string.format(\"[%s] => %s\\n\",\n"
+  "              tostring (key), tostring(value)))\n"
+  "        end\n"
+  "      end\n"
+  "    else\n"
+  "      io.write(tt .. \"\\n\")\n"
+  "    end\n"
+  "  end\n"
   "  io.stdout:setvbuf('no')\n"
   "  -----------------------------------\n"
-  "  function lua_true(string)\n"
-  "    return true\n"
-  "  end\n"
-  "  -----------------------------------\n"
-  "  function lua_false(string)\n"
-  "    return false\n"
+  "  function lua_object(object)\n"
+  "    return object, false -- disable the automatic transformation to array: this will always be marpaESLIF table type\n"
   "  end\n"
   "  -----------------------------------\n"
   "  function lua_members(...)\n"
-  "    local _args = table.pack(...)\n"
   "    local _result = {}\n"
-  "    \n"
-  "    -- Note: per construction nils are impossible\n"
-  "    local _imax = _args.n / 2"
-  "    local _j = 1\n"
-  "    for _i=1,_imax do\n"
-  "      _result[_args[_j]] = _args[_j+1]\n"
-  "      _j = _j + 2\n"
+  "    for _i=1,select('#', ...) do\n"
+  "      local _pair = select(_i, ...)\n"
+  "      _result[_pair['key']] = _pair['value']\n"
   "    end\n"
-  "    return ''\n"
+  "    return _result, false -- hint to say that we never want that to appear as a marpaESLIF array\n"
   "  end\n"
   "  -----------------------------------\n"
-  "  function lua_pairs(string,value)\n"
-  "    local _result = {}\n"
-  "    _result[string] = value\n"
-  "    local jdd = { _result }\n"
-  "    _result['jdd'] = jdd\n"
-  "    return _result\n"
+  "  function lua_pairs(key, value)\n"
+  "    return { ['key'] = key, ['value'] = value }\n"
   "  end\n"
   "  -----------------------------------\n"
   "  function lua_elements(...)\n"
-  "    local _args = {...}\n"
-  "    local _result = table.unpack(_args)\n"
-  "    return _result\n"
+  "    local _result = {}\n"
+  "    for _i=1,select('#', ...) do\n"
+  "      _result[_i] = select(_i, ...)\n"
+  "    end\n"
+  "    return _result, true -- hint to say that we allow that to appear as a marpaESLIF array\n"
   "  end\n"
   "  -----------------------------------\n"
   "  function lua_number(number)\n"
@@ -243,8 +244,8 @@ const static char *dsl = "\n"
   "    return ''\n"
   "  end\n"
   "  -----------------------------------\n"
-  "  function lua_string(string)\n"
-  "    return string, 'UTF-8'\n"
+  "  function lua_chars(chars)\n"
+  "    return marpaESLIF:marpaESLIFStringHelper_new(chars, 'UTF-8')\n"
   "  end\n"
   "  -----------------------------------\n"
   "  function lua_unicode(u)\n"
@@ -285,7 +286,7 @@ const static char *dsl = "\n"
   "      _result = _result..utf8.char(_codepoint)\n"
   "    end\n"
   "\n"
-  "    return _result, 'UTF-8'\n"
+  "      return marpaESLIF:marpaESLIFStringHelper_new(_result, 'UTF-8')\n"
   "  end\n"
   "</luascript>\n"
   ;
@@ -316,14 +317,14 @@ int main() {
   valueContext_t               valueContext;
 
   const static char           *inputs[] = {
+    "{\"test\":[1,2,3,null]}",
+    NULL,
     "[\"\"]",
     "[\"\\uD801\\udc37\"]",
     "[\"\\ud83d\\ude39\\ud83d\\udc8d\"]",
     "\"\\ud83d\\ude39\\ud83d\\udc8d\"",
     "\"ASCII String\"",
-    "{\"test\":\"\\u1234\"}",
     "{\"test\":\"1\"}",
-    "{\"test\":[1,2,3]}",
     "{\"test\":true}",
     "{\"test\":false}",
     "{\"test\":null}",
@@ -409,6 +410,9 @@ int main() {
     "true",
     "false",
     "\"x\"",
+    "{\"test\":\"ASCII String\"}",
+    "{\"test\":[1,2,3]}",
+    "{\"test\":\"\\u1234\"}"
   };
 
   genericLoggerp = GENERICLOGGER_NEW(GENERICLOGGER_LOGLEVEL_DEBUG);
@@ -449,7 +453,7 @@ int main() {
   for (i = 0; i < (sizeof(inputs)/sizeof(inputs[0])); i++) {
     marpaESLIFTester_context.genericLoggerp = genericLoggerp;
     marpaESLIFTester_context.inputs         = (char *) inputs[i];
-    marpaESLIFTester_context.inputl         = strlen(inputs[i]);
+    marpaESLIFTester_context.inputl         = (inputs[i] != NULL) ? strlen(inputs[i]) : 0;
 
     marpaESLIFRecognizerOption.userDatavp        = &marpaESLIFTester_context;
     marpaESLIFRecognizerOption.readerCallbackp   = inputReaderb;
@@ -474,6 +478,10 @@ int main() {
     marpaESLIFRecognizerp = marpaESLIFRecognizer_newp(marpaESLIFGrammarp, &marpaESLIFRecognizerOption);
     if (marpaESLIFRecognizerp == NULL) {
       goto err;
+    }
+
+    if (marpaESLIFTester_context.inputs == NULL) {
+      break;
     }
 
     GENERICLOGGER_INFO(genericLoggerp, "Scanning JSON");
@@ -568,7 +576,7 @@ static short transformCharb(marpaESLIFValue_t *marpaESLIFValuep, void *userDatav
 {
   valueContext_t *valueContextp = (valueContext_t *) userDatavp;
 
-  GENERICLOGGER_NOTICE(valueContextp->genericLoggerp, "Result type is char");
+  GENERICLOGGER_NOTICEF(valueContextp->genericLoggerp, "Result type is char: %c", c);
 
   return 1;
 }
@@ -579,7 +587,7 @@ static short transformShortb(marpaESLIFValue_t *marpaESLIFValuep, void *userData
 {
   valueContext_t *valueContextp = (valueContext_t *) userDatavp;
 
-  GENERICLOGGER_NOTICE(valueContextp->genericLoggerp, "Result type is short");
+  GENERICLOGGER_NOTICEF(valueContextp->genericLoggerp, "Result type is short: %d", (int) b);
 
   return 1;
 }
@@ -590,7 +598,7 @@ static short transformIntb(marpaESLIFValue_t *marpaESLIFValuep, void *userDatavp
 {
   valueContext_t *valueContextp = (valueContext_t *) userDatavp;
 
-  GENERICLOGGER_NOTICE(valueContextp->genericLoggerp, "Result type is int");
+  GENERICLOGGER_NOTICEF(valueContextp->genericLoggerp, "Result type is int: %d", i);
 
   return 1;
 }
@@ -601,7 +609,7 @@ static short transformLongb(marpaESLIFValue_t *marpaESLIFValuep, void *userDatav
 {
   valueContext_t *valueContextp = (valueContext_t *) userDatavp;
 
-  GENERICLOGGER_NOTICE(valueContextp->genericLoggerp, "Result type is long");
+  GENERICLOGGER_NOTICEF(valueContextp->genericLoggerp, "Result type is long: %ld", l);
 
   return 1;
 }
@@ -612,7 +620,7 @@ static short transformFloatb(marpaESLIFValue_t *marpaESLIFValuep, void *userData
 {
   valueContext_t *valueContextp = (valueContext_t *) userDatavp;
 
-  GENERICLOGGER_NOTICE(valueContextp->genericLoggerp, "Result type is float");
+  GENERICLOGGER_NOTICEF(valueContextp->genericLoggerp, "Result type is float: %f", (double) f);
 
   return 1;
 }
@@ -623,7 +631,7 @@ static short transformDoubleb(marpaESLIFValue_t *marpaESLIFValuep, void *userDat
 {
   valueContext_t *valueContextp = (valueContext_t *) userDatavp;
 
-  GENERICLOGGER_NOTICE(valueContextp->genericLoggerp, "Result type is double");
+  GENERICLOGGER_NOTICEF(valueContextp->genericLoggerp, "Result type is double: %f", d);
 
   return 1;
 }
@@ -634,7 +642,7 @@ static short transformPtrb(marpaESLIFValue_t *marpaESLIFValuep, void *userDatavp
 {
   valueContext_t *valueContextp = (valueContext_t *) userDatavp;
 
-  GENERICLOGGER_NOTICE(valueContextp->genericLoggerp, "Result type is ptr");
+  GENERICLOGGER_NOTICEF(valueContextp->genericLoggerp, "Result type is ptr: %p", p.p);
 
   return 1;
 }
@@ -645,7 +653,7 @@ static short transformArrayb(marpaESLIFValue_t *marpaESLIFValuep, void *userData
 {
   valueContext_t *valueContextp = (valueContext_t *) userDatavp;
 
-  GENERICLOGGER_NOTICE(valueContextp->genericLoggerp, "Result type is array");
+  GENERICLOGGER_NOTICEF(valueContextp->genericLoggerp, "Result type is array: {%p,%ld}", a.p, (unsigned long) a.sizel);
 
   return 1;
 }
@@ -667,7 +675,7 @@ static short transformStringb(marpaESLIFValue_t *marpaESLIFValuep, void *userDat
 {
   valueContext_t *valueContextp = (valueContext_t *) userDatavp;
 
-  GENERICLOGGER_NOTICEF(valueContextp->genericLoggerp, "Result type is string: %s", s.p);
+  GENERICLOGGER_NOTICEF(valueContextp->genericLoggerp, "Result type is string: %s, encoding: %s", s.p, s.encodingasciis);
 
   return 1;
 }

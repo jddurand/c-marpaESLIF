@@ -475,6 +475,12 @@ marpaESLIFValueOption_t marpaESLIFValueOption_default_template = {
   0     /* maxParsesi */
 };
 
+/* String helper */
+struct marpaESLIFStringHelper {
+  marpaESLIF_t       *marpaESLIFp;
+  marpaESLIFString_t *marpaESLIFStringp;
+};
+
 #include "marpaESLIF/internal/eslif.h"
 
 #endif /* MARPAESLIF_INTERNAL_STRUCTURES_H */

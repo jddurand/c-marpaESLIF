@@ -27,6 +27,8 @@ ESLIF values are mapped to constants. This module is giving access to them, alth
   $valueType = MarpaX::ESLIF::Value::Type->MARPAESLIF_VALUE_TYPE_ARRAY;         #  8
   $valueType = MarpaX::ESLIF::Value::Type->MARPAESLIF_VALUE_TYPE_BOOL;          #  9
   $valueType = MarpaX::ESLIF::Value::Type->MARPAESLIF_VALUE_TYPE_STRING;        #  10
+  $valueType = MarpaX::ESLIF::Value::Type->MARPAESLIF_VALUE_TYPE_ROW;           #  11
+  $valueType = MarpaX::ESLIF::Value::Type->MARPAESLIF_VALUE_TYPE_TABLE;         #  12
 
 =cut
 
@@ -78,7 +80,15 @@ I<C>'s C<short> where any value different than zero means a true value.
 
 =head2 MARPAESLIF_VALUE_TYPE_STRING
 
-A string in UTF-8 encoding.
+A string. Encoding is contextual and depend on the action that generated that string. Lexemes that comes from a grammar running in character mode are guaranteed to be in UTF-8.
+
+=head2 MARPAESLIF_VALUE_TYPE_ROW
+
+An array of values.
+
+=head2 MARPAESLIF_VALUE_TYPE_TABLE
+
+An array of values, where number of values is even.
 
 =cut
 
