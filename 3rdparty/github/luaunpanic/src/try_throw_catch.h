@@ -30,12 +30,44 @@
  * http://www.di.unipi.it/~nids/docs/longjump_try_trow_catch.html
  */
 
-#undef TRY
+#undef _TRY_THROW_SETJMP
+/* If we abort it is really really bad luck... */
+#define _TRY_THROW_SETJMP(LW, envp) jmp_buf localenv; do {              \
+  if ((LW) == NULL) {                                                   \
+    envp = &localenv;                                                   \
+  } else {                                                              \
+    if ((LW)->envp == NULL) {                                           \
+      (LW)->envp = (jmp_buf *) malloc(sizeof(jmp_buf));                 \
+      if ((LW)->envp == NULL) abort();                                  \
+      (LW)->envpmallocl = (LW)->envpusedl = 1;                          \
+    } else {                                                            \
+      if ((LW)->envpusedl < (LW)->envpmallocl) {                        \
+        (LW)->envpusedl++;                                              \
+      } else {                                                          \
+        jmp_buf *tmp = (jmp_buf *) realloc((LW)->envp, sizeof(jmp_buf) * ((LW)->envpusedl = ++(LW)->envpmallocl)); \
+        if (tmp == NULL) abort();                                       \
+        (LW)->envp = tmp;                                               \
+      }                                                                 \
+    }                                                                   \
+    envp = &((LW)->envp[(LW)->envpusedl - 1]);                          \
+  }                                                                     \
+  } while (0)
+
+#undef _TRY_SETJMP_IMPL
+#undef _TRY_LONGJMP_IMPL
 #if defined(LUA_USE_POSIX)
-#  define TRY(LW) do { jmp_buf env; (LW)->envp = &env; switch( _setjmp(env) ) { case 0: while(1) {
+#  define _TRY_SETJMP_IMPL(env)     _setjmp(env)
+#  define _TRY_LONGJMP_IMPL(env, x) _longjmp(env, x)
 #else
-#  define TRY(LW) do { jmp_buf env; (LW)->envp = &env; switch( setjmp(env) ) { case 0: while(1) {
+#  define _TRY_SETJMP_IMPL(env)      setjmp(env)
+#  define _TRY_LONGJMP_IMPL(env, x)  longjmp(env, x)
 #endif
+
+#undef _TRY_THROW_GETJMP
+#define _TRY_THROW_GETJMP(LW) (LW)->envp[(LW)->envpusedl - 1]
+
+#undef TRY
+#define TRY(LW) do { jmp_buf *envp; _TRY_THROW_SETJMP(LW, envp); switch( _TRY_SETJMP_IMPL(*envp) ) { case 0: while(1) {
 
 #undef CATCH
 #define CATCH(LW, x) break; case x:
@@ -44,13 +76,9 @@
 #define FINALLY(LW) break; } default: {
 
 #undef ETRY
-#define ETRY(LW) break; } } if ((LW) != NULL) (LW)->envp = NULL; } while(0)
+#define ETRY(LW) break; } } if ((LW) != NULL) (LW)->envpusedl--; } while(0)
 
 #undef THROW
-#if defined(LUA_USE_POSIX)
-#  define THROW(LW, x) if (((LW) != NULL) && ((LW)->envp != NULL)) _longjmp(*((LW)->envp), x)
-#else
-#  define THROW(LW, x) if (((LW) != NULL) && ((LW)->envp != NULL)) longjmp(*((LW)->envp), x)
-#endif
+#define THROW(LW, x) if ((LW) != NULL) _TRY_LONGJMP_IMPL(_TRY_THROW_GETJMP(LW), x)
 
 #endif /*!_TRY_THROW_CATCH_H_*/
