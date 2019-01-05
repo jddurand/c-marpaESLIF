@@ -135,6 +135,7 @@
 #define G1_RULE_ACTION_NAME_9                    "G1_rule_action_name_9"
 #define G1_RULE_ACTION_NAME_10                   "G1_rule_action_name_10"
 #define G1_RULE_ACTION_NAME_11                   "G1_rule_action_name_11"
+#define G1_RULE_ACTION_NAME_12                   "G1_rule_action_name_12"
 #define G1_RULE_ACTION_FREE_NAME                 "G1_rule_action_free_name"
 #define G1_RULE_SYMBOLACTION_NAME_1              "G1_rule_symbolaction_name_1"
 #define G1_RULE_SYMBOLACTION_NAME_2              "G1_rule_symbolaction_name_2"
@@ -303,6 +304,7 @@
 #define G1_ACTION_ACTION_NAME_9                    "::ascii" /* <action name> ::= '::true' */
 #define G1_ACTION_ACTION_NAME_10                   "::ascii" /* <action name> ::= '::false' */
 #define G1_ACTION_ACTION_NAME_11                   "::ascii" /* <action name> ::= '::json' */
+#define G1_ACTION_ACTION_NAME_12                   "::ascii" /* <action name> ::= '::row' */
 #define G1_ACTION_FREE_NAME                        "::ascii" /* <free name> ::= <ascii graph name> */
 #define G1_ACTION_SYMBOLACTION_NAME_1              "::ascii" /* <symbol action name> ::= <ascii graph name> */
 #define G1_ACTION_SYMBOLACTION_NAME_2              "::ascii" /* <symbol action name> ::= '::transfer' */
