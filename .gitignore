@@ -86,3 +86,4 @@ src/bindings/perl/Changes
 src/bindings/perl/META.json
 src/bindings/perl/README.pod
 LICENSE.txt
+CPackCustomProjectConfig.cmake
