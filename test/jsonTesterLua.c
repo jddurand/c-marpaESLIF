@@ -64,11 +64,11 @@ const static char *dsl = "\n"
   "# ----------\n"
   "value    ::= string                                                           # ::shift (default action)\n"
   "           | number                                                           # ::shift (default action)\n"
-  "           | object                               action => ::lua->lua_object\n"
+  "           | object                                                           # ::shift (default action)\n"
   "           | array                                                            # ::shift (default action)\n"
   "           | 'true'                               action => ::true            # built-in true action\n"
   "           | 'false'                              action => ::false           # built-in false action\n"
-  "           | 'null'                               action => ::undef           # built-in undef action\n"
+  "           | 'null'                               action => ::lua->lua_null   # built-in undef action\n"
   "\n"
   "# -----------\n"
   "# JSON object\n"
@@ -210,8 +210,17 @@ const static char *dsl = "\n"
   "  end\n"
   "  io.stdout:setvbuf('no')\n"
   "  -----------------------------------\n"
-  "  function lua_object(object)\n"
-  "    return object, false -- disable the automatic transformation to array: this will always be marpaESLIF table type\n"
+  "  function lua_null()\n"
+  "    -- Special case to have nil persistency\n"
+  "    local _result = {}\n"
+  "    local _mt = {}\n"
+  "    _mt.__tostring = function() return 'null' end\n"
+  "    -- We VOLUNTARILY do not set an encoding, that will make marpaESLIF understand it is a true string.\n"
+  "    -- i.e. during json stringification, this would be enclosed with double-quotes. Instead we just make\n"
+  "    -- make sure this is an UTF-8 compatible set of bytes.\n"
+  "    _mt.__marpaESLIF_opaque = true\n"
+  "    setmetatable(_result, _mt) \n"
+  "    return _result\n"
   "  end\n"
   "  -----------------------------------\n"
   "  function lua_members(...)\n"
@@ -220,7 +229,10 @@ const static char *dsl = "\n"
   "      local _pair = select(_i, ...)\n"
   "      _result[_pair['key']] = _pair['value']\n"
   "    end\n"
-  "    return _result, false -- hint to say that we never want that to appear as a marpaESLIF array\n"
+  "    local _mt = {}\n"
+  "    _mt.__marpaESLIF_canarray = false -- hint to say that we never want that to appear as a marpaESLIF array\n"
+  "    setmetatable(_result, _mt) \n"
+  "    return _result\n"
   "  end\n"
   "  -----------------------------------\n"
   "  function lua_pairs(key, value)\n"
@@ -232,7 +244,7 @@ const static char *dsl = "\n"
   "    for _i=1,select('#', ...) do\n"
   "      _result[_i] = select(_i, ...)\n"
   "    end\n"
-  "    return _result, true -- hint to say that we allow that to appear as a marpaESLIF array\n"
+  "    return _result\n"
   "  end\n"
   "  -----------------------------------\n"
   "  function lua_number(number)\n"
@@ -317,8 +329,6 @@ int main() {
   valueContext_t               valueContext;
 
   const static char           *inputs[] = {
-    "{\"test\":[1,2,3,null]}",
-    NULL,
     "[\"\"]",
     "[\"\\uD801\\udc37\"]",
     "[\"\\ud83d\\ude39\\ud83d\\udc8d\"]",
@@ -412,7 +422,13 @@ int main() {
     "\"x\"",
     "{\"test\":\"ASCII String\"}",
     "{\"test\":[1,2,3]}",
-    "{\"test\":\"\\u1234\"}"
+    "{\"test\":\"\\u1234\"}",
+    "{\"test\":[1,2,3,null,5]}",
+    "{\"test\":[1,2,3,[null],5]}",
+    "{\"geo\" : {}}",
+    "{\"geo\" : []}",
+    "{}",
+    "[]"
   };
 
   genericLoggerp = GENERICLOGGER_NEW(GENERICLOGGER_LOGLEVEL_DEBUG);

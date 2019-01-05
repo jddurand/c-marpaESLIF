@@ -13688,6 +13688,7 @@ static short _marpaESLIFRecognizer_concat_valueResultCallbackb(void *userDatavp,
     if (representationp != NULL) {
       srcs = NULL;
       srcl = 0;
+      encodingasciis = NULL;
       if (! representationp(representationUserDatavp, &marpaESLIFValueResult, &srcs, &srcl, &encodingasciis)) {
         goto err;
       }
@@ -13720,11 +13721,11 @@ static short _marpaESLIFRecognizer_concat_valueResultCallbackb(void *userDatavp,
       }
       break;
     case MARPAESLIF_VALUE_TYPE_CHAR:
+      /* fprintf(stdout, "CHAR %c\n", marpaESLIFValueResult.u.c); fflush(stdout); */
       /* Char default representation:
          - string mode: %c, json: "%c"
          - binary mode: content
       */
-      /* fprintf(stdout, "CHAR %c\n", marpaESLIFValueResult.u.c); fflush(stdout); */
       if (contextp->stringb) {
         if (contextp->jsonb) {
           _marpaESLIF_codepoint_to_json((marpaESLIF_uint32_t) marpaESLIFValueResult.u.c, genericLoggerp);
@@ -13736,6 +13737,7 @@ static short _marpaESLIFRecognizer_concat_valueResultCallbackb(void *userDatavp,
       }
       break;
     case MARPAESLIF_VALUE_TYPE_SHORT:
+      /* fprintf(stdout, "SHORT %d\n", (int) marpaESLIFValueResult.u.b); fflush(stdout); */
       /* Char default representation:
          - string mode: %d, json: %d
          - binary mode: content
@@ -13747,6 +13749,7 @@ static short _marpaESLIFRecognizer_concat_valueResultCallbackb(void *userDatavp,
       }
       break;
     case MARPAESLIF_VALUE_TYPE_INT:
+      /* fprintf(stdout, "INT %d\n", marpaESLIFValueResult.u.i); fflush(stdout); */
       /* Char default representation:
          - string mode: %d, json: %d
          - binary mode: content
@@ -13758,6 +13761,7 @@ static short _marpaESLIFRecognizer_concat_valueResultCallbackb(void *userDatavp,
       }
       break;
     case MARPAESLIF_VALUE_TYPE_LONG:
+      /* fprintf(stdout, "LONG %ld\n", marpaESLIFValueResult.u.l); fflush(stdout); */
       /* Long default representation:
          string mode: %ld, json: %ld
          binary mode: content
@@ -13769,6 +13773,7 @@ static short _marpaESLIFRecognizer_concat_valueResultCallbackb(void *userDatavp,
       }
       break;
     case MARPAESLIF_VALUE_TYPE_FLOAT:
+      /* fprintf(stdout, "FLOAT %f\n", (double) marpaESLIFValueResult.u.f); fflush(stdout); */
       /* Float default representation:
          - string mode: marpaESLIFp->float_fmts, json: marpaESLIFp->float_fmts
          - binary mode: content
@@ -13780,6 +13785,7 @@ static short _marpaESLIFRecognizer_concat_valueResultCallbackb(void *userDatavp,
       }
       break;
     case MARPAESLIF_VALUE_TYPE_DOUBLE:
+      /* fprintf(stdout, "DOUBLE %f\n", (double) marpaESLIFValueResult.u.d); fflush(stdout); */
       /* Double default representation:
          - string mode: marpaESLIFp->double_fmts, json: marpaESLIFp->double_fmts
          - binary mode: content
@@ -13791,6 +13797,7 @@ static short _marpaESLIFRecognizer_concat_valueResultCallbackb(void *userDatavp,
       }
       break;
     case MARPAESLIF_VALUE_TYPE_PTR:
+      /* fprintf(stdout, "PTR %p\n", marpaESLIFValueResult.u.p.p); fflush(stdout); */
       /* Ptr default representation:
          - string mode: %p, json: %p
          - binary mode: content
@@ -13802,12 +13809,14 @@ static short _marpaESLIFRecognizer_concat_valueResultCallbackb(void *userDatavp,
       }
       break;
     case MARPAESLIF_VALUE_TYPE_ARRAY:
+      /* fprintf(stdout, "ARRAY {%p,%ld}\n", marpaESLIFValueResult.u.a.p, (unsigned long) marpaESLIFValueResult.u.a.sizel); fflush(stdout); */
       /* Array default representation: bytes as-is */
       if ((marpaESLIFValueResult.u.a.p != NULL) && (marpaESLIFValueResult.u.a.sizel > 0)) {
         _marpaESLIF_appendOpaqueDataToStringGenerator(marpaESLIF_stringGeneratorp, marpaESLIFValueResult.u.a.p, marpaESLIFValueResult.u.a.sizel);
       }
       break;
     case MARPAESLIF_VALUE_TYPE_BOOL:
+      /* fprintf(stdout, "BOOL %d\n", (int) marpaESLIFValueResult.u.y); fflush(stdout); */
       /* Bool default representation:
          - string mode: true or false, json: true or false
          - binary mode: content
@@ -13819,11 +13828,11 @@ static short _marpaESLIFRecognizer_concat_valueResultCallbackb(void *userDatavp,
       }
       break;
     case MARPAESLIF_VALUE_TYPE_STRING:
+      /* fprintf(stdout, "STRING {%p,%ld,%s}\n", marpaESLIFValueResult.u.s.p, (unsigned long) marpaESLIFValueResult.u.s.sizel, marpaESLIFValueResult.u.s.encodingasciis); fflush(stdout); */
       /* String default representation:
          - string mode: UTF-8 bytes, json: escaped string
          - binary mode: content
       */
-      /* fprintf(stdout, "STRING {%p,%ld}\n", utf8p->bytep, (unsigned long) utf8p->bytel); fflush(stdout); */
       if (contextp->stringb) {
         string.bytep          = marpaESLIFValueResult.u.s.p;
         string.bytel          = marpaESLIFValueResult.u.s.sizel;
@@ -13864,6 +13873,7 @@ static short _marpaESLIFRecognizer_concat_valueResultCallbackb(void *userDatavp,
       break;
     case MARPAESLIF_VALUE_TYPE_ROW:
       /* String default representation: concatenation of sub-members representation, in reverse order for intuitive representation -; */
+      /* fprintf(stdout, "ROW {%p,%ld}\n", marpaESLIFValueResult.u.r.p, (unsigned long) marpaESLIFValueResult.u.r.sizel); fflush(stdout); */
       GENERICSTACK_PUSH_CUSTOM(todoStackp, marpaESLIFValueResultRightSquare);
       if (GENERICSTACK_ERROR(todoStackp)) {
         MARPAESLIF_ERRORF(marpaESLIFp, "todoStackp push failure, %s", strerror(errno));
@@ -13896,6 +13906,7 @@ static short _marpaESLIFRecognizer_concat_valueResultCallbackb(void *userDatavp,
       break;
     case MARPAESLIF_VALUE_TYPE_TABLE:
       /* Nothing else but a row with an even number of elements, in reverse order for intuitive representation -; */
+      /* fprintf(stdout, "TABLE {%p,%ld}\n", marpaESLIFValueResult.u.t.p, (unsigned long) marpaESLIFValueResult.u.t.sizel); fflush(stdout); */
       GENERICSTACK_PUSH_CUSTOM(todoStackp, marpaESLIFValueResultRightBracket);
       if (GENERICSTACK_ERROR(todoStackp)) {
         MARPAESLIF_ERRORF(marpaESLIFp, "todoStackp push failure, %s", strerror(errno));
