@@ -76,9 +76,9 @@
 #define FINALLY(LW) break; } default: {
 
 #undef ETRY
-#define ETRY(LW) break; } } if ((LW) != NULL) (LW)->envpusedl--; } while(0)
+#define ETRY(LW) break; } } if (((LW) != NULL) && ((LW)->envpusedl > 0)) (LW)->envpusedl--; } while(0)
 
 #undef THROW
-#define THROW(LW, x) if ((LW) != NULL) _TRY_LONGJMP_IMPL(_TRY_THROW_GETJMP(LW), x)
+#define THROW(LW, x) if (((LW) != NULL) && ((LW)->envpusedl > 0)) { _TRY_LONGJMP_IMPL(_TRY_THROW_GETJMP(LW), x); }
 
 #endif /*!_TRY_THROW_CATCH_H_*/
