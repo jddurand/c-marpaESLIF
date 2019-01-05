@@ -334,6 +334,7 @@ int main() {
   valueContext_t               valueContext;
 
   const static char           *inputs[] = {
+    "[\"a\",\"b\"]",
     "[\"\"]",
     "[\"\\uD801\\udc37\"]",
     "[\"\\ud83d\\ude39\\ud83d\\udc8d\"]",

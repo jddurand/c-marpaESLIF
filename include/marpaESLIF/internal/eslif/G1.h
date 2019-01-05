@@ -94,6 +94,7 @@ typedef enum bootstrap_grammar_G1_enum {
   G1_TERMINAL___FALSE,
   G1_TERMINAL___JSON,
   G1_TERMINAL___ROW,
+  G1_TERMINAL___TABLE,
   /* ----- Non terminals ------ */
   G1_META_STATEMENTS,
   G1_META_STATEMENT,
@@ -959,6 +960,14 @@ bootstrap_grammar_terminal_t bootstrap_grammar_G1_terminals[] = {
 #else
     NULL, NULL
 #endif
+  },
+  { G1_TERMINAL___TABLE, MARPAESLIF_TERMINAL_TYPE_STRING, NULL,
+    "'::table'",
+#ifndef MARPAESLIF_NTRACE
+    "::table", "::ta"
+#else
+    NULL, NULL
+#endif
   }
 };
 
@@ -1302,6 +1311,7 @@ bootstrap_grammar_rule_t bootstrap_grammar_G1_rules[] = {
   { G1_META_ACTION_NAME,                      G1_RULE_ACTION_NAME_10,                         MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_TERMINAL___FALSE                          }, -1,                        -1,      -1,              0, G1_ACTION_ACTION_NAME_10 },
   { G1_META_ACTION_NAME,                      G1_RULE_ACTION_NAME_11,                         MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_TERMINAL___JSON                           }, -1,                        -1,      -1,              0, G1_ACTION_ACTION_NAME_11 },
   { G1_META_ACTION_NAME,                      G1_RULE_ACTION_NAME_12,                         MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_TERMINAL___ROW                            }, -1,                        -1,      -1,              0, G1_ACTION_ACTION_NAME_12 },
+  { G1_META_ACTION_NAME,                      G1_RULE_ACTION_NAME_13,                         MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_TERMINAL___TABLE                          }, -1,                        -1,      -1,              0, G1_ACTION_ACTION_NAME_13 },
   { G1_META_FREE_NAME,                        G1_RULE_ACTION_FREE_NAME,                       MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_RESTRICTED_ASCII_GRAPH_NAME          }, -1,                        -1,      -1,              0, G1_ACTION_FREE_NAME },
   { G1_META_SYMBOLACTION_NAME,                G1_RULE_SYMBOLACTION_NAME_1,                    MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_RESTRICTED_ASCII_GRAPH_NAME          }, -1,                        -1,      -1,              0, G1_ACTION_SYMBOLACTION_NAME_1 },
   { G1_META_SYMBOLACTION_NAME,                G1_RULE_SYMBOLACTION_NAME_2,                    MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_TERMINAL___TRANSFER                       }, -1,                        -1,      -1,              0, G1_ACTION_SYMBOLACTION_NAME_2 },

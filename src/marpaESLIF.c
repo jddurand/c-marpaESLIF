@@ -530,6 +530,7 @@ static        short                  _marpaESLIF_rule_action___trueb(void *userD
 static        short                  _marpaESLIF_rule_action___falseb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
 static        short                  _marpaESLIF_rule_action___jsonb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
 static        short                  _marpaESLIF_rule_action___rowb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
+static        short                  _marpaESLIF_rule_action___tableb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
 static        short                  _marpaESLIF_symbol_action___transferb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, char *bytep, size_t bytel, int resulti);
 static        short                  _marpaESLIF_symbol_action___undefb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, char *bytep, size_t bytel, int resulti);
 static        short                  _marpaESLIF_symbol_action___asciib(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, char *bytep, size_t bytel, int resulti);
@@ -14401,6 +14402,90 @@ static short _marpaESLIF_rule_action___rowb(void *userDatavp, marpaESLIFValue_t 
 }
 
 /*****************************************************************************/
+static short _marpaESLIF_rule_action___tableb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb)
+/*****************************************************************************/
+/* Exactly the same logic as for row except that the target is of type table and that we require an even number of elements
+/*****************************************************************************/
+{
+  short                    rcb;
+  int                      i;
+  marpaESLIFValueResult_t  marpaESLIFValueResult;
+  marpaESLIFValueResult_t *marpaESLIFValueResultp;
+  short                   *origshallowbp;
+
+  marpaESLIFValueResult.contextp        = NULL;
+  marpaESLIFValueResult.representationp = NULL;
+  marpaESLIFValueResult.type            = MARPAESLIF_VALUE_TYPE_TABLE;
+  marpaESLIFValueResult.u.t.p           = NULL;
+  marpaESLIFValueResult.u.t.shallowb    = 0;
+  marpaESLIFValueResult.u.t.sizel       = nullableb ? 0 : (argni - arg0i + 1);
+
+  if ((marpaESLIFValueResult.u.t.sizel % 2) != 0) {
+    MARPAESLIF_ERROR(marpaESLIFValuep->marpaESLIFp, "::table rule action requires an even number of arguments");
+    goto err;
+  }
+
+  if (marpaESLIFValueResult.u.t.sizel > 0) {
+    if ((marpaESLIFValueResult.u.t.p = (marpaESLIFValueResult_t *) malloc(marpaESLIFValueResult.u.t.sizel * sizeof(marpaESLIFValueResult_t))) == NULL) {
+      MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "malloc failure, %s", strerror(errno));
+      goto err;
+    }
+    for (i = 0; i < marpaESLIFValueResult.u.t.sizel; i++) {
+      /* We have to take care of members's shallow status: the array becomes the owner in any case */
+      marpaESLIFValueResultp = _marpaESLIFValue_stack_getp(marpaESLIFValuep, arg0i + i);
+      if (marpaESLIFValueResultp == NULL) {
+        MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "Failed to fetch value result at stack indice %d", resulti);
+        goto err;
+      }
+      origshallowbp = NULL;
+      switch (marpaESLIFValueResultp->type) {
+      case MARPAESLIF_VALUE_TYPE_PTR:
+        origshallowbp = &(marpaESLIFValueResultp->u.p.shallowb);
+        break;
+      case MARPAESLIF_VALUE_TYPE_ARRAY:
+        origshallowbp = &(marpaESLIFValueResultp->u.a.shallowb);
+        break;
+      case MARPAESLIF_VALUE_TYPE_STRING:
+        origshallowbp = &(marpaESLIFValueResultp->u.s.shallowb);
+        break;
+      case MARPAESLIF_VALUE_TYPE_ROW:
+        origshallowbp = &(marpaESLIFValueResultp->u.t.shallowb);
+        break;
+      case MARPAESLIF_VALUE_TYPE_TABLE:
+        origshallowbp = &(marpaESLIFValueResultp->u.t.shallowb);
+        break;
+      default:
+        break;
+      }
+
+      marpaESLIFValueResult.u.t.p[i] = *marpaESLIFValueResultp;
+
+      if (origshallowbp != NULL) {
+        *origshallowbp = 1;
+      }
+
+    }
+  }
+
+  /* If this fails, we will leak at most */
+  if (! _marpaESLIFValue_stack_setb(marpaESLIFValuep, resulti, &marpaESLIFValueResult)) {
+    goto err;
+  }
+
+  rcb = 1;
+  goto done;
+
+ err:
+  if (marpaESLIFValueResult.u.t.p != NULL) {
+    free(marpaESLIFValueResult.u.t.p);
+  }
+  rcb = 0;
+
+ done:
+  return rcb;
+}
+
+/*****************************************************************************/
 static short _marpaESLIF_rule_action___asciib(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb)
 /*****************************************************************************/
 {
@@ -15932,6 +16017,8 @@ static inline short _marpaESLIFValue_ruleActionCallbackb(marpaESLIFValue_t *marp
           ruleCallbackp = _marpaESLIF_rule_action___jsonb;
         } else if (strcmp(names, "::row") == 0) {
           ruleCallbackp = _marpaESLIF_rule_action___rowb;
+        } else if (strcmp(names, "::table") == 0) {
+          ruleCallbackp = _marpaESLIF_rule_action___tableb;
         } else {
           /* Not a built-in: ask to the resolver */
           if (ruleActionResolverp == NULL) {
