@@ -1428,7 +1428,7 @@ static char *marpaESLIF_sv2byte(pTHX_ SV *svp, char **bytepp, size_t *bytelp, sh
   SAVETMPS;
 
   svtmp = sv_mortalcopy(svp);
-  strings = SvPVutf8(svtmp, len);
+  strings = SvPV(svtmp, len);
 
   if ((strings != NULL) && (len > 0)) {
     okb = 1;
