@@ -287,7 +287,7 @@ static void                            marpaESLIF_paramIsEncodingv(pTHX_ SV *sv)
 static short                           marpaESLIF_paramIsLoggerInterfaceOrUndefb(pTHX_ SV *sv);
 static void                            marpaESLIF_paramIsRecognizerInterfacev(pTHX_ SV *sv);
 static void                            marpaESLIF_paramIsValueInterfacev(pTHX_ SV *sv);
-static short                           marpaESLIF_representationb(void *userDatavp, marpaESLIFValueResult_t *marpaESLIFValueResultp, char **inputcpp, size_t *inputlp);
+static short                           marpaESLIF_representationb(void *userDatavp, marpaESLIFValueResult_t *marpaESLIFValueResultp, char **inputcpp, size_t *inputlp, char **encodingasciisp);
 static char                           *marpaESLIF_sv2byte(pTHX_ SV *svp, char **bytepp, size_t *bytelp, short encodingInformationb, short *characterStreambp, char **encodingsp, size_t *encodinglp, short warnIsFatalb);
 
 /* marpaESLIFValueResult transformers */
@@ -976,8 +976,8 @@ static SV *marpaESLIF_getSvp(pTHX_ MarpaX_ESLIF_Value_t *Perl_MarpaX_ESLIF_Value
     MARPAESLIF_CROAKF("marpaESLIFValue_transformb failure, %s", strerror(errno));
   }
 
-  if (marpaESLIF_GENERICSTACK_USED(&(Perl_MarpaX_ESLIF_Valuep->valueStack)) <= 0) {
-    MARPAESLIF_CROAK("Empty value stack");
+  if (marpaESLIF_GENERICSTACK_USED(&(Perl_MarpaX_ESLIF_Valuep->valueStack)) != 1) {
+    MARPAESLIF_CROAKF("Internal value stack is %d instead of 1", marpaESLIF_GENERICSTACK_USED(&(Perl_MarpaX_ESLIF_Valuep->valueStack)));
   }
 
   return (SV *) marpaESLIF_GENERICSTACK_POP_PTR(&(Perl_MarpaX_ESLIF_Valuep->valueStack));
@@ -1006,9 +1006,6 @@ static short marpaESLIF_valueRuleCallbackb(void *userDatavp, marpaESLIFValue_t *
     list = newAV();
     for (i = arg0i; i <= argni; i++) {
       svp = marpaESLIF_getSvp(aTHX_ Perl_MarpaX_ESLIF_Valuep, marpaESLIFValuep, i, NULL /* bytep */, 0 /* bytel */);
-      /*
-        sv_dump(svp);
-      */
       /* One reference count ownership is transfered to the array */
       av_push(list, svp);
     }
@@ -1061,16 +1058,6 @@ static void marpaESLIF_valueFreeCallbackv(void *userDatavp, marpaESLIFValueResul
 {
   MarpaX_ESLIF_Value_t *Perl_MarpaX_ESLIF_Valuep = (MarpaX_ESLIF_Value_t *) userDatavp;
   dMYTHX(Perl_MarpaX_ESLIF_Valuep);
-
-  /* We are called when valuation is going to withdraw an item in the stack that is a PTR or an ARRAY that we own */
-  /* It is guaranteed to be non-NULL at this stage. Nevertheless there some SV* in perl that are just pointers */
-  /* to constants: undef, yes, no (we do not use placeholder). */
-  /*
-  fprintf(stderr, "------------\n");
-  fprintf(stderr, "Withdrawing:\n");
-  sv_dump((SV *) p);
-  fprintf(stderr, "------------\n");
-  */
 
   /* We always inject a PTR so no need to check the context */
   MARPAESLIF_REFCNT_DEC(marpaESLIFValueResultp->u.p.p);
@@ -1392,7 +1379,7 @@ static void marpaESLIF_paramIsValueInterfacev(pTHX_ SV *sv)
 }
 
 /*****************************************************************************/
-static short marpaESLIF_representationb(void *userDatavp, marpaESLIFValueResult_t *marpaESLIFValueResultp, char **inputcpp, size_t *inputlp)
+static short marpaESLIF_representationb(void *userDatavp, marpaESLIFValueResult_t *marpaESLIFValueResultp, char **inputcpp, size_t *inputlp, char **encodingasciisp)
 /*****************************************************************************/
 {
   static const char    *funcs                    = "marpaESLIF_representationb";
@@ -1409,7 +1396,7 @@ static short marpaESLIF_representationb(void *userDatavp, marpaESLIFValueResult_
   if (marpaESLIFValueResultp->contextp != ESLIF_PERL_CONTEXT) {
     MARPAESLIF_CROAKF("User-defined value context is not ESLIF_PERL_CONTEXT but %p", marpaESLIFValueResultp->contextp);
   }
-  Perl_MarpaX_ESLIF_Valuep->previous_strings = marpaESLIF_sv2byte(aTHX_ (SV *) marpaESLIFValueResultp->u.p.p, inputcpp, inputlp, 0 /* encodingInformationb */, NULL /* characterStreambp */, NULL /* encodingsp */, NULL /* encodinglp */, 0 /* warnIsFatalb */);
+  Perl_MarpaX_ESLIF_Valuep->previous_strings = marpaESLIF_sv2byte(aTHX_ (SV *) marpaESLIFValueResultp->u.p.p, inputcpp, inputlp, 1 /* encodingInformationb */, NULL /* characterStreambp */, encodingasciisp, NULL /* encodinglp */, 0 /* warnIsFatalb */);
 
   /* Always return a true value, else ::concat will abort */
   return 1;
@@ -1441,7 +1428,7 @@ static char *marpaESLIF_sv2byte(pTHX_ SV *svp, char **bytepp, size_t *bytelp, sh
   SAVETMPS;
 
   svtmp = sv_mortalcopy(svp);
-  strings = SvPV(svtmp, len);
+  strings = SvPVutf8(svtmp, len);
 
   if ((strings != NULL) && (len > 0)) {
     okb = 1;
@@ -1737,7 +1724,8 @@ static short marpaESLIF_TransformRowb(marpaESLIFValue_t *marpaESLIFValuep, void 
     av_push(avp, svp);
   }
 
-  marpaESLIF_GENERICSTACK_PUSH_PTR(&(Perl_MarpaX_ESLIF_Valuep->valueStack), avp);
+  svp = newRV((SV *)avp);
+  marpaESLIF_GENERICSTACK_PUSH_PTR(&(Perl_MarpaX_ESLIF_Valuep->valueStack), svp);
   if (marpaESLIF_GENERICSTACK_ERROR(&(Perl_MarpaX_ESLIF_Valuep->valueStack))) {
     MARPAESLIF_CROAKF("Perl_MarpaX_ESLIF_Valuep->valueStack push failure, %s", strerror(errno));
   }
@@ -1754,6 +1742,7 @@ static short marpaESLIF_TransformTableb(marpaESLIFValue_t *marpaESLIFValuep, voi
   HV                     *hvp;
   SV                     *keyp;
   SV                     *valuep;
+  SV                     *svp;
   size_t                  i;
   dMYTHX(Perl_MarpaX_ESLIF_Valuep);
 
@@ -1761,16 +1750,19 @@ static short marpaESLIF_TransformTableb(marpaESLIFValue_t *marpaESLIFValuep, voi
   hvp = newHV();
 
   for (i = t.sizel; i > 0; i -= 2) {
-    valuep = (SV *) marpaESLIF_GENERICSTACK_POP_PTR(&(Perl_MarpaX_ESLIF_Valuep->valueStack));
     /* Note that Perl_MarpaX_ESLIF_Valuep->valueStack contains only new SV's, or &PL_sv_undef, &PL_sv_yes, &PL_sv_no */
+    /* This is why it is not necessary to SvREFCNT_inc/SvREFCNT_dec on valuep: all we do is create an SV and move it in the hash */
+    valuep = (SV *) marpaESLIF_GENERICSTACK_POP_PTR(&(Perl_MarpaX_ESLIF_Valuep->valueStack));
     keyp = (SV *) marpaESLIF_GENERICSTACK_POP_PTR(&(Perl_MarpaX_ESLIF_Valuep->valueStack));
+
     if (hv_store_ent(hvp, keyp, valuep, 0) == NULL) {
       /* We never play with tied hashes, so hv_store_ent() must return a non-NULL value */
       MARPAESLIF_CROAK("hv_store_ent failure");
     }
   }
 
-  marpaESLIF_GENERICSTACK_PUSH_PTR(&(Perl_MarpaX_ESLIF_Valuep->valueStack), hvp);
+  svp = newRV((SV *)hvp);
+  marpaESLIF_GENERICSTACK_PUSH_PTR(&(Perl_MarpaX_ESLIF_Valuep->valueStack), svp);
   if (marpaESLIF_GENERICSTACK_ERROR(&(Perl_MarpaX_ESLIF_Valuep->valueStack))) {
     MARPAESLIF_CROAKF("Perl_MarpaX_ESLIF_Valuep->valueStack push failure, %s", strerror(errno));
   }
@@ -2744,8 +2736,8 @@ CODE:
   if (! marpaESLIFGrammar_parseb(Perl_MarpaX_ESLIF_Grammarp->marpaESLIFGrammarp, &marpaESLIFRecognizerOption, &marpaESLIFValueOption, NULL)) {
     goto err;
   }
-  if (marpaESLIF_GENERICSTACK_USED(&(marpaESLIFValueContext.valueStack)) <= 0) {
-    MARPAESLIF_CROAK("Empty value stack");
+  if (marpaESLIF_GENERICSTACK_USED(&(marpaESLIFValueContext.valueStack)) != 1) {
+    MARPAESLIF_CROAKF("Internal value stack is %d instead of 1", marpaESLIF_GENERICSTACK_USED(&(marpaESLIFValueContext.valueStack)));
   }
   svp = (SV *) marpaESLIF_GENERICSTACK_POP_PTR(&(marpaESLIFValueContext.valueStack));
   marpaESLIF_call_methodv(aTHX_ Perl_valueInterfacep, "setResult", svp);
@@ -3739,8 +3731,8 @@ CODE:
     MARPAESLIF_CROAKF("marpaESLIFValue_valueb failure, %s", strerror(errno));
   }
   if (valueb > 0) {
-    if (marpaESLIF_GENERICSTACK_USED(&(Perl_MarpaX_ESLIF_Valuep->valueStack)) <= 0) {
-      MARPAESLIF_CROAK("Empty value stack");
+    if (marpaESLIF_GENERICSTACK_USED(&(Perl_MarpaX_ESLIF_Valuep->valueStack)) != 1) {
+      MARPAESLIF_CROAKF("Internal value stack is %d instead of 1", marpaESLIF_GENERICSTACK_USED(&(Perl_MarpaX_ESLIF_Valuep->valueStack)));
     }
     svp = (SV *) marpaESLIF_GENERICSTACK_POP_PTR(&(Perl_MarpaX_ESLIF_Valuep->valueStack));
     marpaESLIF_call_methodv(aTHX_ Perl_MarpaX_ESLIF_Valuep->Perl_valueInterfacep, "setResult", svp);
