@@ -180,7 +180,7 @@ sub doparse {
         BAIL_OUT("Failure when valuating:\n$inputs\n");
     }
 
-    my $value = $valueInterface->getResult();
+    my $value = $valueInterface->getResult(); use Data::Dumper; print "RESULT: " . Dumper($value);
 
     $rc = 1;
     goto done;
@@ -195,6 +195,7 @@ sub doparse {
 done_testing();
 
 __DATA__
+
 #
 # Default action is to propagate the first RHS value
 #
@@ -204,10 +205,11 @@ __DATA__
                    # >>>>>>>>>>>>>>>> Strict JSON Grammar <<<<<<<<<<<<<<<<
                    #######################################################
 
-# ----------------
-# Start is a value
-# ----------------
-:start ::= value
+# -----------------------------------------
+# Start is a value that we want stringified
+# -----------------------------------------
+:start ::= value2string
+value2string ::= value action => ::json
 
 # -------------------
 # Composite separator
@@ -221,35 +223,35 @@ value    ::= string                                                           # 
            | number                                                           # ::shift (default action)
            | object                                                           # ::shift (default action)
            | array                                                            # ::shift (default action)
-           | 'true'                               action         => ::lua->do_true      # Returns a true value
-           | 'false'                              action         => ::lua->do_false     # Returns a false value
-           | 'null'
+           | 'true'                               action => ::true            # built-in true action
+           | 'false'                              action => ::false           # built-in false action
+           | 'null'                               action => ::lua->lua_null   # built-in undef action
 
 # -----------
 # JSON object
 # -----------
-object   ::= '{' inc members '}' dec              action         => ::copy[2] # Returns members
-members  ::= pairs*                               action         => ::lua->do_members # Returns a table { pair[1] => pair[2] }
+object   ::= (-'{'-) members (-'}'-)                                          # ::shift (default action)
+members  ::= pairs*                               action         => ::lua->lua_members   # Returns { @{pairs1}, ..., @{pair2} }
                                                   separator      => comma     # ... separated by comma
                                                   proper         => 1         # ... with no trailing separator
                                                   hide-separator => 1         # ... and hide separator in the action
                                                   
-pairs    ::= string ':' value                     action         => ::lua->do_pairs  # Returns the table {string, value}
+pairs    ::= string (-':'-) value                 action         => ::lua->lua_pairs     # Returns [ string, value ]
 
 # -----------
 # JSON Arrays
 # -----------
-array    ::= '[' inc elements ']' dec             action         => ::copy[2]   # Returns elements
-elements ::= value*                               action => ::lua->do_elements  # returns elements packed in a table
-                                                  separator      => comma       # ... separated by comma
-                                                  proper         => 1           # ... with no trailing separator
-                                                  hide-separator => 1           # ... and hide separator in the action
+array    ::= (-'['-) elements (-']'-)                                         # ::shift (default action)
+elements ::= value*                               action => ::row             # Returns [ value1, ..., valuen ]
+                                                  separator      => comma     # ... separated by comma
+                                                  proper         => 1         # ... with no trailing separator
+                                                  hide-separator => 1         # ... and hide separator in the action
                                                   
 
 # ------------
 # JSON Numbers
 # ------------
-number ::= NUMBER                                 action => ::lua->do_number
+number ::= NUMBER                                 action => ::lua->lua_number # Prepare for eventual bignum extension
 
 NUMBER   ~ _INT
          | _INT _FRAC
@@ -263,44 +265,38 @@ _DIGIT   ~ [0-9]
 _DIGIT19 ~ [1-9]
 _FRAC    ~ '.' _DIGITS
 _EXP     ~ _E _DIGITS
-_DIGITS  ~ _DIGIT+
+_DIGITS  ~ /[0-9]+/
 _E       ~ /e[+-]?/i
 
 # -----------
 # JSON String
 # -----------
-string     ::= '"' discardOff chars '"' discardOn action => ::copy[2]               # Only chars is of interest
-discardOff ::=                                    action => ::undef                 # Nullable rule used to disable discard
-discardOn  ::=                                    action => ::undef                 # Nullable rule used to enable discard
+string     ::= '"' discardOff chars '"' discardOn action => ::copy[2]
+discardOff ::=                                                                        # Nullable rule used to disable discard
+discardOn  ::=                                                                        # Nullable rule used to enable discard
 
-event :discard[on]  = nulled discardOn                                                           # Implementation of discard disabing using reserved ':discard[on]' keyword
-event :discard[off] = nulled discardOff                                                          # Implementation of discard enabling using reserved ':discard[off]' keyword
+event :discard[on]  = nulled discardOn                                                # Implementation of discard disabing using reserved ':discard[on]' keyword
+event :discard[off] = nulled discardOff                                               # Implementation of discard enabling using reserved ':discard[off]' keyword
 
-chars   ::= filled                                                                               # ::shift (default action)
-filled  ::= char+                                 action => ::concat                # Returns join('', char1, ..., charn)
-chars   ::=                                       action => ::lua->do_empty_string            # Prefering empty string instead of undef
-char    ::= [^"\\\x00-\x1F]                                                         # ::shift (default action) - take care PCRE2 [:cntrl:] includes DEL character
-          | '\\' '"'                              action => ::copy[1]               # Returns double quote, already ok in data
-          | '\\' '\\'                             action => ::copy[1]               # Returns backslash, already ok in data
+chars   ::= filled                                  action => ::lua->lua_chars
+filled  ::= char+                                   action => ::concat                # Returns join('', char1, ..., charn)
+chars   ::=                                         action => ::lua->lua_empty_string # Prefering empty string instead of undef
+char    ::= /[^"\\\x00-\x1F]+/                                                   # ::shift (default action) - take care PCRE2 [:cntrl:] includes DEL character
+          | '\\' '"'                             action => ::copy[1]               # Returns double quote, already ok in data
+          | '\\' '\\'                           action => ::copy[1]               # Returns backslash, already ok in data
           | '\\' '/'                              action => ::copy[1]               # Returns slash, already ok in data
           | '\\' 'b'                              action => ::u8"\x{08}"
           | '\\' 'f'                              action => ::u8"\x{0C}"
           | '\\' 'n'                              action => ::u8"\x{0A}"
           | '\\' 'r'                              action => ::u8"\x{0D}"
           | '\\' 't'                              action => ::u8"\x{09}"
-          | /(?:\\u[[:xdigit:]]{4})+/             action => unicode
+          | /(?:\\u[[:xdigit:]]{4})+/             action => ::lua->lua_unicode
 
 
 # -------------------------
 # Unsignificant whitespaces
 # -------------------------
 :discard ::= /[\x{9}\x{A}\x{D}\x{20}]+/
-
-# ------------------------------------------------------
-# Needed for eventual depth extension - no op by default
-# ------------------------------------------------------
-inc ::=                                                        action => ::undef
-dec ::=                                                        action => ::undef
 
                    #######################################################
                    # >>>>>>>>>>>>>>>>>> JSON Extensions <<<<<<<<<<<<<<<<<<
@@ -314,95 +310,155 @@ dec ::=                                                        action => ::undef
 # --------------------------
 # Perl comment extension
 # --------------------------
-# /* Perl comment */:discard ::= /(?:(?:#)(?:[^\n]*)(?:\n|\z))/u
+:discard ::= /(?:(?:#)(?:[^\n]*)(?:\n|\z))/u
 
 # --------------------------
 # C++ comment extension
 # --------------------------
 # /* C++ comment */:discard ::= /(?:(?:(?:\/\/)(?:[^\n]*)(?:\n|\z))|(?:(?:\/\*)(?:(?:[^\*]+|\*(?!\/))*)(?:\*\/)))/
 
-# --------------------------
-# Max depth extension
-# --------------------------
-# /* max_depth */event inc[] = nulled inc                                                        # Increment depth
-# /* max_depth */event dec[] = nulled dec                                                        # Decrement depth
-
 # ----------------
 # Number extension
 # ----------------
 #
-# number ::= /\-?(?:(?:[1-9]?[0-9]+)|[0-9])(?:\.[0-9]+)?(?:[eE](?:[+-])?[0-9]+)?/ # /* bignum */action => number
+# number ::= /\-?(?:(?:[1-9]?[0-9]+)|[0-9])(?:\.[0-9]+)?(?:[eE](?:[+-])?[0-9]+)?/ # /* bignum */action => ::lua->lua_number
 
-# /* nan */number   ::= '-NaN':i                               action => nan
-# /* nan */number   ::=  'NaN':i                               action => nan
-# /* nan */number   ::= '+NaN':i                               action => nan
-# /* inf */number   ::= '-Infinity':i                          action => negative_infinity
-# /* inf */number   ::=  'Infinity':i                          action => positive_infinity
-# /* inf */number   ::= '+Infinity':i                          action => positive_infinity
-# /* inf */number   ::= '-Inf':i                               action => negative_infinity
-# /* inf            ::=  'Inf':i                               action => positive_infinity
-# /* inf */number   ::= '+Inf':i                               action => positive_infinity
+# /* nan */number   ::= '-NaN':i                               action => ::lua->lua_nan
+# /* nan */number   ::=  'NaN':i                               action => ::lua->lua_nan
+# /* nan */number   ::= '+NaN':i                               action => ::lua->lua_nan
+# /* inf */number   ::= '-Infinity':i                          action => ::lua->lua_negative_infinity
+# /* inf */number   ::=  'Infinity':i                          action => ::lua->lua_positive_infinity
+# /* inf */number   ::= '+Infinity':i                          action => ::lua->lua_positive_infinity
+# /* inf */number   ::= '-Inf':i                               action => ::lua->lua_negative_infinity
+# /* inf            ::=  'Inf':i                               action => ::lua->lua_positive_infinity
+# /* inf */number   ::= '+Inf':i                               action => ::lua->lua_positive_infinity
 
 # -----------------
 # Control character
 # -----------------
 # /* cntrl */char      ::= /[\x00-\x1F]/                                                          # Because [:cntrl:] includes DEL (x7F)
 
+# -----------------
+# Lua actions      
+# -----------------
 <luascript>
-  function do_true(context)
-    print("< ::lua->do_true")
-    local rc = true
-    print("> ::lua->do_true returns: "..tostring(rc))
-    return rc
-  end
-
-  function do_false(context)
-    print("< ::lua->do_false")
-    local rc = false
-    print("> ::lua->do_false returns: "..tostring(rc))
-    return rc
-  end
-
-  function do_members(context, ...)
-    print("< ::lua->do_members")
-    local args = table.pack(...)
-    local i = 1
-    local maxi = args.n
-    while (i <= maxi)  do
-      local arg = args[i]
-      print(">> arg: "..tostring(arg))
-      local key = arg[1]
-      local value = arg[2]
-      print(">> key: "..tostring(key)..", value: "..tostring(value))
-      i = i + 1
+  function table_print (tt, indent, done)
+    done = done or {}
+    indent = indent or 0
+    if type(tt) == "table" then
+      for key, value in pairs (tt) do
+        io.write(string.rep (" ", indent)) -- indent it
+        if type (value) == "table" and not done [value] then
+          done [value] = true
+          io.write(string.format("[%s] => table\n", tostring (key)));
+          io.write(string.rep (" ", indent+4)) -- indent it
+          io.write("(\n");
+          table_print (value, indent + 7, done)
+          io.write(string.rep (" ", indent+4)) -- indent it
+          io.write(")\n");
+        else
+          io.write(string.format("[%s] => %s\n",
+              tostring (key), tostring(value)))
+        end
+      end
+    else
+      io.write(tostring(tt) .. "\n")
     end
   end
-     
-  function do_empty_string(context)
-    print("< ::lua->do_empty_string")
-    local rc = ''
-    print("> ::lua->do_empty_string returns: "..tostring(rc))
-    return rc
-  end
+  io.stdout:setvbuf('no')
+  -----------------------------------
+  function lua_null()
+    -- Special case to have nil persistency: we will return a table saying we want it to be opaque to marpaESLIF:
 
-  function do_elements(context, ...)
-    print("< ::lua->do_elements")
-    local rc = table.pack(...)
-    print("> ::lua->do_elements returns: "..tostring(rc))
-    return rc
-  end
+    -- This table's metatable will host: an opaque flag and the representation.
+    -- The opaque flag is a__marpaESLIF_opaque metafield that must be a boolean.
+    -- The __tostring standard metafield gives the representation, and must be a function that returns a string.
+    local _mt = {}
+    _mt.__marpaESLIF_opaque = true
+    _mt.__tostring = function() return 'null' end
 
-  function do_number(context, number)
-    print("< ::lua->do_number")
-    local rc = tonumber(number)
-    print("> ::lua->do_number returns: "..tostring(rc))
-    return rc
-  end
+    -- We COULD have set also a __marpaESLIF_opaque encoding metafield but then, during representation, marpaESLIF
+    -- will understand this is a string, thus enclosing the output in double quotes. Without the encoding metafield
+    -- marpaESLIF will consider this as an ARRAY of bytes and use it verbatim in the representation. We just have:
+    -- to make sure this is UTF-8 compatible in this case.
+    -- When set, the __marpaESLIF_encoding metafield must be a function that returns a string:
+    -- _mt.__marpaESLIF_encoding = function() return 'UTF-8' end
 
-  function do_pairs(context, key, separator, value)
-    print("< ::lua->do_pairs")
-    local rc = {key, value}
-    print("> ::lua->do_pairs returns: "..tostring(rc))
-    return rc
+    local _result = {}
+    setmetatable(_result, _mt) 
+    return _result
+  end
+  -----------------------------------
+  function lua_members(...)
+    local _result = {}
+    for _i=1,select('#', ...) do
+      local _pair = select(_i, ...)
+      _result[_pair[1]] = _pair[2]
+    end
+    local _mt = {}
+    _mt.__marpaESLIF_canarray = false -- hint to say that we never want that to appear as a marpaESLIF array
+    setmetatable(_result, _mt) 
+    return _result
+  end
+  -----------------------------------
+  function lua_pairs(key, value)
+    return { key, value }
+  end
+  -----------------------------------
+  function lua_number(number)
+    local _result = tonumber(number)
+    return _result
+  end
+  -----------------------------------
+  function lua_empty_string()
+    return ''
+  end
+  -----------------------------------
+  function lua_chars(chars)
+    -- marpaESLIFStringHelper_new returns an object that these metafields:
+    -- __tostring: a function that returns the representation as a string
+    -- __marpaESLIF_encoding: a function that returns the encoding as a string
+    -- __marpaESLIF_opaque: a boolean that says to remain opaque to marpaESLIF
+    return marpaESLIF:marpaESLIFStringHelper_new(chars, 'UTF-8')
+  end
+  -----------------------------------
+  function lua_unicode(u)
+    local _hex = {}
+    local _maxpos = string.len(u)
+    local _nextArrayIndice = 1
+    local _pos = 1
+
+    -- Per def u is a sequence of \\u[[:xdigit:]]{4} i.e. 6 'characters', ahem bytes
+    while (_pos < _maxpos) do
+       -- Extract the [[:xdigit:]]{4} part
+      local _codepointAsString = string.sub(u, _pos + 2, _pos + 5)      local _codepoint = tonumber(_codepointAsString, 16)
+      _hex[_nextArrayIndice] = _codepoint
+      _nextArrayIndice = _nextArrayIndice + 1
+      _pos = _pos + 6
+    end
+
+    local _result = ''
+    local _high
+    local _low
+    local _codepoint
+    while (#_hex > 0) do
+      if (#_hex > 1) then
+        _high, _low = table.unpack(_hex, 1, 2)
+        -- UTF-16 surrogate pair ?
+        if ((_high >= 0xD800) and (_high <= 0xDBFF) and (_low >= 0xDC00) and (_low <= 0xDFFF)) then
+          _codepoint = ((_high - 0xD800) * 0x400) + (_low - 0xDC00) + 0x10000
+          table.remove(_hex, 1)
+          table.remove(_hex, 1)
+        else
+          _codepoint = _high
+          table.remove(_hex, 1)
+        end
+      else
+        _codepoint = table.remove(_hex, 1)
+      end
+      _result = _result..utf8.char(_codepoint)
+    end
+
+      return marpaESLIF:marpaESLIFStringHelper_new(_result, 'UTF-8')
   end
 </luascript>
