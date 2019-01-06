@@ -12517,8 +12517,8 @@ static inline short _marpaESLIFValue_transformb(marpaESLIFValue_t *marpaESLIFVal
       break;
     case MARPAESLIF_VALUE_TYPE_ARRAY:
       if (marpaESLIFValueResult.u.a.sizel <= 0) {
-        /* An alternative - by construction marpaESLIFValueResult.u.a.sizel is 0 */
-        marpaESLIFValueResultp = (marpaESLIFValueResult_t *) marpaESLIFValueResult.u.a.p;
+        /* An alternative - by construction marpaESLIFValueResult.u.a.sizel is 0 and marpaESLIFValueResult.u.a.p points to another marpaESLIFValueResult */
+        marpaESLIFValueResult = * (marpaESLIFValueResult_t *) marpaESLIFValueResult.u.a.p;
         /* ESLIF guarantees that an alternative cannot contain another alternative, */
         /* so it is safe to do again the switch on this new value */
         goto again;
@@ -12641,7 +12641,7 @@ static inline short _marpaESLIFValue_transformb(marpaESLIFValue_t *marpaESLIFVal
  done:
   GENERICSTACK_RESET(marpaESLIFValueResultStackp);
 
-  MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "return %p", marpaESLIFValueResultp);
+  MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "return %d", (int) rcb);
   MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_DEC;
   return rcb;
 }
