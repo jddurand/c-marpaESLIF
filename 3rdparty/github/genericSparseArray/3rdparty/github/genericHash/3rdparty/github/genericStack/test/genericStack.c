@@ -276,6 +276,8 @@ static short myFunction2(genericStack_t *myStackp) {
   printf("... Use/size: %d/%d (initial+heap=%d+%d)\n", (int) GENERICSTACK_USED(myStackp), (int) GENERICSTACK_LENGTH(myStackp), (int) GENERICSTACK_INITIAL_LENGTH(myStackp), (int) GENERICSTACK_HEAP_LENGTH(myStackp));
   if (rcb != 0) { printf("IS_CUSTOM : %s\n",  (rcb = GENERICSTACK_IS_CUSTOM(myStackp, 17) ? 1 : 0) ? "OK" : "KO"); }
   printf("... Use/size: %d/%d (initial+heap=%d+%d)\n", (int) GENERICSTACK_USED(myStackp), (int) GENERICSTACK_LENGTH(myStackp), (int) GENERICSTACK_INITIAL_LENGTH(myStackp), (int) GENERICSTACK_HEAP_LENGTH(myStackp));
+  if (rcb != 0) { printf("IS_LONG_DOUBLE : %s\n",    (rcb = GENERICSTACK_IS_LONG_DOUBLE(myStackp, 10)   ? 0 : 1) ? "OK" : "KO"); }
+  printf("... Use/size: %d/%d (initial+heap=%d+%d)\n", (int) GENERICSTACK_USED(myStackp), (int) GENERICSTACK_LENGTH(myStackp), (int) GENERICSTACK_INITIAL_LENGTH(myStackp), (int) GENERICSTACK_HEAP_LENGTH(myStackp));
   if (rcb) {
     free(GENERICSTACK_GET_CUSTOM(myStackp, 17).u.s);
   }

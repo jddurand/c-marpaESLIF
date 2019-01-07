@@ -2,65 +2,81 @@
 
 ## About this page
 
-This is the updates page for Marpa::R2.
-This page carries information which does not justify
-a full new distribution,
-but which it is useful for the user to know.
+This is the updates page for Marpa::R2,
+version 6.000000.
+(For the updates pages for previous versions, see below.)
+It may contain descriptions of bugs for which a fix
+is in preparation.
+It also carries notices which are useful to current users,
+but which do not justify a full new distribution,
 
 On CPAN, Marpa::R2's primary distribution mechanism,
 there is no way to have true "meta" information --
 even a small doc always is part of the distribution itself
 and requires the creation of a completely new version.
 
-Because Marpa is now "stable", new versions are released only
-when they benefit its current users.
-In effect, this means new versions occur only when a serious
-bug is discovered, which (knock on wood)
-happens rarely.
+Marpa is now "stable", and new features are not added to it.
+New versions are released only when they benefit users
+of the current functionality in a major way.
+New versions usually occur only when a serious
+bug is discovered.
 
-## No support for Perl 5.10.0
+## Bugs
 
-Contrary to what the documentation says, Marpa::R2 does not support Perl 5.10.0.
-The reason for this was an accidental regression --
-some new test scripts were taken from Marpa::R3 and these require Perl 5.10.1, causing testing to fail.
-The other tests succeed and my guess is that a forced installation would work, but based on feedback from
-Marpa's user community, there are no 5.10.0 users and the best choice is to end support for 5.10.0.
+### Integer arguments of lexeme_complete() and resume() sometimes ignored
 
-Perl 5.10.0 was the official release from December 2007 to August 2009.
-It was extremely buggy and most users who hadn't stuck with Perl 5.8 quickly moved on to 5.10.1.
-The legacy community for 5.10.0 is small to the point of invisibility.
-Since 2009 new installations of 5.10.0 have been almost non-existent.
-5.10.0 is not one of the perlbrew versions.
+In Perl 5.18 and higher, the integer arguments of
+$recce->lexeme_complete() and $recce->resume() may be ignored if Perl
+considers them to be "tied".
+This problem does not occur in Perl version 5.16 or older.
+Most integers are not "tied", but see below.
 
-This lack of use was a major contributor to the regression bug that ended 5.10.0 support.
-Marpa::R2 4.000_000 was extensively tested on CPANtesters, but tests with 5.10.0 are quite rare and the
-failure reports did not appear for weeks, at which point Marpa::R2 had been released.
+The
+[int Perl function](https://perldoc.perl.org/functions/int.html)
+can be used to convert the integer to an
+"untied" version.
+This can be used as a workaround.
 
-With the end of support, a minor bug remains.
-The build of Marpa::R2 does not fail smoothly, but instead builds (successfully)
-and then fails in the test phase.
-If there is a next version of Marpa::R2, it should refuse to attempt installation
-on Perl 5.10.0.
+A fix to this problem has been found.
+This is being treated as a serious bug,
+and a new indexed release of Marpa::R2 is being prepared which
+will include this fix.
 
-## No support for cperl and other Perl variants
+"Tied" in the sense it is used in this context
+is a Perl internals concept.
+Most integers are not tied but,
+for example, as of this writing,
+the value of @LAST_MATCH_START
+(see
+[perlvars](https://perldoc.perl.org/perlvar.html#Variables-related-to-regular-expressions))
+is "tied".
 
-There is no support for anything but standard Perl.  A bug with a Perl variant will be rejected
+The problem occurred because of a change in the
+[Perl API](https://perldoc.perl.org/perlapi.html)
+as of Perl 5.18.
+A description of the change can be found in the Perl
+documents
+[here](https://perldoc.perl.org/perlguts.html#What's-Really-Stored-in-an-SV%3f).
+
+## Notices
+
+### No support for Perl 5.10.0
+
+Marpa::R2 no longer supports Perl 5.10.0.
+There do not appear to be any Marpa::R2 users
+of Perl 5.10.0.
+And, in the cloud,
+Perl 5.10.0 is so rare it is hard to find testing for it.
+
+### No support for cperl and other Perl variants
+
+We are happy to see experimentation with Perl,
+but unfortunately we do not have
+the resources to support anything but standard Perl.
+A bug with a Perl variant will be rejected
 if the bug cannot be duplicated in standard Perl.
 
-## Improved documentation of rule ranking
+## Updates pages for previous versions
 
-The documentation of rule ranking was incomplete,
-and in some respects wrong.
-It has been rewritten.
-In particular, the
-[Semantics::Rank pod](https://github.com/jeffreykegler/Marpa--R2/blob/master/cpan/pod/Semantics/Rank.pod)
-document is completely new.
-
-## Bug fix in html_fmt utility
-
-There was an bug in `marpa_r2_html_fmt` that caused it, in rare circumstances,
-to duplicate text.  The duplications would occur as text added
-after an empty tag, for example, after an `<hr>` tag.  An example
-of an HTML file which had the problem is in the Github repo as
-`cpan/html/t/fmt_t_data/input3.html`.
-This problem is now fixed.
+The updates page for version 4.000000 can be found
+[here](https://github.com/jeffreykegler/Marpa--R2/blob/f2a676b760de8fd0e41669806744503253d76bd6/UPDATES.md).
