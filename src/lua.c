@@ -18,17 +18,6 @@
 #define marpaESLIFLua_luaL_newlib(L, l) (! luaunpanicL_newlib(L, l))
 #include "../src/bindings/lua/src/marpaESLIFLua.c"
 
-/* Note that a lua integer is:
- * - an int  if LUA_INT_TYPE = LUA_INT_INT
- * - a  long if LUA_INT_TYPE = LUA_INT_LONG
- * a lua number is:
- * - a float  if LUA_FLOAT_TYPE = LUA_FLOAT_FLOAT
- * - a double if LUA_FLOAT_TYPE = LUA_FLOAT_DOUBLE
- *
- * This is because we are forcing LUA_USE_C89 in our embedded lua. Then
- * remains these two possiblities for lua integer and number.
- */
-
 #undef  FILENAMES
 #define FILENAMES "lua.c" /* For logging */
 
