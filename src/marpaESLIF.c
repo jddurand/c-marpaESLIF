@@ -13438,7 +13438,6 @@ static void _marpaESLIF_rule_freeCallbackv(void *userDatavp, marpaESLIFValueResu
     break;
   }
 
- done:
   MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "return");
   MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_DEC;
 }

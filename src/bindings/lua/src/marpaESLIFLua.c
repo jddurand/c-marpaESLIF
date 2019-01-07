@@ -3374,7 +3374,6 @@ static short marpaESLIFLua_valueCallbackb(void *userDatavp, marpaESLIFValue_t *m
   marpaESLIFLuaValueContext_t *marpaESLIFLuaValueContextp = (marpaESLIFLuaValueContext_t *) userDatavp;
   lua_State                   *L                          = marpaESLIFLuaValueContextp->L;
   char                        *encodings                  = NULL;
-  size_t                       encodingl;
   const char                  *tmps;
   size_t                       tmpl;
   int                          topi;
@@ -3382,7 +3381,6 @@ static short marpaESLIFLua_valueCallbackb(void *userDatavp, marpaESLIFValue_t *m
   int                          i;
   int                          secondVariableTypei;
   int                          valuetypei;
-  int                          canarrayi;
   short                        rcb;
 
   /* Get value context */
@@ -3704,7 +3702,11 @@ static short marpaESLIFLua_transformRowb(marpaESLIFValue_t *marpaESLIFValuep, vo
   /* We received elements transformation callbacks in order; i.e. 1, then 2, then 3... */
   /* We pushed that in lua stack, i.e. the lua stack then contains:  1 transformed, then 2 transformed, then 3 transformed... */
 
-  if (! marpaESLIFLua_lua_createtable(L, r.sizel, 0)) goto err  ;                    /* Stack: val1, ..., valn, table */
+  if (r.sizel > INT_MAX) {
+      marpaESLIFLua_luaL_errorf(L, "table size %ld too big, maximum is %d", (unsigned long) r.sizel, INT_MAX);
+      goto err;
+  }
+  if (! marpaESLIFLua_lua_createtable(L, (int) r.sizel, 0)) goto err  ;                    /* Stack: val1, ..., valn, table */
   if (! marpaESLIFLua_lua_newtable(L)) goto err;                                     /* Stack: val1, ..., valn, table, metatable */
   MARPAESLIFLUA_STORE_BOOLEAN(L, "__marpaESLIF_canarray", 1);                        /* Stack: val1, ..., valn, table, metatable */
   if (! marpaESLIFLua_lua_setmetatable(L, -2)) goto err;                             /* Stack: val1, ..., valn, table */
@@ -3739,7 +3741,11 @@ static short marpaESLIFLua_transformTableb(marpaESLIFValue_t *marpaESLIFValuep, 
   /* We received elements transformation callbacks in order; i.e. key0, val0, ..., keyn, valn */
   /* We pushed that in lua stack, i.e. the lua stack then contains:  valn transformed, keyn transformed, ..., val0 transformed, key0 transformed */
 
-  if (! marpaESLIFLua_lua_createtable(L, t.sizel / 2, 0)) goto err;                /* Stack: keyn, valn, ..., key1, val1, table */
+  if ((t.sizel / 2) > INT_MAX) {
+      marpaESLIFLua_luaL_errorf(L, "table size %ld too big, maximum is %d", (unsigned long) (t.sizel / 2), INT_MAX);
+      goto err;
+  }
+  if (! marpaESLIFLua_lua_createtable(L, (int) t.sizel / 2, 0)) goto err;                /* Stack: keyn, valn, ..., key1, val1, table */
   if (! marpaESLIFLua_lua_newtable(L)) goto err;                                     /* Stack: val1, ..., valn, table, metatable */
   MARPAESLIFLUA_STORE_BOOLEAN(L, "__marpaESLIF_canarray", 0);                        /* Stack: val1, ..., valn, table, metatable */
   if (! marpaESLIFLua_lua_setmetatable(L, -2)) goto err;                             /* Stack: val1, ..., valn, table */
@@ -6398,9 +6404,8 @@ static short marpaESLIFLua_stack_setb(lua_State *L, marpaESLIFLuaValueContext_t 
   int                           isNumi;
   const char                   *tmps;
   size_t                        tmpl;
-  void                         *luap;
   size_t                        tablel;
-  lua_Integer                   tableNextl;
+  size_t			tableNextl;
   short                         tableIsArrayb;
   int                           i;
   int                           keyTypei;
@@ -6409,15 +6414,11 @@ static short marpaESLIFLua_stack_setb(lua_State *L, marpaESLIFLuaValueContext_t 
   int                           valueTypei;
   int                           isnili;
   int                           visitedTableIndicei;
-  marpaESLIFValueResultRow_t   *marpaESLIFValueResultRowp;
-  marpaESLIFValueResultTable_t *marpaESLIFValueResultTablep;
   int                           nexti;
   size_t                        sizel;
   int                           currenti;
-  int                           fieldtypei;
   int                           canarrayi;
   lua_Integer                   arrayl;
-  int                           callmetai;
   int                           opaquei;
 
   GENERICSTACK_INIT(marpaESLIFValueResultStackp);
