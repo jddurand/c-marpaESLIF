@@ -305,7 +305,7 @@ extern "C" {
 #define luaunpanic_tostring(rcp, L,i)    luaunpanic_tolstring(rcp, L, (i), NULL)
 #define luaunpanic_insert(L,idx)	 luaunpanic_rotate(L, (idx), 1)
 #define luaunpanic_remove(L,idx)         (luaunpanic_rotate(L, (idx), -1) || luaunpanic_pop(L, 1))
-#define luaunpanic_replace(L,idx)        (luaunpanic_copy(NULL, L, -1, (idx)) || luaunpanic_pop(L, 1))
+#define luaunpanic_replace(L,idx)        (luaunpanic_copy(L, -1, (idx)) || luaunpanic_pop(L, 1))
 /*
 ** compatibility macros for unsigned conversions
 */
