@@ -68,7 +68,7 @@ const static char *dsl = "\n"
   "           | array                                                            # ::shift (default action)\n"
   "           | 'true'                               action => ::true            # built-in true action\n"
   "           | 'false'                              action => ::false           # built-in false action\n"
-  "           | 'null'                               action => ::lua->lua_null   # built-in undef action\n"
+  "           | 'null'                               action => ::lua->lua_null\n"
   "\n"
   "# -----------\n"
   "# JSON object\n"
@@ -236,16 +236,21 @@ const static char *dsl = "\n"
   "    local _result = {}\n"
   "    for _i=1,select('#', ...) do\n"
   "      local _pair = select(_i, ...)\n"
-  "      _result[_pair[1]] = _pair[2]\n"
+  "      local _key = _pair[1]\n"
+  "      local _value = _pair[2]\n"
+  "      _result[_key] = value\n"
   "    end\n"
   "    local _mt = {}\n"
   "    _mt.__marpaESLIF_canarray = false -- hint to say that we never want that to appear as a marpaESLIF array\n"
-  "    setmetatable(_result, _mt) \n"
+  "    setmetatable(_result, _mt)\n"
   "    return _result\n"
   "  end\n"
   "  -----------------------------------\n"
   "  function lua_pairs(key, value)\n"
-  "    return { key, value }\n"
+  "    local _result = {}\n"
+  "    _result[1] = key\n"
+  "    _result[2] = value\n"
+  "    return _result\n"
   "  end\n"
   "  -----------------------------------\n"
   "  function lua_number(number)\n"
@@ -345,6 +350,7 @@ int main() {
   valueContext_t               valueContext;
 
   const static char           *inputs[] = {
+    "{\"test\":null}",
     "[\"a\",\"b\"]",
     "[\"\"]",
     "[\"\\uD801\\udc37\"]",
@@ -354,7 +360,6 @@ int main() {
     "{\"test\":\"1\"}",
     "{\"test\":true}",
     "{\"test\":false}",
-    "{\"test\":null}",
     "{\"test\":null, \"test2\":\"hello world\"}",
     "{\"test\":\"1.25\"}",
     "{\"test\":\"1.25e4\"}",
