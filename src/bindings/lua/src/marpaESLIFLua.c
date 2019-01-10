@@ -94,6 +94,7 @@ typedef struct marpaESLIFLuaValueContext {
 
 static void                            marpaESLIFLua_stackdumpv(lua_State* L, int forcelookupi);
 static void                            marpaESLIFLua_tabledumpv(lua_State *L, const char *texts, int indicei, unsigned int identi);
+static void                            marpaESLIFLua_tabledump_usingpairsv(lua_State *L, const char *texts, int indicei, unsigned int identi);
 static short                           marpaESLIFLua_paramIsLoggerInterfaceOrNilb(lua_State *L, int stacki);
 static short                           marpaESLIFLua_paramIsRecognizerInterfacev(lua_State *L, int stacki);
 static short                           marpaESLIFLua_paramIsValueInterfacev(lua_State *L, int stacki);
@@ -222,8 +223,10 @@ static int                             marpaESLIFLua_marpaESLIFStringHelper_newi
 static int                             marpaESLIFLua_marpaESLIFStringHelper_freei(lua_State *L);
 static int                             marpaESLIFLua_marpaESLIFStringHelper_tostringi(lua_State *L);
 static int                             marpaESLIFLua_marpaESLIFStringHelper_encodingi(lua_State *L);
-static short                           marpaESLIFLua_table_canarray_getb(lua_State *L, int indicei, int *canarrayip);
-static short                           marpaESLIFLua_table_opaque_getb(lua_State *L, int indicei, int *opaqueip);
+static short                           marpaESLIFLua_table_canarray_getb(lua_State *L, int indicei, short *canarraybp);
+static short                           marpaESLIFLua_table_opaque_getb(lua_State *L, int indicei, short *opaquebp);
+static int                             marpaESLIFLua_nexti(lua_State *L);
+static short                           marpaESLIFLua_luaL_pairsb(int *rcip, lua_State *L, int idx, int *iteratorip, int *statevariableip);
 
 /* Transformers */
 static marpaESLIFValueResultTransform_t marpaESLIFLuaValueResultTransformDefault = {
@@ -302,6 +305,7 @@ static short marpaESLIFLua_luaL_checkinteger(lua_Integer *rcp, lua_State *L, int
 static short marpaESLIFLua_lua_getmetatable(int *rcip, lua_State *L, int index);
 static short marpaESLIFLua_luaL_callmeta(int *rcp, lua_State *L, int obj, const char *e);
 static short marpaESLIFLua_luaL_getmetafield(int *rcp, lua_State *L, int obj, const char *e);
+static short marpaESLIFLua_luaL_checktype(lua_State *L, int arg, int t);
 
 /* Grrr lua defines that with a macro */
 #ifndef marpaESLIFLua_luaL_newlib
@@ -1361,6 +1365,73 @@ static void marpaESLIFLua_tabledumpv(lua_State *L, const char *texts, int indice
     fprintf(stdout, "%*s%25s   }\n", identi, " ", " ");
     lua_pop(L, 1);                                            /* Stack: ... */
   }
+
+  fflush(stdout);
+
+  --identi;
+}
+
+/****************************************************************************/
+static void marpaESLIFLua_tabledump_usingpairsv(lua_State *L, const char *texts, int indicei, unsigned int identi)
+/****************************************************************************/
+/* Copy of https://github.com/Tieske/Lua_library_template/blob/master/udtype_example/udtype.c */
+/****************************************************************************/
+{
+  const char *keys;
+  const char *values;
+  int         absindicei;
+  int         nexti;
+  int         iteratori;
+  int         statevariablei;
+  int         getmetai;
+
+  absindicei = lua_absindex(L, indicei);
+
+  if (texts != NULL) {
+    fprintf(stdout, "[%s] table at indice %d (absolute indice %d, identi=%d)\n", texts, indicei, absindicei, identi);
+  }
+
+  lua_pushvalue(L, indicei);                                  /* Stack: ..., table */
+  lua_pushnil(L);                                             /* Stack: ..., table, nil */
+  while (1) {
+    marpaESLIFLua_luaL_pairsb(&nexti, L, -2, &iteratori, &statevariablei);
+    if (! nexti) break;
+    keys = luaL_tolstring(L, -2, NULL);                       /* Stack: ..., table, key, value, keys */
+    switch (lua_type(L, -2)) {
+    case LUA_TTABLE:
+      /* Does it have a __tostring metamethod ? */
+      getmetai = luaL_getmetafield(L, -2, "__tostring");
+      if (getmetai != LUA_TNIL) {
+	lua_pop(L, 1);
+	values = luaL_tolstring(L, -2, NULL);                   /* Stack: ..., table, key, value, keys, values */
+	fprintf(stdout, "%*s%25s = {} __tostring=%s\n", identi, " ", keys, values);
+	lua_pop(L, 1);                                          /* Stack: ..., table, key, value, keys */
+      } else {
+	fprintf(stdout, "%*s%25s = {\n", identi, " ", keys);
+	marpaESLIFLua_tabledump_usingpairsv(L, NULL, -2, identi + 2);
+	fprintf(stdout, "%*s%25s   }\n", identi, " ", " ");
+      }
+      break;
+    default:
+      values = luaL_tolstring(L, -2, NULL);                   /* Stack: ..., table, key, value, keys, values */
+      /* fprintf(stdout, "%*s%25s = %s (%s = %s)\n", identi, " ", keys, values, lua_typename(L, lua_type(L, -4)), lua_typename(L, lua_type(L, -3))); */
+      /* More lisibile without the typename IMHO */
+      fprintf(stdout, "%*s%25s = %s\n", identi, " ", keys, values);
+      lua_pop(L, 1);                                          /* Stack: ..., table, key, value, keys */
+      break;
+    }
+    lua_pop(L, 2);                                            /* Stack: ..., table, key */
+  }                                                           /* Stack: ..., table */
+  lua_pop(L, 1);                                              /* Stack: ... */
+
+  /*
+  if (lua_getmetatable(L, indicei)) {
+    fprintf(stdout, "%*s%25s = {\n", identi, " ", "<metatable>");
+    marpaESLIFLua_tabledump_usingpairsv(L, NULL, -1, identi + 2);
+    fprintf(stdout, "%*s%25s   }\n", identi, " ", " ");
+    lua_pop(L, 1);
+  }
+  */
 
   fflush(stdout);
 
@@ -6381,6 +6452,15 @@ static short marpaESLIFLua_luaL_getmetafield(int *rcp, lua_State *L, int obj, co
   return 1;
 }
 
+/****************************************************************************/
+static short marpaESLIFLua_luaL_checktype(lua_State *L, int arg, int t)
+/****************************************************************************/
+{
+  luaL_checktype(L, arg, t);
+
+  return 1;
+}
+
 #endif /* MARPAESLIFLUA_EMBEDDED */
 
 /****************************************************************************/
@@ -6417,9 +6497,9 @@ static short marpaESLIFLua_stack_setb(lua_State *L, marpaESLIFLuaValueContext_t 
   int                           nexti;
   size_t                        sizel;
   int                           currenti;
-  int                           canarrayi;
+  short                         canarrayb;
   lua_Integer                   arrayl;
-  int                           opaquei;
+  short                         opaqueb;
 
   GENERICSTACK_INIT(marpaESLIFValueResultStackp);
   if (GENERICSTACK_ERROR(marpaESLIFValueResultStackp)) {
@@ -6571,20 +6651,20 @@ static short marpaESLIFLua_stack_setb(lua_State *L, marpaESLIFLuaValueContext_t 
       eslifb = 1;
       break;
     case LUA_TTABLE:
-      if (! marpaESLIFLua_table_opaque_getb(L, currenti, &opaquei)) goto err;
-      if (! opaquei) {
+      if (! marpaESLIFLua_table_opaque_getb(L, currenti, &opaqueb)) goto err;
+      if (! opaqueb) {
         /* Check if this table contains internal fields (via methods in our case) that forces the type and the context */
 
         /* Check if the table can be translated to a true array */
-        if (! marpaESLIFLua_table_canarray_getb(L, currenti, &canarrayi)) goto err;
+        if (! marpaESLIFLua_table_canarray_getb(L, currenti, &canarrayb)) goto err;
 
         /* Count the number of items. The only way to iterate first. We take this as the opportunity to check for circular reference */
         /* that can make lua loop. */
-        if (! marpaESLIFLua_lua_pushnil(L)) goto err;                                                     /* Stack: visitedTable, ..., xxx=table, nil */
+        if (! marpaESLIFLua_lua_pushnil(L)) goto err;                                                   /* Stack: visitedTable, ..., xxx=table, nil */
         tablel = 0;
-        tableIsArrayb = canarrayi;
+        tableIsArrayb = canarrayb;
         while (1) {
-          if (! marpaESLIFLua_lua_next(&nexti, L, -2)) goto err;                                          /* Stack: visitedTable, ..., xxx=table, key, value */
+          if (! marpaESLIFLua_lua_next(&nexti, L, -2)) goto err;                                        /* Stack: visitedTable, ..., xxx=table, key, value */
           if (nexti == 0) break;
           /* Improbable turnaround */
           tableNextl = tablel + 1;
@@ -6919,11 +6999,12 @@ static int marpaESLIFLua_marpaESLIFStringHelper_encodingi(lua_State *L)
 }
 
 /****************************************************************************/
-static short marpaESLIFLua_table_canarray_getb(lua_State *L, int indicei, int *canarrayip)
+static short marpaESLIFLua_table_canarray_getb(lua_State *L, int indicei, short *canarraybp)
 /****************************************************************************/
 {
   static const char *funcs     = "marpaESLIFLua_table_canarray_getb";
-  int                canarrayi = 1; /* Default is true */
+  short              canarrayb = 1; /* Default is true */
+  int                canarrayi;
   int                getmetai;
 
   if (! marpaESLIFLua_luaL_getmetafield(&getmetai, L, indicei, "__marpaESLIF_canarray")) goto err; /* Stack: ..., __marpaESLIF_canarray? */
@@ -6933,11 +7014,12 @@ static short marpaESLIFLua_table_canarray_getb(lua_State *L, int indicei, int *c
       goto err;
     }
     if (! marpaESLIFLua_lua_toboolean(&canarrayi, L, -1)) goto err;                               /* Stack: ..., __marpaESLIF_canarray */
+    canarrayb = canarrayi ? 1 : 0;
     if (! marpaESLIFLua_lua_pop(L, 1)) goto err;                                                  /* Stack: ... */
   }
 
-  if (canarrayip != NULL) {
-    *canarrayip = canarrayi;
+  if (canarraybp != NULL) {
+    *canarraybp = canarrayb;
   }
 
   return 1;
@@ -6948,11 +7030,12 @@ static short marpaESLIFLua_table_canarray_getb(lua_State *L, int indicei, int *c
 }
 
 /****************************************************************************/
-static short marpaESLIFLua_table_opaque_getb(lua_State *L, int indicei, int *opaqueip)
+static short marpaESLIFLua_table_opaque_getb(lua_State *L, int indicei, short *opaquebp)
 /****************************************************************************/
 {
   static const char *funcs   = "marpaESLIFLua_table_opaque_getb";
-  int                opaquei = 0; /* Default is false */
+  short              opaqueb = 0; /* Default is false */
+  int                opaquei;
   int                getmetai;
 
   if (! marpaESLIFLua_luaL_getmetafield(&getmetai, L, indicei, "__marpaESLIF_opaque")) goto err; /* Stack: ..., __marpaESLIF_opaque? */
@@ -6963,11 +7046,12 @@ static short marpaESLIFLua_table_opaque_getb(lua_State *L, int indicei, int *opa
       goto err;
     }
     if (! marpaESLIFLua_lua_toboolean(&opaquei, L, -1)) goto err;                                /* Stack: ..., __marpaESLIF_opaque */
+    opaqueb = opaquei ? 1 : 0;
     if (! marpaESLIFLua_lua_pop(L, 1)) goto err;                                                 /* Stack: ... */
   }
 
-  if (opaqueip != NULL) {
-    *opaqueip = opaquei;
+  if (opaquebp != NULL) {
+    *opaquebp = opaqueb;
   }
 
   return 1;
@@ -6975,5 +7059,96 @@ static short marpaESLIFLua_table_opaque_getb(lua_State *L, int indicei, int *opa
  err:
   errno = EINVAL;
   return 0;
+}
+
+/****************************************************************************/
+static int marpaESLIFLua_nexti(lua_State *L)
+/****************************************************************************/
+{
+  int rci;
+  int nexti;
+
+  if (! marpaESLIFLua_luaL_checktype(L, 1, LUA_TTABLE)) goto err;         /* Stack: table */
+  if (! marpaESLIFLua_lua_settop(L, 2)) goto err;                         /* Stack: table, argument (create a 2nd argument if there isn't one) */
+  if (! marpaESLIFLua_lua_next(&nexti, L, 1)) goto err;
+  if (nexti) {
+    rci = 2;                                                              /* Stack: key, value */
+  } else {
+    if (! marpaESLIFLua_lua_pushnil(L)) goto err;                         /* Stack: nil (end of loop indicator) */
+    rci = 1;
+  }
+
+  goto done;
+
+ err:
+  rci = 0;
+
+ done:
+  return rci;
+}
+
+/****************************************************************************/
+static short marpaESLIFLua_luaL_pairsb(int *rcip, lua_State *L, int idx, int *iteratorip, int *statevariableip)
+/****************************************************************************/
+/* This method uses pairs() if available. It must be called with non-NULL iteratorip and statevariableip variables */
+/****************************************************************************/
+{
+  short rcb;
+  int   isnili;
+  int   getmetai;
+  int   iteratori;
+  int   statevariablei;
+  int   rci;
+
+  /* First call ? */
+  if (! marpaESLIFLua_lua_isnil(&isnili, L, -1)) goto err;
+  if (isnili) {                                                                         /* Stack: ..., nil */
+    if (! marpaESLIFLua_lua_pop(L, 1)) goto err;                                        /* Stack: ... */
+    /* Is there a __pairs() metatable entry (assumed to be a method) */
+    if (! marpaESLIFLua_luaL_getmetafield(&getmetai, L, idx, "__pairs")) goto err;
+    if (getmetai == LUA_TNIL) {  /* no metamethod? */
+      if (! marpaESLIFLua_lua_pushcfunction(L, marpaESLIFLua_nexti)) goto err;          /* Stack: ..., lua_next() */
+      if (! marpaESLIFLua_lua_pushvalue(L, idx)) goto err;                              /* Stack: ..., lua_next(), table */
+      if (! marpaESLIFLua_lua_pushnil(L)) goto err;                                     /* Stack: ..., lua_next(), table, nil */
+    } else {
+      if (! marpaESLIFLua_lua_pushvalue(L, idx)) goto err;                              /* Stack: ..., __pairs(), table */
+      if (! marpaESLIFLua_lua_call(L, 1, 3)) goto err;                                  /* Stack: ..., iterator, statevariable, initialvalue */
+    }
+    if (! marpaESLIFLua_lua_pushvalue(L, -3)) goto err;                                 /* Stack: ..., iterator, statevariable, initialvalue, iterator */
+    if (! marpaESLIFLua_lua_pushvalue(L, -3)) goto err;                                 /* Stack: ..., iterator, statevariable, initialvalue, iterator, statevariable */
+    MARPAESLIFLUA_REF(L, statevariablei);                                               /* Stack: ..., iterator, statevariable, initialvalue, iterator */
+    *statevariableip = statevariablei;
+    MARPAESLIFLUA_REF(L, iteratori);                                                    /* Stack: ..., iterator, statevariable, initialvalue */
+    *iteratorip = iteratori;
+  } else {                                                                              /* Stack: ..., key */
+    MARPAESLIFLUA_DEREF(L, *iteratorip);                                                /* Stack: ..., key, iterator */
+    if (! marpaESLIFLua_lua_insert(L, -2)) goto err;                                    /* Stack: ..., iterator, key */
+    MARPAESLIFLUA_DEREF(L, *statevariableip);                                           /* Stack: ..., iterator, key, statevariable */
+    if (! marpaESLIFLua_lua_insert(L, -2)) goto err;                                    /* Stack: ..., iterator, statevariable, key */
+  }
+
+  /* Get next key,value */
+  if (! marpaESLIFLua_lua_call(L, 2, 2)) goto err;                                      /* Stack: ..., nextkey, nextvalue */
+  if (! marpaESLIFLua_lua_isnil(&isnili, L, -2)) goto err;
+  if (isnili) {                                                                         /* Stack: ..., nextkey=nil, nextvalue=<not considered> */
+    MARPAESLIFLUA_UNREF(L, *iteratorip);
+    MARPAESLIFLUA_UNREF(L, *statevariableip);
+    if (! marpaESLIFLua_lua_pop(L, 2)) goto err;                                        /* Stack: ... */
+    rci = 0;
+  } else {
+    rci = 1;
+  }
+
+  if (rcip != NULL) {
+    *rcip = rci;
+  }
+  rcb = 1;
+  goto done;
+
+ err:
+  rcb = 0;
+
+ done:
+  return rcb;
 }
 
