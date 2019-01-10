@@ -934,6 +934,8 @@ static int marpaESLIFLua_marpaESLIF_newi(lua_State *L)
   int                                  isnili;
   int                                  topi;
   int                                  nexti;
+  int                                  iteratori;
+  int                                  statevariablei;
 
   if (! marpaESLIFLua_lua_gettop(&topi, L)) goto err;
 
@@ -953,7 +955,7 @@ static int marpaESLIFLua_marpaESLIF_newi(lua_State *L)
 
   if (! marpaESLIFLua_lua_pushnil(L)) goto err;                                                     /* Stack: logger?, MARPAESLIFMULTITONSTABLE, nil */
   while (1) {
-    if (! marpaESLIFLua_lua_next(&nexti, L, -2)) goto err;                                          /* Stack: logger?, MARPAESLIFMULTITONSTABLE, marpaESLIFLuaContextp, r */
+    if (! marpaESLIFLua_luaL_pairsb(&nexti, L, -2, &iteratori, &statevariablei)) goto err;          /* Stack: logger?, MARPAESLIFMULTITONSTABLE, marpaESLIFLuaContextp, r */
     if (nexti == 0) break;
     if (! marpaESLIFLua_lua_tointeger(&tmpi, L, -1)) goto err;
     logger_r = (int) tmpi;
@@ -1977,11 +1979,13 @@ static int marpaESLIFLua_marpaESLIFMultitonsTable_freei(lua_State *L)
   genericLogger_t                     *genericLoggerp                     = NULL;
   marpaESLIFOption_t                  *marpaESLIFOptionp;
   int                                  nexti;
+  int                                  iteratori;
+  int                                  statevariablei;
 
   /* Loop on MARPAESLIFMULTITONSTABLE */
   if (! marpaESLIFLua_lua_pushnil(L)) goto err;                       /* Stack: MARPAESLIFMULTITONSTABLE, nil */
   while (1) {
-    if (! marpaESLIFLua_lua_next(&nexti, L, -2)) goto err;            /* Stack: MARPAESLIFMULTITONSTABLE, marpaESLIFLuaContextp, r */
+    if (! marpaESLIFLua_luaL_pairsb(&nexti, L, -2, &iteratori, &statevariablei)) goto err; /* Stack: MARPAESLIFMULTITONSTABLE, marpaESLIFLuaContextp, r */
     if (nexti == 0) break;
     if (! marpaESLIFLua_lua_touserdata((void **) &marpaESLIFLuaContextp, L, -2)) goto err;
     if (! marpaESLIFLua_lua_tointeger(&logger_r, L, -1)) goto err;
@@ -4524,7 +4528,9 @@ static int marpaESLIFLua_marpaESLIFRecognizer_eventOnOffi(lua_State *L)
   int                               tmpb;
   int                               topi;
   int                               nexti;
- 
+  int                               iteratori;
+  int                               statevariablei;
+
   if (! marpaESLIFLua_lua_gettop(&topi, L)) goto err;
   if (topi != 4) {
     marpaESLIFLua_luaL_error(L, "Usage: marpaESLIFRecognizer_eventOnOff(marpaESLIFRecognizerp, symbol, eventTypes, onOff)");
@@ -4554,7 +4560,7 @@ static int marpaESLIFLua_marpaESLIFRecognizer_eventOnOffi(lua_State *L)
   }
   if (! marpaESLIFLua_lua_pushnil(L)) goto err;
   while (1) {
-    if (! marpaESLIFLua_lua_next(&nexti, L, 3)) goto err;
+    if (! marpaESLIFLua_luaL_pairsb(&nexti, L, 3, &iteratori, &statevariablei)) goto err;
     if (nexti == 0) break;
     if (! marpaESLIFLua_lua_tointegerx(&tmpi, L, -1, &isNumi)) goto err;
     if (! isNumi) {
@@ -6500,6 +6506,8 @@ static short marpaESLIFLua_stack_setb(lua_State *L, marpaESLIFLuaValueContext_t 
   short                         canarrayb;
   lua_Integer                   arrayl;
   short                         opaqueb;
+  int                           iteratori;
+  int                           statevariablei;
 
   GENERICSTACK_INIT(marpaESLIFValueResultStackp);
   if (GENERICSTACK_ERROR(marpaESLIFValueResultStackp)) {
@@ -6664,7 +6672,7 @@ static short marpaESLIFLua_stack_setb(lua_State *L, marpaESLIFLuaValueContext_t 
         tablel = 0;
         tableIsArrayb = canarrayb;
         while (1) {
-          if (! marpaESLIFLua_lua_next(&nexti, L, -2)) goto err;                                        /* Stack: visitedTable, ..., xxx=table, key, value */
+          if (! marpaESLIFLua_luaL_pairsb(&nexti, L, -2, &iteratori, &statevariablei)) goto err;        /* Stack: visitedTable, ..., xxx=table, key, value */
           if (nexti == 0) break;
           /* Improbable turnaround */
           tableNextl = tablel + 1;
@@ -6794,7 +6802,7 @@ static short marpaESLIFLua_stack_setb(lua_State *L, marpaESLIFLuaValueContext_t 
           if (! marpaESLIFLua_lua_pushnil(L)) goto err;                                                 /* Stack: visitedTable, ..., xxx=table, nil */
           sizel = 0;
           while (1) {
-            if (! marpaESLIFLua_lua_next(&nexti, L, currenti)) goto err;                                /* Stack: visitedTable, ..., xxx=table, key, value */
+            if (! marpaESLIFLua_luaL_pairsb(&nexti, L, currenti, &iteratori, &statevariablei)) goto err;/* Stack: visitedTable, ..., xxx=table, key, value */
             if (nexti == 0) break;
 
             /* Push room for key */
