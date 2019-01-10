@@ -1083,6 +1083,15 @@ static short marpaESLIFLua_luaL_getmetafield(int *rcp, lua_State *L, int obj, co
 }
 
 /****************************************************************************/
+static short marpaESLIFLua_luaL_checktype(lua_State *L, int arg, int t)
+/****************************************************************************/
+{
+  return ! luaunpanicL_checktype(L, arg, t);
+
+  return 1;
+}
+
+/****************************************************************************/
 static short _marpaESLIF_lua_representationb(void *userDatavp, marpaESLIFValueResult_t *marpaESLIFValueResultp, char **inputcpp, size_t *inputlp, char **encodingasciisp)
 /****************************************************************************/
 {
