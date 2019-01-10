@@ -17,7 +17,6 @@ typedef struct marpaESLIFSymbol      marpaESLIFSymbol_t;
 typedef struct marpaESLIFValueResult marpaESLIFValueResult_t;
 
 /* A string */
-typedef struct marpaESLIFStringHelper marpaESLIFStringHelper_t; 
 typedef struct marpaESLIFString {
   char   *bytep;            /* pointer bytes */
   size_t  bytel;            /* number of bytes */
@@ -429,13 +428,6 @@ extern "C" {
 
   marpaESLIF_EXPORT void                          marpaESLIF_freev(marpaESLIF_t *marpaESLIFp);
 
-  /* Some languages may NOT have a proper string representation (lua for example). These methods are helpers for a correct string implementation */
-  /* bytep and encodingasciis can be on the stack: marpaESLIFString_newp will always duplicate the data */
-  marpaESLIF_EXPORT marpaESLIFStringHelper_t     *marpaESLIFStringHelper_newp(marpaESLIF_t *marpaESLIFp, char *bytep, size_t bytel, char *encodingasciis);
-  /* marpaESLIFStringHelper_convertp returns a NEW instance of marpaESLIFStringHelper_t */
-  marpaESLIF_EXPORT marpaESLIFStringHelper_t     *marpaESLIFStringHelper_convertp(marpaESLIFStringHelper_t *marpaESLIFStringHelperp, char *newencodingasciis);
-  marpaESLIF_EXPORT marpaESLIFString_t           *marpaESLIFStringHelper_stringp(marpaESLIFStringHelper_t *marpaESLIFStringHelperp);
-  marpaESLIF_EXPORT void                          marpaESLIFStringHelper_freev(marpaESLIFStringHelper_t *marpaESLIFStringHelperp);
 #ifdef __cplusplus
 }
 #endif
