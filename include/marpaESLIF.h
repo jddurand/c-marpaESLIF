@@ -156,42 +156,15 @@ typedef struct marpaESLIFAlternative {
   size_t                     grammarLengthl; /* Length within the grammar (1 in the token-stream model) */
 } marpaESLIFAlternative_t;
 
-/* Value result transformer helper */
-typedef short (*marpaESLIFValueResultTransformUndef_t)(marpaESLIFValue_t *marpaESLIFValuep, void *userDatavp, void *contextp);
-typedef short (*marpaESLIFValueResultTransformChar_t)(marpaESLIFValue_t *marpaESLIFValuep, void *userDatavp, void *contextp, marpaESLIFValueResultChar_t c);
-typedef short (*marpaESLIFValueResultTransformShort_t)(marpaESLIFValue_t *marpaESLIFValuep, void *userDatavp, void *contextp, marpaESLIFValueResultShort_t b);
-typedef short (*marpaESLIFValueResultTransformInt_t)(marpaESLIFValue_t *marpaESLIFValuep, void *userDatavp, void *contextp, marpaESLIFValueResultInt_t i);
-typedef short (*marpaESLIFValueResultTransformLong_t)(marpaESLIFValue_t *marpaESLIFValuep, void *userDatavp, void *contextp, marpaESLIFValueResultLong_t l);
-typedef short (*marpaESLIFValueResultTransformFloat_t)(marpaESLIFValue_t *marpaESLIFValuep, void *userDatavp, void *contextp, marpaESLIFValueResultFloat_t f);
-typedef short (*marpaESLIFValueResultTransformDouble_t)(marpaESLIFValue_t *marpaESLIFValuep, void *userDatavp, void *contextp, marpaESLIFValueResultDouble_t d);
-typedef short (*marpaESLIFValueResultTransformPtr_t)(marpaESLIFValue_t *marpaESLIFValuep, void *userDatavp, void *contextp, marpaESLIFValueResultPtr_t p);
-typedef short (*marpaESLIFValueResultTransformArray_t)(marpaESLIFValue_t *marpaESLIFValuep, void *userDatavp, void *contextp, marpaESLIFValueResultArray_t a);
-typedef short (*marpaESLIFValueResultTransformBool_t)(marpaESLIFValue_t *marpaESLIFValuep, void *userDatavp, void *contextp, marpaESLIFValueResultBool_t b);
-typedef short (*marpaESLIFValueResultTransformString_t)(marpaESLIFValue_t *marpaESLIFValuep, void *userDatavp, void *contextp, marpaESLIFValueResultString_t s);
-typedef short (*marpaESLIFValueResultTransformRow_t)(marpaESLIFValue_t *marpaESLIFValuep, void *userDatavp, void *contextp, marpaESLIFValueResultRow_t r);
-typedef short (*marpaESLIFValueResultTransformTable_t)(marpaESLIFValue_t *marpaESLIFValuep, void *userDatavp, void *contextp, marpaESLIFValueResultTable_t t);
-typedef struct marpaESLIFValueResultTransform {
-  marpaESLIFValueResultTransformUndef_t             undefTransformerp;
-  marpaESLIFValueResultTransformChar_t              charTransformerp;
-  marpaESLIFValueResultTransformShort_t             shortTransformerp;
-  marpaESLIFValueResultTransformInt_t               intTransformerp;
-  marpaESLIFValueResultTransformLong_t              longTransformerp;
-  marpaESLIFValueResultTransformFloat_t             floatTransformerp;
-  marpaESLIFValueResultTransformDouble_t            doubleTransformerp;
-  marpaESLIFValueResultTransformPtr_t               ptrTransformerp;
-  marpaESLIFValueResultTransformArray_t             arrayTransformerp;
-  marpaESLIFValueResultTransformBool_t              boolTransformerp;
-  marpaESLIFValueResultTransformString_t            stringTransformerp;
-  marpaESLIFValueResultTransformRow_t               rowTransformerp;
-  marpaESLIFValueResultTransformTable_t             tableTransformerp;
-} marpaESLIFValueResultTransform_t;
+/* Ask the host system to import a marpaESLIFValueResult */
+typedef short (*marpaESLIFValueResultImport_t)(marpaESLIFValue_t *marpaESLIFValuep, void *userDatavp, marpaESLIFValueResult_t *marpaESLIFValueResultp);
 
 typedef struct marpaESLIFValueOption {
   void                                 *userDatavp;            /* User specific context */
   marpaESLIFValueRuleActionResolver_t   ruleActionResolverp;   /* Will return the function doing the wanted rule action */
   marpaESLIFValueSymbolActionResolver_t symbolActionResolverp; /* Will return the function doing the wanted symbol action */
   marpaESLIFValueFreeActionResolver_t   freeActionResolverp;   /* Will return the function doing the free */
-  marpaESLIFValueResultTransform_t     *transformerp;          /* Will ask end-user to process a value */
+  marpaESLIFValueResultImport_t         importerp;             /* Will ask end-user to import a marpaESLIFValueResult */
   short                                 highRankOnlyb;         /* Default: 1 */
   short                                 orderByRankb;          /* Default: 1 */
   short                                 ambiguousb;            /* Default: 0 */
@@ -420,11 +393,11 @@ extern "C" {
   /* marpaESLIFValue_stack_getAndForgetb transfers the memory management from the stack to the end-user in one call */
   /* It is nothing else but a wrapper on marpaESLIFValue_stack_getb followed by marpaESLIFValue_stack_forgetb */
   marpaESLIF_EXPORT short                         marpaESLIFValue_stack_getAndForgetb(marpaESLIFValue_t *marpaESLIFValuep, int indicei, marpaESLIFValueResult_t *marpaESLIFValueResultp);
-  /* marpaESLIFValue_transformb takes the value at stack indice number indice and call the appropriate transform callback */
-  marpaESLIF_EXPORT short                         marpaESLIFValue_transformb(marpaESLIFValue_t *marpaESLIFValuep, marpaESLIFValueResult_t *marpaESLIFValueResultp, marpaESLIFValueResult_t *marpaESLIFValueResultResolvedp);
-  /* marpaESLIFValue_stack_get_transformb takes the value at stack indice number indice and call the appropriate transform callback */
-  /* It is nothing else but a wrapper on marpaESLIFValue_stack_getp followed by marpaESLIFValue_transformb */
-  marpaESLIF_EXPORT short                         marpaESLIFValue_stack_get_transformb(marpaESLIFValue_t *marpaESLIFValuep, int indicei);
+  /* marpaESLIFValue_importb takes the value at stack indice number indice and call import callback */
+  marpaESLIF_EXPORT short                         marpaESLIFValue_importb(marpaESLIFValue_t *marpaESLIFValuep, marpaESLIFValueResult_t *marpaESLIFValueResultp, marpaESLIFValueResult_t *marpaESLIFValueResultResolvedp);
+  /* marpaESLIFValue_stack_get_importb takes the value at stack indice number indice and call import callback */
+  /* It is nothing else but a wrapper on marpaESLIFValue_stack_getp followed by marpaESLIFValue_importb */
+  marpaESLIF_EXPORT short                         marpaESLIFValue_stack_get_importb(marpaESLIFValue_t *marpaESLIFValuep, int indicei);
 
   marpaESLIF_EXPORT void                          marpaESLIF_freev(marpaESLIF_t *marpaESLIFp);
 

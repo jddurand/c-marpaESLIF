@@ -6,31 +6,7 @@
 #include <marpaESLIF.h>
 
 static short inputReaderb(void *userDatavp, char **inputsp, size_t *inputlp, short *eofbp, short *characterStreambp, char **encodingsp, size_t *encodinglp);
-static short transformUndefb(marpaESLIFValue_t *marpaESLIFValuep, void *userDatavp, void *contextp);
-static short transformCharb(marpaESLIFValue_t *marpaESLIFValuep, void *userDatavp, void *contextp, char c);
-static short transformShortb(marpaESLIFValue_t *marpaESLIFValuep, void *userDatavp, void *contextp, short b);
-static short transformIntb(marpaESLIFValue_t *marpaESLIFValuep, void *userDatavp, void *contextp, int i);
-static short transformLongb(marpaESLIFValue_t *marpaESLIFValuep, void *userDatavp, void *contextp, long l);
-static short transformFloatb(marpaESLIFValue_t *marpaESLIFValuep, void *userDatavp, void *contextp, float f);
-static short transformDoubleb(marpaESLIFValue_t *marpaESLIFValuep, void *userDatavp, void *contextp, double d);
-static short transformPtrb(marpaESLIFValue_t *marpaESLIFValuep, void *userDatavp, void *contextp, marpaESLIFValueResultPtr_t p);
-static short transformArrayb(marpaESLIFValue_t *marpaESLIFValuep, void *userDatavp, void *contextp, marpaESLIFValueResultArray_t a);
-static short transformBoolb(marpaESLIFValue_t *marpaESLIFValuep, void *userDatavp, void *contextp, marpaESLIFValueResultBool_t b);
-static short transformStringb(marpaESLIFValue_t *marpaESLIFValuep, void *userDatavp, void *contextp, marpaESLIFValueResultString_t s);
-
-static marpaESLIFValueResultTransform_t transformDefault = {
-  transformUndefb,
-  transformCharb,
-  transformShortb,
-  transformIntb,
-  transformLongb,
-  transformFloatb,
-  transformDoubleb,
-  transformPtrb,
-  transformArrayb,
-  transformBoolb,
-  transformStringb
-};
+static short importb(marpaESLIFValue_t *marpaESLIFValuep, void *userDatavp, marpaESLIFValueResult_t *marpaESLIFValueResultp);
 
 typedef struct marpaESLIFTester_context {
   genericLogger_t *genericLoggerp;
@@ -545,7 +521,7 @@ int main() {
     marpaESLIFValueOption.ruleActionResolverp   = NULL; /* Will return the function doing the wanted rule action */
     marpaESLIFValueOption.symbolActionResolverp = NULL; /* Will return the function doing the wanted symbol action */
     marpaESLIFValueOption.freeActionResolverp   = NULL; /* Will return the function doing the free */
-    marpaESLIFValueOption.transformerp          = &transformDefault;
+    marpaESLIFValueOption.importerp             = importb;
     marpaESLIFValueOption.highRankOnlyb         = 1;    /* Default: 1 */
     marpaESLIFValueOption.orderByRankb          = 1;    /* Default: 1 */
     marpaESLIFValueOption.ambiguousb            = 0;    /* Default: 0 */
@@ -599,122 +575,55 @@ static short inputReaderb(void *userDatavp, char **inputsp, size_t *inputlp, sho
 }
 
 /*****************************************************************************/
-static short transformUndefb(marpaESLIFValue_t *marpaESLIFValuep, void *userDatavp, void *contextp)
+static short importb(marpaESLIFValue_t *marpaESLIFValuep, void *userDatavp, marpaESLIFValueResult_t *marpaESLIFValueResultp)
 /*****************************************************************************/
 {
   valueContext_t *valueContextp = (valueContext_t *) userDatavp;
 
-  GENERICLOGGER_NOTICE(valueContextp->genericLoggerp, "Result type is undef");
-
-  return 1;
-}
-
-/*****************************************************************************/
-static short transformCharb(marpaESLIFValue_t *marpaESLIFValuep, void *userDatavp, void *contextp, char c)
-/*****************************************************************************/
-{
-  valueContext_t *valueContextp = (valueContext_t *) userDatavp;
-
-  GENERICLOGGER_NOTICEF(valueContextp->genericLoggerp, "Result type is char: %c", c);
-
-  return 1;
-}
-
-/*****************************************************************************/
-static short transformShortb(marpaESLIFValue_t *marpaESLIFValuep, void *userDatavp, void *contextp, short b)
-/*****************************************************************************/
-{
-  valueContext_t *valueContextp = (valueContext_t *) userDatavp;
-
-  GENERICLOGGER_NOTICEF(valueContextp->genericLoggerp, "Result type is short: %d", (int) b);
-
-  return 1;
-}
-
-/*****************************************************************************/
-static short transformIntb(marpaESLIFValue_t *marpaESLIFValuep, void *userDatavp, void *contextp, int i)
-/*****************************************************************************/
-{
-  valueContext_t *valueContextp = (valueContext_t *) userDatavp;
-
-  GENERICLOGGER_NOTICEF(valueContextp->genericLoggerp, "Result type is int: %d", i);
-
-  return 1;
-}
-
-/*****************************************************************************/
-static short transformLongb(marpaESLIFValue_t *marpaESLIFValuep, void *userDatavp, void *contextp, long l)
-/*****************************************************************************/
-{
-  valueContext_t *valueContextp = (valueContext_t *) userDatavp;
-
-  GENERICLOGGER_NOTICEF(valueContextp->genericLoggerp, "Result type is long: %ld", l);
-
-  return 1;
-}
-
-/*****************************************************************************/
-static short transformFloatb(marpaESLIFValue_t *marpaESLIFValuep, void *userDatavp, void *contextp, float f)
-/*****************************************************************************/
-{
-  valueContext_t *valueContextp = (valueContext_t *) userDatavp;
-
-  GENERICLOGGER_NOTICEF(valueContextp->genericLoggerp, "Result type is float: %f", (double) f);
-
-  return 1;
-}
-
-/*****************************************************************************/
-static short transformDoubleb(marpaESLIFValue_t *marpaESLIFValuep, void *userDatavp, void *contextp, double d)
-/*****************************************************************************/
-{
-  valueContext_t *valueContextp = (valueContext_t *) userDatavp;
-
-  GENERICLOGGER_NOTICEF(valueContextp->genericLoggerp, "Result type is double: %f", d);
-
-  return 1;
-}
-
-/*****************************************************************************/
-static short transformPtrb(marpaESLIFValue_t *marpaESLIFValuep, void *userDatavp, void *contextp, marpaESLIFValueResultPtr_t p)
-/*****************************************************************************/
-{
-  valueContext_t *valueContextp = (valueContext_t *) userDatavp;
-
-  GENERICLOGGER_NOTICEF(valueContextp->genericLoggerp, "Result type is ptr: %p", p.p);
-
-  return 1;
-}
-
-/*****************************************************************************/
-static short transformArrayb(marpaESLIFValue_t *marpaESLIFValuep, void *userDatavp, void *contextp, marpaESLIFValueResultArray_t a)
-/*****************************************************************************/
-{
-  valueContext_t *valueContextp = (valueContext_t *) userDatavp;
-
-  GENERICLOGGER_NOTICEF(valueContextp->genericLoggerp, "Result type is array: {%p,%ld}", a.p, (unsigned long) a.sizel);
-
-  return 1;
-}
-
-/*****************************************************************************/
-static short transformBoolb(marpaESLIFValue_t *marpaESLIFValuep, void *userDatavp, void *contextp, marpaESLIFValueResultBool_t b)
-/*****************************************************************************/
-{
-  valueContext_t *valueContextp = (valueContext_t *) userDatavp;
-
-  GENERICLOGGER_NOTICEF(valueContextp->genericLoggerp, "Result type is bool: %d", (int) b);
-
-  return 1;
-}
-
-/*****************************************************************************/
-static short transformStringb(marpaESLIFValue_t *marpaESLIFValuep, void *userDatavp, void *contextp, marpaESLIFValueResultString_t s)
-/*****************************************************************************/
-{
-  valueContext_t *valueContextp = (valueContext_t *) userDatavp;
-
-  GENERICLOGGER_NOTICEF(valueContextp->genericLoggerp, "Result type is string: %s, encoding: %s", s.p, s.encodingasciis);
+  switch (marpaESLIFValueResultp->type) {
+  case MARPAESLIF_VALUE_TYPE_UNDEF:
+    GENERICLOGGER_NOTICE(valueContextp->genericLoggerp, "Result type is undef");
+    break;
+  case MARPAESLIF_VALUE_TYPE_CHAR:
+    GENERICLOGGER_NOTICEF(valueContextp->genericLoggerp, "Result type is char: %c", marpaESLIFValueResultp->u.c);
+    break;
+  case MARPAESLIF_VALUE_TYPE_SHORT:
+    GENERICLOGGER_NOTICEF(valueContextp->genericLoggerp, "Result type is short: %d", (int) marpaESLIFValueResultp->u.b);
+    break;
+  case MARPAESLIF_VALUE_TYPE_INT:
+    GENERICLOGGER_NOTICEF(valueContextp->genericLoggerp, "Result type is int: %d", marpaESLIFValueResultp->u.i);
+    break;
+  case MARPAESLIF_VALUE_TYPE_LONG:
+    GENERICLOGGER_NOTICEF(valueContextp->genericLoggerp, "Result type is long: %ld", marpaESLIFValueResultp->u.l);
+    break;
+  case MARPAESLIF_VALUE_TYPE_FLOAT:
+    GENERICLOGGER_NOTICEF(valueContextp->genericLoggerp, "Result type is float: %f", (double) marpaESLIFValueResultp->u.f);
+    break;
+  case MARPAESLIF_VALUE_TYPE_DOUBLE:
+    GENERICLOGGER_NOTICEF(valueContextp->genericLoggerp, "Result type is double: %f", marpaESLIFValueResultp->u.d);
+    break;
+  case MARPAESLIF_VALUE_TYPE_PTR:
+    GENERICLOGGER_NOTICEF(valueContextp->genericLoggerp, "Result type is ptr: %p", marpaESLIFValueResultp->u.p.p);
+    break;
+  case MARPAESLIF_VALUE_TYPE_ARRAY:
+    GENERICLOGGER_NOTICEF(valueContextp->genericLoggerp, "Result type is array: {%p,%ld}", marpaESLIFValueResultp->u.a.p, (unsigned long) marpaESLIFValueResultp->u.a.sizel);
+    break;
+  case MARPAESLIF_VALUE_TYPE_BOOL:
+    GENERICLOGGER_NOTICEF(valueContextp->genericLoggerp, "Result type is bool: %d", (int) marpaESLIFValueResultp->u.b);
+    break;
+  case MARPAESLIF_VALUE_TYPE_STRING:
+    GENERICLOGGER_NOTICEF(valueContextp->genericLoggerp, "Result type is string: %s, encoding: %s", marpaESLIFValueResultp->u.s.p, marpaESLIFValueResultp->u.s.encodingasciis);
+    break;
+  case MARPAESLIF_VALUE_TYPE_ROW:
+    GENERICLOGGER_NOTICEF(valueContextp->genericLoggerp, "Result type is row: {%p,%ld}", marpaESLIFValueResultp->u.r.p, (unsigned long) marpaESLIFValueResultp->u.r.sizel);
+    break;
+  case MARPAESLIF_VALUE_TYPE_TABLE:
+    GENERICLOGGER_NOTICEF(valueContextp->genericLoggerp, "Result type is table: {%p,%ld}", marpaESLIFValueResultp->u.t.p, (unsigned long) marpaESLIFValueResultp->u.t.sizel);
+    break;
+  default:
+    GENERICLOGGER_ERRORF(valueContextp->genericLoggerp, "Unsupported result type %d", marpaESLIFValueResultp->type);
+    break;
+  }
 
   return 1;
 }

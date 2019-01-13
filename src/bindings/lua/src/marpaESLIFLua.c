@@ -160,19 +160,7 @@ static short                           marpaESLIFLua_valueRuleCallbackb(void *us
 static short                           marpaESLIFLua_valueSymbolCallbackb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, char *bytep, size_t bytel, int resulti);
 static short                           marpaESLIFLua_valueCallbackb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, char *bytep, size_t bytel, int resulti, short nullableb, short symbolb);
 static void                            marpaESLIFLua_valueFreeCallbackv(void *userDatavp, marpaESLIFValueResult_t *marpaESLIFValueResultp);
-static short                           marpaESLIFLua_transformUndefb(marpaESLIFValue_t *marpaESLIFValuep, void *userDatavp, void *contextp);
-static short                           marpaESLIFLua_transformCharb(marpaESLIFValue_t *marpaESLIFValuep, void *userDatavp, void *contextp, marpaESLIFValueResultChar_t c);
-static short                           marpaESLIFLua_transformShortb(marpaESLIFValue_t *marpaESLIFValuep, void *userDatavp, void *contextp, marpaESLIFValueResultShort_t b);
-static short                           marpaESLIFLua_transformIntb(marpaESLIFValue_t *marpaESLIFValuep, void *userDatavp, void *contextp, marpaESLIFValueResultInt_t i);
-static short                           marpaESLIFLua_transformLongb(marpaESLIFValue_t *marpaESLIFValuep, void *userDatavp, void *contextp, marpaESLIFValueResultLong_t l);
-static short                           marpaESLIFLua_transformFloatb(marpaESLIFValue_t *marpaESLIFValuep, void *userDatavp, void *contextp, marpaESLIFValueResultFloat_t f);
-static short                           marpaESLIFLua_transformDoubleb(marpaESLIFValue_t *marpaESLIFValuep, void *userDatavp, void *contextp, marpaESLIFValueResultDouble_t d);
-static short                           marpaESLIFLua_transformPtrb(marpaESLIFValue_t *marpaESLIFValuep, void *userDatavp, void *contextp, marpaESLIFValueResultPtr_t p);
-static short                           marpaESLIFLua_transformArrayb(marpaESLIFValue_t *marpaESLIFValuep, void *userDatavp, void *contextp, marpaESLIFValueResultArray_t a);
-static short                           marpaESLIFLua_transformBoolb(marpaESLIFValue_t *marpaESLIFValuep, void *userDatavp, void *contextp, marpaESLIFValueResultBool_t b);
-static short                           marpaESLIFLua_transformStringb(marpaESLIFValue_t *marpaESLIFValuep, void *userDatavp, void *contextp, marpaESLIFValueResultString_t);
-static short                           marpaESLIFLua_transformRowb(marpaESLIFValue_t *marpaESLIFValuep, void *userDatavp, void *contextp, marpaESLIFValueResultRow_t r);
-static short                           marpaESLIFLua_transformTableb(marpaESLIFValue_t *marpaESLIFValuep, void *userDatavp, void *contextp, marpaESLIFValueResultTable_t t);
+static short                           marpaESLIFLua_importb(marpaESLIFValue_t *marpaESLIFValuep, void *userDatavp, marpaESLIFValueResult_t *marpaESLIFValueResultp);
 static short                           marpaESLIFLua_pushValueb(marpaESLIFLuaValueContext_t *marpaESLIFLuaValueContextp, marpaESLIFValue_t *marpaESLIFValuep, int stackindicei, char *bytep, size_t bytel);
 static short                           marpaESLIFLua_representationb(void *userDatavp, marpaESLIFValueResult_t *marpaESLIFValueResultp, char **inputcpp, size_t *inputlp, char **encodingsp);
 static int                             marpaESLIFLua_marpaESLIFRecognizer_newi(lua_State *L);
@@ -220,23 +208,6 @@ static short                           marpaESLIFLua_table_canarray_getb(lua_Sta
 static short                           marpaESLIFLua_table_opaque_getb(lua_State *L, int indicei, short *opaquebp);
 static int                             marpaESLIFLua_nexti(lua_State *L);
 static short                           marpaESLIFLua_luaL_pairsb(int *rcip, lua_State *L, int idx, int *iteratorip, int *statevariableip);
-
-/* Transformers */
-static marpaESLIFValueResultTransform_t marpaESLIFLuaValueResultTransformDefault = {
-  marpaESLIFLua_transformUndefb,
-  marpaESLIFLua_transformCharb,
-  marpaESLIFLua_transformShortb,
-  marpaESLIFLua_transformIntb,
-  marpaESLIFLua_transformLongb,
-  marpaESLIFLua_transformFloatb,
-  marpaESLIFLua_transformDoubleb,
-  marpaESLIFLua_transformPtrb,
-  marpaESLIFLua_transformArrayb,
-  marpaESLIFLua_transformBoolb,
-  marpaESLIFLua_transformStringb,
-  marpaESLIFLua_transformRowb,
-  marpaESLIFLua_transformTableb
-};
 
 #define MARPAESLIFLUA_NOOP
 
@@ -3282,7 +3253,7 @@ static int  marpaESLIFLua_marpaESLIFGrammar_parsei(lua_State *L)
   marpaESLIFValueOption.ruleActionResolverp    = marpaESLIFLua_valueRuleActionResolver;
   marpaESLIFValueOption.symbolActionResolverp  = marpaESLIFLua_valueSymbolActionResolver;
   marpaESLIFValueOption.freeActionResolverp    = marpaESLIFLua_valueFreeActionResolver;
-  marpaESLIFValueOption.transformerp           = &marpaESLIFLuaValueResultTransformDefault;
+  marpaESLIFValueOption.importerp              = marpaESLIFLua_importb;
   MARPAESLIFLUA_CALLBACKB(L, marpaESLIFLuaValueContext.valueInterface_r, "isWithHighRankOnly", 0 /* nargs */, MARPAESLIFLUA_NOOP, &(marpaESLIFValueOption.highRankOnlyb));
   MARPAESLIFLUA_CALLBACKB(L, marpaESLIFLuaValueContext.valueInterface_r, "isWithOrderByRank",  0 /* nargs */, MARPAESLIFLUA_NOOP, &(marpaESLIFValueOption.orderByRankb));
   MARPAESLIFLUA_CALLBACKB(L, marpaESLIFLuaValueContext.valueInterface_r, "isWithAmbiguous",    0 /* nargs */, MARPAESLIFLUA_NOOP, &(marpaESLIFValueOption.ambiguousb));
@@ -3291,7 +3262,7 @@ static int  marpaESLIFLua_marpaESLIFGrammar_parsei(lua_State *L)
 
   if ((rci = marpaESLIFGrammar_parseb(marpaESLIFLuaGrammarContextp->marpaESLIFGrammarp, &marpaESLIFRecognizerOption, &marpaESLIFValueOption, NULL)) != 0) {
     if (! marpaESLIFLua_lua_gettop(&resultStacki, L)) goto err;
-    /* marpaESLIFGrammar_parseb called the transformers that pushed the final value to the stack */
+    /* marpaESLIFGrammar_parseb called the importer that pushed the final value to the stack */
     MARPAESLIFLUA_CALLBACKV(L, marpaESLIFLuaValueContext.valueInterface_r, "setResult", 1 /* nargs */, if (! marpaESLIFLua_lua_pushnil(L)) goto err; if (! marpaESLIFLua_lua_copy(L, resultStacki, -1)) goto err;);
     if (! marpaESLIFLua_lua_pop(L, 1)) goto err;
   }
@@ -3569,241 +3540,94 @@ static void marpaESLIFLua_valueFreeCallbackv(void *userDatavp, marpaESLIFValueRe
 }
 
 /*****************************************************************************/
-static short marpaESLIFLua_transformUndefb(marpaESLIFValue_t *marpaESLIFValuep, void *userDatavp, void *contextp)
+static short marpaESLIFLua_importb(marpaESLIFValue_t *marpaESLIFValuep, void *userDatavp, marpaESLIFValueResult_t *marpaESLIFValueResultp)
 /*****************************************************************************/
 {
-  static const char           *funcs                      = "marpaESLIFLua_transformUndefb";
+  static const char           *funcs                      = "marpaESLIFLua_importb";
   marpaESLIFLuaValueContext_t *marpaESLIFLuaValueContextp = (marpaESLIFLuaValueContext_t *) userDatavp;
   lua_State                   *L                          = marpaESLIFLuaValueContextp->L;
-
-  if (! marpaESLIFLua_lua_pushnil(L)) goto err;
-
-  return 1;
-
- err:
-  return 0;
-}
-
-/*****************************************************************************/
-static short marpaESLIFLua_transformCharb(marpaESLIFValue_t *marpaESLIFValuep, void *userDatavp, void *contextp, marpaESLIFValueResultChar_t c)
-/*****************************************************************************/
-{
-  static const char           *funcs                      = "marpaESLIFLua_transformCharb";
-  marpaESLIFLuaValueContext_t *marpaESLIFLuaValueContextp = (marpaESLIFLuaValueContext_t *) userDatavp;
-  lua_State                   *L                          = marpaESLIFLuaValueContextp->L;
-
-  if (! marpaESLIFLua_lua_pushlstring(NULL, L, &c, 1)) goto err;
-
-  return 1;
-
- err:
-  return 0;
-}
-
-/*****************************************************************************/
-static short marpaESLIFLua_transformShortb(marpaESLIFValue_t *marpaESLIFValuep, void *userDatavp, void *contextp, marpaESLIFValueResultShort_t b)
-/*****************************************************************************/
-{
-  static const char           *funcs                      = "marpaESLIFLua_transformShortb";
-  marpaESLIFLuaValueContext_t *marpaESLIFLuaValueContextp = (marpaESLIFLuaValueContext_t *) userDatavp;
-  lua_State                   *L                          = marpaESLIFLuaValueContextp->L;
-
-  return marpaESLIFLua_lua_pushinteger(L, (lua_Integer) b);
-}
-
-/*****************************************************************************/
-static short marpaESLIFLua_transformIntb(marpaESLIFValue_t *marpaESLIFValuep, void *userDatavp, void *contextp, marpaESLIFValueResultInt_t i)
-/*****************************************************************************/
-{
-  static const char           *funcs                      = "marpaESLIFLua_transformIntb";
-  marpaESLIFLuaValueContext_t *marpaESLIFLuaValueContextp = (marpaESLIFLuaValueContext_t *) userDatavp;
-  lua_State                   *L                          = marpaESLIFLuaValueContextp->L;
-
-  return marpaESLIFLua_lua_pushinteger(L, (lua_Integer) i);
-}
-
-/*****************************************************************************/
-static short marpaESLIFLua_transformLongb(marpaESLIFValue_t *marpaESLIFValuep, void *userDatavp, void *contextp, marpaESLIFValueResultLong_t l)
-/*****************************************************************************/
-{
-  static const char           *funcs                      = "marpaESLIFLua_transformLongb";
-  marpaESLIFLuaValueContext_t *marpaESLIFLuaValueContextp = (marpaESLIFLuaValueContext_t *) userDatavp;
-  lua_State                   *L                          = marpaESLIFLuaValueContextp->L;
-
-  return marpaESLIFLua_lua_pushinteger(L, (lua_Integer) l);
-}
-
-/*****************************************************************************/
-static short marpaESLIFLua_transformFloatb(marpaESLIFValue_t *marpaESLIFValuep, void *userDatavp, void *contextp, marpaESLIFValueResultFloat_t f)
-/*****************************************************************************/
-{
-  static const char           *funcs                      = "marpaESLIFLua_transformFloatb";
-  marpaESLIFLuaValueContext_t *marpaESLIFLuaValueContextp = (marpaESLIFLuaValueContext_t *) userDatavp;
-  lua_State                   *L                          = marpaESLIFLuaValueContextp->L;
-
-  if (! marpaESLIFLua_lua_pushnumber(L, (lua_Number) f)) goto err;
-
-  return 1;
-
- err:
-  return 0;
-}
-
-/*****************************************************************************/
-static short marpaESLIFLua_transformDoubleb(marpaESLIFValue_t *marpaESLIFValuep, void *userDatavp, void *contextp, marpaESLIFValueResultDouble_t d)
-/*****************************************************************************/
-{
-  static const char           *funcs                      = "marpaESLIFLua_transformDoubleb";
-  marpaESLIFLuaValueContext_t *marpaESLIFLuaValueContextp = (marpaESLIFLuaValueContext_t *) userDatavp;
-  lua_State                   *L                          = marpaESLIFLuaValueContextp->L;
-
-  if (! marpaESLIFLua_lua_pushnumber(L, (lua_Number) d)) goto err;
-
-  return 1;
-
- err:
-  return 0;
-}
-
-/*****************************************************************************/
-static short marpaESLIFLua_transformPtrb(marpaESLIFValue_t *marpaESLIFValuep, void *userDatavp, void *contextp, marpaESLIFValueResultPtr_t p)
-/*****************************************************************************/
-{
-  static const char           *funcs                      = "marpaESLIFLua_transformPtrb";
-  marpaESLIFLuaValueContext_t *marpaESLIFLuaValueContextp = (marpaESLIFLuaValueContext_t *) userDatavp;
-  lua_State                   *L                          = marpaESLIFLuaValueContextp->L;
-
-  if (contextp == MARPAESLIFLUA_CONTEXT) {
-    /* This is a pointer to an integer value that is a global reference to the real value */
-    MARPAESLIFLUA_DEREF(L, * (int *) p.p);
-  } else {
-    if (! marpaESLIFLua_lua_pushlightuserdata(L, p.p)) goto err;
-  }
-
-  return 1;
-
- err:
-  return 0;
-}
-
-/*****************************************************************************/
-static short marpaESLIFLua_transformArrayb(marpaESLIFValue_t *marpaESLIFValuep, void *userDatavp, void *contextp, marpaESLIFValueResultArray_t a)
-/*****************************************************************************/
-{
-  static const char           *funcs                      = "marpaESLIFLua_transformArrayb";
-  marpaESLIFLuaValueContext_t *marpaESLIFLuaValueContextp = (marpaESLIFLuaValueContext_t *) userDatavp;
-  lua_State                   *L                          = marpaESLIFLuaValueContextp->L;
-
-  if (! marpaESLIFLua_lua_pushlstring(NULL, L, a.p, a.sizel)) goto err;
-
-  return 1;
-
- err:
-  return 0;
-}
-
-/*****************************************************************************/
-static short marpaESLIFLua_transformBoolb(marpaESLIFValue_t *marpaESLIFValuep, void *userDatavp, void *contextp, marpaESLIFValueResultBool_t y)
-/*****************************************************************************/
-{
-  static const char           *funcs                      = "marpaESLIFLua_transformBoolb";
-  marpaESLIFLuaValueContext_t *marpaESLIFLuaValueContextp = (marpaESLIFLuaValueContext_t *) userDatavp;
-  lua_State                   *L                          = marpaESLIFLuaValueContextp->L;
-
-  if (! marpaESLIFLua_lua_pushboolean(L, (int) (y == MARPAESLIFVALUERESULTBOOL_FALSE) ? 0 : 1)) goto err;
-
-  return 1;
-
- err:
-  return 0;
-}
-
-/*****************************************************************************/
-static short marpaESLIFLua_transformStringb(marpaESLIFValue_t *marpaESLIFValuep, void *userDatavp, void *contextp, marpaESLIFValueResultString_t s)
-/*****************************************************************************/
-{
-  static const char           *funcs                      = "marpaESLIFLua_transformStringb";
-  marpaESLIFLuaValueContext_t *marpaESLIFLuaValueContextp = (marpaESLIFLuaValueContext_t *) userDatavp;
-  lua_State                   *L                          = marpaESLIFLuaValueContextp->L;
-  short                        rcb;
-
-  if (! marpaESLIFLua_lua_pushlstring(NULL, L, s.p, s.sizel)) goto err;
-
-  rcb = 1;
-  goto done;
-
- err:
-  rcb = 0;
-
- done:
-  return rcb;
-}
-
-/*****************************************************************************/
-static short marpaESLIFLua_transformRowb(marpaESLIFValue_t *marpaESLIFValuep, void *userDatavp, void *contextp, marpaESLIFValueResultRow_t r)
-/*****************************************************************************/
-{
-  static const char           *funcs                      = "marpaESLIFLua_transformRowb";
-  marpaESLIFLuaValueContext_t *marpaESLIFLuaValueContextp = (marpaESLIFLuaValueContext_t *) userDatavp;
-  lua_State                   *L                          = marpaESLIFLuaValueContextp->L;
-  short                        rcb;
   size_t                       i;
+  short                        rcb;
 
-  /* We received elements transformation callbacks in order; i.e. 1, then 2, then 3... */
-  /* We pushed that in lua stack, i.e. the lua stack then contains:  1 transformed, then 2 transformed, then 3 transformed... */
-
-  if (r.sizel > INT_MAX) {
-      marpaESLIFLua_luaL_errorf(L, "table size %ld too big, maximum is %d", (unsigned long) r.sizel, INT_MAX);
-      goto err;
-  }
-  if (! marpaESLIFLua_lua_createtable(L, (int) r.sizel, 0)) goto err  ;                    /* Stack: val1, ..., valn, table */
-  if (! marpaESLIFLua_lua_newtable(L)) goto err;                                     /* Stack: val1, ..., valn, table, metatable */
-  MARPAESLIFLUA_STORE_BOOLEAN(L, "__marpaESLIF_canarray", 1);                        /* Stack: val1, ..., valn, table, metatable */
-  if (! marpaESLIFLua_lua_setmetatable(L, -2)) goto err;                             /* Stack: val1, ..., valn, table */
-
-  if (r.sizel > 0) {
-    for (i = r.sizel; i >=1; i--) {
-      if (! marpaESLIFLua_lua_insert(L, -2)) goto err;                               /* Stack: val1, ..., table, valn */
-      if (! marpaESLIFLua_lua_rawseti(L, -2, (int) i)) goto err;                     /* Stack: val1, ..., table */
+  switch (marpaESLIFValueResultp->type) {
+  case MARPAESLIF_VALUE_TYPE_UNDEF:
+    if (! marpaESLIFLua_lua_pushnil(L)) goto err;
+    break;
+  case MARPAESLIF_VALUE_TYPE_CHAR:
+    if (! marpaESLIFLua_lua_pushlstring(NULL, L, &(marpaESLIFValueResultp->u.c), 1)) goto err;
+    break;
+  case MARPAESLIF_VALUE_TYPE_SHORT:
+    if (! marpaESLIFLua_lua_pushinteger(L, (lua_Integer) marpaESLIFValueResultp->u.b)) goto err;
+    break;
+  case MARPAESLIF_VALUE_TYPE_INT:
+    if (! marpaESLIFLua_lua_pushinteger(L, (lua_Integer) marpaESLIFValueResultp->u.i)) goto err;
+    break;
+  case MARPAESLIF_VALUE_TYPE_LONG:
+    if (! marpaESLIFLua_lua_pushinteger(L, (lua_Integer) marpaESLIFValueResultp->u.l)) goto err;
+    break;
+  case MARPAESLIF_VALUE_TYPE_FLOAT:
+    if (! marpaESLIFLua_lua_pushnumber(L, (lua_Number) marpaESLIFValueResultp->u.f)) goto err;
+    break;
+  case MARPAESLIF_VALUE_TYPE_DOUBLE:
+    if (! marpaESLIFLua_lua_pushnumber(L, (lua_Number) marpaESLIFValueResultp->u.d)) goto err;
+    break;
+  case MARPAESLIF_VALUE_TYPE_PTR:
+    if (marpaESLIFValueResultp->contextp == MARPAESLIFLUA_CONTEXT) {
+      /* This is a pointer to an integer value that is a global reference to the real value */
+      MARPAESLIFLUA_DEREF(L, * (int *) marpaESLIFValueResultp->u.p.p);
+    } else {
+      if (! marpaESLIFLua_lua_pushlightuserdata(L, marpaESLIFValueResultp->u.p.p)) goto err;
     }
-  }
-
-  rcb = 1;
-  goto done;
-
- err:
-  rcb = 0;
-
- done:
-  return rcb;
-}
-
-/*****************************************************************************/
-static short marpaESLIFLua_transformTableb(marpaESLIFValue_t *marpaESLIFValuep, void *userDatavp, void *contextp, marpaESLIFValueResultTable_t t)
-/*****************************************************************************/
-{
-  static const char           *funcs                      = "marpaESLIFLua_transformtableb";
-  marpaESLIFLuaValueContext_t *marpaESLIFLuaValueContextp = (marpaESLIFLuaValueContext_t *) userDatavp;
-  lua_State                   *L                          = marpaESLIFLuaValueContextp->L;
-  short                        rcb;
-  size_t                       i;
-
-  /* We received elements transformation callbacks in order; i.e. key0, val0, ..., keyn, valn */
-  /* We pushed that in lua stack, i.e. the lua stack then contains:  valn transformed, keyn transformed, ..., val0 transformed, key0 transformed */
-
-  if ((t.sizel / 2) > INT_MAX) {
-      marpaESLIFLua_luaL_errorf(L, "table size %ld too big, maximum is %d", (unsigned long) (t.sizel / 2), INT_MAX);
+    break;
+  case MARPAESLIF_VALUE_TYPE_ARRAY:
+    if (! marpaESLIFLua_lua_pushlstring(NULL, L, marpaESLIFValueResultp->u.a.p, marpaESLIFValueResultp->u.a.sizel)) goto err;
+    break;
+  case MARPAESLIF_VALUE_TYPE_BOOL:
+    if (! marpaESLIFLua_lua_pushboolean(L, (int) (marpaESLIFValueResultp->u.y == MARPAESLIFVALUERESULTBOOL_FALSE) ? 0 : 1)) goto err;
+    break;
+  case MARPAESLIF_VALUE_TYPE_STRING:
+    if (! marpaESLIFLua_lua_pushlstring(NULL, L, marpaESLIFValueResultp->u.s.p, marpaESLIFValueResultp->u.s.sizel)) goto err;
+    break;
+  case MARPAESLIF_VALUE_TYPE_ROW:
+    /* We received elements importer callbacks in order; i.e. 1, then 2, then 3... */
+    /* We pushed that in lua stack, i.e. the lua stack then contains:  1 imported, then 2 imported, then 3 imported... */
+    if (marpaESLIFValueResultp->u.r.sizel > INT_MAX) {
+      marpaESLIFLua_luaL_errorf(L, "table size %ld too big, maximum is %d", (unsigned long) marpaESLIFValueResultp->u.r.sizel, INT_MAX);
       goto err;
-  }
-  if (! marpaESLIFLua_lua_createtable(L, (int) t.sizel / 2, 0)) goto err;                /* Stack: keyn, valn, ..., key1, val1, table */
-  if (! marpaESLIFLua_lua_newtable(L)) goto err;                                     /* Stack: val1, ..., valn, table, metatable */
-  MARPAESLIFLUA_STORE_BOOLEAN(L, "__marpaESLIF_canarray", 0);                        /* Stack: val1, ..., valn, table, metatable */
-  if (! marpaESLIFLua_lua_setmetatable(L, -2)) goto err;                             /* Stack: val1, ..., valn, table */
+    }
+    if (! marpaESLIFLua_lua_createtable(L, (int) marpaESLIFValueResultp->u.r.sizel, 0)) goto err; /* Stack: val1, ..., valn, table */
+    if (! marpaESLIFLua_lua_newtable(L)) goto err;                                                /* Stack: val1, ..., valn, table, metatable */
+    MARPAESLIFLUA_STORE_BOOLEAN(L, "__marpaESLIF_canarray", 1);                                   /* Stack: val1, ..., valn, table, metatable */
+    if (! marpaESLIFLua_lua_setmetatable(L, -2)) goto err;                                        /* Stack: val1, ..., valn, table */
 
-  /* By definition the stack contains t.sizel even elements that are {key,value} tuples */
-  for (i = 1; i <= t.sizel; i += 2) {
-    if (! marpaESLIFLua_lua_insert(L, -3)) goto err;                               /* Stack: keyn, valn, ..., table, key1, val1 */
-    if (! marpaESLIFLua_lua_rawset(L, -3)) goto err;                               /* Stack: keyn, valn, ..., table */
+    if (marpaESLIFValueResultp->u.r.sizel > 0) {
+      for (i = marpaESLIFValueResultp->u.r.sizel; i >=1; i--) {
+        if (! marpaESLIFLua_lua_insert(L, -2)) goto err;                                          /* Stack: val1, ..., table, valn */
+        if (! marpaESLIFLua_lua_rawseti(L, -2, (int) i)) goto err;                                /* Stack: val1, ..., table */
+      }
+    }
+    break;
+  case MARPAESLIF_VALUE_TYPE_TABLE:
+    /* We received elements importer callbacks in order; i.e. key0, val0, ..., keyn, valn */
+    /* We pushed that in lua stack, i.e. the lua stack then contains:  valn imported, keyn imported, ..., val0 imported, key0 imported */
+    if ((marpaESLIFValueResultp->u.t.sizel / 2) > INT_MAX) {
+      marpaESLIFLua_luaL_errorf(L, "table size %ld too big, maximum is %d", (unsigned long) (marpaESLIFValueResultp->u.t.sizel / 2), INT_MAX);
+      goto err;
+    }
+    if (! marpaESLIFLua_lua_createtable(L, (int) marpaESLIFValueResultp->u.t.sizel / 2, 0)) goto err; /* Stack: keyn, valn, ..., key1, val1, table */
+    if (! marpaESLIFLua_lua_newtable(L)) goto err;                                                    /* Stack: val1, ..., valn, table, metatable */
+    MARPAESLIFLUA_STORE_BOOLEAN(L, "__marpaESLIF_canarray", 0);                                       /* Stack: val1, ..., valn, table, metatable */
+    if (! marpaESLIFLua_lua_setmetatable(L, -2)) goto err;                                            /* Stack: val1, ..., valn, table */
+
+    /* By definition the stack contains t.sizel even elements that are {key,value} tuples */
+    for (i = 1; i <= marpaESLIFValueResultp->u.t.sizel; i += 2) {
+      if (! marpaESLIFLua_lua_insert(L, -3)) goto err;                                                /* Stack: keyn, valn, ..., table, key1, val1 */
+      if (! marpaESLIFLua_lua_rawset(L, -3)) goto err;                                                /* Stack: keyn, valn, ..., table */
+    }
+    break;
+  default:
+    marpaESLIFLua_luaL_errorf(L, "Unknown result type %d to import", marpaESLIFValueResultp->type);
+    goto err;
   }
 
   rcb = 1;
@@ -3841,8 +3665,8 @@ static short marpaESLIFLua_pushValueb(marpaESLIFLuaValueContext_t *marpaESLIFLua
     }
   }
 
-  if (! marpaESLIFValue_transformb(marpaESLIFValuep, marpaESLIFValueResultp, NULL /* marpaESLIFValueResultResolvedp */)) {
-    marpaESLIFLua_luaL_errorf(L, "marpaESLIFValue_transformb failure, %s", strerror(errno));
+  if (! marpaESLIFValue_importb(marpaESLIFValuep, marpaESLIFValueResultp, NULL /* marpaESLIFValueResultResolvedp */)) {
+    marpaESLIFLua_luaL_errorf(L, "marpaESLIFValue_importb failure, %s", strerror(errno));
     goto err;
   }
 
@@ -5723,7 +5547,7 @@ static int marpaESLIFLua_marpaESLIFValue_newi(lua_State *L)
   marpaESLIFValueOption.ruleActionResolverp    = marpaESLIFLua_valueRuleActionResolver;
   marpaESLIFValueOption.symbolActionResolverp  = marpaESLIFLua_valueSymbolActionResolver;
   marpaESLIFValueOption.freeActionResolverp    = marpaESLIFLua_valueFreeActionResolver;
-  marpaESLIFValueOption.transformerp           = &marpaESLIFLuaValueResultTransformDefault;
+  marpaESLIFValueOption.importerp              = marpaESLIFLua_importb;
   MARPAESLIFLUA_CALLBACKB(L, marpaESLIFLuaValueContextp->valueInterface_r, "isWithHighRankOnly", 0 /* nargs */, MARPAESLIFLUA_NOOP, &(marpaESLIFValueOption.highRankOnlyb));
   MARPAESLIFLUA_CALLBACKB(L, marpaESLIFLuaValueContextp->valueInterface_r, "isWithOrderByRank",  0 /* nargs */, MARPAESLIFLUA_NOOP, &(marpaESLIFValueOption.orderByRankb));
   MARPAESLIFLUA_CALLBACKB(L, marpaESLIFLuaValueContextp->valueInterface_r, "isWithAmbiguous",    0 /* nargs */, MARPAESLIFLUA_NOOP, &(marpaESLIFValueOption.ambiguousb));
@@ -5824,7 +5648,7 @@ static int marpaESLIFLua_marpaESLIFValue_valuei(lua_State *L)
 
   if (valueb > 0) {
     resultStacki = lua_gettop(L);
-    /* marpaESLIFValue_valueb called the transformers that pushed the final value to the stack */
+    /* marpaESLIFValue_valueb called the importer that pushed the final value to the stack */
     MARPAESLIFLUA_CALLBACKV(L, marpaESLIFLuaValueContextp->valueInterface_r, "setResult", 1 /* nargs */, if (! marpaESLIFLua_lua_pushnil(L)) goto err; if (! marpaESLIFLua_lua_copy(L, resultStacki, -1)) goto err;);
     if (! marpaESLIFLua_lua_pop(L, 1)) goto err;
     rci = 1;
