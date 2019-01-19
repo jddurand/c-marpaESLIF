@@ -419,7 +419,7 @@ char    ::= /[^"\\\x00-\x1F]+/                                                  
     -- __tostring: a function that returns the representation as a string
     -- __marpaESLIF_encoding: a function that returns the encoding as a string
     -- __marpaESLIF_opaque: a boolean that says to remain opaque to marpaESLIF
-    return marpaESLIF:marpaESLIFStringHelper_new(chars, 'UTF-8')
+    return chars, 'UTF-8'
   end
   -----------------------------------
   function lua_unicode(u)
