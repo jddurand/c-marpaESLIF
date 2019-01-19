@@ -13623,6 +13623,8 @@ static short _marpaESLIFRecognizer_concat_valueResultCallbackb(void *userDatavp,
       */
       if (contextp->stringb) {
         GENERICLOGGER_TRACEF(genericLoggerp, "%s", "null");
+      } else {
+        continueb = 1;
       }
       break;
     case MARPAESLIF_VALUE_TYPE_CHAR:
