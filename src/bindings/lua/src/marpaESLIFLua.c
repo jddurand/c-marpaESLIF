@@ -6048,7 +6048,7 @@ static short marpaESLIFLua_lua_toboolean(int *rcip, lua_State *L, int idx)
 }
 
 /****************************************************************************/
-static short marpaESLIFLua_luaL_tolstring(const char **rcp, lua_State *L, int idx, size_t *len)
+static short marpaESLIFLua_luaL_tolstring(const char **rcpp, lua_State *L, int idx, size_t *len)
 /****************************************************************************/
 {
   const char *rcp;
@@ -6174,28 +6174,28 @@ static short marpaESLIFLua_lua_next(int *rcip, lua_State *L, int idx)
 }
 
 /****************************************************************************/
-static short marpaESLIFLua_luaL_checklstring(const char **rcp, lua_State *L, int arg, size_t *l)
+static short marpaESLIFLua_luaL_checklstring(const char **rcpp, lua_State *L, int arg, size_t *l)
 /****************************************************************************/
 {
-  const char *rc;
+  const char *rcp;
 
-  rc = luaL_checklstring(L, arg, l);
-  if (rcp != NULL) {
-    *rcp = rcp;
+  rcp = luaL_checklstring(L, arg, l);
+  if (rcpp != NULL) {
+    *rcpp = rcp;
   }
 
   return 1;
 }
 
 /****************************************************************************/
-static short marpaESLIFLua_luaL_checkstring(const char **rcp, lua_State *L, int arg)
+static short marpaESLIFLua_luaL_checkstring(const char **rcpp, lua_State *L, int arg)
 /****************************************************************************/
 {
-  const char *rc;
+  const char *rcp;
 
-  rc = luaL_checkstring(L, arg);
-  if (rcp != NULL) {
-    *rcp = rcp;
+  rcp = luaL_checkstring(L, arg);
+  if (rcpp != NULL) {
+    *rcpp = rcp;
   }
 
   return 1;
@@ -6209,7 +6209,7 @@ static short marpaESLIFLua_luaL_checkinteger(lua_Integer *rcp, lua_State *L, int
 
   rc = luaL_checkinteger(L, arg);
   if (rcp != NULL) {
-    *rcp = rcp;
+    *rcp = rc;
   }
 
   return 1;
@@ -6310,7 +6310,7 @@ static short marpaESLIFLua_stack_setb(lua_State *L, marpaESLIFLuaValueContext_t 
 
   GENERICSTACK_INIT(marpaESLIFValueResultStackp);
   if (GENERICSTACK_ERROR(marpaESLIFValueResultStackp)) {
-    MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "marpaESLIFValueResultStackp initialization failure, %s", strerror(errno));
+    marpaESLIFLua_luaL_errorf(L, "marpaESLIFValueResultStackp initialization failure, %s", strerror(errno));
     marpaESLIFValueResultStackp = NULL;
     goto err;
   }
@@ -6325,7 +6325,7 @@ static short marpaESLIFLua_stack_setb(lua_State *L, marpaESLIFLuaValueContext_t 
   if (! marpaESLIFLua_lua_copy(L, -2, -1)) goto err;                                            /* Stack: visitedTable, xxx, xxx */
   GENERICSTACK_PUSH_PTR(marpaESLIFValueResultStackp, &marpaESLIFValueResult);
   if (GENERICSTACK_ERROR(marpaESLIFValueResultStackp)) {
-    MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "marpaESLIFValueResultStackp push failure, %s", strerror(errno));
+    marpaESLIFLua_luaL_errorf(L, "marpaESLIFValueResultStackp push failure, %s", strerror(errno));
     goto err;
   }
 
@@ -6565,7 +6565,7 @@ static short marpaESLIFLua_stack_setb(lua_State *L, marpaESLIFLuaValueContext_t 
 
             GENERICSTACK_PUSH_PTR(marpaESLIFValueResultStackp, &(marpaESLIFValueResultp->u.r.p[i]));
             if (GENERICSTACK_ERROR(marpaESLIFValueResultStackp)) {
-              MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "marpaESLIFValueResultStackp push failure, %s", strerror(errno));
+              marpaESLIFLua_luaL_errorf(L, "marpaESLIFValueResultStackp push failure, %s", strerror(errno));
               goto err;
             }
           }
@@ -6607,7 +6607,7 @@ static short marpaESLIFLua_stack_setb(lua_State *L, marpaESLIFLuaValueContext_t 
             /* Push room for key */
             GENERICSTACK_PUSH_PTR(marpaESLIFValueResultStackp, &(marpaESLIFValueResultp->u.r.p[sizel++]));
             if (GENERICSTACK_ERROR(marpaESLIFValueResultStackp)) {
-              MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "marpaESLIFValueResultStackp push failure, %s", strerror(errno));
+              marpaESLIFLua_luaL_errorf(L, "marpaESLIFValueResultStackp push failure, %s", strerror(errno));
               goto err;
             }
             if (! marpaESLIFLua_lua_pushnil(L)) goto err;                                               /* Stack: visitedTable, ..., xxx=table, key, value, nil */
@@ -6616,7 +6616,7 @@ static short marpaESLIFLua_stack_setb(lua_State *L, marpaESLIFLuaValueContext_t 
             /* Push room for value */
             GENERICSTACK_PUSH_PTR(marpaESLIFValueResultStackp, &(marpaESLIFValueResultp->u.r.p[sizel++]));
             if (GENERICSTACK_ERROR(marpaESLIFValueResultStackp)) {
-              MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "marpaESLIFValueResultStackp push failure, %s", strerror(errno));
+              marpaESLIFLua_luaL_errorf(L, "marpaESLIFValueResultStackp push failure, %s", strerror(errno));
               goto err;
             }
             if (! marpaESLIFLua_lua_pushnil(L)) goto err;                                               /* Stack: visitedTable, ..., xxx=table, key, value, key, nil */
