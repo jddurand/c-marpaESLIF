@@ -216,7 +216,7 @@ int main() {
       marpaESLIFValueOption.ruleActionResolverp    = NULL;
       marpaESLIFValueOption.symbolActionResolverp  = NULL;
       marpaESLIFValueOption.freeActionResolverp    = NULL;
-      marpaESLIFValueOption.transformerp           = NULL;
+      marpaESLIFValueOption.importerp              = NULL;
       marpaESLIFValueOption.highRankOnlyb          = 1;
       marpaESLIFValueOption.orderByRankb           = 1;
       marpaESLIFValueOption.ambiguousb             = 0;

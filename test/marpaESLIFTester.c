@@ -13,19 +13,7 @@ static short                           inputReaderb(void *userDatavp, char **inp
 static short                           eventManagerb(int *eventCountip, marpaESLIFRecognizer_t *marpaESLIFRecognizerp, genericLogger_t *genericLoggerp);
 static void                            genericLoggerCallback(void *userDatavp, genericLoggerLevel_t logLeveli, const char *msgs);
 static short                           alternativeRepresentation(void *userDatavp, marpaESLIFValueResult_t *valueResultp, char **inputcpp, size_t *inputlp, short *characterStreambp, char **encodingsp, size_t *encodinglp);
-static short                           arrayTransformer(marpaESLIFValue_t *marpaESLIFValuep, void *userDatavp, void *contextp, marpaESLIFValueResultArray_t a);
-
-static marpaESLIFValueResultTransform_t transformer = {
-  NULL, /* undefTransformerp */
-  NULL, /* charTransformerp */
-  NULL, /* shortTransformerp */
-  NULL, /* intTransformerp */
-  NULL, /* longTransformerp */
-  NULL, /* floatTransformerp */
-  NULL, /* doubleTransformerp */
-  NULL, /* ptrTransformerp */
-  arrayTransformer
-};
+short                                  importb(marpaESLIFValue_t *marpaESLIFValuep, void *userDatavp, marpaESLIFValueResult_t *marpaESLIFValueResultp);
 
 typedef struct marpaESLIFTester_context {
   genericLogger_t *genericLoggerp;
@@ -405,7 +393,7 @@ int main() {
   marpaESLIFValueOption.ruleActionResolverp    = NULL;
   marpaESLIFValueOption.symbolActionResolverp  = NULL;
   marpaESLIFValueOption.freeActionResolverp    = NULL;
-  marpaESLIFValueOption.transformerp           = &transformer;
+  marpaESLIFValueOption.importerp              = importb;
   marpaESLIFValueOption.highRankOnlyb          = 1;
   marpaESLIFValueOption.orderByRankb           = 1;
   marpaESLIFValueOption.ambiguousb             = 0;
@@ -430,7 +418,7 @@ int main() {
       (marpaESLIFValueOption.ruleActionResolverp   != marpaESLIFValueOption.ruleActionResolverp) ||
       (marpaESLIFValueOption.symbolActionResolverp != marpaESLIFValueOption.symbolActionResolverp) ||
       (marpaESLIFValueOption.freeActionResolverp   != marpaESLIFValueOption.freeActionResolverp) ||
-      (marpaESLIFValueOption.transformerp          != marpaESLIFValueOption.transformerp) ||
+      (marpaESLIFValueOption.importerp             != marpaESLIFValueOption.importerp) ||
       (marpaESLIFValueOption.highRankOnlyb         != marpaESLIFValueOption.highRankOnlyb) ||
       (marpaESLIFValueOption.orderByRankb          != marpaESLIFValueOption.orderByRankb) ||
       (marpaESLIFValueOption.ambiguousb            != marpaESLIFValueOption.ambiguousb) ||
@@ -717,12 +705,17 @@ static short alternativeRepresentation(void *userDatavp, marpaESLIFValueResult_t
 }
 
 /*****************************************************************************/
-static short arrayTransformer(marpaESLIFValue_t *marpaESLIFValuep, void *userDatavp, void *contextp, marpaESLIFValueResultArray_t a)
+short importb(marpaESLIFValue_t *marpaESLIFValuep, void *userDatavp, marpaESLIFValueResult_t *marpaESLIFValueResultp)
 /*****************************************************************************/
 {
   marpaESLIFTester_context_t *marpaESLIFTester_contextp = (marpaESLIFTester_context_t *) userDatavp;
 
-  GENERICLOGGER_INFOF(marpaESLIFTester_contextp->genericLoggerp, "arrayTransformer on {p,sizel} = {%p, %ld}", a.p, (unsigned long) a.sizel);
+  if  (marpaESLIFValueResultp->type != MARPAESLIF_VALUE_TYPE_ARRAY) {
+    GENERICLOGGER_ERRORF(marpaESLIFTester_contextp->genericLoggerp, "marpaESLIFValueResultp->type=%d not supported", marpaESLIFValueResultp->type);
+    return 0;
+  }
+
+  GENERICLOGGER_INFOF(marpaESLIFTester_contextp->genericLoggerp, "ARRAY import on {p,sizel} = {%p, %ld}", marpaESLIFValueResultp->u.a.p, (unsigned long) marpaESLIFValueResultp->u.a.sizel);
 
   /* Free eventual previous value */
   if (marpaESLIFTester_contextp->values != NULL) {
@@ -730,10 +723,10 @@ static short arrayTransformer(marpaESLIFValue_t *marpaESLIFValuep, void *userDat
     marpaESLIFTester_contextp->values = NULL;
   }
 
-  if (a.p != NULL) {
+  if (marpaESLIFValueResultp->u.a.p != NULL) {
     /* We use the default that is ::concat, i.e. it is guaranteed to be a NUL byte terminated array */
     /* In addition we made sure out input is ASCII compliant */
-    marpaESLIFTester_contextp->values = strdup((char *) a.p);
+    marpaESLIFTester_contextp->values = strdup((char *) marpaESLIFValueResultp->u.a.p);
     if (marpaESLIFTester_contextp->values == NULL) {
       GENERICLOGGER_ERRORF(marpaESLIFTester_contextp->genericLoggerp, "strdup failure, %s", strerror(errno));
       return 0;
@@ -742,4 +735,3 @@ static short arrayTransformer(marpaESLIFValue_t *marpaESLIFValuep, void *userDat
 
   return 1;
 }
-
