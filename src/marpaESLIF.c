@@ -10246,7 +10246,7 @@ static inline void _marpaESLIF_rule_createshowv(marpaESLIF_t *marpaESLIFp, marpa
     skipb = (rulep->skipbp != NULL) && rulep->skipbp[rhsi];
     MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, " ");
     if (skipb) {
-      MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "(");
+      MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "(-");
     }
     switch (symbolp->type) {
     case MARPAESLIF_SYMBOL_TYPE_TERMINAL:
@@ -10268,7 +10268,7 @@ static inline void _marpaESLIF_rule_createshowv(marpaESLIF_t *marpaESLIFp, marpa
       }
     }
     if (skipb) {
-      MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, ")");
+      MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "-)");
     }
   }
   if (rulep->sequenceb) {
@@ -10704,9 +10704,9 @@ static inline void _marpaESLIF_grammar_createshowv(marpaESLIFGrammar_t *marpaESL
           symbolp = (marpaESLIF_symbol_t *) GENERICSTACK_GET_PTR(rulep->rhsStackp, symboli);
           skipb = (rulep->skipbp != NULL) && rulep->skipbp[symboli];
           if (symboli == 0) {
-            GENERICLOGGER_TRACEF(genericLoggerp, " = %s%d%s", skipb ? "(" : "", symbolp->idi, skipb ? ")" : "");
+            GENERICLOGGER_TRACEF(genericLoggerp, " = %s%d%s", skipb ? "(-" : "", symbolp->idi, skipb ? "-)" : "");
           } else {
-            GENERICLOGGER_TRACEF(genericLoggerp, " %s%d%s", skipb ? "(" : "", symbolp->idi, skipb ? ")" : "");
+            GENERICLOGGER_TRACEF(genericLoggerp, " %s%d%s", skipb ? "(-" : "", symbolp->idi, skipb ? "-)" : "");
           }
         }
       }
