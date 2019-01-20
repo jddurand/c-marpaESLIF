@@ -162,7 +162,7 @@ We will test all combinaisons of C<P>, C<Q> and C<R> values. In the user valuati
         marpaESLIFValueOption.ruleActionResolverp    = ruleActionResolverp;
         marpaESLIFValueOption.symbolActionResolverp  = NULL; /* No symbol action resolver... Okay we use the default */
         marpaESLIFValueOption.freeActionResolverp    = NULL; /* No free action resolver... Okay if we generate no pointer */
-        marpaESLIFValueOption.transformerp           = &marpaESLIFValueResultTransformDefault;
+        marpaESLIFValueOption.importer               = importb;
         marpaESLIFValueOption.highRankOnlyb          = 1;    /* Recommended value */
         marpaESLIFValueOption.orderByRankb           = 1;    /* Recommended value */
         marpaESLIFValueOption.ambiguousb             = 0;    /* our BNF is not ambiguous thanks to loosen operator and group association */

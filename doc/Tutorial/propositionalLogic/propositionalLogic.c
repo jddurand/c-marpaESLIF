@@ -72,23 +72,8 @@ static short                         action_or(void *userDatavp, marpaESLIFValue
 static short                         action_implies(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
 static short                         action_equivalent(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
 
-/* marpaESLIFValueResult transformers - in this tutorial we transform only short and char values on the stack */
-static short                         marpaESLIF_TransformChar(void *userDatavp, void *contextp, marpaESLIFValueResultChar_t c);
-static short                         marpaESLIF_TransformShort(void *userDatavp, void *contextp, marpaESLIFValueResultShort_t b);
+short                                importb(marpaESLIFValue_t *marpaESLIFValuep, void *userDatavp, marpaESLIFValueResult_t *marpaESLIFValueResultp);
 
-/* Transformers */
-static marpaESLIFValueResultTransform_t marpaESLIFValueResultTransformDefault = {
-  NULL, /* undefTransformerp */
-  marpaESLIF_TransformChar,
-  marpaESLIF_TransformShort,
-  NULL, /* intTransformerp */
-  NULL, /* longTransformerp */
-  NULL, /* floatTransformerp */
-  NULL, /* doubleTransformerp */
-  NULL, /* ptrTransformerp */
-  NULL, /* arrayTransformerp */
-  NULL /* boolTransformerp */
-};
 typedef struct valueContext {
   genericLogger_t *genericLoggerp;
   short            p;
@@ -174,7 +159,7 @@ int main() {
         marpaESLIFValueOption.ruleActionResolverp    = ruleActionResolverp;
         marpaESLIFValueOption.symbolActionResolverp  = NULL; /* No symbol action resolver... Okay we use the default */
         marpaESLIFValueOption.freeActionResolverp    = NULL; /* No free action resolver... Okay if we generate no pointer */
-        marpaESLIFValueOption.transformerp           = &marpaESLIFValueResultTransformDefault;
+        marpaESLIFValueOption.importerp              = importb;
         marpaESLIFValueOption.highRankOnlyb          = 1;    /* Recommended value */
         marpaESLIFValueOption.orderByRankb           = 1;    /* Recommended value */
         marpaESLIFValueOption.ambiguousb             = 0;    /* our BNF is not ambiguous thanks to loosen operator and group association */
@@ -264,7 +249,7 @@ static short action_not(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, i
   short                   resultb;
   marpaESLIFValueResult_t marpaESLIFValueResult;
 
-  if (! marpaESLIFValue_stack_get_transformb(marpaESLIFValuep, argni)) return 0;
+  if (! marpaESLIFValue_stack_get_importb(marpaESLIFValuep, argni)) return 0;
 
   resultb = (valueContextp->result ? 0 : 1);
   GENERICLOGGER_DEBUGF(valueContextp->genericLoggerp, ".............. {P, Q, R} = {%d, %d, %d}... NOT %d : %d", (int) valueContextp->p, (int) valueContextp->q, (int) valueContextp->r, (int) valb, (int) resultb);
@@ -287,10 +272,10 @@ static short action_and(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, i
   short                   resultb;
   marpaESLIFValueResult_t marpaESLIFValueResult;
 
-  if (! marpaESLIFValue_stack_get_transformb(marpaESLIFValuep, arg0i)) return 0;
+  if (! marpaESLIFValue_stack_get_importb(marpaESLIFValuep, arg0i)) return 0;
   leftb = valueContextp->result;
 
-  if (! marpaESLIFValue_stack_get_transformb(marpaESLIFValuep, argni)) return 0;
+  if (! marpaESLIFValue_stack_get_importb(marpaESLIFValuep, argni)) return 0;
   rightb = valueContextp->result;
 
   resultb = (leftb && rightb) ? 1 : 0;
@@ -314,10 +299,10 @@ static short action_or(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, in
   short                   resultb;
   marpaESLIFValueResult_t marpaESLIFValueResult;
 
-  if (! marpaESLIFValue_stack_get_transformb(marpaESLIFValuep, arg0i)) return 0;
+  if (! marpaESLIFValue_stack_get_importb(marpaESLIFValuep, arg0i)) return 0;
   leftb = valueContextp->result;
 
-  if (! marpaESLIFValue_stack_get_transformb(marpaESLIFValuep, argni)) return 0;
+  if (! marpaESLIFValue_stack_get_importb(marpaESLIFValuep, argni)) return 0;
   rightb = valueContextp->result;
 
   resultb = (leftb || rightb) ? 1 : 0;
@@ -341,10 +326,10 @@ static short action_implies(void *userDatavp, marpaESLIFValue_t *marpaESLIFValue
   short                   resultb;
   marpaESLIFValueResult_t marpaESLIFValueResult;
 
-  if (! marpaESLIFValue_stack_get_transformb(marpaESLIFValuep, arg0i)) return 0;
+  if (! marpaESLIFValue_stack_get_importb(marpaESLIFValuep, arg0i)) return 0;
   leftb = valueContextp->result;
 
-  if (! marpaESLIFValue_stack_get_transformb(marpaESLIFValuep, argni)) return 0;
+  if (! marpaESLIFValue_stack_get_importb(marpaESLIFValuep, argni)) return 0;
   rightb = valueContextp->result;
 
   resultb = leftb ? rightb : 1;
@@ -368,10 +353,10 @@ static short action_equivalent(void *userDatavp, marpaESLIFValue_t *marpaESLIFVa
   short                   resultb;
   marpaESLIFValueResult_t marpaESLIFValueResult;
 
-  if (! marpaESLIFValue_stack_get_transformb(marpaESLIFValuep, arg0i)) return 0;
+  if (! marpaESLIFValue_stack_get_importb(marpaESLIFValuep, arg0i)) return 0;
   leftb = valueContextp->result;
 
-  if (! marpaESLIFValue_stack_get_transformb(marpaESLIFValuep, argni)) return 0;
+  if (! marpaESLIFValue_stack_get_importb(marpaESLIFValuep, argni)) return 0;
   rightb = valueContextp->result;
 
   resultb = (leftb == rightb) ? 1 : 0;
@@ -386,41 +371,41 @@ static short action_equivalent(void *userDatavp, marpaESLIFValue_t *marpaESLIFVa
 }
 
 /*****************************************************************************/
-static short marpaESLIF_TransformChar(void *userDatavp, void *contextp, marpaESLIFValueResultChar_t c)
+short importb(marpaESLIFValue_t *marpaESLIFValuep, void *userDatavp, marpaESLIFValueResult_t *marpaESLIFValueResultp)
 /*****************************************************************************/
 {
   valueContext_t *valueContextp = (valueContext_t *) userDatavp;
   short           rcb;
 
-  switch (c) {
-  case 'P':
-    valueContextp->result = valueContextp->p;
-    rcb = 1;
+  switch (marpaESLIFValueResultp->type) {
+  case MARPAESLIF_VALUE_TYPE_CHAR:
+    switch (marpaESLIFValueResultp->u.c) {
+    case 'P':
+      valueContextp->result = valueContextp->p;
+      rcb = 1;
+      break;
+    case 'Q':
+      valueContextp->result = valueContextp->q;
+      rcb = 1;
+      break;
+    case 'R':
+      valueContextp->result = valueContextp->r;
+      rcb = 1;
+      break;
+    default:
+      GENERICLOGGER_ERRORF(valueContextp->genericLoggerp, "Unknown char '%c'", marpaESLIFValueResultp->u.c);
+      rcb = 0;
+    }
     break;
-  case 'Q':
-    valueContextp->result = valueContextp->q;
-    rcb = 1;
-    break;
-  case 'R':
-    valueContextp->result = valueContextp->r;
+  case MARPAESLIF_VALUE_TYPE_SHORT:
+    valueContextp->result = marpaESLIFValueResultp->u.b;
     rcb = 1;
     break;
   default:
-    GENERICLOGGER_ERRORF(valueContextp->genericLoggerp, "Unknown char '%c'", c);
+    GENERICLOGGER_ERRORF(valueContextp->genericLoggerp, "Unsupported type %d\n", marpaESLIFValueResultp->type);
     rcb = 0;
+    break;
   }
 
   return rcb;
 }
-
-/*****************************************************************************/
-static short marpaESLIF_TransformShort(void *userDatavp, void *contextp, marpaESLIFValueResultShort_t b)
-/*****************************************************************************/
-{
-  valueContext_t *valueContextp = (valueContext_t *) userDatavp;
-
-  valueContextp->result = b;
-
-  return 1;
-}
-
