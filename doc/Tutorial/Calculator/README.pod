@@ -450,7 +450,7 @@ Let's try valuation without setting action resolvers. We can use the previous re
     exit(1);
   }
 
-You see that we have implemented an importer: this is a B<required> callback as soon as a user of the marpaESLIF API is doing valuation: the importer is always invoked at the very end of the parsing to transfer result to userland.
+You see that we have implemented an importer: this is a B<required> callback if a user wants to know the result of a  doing valuation: the importer is always invoked at the very end of the parsing if it is not C<NULL>, to transfer result to userland.
 
 See the comment on symbol action resolver? The default for symbol action is to put on the stack a data of type I<array>, i.e. a tuple {pointer,size}. This default is okay for most applications, and definitely fine with us.
 
