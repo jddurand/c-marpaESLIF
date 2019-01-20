@@ -417,6 +417,7 @@ Let's try valuation without setting action resolvers. We can use the previous re
   }   value_type_t;
 
   typedef struct value_context {
+    genericLogger_t *genericLoggerp; /* Logging convenience */
     value_type_t typei;
     union {
       int i;
@@ -424,21 +425,8 @@ Let's try valuation without setting action resolvers. We can use the previous re
     } u;
   } value_context_t;
   ./..
-  /* marpaESLIFValueResult transformers - in this tutorial we support only int and double */
-  static short marpaESLIF_TransformInt(void *userDatavp, void *contextp, marpaESLIFValueResultInt_t i);
-  static short marpaESLIF_TransformDouble(void *userDatavp, void *contextp, marpaESLIFValueResultDouble_t d);
-  /* Transformers */
-  static marpaESLIFValueResultTransform_t marpaESLIFValueResultTransformDefault = {
-    NULL,
-    NULL,
-    NULL,
-    marpaESLIF_TransformInt,
-    NULL,
-    NULL,
-    marpaESLIF_TransformDouble,
-    NULL,
-    NULL
-  };
+  /* marpaESLIFValueResult importer - in this tutorial we support only int and double */
+  short importb(marpaESLIFValue_t *marpaESLIFValuep, void *userDatavp, marpaESLIFValueResult_t *marpaESLIFValueResultp);
   ./..
   marpaESLIFValueOption_t      marpaESLIFValueOption;
   marpaESLIFValue_t           *marpaESLIFValuep;
@@ -448,7 +436,7 @@ Let's try valuation without setting action resolvers. We can use the previous re
   marpaESLIFValueOption.ruleActionResolverp    = ruleActionResolverp;
   marpaESLIFValueOption.symbolActionResolverp  = NULL; /* No symbol action resolver... Okay we use the default */
   marpaESLIFValueOption.freeActionResolverp    = NULL; /* No free action resolver... Okay if we generate no pointer */
-  marpaESLIFValueOption.transformerp           = &marpaESLIFValueResultTransformDefault;
+  marpaESLIFValueOption.importerp              = importb;
   marpaESLIFValueOption.highRankOnlyb          = 1;    /* Recommended value */
   marpaESLIFValueOption.orderByRankb           = 1;    /* Recommended value */
   marpaESLIFValueOption.ambiguousb             = 0;    /* Recommended value */
@@ -462,7 +450,7 @@ Let's try valuation without setting action resolvers. We can use the previous re
     exit(1);
   }
 
-You see that we have implemented two transformers: at the end of the valuation, marpaESLIF I<will> call for transformation before giving up. This is how we get the final value.
+You see that we have implemented an importer: this is a B<required> callback as soon as a user of the marpaESLIF API is doing valuation: the importer is always invoked at the very end of the parsing to transfer result to userland.
 
 See the comment on symbol action resolver? The default for symbol action is to put on the stack a data of type I<array>, i.e. a tuple {pointer,size}. This default is okay for most applications, and definitely fine with us.
 
@@ -640,65 +628,82 @@ And the resolver is nothing else but this simple method, taking into the same re
     }
   }
 
-The final value requires a "transformer", that will be called internally after valuation is ok. This transformer is a set of function pointers, the end-user is responsible to provide the correct function pointer v.s. the type of the final value:
+The final value requires an "importer", that will be called internally after valuation is ok. This importer is a single function that receives the final result in a C<marpaESLIFValueResult> structure pointer:
 
-  typedef short (*marpaESLIFValueResultTransformUndef_t)(void *userDatavp, int contexti);
-  typedef short (*marpaESLIFValueResultTransformChar_t)(void *userDatavp, int contexti, char c);
-  typedef short (*marpaESLIFValueResultTransformShort_t)(void *userDatavp, int contexti, short b);
-  typedef short (*marpaESLIFValueResultTransformInt_t)(void *userDatavp, int contexti, int i);
-  typedef short (*marpaESLIFValueResultTransformLong_t)(void *userDatavp, int contexti, long l);
-  typedef short (*marpaESLIFValueResultTransformFloat_t)(void *userDatavp, int contexti, float f);
-  typedef short (*marpaESLIFValueResultTransformDouble_t)(void *userDatavp, int contexti, double d);
-  typedef short (*marpaESLIFValueResultTransformPtr_t)(void *userDatavp, int contexti, void *p);
-  typedef short (*marpaESLIFValueResultTransformArray_t)(void *userDatavp, int contexti, void *p, size_t sizel);
-  typedef short (*marpaESLIFValueResultTransformBool_t)(void *userDatavp, void *contextp, marpaESLIFValueResultBool_t b);
-  typedef short (*marpaESLIFValueResultTransformString_t)(void *userDatavp, void *contextp, marpaESLIFValueResultString_t s);
-  typedef struct marpaESLIFValueResultTransform {
-    marpaESLIFValueResultTransformUndef_t undefTransformerp;
-    marpaESLIFValueResultTransformChar_t charTransformerp;
-    marpaESLIFValueResultTransformShort_t shortTransformerp;
-    marpaESLIFValueResultTransformInt_t intTransformerp;
-    marpaESLIFValueResultTransformLong_t longTransformerp;
-    marpaESLIFValueResultTransformFloat_t floatTransformerp;
-    marpaESLIFValueResultTransformDouble_t doubleTransformerp;
-    marpaESLIFValueResultTransformPtr_t ptrTransformerp;
-    marpaESLIFValueResultTransformArray_t arrayTransformerp;
-    marpaESLIFValueResultTransformBool_t boolTransformerp;
-    marpaESLIFValueResultTransformString_t stringTransformerp;
-  } marpaESLIFValueResultTransform_t;
+/*****************************************************************************/
+short importb(marpaESLIFValue_t *marpaESLIFValuep, void *userDatavp, marpaESLIFValueResult_t *marpaESLIFValueResultp)
+/*****************************************************************************/
+{
+  value_context_t *value_contextp = (value_context_t *) userDatavp;
+  short            rcb;
 
-where C<userDatavp> is the end-user valuation context, C<contextp> is a free context pointer, that must be != C<NULL> when it comes outside from the ESLIF engine. Our actions always pushed only an integer or a double, so we only have to provide the C<intTransformerp> and <doubleTransformerp> implementations:
-
-  /*****************************************************************************/
-  static short marpaESLIF_TransformInt(void *userDatavp, void *contextp, marpaESLIFValueResultInt_t i)
-  /*****************************************************************************/
-  {
-    value_context_t *value_contextp = (value_context_t *) userDatavp;
+  switch (marpaESLIFValueResultp->type) {
+  case MARPAESLIF_VALUE_TYPE_INT:
     value_contextp->typei = INTEGER_CONTEXT;
-    value_contextp->u.i   = i;
-    return 1;
-  }
-  /*****************************************************************************/
-  static short marpaESLIF_TransformDouble(void *userDatavp, void *contextp, marpaESLIFValueResultDouble_t d)
-  /*****************************************************************************/
-  {
-    value_context_t *value_contextp = (value_context_t *) userDatavp;
+    value_contextp->u.i   = marpaESLIFValueResultp->u.i;
+    rcb = 1;
+    break;
+  case MARPAESLIF_VALUE_TYPE_DOUBLE:
     value_contextp->typei = DOUBLE_CONTEXT;
-    value_contextp->u.d   = d;
-    return 1;
+    value_contextp->u.d   = marpaESLIFValueResultp->u.d;
+    rcb = 1;
+    break;
+  default:
+    GENERICLOGGER_ERRORF(value_contextp->genericLoggerp, "Unsupported type %d\n", marpaESLIFValueResultp->type);
+    rcb = 0;
+    break;
   }
 
-=head2 FINAL VERSION
+  return rcb;
+}
 
-Here is the final version as can be found in the marpaESLIF repository, where we changed:
+=head2 Skipping automatically element
+
+Do you remember the group Expression element in the grammar:
 
   '(' Expression ')'              assoc => group action => ::copy[1]
 
-to
+In fact the C<'('> and C<')'> elements can be automatically skipped. For this tutorial this can sound over complication, but in real life there is a usage for it. The idea is be able to parse C<( Expression )> and get only C<Expression> itself out of the rule. For that we have to I<skip> the elements. This is done by enclosing them by C<(-> and C<-)> keywords. This will form a I<group>. A group can also be formed by using C<(> and C<)> keywords, which means it will not be skipped.
 
-   # Parenthesis are scanned but skipped during valuation
-   ('(') Expression (')')         assoc => group action => ::shift\n"
+The subtility with groups is that internally marpaESLIF will create a I<dedicated> internal element., e.g.:
 
+  (- '(' -) Expression (- ')' -)              action => ::shift
+
+becomes:
+
+  <Internal[0]> ::= '('
+  <Internal[1]> ::= ')'
+  <Expression> ::= (-<Internal[0]>-) <Expression> (-<Internal[1]>-) action => ::shift
+
+But then the internal rules will get the default action... This is why action are allowed (and recommended) inside groups:
+
+  (- '(' action => ::undef -) Expression (- ')' action => ::undef -) action => ::shift
+
+becomes:
+
+  <Internal[0]> ::= '(' action => ::undef
+  <Internal[1]> ::= ')' action => ::undef
+  <Expression> ::= (-<Internal[0]>-) <Expression> (-<Internal[1]>-) action => ::shift
+
+For our example, the final grammar using skipped elements is:
+
+  :default ::= action => do_op
+  :discard ::= whitespace
+  :discard ::= comment
+  Expression ::=
+      /[\d]+/                          action => do_int
+     | (- '(' action => ::undef -) Expression (- ')' action => ::undef -) assoc => group action => ::shift
+     ||     Expression '**' Expression  assoc => right
+     ||     Expression  '*' Expression
+      |     Expression  '/' Expression
+     ||     Expression  '+' Expression
+      |     Expression  '-' Expression
+  whitespace :[1]:= [\s]
+  comment ~ /(?:(?:(?:\/\/)(?:[^\n]*)(?:\n|\z))|(?:(?:\/\*)(?:(?:[^\*]+|\*(?!\/))*)(?:\*\/)))/u
+
+=head2 FINAL VERSION
+
+Here is the final version as can be found in the marpaESLIF repository;
 
   #include <stdio.h>
   #include <stdlib.h>
@@ -718,6 +723,7 @@ to
   } value_type_t;
   
   typedef struct value_context {
+    genericLogger_t *genericLoggerp;
     value_type_t typei;
     union {
       int i;
@@ -732,22 +738,7 @@ to
   static short                         do_int(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
   static short                         do_op(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
   
-  /* marpaESLIFValueResult transformers - in this tutorial we support only int and double */
-  static short                         marpaESLIF_TransformInt(void *userDatavp, void *contextp, marpaESLIFValueResultInt_t i);
-  static short                         marpaESLIF_TransformDouble(void *userDatavp, void *contextp, marpaESLIFValueResultDouble_t d);
-  
-  /* Transformers */
-  static marpaESLIFValueResultTransform_t marpaESLIFValueResultTransformDefault = {
-    NULL,
-    NULL,
-    NULL,
-    marpaESLIF_TransformInt,
-    NULL,
-    NULL,
-    marpaESLIF_TransformDouble,
-    NULL,
-    NULL
-  };
+  short                                importb(marpaESLIFValue_t *marpaESLIFValuep, void *userDatavp, marpaESLIFValueResult_t *marpaESLIFValueResultp);
   
   const static char *grammars =
     ":default ::= action => do_op\n"
@@ -755,7 +746,7 @@ to
     ":discard ::= comment\n"
     "Expression ::=\n"
     "    /[\\d]+/                          action => do_int\n"
-    "    | ('(') Expression (')')          assoc => group action => ::shift\n"
+    "    | (- '(' action => ::undef -) Expression (- ')' action => ::undef -) assoc => group action => ::shift\n"
     "   ||     Expression '**' Expression  assoc => right\n"
     "   ||     Expression  '*' Expression\n"
     "    |     Expression  '/' Expression\n"
@@ -797,6 +788,8 @@ to
       exit(1);
     }
   
+    GENERICLOGGER_NOTICEF(marpaESLIFOption.genericLoggerp, "Compiling grammar:\n%s", grammars);
+    
     marpaESLIFGrammarOption.bytep     = (void *) grammars;
     marpaESLIFGrammarOption.bytel     = strlen(grammars);
     marpaESLIFGrammarOption.encodings = NULL;
@@ -845,11 +838,12 @@ to
       exit(1);
     }
   
+    value_context.genericLoggerp                 = genericLoggerp;
     marpaESLIFValueOption.userDatavp             = &value_context;
     marpaESLIFValueOption.ruleActionResolverp    = ruleActionResolverp;
     marpaESLIFValueOption.symbolActionResolverp  = NULL; /* No symbol action resolver... Okay we use the default */
     marpaESLIFValueOption.freeActionResolverp    = NULL; /* No free action resolver... Okay if we generate no pointer */
-    marpaESLIFValueOption.transformerp           = &marpaESLIFValueResultTransformDefault;
+    marpaESLIFValueOption.importerp              = importb;
     marpaESLIFValueOption.highRankOnlyb          = 1;    /* Recommended value */
     marpaESLIFValueOption.orderByRankb           = 1;    /* Recommended value */
     marpaESLIFValueOption.ambiguousb             = 0;    /* Recommended value */
@@ -983,7 +977,7 @@ to
   
     for (j = 0; j < 2; j++) {
       if ((! intb[j]) && (! doubleb[j])) {
-        fprintf(stderr, "Expression No %d is neither an int or a double!\n", j);
+        fprintf(stderr, "Expression No %d is neither an int or a double (got %p and %p, intContext is %p and doubleContext is %p)!\n", j, marpaESLIFValueResultpp[0]->contextp, marpaESLIFValueResultpp[1]->contextp, &intContext, &doubleContext);
         return 0;
       }
       /* Get values */
@@ -1093,27 +1087,30 @@ to
   }
   
   /*****************************************************************************/
-  static short marpaESLIF_TransformInt(void *userDatavp, void *contextp, marpaESLIFValueResultInt_t i)
+  short importb(marpaESLIFValue_t *marpaESLIFValuep, void *userDatavp, marpaESLIFValueResult_t *marpaESLIFValueResultp)
   /*****************************************************************************/
   {
     value_context_t *value_contextp = (value_context_t *) userDatavp;
+    short            rcb;
   
-    value_contextp->typei = INTEGER_CONTEXT;
-    value_contextp->u.i   = i;
+    switch (marpaESLIFValueResultp->type) {
+    case MARPAESLIF_VALUE_TYPE_INT:
+      value_contextp->typei = INTEGER_CONTEXT;
+      value_contextp->u.i   = marpaESLIFValueResultp->u.i;
+      rcb = 1;
+      break;
+    case MARPAESLIF_VALUE_TYPE_DOUBLE:
+      value_contextp->typei = DOUBLE_CONTEXT;
+      value_contextp->u.d   = marpaESLIFValueResultp->u.d;
+      rcb = 1;
+      break;
+    default:
+      GENERICLOGGER_ERRORF(value_contextp->genericLoggerp, "Unsupported type %d\n", marpaESLIFValueResultp->type);
+      rcb = 0;
+      break;
+    }
   
-    return 1;
-  }
-  
-  /*****************************************************************************/
-  static short marpaESLIF_TransformDouble(void *userDatavp, void *contextp, marpaESLIFValueResultDouble_t d)
-  /*****************************************************************************/
-  {
-    value_context_t *value_contextp = (value_context_t *) userDatavp;
-  
-    value_contextp->typei = DOUBLE_CONTEXT;
-    value_contextp->u.d   = d;
-  
-    return 1;
+    return rcb;
   }
 
 =head2 TESTS

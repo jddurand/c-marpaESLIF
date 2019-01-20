@@ -16,6 +16,7 @@ typedef enum value_type {
 } value_type_t;
 
 typedef struct value_context {
+  genericLogger_t *genericLoggerp;
   value_type_t typei;
   union {
     int i;
@@ -30,22 +31,7 @@ static marpaESLIFValueRuleCallback_t ruleActionResolverp(void *userDatavp, marpa
 static short                         do_int(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
 static short                         do_op(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
 
-/* marpaESLIFValueResult transformers - in this tutorial we support only int and double */
-static short                         marpaESLIF_TransformInt(void *userDatavp, void *contextp, marpaESLIFValueResultInt_t i);
-static short                         marpaESLIF_TransformDouble(void *userDatavp, void *contextp, marpaESLIFValueResultDouble_t d);
-
-/* Transformers */
-static marpaESLIFValueResultTransform_t marpaESLIFValueResultTransformDefault = {
-  NULL,
-  NULL,
-  NULL,
-  marpaESLIF_TransformInt,
-  NULL,
-  NULL,
-  marpaESLIF_TransformDouble,
-  NULL,
-  NULL
-};
+short                                importb(marpaESLIFValue_t *marpaESLIFValuep, void *userDatavp, marpaESLIFValueResult_t *marpaESLIFValueResultp);
 
 const static char *grammars =
   ":default ::= action => do_op\n"
@@ -53,7 +39,7 @@ const static char *grammars =
   ":discard ::= comment\n"
   "Expression ::=\n"
   "    /[\\d]+/                          action => do_int\n"
-  "    | ('(') Expression (')')          assoc => group action => ::shift\n"
+  "    | (- '(' action => ::undef -) Expression (- ')' action => ::undef -) assoc => group action => ::shift\n"
   "   ||     Expression '**' Expression  assoc => right\n"
   "   ||     Expression  '*' Expression\n"
   "    |     Expression  '/' Expression\n"
@@ -95,6 +81,8 @@ int main() {
     exit(1);
   }
 
+  GENERICLOGGER_NOTICEF(marpaESLIFOption.genericLoggerp, "Compiling grammar:\n%s", grammars);
+  
   marpaESLIFGrammarOption.bytep     = (void *) grammars;
   marpaESLIFGrammarOption.bytel     = strlen(grammars);
   marpaESLIFGrammarOption.encodings = NULL;
@@ -143,11 +131,12 @@ int main() {
     exit(1);
   }
 
+  value_context.genericLoggerp                 = genericLoggerp;
   marpaESLIFValueOption.userDatavp             = &value_context;
   marpaESLIFValueOption.ruleActionResolverp    = ruleActionResolverp;
   marpaESLIFValueOption.symbolActionResolverp  = NULL; /* No symbol action resolver... Okay we use the default */
   marpaESLIFValueOption.freeActionResolverp    = NULL; /* No free action resolver... Okay if we generate no pointer */
-  marpaESLIFValueOption.transformerp           = &marpaESLIFValueResultTransformDefault;
+  marpaESLIFValueOption.importerp              = importb;
   marpaESLIFValueOption.highRankOnlyb          = 1;    /* Recommended value */
   marpaESLIFValueOption.orderByRankb           = 1;    /* Recommended value */
   marpaESLIFValueOption.ambiguousb             = 0;    /* Recommended value */
@@ -281,7 +270,7 @@ static short do_op(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int ar
 
   for (j = 0; j < 2; j++) {
     if ((! intb[j]) && (! doubleb[j])) {
-      fprintf(stderr, "Expression No %d is neither an int or a double!\n", j);
+      fprintf(stderr, "Expression No %d is neither an int or a double (got %p and %p, intContext is %p and doubleContext is %p)!\n", j, marpaESLIFValueResultpp[0]->contextp, marpaESLIFValueResultpp[1]->contextp, &intContext, &doubleContext);
       return 0;
     }
     /* Get values */
@@ -391,25 +380,28 @@ static marpaESLIFValueRuleCallback_t ruleActionResolverp(void *userDatavp, marpa
 }
 
 /*****************************************************************************/
-static short marpaESLIF_TransformInt(void *userDatavp, void *contextp, marpaESLIFValueResultInt_t i)
+short importb(marpaESLIFValue_t *marpaESLIFValuep, void *userDatavp, marpaESLIFValueResult_t *marpaESLIFValueResultp)
 /*****************************************************************************/
 {
   value_context_t *value_contextp = (value_context_t *) userDatavp;
+  short            rcb;
 
-  value_contextp->typei = INTEGER_CONTEXT;
-  value_contextp->u.i   = i;
+  switch (marpaESLIFValueResultp->type) {
+  case MARPAESLIF_VALUE_TYPE_INT:
+    value_contextp->typei = INTEGER_CONTEXT;
+    value_contextp->u.i   = marpaESLIFValueResultp->u.i;
+    rcb = 1;
+    break;
+  case MARPAESLIF_VALUE_TYPE_DOUBLE:
+    value_contextp->typei = DOUBLE_CONTEXT;
+    value_contextp->u.d   = marpaESLIFValueResultp->u.d;
+    rcb = 1;
+    break;
+  default:
+    GENERICLOGGER_ERRORF(value_contextp->genericLoggerp, "Unsupported type %d\n", marpaESLIFValueResultp->type);
+    rcb = 0;
+    break;
+  }
 
-  return 1;
-}
-
-/*****************************************************************************/
-static short marpaESLIF_TransformDouble(void *userDatavp, void *contextp, marpaESLIFValueResultDouble_t d)
-/*****************************************************************************/
-{
-  value_context_t *value_contextp = (value_context_t *) userDatavp;
-
-  value_contextp->typei = DOUBLE_CONTEXT;
-  value_contextp->u.d   = d;
-
-  return 1;
+  return rcb;
 }
