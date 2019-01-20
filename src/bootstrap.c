@@ -997,7 +997,7 @@ static inline marpaESLIF_symbol_t  *_marpaESLIF_bootstrap_check_rhsPrimaryp(marp
        except that <lhs> here is unknown and we create it on the fly.
        <op declare> implicitly correspond to current grammar.
     */
-    sprintf(tmps, "[Internal-%d]", marpaESLIFGrammarp->internalRuleCounti++);
+    sprintf(tmps, "Internal[%d]", marpaESLIFGrammarp->internalRuleCounti++);
     symbolp = _marpaESLIF_bootstrap_check_meta_by_namep(marpaESLIFp, grammarp, tmps, 1 /* createb */);
     if (symbolp == NULL) {
       goto err;
@@ -1012,7 +1012,7 @@ static inline marpaESLIF_symbol_t  *_marpaESLIF_bootstrap_check_rhsPrimaryp(marp
        except that <lhs> here is unknown and we create it on the fly.
        <op declare> implicitly correspond to current grammar.
     */
-    sprintf(tmps, "[Internal-%d]", marpaESLIFGrammarp->internalRuleCounti++);
+    sprintf(tmps, "Internal[%d]", marpaESLIFGrammarp->internalRuleCounti++);
     symbolp = _marpaESLIF_bootstrap_check_meta_by_namep(marpaESLIFp, grammarp, tmps, 1 /* createb */);
     if (symbolp == NULL) {
       goto err;
@@ -1085,7 +1085,7 @@ static inline marpaESLIF_symbol_t  *_marpaESLIF_bootstrap_check_rhsPrimaryp(marp
        except that <lhs> here is unknown and we create it on the fly.
        <op declare> implicitly correspond to current grammar.
     */
-    sprintf(tmps, "[Internal-%d]", marpaESLIFGrammarp->internalRuleCounti++);
+    sprintf(tmps, "Internal[%d]", marpaESLIFGrammarp->internalRuleCounti++);
     symbolp = _marpaESLIF_bootstrap_check_meta_by_namep(marpaESLIFp, grammarp, tmps, 1 /* createb */);
     if (symbolp == NULL) {
       goto err;
