@@ -301,6 +301,7 @@ static const size_t  UTF8l = 5; /* "UTF-8" is 5 bytes in ASCII encoding */
 SV *boot_MarpaX__ESLIF__Grammar__Properties_svp;
 SV *boot_MarpaX__ESLIF__Grammar__Rule__Properties_svp;
 SV *boot_MarpaX__ESLIF__Grammar__Symbol__Properties_svp;
+SV *boot_MarpaX__ESLIF__String_svp;
 
 /*****************************************************************************/
 /* Macros                                                                    */
@@ -1458,7 +1459,11 @@ static short marpaESLIFPerl_importb(marpaESLIFValue_t *marpaESLIFValuep, void *u
   SV                   *keyp;
   SV                   *valuep;
   SV                   *svp;
+  SV                   *stringp;
+  SV                   *encodingp;
+  AV                   *listp;
   size_t                i;
+  short                 utf8b;
   marpaESLIFPerlMYTHX(Perl_MarpaX_ESLIF_Valuep);
 
   switch (marpaESLIFValueResultp->type) {
@@ -1544,14 +1549,26 @@ static short marpaESLIFPerl_importb(marpaESLIFValue_t *marpaESLIFValuep, void *u
     }
     break;
   case MARPAESLIF_VALUE_TYPE_STRING:
-    /* No big difference with an array. We just make the utf8 flag is user claimed it is */
-    svp = newSVpvn(marpaESLIFValueResultp->u.s.p, marpaESLIFValueResultp->u.s.sizel);
+    /* We use our MarpaX::ESLIF::String type wrapper. The value gets the utf8 flag as a bonus if encoding is Perl's extended UTF-8 compatible */
+    /* but this is not important from interface point of view - at most it makes the perl side aware this is an utf8 string, the content is unchanged */
+    /* and this is what is crucial for MarpaX::ESLIF. */
+    stringp = newSVpvn(marpaESLIFValueResultp->u.s.p, marpaESLIFValueResultp->u.s.sizel);
+    utf8b = 0;
     if (MARPAESLIFPERL_ENCODING_IS_UTF8(marpaESLIFValueResultp->u.s.encodingasciis, strlen(marpaESLIFValueResultp->u.s.encodingasciis))) {
       /* Cross-check */
       if (is_utf8_string((const U8 *) marpaESLIFValueResultp->u.s.p, (STRLEN) marpaESLIFValueResultp->u.s.sizel)) {
-        SvUTF8_on(svp);
+	utf8b = 1;
+        SvUTF8_on(stringp);
       }
     }
+    encodingp = newSVpv(marpaESLIFValueResultp->u.s.encodingasciis, 0);
+    listp = newAV();
+    av_push(listp, stringp);
+    av_push(listp, encodingp);
+    /* Gets the object and create a reference to it */
+    svp = marpaESLIFPerl_call_actionp(aTHX_ boot_MarpaX__ESLIF__String_svp, "new", listp, NULL /* Perl_MarpaX_ESLIF_Valuep */);
+    /* The object also has an utf8 flag */
+    av_undef(listp);
     marpaESLIFPerl_GENERICSTACK_PUSH_PTR(&(Perl_MarpaX_ESLIF_Valuep->valueStack), svp);
     if (marpaESLIFPerl_GENERICSTACK_ERROR(&(Perl_MarpaX_ESLIF_Valuep->valueStack))) {
       MARPAESLIFPERL_CROAKF("Perl_MarpaX_ESLIF_Valuep->valueStack push failure, %s", strerror(errno));
@@ -1603,6 +1620,9 @@ static short marpaESLIFPerl_importb(marpaESLIFValue_t *marpaESLIFValuep, void *u
 =cut
 
 MODULE = MarpaX::ESLIF            PACKAGE = MarpaX::ESLIF::Engine
+
+BOOT:
+  boot_MarpaX__ESLIF__String_svp  = newSVpvn("MarpaX::ESLIF::String", strlen("MarpaX::ESLIF::String"));
 
 PROTOTYPES: ENABLE
 
