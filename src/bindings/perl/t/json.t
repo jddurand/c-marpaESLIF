@@ -342,47 +342,16 @@ char    ::= /[^"\\\x00-\x1F]+/                                                  
 # Lua actions      
 # -----------------
 <luascript>
-  function table_print (tt, indent, done)
-    done = done or {}
-    indent = indent or 0
-    if type(tt) == "table" then
-      for key, value in pairs (tt) do
-        io.write(string.rep (" ", indent)) -- indent it
-        if type (value) == "table" and not done [value] then
-          done [value] = true
-          io.write(string.format("[%s] => table\n", tostring (key)));
-          io.write(string.rep (" ", indent+4)) -- indent it
-          io.write("(\n");
-          table_print (value, indent + 7, done)
-          io.write(string.rep (" ", indent+4)) -- indent it
-          io.write(")\n");
-        else
-          io.write(string.format("[%s] => %s\n",
-              tostring (key), tostring(value)))
-        end
-      end
-    else
-      io.write(tostring(tt) .. "\n")
-    end
-  end
-  io.stdout:setvbuf('no')
   -----------------------------------
   function lua_null()
     -- Special case to have nil persistency: we will return a table saying we want it to be opaque to marpaESLIF:
 
     -- This table's metatable will host: an opaque flag and the representation.
-    -- The opaque flag is a__marpaESLIF_opaque metafield that must be a boolean.
+    -- The __marpaESLIF_opaque boolean metafield gives the opaque flag.
     -- The __tostring standard metafield gives the representation, and must be a function that returns a string.
     local _mt = {}
-    _mt.__marpaESLIF_opaque = true
+    _mt.opaque = true
     _mt.__tostring = function() return 'null' end
-
-    -- We COULD have set also a __marpaESLIF_opaque encoding metafield but then, during representation, marpaESLIF
-    -- will understand this is a string, thus enclosing the output in double quotes. Without the encoding metafield
-    -- marpaESLIF will consider this as an ARRAY of bytes and use it verbatim in the representation. We just have:
-    -- to make sure this is UTF-8 compatible in this case.
-    -- When set, the __marpaESLIF_encoding metafield must be a function that returns a string:
-    -- _mt.__marpaESLIF_encoding = function() return 'UTF-8' end
 
     local _result = {}
     setmetatable(_result, _mt) 
@@ -393,16 +362,19 @@ char    ::= /[^"\\\x00-\x1F]+/                                                  
     local _result = {}
     for _i=1,select('#', ...) do
       local _pair = select(_i, ...)
-      _result[_pair[1]] = _pair[2]
+      local _key = _pair[1]
+      local _value = _pair[2]
+      _result[_key] = _value
     end
     local _mt = {}
-    _mt.__marpaESLIF_canarray = false -- hint to say that we never want that to appear as a marpaESLIF array
-    setmetatable(_result, _mt) 
+    _mt.canarray = false -- hint to say that we never want that to appear as a marpaESLIF array
+    setmetatable(_result, _mt)
     return _result
   end
   -----------------------------------
   function lua_pairs(key, value)
-    return { key, value }
+    local _pair = {[1] = key, [2] = value}
+    return _pair
   end
   -----------------------------------
   function lua_number(number)
@@ -411,15 +383,15 @@ char    ::= /[^"\\\x00-\x1F]+/                                                  
   end
   -----------------------------------
   function lua_empty_string()
-    return ''
+    local _result = ''
+    _result:encoding('UTF-8')
+    return _result
   end
   -----------------------------------
   function lua_chars(chars)
-    -- marpaESLIFStringHelper_new returns an object that these metafields:
-    -- __tostring: a function that returns the representation as a string
-    -- __marpaESLIF_encoding: a function that returns the encoding as a string
-    -- __marpaESLIF_opaque: a boolean that says to remain opaque to marpaESLIF
-    return chars, 'UTF-8'
+    local _result = chars
+    _result:encoding('UTF-8')
+    return _result
   end
   -----------------------------------
   function lua_unicode(u)
@@ -428,16 +400,17 @@ char    ::= /[^"\\\x00-\x1F]+/                                                  
     local _nextArrayIndice = 1
     local _pos = 1
 
-    -- Per def u is a sequence of \\u[[:xdigit:]]{4} i.e. 6 'characters', ahem bytes
+    -- Per def u is a sequence of [::xdigit::]{4} i.e. 6 'characters', ahem bytes
     while (_pos < _maxpos) do
        -- Extract the [[:xdigit:]]{4} part
-      local _codepointAsString = string.sub(u, _pos + 2, _pos + 5)      local _codepoint = tonumber(_codepointAsString, 16)
+      local _codepointAsString = string.sub(u, _pos + 2, _pos + 5)
+      local _codepoint = tonumber(_codepointAsString, 16)
       _hex[_nextArrayIndice] = _codepoint
       _nextArrayIndice = _nextArrayIndice + 1
       _pos = _pos + 6
     end
 
-    local _result = ''
+    local _unicode = ''
     local _high
     local _low
     local _codepoint
@@ -456,9 +429,10 @@ char    ::= /[^"\\\x00-\x1F]+/                                                  
       else
         _codepoint = table.remove(_hex, 1)
       end
-      _result = _result..utf8.char(_codepoint)
+      _unicode = _unicode..utf8.char(_codepoint)
     end
 
-      return marpaESLIF:marpaESLIFStringHelper_new(_result, 'UTF-8')
+    _unicode:encoding('UTF-8')
+    return _unicode
   end
 </luascript>
