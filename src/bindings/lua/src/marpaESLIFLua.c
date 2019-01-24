@@ -6365,7 +6365,7 @@ static short marpaESLIFLua_stack_setb(lua_State *L, marpaESLIFLuaValueContext_t 
   int                           iteratori;
   int                           statevariablei;
   int                           encodingtypei;
-  char                         *encodings;
+  const char                   *encodings;
 
   GENERICSTACK_INIT(marpaESLIFValueResultStackp);
   if (GENERICSTACK_ERROR(marpaESLIFValueResultStackp)) {
