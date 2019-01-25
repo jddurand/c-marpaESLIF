@@ -154,9 +154,9 @@ for my $test_data (@tests) {
           my $description = $grammar->currentDescription;
           my $descriptionByLevel0 = $grammar->descriptionByLevel(0);
           my $descriptionByLevel1 = $grammar->descriptionByLevel(1);
-          ok(utf8::is_utf8("$description"), "Description '$description' have the utf8 flag");
-          ok(utf8::is_utf8("$descriptionByLevel0"), "descriptionByLevel(0) '$descriptionByLevel0' have the utf8 flag");
-          ok(utf8::is_utf8("$descriptionByLevel1"), "descriptionByLevel(1) '$descriptionByLevel1' have the utf8 flag");
+          ok(utf8::is_utf8($description), "Description '$description' have the utf8 flag");
+          ok(utf8::is_utf8($descriptionByLevel0), "descriptionByLevel(0) '$descriptionByLevel0' have the utf8 flag");
+          ok(utf8::is_utf8($descriptionByLevel1), "descriptionByLevel(1) '$descriptionByLevel1' have the utf8 flag");
           my $recognizerInterface = MyRecognizerInterface->new($input);
           my $re = MarpaX::ESLIF::Recognizer->new($grammar, $recognizerInterface);
           my %played = ();
@@ -166,7 +166,7 @@ for my $test_data (@tests) {
 
             # In our example there is a single event: no need to ask what it is
             my $CARD = $re->lexemeLastPause('CARD');
-            ok(utf8::is_utf8("$CARD"), "Card '$CARD' have the utf8 flag");
+            ok(utf8::is_utf8($CARD), "Card '$CARD' have the utf8 flag");
             if ( ++$played{$CARD} > 1 ) {
                 $actual_result = 'Parse stopped by application';
                 $actual_value  = "Duplicate card " . $CARD;
@@ -195,7 +195,8 @@ for my $test_data (@tests) {
           }
           if ($status) {
               my $value = $valueInterface->getResult();
-              ok(utf8::is_utf8("$value"), "Value '$value' have the utf8 flag");
+	      # UTF-8 outputs are true strings. In case of any other encoding, you have to explicitly stringify, i.e.: utf8::is_utf8("$value")
+              ok(utf8::is_utf8($value), "Value '$value' have the utf8 flag");
               $actual_result = 'Parse OK';
               $actual_value  = "Hand was $last_hand";
               last PROCESSING;

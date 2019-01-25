@@ -19,6 +19,23 @@
 #include "c-symbolPropertyBitSet-types.inc"
 #include "c-symbol-types.inc"
 
+/* Encode constants as per the documentation */
+#define MARPAESLIFPERL_ENCODE_DIE_ON_ERR    0x0001
+#define MARPAESLIFPERL_ENCODE_WARN_ON_ERR   0x0002
+#define MARPAESLIFPERL_ENCODE_RETURN_ON_ERR 0x0004
+#define MARPAESLIFPERL_ENCODE_LEAVE_SRC     0x0008
+#define MARPAESLIFPERL_ENCODE_PERLQQ        0x0100
+#define MARPAESLIFPERL_ENCODE_HTMLCREF      0x0200
+#define MARPAESLIFPERL_ENCODE_XMLCREF       0x0400
+
+#define MARPAESLIFPERL_ENCODE_FB_DEFAULT    0
+#define MARPAESLIFPERL_ENCODE_FB_CROAK      MARPAESLIFPERL_ENCODE_DIE_ON_ERR
+#define MARPAESLIFPERL_ENCODE_FB_QUIET      MARPAESLIFPERL_ENCODE_RETURN_ON_ERR
+#define MARPAESLIFPERL_ENCODE_FB_WARN       MARPAESLIFPERL_ENCODE_RETURN_ON_ERR | MARPAESLIFPERL_ENCODE_WARN_ON_ERR
+#define MARPAESLIFPERL_ENCODE_FB_PERLQQ     MARPAESLIFPERL_ENCODE_LEAVE_SRC     | MARPAESLIFPERL_ENCODE_PERLQQ
+
+#define MARPAESLIFPERL_UTF8_CROSSCHECK /* This will cross-check all marpESLIFValueString that claims to be UTF-8 */
+
 /* Use the inc and dec macros that fit the best our code */
 #ifdef SvREFCNT_dec_NN
 #  define MARPAESLIFPERL_SvREFCNT_dec(svp) SvREFCNT_dec_NN(svp)
@@ -261,7 +278,7 @@ static int                             marpaESLIFPerl_getTypei(pTHX_ SV* svp);
 static short                           marpaESLIFPerl_canb(pTHX_ SV *svp, char *methods);
 static void                            marpaESLIFPerl_call_methodv(pTHX_ SV *interfacep, char *methods, SV *argsvp);
 static SV                             *marpaESLIFPerl_call_methodp(pTHX_ SV *interfacep, char *methods);
-static SV                             *marpaESLIFPerl_call_actionp(pTHX_ SV *interfacep, char *methods, AV *avp, MarpaX_ESLIF_Value_t *Perl_MarpaX_ESLIF_Valuep);
+static SV                             *marpaESLIFPerl_call_actionp(pTHX_ SV *interfacep, char *methods, AV *avp, MarpaX_ESLIF_Value_t *Perl_MarpaX_ESLIF_Valuep, short evalb, short evalSilentb);
 static IV                              marpaESLIFPerl_call_methodi(pTHX_ SV *interfacep, char *methods);
 static short                           marpaESLIFPerl_call_methodb(pTHX_ SV *interfacep, char *methods);
 static void                            marpaESLIFPerl_genericLoggerCallbackv(void *userDatavp, genericLoggerLevel_t logLeveli, const char *msgs);
@@ -302,6 +319,7 @@ SV *boot_MarpaX__ESLIF__Grammar__Properties_svp;
 SV *boot_MarpaX__ESLIF__Grammar__Rule__Properties_svp;
 SV *boot_MarpaX__ESLIF__Grammar__Symbol__Properties_svp;
 SV *boot_MarpaX__ESLIF__String_svp;
+SV *boot_MarpaX__ESLIF__UTF_8_svp;
 
 /*****************************************************************************/
 /* Macros                                                                    */
@@ -528,7 +546,7 @@ static short marpaESLIFPerl_canb(pTHX_ SV *svp, char *methods)
   */
   /* We always check methods that have ASCII only characters */
   av_push(list, newSVpv(methods, 0));
-  rcp = marpaESLIFPerl_call_actionp(aTHX_ svp, "can", list, NULL /* Perl_MarpaX_ESLIF_Valuep */);
+  rcp = marpaESLIFPerl_call_actionp(aTHX_ svp, "can", list, NULL /* Perl_MarpaX_ESLIF_Valuep */, 0 /* evalb */, 0 /* evalSilentb */);
   av_undef(list);
 
   type = marpaESLIFPerl_getTypei(aTHX_ rcp);
@@ -578,7 +596,7 @@ static SV *marpaESLIFPerl_call_methodp(pTHX_ SV *interfacep, char *methods)
   /*
     fprintf(stderr, "START marpaESLIFPerl_call_methodp(pTHX_ SV *svp, \"%s\")\n", methods);
   */
-  rcp = marpaESLIFPerl_call_actionp(aTHX_ interfacep, methods, NULL /* avp */, NULL /* Perl_MarpaX_ESLIF_Valuep */);
+  rcp = marpaESLIFPerl_call_actionp(aTHX_ interfacep, methods, NULL /* avp */, NULL /* Perl_MarpaX_ESLIF_Valuep */, 0 /* evalb */, 0 /* evalSilentb */);
   /*
     fprintf(stderr, "END marpaESLIFPerl_call_methodp(pTHX_ SV *svp, \"%s\")\n", methods);
   */
@@ -587,12 +605,13 @@ static SV *marpaESLIFPerl_call_methodp(pTHX_ SV *interfacep, char *methods)
 }
 
 /*****************************************************************************/
-static SV *marpaESLIFPerl_call_actionp(pTHX_ SV *interfacep, char *methods, AV *avp, MarpaX_ESLIF_Value_t *Perl_MarpaX_ESLIF_Valuep)
+static SV *marpaESLIFPerl_call_actionp(pTHX_ SV *interfacep, char *methods, AV *avp, MarpaX_ESLIF_Value_t *Perl_MarpaX_ESLIF_Valuep, short evalb, short evalSilentb)
 /*****************************************************************************/
 {
   static const char        *funcs      = "marpaESLIFPerl_call_actionp";
   SSize_t                   avsizel    = (avp != NULL) ? av_len(avp) + 1 : 0;
   SV                      **svargs     = NULL;
+  I32                       flags      = G_SCALAR;
   SV                       *rcp;
   SV                       *Perl_valueInterfacep;
   SV                       *Perl_MarpaX_ESLIF_Grammarp;
@@ -602,7 +621,12 @@ static SV *marpaESLIFPerl_call_actionp(pTHX_ SV *interfacep, char *methods, AV *
   char                     *rules;
   int                       rulei;
   SSize_t                   aviteratorl;
+  SV                        *err_tmp;
   dSP;
+
+  if (evalb) {
+    flags |= G_EVAL;
+  }
 
   ENTER;
   SAVETMPS;
@@ -664,18 +688,43 @@ static SV *marpaESLIFPerl_call_actionp(pTHX_ SV *interfacep, char *methods, AV *
   }
 
   PUSHMARK(SP);
-  EXTEND(SP, 1 + avsizel);
-  PUSHs(sv_2mortal(newSVsv(interfacep)));
-  for (aviteratorl = 0; aviteratorl < avsizel; aviteratorl++) {
-    SV **svpp = av_fetch(avp, aviteratorl, 0); /* We manage ourself the avp, SV's are real */
-    if (svpp == NULL) {
-      MARPAESLIFPERL_CROAKF("av_fetch returned NULL during arguments preparation for method %s", (methods != NULL) ? methods : "undef");
+  if (interfacep != NULL) {
+    EXTEND(SP, 1 + avsizel);
+    PUSHs(sv_2mortal(newSVsv(interfacep)));
+    for (aviteratorl = 0; aviteratorl < avsizel; aviteratorl++) {
+      SV **svpp = av_fetch(avp, aviteratorl, 0); /* We manage ourself the avp, SV's are real */
+      if (svpp == NULL) {
+        MARPAESLIFPERL_CROAKF("av_fetch returned NULL during arguments preparation for method %s", (methods != NULL) ? methods : "undef");
+      }
+      PUSHs(sv_2mortal(newSVsv(*svpp)));
     }
-    PUSHs(sv_2mortal(newSVsv(*svpp)));
+  } else {
+    if (avsizel > 0) {
+      EXTEND(SP, avsizel);
+      for (aviteratorl = 0; aviteratorl < avsizel; aviteratorl++) {
+        SV **svpp = av_fetch(avp, aviteratorl, 0); /* We manage ourself the avp, SV's are real */
+        if (svpp == NULL) {
+          MARPAESLIFPERL_CROAKF("av_fetch returned NULL during arguments preparation for method %s", (methods != NULL) ? methods : "undef");
+        }
+        PUSHs(sv_2mortal(newSVsv(*svpp)));
+      }
+    }
   }
   PUTBACK;
 
-  call_method(methods, G_SCALAR);
+  if (interfacep != NULL) {
+    call_method(methods, flags);
+  } else {
+    call_pv(methods, flags);
+  }
+
+  if (evalb && (! evalSilentb)) {
+    /* Check the eval */
+    err_tmp = ERRSV;
+    if (SvTRUE(err_tmp)) {
+      warn("%s\n", SvPV_nolen(err_tmp));
+     }
+  }
 
   SPAGAIN;
 
@@ -982,7 +1031,7 @@ static short marpaESLIFPerl_valueRuleCallbackb(void *userDatavp, marpaESLIFValue
     }
   }
 
-  actionResult = marpaESLIFPerl_call_actionp(aTHX_ Perl_valueInterfacep, Perl_MarpaX_ESLIF_Valuep->actions, list, Perl_MarpaX_ESLIF_Valuep);
+  actionResult = marpaESLIFPerl_call_actionp(aTHX_ Perl_valueInterfacep, Perl_MarpaX_ESLIF_Valuep->actions, list, Perl_MarpaX_ESLIF_Valuep, 0 /* evalb */, 0 /* evalSilentb */);
   if (list != NULL) {
     /* This will decrement all elements reference count */
     av_undef(list);
@@ -1014,7 +1063,7 @@ static short marpaESLIFPerl_valueSymbolCallbackb(void *userDatavp, marpaESLIFVal
   svp = marpaESLIFPerl_getSvp(aTHX_ Perl_MarpaX_ESLIF_Valuep, marpaESLIFValuep, -1 /* stackindicei */, bytep, bytel);
   /* One reference count ownership is transfered to the array */
   av_push(list, svp);
-  actionResult = marpaESLIFPerl_call_actionp(aTHX_ Perl_MarpaX_ESLIF_Valuep->Perl_valueInterfacep, Perl_MarpaX_ESLIF_Valuep->actions, list, Perl_MarpaX_ESLIF_Valuep);
+  actionResult = marpaESLIFPerl_call_actionp(aTHX_ Perl_MarpaX_ESLIF_Valuep->Perl_valueInterfacep, Perl_MarpaX_ESLIF_Valuep->actions, list, Perl_MarpaX_ESLIF_Valuep, 0 /* evalb */, 0 /* evalSilentb */);
   /* This will decrement by one the inner element reference count */
   av_undef(list);
 
@@ -1462,8 +1511,10 @@ static short marpaESLIFPerl_importb(marpaESLIFValue_t *marpaESLIFValuep, void *u
   SV                   *stringp;
   SV                   *encodingp;
   AV                   *listp;
+  SV                   *checkp;
   size_t                i;
   short                 utf8b;
+
   marpaESLIFPerlMYTHX(Perl_MarpaX_ESLIF_Valuep);
 
   switch (marpaESLIFValueResultp->type) {
@@ -1549,26 +1600,54 @@ static short marpaESLIFPerl_importb(marpaESLIFValue_t *marpaESLIFValuep, void *u
     }
     break;
   case MARPAESLIF_VALUE_TYPE_STRING:
-    /* We use our MarpaX::ESLIF::String type wrapper. The value gets the utf8 flag as a bonus if encoding is Perl's extended UTF-8 compatible */
-    /* but this is not important from interface point of view - at most it makes the perl side aware this is an utf8 string, the content is unchanged */
-    /* and this is what is crucial for MarpaX::ESLIF. */
     stringp = newSVpvn(marpaESLIFValueResultp->u.s.p, marpaESLIFValueResultp->u.s.sizel);
     utf8b = 0;
     if (MARPAESLIFPERL_ENCODING_IS_UTF8(marpaESLIFValueResultp->u.s.encodingasciis, strlen(marpaESLIFValueResultp->u.s.encodingasciis))) {
-      /* Cross-check */
-      if (is_utf8_string((const U8 *) marpaESLIFValueResultp->u.s.p, (STRLEN) marpaESLIFValueResultp->u.s.sizel)) {
-	utf8b = 1;
-        SvUTF8_on(stringp);
+#ifdef MARPAESLIFPERL_UTF8_CROSSCHECK
+      /* Cross-check it is a string UTF-8 string */
+#ifdef is_strict_utf8_string
+      /* Since perl-5.26 */
+      if (is_strict_utf8_string((const U8 *) marpaESLIFValueResultp->u.s.p, (STRLEN) marpaESLIFValueResultp->u.s.sizel)) {
+        svp = stringp;
+        SvUTF8_on(svp);
+        utf8b = 1;
+      } else {
+	warn("is_strict_utf8_string() failure on a string claimed to be in UTF encoding\n");
       }
+#else
+      /* Use Encode::decode("UTF-8", octets, CHECK) - Note that Encode module is always loaded, c.f. MarpaX::ESLIF::String */
+      listp = newAV();
+      av_push(listp, newSVsv(boot_MarpaX__ESLIF__UTF_8_svp));
+      av_push(listp, newSVsv(stringp));
+      av_push(listp, newSViv(MARPAESLIFPERL_ENCODE_FB_CROAK));
+      /* Call Encode::decode static method */
+      checkp = marpaESLIFPerl_call_actionp(aTHX_ NULL /* interfacep */, "Encode::decode", listp, NULL /* Perl_MarpaX_ESLIF_Valuep */, 1 /* evalb */, 0 /* evalSilentb */);
+      /* The object also has an utf8 flag */
+      av_undef(listp);
+      /* If we are here this did not croak -; */
+      if (SvOK(checkp) && (! SvROK(checkp))) {
+	/* It returned a defined scalar, so this is ok */
+        svp = stringp;
+        SvUTF8_on(svp);
+        utf8b = 1;
+      }
+      MARPAESLIFPERL_REFCNT_DEC(checkp);
+#endif /* is_strict_utf8_string */
+#endif
+#ifdef MARPAESLIFPERL_UTF8_CROSSCHECK
     }
-    encodingp = newSVpv(marpaESLIFValueResultp->u.s.encodingasciis, 0);
-    listp = newAV();
-    av_push(listp, stringp);
-    av_push(listp, encodingp);
-    /* Gets the object and create a reference to it */
-    svp = marpaESLIFPerl_call_actionp(aTHX_ boot_MarpaX__ESLIF__String_svp, "new", listp, NULL /* Perl_MarpaX_ESLIF_Valuep */);
-    /* The object also has an utf8 flag */
-    av_undef(listp);
+#endif
+    if (! utf8b) {
+      /* This will be a MarpaX::ESLIF::String */
+      encodingp = newSVpv(marpaESLIFValueResultp->u.s.encodingasciis, 0);
+      listp = newAV();
+      av_push(listp, stringp);
+      av_push(listp, encodingp);
+      /* Gets the object and create a reference to it */
+      svp = marpaESLIFPerl_call_actionp(aTHX_ boot_MarpaX__ESLIF__String_svp, "new", listp, NULL /* Perl_MarpaX_ESLIF_Valuep */, 0 /* evalb */, 0 /* evalSilentb */);
+      /* The object also has an utf8 flag */
+      av_undef(listp);
+    }
     marpaESLIFPerl_GENERICSTACK_PUSH_PTR(&(Perl_MarpaX_ESLIF_Valuep->valueStack), svp);
     if (marpaESLIFPerl_GENERICSTACK_ERROR(&(Perl_MarpaX_ESLIF_Valuep->valueStack))) {
       MARPAESLIFPERL_CROAKF("Perl_MarpaX_ESLIF_Valuep->valueStack push failure, %s", strerror(errno));
@@ -1623,6 +1702,7 @@ MODULE = MarpaX::ESLIF            PACKAGE = MarpaX::ESLIF::Engine
 
 BOOT:
   boot_MarpaX__ESLIF__String_svp  = newSVpvn("MarpaX::ESLIF::String", strlen("MarpaX::ESLIF::String"));
+  boot_MarpaX__ESLIF__UTF_8_svp  = newSVpvn("UTF-8", strlen("UTF-8"));
 
 PROTOTYPES: ENABLE
 
@@ -2113,7 +2193,7 @@ CODE:
   MARPAESLIFPERL_XV_STORE_IVARRAY(avp, "symbolIds",           grammarProperty.nsymboll, grammarProperty.symbolip);
   MARPAESLIFPERL_XV_STORE_IVARRAY(avp, "ruleIds",             grammarProperty.nrulel, grammarProperty.ruleip);
 
-  RETVAL = marpaESLIFPerl_call_actionp(aTHX_ boot_MarpaX__ESLIF__Grammar__Properties_svp, "new", avp, NULL /* Perl_MarpaX_ESLIF_Valuep */);
+  RETVAL = marpaESLIFPerl_call_actionp(aTHX_ boot_MarpaX__ESLIF__Grammar__Properties_svp, "new", avp, NULL /* Perl_MarpaX_ESLIF_Valuep */, 0 /* evalb */, 0 /* evalSilentb */);
   av_undef(avp);
 OUTPUT:
   RETVAL
@@ -2151,7 +2231,7 @@ CODE:
   MARPAESLIFPERL_XV_STORE_IVARRAY(avp, "symbolIds",           grammarProperty.nsymboll, grammarProperty.symbolip);
   MARPAESLIFPERL_XV_STORE_IVARRAY(avp, "ruleIds",             grammarProperty.nrulel, grammarProperty.ruleip);
 
-  RETVAL = marpaESLIFPerl_call_actionp(aTHX_ boot_MarpaX__ESLIF__Grammar__Properties_svp, "new", avp, NULL /* Perl_MarpaX_ESLIF_Valuep */);
+  RETVAL = marpaESLIFPerl_call_actionp(aTHX_ boot_MarpaX__ESLIF__Grammar__Properties_svp, "new", avp, NULL /* Perl_MarpaX_ESLIF_Valuep */, 0 /* evalb */, 0 /* evalSilentb */);
   av_undef(avp);
 OUTPUT:
   RETVAL
@@ -2197,7 +2277,7 @@ CODE:
   MARPAESLIFPERL_XV_STORE_IV         (avp, "propertyBitSet",           ruleProperty.propertyBitSet);
   MARPAESLIFPERL_XV_STORE_IV         (avp, "hideseparator",            ruleProperty.hideseparatorb);
 
-  RETVAL = marpaESLIFPerl_call_actionp(aTHX_ boot_MarpaX__ESLIF__Grammar__Rule__Properties_svp, "new", avp, NULL /* Perl_MarpaX_ESLIF_Valuep */);
+  RETVAL = marpaESLIFPerl_call_actionp(aTHX_ boot_MarpaX__ESLIF__Grammar__Rule__Properties_svp, "new", avp, NULL /* Perl_MarpaX_ESLIF_Valuep */, 0 /* evalb */, 0 /* evalSilentb */);
   av_undef(avp);
 OUTPUT:
   RETVAL
@@ -2244,7 +2324,7 @@ CODE:
   MARPAESLIFPERL_XV_STORE_IV         (avp, "propertyBitSet",           ruleProperty.propertyBitSet);
   MARPAESLIFPERL_XV_STORE_IV         (avp, "hideseparator",            ruleProperty.hideseparatorb);
 
-  RETVAL = marpaESLIFPerl_call_actionp(aTHX_ boot_MarpaX__ESLIF__Grammar__Rule__Properties_svp, "new", avp, NULL /* Perl_MarpaX_ESLIF_Valuep */);
+  RETVAL = marpaESLIFPerl_call_actionp(aTHX_ boot_MarpaX__ESLIF__Grammar__Rule__Properties_svp, "new", avp, NULL /* Perl_MarpaX_ESLIF_Valuep */, 0 /* evalb */, 0 /* evalSilentb */);
   av_undef(avp);
 OUTPUT:
   RETVAL
@@ -2295,7 +2375,7 @@ CODE:
   MARPAESLIFPERL_XV_STORE_ACTION     (avp, "nullableAction",             symbolProperty.nullableActionp);
   MARPAESLIFPERL_XV_STORE_IV         (avp, "propertyBitSet",             symbolProperty.propertyBitSet);
 
-  RETVAL = marpaESLIFPerl_call_actionp(aTHX_ boot_MarpaX__ESLIF__Grammar__Symbol__Properties_svp, "new", avp, NULL /* Perl_MarpaX_ESLIF_Valuep */);
+  RETVAL = marpaESLIFPerl_call_actionp(aTHX_ boot_MarpaX__ESLIF__Grammar__Symbol__Properties_svp, "new", avp, NULL /* Perl_MarpaX_ESLIF_Valuep */, 0 /* evalb */, 0 /* evalSilentb */);
   av_undef(avp);
 OUTPUT:
   RETVAL
@@ -2347,7 +2427,7 @@ CODE:
   MARPAESLIFPERL_XV_STORE_ACTION     (avp, "nullableAction",             symbolProperty.nullableActionp);
   MARPAESLIFPERL_XV_STORE_IV         (avp, "propertyBitSet",             symbolProperty.propertyBitSet);
 
-  RETVAL = marpaESLIFPerl_call_actionp(aTHX_ boot_MarpaX__ESLIF__Grammar__Symbol__Properties_svp, "new", avp, NULL /* Perl_MarpaX_ESLIF_Valuep */);
+  RETVAL = marpaESLIFPerl_call_actionp(aTHX_ boot_MarpaX__ESLIF__Grammar__Symbol__Properties_svp, "new", avp, NULL /* Perl_MarpaX_ESLIF_Valuep */, 0 /* evalb */, 0 /* evalSilentb */);
   av_undef(avp);
 OUTPUT:
   RETVAL
