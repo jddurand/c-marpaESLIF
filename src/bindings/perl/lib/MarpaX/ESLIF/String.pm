@@ -11,9 +11,10 @@ package MarpaX::ESLIF::String;
 
 # AUTHORITY
 use namespace::autoclean;
-use vars qw/$VERSION/;
 use Encoding qw//;
 use Moo;
+
+# VERSION
 
 =head1 DESCRIPTION
 
