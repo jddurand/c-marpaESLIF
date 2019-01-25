@@ -10,17 +10,18 @@ package MarpaX::ESLIF::String;
 # ABSTRACT: ESLIF String is any string value with encoding attribute
 
 # AUTHORITY
-use namespace::autoclean;
-use Encoding qw//;
-use Moo;
-
-# VERSION
 
 =head1 DESCRIPTION
 
 MarpaX::ESLIF::String is a string type wrapper that associates an encoding information to the string value. Without this wrapper, only valid utf8 perl string will be able to transport encoding information to MarpaX::ESLIF, with a fixed encoding value to C<UTF-8> or C<Latin-1>.
 
 =cut
+
+use namespace::autoclean;
+use Encode qw//;
+use Moo;
+
+# VERSION
 
 =head1 METHODS
 
