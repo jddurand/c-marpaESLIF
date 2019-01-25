@@ -34,7 +34,7 @@
 #define MARPAESLIFPERL_ENCODE_FB_WARN       MARPAESLIFPERL_ENCODE_RETURN_ON_ERR | MARPAESLIFPERL_ENCODE_WARN_ON_ERR
 #define MARPAESLIFPERL_ENCODE_FB_PERLQQ     MARPAESLIFPERL_ENCODE_LEAVE_SRC     | MARPAESLIFPERL_ENCODE_PERLQQ
 
-#define MARPAESLIFPERL_UTF8_CROSSCHECK /* This will cross-check all marpESLIFValueString that claims to be UTF-8 */
+/* #define MARPAESLIFPERL_UTF8_CROSSCHECK */ /* This will cross-check all marpESLIFValueString that claims to be UTF-8 */
 
 /* Use the inc and dec macros that fit the best our code */
 #ifdef SvREFCNT_dec_NN
@@ -1633,10 +1633,13 @@ static short marpaESLIFPerl_importb(marpaESLIFValue_t *marpaESLIFValuep, void *u
       }
       MARPAESLIFPERL_REFCNT_DEC(checkp);
 #endif /* is_strict_utf8_string */
+#else
+      /* We trust the encoding */
+      svp = stringp;
+      SvUTF8_on(svp);
+      utf8b = 1;
 #endif
-#ifdef MARPAESLIFPERL_UTF8_CROSSCHECK
     }
-#endif
     if (! utf8b) {
       /* This will be a MarpaX::ESLIF::String */
       encodingp = newSVpv(marpaESLIFValueResultp->u.s.encodingasciis, 0);
