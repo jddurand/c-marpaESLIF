@@ -50,11 +50,6 @@ clone_folder: C:\projects\c-marpaESLIF
 matrix:
   fast_finish: true # Immediately finish build once one of the jobs fails
 
-environment:
-  matrix:
-    - PLATFORM: x64
-    - PLATFORM: x86
-
 cache:
   - C:\strawberry # Do not reinstall strawberryperl between builds
 
