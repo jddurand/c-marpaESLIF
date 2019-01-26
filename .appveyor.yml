@@ -93,7 +93,7 @@ build_script:
 
 test_script:
   - cd C:\projects\c-marpaESLIF
-  - SET PATH=C:\projects\c-marpaESLIF\output\lib;C:\Program Files (x86)\Dr. Memory\bin;%PATH%
+  - SET PATH=C:\projects\c-marpaESLIF\output\lib;C:\projects\c-marpaESLIF\3rdparty\github\genericLogger\output\lib;C:\Program Files (x86)\Dr. Memory\bin;%PATH%
   - nmake selfTester
   - drmemory.exe -batch -exit_code_if_errors 1 -results_to_stderr -summary -- output\lib\selfTester.exe
   - nmake check
