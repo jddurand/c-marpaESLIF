@@ -1557,14 +1557,22 @@ static short marpaESLIFPerl_importb(marpaESLIFValue_t *marpaESLIFValuep, void *u
     }
     break;
   case MARPAESLIF_VALUE_TYPE_FLOAT:
-    svp = newSVnv((double) marpaESLIFValueResultp->u.f);
+    svp = newSVnv((NV) marpaESLIFValueResultp->u.f);
     marpaESLIFPerl_GENERICSTACK_PUSH_PTR(&(Perl_MarpaX_ESLIF_Valuep->valueStack), svp);
     if (marpaESLIFPerl_GENERICSTACK_ERROR(&(Perl_MarpaX_ESLIF_Valuep->valueStack))) {
       MARPAESLIFPERL_CROAKF("Perl_MarpaX_ESLIF_Valuep->valueStack push failure, %s", strerror(errno));
     }
     break;
   case MARPAESLIF_VALUE_TYPE_DOUBLE:
-    svp = newSVnv(marpaESLIFValueResultp->u.d);
+    svp = newSVnv((NV) marpaESLIFValueResultp->u.d);
+    marpaESLIFPerl_GENERICSTACK_PUSH_PTR(&(Perl_MarpaX_ESLIF_Valuep->valueStack), svp);
+    if (marpaESLIFPerl_GENERICSTACK_ERROR(&(Perl_MarpaX_ESLIF_Valuep->valueStack))) {
+      MARPAESLIFPERL_CROAKF("Perl_MarpaX_ESLIF_Valuep->valueStack push failure, %s", strerror(errno));
+    }
+    break;
+  case MARPAESLIF_VALUE_TYPE_LONG_DOUBLE:
+    /* Loss if perl is using double */
+    svp = newSVnv((NV) marpaESLIFValueResultp->u.ld);
     marpaESLIFPerl_GENERICSTACK_PUSH_PTR(&(Perl_MarpaX_ESLIF_Valuep->valueStack), svp);
     if (marpaESLIFPerl_GENERICSTACK_ERROR(&(Perl_MarpaX_ESLIF_Valuep->valueStack))) {
       MARPAESLIFPERL_CROAKF("Perl_MarpaX_ESLIF_Valuep->valueStack push failure, %s", strerror(errno));
