@@ -54,7 +54,6 @@ cache:
 
 install:
   - cinst drmemory
-  - set PATH=C:\Program Files (x86)\Dr. Memory\bin;%PATH%
   - cinst cmake
   - cinst nsis
   - if not exist "C:\strawberry" cinst strawberryperl
@@ -94,6 +93,8 @@ build_script:
 test_script:
   - cd C:\projects\c-marpaESLIF
   - SET PATH=C:\projects\c-marpaESLIF\output\lib;%PATH%
+  - set PATH=C:\Program Files (x86)\Dr. Memory\bin;%PATH%
+  - nmake selfTester
   - drmem -batch -exit_code_if_errors 1 -results_to_stderr -summary -- output\lib\selfTester
   - nmake check
   - nmake install
