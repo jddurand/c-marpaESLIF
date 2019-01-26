@@ -12244,7 +12244,7 @@ static inline short _marpaESLIFValue_stack_setb(marpaESLIFValue_t *marpaESLIFVal
     goto err;
   }
 
-  MARPAESLIF_TRACEF(marpaESLIFValuep->marpaESLIFp, "Action %s success, result type is %s", marpaESLIFValuep->actions, _marpaESLIF_value_types(marpaESLIFValueResultp->type));
+  MARPAESLIF_TRACEF(marpaESLIFValuep->marpaESLIFp, funcs, "Action %s success, result type is %s", marpaESLIFValuep->actions, _marpaESLIF_value_types(marpaESLIFValueResultp->type));
   rcb = 1;
   goto done;
 
