@@ -42,7 +42,6 @@ build:
   parallel: true
 
 configuration:
-  - Debug
   - Release
 
 clone_folder: C:\projects\c-marpaESLIF
