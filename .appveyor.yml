@@ -85,7 +85,7 @@ init:
 build_script:
   - cd C:\projects\c-marpaESLIF
   - perl CMakeObjects.PL
-  - del /f /s /q output
+  - del /f /s /q output 1>nul
   - cmake -G "NMake Makefiles" -DALL_IN_ONE=TRUE .
   - nmake
 
