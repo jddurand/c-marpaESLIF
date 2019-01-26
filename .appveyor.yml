@@ -54,9 +54,9 @@ cache:
 
 install:
   - cinst drmemory
+  - set PATH=C:\Program Files (x86)\Dr. Memory\bin;%PATH%
   - cinst cmake
   - cinst nsis
-  - refreshenv
   - if not exist "C:\strawberry" cinst strawberryperl
   - set PATH=C:\strawberry\perl\bin;C:\strawberry\perl\site\bin;C:\strawberry\c\bin;%PATH%
   - perl -V
