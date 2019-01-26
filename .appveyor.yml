@@ -93,11 +93,9 @@ build_script:
 
 test_script:
   - cd C:\projects\c-marpaESLIF
-  - SET PATH=C:\projects\c-marpaESLIF\output\lib;%PATH%
-  - dir C:\Program Files (x86)\Dr. Memory\bin
-  - set PATH=C:\Program Files (x86)\Dr. Memory\bin;%PATH%
+  - SET PATH=C:\projects\c-marpaESLIF\output\lib;C:\Program Files (x86)\Dr. Memory\bin;%PATH%
   - nmake selfTester
-  - drmem -batch -exit_code_if_errors 1 -results_to_stderr -summary -- output\lib\selfTester
+  - drmemory.exe -batch -exit_code_if_errors 1 -results_to_stderr -summary -- output\lib\selfTester.exe
   - nmake check
   - nmake install
   - nmake pack
