@@ -54,6 +54,7 @@ cache:
 
 install:
   - cinst drmemory
+  - dir "C:\Program Files (x86)\Dr. Memory\bin"
   - cinst cmake
   - cinst nsis
   - if not exist "C:\strawberry" cinst strawberryperl
