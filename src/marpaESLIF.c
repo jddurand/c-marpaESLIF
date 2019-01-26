@@ -20,6 +20,11 @@
 # define DBL_DIG 15
 #endif
 
+#ifndef LDBL_DIG
+  /* Compiler will optimize that */
+#define LDBL_DIG ((sizeof(long double) == 10) ? 18 : (sizeof(long double) == 12) ? 18 : (sizeof(long double) == 16) ? 33 : DBL_DIG)
+#endif
+
 static const char *MARPAESLIF_VERSION_STATIC       = MARPAESLIF_VERSION;
 static const int   MARPAESLIF_VERSION_MAJOR_STATIC = MARPAESLIF_VERSION_MAJOR;
 static const int   MARPAESLIF_VERSION_MINOR_STATIC = MARPAESLIF_VERSION_MINOR;
