@@ -42,7 +42,7 @@ build:
   parallel: true
 
 configuration:
-  - Release
+  - RelWithDebInfo
 
 clone_folder: C:\projects\c-marpaESLIF
 
@@ -53,6 +53,7 @@ cache:
   - C:\strawberry # Do not reinstall strawberryperl between builds
 
 install:
+  - cinst drmemory
   - cinst cmake
   - cinst nsis
   - if not exist "C:\strawberry" cinst strawberryperl
@@ -91,6 +92,8 @@ build_script:
 
 test_script:
   - cd C:\projects\c-marpaESLIF
+  - SET PATH=C:\projects\c-marpaESLIF\output\lib;%PATH%
+  - "C:\Program Files (x86)\Dr. Memory\bin\drmemory.exe" -batch -exit_code_if_errors 1 -results_to_stderr -summary -- output\lib\selfTester.exe
   - nmake check
   - nmake install
   - nmake pack
