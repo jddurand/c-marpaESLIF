@@ -53,7 +53,7 @@ matrix:
 cache:
   - C:\strawberry # Do not reinstall strawberryperl between builds
 
-before_build:
+install:
   - if not exist "C:\strawberry" cinst strawberryperl
   - set PATH=C:\strawberry\perl\bin;C:\strawberry\perl\site\bin;C:\strawberry\c\bin;%PATH%
   - perl -V
@@ -63,6 +63,14 @@ before_build:
   - sudo cpanm --notest Archive::Tar Class::Tiny Config::AutoConf::INI ExtUtils::CBuilder ExtUtils::CppGuess ExtUtils::MakeMaker File::Basename File::chdir File::Copy File::Copy::Recursive File::Find File::Path File::Spec File::Temp IPC::Open3 IPC::Run Params::Validate Perl::OSType Role::Tiny Scalar::Util Test::More Test::More::UTF8 Log::Log4perl Log::Any Log::Any::Adapter Log::Any::Adapter::Log4perl Test::EOL Test::Kwalitee Test::NoTabs Test::Pod::Coverage namespace::autoclean
   - cpanm --notest Dist::Zilla::PluginBundle::RJBS
   - pushd src/bindings/perl && dzil authordeps --missing | xargs cpanm --notest && popd
+  - cmd: cinst cmake
+  - cmd: cinst nsis
+  - cmd: cpanm --notest Dist::Zilla
+  - cmd: cpanm --notest Path::Tiny
+  - cmd: cpanm --notest Moose MooseX::Role::Parameterized
+  - cmd: cpanm --notest Archive::Tar Class::Tiny Config::AutoConf::INI ExtUtils::CBuilder ExtUtils::CppGuess ExtUtils::MakeMaker File::Basename File::chdir File::Copy File::Copy::Recursive File::Find File::Path File::Spec File::Temp IPC::Open3 IPC::Run Params::Validate Perl::OSType Role::Tiny Scalar::Util Test::More Test::More::UTF8 Log::Log4perl Log::Any Log::Any::Adapter Log::Any::Adapter::Log4perl Test::EOL Test::Kwalitee Test::NoTabs Test::Pod::Coverage
+  - cmd: cpanm --notest Dist::Zilla::PluginBundle::RJBS
+  - cmd: pushd src/bindings/perl && dzil authordeps --missing | xargs cpanm --notest && popd
 
 init:
   - IF "%ARCHITECTURE%" == "x86" IF "%COMPILER%" == "VS_2017" call "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Auxiliary\Build\vcvars32.bat"
@@ -79,16 +87,6 @@ init:
   - IF "%ARCHITECTURE%" == "x86" IF "%COMPILER%" == "MINGW_492" set PATH=C:\Qt\Tools\mingw492_32\bin;%PATH%
   - IF "%ARCHITECTURE%" == "x64" IF "%COMPILER%" == "MINGW_W64" set PATH=C:\mingw-w64\x86_64-6.3.0-posix-seh-rt_v5-rev1\mingw64\bin;%PATH%
   - ECHO %PATH%
-
-install:
-- cmd: cinst cmake
-- cmd: cinst nsis
-- cmd: cpanm --notest Dist::Zilla
-- cmd: cpanm --notest Path::Tiny
-- cmd: cpanm --notest Moose MooseX::Role::Parameterized
-- cmd: cpanm --notest Archive::Tar Class::Tiny Config::AutoConf::INI ExtUtils::CBuilder ExtUtils::CppGuess ExtUtils::MakeMaker File::Basename File::chdir File::Copy File::Copy::Recursive File::Find File::Path File::Spec File::Temp IPC::Open3 IPC::Run Params::Validate Perl::OSType Role::Tiny Scalar::Util Test::More Test::More::UTF8 Log::Log4perl Log::Any Log::Any::Adapter Log::Any::Adapter::Log4perl Test::EOL Test::Kwalitee Test::NoTabs Test::Pod::Coverage
-- cmd: cpanm --notest Dist::Zilla::PluginBundle::RJBS
-- cmd: pushd src/bindings/perl && dzil authordeps --missing | xargs cpanm --notest && popd
 
 build_script:
   - cd C:\projects\c-marpaESLIF
