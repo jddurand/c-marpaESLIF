@@ -290,19 +290,22 @@ sub write_config {
    
 $source
 
-#if defined(SIZEOF_UINT32) && (SIZEOF_UINT32 == 4)
-typedef uint32 marpaESLIF_uint32_t;
+#if defined(SIZEOF_UINT32_T) && (SIZEOF_UINT32_T == 4)
+typedef uint32_t marpaESLIF_uint32_t;
 #else
-#  if defined(SIZEOF___UINT32) && (SIZEOF___UINT32 == 4)
-typedef __uint32 marpaESLIF_uint32_t;
+#  if defined(SIZEOF__UINT32_T) && (SIZEOF__UINT32_T == 4)
+typedef _uint32_t marpaESLIF_uint32_t;
 #  else
-#    if defined(SIZEOF_UNSIGNED_LONG) && (SIZEOF_UNSIGNED_LONG == 4)
-typedef unsigned long int marpaESLIF_uint32_t;
-#    else
-#      if defined(SIZEOF_UNSIGNED_INT) && (SIZEOF_UNSIGNED_INT == 4)
-typedef unsigned int marpaESLIF_uint32_t;
+#    if defined(SIZEOF___UINT32_T) && (SIZEOF___UINT32_T == 4)
+typedef __uint32_t marpaESLIF_uint32_t;
+#      if defined(SIZEOF_UNSIGNED_LONG) && (SIZEOF_UNSIGNED_LONG == 4)
+typedef unsigned long marpaESLIF_uint32_t;
 #      else
-#        error "Cannot determine marpaESLIF_uint32_t"
+#        if defined(SIZEOF_UNSIGNED_INT) && (SIZEOF_UNSIGNED_INT == 4)
+typedef unsigned int marpaESLIF_uint32_t;
+#        else
+#          error "Cannot determine marpaESLIF_uint32_t"
+#        endif
 #      endif
 #    endif
 #  endif
