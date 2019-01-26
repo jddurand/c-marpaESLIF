@@ -29,6 +29,7 @@ ESLIF values are mapped to constants. This module is giving access to them, alth
   $valueType = MarpaX::ESLIF::Value::Type->MARPAESLIF_VALUE_TYPE_STRING;        #  10
   $valueType = MarpaX::ESLIF::Value::Type->MARPAESLIF_VALUE_TYPE_ROW;           #  11
   $valueType = MarpaX::ESLIF::Value::Type->MARPAESLIF_VALUE_TYPE_TABLE;         #  12
+  $valueType = MarpaX::ESLIF::Value::Type->MARPAESLIF_VALUE_TYPE_LONG_DOUBLE;   #  13
 
 =cut
 
