@@ -746,6 +746,7 @@ static int marpaESLIFLua_installi(lua_State *L)
   MARPAESLIFLUA_CREATEINTEGERCONSTANT(L, MARPAESLIF_VALUE_TYPE_PTR);
   MARPAESLIFLUA_CREATEINTEGERCONSTANT(L, MARPAESLIF_VALUE_TYPE_ARRAY);
   MARPAESLIFLUA_CREATEINTEGERCONSTANT(L, MARPAESLIF_VALUE_TYPE_BOOL);
+  MARPAESLIFLUA_CREATEINTEGERCONSTANT(L, MARPAESLIF_VALUE_TYPE_LONG_DOUBLE);
   
   MARPAESLIFLUA_CREATEINTEGERCONSTANT(L, MARPAESLIF_RULE_IS_ACCESSIBLE);
   MARPAESLIFLUA_CREATEINTEGERCONSTANT(L, MARPAESLIF_RULE_IS_NULLABLE);
@@ -3682,6 +3683,9 @@ static short marpaESLIFLua_importb(marpaESLIFValue_t *marpaESLIFValuep, void *us
       if (! marpaESLIFLua_lua_rawset(L, -3)) goto err;                                                /* Stack: keyn, valn, ..., table */
     }
     break;
+  case MARPAESLIF_VALUE_TYPE_LONG_DOUBLE:
+    if (! marpaESLIFLua_lua_pushnumber(L, (lua_Number) marpaESLIFValueResultp->u.ld)) goto err;
+    break;
   default:
     marpaESLIFLua_luaL_errorf(L, "Unknown result type %d to import", marpaESLIFValueResultp->type);
     goto err;
@@ -6453,6 +6457,14 @@ static short marpaESLIFLua_stack_setb(lua_State *L, marpaESLIFLuaValueContext_t 
           marpaESLIFValueResultp->type            = MARPAESLIF_VALUE_TYPE_DOUBLE;
           marpaESLIFValueResultp->u.d             = tmpd; /* We volontarily do not typecast, there should be no warning */
           eslifb = 1;
+#    else
+#      if defined(LUA_FLOAT_LONGDOUBLE) && (LUA_FLOAT_LONGDOUBLE == LUA_FLOAT_TYPE)
+          marpaESLIFValueResultp->contextp        = MARPAESLIFLUA_CONTEXT;
+          marpaESLIFValueResultp->representationp = NULL;
+          marpaESLIFValueResultp->type            = MARPAESLIF_VALUE_TYPE_LONG_DOUBLE;
+          marpaESLIFValueResultp->u.ld            = tmpd; /* We volontarily do not typecast, there should be no warning */
+          eslifb = 1;
+#      endif
 #    endif
 #  endif /* defined(LUA_FLOAT_FLOAT) && (LUA_FLOAT_FLOAT == LUA_FLOAT_TYPE) */
         }
