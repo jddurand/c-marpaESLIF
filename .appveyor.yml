@@ -54,7 +54,8 @@ cache:
   - C:\strawberry # Do not reinstall strawberryperl between builds
 
 install:
-  - cd C:\projects\c-marpaESLIF
+  - cinst cmake
+  - cinst nsis
   - if not exist "C:\strawberry" cinst strawberryperl
   - set PATH=C:\strawberry\perl\bin;C:\strawberry\perl\site\bin;C:\strawberry\c\bin;%PATH%
   - perl -V
@@ -63,17 +64,8 @@ install:
   - cpanm --notest Moo Moose MooseX::Role::Parameterized
   - cpanm --notest Archive::Tar Class::Tiny Config::AutoConf::INI ExtUtils::CBuilder ExtUtils::CppGuess ExtUtils::MakeMaker File::Basename File::chdir File::Copy File::Copy::Recursive File::Find File::Path File::Spec File::Temp IPC::Open3 IPC::Run Params::Validate Perl::OSType Role::Tiny Scalar::Util Test::More Test::More::UTF8 Log::Log4perl Log::Any Log::Any::Adapter Log::Any::Adapter::Log4perl Test::EOL Test::Kwalitee Test::NoTabs Test::Pod::Coverage namespace::autoclean
   - cpanm --notest Dist::Zilla::PluginBundle::RJBS
-  - pushd src\bindings\perl
+  - cd C:\projects\c-marpaESLIF\src\bindings\perl
   - dzil authordeps --missing | xargs cpanm --notest
-  - popd
-  - cinst cmake
-  - cinst nsis
-  - cpanm --notest Dist::Zilla
-  - cpanm --notest Path::Tiny
-  - cpanm --notest Moose MooseX::Role::Parameterized
-  - cpanm --notest Archive::Tar Class::Tiny Config::AutoConf::INI ExtUtils::CBuilder ExtUtils::CppGuess ExtUtils::MakeMaker File::Basename File::chdir File::Copy File::Copy::Recursive File::Find File::Path File::Spec File::Temp IPC::Open3 IPC::Run Params::Validate Perl::OSType Role::Tiny Scalar::Util Test::More Test::More::UTF8 Log::Log4perl Log::Any Log::Any::Adapter Log::Any::Adapter::Log4perl Test::EOL Test::Kwalitee Test::NoTabs Test::Pod::Coverage
-  - cpanm --notest Dist::Zilla::PluginBundle::RJBS
-  - pushd src/bindings/perl && dzil authordeps --missing | xargs cpanm --notest && popd
 
 init:
   - IF "%ARCHITECTURE%" == "x86" IF "%COMPILER%" == "VS_2017" call "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Auxiliary\Build\vcvars32.bat"
