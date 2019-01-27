@@ -60,6 +60,10 @@ install:
 #  - cinst nsis
 #  - if not exist "C:\strawberry" cinst strawberryperl
 #  - set PATH=C:\strawberry\perl\bin;C:\strawberry\perl\site\bin;C:\strawberry\c\bin;%PATH%
+  - dir C:\Perl
+  - dir C:\Perl\c
+  - dir C:\Perl\c\bin
+  - set PATH=%PATH%;C:\Perl\c\bin
   - perl -MCPAN -e "install(shift)" "App::cpanminus"
   - perl -V
   - cpanm --notest Dist::Zilla
