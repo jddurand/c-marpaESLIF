@@ -95,11 +95,11 @@ int main(int argc, char *argv[])
    * top of the stack.
    */
   for (i = 1; i <= 5; i++) {
-    if (luaunpanic_pushnumber(L, i)) {   /* Push the table index */
+    if (luaunpanic_pushnumber(L, (lua_Number) i)) {   /* Push the table index */
       PRINT_PANIC_STRING(L, luaunpanic_pushnumber);
       exit(1);
     }
-    if (luaunpanic_pushnumber(L, i*2)) { /* Push the cell value */
+    if (luaunpanic_pushnumber(L, (lua_Number) i*2)) { /* Push the cell value */
       PRINT_PANIC_STRING(L, luaunpanic_pushnumber);
       exit(1);
     }

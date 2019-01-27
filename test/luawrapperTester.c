@@ -43,13 +43,13 @@ short luaadd(int *rcp, int x, int y)
   }
 
   /* the first argument */
-  if (luaunpanic_pushnumber(L, x)) {
+  if (luaunpanic_pushnumber(L, (lua_Number) x)) {
     PRINT_PANIC_STRING(L, luaunpanic_pushnumber);
     return 1;
   }
 
   /* the second argument */
-  if (luaunpanic_pushnumber(L, y)) {
+  if (luaunpanic_pushnumber(L, (lua_Number) y)) {
     PRINT_PANIC_STRING(L, luaunpanic_pushnumber);
     return 1;
   }
