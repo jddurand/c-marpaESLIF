@@ -52,14 +52,14 @@ matrix:
   fast_finish: true # Immediately finish build once one of the jobs fails
 
 cache:
-  - C:\strawberry # Do not reinstall strawberryperl between builds
+#  - C:\strawberry # Do not reinstall strawberryperl between builds
 
 install:
-  - cinst drmemory
-  - cinst cmake
-  - cinst nsis
-  - if not exist "C:\strawberry" cinst strawberryperl
-  - set PATH=C:\strawberry\perl\bin;C:\strawberry\perl\site\bin;C:\strawberry\c\bin;%PATH%
+#  - cinst drmemory
+#  - cinst cmake
+#  - cinst nsis
+#  - if not exist "C:\strawberry" cinst strawberryperl
+#  - set PATH=C:\strawberry\perl\bin;C:\strawberry\perl\site\bin;C:\strawberry\c\bin;%PATH%
   - perl -V
   - cpanm --notest Dist::Zilla
   - cpanm --notest Path::Tiny
