@@ -9,6 +9,14 @@ use MarpaX::ESLIF::String;   # Make sure it is loaded, the XS is using it
 # AUTHORITY
 
 use vars qw/$VERSION/;
+use Config;
+
+#
+# Internal routine used at bootstrap that says is nvtype is a double
+#
+sub _nvtype_is_long_double {
+    return (($Config{nvtype} || '') =~ /^\s*long\s+double\s*$/) ? 1 : 0
+}
 
 BEGIN {
     # VERSION
@@ -28,6 +36,8 @@ use MarpaX::ESLIF::Symbol::PropertyBitSet;
 use MarpaX::ESLIF::Symbol::Type;
 use MarpaX::ESLIF::Value::Type;
 use MarpaX::ESLIF::Rule::PropertyBitSet;
+
+# Other modules
 use Math::BigFloat;
 
 =head1 DESCRIPTION

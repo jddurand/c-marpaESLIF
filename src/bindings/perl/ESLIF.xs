@@ -344,8 +344,10 @@ SV *boot_MarpaX__ESLIF__Grammar__Properties_svp;
 SV *boot_MarpaX__ESLIF__Grammar__Rule__Properties_svp;
 SV *boot_MarpaX__ESLIF__Grammar__Symbol__Properties_svp;
 SV *boot_MarpaX__ESLIF__String_svp;
+SV *boot_MarpaX__ESLIF_svp;
 SV *boot_MarpaX__ESLIF__UTF_8_svp;
 SV *boot_MarpaX__ESLIF__Math__BigFloat_svp;
+short boot_nvtype_is_long_doubleb;
 
 /*****************************************************************************/
 /* Macros                                                                    */
@@ -411,7 +413,7 @@ SV *boot_MarpaX__ESLIF__Math__BigFloat_svp;
     if (SvTYPE((SV *)xvp) == SVt_PVHV) {                \
       hv_store((HV *) xvp, key, strlen(key), svp, 0);   \
     } else {                                            \
-      av_push((AV *) xvp, newSVpvn(key, strlen(key)));  \
+      av_push((AV *) xvp, newSVpvn((const char *) key, (STRLEN) strlen(key))); \
       av_push((AV *) xvp, svp);                         \
     }                                                   \
   } while (0)
@@ -427,7 +429,7 @@ SV *boot_MarpaX__ESLIF__Math__BigFloat_svp;
         MARPAESLIFPERL_XV_STORE(hvp, key, newSVpv(actionp->u.names, 0)); \
         break;                                                          \
       case MARPAESLIF_ACTION_TYPE_STRING:                               \
-        _svp = newSVpvn(actionp->u.stringp->bytep, actionp->u.stringp->bytel); \
+        _svp = newSVpvn((const char *) actionp->u.stringp->bytep, (STRLEN) actionp->u.stringp->bytel); \
         if (is_utf8_string((const U8 *) actionp->u.stringp->bytep, (STRLEN) actionp->u.stringp->bytel)) { \
           SvUTF8_on(_svp);                                              \
         }                                                               \
@@ -447,7 +449,7 @@ SV *boot_MarpaX__ESLIF__Math__BigFloat_svp;
     SV *_svp;                                                           \
                                                                         \
     if (stringp != NULL) {                                              \
-      _svp = newSVpvn(stringp->bytep, stringp->bytel);                  \
+      _svp = newSVpvn((const char *) stringp->bytep, (STRLEN) stringp->bytel); \
       if (is_utf8_string((const U8 *) stringp->bytep, (STRLEN) stringp->bytel)) { \
         SvUTF8_on(_svp);                                                \
       }                                                                 \
@@ -1554,7 +1556,7 @@ static short marpaESLIFPerl_importb(marpaESLIFValue_t *marpaESLIFValuep, void *u
     }
     break;
   case MARPAESLIF_VALUE_TYPE_CHAR:
-    svp = newSVpvn(&(marpaESLIFValueResultp->u.c), 1);
+    svp = newSVpvn((const char *) &(marpaESLIFValueResultp->u.c), (STRLEN) 1);
     if (is_utf8_string((const U8 *) &(marpaESLIFValueResultp->u.c), (STRLEN) 1)) {
       SvUTF8_on(svp);
     }
@@ -1585,14 +1587,15 @@ static short marpaESLIFPerl_importb(marpaESLIFValue_t *marpaESLIFValuep, void *u
     }
     break;
   case MARPAESLIF_VALUE_TYPE_FLOAT:
-    svp = newSVnv((NV) marpaESLIFValueResultp->u.f);
+    svp = newSVnv((NVTYPE) marpaESLIFValueResultp->u.f);
     marpaESLIFPerl_GENERICSTACK_PUSH_PTR(&(Perl_MarpaX_ESLIF_Valuep->valueStack), svp);
     if (marpaESLIFPerl_GENERICSTACK_ERROR(&(Perl_MarpaX_ESLIF_Valuep->valueStack))) {
       MARPAESLIFPERL_CROAKF("Perl_MarpaX_ESLIF_Valuep->valueStack push failure, %s", strerror(errno));
     }
     break;
   case MARPAESLIF_VALUE_TYPE_DOUBLE:
-    svp = newSVnv((NV) marpaESLIFValueResultp->u.d);
+    /* NV is always at least double in perl. So at least we will not loose precision if it was long double */
+    svp = newSVnv((NVTYPE) marpaESLIFValueResultp->u.d);
     marpaESLIFPerl_GENERICSTACK_PUSH_PTR(&(Perl_MarpaX_ESLIF_Valuep->valueStack), svp);
     if (marpaESLIFPerl_GENERICSTACK_ERROR(&(Perl_MarpaX_ESLIF_Valuep->valueStack))) {
       MARPAESLIFPERL_CROAKF("Perl_MarpaX_ESLIF_Valuep->valueStack push failure, %s", strerror(errno));
@@ -1614,7 +1617,7 @@ static short marpaESLIFPerl_importb(marpaESLIFValue_t *marpaESLIFValuep, void *u
     }
     break;
   case MARPAESLIF_VALUE_TYPE_ARRAY:
-    svp = newSVpvn(marpaESLIFValueResultp->u.a.p, marpaESLIFValueResultp->u.a.sizel);
+    svp = newSVpvn((const char *) marpaESLIFValueResultp->u.a.p, (STRLEN) marpaESLIFValueResultp->u.a.sizel);
     marpaESLIFPerl_GENERICSTACK_PUSH_PTR(&(Perl_MarpaX_ESLIF_Valuep->valueStack), svp);
     if (marpaESLIFPerl_GENERICSTACK_ERROR(&(Perl_MarpaX_ESLIF_Valuep->valueStack))) {
       MARPAESLIFPERL_CROAKF("Perl_MarpaX_ESLIF_Valuep->valueStack push failure, %s", strerror(errno));
@@ -1628,7 +1631,7 @@ static short marpaESLIFPerl_importb(marpaESLIFValue_t *marpaESLIFValuep, void *u
     }
     break;
   case MARPAESLIF_VALUE_TYPE_STRING:
-    stringp = newSVpvn(marpaESLIFValueResultp->u.s.p, marpaESLIFValueResultp->u.s.sizel);
+    stringp = newSVpvn((const char *) marpaESLIFValueResultp->u.s.p, (STRLEN) marpaESLIFValueResultp->u.s.sizel);
     utf8b = 0;
     if (MARPAESLIFPERL_ENCODING_IS_UTF8(marpaESLIFValueResultp->u.s.encodingasciis, strlen(marpaESLIFValueResultp->u.s.encodingasciis))) {
 #ifdef MARPAESLIFPERL_UTF8_CROSSCHECK
@@ -1717,7 +1720,7 @@ static short marpaESLIFPerl_importb(marpaESLIFValue_t *marpaESLIFValuep, void *u
     }
     break;
   case MARPAESLIF_VALUE_TYPE_LONG_DOUBLE:
-    if (sizeof(NV) < sizeof(long double)) {
+    if (! boot_nvtype_is_long_doubleb) {
       /* Switch to Math::BigFloat - we must first generate a string representation of this long double. */
 #ifdef PERL_IMPLICIT_CONTEXT
       marpaESLIFPerl_stringGenerator.PerlInterpreterp = Perl_MarpaX_ESLIF_Valuep->PerlInterpreterp;
@@ -1734,9 +1737,9 @@ static short marpaESLIFPerl_importb(marpaESLIFValue_t *marpaESLIFValuep, void *u
       if ((marpaESLIFPerl_stringGenerator.s == NULL) || (marpaESLIFPerl_stringGenerator.l <= 1)) {
         /* This should never happen */
         GENERICLOGGER_FREE(genericLoggerp);
-        MARPAESLIFPERL_CROAKF("Internal error when doing string representation of long double %Ld", marpaESLIFValueResultp->u.ld);
+        MARPAESLIFPERL_CROAKF("Internal error when doing string representation of long double %Lf", marpaESLIFValueResultp->u.ld);
       }
-      stringp = newSVpvn((const U8 *) marpaESLIFPerl_stringGenerator.s, (STRLEN) (marpaESLIFPerl_stringGenerator.l - 1));
+      stringp = newSVpvn((const char *) marpaESLIFPerl_stringGenerator.s, (STRLEN) (marpaESLIFPerl_stringGenerator.l - 1));
       free(marpaESLIFPerl_stringGenerator.s);
       marpaESLIFPerl_stringGenerator.s = NULL;
       GENERICLOGGER_FREE(genericLoggerp);
@@ -1748,7 +1751,7 @@ static short marpaESLIFPerl_importb(marpaESLIFValue_t *marpaESLIFValuep, void *u
       av_undef(listp);
 
     } else {
-      svp = newSVnv((NV) marpaESLIFValueResultp->u.ld);
+      svp = newSVnv((NVTYPE) marpaESLIFValueResultp->u.ld);
       marpaESLIFPerl_GENERICSTACK_PUSH_PTR(&(Perl_MarpaX_ESLIF_Valuep->valueStack), svp);
       if (marpaESLIFPerl_GENERICSTACK_ERROR(&(Perl_MarpaX_ESLIF_Valuep->valueStack))) {
         MARPAESLIFPERL_CROAKF("Perl_MarpaX_ESLIF_Valuep->valueStack push failure, %s", strerror(errno));
@@ -1857,9 +1860,11 @@ MODULE = MarpaX::ESLIF            PACKAGE = MarpaX::ESLIF::Engine
 
 BOOT:
   boot_MarpaX__ESLIF__String_svp  = newSVpvn("MarpaX::ESLIF::String", strlen("MarpaX::ESLIF::String"));
+  boot_MarpaX__ESLIF_svp  = newSVpvn("MarpaX::ESLIF", strlen("MarpaX::ESLIF"));
   boot_MarpaX__ESLIF__UTF_8_svp  = newSVpvn("UTF-8", strlen("UTF-8"));
   sprintf(long_double_fmts, "%%%d.%dLe", LDBL_DIG + 8, LDBL_DIG);
   boot_MarpaX__ESLIF__Math__BigFloat_svp = newSVpvn("Math::BigFloat", strlen("Math::BigFloat"));
+  boot_nvtype_is_long_doubleb = marpaESLIFPerl_call_methodb(aTHX_ boot_MarpaX__ESLIF_svp, "_nvtype_is_long_double");
 
 PROTOTYPES: ENABLE
 
@@ -2156,7 +2161,7 @@ CODE:
     MARPAESLIFPERL_CROAK("marpaESLIFGrammar_grammar_currentb failure");
   }
   /* It is in the same encoding as original grammar */
-  svp = newSVpvn(descp->bytep, descp->bytel);
+  svp = newSVpvn((const char *) descp->bytep, (STRLEN) descp->bytel);
   if (is_utf8_string((const U8 *) descp->bytep, (STRLEN) descp->bytel)) {
     SvUTF8_on(svp);
   }
@@ -2184,7 +2189,7 @@ CODE:
     MARPAESLIFPERL_CROAK("marpaESLIFGrammar_grammar_by_levelb failure");
   }
   /* It is in the same encoding as original grammar */
-  svp = newSVpvn(descp->bytep, descp->bytel);
+  svp = newSVpvn((const char *) descp->bytep, (STRLEN) descp->bytel);
   if (is_utf8_string((const U8 *) descp->bytep, (STRLEN) descp->bytel)) {
     SvUTF8_on(svp);
   }
@@ -2781,7 +2786,6 @@ parse(Perl_MarpaX_ESLIF_Grammarp, Perl_recognizerInterfacep, Perl_valueInterface
 PREINIT:
   static const char *funcs = "MarpaX::ESLIF::Grammar::parse";
 CODE:
-  MarpaX_ESLIF_Value_t          Perl_MarpaX_ESLIF_Value;
   marpaESLIFRecognizerOption_t  marpaESLIFRecognizerOption;
   marpaESLIFValueOption_t       marpaESLIFValueOption;
   MarpaX_ESLIF_Recognizer_t     marpaESLIFRecognizerContext;
@@ -3411,7 +3415,7 @@ CODE:
     MARPAESLIFPERL_CROAKF("marpaESLIFRecognizer_lexeme_last_pauseb failure, %s", strerror(errno));
   }
   if ((pauses != NULL) && (pausel > 0)) {
-    svp = newSVpvn(pauses, pausel);
+    svp = newSVpvn((const char *) pauses, (STRLEN) pausel);
     if (is_utf8_string((const U8 *) pauses, (STRLEN) pausel)) {
       SvUTF8_on(svp);
     }
@@ -3443,7 +3447,7 @@ CODE:
     MARPAESLIFPERL_CROAKF("marpaESLIFRecognizer_lexeme_last_tryb failure, %s", strerror(errno));
   }
   if ((trys != NULL) && (tryl > 0)) {
-    svp = newSVpvn(trys, tryl);
+    svp = newSVpvn((const char *) trys, (STRLEN) tryl);
     if (is_utf8_string((const U8 *) trys, (STRLEN) tryl)) {
       SvUTF8_on(svp);
     }
@@ -3474,7 +3478,7 @@ CODE:
     MARPAESLIFPERL_CROAKF("marpaESLIFRecognizer_discard_last_tryb failure, %s", strerror(errno));
   }
   if ((discards != NULL) && (discardl > 0)) {
-    svp = newSVpvn(discards, discardl);
+    svp = newSVpvn((const char *) discards, (STRLEN) discardl);
     if (is_utf8_string((const U8 *) discards, (STRLEN) discardl)) {
       SvUTF8_on(svp);
     }
@@ -3542,7 +3546,7 @@ CODE:
     MARPAESLIFPERL_CROAKF("marpaESLIFRecognizer_inputb failure, %s", strerror(errno));
   }
   if ((inputs != NULL) && (inputl > 0)) {
-    svp = newSVpvn(inputs, inputl);
+    svp = newSVpvn((const char *) inputs, (STRLEN) inputl);
     if (is_utf8_string((const U8 *) inputs, (STRLEN) inputl)) {
       SvUTF8_on(svp);
     }
