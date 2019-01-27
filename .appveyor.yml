@@ -60,7 +60,7 @@ install:
   - cmake -G "NMake Makefiles" -DCMAKE_BUILD_TYPE=Debug -DALL_IN_ONE=TRUE .
   - SET PATH=C:\projects\c-marpaESLIF\output\lib;C:\projects\c-marpaESLIF\3rdparty\github\genericLogger\output\lib;C:\Program Files (x86)\Dr. Memory\bin;%PATH%
   - nmake selfTester
-  - drmemory.exe -batch -exit_code_if_errors 1 -results_to_stderr -summary -- output\lib\selfTester.exe
+  - drmemory.exe -batch -results_to_stderr -summary -- output\lib\selfTester.exe
   - if not exist "C:\strawberry" cinst strawberryperl
   - set PATH=C:\strawberry\perl\bin;C:\strawberry\perl\site\bin;C:\strawberry\c\bin;%PATH%
   - perl -V
@@ -99,7 +99,7 @@ test_script:
   - cd C:\projects\c-marpaESLIF
   - SET PATH=C:\projects\c-marpaESLIF\output\lib;C:\projects\c-marpaESLIF\3rdparty\github\genericLogger\output\lib;C:\Program Files (x86)\Dr. Memory\bin;%PATH%
   - nmake selfTester
-  - drmemory.exe -batch -exit_code_if_errors 1 -results_to_stderr -summary -- output\lib\selfTester.exe
+  - drmemory.exe -batch -results_to_stderr -summary -- output\lib\selfTester.exe
   - nmake check
   - nmake install
   - nmake pack
