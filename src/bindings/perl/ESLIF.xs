@@ -348,6 +348,7 @@ SV *boot_MarpaX__ESLIF_svp;
 SV *boot_MarpaX__ESLIF__UTF_8_svp;
 SV *boot_MarpaX__ESLIF__Math__BigFloat_svp;
 short boot_nvtype_is_long_doubleb;
+short boot_nvtype_is___float128;
 
 /*****************************************************************************/
 /* Macros                                                                    */
@@ -1587,6 +1588,7 @@ static short marpaESLIFPerl_importb(marpaESLIFValue_t *marpaESLIFValuep, void *u
     }
     break;
   case MARPAESLIF_VALUE_TYPE_FLOAT:
+    /* NVTYPE is at least double */
     svp = newSVnv((NVTYPE) marpaESLIFValueResultp->u.f);
     marpaESLIFPerl_GENERICSTACK_PUSH_PTR(&(Perl_MarpaX_ESLIF_Valuep->valueStack), svp);
     if (marpaESLIFPerl_GENERICSTACK_ERROR(&(Perl_MarpaX_ESLIF_Valuep->valueStack))) {
@@ -1594,7 +1596,7 @@ static short marpaESLIFPerl_importb(marpaESLIFValue_t *marpaESLIFValuep, void *u
     }
     break;
   case MARPAESLIF_VALUE_TYPE_DOUBLE:
-    /* NV is always at least double in perl. So at least we will not loose precision if it was long double */
+    /* NVTYPE is at least double */
     svp = newSVnv((NVTYPE) marpaESLIFValueResultp->u.d);
     marpaESLIFPerl_GENERICSTACK_PUSH_PTR(&(Perl_MarpaX_ESLIF_Valuep->valueStack), svp);
     if (marpaESLIFPerl_GENERICSTACK_ERROR(&(Perl_MarpaX_ESLIF_Valuep->valueStack))) {
@@ -1720,7 +1722,7 @@ static short marpaESLIFPerl_importb(marpaESLIFValue_t *marpaESLIFValuep, void *u
     }
     break;
   case MARPAESLIF_VALUE_TYPE_LONG_DOUBLE:
-    if (! boot_nvtype_is_long_doubleb) {
+    if ((! boot_nvtype_is_long_doubleb) && (! boot_nvtype_is___float128)) {
       /* Switch to Math::BigFloat - we must first generate a string representation of this long double. */
 #ifdef PERL_IMPLICIT_CONTEXT
       marpaESLIFPerl_stringGenerator.PerlInterpreterp = Perl_MarpaX_ESLIF_Valuep->PerlInterpreterp;
@@ -1751,6 +1753,7 @@ static short marpaESLIFPerl_importb(marpaESLIFValue_t *marpaESLIFValuep, void *u
       av_undef(listp);
 
     } else {
+      /* NVTYPE here is long double or __float128 */
       svp = newSVnv((NVTYPE) marpaESLIFValueResultp->u.ld);
       marpaESLIFPerl_GENERICSTACK_PUSH_PTR(&(Perl_MarpaX_ESLIF_Valuep->valueStack), svp);
       if (marpaESLIFPerl_GENERICSTACK_ERROR(&(Perl_MarpaX_ESLIF_Valuep->valueStack))) {
@@ -1865,6 +1868,7 @@ BOOT:
   sprintf(long_double_fmts, "%%%d.%dLe", LDBL_DIG + 8, LDBL_DIG);
   boot_MarpaX__ESLIF__Math__BigFloat_svp = newSVpvn("Math::BigFloat", strlen("Math::BigFloat"));
   boot_nvtype_is_long_doubleb = marpaESLIFPerl_call_methodb(aTHX_ boot_MarpaX__ESLIF_svp, "_nvtype_is_long_double");
+  boot_nvtype_is___float128 = marpaESLIFPerl_call_methodb(aTHX_ boot_MarpaX__ESLIF_svp, "_nvtype_is___float128");
 
 PROTOTYPES: ENABLE
 

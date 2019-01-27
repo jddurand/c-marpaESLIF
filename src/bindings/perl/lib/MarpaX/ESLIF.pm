@@ -17,6 +17,12 @@ use Config;
 sub _nvtype_is_long_double {
     return (($Config{nvtype} || '') =~ /^\s*long\s+double\s*$/) ? 1 : 0
 }
+#
+# Internal routine used at bootstrap that says is nvtype is a __float128
+#
+sub _nvtype_is___float128 {
+    return (($Config{nvtype} || '') eq '__float128') ? 1 : 0
+}
 
 BEGIN {
     # VERSION
