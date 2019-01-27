@@ -6353,7 +6353,7 @@ static short marpaESLIFLua_stack_setb(lua_State *L, marpaESLIFLuaValueContext_t 
   size_t                        tablel;
   size_t			tableNextl;
   short                         tableIsArrayb;
-  int                           i;
+  size_t                        i;
   int                           keyTypei;
   lua_Integer                   keyi;
   int                           keyIsNumi;
