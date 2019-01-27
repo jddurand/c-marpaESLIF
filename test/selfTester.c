@@ -259,6 +259,7 @@ int main() {
   char                        *grammarscripts;
 
   genericLoggerp = GENERICLOGGER_NEW(GENERICLOGGER_LOGLEVEL_TRACE);
+  GENERICLOGGER_LEVEL_SET(genericLoggerp, GENERICLOGGER_LOGLEVEL_INFO);
 
   marpaESLIFOption.genericLoggerp = genericLoggerp;
   marpaESLIFp = marpaESLIF_newp(&marpaESLIFOption);
@@ -367,6 +368,7 @@ int main() {
   }
 
   /* Play with defaults */
+  GENERICLOGGER_LEVEL_SET(marpaESLIFOption.genericLoggerp, GENERICLOGGER_LOGLEVEL_TRACE);
   for (leveli = 0; leveli < ngrammari; leveli++) {
     GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "Getting defaults of grammar at level %d", leveli);
     if (! marpaESLIFGrammar_defaults_by_levelb(marpaESLIFGrammarp, &marpaESLIFGrammarDefaults, leveli, NULL /* descp */)) {
@@ -400,8 +402,10 @@ int main() {
   exiti = 1;
 
  done:
+  GENERICLOGGER_LEVEL_SET(marpaESLIFOption.genericLoggerp, GENERICLOGGER_LOGLEVEL_INFO);
   marpaESLIFGrammar_freev(marpaESLIFGrammarp);
   marpaESLIF_freev(marpaESLIFp);
+  GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "Exiting with status %d", exiti);
   GENERICLOGGER_FREE(genericLoggerp);
   return exiti;
 }
