@@ -618,7 +618,7 @@ to augment. Recommended: 50 */
   marpaESLIFGrammar_freev(marpaESLIFGrammarp);
   marpaESLIF_freev(marpaESLIFp);
   GENERICLOGGER_FREE(genericLoggerp);
-  return exiti;
+  exit(exiti);
 }
 
 /*****************************************************************************/

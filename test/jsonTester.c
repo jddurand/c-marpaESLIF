@@ -290,7 +290,7 @@ int main() {
   marpaESLIF_freev(marpaESLIFp);
 
   GENERICLOGGER_FREE(genericLoggerp);
-  return exiti;
+  exit(exiti);
 }
 
 /*****************************************************************************/

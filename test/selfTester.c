@@ -407,7 +407,7 @@ int main() {
   marpaESLIF_freev(marpaESLIFp);
   GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "Exiting with status %d", exiti);
   GENERICLOGGER_FREE(genericLoggerp);
-  return exiti;
+  exit(exiti);
 }
 
 /*****************************************************************************/
