@@ -88,14 +88,14 @@ build_script:
   - cd C:\projects\c-marpaESLIF
   - perl CMakeObjects.PL
   - del /f /s /q output 1>nul
-  - cmake -G "NMake Makefiles" -DALL_IN_ONE=TRUE .
+  - cmake -G "NMake Makefiles" -DCMAKE_BUILD_TYPE=RelWithDebInfo -DALL_IN_ONE=TRUE .
   - nmake
 
 test_script:
   - cd C:\projects\c-marpaESLIF
   - SET PATH=C:\projects\c-marpaESLIF\output\lib;C:\projects\c-marpaESLIF\3rdparty\github\genericLogger\output\lib;C:\Program Files (x86)\Dr. Memory\bin;%PATH%
   - nmake selfTester
-  - drmemory.exe -batch -exit_code_if_errors 1 -results_to_stderr -summary -- output\lib\selfTester.exe > null 2>&1
+  - drmemory.exe -batch -exit_code_if_errors 1 -results_to_stderr -summary -- output\lib\selfTester.exe
   - nmake check
   - nmake install
   - nmake pack
