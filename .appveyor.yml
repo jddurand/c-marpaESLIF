@@ -1,4 +1,6 @@
-shallow_clone: true
+# Because of perl that requires to be a git repository, it must be a real clone
+# shallow_clone: true
+clone_depth: 50
 
 environment:
   matrix:
