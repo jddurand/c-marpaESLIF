@@ -396,7 +396,20 @@ extern "C" {
   /* marpaESLIFValue_stack_getAndForgetb transfers the memory management from the stack to the end-user in one call */
   /* It is nothing else but a wrapper on marpaESLIFValue_stack_getb followed by marpaESLIFValue_stack_forgetb */
   marpaESLIF_EXPORT short                         marpaESLIFValue_stack_getAndForgetb(marpaESLIFValue_t *marpaESLIFValuep, int indicei, marpaESLIFValueResult_t *marpaESLIFValueResultp);
-  /* marpaESLIFValue_importb takes the value at stack indice number indice and call import callback */
+  /* marpaESLIFValue_importb call the end-user importerp() function callback. */
+  /* ROW and TABLE types are flat'idified:                                                                                                                          */
+  /* - For an ROW type, all members are imported first in order, then the row marpaESLIFValueResult itself (which contains the number of elements in u.r.sizel)     */
+  /*   i.e. value[0], value[1], ... value[value.u.r.sizel - 1], value                                                                                               */
+  /* - For an TABLE type, all members are imported first in order, then the array marpaESLIFValueResult itself (which contains the number of elements in u.t.sizel) */
+  /*   i.e. table[0], table[1], ... table[table.u.t.sizel - 1], table                                                                                               */
+  /*   Since a table member is nothign else but a row with an even number of elements, it means this can be reinterpreted as:                                       */
+  /*        key[0],value[0]...,key[(table.u.t.sizel/2)-1],value[(table.u.t.sizel/2)-1]                                                                              */
+  /*                                                                                                                                                                */
+  /*   This mean that the importer callback should maintain an internal stack of marpaESLIFValueResult_t items everytime it is called and:                          */
+  /*   - push to its stack anything that is not a ROW or a TABLE                                                                                                    */
+  /*   - pop from its stack value.u.r.sizel   elements when it receives a ROW callback                                                                              */
+  /*   - pop from its stack value.u.t.sizel*2 elements when it receives a TABLE callback                                                                            */
+  /*   At the end it must have exactly one element in its internal stack.                                                                                           */
   marpaESLIF_EXPORT short                         marpaESLIFValue_importb(marpaESLIFValue_t *marpaESLIFValuep, marpaESLIFValueResult_t *marpaESLIFValueResultp, marpaESLIFValueResult_t *marpaESLIFValueResultResolvedp);
   /* marpaESLIFValue_stack_get_importb takes the value at stack indice number indice and call import callback */
   /* It is nothing else but a wrapper on marpaESLIFValue_stack_getp followed by marpaESLIFValue_importb */
