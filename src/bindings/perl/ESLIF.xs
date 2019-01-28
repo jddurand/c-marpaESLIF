@@ -1703,7 +1703,7 @@ static short marpaESLIFPerl_importb(marpaESLIFValue_t *marpaESLIFValuep, void *u
     }
     break;
   case MARPAESLIF_VALUE_TYPE_TABLE:
-  /* We pushed in the internal valueStack r.sizel*2 elements */
+  /* We pushed in the internal valueStack t.sizel*2 elements */
     hvp = newHV();
     for (i = marpaESLIFValueResultp->u.t.sizel; i > 0; i -= 2) {
       /* Note that Perl_MarpaX_ESLIF_Valuep->valueStack contains only new SV's, or &PL_sv_undef, &PL_sv_yes, &PL_sv_no */
