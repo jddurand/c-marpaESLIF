@@ -10,6 +10,16 @@ use MarpaX::ESLIF::String;   # Make sure it is loaded, the XS is using it
 
 use vars qw/$VERSION/;
 use Config;
+#
+# It is difficult to make perl communicate with other languages using
+# a "native" type, and the only unambiguous thingies are:
+# - undef (managed directly the XS)
+# - strict number (uses Types::Standard)
+# - integer (subset of the above)
+# - string is sort of catch-all fallback for scalars
+# - else data will remain opaque to perl
+#
+use Types::Standard qw//;
 
 #
 # Internal routine used at bootstrap that says is nvtype is a double
