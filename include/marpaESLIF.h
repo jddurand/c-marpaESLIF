@@ -397,6 +397,7 @@ extern "C" {
   /* It is nothing else but a wrapper on marpaESLIFValue_stack_getb followed by marpaESLIFValue_stack_forgetb */
   marpaESLIF_EXPORT short                         marpaESLIFValue_stack_getAndForgetb(marpaESLIFValue_t *marpaESLIFValuep, int indicei, marpaESLIFValueResult_t *marpaESLIFValueResultp);
   /* marpaESLIFValue_importb call the end-user importerp() function callback. */
+  /* -------------------------------------------------------------------------------------------------------------------------------------------------------------- */
   /* ROW and TABLE types are flat'idified:                                                                                                                          */
   /* - For an ROW type, all members are imported first in order, then the row marpaESLIFValueResult itself (which contains the number of elements in u.r.sizel)     */
   /*   i.e. value[0], value[1], ... value[value.u.r.sizel - 1], value                                                                                               */
@@ -410,6 +411,7 @@ extern "C" {
   /*   - pop from its stack value.u.r.sizel   elements when it receives a ROW callback                                                                              */
   /*   - pop from its stack value.u.t.sizel*2 elements when it receives a TABLE callback                                                                            */
   /*   At the end it must have exactly one element in its internal stack.                                                                                           */
+  /* -------------------------------------------------------------------------------------------------------------------------------------------------------------- */
   marpaESLIF_EXPORT short                         marpaESLIFValue_importb(marpaESLIFValue_t *marpaESLIFValuep, marpaESLIFValueResult_t *marpaESLIFValueResultp, marpaESLIFValueResult_t *marpaESLIFValueResultResolvedp);
   /* marpaESLIFValue_stack_get_importb takes the value at stack indice number indice and call import callback */
   /* It is nothing else but a wrapper on marpaESLIFValue_stack_getp followed by marpaESLIFValue_importb */
