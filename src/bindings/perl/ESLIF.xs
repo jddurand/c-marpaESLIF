@@ -454,8 +454,7 @@ short boot_nvtype_is___float128;
       size_t  _bytel;                                                   \
       char   *_encodings;                                               \
                                                                         \
-      _bytep = marpaESLIFPerl_sv2byte(aTHX_ _p, &_bytep, &_bytel, 1 /* encodingInformationb */, NULL /* characterStreambp */, &_encodings, NULL /* encodinglp */, 0 /* warnIsFatalb */); \
-      if (_bytep != NULL) {                                             \
+      if (marpaESLIFPerl_sv2byte(aTHX_ _p, &_bytep, &_bytel, 1 /* encodingInformationb */, NULL /* characterStreambp */, &_encodings, NULL /* encodinglp */, 0 /* warnIsFatalb */) != NULL) { \
         if (_encodings != NULL) {                                       \
           _marpaESLIFValueResult.type               = MARPAESLIF_VALUE_TYPE_STRING; \
           _marpaESLIFValueResult.contextp           = MARPAESLIFPERL_CONTEXT; \
@@ -1559,7 +1558,6 @@ static char *marpaESLIFPerl_sv2byte(pTHX_ SV *svp, char **bytepp, size_t *bytelp
   static const char *funcs = "marpaESLIFPerl_sv2byte";
   char              *rcp = NULL;
   short              okb   = 0;
-  SV                *svtmp;
   char              *strings;
   STRLEN             len;
   char              *bytep;
@@ -1573,12 +1571,8 @@ static char *marpaESLIFPerl_sv2byte(pTHX_ SV *svp, char **bytepp, size_t *bytelp
   if ((svp == NULL) || (svp == &PL_sv_undef)) {
     return NULL;
   }
-  
-  /* Because of the sv_mortalcopy below */
-  SAVETMPS;
 
-  svtmp = sv_mortalcopy(svp);
-  strings = SvPV(svtmp, len);
+  strings = SvPV(svp, len);
 
   if ((strings != NULL) && (len > 0)) {
     okb = 1;
@@ -1604,9 +1598,6 @@ static char *marpaESLIFPerl_sv2byte(pTHX_ SV *svp, char **bytepp, size_t *bytelp
     bytep = CopyD(strings, rcp, (int) len, char);
     bytel = (size_t) len;
   }
-
-  /* This will free the svtmp SV */
-  FREETMPS;
 
   if (okb) {
     if (bytepp != NULL) {
