@@ -6353,6 +6353,7 @@ static short marpaESLIFLua_stack_setb(lua_State *L, marpaESLIFLuaValueContext_t 
   size_t                        tablel;
   size_t			tableNextl;
   short                         tableIsArrayb;
+  short                         tableIsRecursiveb;
   size_t                        i;
   int                           keyTypei;
   lua_Integer                   keyi;
@@ -6557,6 +6558,7 @@ static short marpaESLIFLua_stack_setb(lua_State *L, marpaESLIFLuaValueContext_t 
         if (! marpaESLIFLua_lua_pushnil(L)) goto err;                                                   /* Stack: visitedTable, ..., xxx=table, nil */
         tablel = 0;
         tableIsArrayb = canarrayb;
+        tableIsRecursiveb = 0;
         while (1) {
           if (! marpaESLIFLua_luaL_pairsb(&nexti, L, -2, &iteratori, &statevariablei)) goto err;        /* Stack: visitedTable, ..., xxx=table, key, value */
           if (nexti == 0) break;
@@ -6577,8 +6579,9 @@ static short marpaESLIFLua_stack_setb(lua_State *L, marpaESLIFLuaValueContext_t 
             isnili = 0;
             if (! marpaESLIFLua_lua_isnil(&isnili, L, -1)) goto err;
             if (! isnili) {
-              marpaESLIFLua_luaL_error(L, "Table's key is a child of itself");
-              goto err;
+              if (! marpaESLIFLua_lua_pop(L, 3)) goto err;                                              /* Stack: visitedTable, ..., xxx=table */
+              tableIsRecursiveb = 1;
+              break;
             }
             if (! marpaESLIFLua_lua_pop(L, 1)) goto err;                                                /* Stack: visitedTable, ..., xxx=table, key, value */
             if (! marpaESLIFLua_lua_pushnil(L)) goto err;                                               /* Stack: visitedTable, ..., xxx=table, key, value, nil */
@@ -6602,119 +6605,125 @@ static short marpaESLIFLua_stack_setb(lua_State *L, marpaESLIFLuaValueContext_t 
             tableIsArrayb = 0;
           }
 
-          /* If value is a table, is it already visited ? */
-          if (! marpaESLIFLua_lua_type(&valueTypei, L, -1)) goto err;
-          if (valueTypei == LUA_TTABLE) {
-            if (! marpaESLIFLua_lua_pushnil(L)) goto err;                                               /* Stack: visitedTable, ..., xxx=table, key, value, nil */
-            if (! marpaESLIFLua_lua_copy(L, -2, -1)) goto err;                                          /* Stack: visitedTable, ..., xxx=table, key, value, value */
-            if (! marpaESLIFLua_lua_rawget(NULL, L, visitedTableIndicei)) goto err;                     /* Stack: visitedTable, ..., xxx=table, key, value, visitableTable[value] */
-            isnili = 0;
-            if (! marpaESLIFLua_lua_isnil(&isnili, L, -1)) goto err;
-            if (! isnili) {
-              marpaESLIFLua_luaL_error(L, "Table's value is a child of itself");
-              goto err;
+          if (! tableIsRecursiveb) {
+            /* If value is a table, is it already visited ? */
+            if (! marpaESLIFLua_lua_type(&valueTypei, L, -1)) goto err;
+            if (valueTypei == LUA_TTABLE) {
+              if (! marpaESLIFLua_lua_pushnil(L)) goto err;                                             /* Stack: visitedTable, ..., xxx=table, key, value, nil */
+              if (! marpaESLIFLua_lua_copy(L, -2, -1)) goto err;                                        /* Stack: visitedTable, ..., xxx=table, key, value, value */
+              if (! marpaESLIFLua_lua_rawget(NULL, L, visitedTableIndicei)) goto err;                   /* Stack: visitedTable, ..., xxx=table, key, value, visitableTable[value] */
+              isnili = 0;
+              if (! marpaESLIFLua_lua_isnil(&isnili, L, -1)) goto err;
+              if (! isnili) {
+                if (! marpaESLIFLua_lua_pop(L, 3)) goto err;                                            /* Stack: visitedTable, ..., xxx=table */
+                tableIsRecursiveb = 1;
+                break;
+              }
+              if (! marpaESLIFLua_lua_pop(L, 1)) goto err;                                              /* Stack: visitedTable, ..., xxx=table, key, value */
+              if (! marpaESLIFLua_lua_pushnil(L)) goto err;                                             /* Stack: visitedTable, ..., xxx=table, key, value, nil */
+              if (! marpaESLIFLua_lua_copy(L, -2, -1)) goto err;                                        /* Stack: visitedTable, ..., xxx=table, key, value, value */
+              if (! marpaESLIFLua_lua_pushboolean(L, 1)) goto err;                                      /* Stack: visitedTable, ..., xxx=table, key, value, value, true */
+              /* Set visitableTable[value] = true */
+              if (! marpaESLIFLua_lua_rawset(L, visitedTableIndicei)) goto err;                         /* Stack: visitedTable, ..., xxx=table, key, value */
             }
-            if (! marpaESLIFLua_lua_pop(L, 1)) goto err;                                                /* Stack: visitedTable, ..., xxx=table, key, value */
-            if (! marpaESLIFLua_lua_pushnil(L)) goto err;                                               /* Stack: visitedTable, ..., xxx=table, key, value, nil */
-            if (! marpaESLIFLua_lua_copy(L, -2, -1)) goto err;                                          /* Stack: visitedTable, ..., xxx=table, key, value, value */
-            if (! marpaESLIFLua_lua_pushboolean(L, 1)) goto err;                                        /* Stack: visitedTable, ..., xxx=table, key, value, value, true */
-            /* Set visitableTable[value] = true */
-            if (! marpaESLIFLua_lua_rawset(L, visitedTableIndicei)) goto err;                           /* Stack: visitedTable, ..., xxx=table, key, value */
           }
 
           if (! marpaESLIFLua_lua_pop(L, 1)) goto err;                                                  /* Stack: visitedTable, ..., xxx=table, key */
         }                                                                                               /* Stack: visitedTable, ..., xxx=table */
 
-        if (tableIsArrayb) {
-          sizel = tablel;
-          /* Allocate a marpaESLIFValueResult of type ROW of size tablel where we will secialize only the values  */
-          marpaESLIFValueResultp->contextp           = MARPAESLIFLUA_CONTEXT;
-          marpaESLIFValueResultp->representationp    = NULL;
-          marpaESLIFValueResultp->type               = MARPAESLIF_VALUE_TYPE_ROW;
-          marpaESLIFValueResultp->u.r.shallowb       = 0;
-          marpaESLIFValueResultp->u.r.sizel          = sizel; /* Number of value items */
-          if (sizel > 0) {
-            marpaESLIFValueResultp->u.r.p            = (marpaESLIFValueResult_t *) malloc(sizel * sizeof(marpaESLIFValueResult_t));
-            if (marpaESLIFValueResultp->u.r.p == NULL) {
-              marpaESLIFLua_luaL_errorf(L, "malloc failure, %s", strerror(errno));
-              goto err;
+        if (! tableIsRecursiveb) {
+          if (tableIsArrayb) {
+            sizel = tablel;
+            /* Allocate a marpaESLIFValueResult of type ROW of size tablel where we will secialize only the values  */
+            marpaESLIFValueResultp->contextp           = MARPAESLIFLUA_CONTEXT;
+            marpaESLIFValueResultp->representationp    = NULL;
+            marpaESLIFValueResultp->type               = MARPAESLIF_VALUE_TYPE_ROW;
+            marpaESLIFValueResultp->u.r.shallowb       = 0;
+            marpaESLIFValueResultp->u.r.sizel          = sizel; /* Number of value items */
+            if (sizel > 0) {
+              marpaESLIFValueResultp->u.r.p            = (marpaESLIFValueResult_t *) malloc(sizel * sizeof(marpaESLIFValueResult_t));
+              if (marpaESLIFValueResultp->u.r.p == NULL) {
+                marpaESLIFLua_luaL_errorf(L, "malloc failure, %s", strerror(errno));
+                goto err;
+              }
+              for (i = 0; i < sizel; i++) {
+                marpaESLIFValueResultp->u.r.p[i].type  = MARPAESLIF_VALUE_TYPE_UNDEF;
+              }
+            } else {
+              marpaESLIFValueResultp->u.r.p = NULL;
             }
-            for (i = 0; i < sizel; i++) {
-              marpaESLIFValueResultp->u.r.p[i].type  = MARPAESLIF_VALUE_TYPE_UNDEF;
-            }
-          } else {
-            marpaESLIFValueResultp->u.r.p = NULL;
-          }
 
-          /* Process the table content - and push items in an order synchronized with marpaESLIFValueResult allocated array */
-          for (i = 0, arrayl = 1; i < sizel; i++, arrayl++) {
-            if (! marpaESLIFLua_lua_rawgeti(NULL, L, currenti, arrayl)) goto err;                      /* Stack: visitedTable, ..., xxx=table, table[i] */
+            /* Process the table content - and push items in an order synchronized with marpaESLIFValueResult allocated array */
+            for (i = 0, arrayl = 1; i < sizel; i++, arrayl++) {
+              if (! marpaESLIFLua_lua_rawgeti(NULL, L, currenti, arrayl)) goto err;                    /* Stack: visitedTable, ..., xxx=table, table[i] */
 
-            GENERICSTACK_PUSH_PTR(marpaESLIFValueResultStackp, &(marpaESLIFValueResultp->u.r.p[i]));
-            if (GENERICSTACK_ERROR(marpaESLIFValueResultStackp)) {
-              marpaESLIFLua_luaL_errorf(L, "marpaESLIFValueResultStackp push failure, %s", strerror(errno));
-              goto err;
+              GENERICSTACK_PUSH_PTR(marpaESLIFValueResultStackp, &(marpaESLIFValueResultp->u.r.p[i]));
+              if (GENERICSTACK_ERROR(marpaESLIFValueResultStackp)) {
+                marpaESLIFLua_luaL_errorf(L, "marpaESLIFValueResultStackp push failure, %s", strerror(errno));
+                goto err;
+              }
             }
-          }
         
-        } else {
-          /* Allocate a marpaESLIFValueResult of type TABLE of size tablel*2 where every key and value will be adjacent  */
-          /* Pushing {key,value} items in order is irrelevant here because lua does NOT guarantee that lua_next preserves */
-          /* the insertion order. */
-          sizel = tablel * 2;
-          if (sizel < tablel) {
-            marpaESLIFLua_luaL_error(L, "lua_Integer turnaround when computing table size");
-            goto err;
-          }
-          marpaESLIFValueResultp->contextp           = MARPAESLIFLUA_CONTEXT;
-          marpaESLIFValueResultp->representationp    = NULL;
-          marpaESLIFValueResultp->type               = MARPAESLIF_VALUE_TYPE_TABLE;
-          marpaESLIFValueResultp->u.r.shallowb       = 0;
-          marpaESLIFValueResultp->u.r.sizel          = sizel; /* Number of key and value items */
-          if (sizel > 0) {
-            marpaESLIFValueResultp->u.r.p            = (marpaESLIFValueResult_t *) malloc(sizel * sizeof(marpaESLIFValueResult_t));
-            if (marpaESLIFValueResultp->u.r.p == NULL) {
-              marpaESLIFLua_luaL_errorf(L, "malloc failure, %s", strerror(errno));
-              goto err;
-            }
-            for (i = 0; i < sizel; i++) {
-              marpaESLIFValueResultp->u.r.p[i].type  = MARPAESLIF_VALUE_TYPE_UNDEF;
-            }
           } else {
-            marpaESLIFValueResultp->u.r.p = NULL;
+            /* Allocate a marpaESLIFValueResult of type TABLE of size tablel*2 where every key and value will be adjacent  */
+            /* Pushing {key,value} items in order is irrelevant here because lua does NOT guarantee that lua_next preserves */
+            /* the insertion order. */
+            sizel = tablel * 2;
+            if (sizel < tablel) {
+              marpaESLIFLua_luaL_error(L, "lua_Integer turnaround when computing table size");
+              goto err;
+            }
+            marpaESLIFValueResultp->contextp           = MARPAESLIFLUA_CONTEXT;
+            marpaESLIFValueResultp->representationp    = NULL;
+            marpaESLIFValueResultp->type               = MARPAESLIF_VALUE_TYPE_TABLE;
+            marpaESLIFValueResultp->u.r.shallowb       = 0;
+            marpaESLIFValueResultp->u.r.sizel          = sizel; /* Number of key and value items */
+            if (sizel > 0) {
+              marpaESLIFValueResultp->u.r.p            = (marpaESLIFValueResult_t *) malloc(sizel * sizeof(marpaESLIFValueResult_t));
+              if (marpaESLIFValueResultp->u.r.p == NULL) {
+                marpaESLIFLua_luaL_errorf(L, "malloc failure, %s", strerror(errno));
+                goto err;
+              }
+              for (i = 0; i < sizel; i++) {
+                marpaESLIFValueResultp->u.r.p[i].type  = MARPAESLIF_VALUE_TYPE_UNDEF;
+              }
+            } else {
+              marpaESLIFValueResultp->u.r.p = NULL;
+            }
+
+            /* Process the table content */
+            if (! marpaESLIFLua_lua_pushnil(L)) goto err;                                               /* Stack: visitedTable, ..., xxx=table, nil */
+            sizel = 0;
+            while (1) {
+              if (! marpaESLIFLua_luaL_pairsb(&nexti, L, currenti, &iteratori, &statevariablei)) goto err;/* Stack: visitedTable, ..., xxx=table, key, value */
+              if (nexti == 0) break;
+
+              /* Push room for key */
+              GENERICSTACK_PUSH_PTR(marpaESLIFValueResultStackp, &(marpaESLIFValueResultp->u.r.p[sizel++]));
+              if (GENERICSTACK_ERROR(marpaESLIFValueResultStackp)) {
+                marpaESLIFLua_luaL_errorf(L, "marpaESLIFValueResultStackp push failure, %s", strerror(errno));
+                goto err;
+              }
+              if (! marpaESLIFLua_lua_pushnil(L)) goto err;                                             /* Stack: visitedTable, ..., xxx=table, key, value, nil */
+              if (! marpaESLIFLua_lua_copy(L, -3, -1)) goto err;                                        /* Stack: visitedTable, ..., xxx=table, key, value, key */
+
+              /* Push room for value */
+              GENERICSTACK_PUSH_PTR(marpaESLIFValueResultStackp, &(marpaESLIFValueResultp->u.r.p[sizel++]));
+              if (GENERICSTACK_ERROR(marpaESLIFValueResultStackp)) {
+                marpaESLIFLua_luaL_errorf(L, "marpaESLIFValueResultStackp push failure, %s", strerror(errno));
+                goto err;
+              }
+              if (! marpaESLIFLua_lua_pushnil(L)) goto err;                                             /* Stack: visitedTable, ..., xxx=table, key, value, key, nil */
+              if (! marpaESLIFLua_lua_copy(L, -3, -1)) goto err;                                        /* Stack: visitedTable, ..., xxx=table, key, value, key, value */
+
+              if (! marpaESLIFLua_lua_pop(L, 1)) goto err;                                              /* Stack: visitedTable, ..., xxx=table, key, value, key */
+            }                                                                                           /* Stack: visitedTable, ..., xxx=table, key, value */
           }
-
-          /* Process the table content */
-          if (! marpaESLIFLua_lua_pushnil(L)) goto err;                                                 /* Stack: visitedTable, ..., xxx=table, nil */
-          sizel = 0;
-          while (1) {
-            if (! marpaESLIFLua_luaL_pairsb(&nexti, L, currenti, &iteratori, &statevariablei)) goto err;/* Stack: visitedTable, ..., xxx=table, key, value */
-            if (nexti == 0) break;
-
-            /* Push room for key */
-            GENERICSTACK_PUSH_PTR(marpaESLIFValueResultStackp, &(marpaESLIFValueResultp->u.r.p[sizel++]));
-            if (GENERICSTACK_ERROR(marpaESLIFValueResultStackp)) {
-              marpaESLIFLua_luaL_errorf(L, "marpaESLIFValueResultStackp push failure, %s", strerror(errno));
-              goto err;
-            }
-            if (! marpaESLIFLua_lua_pushnil(L)) goto err;                                               /* Stack: visitedTable, ..., xxx=table, key, value, nil */
-            if (! marpaESLIFLua_lua_copy(L, -3, -1)) goto err;                                          /* Stack: visitedTable, ..., xxx=table, key, value, key */
-
-            /* Push room for value */
-            GENERICSTACK_PUSH_PTR(marpaESLIFValueResultStackp, &(marpaESLIFValueResultp->u.r.p[sizel++]));
-            if (GENERICSTACK_ERROR(marpaESLIFValueResultStackp)) {
-              marpaESLIFLua_luaL_errorf(L, "marpaESLIFValueResultStackp push failure, %s", strerror(errno));
-              goto err;
-            }
-            if (! marpaESLIFLua_lua_pushnil(L)) goto err;                                               /* Stack: visitedTable, ..., xxx=table, key, value, key, nil */
-            if (! marpaESLIFLua_lua_copy(L, -3, -1)) goto err;                                          /* Stack: visitedTable, ..., xxx=table, key, value, key, value */
-
-            if (! marpaESLIFLua_lua_pop(L, 1)) goto err;                                                /* Stack: visitedTable, ..., xxx=table, key, value, key */
-          }                                                                                             /* Stack: visitedTable, ..., xxx=table, key, value */
+          eslifb = 1;
+        } else {        /* ! tableIsRecursiveb */
+          eslifb = 0;
         }
-
-        eslifb = 1;
-      }
+      } /* ! opaqueb */
       break;
     default:
       break;
