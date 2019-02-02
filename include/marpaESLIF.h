@@ -129,7 +129,12 @@ typedef struct marpaESLIFValueResultRow {
   short                       shallowb;
   size_t                      sizel;
 } marpaESLIFValueResultRow_t;
-typedef marpaESLIFValueResultRow_t marpaESLIFValueResultTable_t;
+typedef struct marpaESLIFValueResultPair marpaESLIFValueResultPair_t;
+typedef struct marpaESLIFValueResultTable {
+  marpaESLIFValueResultPair_t *p;
+  short                        shallowb;
+  size_t                       sizel;
+} marpaESLIFValueResultTable_t;
 typedef long double marpaESLIFValueResultLongDouble_t;
 struct marpaESLIFValueResult {
   void                      *contextp;          /* Free value meaningful only to the user */
@@ -150,6 +155,11 @@ struct marpaESLIFValueResult {
     marpaESLIFValueResultTable_t       t; /* Value is a row of values, where sizel is even */
     marpaESLIFValueResultLongDouble_t ld; /* Value is a long double */
   } u;
+};
+/* Now that marpaESLIFValueResult is defined, we can define the pair */
+struct marpaESLIFValueResultPair {
+  marpaESLIFValueResult_t    key;
+  marpaESLIFValueResult_t    value;
 };
 
 /* An alternative from external lexer point of view */
