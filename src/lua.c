@@ -1087,8 +1087,6 @@ static short marpaESLIFLua_luaL_checktype(lua_State *L, int arg, int t)
 /****************************************************************************/
 {
   return ! luaunpanicL_checktype(L, arg, t);
-
-  return 1;
 }
 
 /****************************************************************************/
