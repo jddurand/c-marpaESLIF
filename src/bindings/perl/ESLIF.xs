@@ -11,6 +11,7 @@
 #include <errno.h>
 #include <string.h>
 #include <float.h>
+#include <limits.h>
 
 /* Try to play with LDBL_DIG */
 #ifndef DBL_DIG
@@ -333,6 +334,8 @@ static short                           marpaESLIFPerl_importb(marpaESLIFValue_t 
 static void                            marpaESLIFPerl_generateStringWithLoggerCallback(void *userDatavp, genericLoggerLevel_t logLeveli, const char *msgs);
 static short                           marpaESLIFPerl_appendOpaqueDataToStringGenerator(marpaESLIFPerl_stringGenerator_t *marpaESLIFPerl_stringGeneratorp, char *p, size_t sizel);
 static short                           marpaESLIFPerl_is_undef(pTHX_ SV *svp);
+static short                           marpaESLIFPerl_is_arrayref(pTHX_ SV *svp);
+static short                           marpaESLIFPerl_is_hashref(pTHX_ SV *svp);
 static short                           marpaESLIFPerl_is_Types__Standard(pTHX_ SV *svp, const char *types);
 static void                            marpaESLIFPerl_stack_setv(pTHX_ marpaESLIFValue_t *marpaESLIFValuep, short resulti, SV *svp);
 
@@ -1857,6 +1860,20 @@ static short marpaESLIFPerl_is_undef(pTHX_ SV *svp)
 }
 
 /*****************************************************************************/
+static short marpaESLIFPerl_is_arrayref(pTHX_ SV *svp)
+/*****************************************************************************/
+{
+  return (marpaESLIFPerl_getTypei(aTHX_ svp) == ARRAYREF);
+}
+
+/*****************************************************************************/
+static short marpaESLIFPerl_is_hashref(pTHX_ SV *svp)
+/*****************************************************************************/
+{
+  return (marpaESLIFPerl_getTypei(aTHX_ svp) == HASHREF);
+}
+
+/*****************************************************************************/
 static short marpaESLIFPerl_is_Types__Standard(pTHX_ SV *svp, const char *types)
 /*****************************************************************************/
 {
@@ -1886,7 +1903,6 @@ static void marpaESLIFPerl_stack_setv(pTHX_ marpaESLIFValue_t *marpaESLIFValuep,
   char                    *encodings;
   IV                       iv;
   NV                       nv;
-  short                    nvokb;
 
   if (marpaESLIFPerl_is_undef(aTHX_ svp)) {
     marpaESLIFValueResult.type            = MARPAESLIF_VALUE_TYPE_UNDEF;
@@ -1894,33 +1910,53 @@ static void marpaESLIFPerl_stack_setv(pTHX_ marpaESLIFValue_t *marpaESLIFValuep,
     marpaESLIFValueResult.representationp = NULL;
     opaqueb = 0;
   } else if (marpaESLIFPerl_is_Types__Standard(aTHX_ svp, "Types::Standard::is_Int")) {
-    /* Ok if it fits into [INT_MIN,INT_MAX] and we loosed nothing */
     iv = SvIV(svp);
-    if ((iv >= INT_MIN) && (iv <= INT_MAX) && (sv_cmp(svp, sv_2mortal(newSViv(iv))) == 0)) {
-      marpaESLIFValueResult.type            = MARPAESLIF_VALUE_TYPE_INT;
-      marpaESLIFValueResult.contextp        = MARPAESLIFPERL_CONTEXT;
-      marpaESLIFValueResult.representationp = NULL;
-      marpaESLIFValueResult.u.i             = (int) iv;
-      opaqueb = 0;
+    if (sv_cmp(svp, sv_2mortal(newSViv(iv))) == 0) {
+      /* Ok if we loosed nothing */
+      if ((iv >= SHRT_MIN) && (iv <= SHRT_MAX)) {
+        /* Ok if it fits into [SHRT_MIN,SHRT_MAX] */
+        marpaESLIFValueResult.type            = MARPAESLIF_VALUE_TYPE_SHORT;
+        marpaESLIFValueResult.contextp        = MARPAESLIFPERL_CONTEXT;
+        marpaESLIFValueResult.representationp = NULL;
+        marpaESLIFValueResult.u.b             = (short) iv;
+        opaqueb = 0;
+      } else if ((iv >= INT_MIN) && (iv <= INT_MAX)) {
+        /* Ok if it fits into [INT_MIN,INT_MAX] */
+        marpaESLIFValueResult.type            = MARPAESLIF_VALUE_TYPE_INT;
+        marpaESLIFValueResult.contextp        = MARPAESLIFPERL_CONTEXT;
+        marpaESLIFValueResult.representationp = NULL;
+        marpaESLIFValueResult.u.i             = (int) iv;
+        opaqueb = 0;
+      } else if ((iv >= LONG_MIN) && (iv <= LONG_MAX)) {
+        /* Ok if it fits into [LONG_MIN,LONG_MAX] */
+        marpaESLIFValueResult.type            = MARPAESLIF_VALUE_TYPE_LONG;
+        marpaESLIFValueResult.contextp        = MARPAESLIFPERL_CONTEXT;
+        marpaESLIFValueResult.representationp = NULL;
+        marpaESLIFValueResult.u.l             = (long) iv;
+        opaqueb = 0;
+      }
     }
   } else if (marpaESLIFPerl_is_Types__Standard(aTHX_ svp, "Types::Standard::is_StrictNum")) {
     /* Ok if it fits into [DBL_MIN,DBL_MAX] and we loosed nothing */
     nv = SvNV(svp);
-    nvokb = (sv_cmp(svp, sv_2mortal(newSViv(iv))) == 0);
-    if ((nv >= DBL_MIN) && (nv <= DBL_MAX) && nvokb) {
-      marpaESLIFValueResult.type            = MARPAESLIF_VALUE_TYPE_DOUBLE;
-      marpaESLIFValueResult.contextp        = MARPAESLIFPERL_CONTEXT;
-      marpaESLIFValueResult.representationp = NULL;
-      marpaESLIFValueResult.u.d             = (double) nv;
-      opaqueb = 0;
-    }
-    /* Or if it fits into [LDBL_MIN,LDBL_MAX] and we loosed nothing */
-    else if ((nv >= LDBL_MIN) && (nv <= LDBL_MAX) && nvokb) {
+    if (sv_cmp(svp, sv_2mortal(newSVnv(nv))) == 0) {
+#if defined(USE_LONG_DOUBLE) && defined(HAS_LONG_DOUBLE)
+      /* NVTYPE is long double -; */
       marpaESLIFValueResult.type            = MARPAESLIF_VALUE_TYPE_LONG_DOUBLE;
       marpaESLIFValueResult.contextp        = MARPAESLIFPERL_CONTEXT;
       marpaESLIFValueResult.representationp = NULL;
-      marpaESLIFValueResult.u.ld           = (long double) nv;
+      marpaESLIFValueResult.u.ld            = nv; /* In theory no need to cast */
       opaqueb = 0;
+#else
+# if ! defined(USE_QUADMATH)
+      /* NVTYPE is double -; */
+      marpaESLIFValueResult.type            = MARPAESLIF_VALUE_TYPE_DOUBLE;
+      marpaESLIFValueResult.contextp        = MARPAESLIFPERL_CONTEXT;
+      marpaESLIFValueResult.representationp = NULL;
+      marpaESLIFValueResult.u.ld            = nv; /* In theory no need to cast */
+      opaqueb = 0;
+#  endif
+#endif
     }
   } else if (marpaESLIFPerl_is_Types__Standard(aTHX_ svp, "Types::Standard::is_Str")) {
     /* Ok it this is a scalar in general - perl will recoerce it back */
