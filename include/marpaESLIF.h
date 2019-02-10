@@ -423,9 +423,6 @@ extern "C" {
   /*   At the end it must have exactly one element in its internal stack.                                                                                           */
   /* -------------------------------------------------------------------------------------------------------------------------------------------------------------- */
   marpaESLIF_EXPORT short                         marpaESLIFValue_importb(marpaESLIFValue_t *marpaESLIFValuep, marpaESLIFValueResult_t *marpaESLIFValueResultp, marpaESLIFValueResult_t *marpaESLIFValueResultResolvedp);
-  /* marpaESLIFValue_stack_get_importb takes the value at stack indice number indice and call import callback */
-  /* It is nothing else but a wrapper on marpaESLIFValue_stack_getp followed by marpaESLIFValue_importb */
-  marpaESLIF_EXPORT short                         marpaESLIFValue_stack_get_importb(marpaESLIFValue_t *marpaESLIFValuep, int indicei);
 
   marpaESLIF_EXPORT void                          marpaESLIF_freev(marpaESLIF_t *marpaESLIFp);
 
