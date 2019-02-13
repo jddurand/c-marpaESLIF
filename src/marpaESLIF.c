@@ -9456,7 +9456,6 @@ static short _marpaESLIFValue_ruleCallbackWrapperb(void *userDatavp, int rulei, 
       MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Hide value changed stack indices: [%d] = [%d-%d]", resulti, arg0i, argni);
     }
 
-#ifdef MARPAESLIF_EXPORT_IMPORT
     /* We export to host */
     for (i = arg0i; i <= argni; i++) {
       marpaESLIFValueResultp = marpaESLIFValue_stack_getp(marpaESLIFValuep, i);
@@ -9467,7 +9466,6 @@ static short _marpaESLIFValue_ruleCallbackWrapperb(void *userDatavp, int rulei, 
         goto err;
       }
     }
-#endif
 
     /* We call the action */
     if (! ruleCallbackp(marpaESLIFValueOption.userDatavp, marpaESLIFValuep, arg0i, argni, resulti, 0 /* nullableb */)) {
@@ -9476,14 +9474,12 @@ static short _marpaESLIFValue_ruleCallbackWrapperb(void *userDatavp, int rulei, 
       goto err;
     }
 
-#ifdef MARPAESLIF_EXPORT_IMPORT
     /* We import from host and inject the result */
     if ((! _marpaESLIFValue_exchangeb(marpaESLIFValuep, &marpaESLIFValueResult, resulti))
         ||
         (! _marpaESLIFValue_stack_setb(marpaESLIFValuep, resulti, &marpaESLIFValueResult))) {
       goto err;
     }
-#endif
   }
 
   rcb = 1;
@@ -9556,7 +9552,6 @@ static inline short _marpaESLIFValue_anySymbolCallbackWrapperb(void *userDatavp,
   }
 
   if (symbolCallbackp != NULL) {
-#ifdef MARPAESLIF_EXPORT_IMPORT
     /* We generate an ARRAY type on stack */
     marpaESLIFValueResult.type         = MARPAESLIF_VALUE_TYPE_ARRAY;
     marpaESLIFValueResult.u.a.p        = bytep;
@@ -9566,7 +9561,6 @@ static inline short _marpaESLIFValue_anySymbolCallbackWrapperb(void *userDatavp,
     if (! _marpaESLIFValue_exchangeb(marpaESLIFValuep, &marpaESLIFValueResult, -1 /* resulti */)) {
       goto err;
     }
-#endif
     /* We call the symbol action */
     if (! symbolCallbackp(marpaESLIFValueOption.userDatavp, marpaESLIFValuep, bytep, bytel, resulti)) {
       /* marpaWrapper logging will not give symbol description, so do we */
@@ -9574,11 +9568,19 @@ static inline short _marpaESLIFValue_anySymbolCallbackWrapperb(void *userDatavp,
       goto err;
     }
   } else {
+    /* Only nullable actions can resolve to a rule callback: nothing to import */
     if (! ruleCallbackp(marpaESLIFValueOption.userDatavp, marpaESLIFValuep, -1, -1, resulti, nullableb)) {
       /* marpaWrapper logging will not give symbol description, so do we */
       MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "Action %s failed for symbol: %s", marpaESLIFValuep->actions, symbolp->descp->asciis);
       goto err;
     }
+  }
+
+  /* We import from host and inject the result */
+  if ((! _marpaESLIFValue_exchangeb(marpaESLIFValuep, &marpaESLIFValueResult, resulti))
+      ||
+      (! _marpaESLIFValue_stack_setb(marpaESLIFValuep, resulti, &marpaESLIFValueResult))) {
+    goto err;
   }
 
   rcb = 1;
