@@ -636,9 +636,10 @@ static jobject marpaESLIFRuleProperties(JNIEnv *envp, marpaESLIFRuleProperty_t *
 static jobject marpaESLIFSymbolProperties(JNIEnv *envp, marpaESLIFSymbolProperty_t *symbolPropertyp);
 static jobject marpaESLIFGetObjectp(marpaESLIFValueContext_t *marpaESLIFValueContextp, marpaESLIFValue_t *marpaESLIFValuep, int stackindicei, char *bytep, size_t bytel, marpaESLIFValueResult_t *marpaESLIFValueResultp);
 static short marpaESLIFJava_importb(marpaESLIFValue_t *marpaESLIFValuep, void *userDatavp, marpaESLIFValueResult_t *marpaESLIFValueResultp);
-static jstring                         marpaESLIF_marpaESLIFStringToJavap(JNIEnv *envp, marpaESLIFString_t *marpaESLIFStringp);
-static jstring                         marpaESLIF_marpaESLIFASCIIToJavap(JNIEnv *envp, char *asciis);
-static jstring                         marpaESLIF_marpaESLIFActionToJavap(JNIEnv *envp, marpaESLIFAction_t *actionp);
+static short marpaESLIFJava_exportb(marpaESLIFValue_t *marpaESLIFValuep, void *userDatavp, marpaESLIFValueResult_t *marpaESLIFValueResultp);
+static jstring marpaESLIF_marpaESLIFStringToJavap(JNIEnv *envp, marpaESLIFString_t *marpaESLIFStringp);
+static jstring marpaESLIF_marpaESLIFASCIIToJavap(JNIEnv *envp, char *asciis);
+static jstring marpaESLIF_marpaESLIFActionToJavap(JNIEnv *envp, marpaESLIFAction_t *actionp);
 
 /* --------------- */
 /* Internal macros */
@@ -1823,6 +1824,7 @@ JNIEXPORT jboolean JNICALL Java_org_parser_marpa_ESLIFGrammar_jniParse(JNIEnv *e
   marpaESLIFValueOption.symbolActionResolverp          = marpaESLIFValueSymbolActionResolver;
   marpaESLIFValueOption.freeActionResolverp            = marpaESLIFValueFreeActionResolver;
   marpaESLIFValueOption.importerp                      = marpaESLIFJava_importb;
+  marpaESLIFValueOption.exporterp                      = marpaESLIFJava_exportb;
   marpaESLIFValueOption.highRankOnlyb                  = ((*envp)->CallBooleanMethod(envp, eslifValueInterfacep, MARPAESLIF_ESLIFVALUEINTERFACE_CLASS_isWithHighRankOnly_METHODP) == JNI_TRUE);
   if (HAVEEXCEPTION(envp)) {
     goto err;
@@ -3691,6 +3693,7 @@ JNIEXPORT void JNICALL Java_org_parser_marpa_ESLIFValue_jniNew(JNIEnv *envp, job
   marpaESLIFValueOption.symbolActionResolverp = marpaESLIFValueSymbolActionResolver;
   marpaESLIFValueOption.freeActionResolverp   = marpaESLIFValueFreeActionResolver;
   marpaESLIFValueOption.importerp             = marpaESLIFJava_importb;
+  marpaESLIFValueOption.exporterp             = marpaESLIFJava_exportb;
   marpaESLIFValueOption.highRankOnlyb         = ((*envp)->CallBooleanMethod(envp, eslifValueInterfacep, MARPAESLIF_ESLIFVALUEINTERFACE_CLASS_isWithHighRankOnly_METHODP) == JNI_TRUE);
   if (HAVEEXCEPTION(envp)) {
     goto err;
@@ -4891,7 +4894,7 @@ static jobject marpaESLIFGetObjectp(marpaESLIFValueContext_t *marpaESLIFValueCon
     }
   }
 
-  if (! marpaESLIFValue_importb(marpaESLIFValuep, marpaESLIFValueResultp, NULL /* marpaESLIFValueResultResolvedp */)) {
+  if (! marpaESLIFValue_importb(marpaESLIFValuep, marpaESLIFValueResultp)) {
     RAISEEXCEPTIONF(marpaESLIFValueContextp->envp, "marpaESLIFValue_importb failure, %s", strerror(errno));
   }
 
@@ -5150,6 +5153,18 @@ static short marpaESLIFJava_importb(marpaESLIFValue_t *marpaESLIFValuep, void *u
     }
   }
   return rcb;
+}
+
+/*****************************************************************************/
+static short marpaESLIFJava_exportb(marpaESLIFValue_t *marpaESLIFValuep, void *userDatavp, marpaESLIFValueResult_t *marpaESLIFValueResultp)
+/*****************************************************************************/
+{
+  static const char        *funcs                   = "marpaESLIFJava_exportb";
+  marpaESLIFValueContext_t *marpaESLIFValueContextp = (marpaESLIFValueContext_t *) userDatavp;
+  JNIEnv                   *envp                    = marpaESLIFValueContextp->envp;
+
+  errno = ENOSYS;
+  return 0;
 }
 
 /*****************************************************************************/

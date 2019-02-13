@@ -74,8 +74,18 @@ Log::Log4perl::init(\$defaultLog4perlConf);
 Log::Any::Adapter->set('Log4perl');
 
 my $grammar = q{
-Output ::= Input action => output
+Output ::= LuaProxy action => output
+LuaProxy ::= Input action => ::lua->lua_proxy
 Input ::= /.+/   action => input
+
+<luascript>
+  io.stdout:setvbuf 'no'
+
+  function lua_proxy(input)
+    io.write(string.format('In lua_proxy\n'))
+    return input
+  end
+</luascript>
 };
 
 my $eslif = MarpaX::ESLIF->new($log);

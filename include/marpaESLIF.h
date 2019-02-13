@@ -169,15 +169,18 @@ typedef struct marpaESLIFAlternative {
   size_t                     grammarLengthl; /* Length within the grammar (1 in the token-stream model) */
 } marpaESLIFAlternative_t;
 
-/* Ask the host system to import a marpaESLIFValueResult */
-typedef short (*marpaESLIFValueResultImport_t)(marpaESLIFValue_t *marpaESLIFValuep, void *userDatavp, marpaESLIFValueResult_t *marpaESLIFValueResultp);
+/* Generic data exchange callback, used in both directions */
+typedef short (*marpaESLIFValueResultExchange_t)(marpaESLIFValue_t *marpaESLIFValuep, void *userDatavp, marpaESLIFValueResult_t *marpaESLIFValueResultp);
+typedef short (*marpaESLIFValueResultUnfold_t)(marpaESLIFValue_t *marpaESLIFValuep, void *userDatavp, marpaESLIFValueResult_t *marpaESLIFValueResultOriginp, marpaESLIFValueResult_t *marpaESLIFValueResultArrayp);
 
 typedef struct marpaESLIFValueOption {
   void                                 *userDatavp;            /* User specific context */
   marpaESLIFValueRuleActionResolver_t   ruleActionResolverp;   /* Will return the function doing the wanted rule action */
   marpaESLIFValueSymbolActionResolver_t symbolActionResolverp; /* Will return the function doing the wanted symbol action */
   marpaESLIFValueFreeActionResolver_t   freeActionResolverp;   /* Will return the function doing the free */
-  marpaESLIFValueResultImport_t         importerp;             /* Will ask end-user to import a marpaESLIFValueResult */
+  marpaESLIFValueResultExchange_t       importerp;             /* Will ask end-user to import a marpaESLIFValueResult */
+  marpaESLIFValueResultExchange_t       exporterp;             /* Will ask end-user to export a marpaESLIFValueResult */
+  marpaESLIFValueResultUnfold_t         unfolderp;             /* For import/export, unfold a container (i.e. a ROW or a TABLE) */
   short                                 highRankOnlyb;         /* Default: 1 */
   short                                 orderByRankb;          /* Default: 1 */
   short                                 ambiguousb;            /* Default: 0 */
@@ -406,23 +409,39 @@ extern "C" {
   /* marpaESLIFValue_stack_getAndForgetb transfers the memory management from the stack to the end-user in one call */
   /* It is nothing else but a wrapper on marpaESLIFValue_stack_getb followed by marpaESLIFValue_stack_forgetb */
   marpaESLIF_EXPORT short                         marpaESLIFValue_stack_getAndForgetb(marpaESLIFValue_t *marpaESLIFValuep, int indicei, marpaESLIFValueResult_t *marpaESLIFValueResultp);
-  /* marpaESLIFValue_importb call the end-user importerp() function callback. */
+  /* -------------------------------------------------------------------------------------------------------------------------------------------------------------- */
+  /* marpaESLIFValue_importb is a helper method that calls the end-user importerp() function callback.                                                              */
+  /* marpaESLIFValue_exportb is a helper method that calls the end-user exporterp() function callback.                                                              */
   /* -------------------------------------------------------------------------------------------------------------------------------------------------------------- */
   /* ROW and TABLE types are flat'idified:                                                                                                                          */
-  /* - For an ROW type, all members are imported first in order, then the row marpaESLIFValueResult itself (which contains the number of elements in u.r.sizel)     */
+  /* - For an ROW type, all members are exchanged first in order, then the row marpaESLIFValueResult itself (which contains the number of elements in u.r.sizel)    */
   /*   i.e. value[0], value[1], ... value[value.u.r.sizel - 1], value                                                                                               */
-  /* - For an TABLE type, all members are imported first in order, then the array marpaESLIFValueResult itself (which contains the number of elements in u.t.sizel) */
-  /*   i.e. table[0], table[1], ... table[table.u.t.sizel - 1], table                                                                                               */
-  /*   Since a table member is nothign else but a row with an even number of elements, it means this can be reinterpreted as:                                       */
-  /*        key[0],value[0]...,key[(table.u.t.sizel/2)-1],value[(table.u.t.sizel/2)-1]                                                                              */
+  /* - For an TABLE type, all key/value members are exchanged first in order, then the table marpaESLIFValueResult itself (which contains the number of elements    */
+  /*   in u.t.sizel)                                                                                                                                                */
+  /*   i.e. key[0],value[0]...,key[table.u.t.sizel-1],value[table.u.t.sizel-1]                                                                                      */
   /*                                                                                                                                                                */
-  /*   This mean that the importer callback should maintain an internal stack of marpaESLIFValueResult_t items everytime it is called and:                          */
+  /*   This mean that the exchanger callback should maintain an internal stack of marpaESLIFValueResult_t items everytime it is called and:                         */
+  /*                                                                                                                                                                */
+  /*   In import mode:                                                                                                                                              */
   /*   - push to its stack anything that is not a ROW or a TABLE                                                                                                    */
-  /*   - pop from its stack value.u.r.sizel   elements when it receives a ROW callback                                                                              */
-  /*   - pop from its stack value.u.t.sizel*2 elements when it receives a TABLE callback                                                                            */
+  /*   - pop from its stack value.u.r.sizel      values when it receives a ROW callback, creating a ROW reference from them                                         */
+  /*   - pop from its stack value.u.t.sizel keys/values when it receives a TABLE callback, creating a TABLE reference from them                                     */
   /*   At the end it must have exactly one element in its internal stack.                                                                                           */
+  /*                                                                                                                                                                */
+  /*   In export mode:                                                                                                                                              */
+  /*   - pop from its stack anything that is not a ROW or a TABLE                                                                                                   */
+  /*   - push to its stack value.u.r.sizel      values when it receives a ROW callback                                                                              */
+  /*   - push to its stack value.u.t.sizel keys/values when it receives a TABLE callback                                                                            */
+  /*   At the end it must pushed an entired flattened marpaESLIFValueResult.                                                                                        */
+  /*                                                                                                                                                                */
+  /*   For any host, A ROW or TABLE have its own representation. For example:                                                                                       */
+  /*   - In Lua, both are a table                                                                                                                                   */
+  /*   - In Perl, ROW is an reference to an array, TABLE is a reference to a hash where a key is always a string                                                    */
+  /*   - In Java, ROW is an array, TABLE is a dictionnary                                                                                                           */
+  /*                                                                                                                                                                */
   /* -------------------------------------------------------------------------------------------------------------------------------------------------------------- */
-  marpaESLIF_EXPORT short                         marpaESLIFValue_importb(marpaESLIFValue_t *marpaESLIFValuep, marpaESLIFValueResult_t *marpaESLIFValueResultp, marpaESLIFValueResult_t *marpaESLIFValueResultResolvedp);
+  marpaESLIF_EXPORT short                         marpaESLIFValue_importb(marpaESLIFValue_t *marpaESLIFValuep, marpaESLIFValueResult_t *marpaESLIFValueResultp);
+  marpaESLIF_EXPORT short                         marpaESLIFValue_exportb(marpaESLIFValue_t *marpaESLIFValuep, marpaESLIFValueResult_t *marpaESLIFValueResultp, int resulti);
 
   marpaESLIF_EXPORT void                          marpaESLIF_freev(marpaESLIF_t *marpaESLIFp);
 

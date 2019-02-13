@@ -434,7 +434,9 @@ static short _marpaESLIFValue_lua_actionb(void *userDatavp, marpaESLIFValue_t *m
   marpaESLIFLuaValueContext_t      *marpaESLIFLuaValueContextp;
   marpaESLIFValueRuleCallback_t     ruleCallbackp;
   void                             *userDataBackupvp;
-  marpaESLIFValueResultImport_t     importerBackupp;
+  marpaESLIFValueResultExchange_t   importerBackupp;
+  marpaESLIFValueResultExchange_t   exporterBackupp;
+  marpaESLIFValueResultUnfold_t     unfolderBackupp;
   int                               typei;
   short                             rcb;
 
@@ -468,9 +470,13 @@ static short _marpaESLIFValue_lua_actionb(void *userDatavp, marpaESLIFValue_t *m
   }
 
   {
-    /* Take care about importer that is specific to lua */
+    /* Take care about importer/exporter/unfolder that is specific to lua */
     importerBackupp = marpaESLIFValuep->marpaESLIFValueOption.importerp;
+    exporterBackupp = marpaESLIFValuep->marpaESLIFValueOption.exporterp;
+    unfolderBackupp = marpaESLIFValuep->marpaESLIFValueOption.unfolderp;
     marpaESLIFValuep->marpaESLIFValueOption.importerp    = marpaESLIFLua_importb;
+    marpaESLIFValuep->marpaESLIFValueOption.exporterp    = marpaESLIFLua_exportb;
+    marpaESLIFValuep->marpaESLIFValueOption.unfolderp    = marpaESLIFLua_unfoldb;
     /* And about userDatavp that is marpaESLIFLuaValueContextp in lua bindings */
     userDataBackupvp = marpaESLIFValuep->marpaESLIFValueOption.userDatavp;
     marpaESLIFValuep->marpaESLIFValueOption.userDatavp = marpaESLIFLuaValueContextp;
@@ -478,6 +484,8 @@ static short _marpaESLIFValue_lua_actionb(void *userDatavp, marpaESLIFValue_t *m
     rcb = ruleCallbackp((void *) marpaESLIFLuaValueContextp /* userDatavp */, marpaESLIFValuep, arg0i, argni, resulti, nullableb);
 
     marpaESLIFValuep->marpaESLIFValueOption.importerp    = importerBackupp;
+    marpaESLIFValuep->marpaESLIFValueOption.exporterp    = exporterBackupp;
+    marpaESLIFValuep->marpaESLIFValueOption.unfolderp    = unfolderBackupp;
     marpaESLIFValuep->marpaESLIFValueOption.userDatavp   = userDataBackupvp;
   }
 
@@ -503,7 +511,9 @@ static short _marpaESLIFValue_lua_symbolb(void *userDatavp, marpaESLIFValue_t *m
   marpaESLIFLuaValueContext_t      *marpaESLIFLuaValueContextp;
   marpaESLIFValueSymbolCallback_t   symbolCallbackp;
   void                             *userDataBackupvp;
-  marpaESLIFValueResultImport_t     importerBackupp;
+  marpaESLIFValueResultExchange_t   importerBackupp;
+  marpaESLIFValueResultExchange_t   exporterBackupp;
+  marpaESLIFValueResultUnfold_t     unfolderBackupp;
   int                               typei;
   short                             rcb;
 
@@ -536,9 +546,13 @@ static short _marpaESLIFValue_lua_symbolb(void *userDatavp, marpaESLIFValue_t *m
     goto err; /* Lua will shutdown anyway */
   }
   {
-    /* Take care about importer that is specific to lua */
+    /* Take care about importer/exporter/unfolder that is specific to lua */
     importerBackupp = marpaESLIFValuep->marpaESLIFValueOption.importerp;
+    exporterBackupp = marpaESLIFValuep->marpaESLIFValueOption.exporterp;
+    unfolderBackupp = marpaESLIFValuep->marpaESLIFValueOption.unfolderp;
     marpaESLIFValuep->marpaESLIFValueOption.importerp = marpaESLIFLua_importb;
+    marpaESLIFValuep->marpaESLIFValueOption.exporterp = marpaESLIFLua_exportb;
+    marpaESLIFValuep->marpaESLIFValueOption.unfolderp = marpaESLIFLua_unfoldb;
     /* And about userDatavp that is marpaESLIFLuaValueContextp in lua bindings */
     userDataBackupvp = marpaESLIFValuep->marpaESLIFValueOption.userDatavp;
     marpaESLIFValuep->marpaESLIFValueOption.userDatavp = marpaESLIFLuaValueContextp;
@@ -546,6 +560,8 @@ static short _marpaESLIFValue_lua_symbolb(void *userDatavp, marpaESLIFValue_t *m
     rcb = symbolCallbackp((void *) marpaESLIFLuaValueContextp /* userDatavp */, marpaESLIFValuep, bytep, bytel, resulti);
 
     marpaESLIFValuep->marpaESLIFValueOption.importerp    = importerBackupp;
+    marpaESLIFValuep->marpaESLIFValueOption.exporterp    = exporterBackupp;
+    marpaESLIFValuep->marpaESLIFValueOption.unfolderp    = unfolderBackupp;
     marpaESLIFValuep->marpaESLIFValueOption.userDatavp   = userDataBackupvp;
   }
 
@@ -571,7 +587,9 @@ static void _marpaESLIF_lua_freeDefaultActionv(void *userDatavp, marpaESLIFValue
   marpaESLIFLuaValueContext_t      *marpaESLIFLuaValueContextp;
   marpaESLIFValueFreeCallback_t     freeCallbackp;
   void                             *userDataBackupvp;
-  marpaESLIFValueResultImport_t     importerBackupp;
+  marpaESLIFValueResultExchange_t   importerBackupp;
+  marpaESLIFValueResultExchange_t   exporterBackupp;
+  marpaESLIFValueResultUnfold_t     unfolderBackupp;
   int                               typei;
 
   /* We should never be called outside of a valuation, thus a lua_State must already exist */
@@ -599,9 +617,13 @@ static void _marpaESLIF_lua_freeDefaultActionv(void *userDatavp, marpaESLIFValue
     MARPAESLIF_ERROR(marpaESLIFValuep->marpaESLIFp, "Lua bindings returned no free callback");
     goto err; /* Lua will shutdown anyway */
   }
-  /* Take care about importer that is specific to lua */
+  /* Take care about importer/exporter/unfolder that is specific to lua */
   importerBackupp = marpaESLIFValuep->marpaESLIFValueOption.importerp;
+  exporterBackupp = marpaESLIFValuep->marpaESLIFValueOption.exporterp;
+  unfolderBackupp = marpaESLIFValuep->marpaESLIFValueOption.unfolderp;
   marpaESLIFValuep->marpaESLIFValueOption.importerp = marpaESLIFLua_importb;
+  marpaESLIFValuep->marpaESLIFValueOption.exporterp = marpaESLIFLua_exportb;
+  marpaESLIFValuep->marpaESLIFValueOption.unfolderp = marpaESLIFLua_unfoldb;
   /* And about userDatavp that is marpaESLIFLuaValueContextp in lua bindings */
   userDataBackupvp = marpaESLIFValuep->marpaESLIFValueOption.userDatavp;
   marpaESLIFValuep->marpaESLIFValueOption.userDatavp = marpaESLIFLuaValueContextp;
@@ -609,6 +631,8 @@ static void _marpaESLIF_lua_freeDefaultActionv(void *userDatavp, marpaESLIFValue
   freeCallbackp((void *) marpaESLIFLuaValueContextp /* userDatavp */, marpaESLIFValueResultp);
 
   marpaESLIFValuep->marpaESLIFValueOption.importerp    = importerBackupp;
+  marpaESLIFValuep->marpaESLIFValueOption.exporterp    = exporterBackupp;
+  marpaESLIFValuep->marpaESLIFValueOption.unfolderp    = unfolderBackupp;
   marpaESLIFValuep->marpaESLIFValueOption.userDatavp   = userDataBackupvp;
 
  err:

@@ -290,6 +290,10 @@ struct marpaESLIFValue {
   char                    *actions; /* True external name of best-effort ASCII in case of literal */
   marpaESLIF_string_t     *stringp; /* Not NULL only when is a literal - then callback is forced to be internal */
   lua_State               *L;
+  genericStack_t           _exchangeStack;
+  genericStack_t          *exchangeStackp;
+  size_t                   marpaESLIFValueResultArrayl;
+  marpaESLIFValueResult_t *marpaESLIFValueResultArrayp; /* Used by exchange */
 };
 
 struct marpaESLIF_stream {
@@ -469,6 +473,8 @@ marpaESLIFValueOption_t marpaESLIFValueOption_default_template = {
   NULL, /* symbolActionResolverp */
   NULL, /* freeActionResolverp */
   NULL, /* importerp */
+  NULL, /* exporterp */
+  NULL, /* iteratorp */
   1,    /* highRankOnlyb */
   1,    /* orderByRankb */
   0,    /* ambiguousb */
