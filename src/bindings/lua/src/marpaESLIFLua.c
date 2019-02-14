@@ -97,7 +97,6 @@ typedef struct marpaESLIFLuaValueContext {
   int                symboli;
   char              *rules;
   int                rulei;
-  int                result_r;              /* Reference to last result */
 } marpaESLIFLuaValueContext_t;
 
 static void                            marpaESLIFLua_stackdumpv(lua_State* L, int forcelookupi);
@@ -1949,7 +1948,6 @@ static short  marpaESLIFLua_valueContextInitb(lua_State *L, int grammarStacki, i
   marpaESLIFLuaValueContextp->symboli            = -1;
   marpaESLIFLuaValueContextp->rules              = NULL;
   marpaESLIFLuaValueContextp->rulei              = -1;
-  marpaESLIFLuaValueContextp->result_r           = LUA_NOREF;
 
   return 1;
 
@@ -3730,12 +3728,6 @@ static short marpaESLIFLua_pushValueb(marpaESLIFLuaValueContext_t *marpaESLIFLua
     marpaESLIFLua_luaL_errorf(L, "marpaESLIFValue_importb failure, %s", strerror(errno));
     goto err;
   }
-
-  /* Dereference eventual last result and keep a reference to the new one */
-  MARPAESLIFLUA_UNREF(L, marpaESLIFLuaValueContextp->result_r);
-  if (! marpaESLIFLua_lua_pushnil(L)) goto err;                                                     /* Stack: value, nil */
-  if (! marpaESLIFLua_lua_copy(L, -2, -1)) goto err;                                                /* Stack: value, value */
-  MARPAESLIFLUA_REF(L, marpaESLIFLuaValueContextp->result_r);                                       /* Stack: value */
 
   return 1;
 
