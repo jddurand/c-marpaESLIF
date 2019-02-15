@@ -1953,7 +1953,7 @@ static void marpaESLIFPerl_stack_setv(pTHX_ marpaESLIFValue_t *marpaESLIFValuep,
       marpaESLIFValueResult.type            = MARPAESLIF_VALUE_TYPE_DOUBLE;
       marpaESLIFValueResult.contextp        = MARPAESLIFPERL_CONTEXT;
       marpaESLIFValueResult.representationp = NULL;
-      marpaESLIFValueResult.u.ld            = nv; /* In theory no need to cast */
+      marpaESLIFValueResult.u.d             = nv; /* In theory no need to cast */
       opaqueb = 0;
 #  endif
 #endif
