@@ -55,6 +55,7 @@ use MarpaX::ESLIF::Rule::PropertyBitSet;
 
 # Other modules
 use Math::BigFloat;
+use Types::Serialiser;
 
 =head1 DESCRIPTION
 
