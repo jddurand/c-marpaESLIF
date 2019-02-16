@@ -54,8 +54,8 @@ use MarpaX::ESLIF::Value::Type;
 use MarpaX::ESLIF::Rule::PropertyBitSet;
 
 # Other modules
-use Math::BigFloat;
-use Types::Serialiser;
+use Math::BigFloat qw//;
+use JSON::MaybeXS qw/is_bool/;
 
 =head1 DESCRIPTION
 
@@ -185,6 +185,31 @@ sub DESTROY {
 =head1 NOTES
 
 The perl interface is an I<all-in-one> version of L<marpaESLIF|https://github.com/jddurand/c-marpaESLIF> library, which means that character conversion is using C<iconv> (or C<iconv>-like on Windows) instead of ICU, even if the later is available on your system.
+
+=head2 BOOLEAN TYPE
+
+ESLIF has a boolean type, perl has not. In order to not reinvent the wheel, the widely JSON's Perl's boolean utilities via L<JSON::MaybeXS> wrapper are used, i.e.:
+
+=over
+
+=item true
+
+Defaults to C<JSON::MaybeXS::true()>.
+
+=item false
+
+Defaults to C<JSON::MaybeXS::false()>.
+
+=item is_bool($value)
+
+Defaults to C<JSON::MaybeXS::is_bool($value)>
+
+=back
+
+=cut
+
+our $true = JSON::MaybeXS::true();
+our $false = JSON::MaybeXS::false();
 
 =head1 SEE ALSO
 
