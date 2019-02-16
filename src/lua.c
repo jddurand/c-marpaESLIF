@@ -822,6 +822,13 @@ static short marpaESLIFLua_lua_pushlightuserdata(lua_State *L, void *p)
 }
 
 /****************************************************************************/
+static short marpaESLIFLua_lua_newuserdata(void **rcpp, lua_State *L, size_t sz)
+/****************************************************************************/
+{
+  return ! luaunpanic_newuserdata(rcpp, L, sz);
+}
+
+/****************************************************************************/
 static short marpaESLIFLua_lua_pushvalue(lua_State *L, int index)
 /****************************************************************************/
 {

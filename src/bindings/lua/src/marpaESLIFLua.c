@@ -249,6 +249,7 @@ static short marpaESLIFLua_lua_rawset(lua_State *L, int index);
 static short marpaESLIFLua_lua_pushboolean(lua_State *L, int b);
 static short marpaESLIFLua_lua_pushnumber(lua_State *L, lua_Number n);
 static short marpaESLIFLua_lua_pushlightuserdata(lua_State *L, void *p);
+static short marpaESLIFLua_lua_newuserdata(void **rcpp, lua_State *L, size_t sz);
 static short marpaESLIFLua_lua_pushvalue(lua_State *L, int index);
 static short marpaESLIFLua_luaL_ref(int *rcip, lua_State *L, int t);
 static short marpaESLIFLua_luaL_unref(lua_State *L, int t, int ref);
@@ -6011,6 +6012,18 @@ static short marpaESLIFLua_lua_pushlightuserdata(lua_State *L, void *p)
 /****************************************************************************/
 {
   lua_pushlightuserdata(L, p); /* Native lua call */
+
+  return 1;
+}
+
+/****************************************************************************/
+static short marpaESLIFLua_lua_newuserdata(void **rcpp, lua_State *L, size_t sz)
+/****************************************************************************/
+{
+  void *rcp;
+
+  rcp = lua_newuserdata(L, sz);
+  if (rcpp != NULL) *rcpp = rcp;
 
   return 1;
 }
