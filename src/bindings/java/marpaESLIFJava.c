@@ -624,7 +624,7 @@ static marpaESLIFValueFreeCallback_t   marpaESLIFValueFreeActionResolver(void *u
 static short marpaESLIFValueContextInject(JNIEnv *envp, marpaESLIFValue_t *marpaESLIFValuep, jobject eslifValueInterfacep, marpaESLIFValueContext_t *marpaESLIFValueContextp);
 static short marpaESLIFValueRuleCallback(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
 static short marpaESLIFValueSymbolCallback(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, char *bytep, size_t bytel, int resulti);
-static void  marpaESLIFValueFreeCallback(void *userDatavp, marpaESLIFValueResult_t *marpaESLIFValueResultp);
+static void  marpaESLIFValueFreeCallback(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, marpaESLIFValueResult_t *marpaESLIFValueResultp);
 static jmethodID marpaESLIFValueActionResolver(JNIEnv *envp, marpaESLIFValueContext_t *marpaESLIFValueContextp, char *methods, char *signatures);
 static void marpaESLIFValueContextFree(JNIEnv *envp, marpaESLIFValueContext_t *marpaESLIFValueContextp, short onStackb);
 static void marpaESLIFRecognizerContextFree(JNIEnv *envp, marpaESLIFRecognizerContext_t *marpaESLIFRecognizerContextp, short onStackb);
@@ -4151,7 +4151,7 @@ static short marpaESLIFValueSymbolCallback(void *userDatavp, marpaESLIFValue_t *
 }
 
 /*****************************************************************************/
-static void marpaESLIFValueFreeCallback(void *userDatavp, marpaESLIFValueResult_t *marpaESLIFValueResultp)
+static void marpaESLIFValueFreeCallback(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, marpaESLIFValueResult_t *marpaESLIFValueResultp)
 /*****************************************************************************/
 {
   /* We are called when valuation is doing to withdraw an item in the stack that is a PTR or an ARRAY that we own */

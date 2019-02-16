@@ -1442,11 +1442,10 @@ static inline void _marpaESLIF_bootstrap_adverb_list_item_freev(marpaESLIF_boots
 }
 
 /*****************************************************************************/
-static void _marpaESLIF_bootstrap_freeDefaultActionv(void *userDatavp, marpaESLIFValueResult_t *marpaESLIFValueResultp)
+static void _marpaESLIF_bootstrap_freeDefaultActionv(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, marpaESLIFValueResult_t *marpaESLIFValueResultp)
 /*****************************************************************************/
 {
   static const char       *funcs                 = "_marpaESLIF_bootstrap_freeDefaultActionv";
-  marpaESLIFValue_t       *marpaESLIFValuep      = (marpaESLIFValue_t *) userDatavp;
   marpaESLIFRecognizer_t  *marpaESLIFRecognizerp = marpaESLIFValuep->marpaESLIFRecognizerp;
 
   MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_INC;

@@ -433,8 +433,6 @@ static short _marpaESLIFValue_lua_actionb(void *userDatavp, marpaESLIFValue_t *m
   marpaESLIFRecognizer_t           *marpaESLIFRecognizerp = marpaESLIFValuep->marpaESLIFRecognizerp;
   marpaESLIFLuaValueContext_t      *marpaESLIFLuaValueContextp;
   marpaESLIFValueRuleCallback_t     ruleCallbackp;
-  void                             *userDataBackupvp;
-  marpaESLIFValueResultImport_t     importerBackupp;
   int                               typei;
   short                             rcb;
 
@@ -445,41 +443,13 @@ static short _marpaESLIFValue_lua_actionb(void *userDatavp, marpaESLIFValue_t *m
     goto err;
   }
 
-  /* Remember that we pushed the "marpaESLIFValue" global ? */
-  LUA_GETGLOBAL(&typei, marpaESLIFValuep, "marpaESLIFValue");                    /* stack: ..., marpaESLIFValueTable */
-  if (typei != LUA_TTABLE) {
-    MARPAESLIF_ERROR(marpaESLIFValuep->marpaESLIFp, "Lua marpaESLIFValue global is not a table");
-    goto err; /* Lua will shutdown anyway */
-  }
-  /* And this marpaESLIFValue is a table with a key "marpaESLIFValueContext" */
-  LUA_GETFIELDI(&typei, marpaESLIFValuep, -1, "marpaESLIFLuaValueContextp");     /* stack: ..., marpaESLIFValueTable, marpaESLIFLuaValueContextp */
-  if (typei != LUA_TLIGHTUSERDATA) {
-    MARPAESLIF_ERROR(marpaESLIFValuep->marpaESLIFp, "Lua marpaESLIFLuaValueContextp is not a light userdata");
-    goto err; /* Lua will shutdown anyway */
-  }
-  LUA_TOUSERDATA(marpaESLIFValuep, &marpaESLIFLuaValueContextp, -1);
-  LUA_POP(marpaESLIFValuep, 2);                                                  /* stack: ... */
-
-  /* Proxy to the lua bindings rule callback action - then userDatavp has to be marpaESLIFLuaValueContextp */
-  ruleCallbackp = marpaESLIFLua_valueRuleActionResolver((void *) marpaESLIFLuaValueContextp /* userDatavp */, marpaESLIFValuep, marpaESLIFValuep->actions);
+  ruleCallbackp = marpaESLIFLua_valueRuleActionResolver(userDatavp, marpaESLIFValuep, marpaESLIFValuep->actions);
   if (ruleCallbackp == NULL) {
     MARPAESLIF_ERROR(marpaESLIFValuep->marpaESLIFp, "Lua bindings returned no rule callback");
     goto err; /* Lua will shutdown anyway */
   }
 
-  {
-    /* Take care about importer that is specific to lua */
-    importerBackupp = marpaESLIFValuep->marpaESLIFValueOption.importerp;
-    marpaESLIFValuep->marpaESLIFValueOption.importerp    = marpaESLIFLua_importb;
-    /* And about userDatavp that is marpaESLIFLuaValueContextp in lua bindings */
-    userDataBackupvp = marpaESLIFValuep->marpaESLIFValueOption.userDatavp;
-    marpaESLIFValuep->marpaESLIFValueOption.userDatavp = marpaESLIFLuaValueContextp;
-
-    rcb = ruleCallbackp((void *) marpaESLIFLuaValueContextp /* userDatavp */, marpaESLIFValuep, arg0i, argni, resulti, nullableb);
-
-    marpaESLIFValuep->marpaESLIFValueOption.importerp    = importerBackupp;
-    marpaESLIFValuep->marpaESLIFValueOption.userDatavp   = userDataBackupvp;
-  }
+  rcb = ruleCallbackp(userDatavp, marpaESLIFValuep, arg0i, argni, resulti, nullableb);
 
   if (! rcb) goto err;
 
@@ -502,8 +472,6 @@ static short _marpaESLIFValue_lua_symbolb(void *userDatavp, marpaESLIFValue_t *m
   marpaESLIFRecognizer_t           *marpaESLIFRecognizerp = marpaESLIFValuep->marpaESLIFRecognizerp;
   marpaESLIFLuaValueContext_t      *marpaESLIFLuaValueContextp;
   marpaESLIFValueSymbolCallback_t   symbolCallbackp;
-  void                             *userDataBackupvp;
-  marpaESLIFValueResultImport_t     importerBackupp;
   int                               typei;
   short                             rcb;
 
@@ -514,40 +482,13 @@ static short _marpaESLIFValue_lua_symbolb(void *userDatavp, marpaESLIFValue_t *m
     goto err;
   }
 
-  /* Remember that we pushed the "marpaESLIFValue" global ? */
-  LUA_GETGLOBAL(&typei, marpaESLIFValuep, "marpaESLIFValue");                    /* stack: ..., marpaESLIFValueTable */
-  if (typei != LUA_TTABLE) {
-    MARPAESLIF_ERROR(marpaESLIFValuep->marpaESLIFp, "Lua marpaESLIFValue global is not a table");
-    goto err; /* Lua will shutdown anyway */
-  }
-  /* And this marpaESLIFValue is a table with a key "marpaESLIFValueContext" */
-  LUA_GETFIELDI(&typei, marpaESLIFValuep, -1, "marpaESLIFLuaValueContextp");     /* stack: ..., marpaESLIFValueTable, marpaESLIFLuaValueContextp */
-  if (typei != LUA_TLIGHTUSERDATA) {
-    MARPAESLIF_ERROR(marpaESLIFValuep->marpaESLIFp, "Lua marpaESLIFLuaValueContextp is not a light userdata");
-    goto err; /* Lua will shutdown anyway */
-  }
-  LUA_TOUSERDATA(marpaESLIFValuep, &marpaESLIFLuaValueContextp, -1);
-  LUA_POP(marpaESLIFValuep, 2);                                                  /* stack: ... */
-
-  /* Proxy to the lua bindings rule callback action - then userDatavp has to be marpaESLIFLuaValueContextp */
-  symbolCallbackp = marpaESLIFLua_valueSymbolActionResolver((void *) marpaESLIFLuaValueContextp /* userDatavp */, marpaESLIFValuep, marpaESLIFValuep->actions);
+  symbolCallbackp = marpaESLIFLua_valueSymbolActionResolver(userDatavp, marpaESLIFValuep, marpaESLIFValuep->actions);
   if (symbolCallbackp == NULL) {
     MARPAESLIF_ERROR(marpaESLIFValuep->marpaESLIFp, "Lua bindings returned no symbol callback");
     goto err; /* Lua will shutdown anyway */
   }
-  {
-    /* Take care about importer that is specific to lua */
-    importerBackupp = marpaESLIFValuep->marpaESLIFValueOption.importerp;
-    marpaESLIFValuep->marpaESLIFValueOption.importerp = marpaESLIFLua_importb;
-    /* And about userDatavp that is marpaESLIFLuaValueContextp in lua bindings */
-    userDataBackupvp = marpaESLIFValuep->marpaESLIFValueOption.userDatavp;
-    marpaESLIFValuep->marpaESLIFValueOption.userDatavp = marpaESLIFLuaValueContextp;
 
-    rcb = symbolCallbackp((void *) marpaESLIFLuaValueContextp /* userDatavp */, marpaESLIFValuep, bytep, bytel, resulti);
-
-    marpaESLIFValuep->marpaESLIFValueOption.importerp    = importerBackupp;
-    marpaESLIFValuep->marpaESLIFValueOption.userDatavp   = userDataBackupvp;
-  }
+  rcb = symbolCallbackp(userDatavp, marpaESLIFValuep, bytep, bytel, resulti);
 
   if (! rcb) goto err;
 
@@ -563,15 +504,12 @@ static short _marpaESLIFValue_lua_symbolb(void *userDatavp, marpaESLIFValue_t *m
 }
 
 /*****************************************************************************/
-static void _marpaESLIF_lua_freeDefaultActionv(void *userDatavp, marpaESLIFValueResult_t *marpaESLIFValueResultp)
+static void _marpaESLIF_lua_freeDefaultActionv(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, marpaESLIFValueResult_t *marpaESLIFValueResultp)
 /*****************************************************************************/
 {
   static const char                *funcs            = "_marpaESLIF_lua_freeDefaultActionv";
-  marpaESLIFValue_t                *marpaESLIFValuep = (marpaESLIFValue_t *) userDatavp;
   marpaESLIFLuaValueContext_t      *marpaESLIFLuaValueContextp;
   marpaESLIFValueFreeCallback_t     freeCallbackp;
-  void                             *userDataBackupvp;
-  marpaESLIFValueResultImport_t     importerBackupp;
   int                               typei;
 
   /* We should never be called outside of a valuation, thus a lua_State must already exist */
@@ -579,37 +517,13 @@ static void _marpaESLIF_lua_freeDefaultActionv(void *userDatavp, marpaESLIFValue
     goto err;
   }
 
-  /* Remember that we pushed the "marpaESLIFValue" global ? */
-  LUA_GETGLOBAL(&typei, marpaESLIFValuep, "marpaESLIFValue");                    /* stack: ..., marpaESLIFValueTable */
-  if (typei != LUA_TTABLE) {
-    MARPAESLIF_ERROR(marpaESLIFValuep->marpaESLIFp, "Lua marpaESLIFValue global is not a table");
-    goto err; /* Lua will shutdown anyway */
-  }
-  /* And this marpaESLIFValue is a table with a key "marpaESLIFValueContext" */
-  LUA_GETFIELDI(&typei, marpaESLIFValuep, -1, "marpaESLIFLuaValueContextp");     /* stack: ..., marpaESLIFValueTable, marpaESLIFLuaValueContextp */
-  if (typei != LUA_TLIGHTUSERDATA) {
-    MARPAESLIF_ERROR(marpaESLIFValuep->marpaESLIFp, "Lua marpaESLIFLuaValueContextp is not a light userdata");
-    goto err; /* Lua will shutdown anyway */
-  }
-  LUA_TOUSERDATA(marpaESLIFValuep, &marpaESLIFLuaValueContextp, -1);
-  LUA_POP(marpaESLIFValuep, 2);                                                  /* stack: ... */
-
-  freeCallbackp = marpaESLIFLua_valueFreeActionResolver((void *) marpaESLIFLuaValueContextp /* userDatavp */, marpaESLIFValuep, ":defaultFreeActions" /* marpaESLIFValuep->actions */);
+  freeCallbackp = marpaESLIFLua_valueFreeActionResolver(userDatavp, marpaESLIFValuep, ":defaultFreeActions" /* marpaESLIFValuep->actions */);
   if (freeCallbackp == NULL) {
     MARPAESLIF_ERROR(marpaESLIFValuep->marpaESLIFp, "Lua bindings returned no free callback");
     goto err; /* Lua will shutdown anyway */
   }
-  /* Take care about importer that is specific to lua */
-  importerBackupp = marpaESLIFValuep->marpaESLIFValueOption.importerp;
-  marpaESLIFValuep->marpaESLIFValueOption.importerp = marpaESLIFLua_importb;
-  /* And about userDatavp that is marpaESLIFLuaValueContextp in lua bindings */
-  userDataBackupvp = marpaESLIFValuep->marpaESLIFValueOption.userDatavp;
-  marpaESLIFValuep->marpaESLIFValueOption.userDatavp = marpaESLIFLuaValueContextp;
 
-  freeCallbackp((void *) marpaESLIFLuaValueContextp /* userDatavp */, marpaESLIFValueResultp);
-
-  marpaESLIFValuep->marpaESLIFValueOption.importerp    = importerBackupp;
-  marpaESLIFValuep->marpaESLIFValueOption.userDatavp   = userDataBackupvp;
+  freeCallbackp(userDatavp, marpaESLIFValuep, marpaESLIFValueResultp);
 
  err:
   return;

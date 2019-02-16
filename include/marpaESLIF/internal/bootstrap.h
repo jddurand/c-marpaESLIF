@@ -270,7 +270,7 @@ struct marpaESLIF_bootstrap_event_initialization {
   marpaESLIF_bootstrap_event_initializer_type_t initializerb;
 };
 
-static void                          _marpaESLIF_bootstrap_freeDefaultActionv(void *userDatavp, marpaESLIFValueResult_t *marpaESLIFValueResultp);
+static void                          _marpaESLIF_bootstrap_freeDefaultActionv(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, marpaESLIFValueResult_t *marpaESLIFValueResultp);
 static marpaESLIFValueRuleCallback_t _marpaESLIF_bootstrap_ruleActionResolver(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, char *actions);
 
 #endif /* MARPAESLIF_INTERNAL_BOOTSTRAP_H */

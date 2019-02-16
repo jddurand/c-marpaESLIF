@@ -170,7 +170,7 @@ static marpaESLIFValueFreeCallback_t   marpaESLIFLua_valueFreeActionResolver(voi
 static short                           marpaESLIFLua_valueRuleCallbackb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
 static short                           marpaESLIFLua_valueSymbolCallbackb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, char *bytep, size_t bytel, int resulti);
 static short                           marpaESLIFLua_valueCallbackb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, char *bytep, size_t bytel, int resulti, short nullableb, short symbolb);
-static void                            marpaESLIFLua_valueFreeCallbackv(void *userDatavp, marpaESLIFValueResult_t *marpaESLIFValueResultp);
+static void                            marpaESLIFLua_valueFreeCallbackv(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, marpaESLIFValueResult_t *marpaESLIFValueResultp);
 static short                           marpaESLIFLua_importb(marpaESLIFValue_t *marpaESLIFValuep, void *userDatavp, marpaESLIFValueResult_t *marpaESLIFValueResultp);
 static short                           marpaESLIFLua_pushValueb(marpaESLIFLuaValueContext_t *marpaESLIFLuaValueContextp, marpaESLIFValue_t *marpaESLIFValuep, int stackindicei, char *bytep, size_t bytel);
 static short                           marpaESLIFLua_representationb(void *userDatavp, marpaESLIFValueResult_t *marpaESLIFValueResultp, char **inputcpp, size_t *inputlp, char **encodingsp);
@@ -3420,7 +3420,11 @@ static marpaESLIFValueRuleCallback_t marpaESLIFLua_valueRuleActionResolver(void 
 /*****************************************************************************/
 {
   static const char           *funcs                      = "marpaESLIFLua_valueRuleActionResolver";
+#ifdef MARPAESLIFLUA_EMBEDDED
+  marpaESLIFLuaValueContext_t *marpaESLIFLuaValueContextp = (marpaESLIFLuaValueContext_t *) marpaESLIFValuep->marpaESLIFLuaValueContextp;
+#else
   marpaESLIFLuaValueContext_t *marpaESLIFLuaValueContextp = (marpaESLIFLuaValueContext_t *) userDatavp;
+#endif
   lua_State                   *L                          = marpaESLIFLuaValueContextp->L;
 
   /* Just remember the action name - lua will croak if calling this method fails */
@@ -3434,7 +3438,11 @@ static marpaESLIFValueSymbolCallback_t marpaESLIFLua_valueSymbolActionResolver(v
 /*****************************************************************************/
 {
   static const char           *funcs                      = "marpaESLIFLua_valueSymbolActionResolver";
+#ifdef MARPAESLIFLUA_EMBEDDED
+  marpaESLIFLuaValueContext_t *marpaESLIFLuaValueContextp = (marpaESLIFLuaValueContext_t *) marpaESLIFValuep->marpaESLIFLuaValueContextp;
+#else
   marpaESLIFLuaValueContext_t *marpaESLIFLuaValueContextp = (marpaESLIFLuaValueContext_t *) userDatavp;
+#endif
   lua_State                   *L                          = marpaESLIFLuaValueContextp->L;
 
   /* Just remember the action name - lua will croak if calling this method fails */
@@ -3448,7 +3456,11 @@ static marpaESLIFValueFreeCallback_t marpaESLIFLua_valueFreeActionResolver(void 
 /*****************************************************************************/
 {
   static const char           *funcs                      = "marpaESLIFLua_valueFreeActionResolver";
+#ifdef MARPAESLIFLUA_EMBEDDED
+  marpaESLIFLuaValueContext_t *marpaESLIFLuaValueContextp = (marpaESLIFLuaValueContext_t *) marpaESLIFValuep->marpaESLIFLuaValueContextp;
+#else
   marpaESLIFLuaValueContext_t *marpaESLIFLuaValueContextp = (marpaESLIFLuaValueContext_t *) userDatavp;
+#endif
   lua_State                   *L                          = marpaESLIFLuaValueContextp->L;
 
   /* It HAS to be ":defaultFreeActions" */
@@ -3484,7 +3496,11 @@ static short marpaESLIFLua_valueCallbackb(void *userDatavp, marpaESLIFValue_t *m
 /*****************************************************************************/
 {
   static const char           *funcs                      = "marpaESLIFLua_valueCallbackb";
+#ifdef MARPAESLIFLUA_EMBEDDED
+  marpaESLIFLuaValueContext_t *marpaESLIFLuaValueContextp = (marpaESLIFLuaValueContext_t *) marpaESLIFValuep->marpaESLIFLuaValueContextp;
+#else
   marpaESLIFLuaValueContext_t *marpaESLIFLuaValueContextp = (marpaESLIFLuaValueContext_t *) userDatavp;
+#endif
   lua_State                   *L                          = marpaESLIFLuaValueContextp->L;
   char                        *encodings                  = NULL;
   int                          topi;
@@ -3540,11 +3556,15 @@ static short marpaESLIFLua_valueCallbackb(void *userDatavp, marpaESLIFValue_t *m
 }
 
 /*****************************************************************************/
-static void marpaESLIFLua_valueFreeCallbackv(void *userDatavp, marpaESLIFValueResult_t *marpaESLIFValueResultp)
+static void marpaESLIFLua_valueFreeCallbackv(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, marpaESLIFValueResult_t *marpaESLIFValueResultp)
 /*****************************************************************************/
 {
   static const char           *funcs                      = "marpaESLIFLua_valueFreeCallbackv";
+#ifdef MARPAESLIFLUA_EMBEDDED
+  marpaESLIFLuaValueContext_t *marpaESLIFLuaValueContextp = (marpaESLIFLuaValueContext_t *) marpaESLIFValuep->marpaESLIFLuaValueContextp;
+#else
   marpaESLIFLuaValueContext_t *marpaESLIFLuaValueContextp = (marpaESLIFLuaValueContext_t *) userDatavp;
+#endif
   lua_State                   *L                          = marpaESLIFLuaValueContextp->L;
   int                         *ip;
 
@@ -3594,7 +3614,11 @@ static short marpaESLIFLua_importb(marpaESLIFValue_t *marpaESLIFValuep, void *us
 /*****************************************************************************/
 {
   static const char           *funcs                      = "marpaESLIFLua_importb";
+#ifdef MARPAESLIFLUA_EMBEDDED
+  marpaESLIFLuaValueContext_t *marpaESLIFLuaValueContextp = (marpaESLIFLuaValueContext_t *) marpaESLIFValuep->marpaESLIFLuaValueContextp;
+#else
   marpaESLIFLuaValueContext_t *marpaESLIFLuaValueContextp = (marpaESLIFLuaValueContext_t *) userDatavp;
+#endif
   lua_State                   *L                          = marpaESLIFLuaValueContextp->L;
   size_t                       i;
   short                        rcb;
@@ -3724,10 +3748,18 @@ static short marpaESLIFLua_pushValueb(marpaESLIFLuaValueContext_t *marpaESLIFLua
     }
   }
 
+#ifdef MARPAESLIFLUA_EMBEDDED
+  /* In embedded mode we must never trust userDatavp */
+  if (! _marpaESLIFValue_eslif2hostb(marpaESLIFValuep, marpaESLIFValueResultp, NULL /* marpaESLIFValueResultResolvedp */, marpaESLIFLuaValueContextp /* forcedUserDatavp */, marpaESLIFLua_importb /* forcedImporterp */)) {
+    marpaESLIFLua_luaL_errorf(L, "_marpaESLIFValue_eslif2hostb failure, %s", strerror(errno));
+    goto err;
+  }
+#else
   if (! marpaESLIFValue_importb(marpaESLIFValuep, marpaESLIFValueResultp, NULL /* marpaESLIFValueResultResolvedp */)) {
     marpaESLIFLua_luaL_errorf(L, "marpaESLIFValue_importb failure, %s", strerror(errno));
     goto err;
   }
+#endif
 
   return 1;
 
@@ -5645,6 +5677,9 @@ static int marpaESLIFLua_marpaESLIFValue_newFromUnmanagedi(lua_State *L, marpaES
   if (! marpaESLIFLua_valueContextInitb(L, 0 /* grammarStacki */, 0 /* recognizerStacki */, 0 /* valueInterfaceStacki */, marpaESLIFLuaValueContextp, 1 /* unmanagedb */, 1 /* grammarStackiCanBeZerob */)) goto err;
   marpaESLIFLuaValueContextp->marpaESLIFValuep = marpaESLIFValueUnmanagedp;
   marpaESLIFLuaValueContextp->managedb           = 0;
+
+  /* We are in embedded code, this mean that we have access to marpaESLIFValue structure */
+  marpaESLIFValueUnmanagedp->marpaESLIFLuaValueContextp = marpaESLIFLuaValueContextp;
 
   MARPAESLIFLUA_PUSH_MARPAESLIFVALUE_OBJECT(L, marpaESLIFLuaValueContextp);
 

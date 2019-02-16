@@ -513,8 +513,8 @@ static        short                  _marpaESLIF_lexeme_transferb(void *userData
 static        short                  _marpaESLIF_symbol_literal_transferb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, char *bytep, size_t bytel, int resulti);
 static        short                  _marpaESLIF_rule_literal_transferb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
 static        short                  _marpaESLIF_lexeme_concatb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
-static        void                   _marpaESLIF_lexeme_freeCallbackv(void *userDatavp, marpaESLIFValueResult_t *marpaESLIFValueResultp);
-static        void                   _marpaESLIF_rule_freeCallbackv(void *userDatavp, marpaESLIFValueResult_t *marpaESLIFValueResultp);
+static        void                   _marpaESLIF_lexeme_freeCallbackv(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, marpaESLIFValueResult_t *marpaESLIFValueResultp);
+static        void                   _marpaESLIF_rule_freeCallbackv(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, marpaESLIFValueResult_t *marpaESLIFValueResultp);
 static inline marpaESLIFValue_t     *_marpaESLIFValue_newp(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFValueOption_t *marpaESLIFValueOptionp, short silentb, short fakeb);
 static inline short                  _marpaESLIFValue_stack_newb(marpaESLIFValue_t *marpaESLIFValuep);
 static inline short                  _marpaESLIFValue_stack_freeb(marpaESLIFValue_t *marpaESLIFValuep);
@@ -4457,9 +4457,6 @@ static inline short _marpaESLIFRecognizer_meta_matcherb(marpaESLIFRecognizer_t *
   marpaESLIFRecognizerOption.disableThresholdb = 1;
   marpaESLIFRecognizerOption.exhaustedb        = 1;
 
-  /* The context of an internal match is the grammar on which we try to match is the current recognizer */
-  marpaESLIFValueOption.userDatavp            = (void *) marpaESLIFRecognizerp; /* Used by _marpaESLIF_lexeme_freeCallbackv */
-
   if (! _marpaESLIFGrammar_parseb(metap->marpaESLIFGrammarLexemeClonep,
                                   &marpaESLIFRecognizerOption,
                                   &marpaESLIFValueOption,
@@ -7333,9 +7330,6 @@ static inline short _marpaESLIFRecognizer_discard_tryb(marpaESLIFRecognizer_t *m
   marpaESLIFRecognizerOptionDiscard.newlineb          = 0; /* ... do not count line/column numbers */
   marpaESLIFRecognizerOptionDiscard.trackb            = 0; /* ... do not track absolute position */
 
-  /* The context of a discard is current recognizer */
-  marpaESLIFValueOptionDiscard.userDatavp             = (void *) marpaESLIFRecognizerp; /* Used by _marpaESLIF_lexeme_freeCallbackv */
-
   /* It is important to select marpaESLIFRecognizerp->noEventb because only this grammar can be cached */
   /* nevertheles event if the sub-grammar MAY generate an event, end-user will not see it because we */
   /* will never propagate it. This is why the two following lines have to remain commented: they have */
@@ -8284,8 +8278,6 @@ static inline short _marpaESLIFRecognizer_push_grammar_eventsb(marpaESLIFRecogni
       marpaESLIFRecognizerOptionDiscard.trackb            = 0; /* ... do not count track absolute position */
 
       marpaESLIFValueOptionDiscard                        = marpaESLIFValueOption_default_template;
-      /* The context of a discard is current recognizer */
-      marpaESLIFValueOptionDiscard.userDatavp             = (void *) marpaESLIFRecognizerp; /* Used by _marpaESLIF_lexeme_freeCallbackv */
 
       do {
         /* Always reset this shallow pointer */
@@ -12952,7 +12944,7 @@ static inline short _marpaESLIFValue_stack_i_resetb(marpaESLIFValue_t *marpaESLI
         }
 
         /* No test on freeCallbackp here because the upper code guarantees it cannot be NULL */
-        freeCallbackp(userDatavp, &marpaESLIFValueResultOrig);
+        freeCallbackp(userDatavp, marpaESLIFValuep, &marpaESLIFValueResultOrig);
       }
     }
   }
@@ -13265,11 +13257,11 @@ static short _marpaESLIF_lexeme_concatb(void *userDatavp, marpaESLIFValue_t *mar
 }
 
 /*****************************************************************************/
-static void _marpaESLIF_lexeme_freeCallbackv(void *userDatavp, marpaESLIFValueResult_t *marpaESLIFValueResultp)
+static void _marpaESLIF_lexeme_freeCallbackv(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, marpaESLIFValueResult_t *marpaESLIFValueResultp)
 /*****************************************************************************/
 {
   static const char       *funcs                 = "_marpaESLIF_lexeme_freeCallbackv";
-  marpaESLIFRecognizer_t  *marpaESLIFRecognizerp = (marpaESLIFRecognizer_t *) userDatavp;
+  marpaESLIFRecognizer_t  *marpaESLIFRecognizerp = marpaESLIFValuep->marpaESLIFRecognizerp;
   
   MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_INC;
   MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "start");
@@ -13283,11 +13275,10 @@ static void _marpaESLIF_lexeme_freeCallbackv(void *userDatavp, marpaESLIFValueRe
 }
 
 /*****************************************************************************/
-static void _marpaESLIF_rule_freeCallbackv(void *userDatavp, marpaESLIFValueResult_t *marpaESLIFValueResultp)
+static void _marpaESLIF_rule_freeCallbackv(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, marpaESLIFValueResult_t *marpaESLIFValueResultp)
 /*****************************************************************************/
 {
   static const char       *funcs                       = "_marpaESLIF_rule_freeCallbackv";
-  marpaESLIFValue_t       *marpaESLIFValuep            = (marpaESLIFValue_t *) userDatavp;
   marpaESLIFRecognizer_t  *marpaESLIFRecognizerp       = marpaESLIFValuep->marpaESLIFRecognizerp;
   marpaESLIF_string_t      string;
   
@@ -13368,6 +13359,7 @@ static inline marpaESLIFValue_t *_marpaESLIFValue_newp(marpaESLIFRecognizer_t *m
   marpaESLIFValuep->actions                     = NULL;
   marpaESLIFValuep->stringp                     = NULL;
   marpaESLIFValuep->L                           = NULL;
+  marpaESLIFValuep->marpaESLIFLuaValueContextp  = NULL; /* Shallow pointer */
 
   if (! fakeb) {
     marpaWrapperValueOption.genericLoggerp = silentb ? marpaESLIFp->traceLoggerp : marpaESLIFp->marpaESLIFOption.genericLoggerp;

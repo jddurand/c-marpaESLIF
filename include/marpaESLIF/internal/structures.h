@@ -276,20 +276,21 @@ struct marpaESLIF_meta {
 };
 
 struct marpaESLIFValue {
-  marpaESLIF_t            *marpaESLIFp;
-  marpaESLIFRecognizer_t  *marpaESLIFRecognizerp;
-  marpaESLIFValueOption_t  marpaESLIFValueOption;
-  marpaWrapperValue_t     *marpaWrapperValuep;
-  short                    previousPassWasPassthroughb;
-  int                      previousArg0i;
-  int                      previousArgni;
-  genericStack_t          *valueResultStackp;
-  short                    inValuationb;
-  marpaESLIF_symbol_t     *symbolp;
-  marpaESLIF_rule_t       *rulep;
-  char                    *actions; /* True external name of best-effort ASCII in case of literal */
-  marpaESLIF_string_t     *stringp; /* Not NULL only when is a literal - then callback is forced to be internal */
-  lua_State               *L;
+  marpaESLIF_t                *marpaESLIFp;
+  marpaESLIFRecognizer_t      *marpaESLIFRecognizerp;
+  marpaESLIFValueOption_t      marpaESLIFValueOption;
+  marpaWrapperValue_t         *marpaWrapperValuep;
+  short                        previousPassWasPassthroughb;
+  int                          previousArg0i;
+  int                          previousArgni;
+  genericStack_t              *valueResultStackp;
+  short                        inValuationb;
+  marpaESLIF_symbol_t         *symbolp;
+  marpaESLIF_rule_t           *rulep;
+  char                        *actions; /* True external name of best-effort ASCII in case of literal */
+  marpaESLIF_string_t         *stringp; /* Not NULL only when is a literal - then callback is forced to be internal */
+  lua_State                   *L;
+  void                        *marpaESLIFLuaValueContextp;
 };
 
 struct marpaESLIF_stream {
