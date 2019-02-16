@@ -1940,23 +1940,21 @@ static void marpaESLIFPerl_stack_setv(pTHX_ marpaESLIFValue_t *marpaESLIFValuep,
     /* Ok if it fits into [DBL_MIN,DBL_MAX] and we loosed nothing */
     nv = SvNV(svp);
     if (sv_cmp(svp, sv_2mortal(newSVnv(nv))) == 0) {
-#if defined(USE_LONG_DOUBLE) && defined(HAS_LONG_DOUBLE)
-      /* NVTYPE is long double -; */
-      marpaESLIFValueResult.type            = MARPAESLIF_VALUE_TYPE_LONG_DOUBLE;
-      marpaESLIFValueResult.contextp        = MARPAESLIFPERL_CONTEXT;
-      marpaESLIFValueResult.representationp = NULL;
-      marpaESLIFValueResult.u.ld            = nv; /* In theory no need to cast */
-      opaqueb = 0;
-#else
-# if ! defined(USE_QUADMATH)
-      /* NVTYPE is double -; */
-      marpaESLIFValueResult.type            = MARPAESLIF_VALUE_TYPE_DOUBLE;
-      marpaESLIFValueResult.contextp        = MARPAESLIFPERL_CONTEXT;
-      marpaESLIFValueResult.representationp = NULL;
-      marpaESLIFValueResult.u.d             = nv; /* In theory no need to cast */
-      opaqueb = 0;
-#  endif
-#endif
+      if (boot_nvtype_is_long_doubleb) {
+        /* NVTYPE is long double -; */
+        marpaESLIFValueResult.type            = MARPAESLIF_VALUE_TYPE_LONG_DOUBLE;
+        marpaESLIFValueResult.contextp        = MARPAESLIFPERL_CONTEXT;
+        marpaESLIFValueResult.representationp = NULL;
+        marpaESLIFValueResult.u.ld            = (long double) nv;
+        opaqueb = 0;
+      } else if (! boot_nvtype_is___float128) {
+        /* NVTYPE is double -; */
+        marpaESLIFValueResult.type            = MARPAESLIF_VALUE_TYPE_DOUBLE;
+        marpaESLIFValueResult.contextp        = MARPAESLIFPERL_CONTEXT;
+        marpaESLIFValueResult.representationp = NULL;
+        marpaESLIFValueResult.u.d             = (double) nv;
+        opaqueb = 0;
+      }
     }
   } else if (marpaESLIFPerl_is_Types__Standard(aTHX_ svp, "Types::Standard::is_Str")) {
     /* Ok it this is a scalar in general - perl will recoerce it back */
