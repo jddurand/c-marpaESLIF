@@ -77,7 +77,6 @@ typedef struct marpaESLIFLuaRecognizerContext {
   int                     recognizer_orig_r;      /* Lua original recognizer reference in case of newFrom() */
   char                   *previousInputs;         /* Because we want to maintain lifetime of inputs lua string outside of stack */
   char                   *previousEncodings;      /* Because we want to maintain lifetime of encodings lua string outside of stack */
-  genericStack_t         *lexemeStackp;
   marpaESLIFRecognizer_t *marpaESLIFRecognizerp;
   short                   managedb;               /* True if we own marpaESLIFRecognizerp */
 } marpaESLIFLuaRecognizerContext_t;
@@ -214,7 +213,7 @@ static int                             marpaESLIFLua_marpaESLIFValue_newFromUnma
 #endif
 static int                             marpaESLIFLua_marpaESLIFValue_freei(lua_State *L);
 static int                             marpaESLIFLua_marpaESLIFValue_valuei(lua_State *L);
-static short                           marpaESLIFLua_stack_setb(lua_State *L, marpaESLIFLuaValueContext_t *marpaESLIFLuaValueContextp, marpaESLIFValue_t *marpaESLIFValuep, int resulti);
+static short                           marpaESLIFLua_stack_setb(lua_State *L, marpaESLIFValue_t *marpaESLIFValuep, int resulti, marpaESLIFValueResult_t *marpaESLIFValueResultOutputp);
 static short                           marpaESLIFLua_table_canarray_getb(lua_State *L, int indicei, short *canarraybp);
 static short                           marpaESLIFLua_table_opaque_getb(lua_State *L, int indicei, short *opaquebp);
 static int                             marpaESLIFLua_nexti(lua_State *L);
@@ -1714,7 +1713,6 @@ static short  marpaESLIFLua_recognizerContextInitb(lua_State *L, int grammarStac
   }
   marpaESLIFLuaRecognizerContextp->previousInputs        = NULL;
   marpaESLIFLuaRecognizerContextp->previousEncodings     = NULL;
-  marpaESLIFLuaRecognizerContextp->lexemeStackp          = NULL;
   marpaESLIFLuaRecognizerContextp->marpaESLIFRecognizerp = NULL;
   marpaESLIFLuaRecognizerContextp->managedb              = 0;
 
@@ -1779,7 +1777,6 @@ static void  marpaESLIFLua_recognizerContextFreev(marpaESLIFLuaRecognizerContext
 {
   static const char *funcs = "marpaESLIFLua_recognizerContextFreev";
   lua_State         *L;
-  genericStack_t    *lexemeStackp;
   int                i;
   int                refi;
   int               *p;
@@ -1801,26 +1798,6 @@ static void  marpaESLIFLua_recognizerContextFreev(marpaESLIFLuaRecognizerContext
       MARPAESLIFLUA_UNREF(L, marpaESLIFLuaRecognizerContextp->recognizer_orig_r);
     }
 
-    lexemeStackp = marpaESLIFLuaRecognizerContextp->lexemeStackp;
-    if (lexemeStackp != NULL) {
-      /* It is important to delete references in the reverse order of their creation */
-      while (GENERICSTACK_USED(lexemeStackp) > 0) {
-        /* Last indice ... */
-        i = GENERICSTACK_USED(lexemeStackp) - 1;
-        /* ... is cleared ... */
-        if (GENERICSTACK_IS_PTR(lexemeStackp, i)) {
-	  p = (int *) GENERICSTACK_GET_PTR(lexemeStackp, i);
-	  if (p != NULL) {
-	    refi = *p;
-	    MARPAESLIFLUA_UNREF(L, refi);
-	    free(p);
-	  }
-        }
-        /* ... and becomes current used size */
-        GENERICSTACK_USED(lexemeStackp) = i;
-      }
-      GENERICSTACK_FREE(marpaESLIFLuaRecognizerContextp->lexemeStackp);
-    }
     if (marpaESLIFLuaRecognizerContextp->managedb) {
       if (marpaESLIFLuaRecognizerContextp->marpaESLIFRecognizerp != NULL) {
 	marpaESLIFRecognizer_freev(marpaESLIFLuaRecognizerContextp->marpaESLIFRecognizerp);
@@ -3540,7 +3517,7 @@ static short marpaESLIFLua_valueCallbackb(void *userDatavp, marpaESLIFValue_t *m
     }
   }
 
-  if (! marpaESLIFLua_stack_setb(L, marpaESLIFLuaValueContextp, marpaESLIFValuep, resulti)) goto err;
+  if (! marpaESLIFLua_stack_setb(L, marpaESLIFValuep, resulti, NULL /* marpaESLIFValueResultOutputp */)) goto err;
   if (! marpaESLIFLua_lua_pop(L, 1)) goto err;
 
   rcb = 1;
@@ -3884,15 +3861,6 @@ static int marpaESLIFLua_marpaESLIFRecognizer_newi(lua_State *L)
 
   if (! marpaESLIFLua_recognizerContextInitb(L, 1 /* grammarStacki */, 2 /* recognizerInterfaceStacki */, 0 /* recognizerOrigStacki */, marpaESLIFLuaRecognizerContextp, 0 /* unmanagedb */)) goto err;
 
-  /* We need a lexeme stack in this mode (in contrary to the parse() method that never calls back) */
-  GENERICSTACK_NEW(marpaESLIFLuaRecognizerContextp->lexemeStackp);
-  if (GENERICSTACK_ERROR(marpaESLIFLuaRecognizerContextp->lexemeStackp)) {
-    int save_errno = errno;
-    marpaESLIFLua_recognizerContextFreev(marpaESLIFLuaRecognizerContextp, 0 /* onStackb */);
-    marpaESLIFLua_luaL_errorf(L, "GENERICSTACK_NEW failure, %s", strerror(save_errno));
-    goto err;
-  }
-
   marpaESLIFRecognizerOption.userDatavp        = marpaESLIFLuaRecognizerContextp;
   marpaESLIFRecognizerOption.readerCallbackp   = marpaESLIFLua_readerCallbackb;
   MARPAESLIFLUA_CALLBACKB(L, marpaESLIFLuaRecognizerContextp->recognizerInterface_r, "isWithDisableThreshold", 0 /* nargs */, MARPAESLIFLUA_NOOP, &(marpaESLIFRecognizerOption.disableThresholdb));
@@ -4015,15 +3983,6 @@ static int marpaESLIFLua_marpaESLIFRecognizer_newFromi(lua_State *L)
   }
 
   if (! marpaESLIFLua_recognizerContextInitb(L, 2 /* grammarStacki */, 0 /* recognizerInterfaceStacki */, 1 /* recognizerOrigStacki */, marpaESLIFLuaRecognizerContextp, 0 /* unmanagedb */)) goto err;
-
-  /* We need a lexeme stack in this mode (in contrary to the parse() method that never calls back) */
-  GENERICSTACK_NEW(marpaESLIFLuaRecognizerContextp->lexemeStackp);
-  if (GENERICSTACK_ERROR(marpaESLIFLuaRecognizerContextp->lexemeStackp)) {
-    int save_errno = errno;
-    marpaESLIFLua_recognizerContextFreev(marpaESLIFLuaRecognizerContextp, 0 /* onStackb */);
-    marpaESLIFLua_luaL_errorf(L, "GENERICSTACK_NEW failure, %s", strerror(save_errno));
-    goto err;
-  }
 
   marpaESLIFLuaRecognizerContextp->marpaESLIFRecognizerp = marpaESLIFRecognizer_newFromp(marpaESLIFLuaGrammarContextp->marpaESLIFGrammarp, marpaESLIFLuaRecognizerContextFromp->marpaESLIFRecognizerp);
   marpaESLIFLuaRecognizerContextp->managedb              = 1;
@@ -4497,18 +4456,17 @@ static int marpaESLIFLua_marpaESLIFRecognizer_eventOnOffi(lua_State *L)
 static int marpaESLIFLua_marpaESLIFRecognizer_lexemeAlternativei(lua_State *L)
 /*****************************************************************************/
 {
-  static const char                *funcs          = "marpaESLIFLua_marpaESLIFRecognizer_lexemeAlternativei";
-  size_t                            grammarLengthl = 1;
+  static const char                *funcs = "marpaESLIFLua_marpaESLIFRecognizer_lexemeAlternativei";
   marpaESLIFLuaRecognizerContext_t *marpaESLIFLuaRecognizerContextp;
-  const char                       *names;
   int                               isNumi;
-  int                               refi;
   marpaESLIFAlternative_t           marpaESLIFAlternative;
-  int                              *p;
   int                               typei;
   lua_Integer                       tmpi;
   int                               topi;
  
+  marpaESLIFAlternative.lexemes        = NULL;
+  marpaESLIFAlternative.grammarLengthl = 1; /* Default value */
+
   if (! marpaESLIFLua_lua_gettop(&topi, L)) goto err;
   switch (topi) {
   case 4:
@@ -4522,8 +4480,9 @@ static int marpaESLIFLua_marpaESLIFRecognizer_lexemeAlternativei(lua_State *L)
       marpaESLIFLua_luaL_error(L, "Failed to convert grammarLengths to an integer");
       goto err;
     }
-    grammarLengthl = (size_t) tmpi;
-    /* Intentionnaly no break */
+    marpaESLIFAlternative.grammarLengthl = (size_t) tmpi;
+    if (! marpaESLIFLua_lua_pop(L, 1)) goto err;  /* So that indice -1 points to the value */
+    /* Intentionaly no break */
   case 3:
   if (! marpaESLIFLua_lua_type(&typei, L, 1)) goto err;
     if (typei != LUA_TTABLE) {
@@ -4539,45 +4498,22 @@ static int marpaESLIFLua_marpaESLIFRecognizer_lexemeAlternativei(lua_State *L)
       marpaESLIFLua_luaL_error(L, "name must be a string");
       goto err;
     }
-    if (! marpaESLIFLua_lua_tostring(&names, L, 2)) goto err;
+    /* lexemes is valid until we remove it from the stack */
+    if (! marpaESLIFLua_lua_tostring((const char **) &(marpaESLIFAlternative.lexemes), L, 2)) goto err;
 
-    /* We make a reference to the value and remember that in an (int *) pointer */
-    /* in order to re-use the marpaESLIFLua_representationb method */
-    if (! marpaESLIFLua_lua_pushnil(L)) goto err;
-    if (! marpaESLIFLua_lua_copy(L, 3, -1)) goto err;
-    MARPAESLIFLUA_REF(L, refi);
-    
-    p = (int *) malloc(sizeof(int));
-    if (p == NULL) {
-      marpaESLIFLua_luaL_errorf(L, "malloc failure, %s", strerror(errno));
-      goto err;
-    }
-    *p = refi;
-
-    /* And remember that reference */
-    GENERICSTACK_PUSH_PTR(marpaESLIFLuaRecognizerContextp->lexemeStackp, p);
-    if (GENERICSTACK_ERROR(marpaESLIFLuaRecognizerContextp->lexemeStackp)) {
-      marpaESLIFLua_luaL_errorf(L, "lexemeStackp push failure, %s", strerror(errno));
-      goto err;
-    }
+    /* We convert value at indice -1 to a marpaESLIFValueResult */
+    if (! marpaESLIFLua_stack_setb(L, NULL /* marpaESLIFValuep */, -1 /* resulti */, &(marpaESLIFAlternative.value))) goto err;
     break;
   default:
     marpaESLIFLua_luaL_error(L, "Usage: marpaESLIFRecognizer_lexemeAlternative(marpaESLIFRecognizerp, name, value[, grammarLength])");
     goto err;
   }
 
-  marpaESLIFAlternative.lexemes               = (char *) names;
-  marpaESLIFAlternative.value.contextp        = MARPAESLIFLUA_CONTEXT;
-  marpaESLIFAlternative.value.representationp = marpaESLIFLua_representationb;
-  marpaESLIFAlternative.value.type            = MARPAESLIF_VALUE_TYPE_PTR;
-  marpaESLIFAlternative.value.u.p.p           = p;
-  marpaESLIFAlternative.value.u.p.shallowb    = 0; /* C.f. marpaESLIF_valueFreeCallbackv */
-  marpaESLIFAlternative.grammarLengthl        = grammarLengthl;
+  /* Commit the alternative */
+  if (! marpaESLIFLua_lua_pushboolean(L, marpaESLIFRecognizer_lexeme_alternativeb(marpaESLIFLuaRecognizerContextp->marpaESLIFRecognizerp, &marpaESLIFAlternative))) goto err;
 
   /* Clear the stack */
   if (! marpaESLIFLua_lua_settop(L, 0)) goto err;
-
-  if (! marpaESLIFLua_lua_pushboolean(L, marpaESLIFRecognizer_lexeme_alternativeb(marpaESLIFLuaRecognizerContextp->marpaESLIFRecognizerp, &marpaESLIFAlternative))) goto err;
 
   return 1;
 
@@ -4639,19 +4575,18 @@ static int marpaESLIFLua_marpaESLIFRecognizer_lexemeCompletei(lua_State *L)
 static int marpaESLIFLua_marpaESLIFRecognizer_lexemeReadi(lua_State *L)
 /*****************************************************************************/
 {
-  static const char                *funcs          = "marpaESLIFLua_marpaESLIFRecognizer_lexemeReadi";
-  size_t                            grammarLengthl = 1;
+  static const char                *funcs = "marpaESLIFLua_marpaESLIFRecognizer_lexemeReadi";
   size_t                            lengthl;
   marpaESLIFLuaRecognizerContext_t *marpaESLIFLuaRecognizerContextp;
-  const char                       *names;
   int                               isNumi;
-  int                               refi;
   marpaESLIFAlternative_t           marpaESLIFAlternative;
-  int                              *p;
   int                               typei;
   lua_Integer                       tmpi;
   int                               topi;
  
+  marpaESLIFAlternative.lexemes        = NULL;
+  marpaESLIFAlternative.grammarLengthl = 1; /* Default value */
+
   if (! marpaESLIFLua_lua_gettop(&topi, L)) goto err;
   switch (topi) {
   case 5:
@@ -4665,7 +4600,8 @@ static int marpaESLIFLua_marpaESLIFRecognizer_lexemeReadi(lua_State *L)
       marpaESLIFLua_luaL_error(L, "Failed to convert grammarLength to a number");
       goto err;
     }
-    grammarLengthl = (size_t) tmpi;
+    marpaESLIFAlternative.grammarLengthl = (size_t) tmpi;
+    if (! marpaESLIFLua_lua_pop(L, 1)) goto err;  /* So that indice -1 points to the length */
     /* Intentionnaly no break */
   case 4:
     if (! marpaESLIFLua_lua_type(&typei, L, 1)) goto err;
@@ -4682,27 +4618,8 @@ static int marpaESLIFLua_marpaESLIFRecognizer_lexemeReadi(lua_State *L)
       marpaESLIFLua_luaL_error(L, "name must be a string");
       goto err;
     }
-    if (! marpaESLIFLua_lua_tostring(&names, L, 2)) goto err;
-
-    /* We make a reference to the value and remember that in an (int *) pointer */
-    /* in order to re-use the marpaESLIFLua_representationb method */
-    if (! marpaESLIFLua_lua_pushnil(L)) goto err;
-    if (! marpaESLIFLua_lua_copy(L, 3, -1)) goto err;
-    MARPAESLIFLUA_REF(L, refi);
-    
-    p = (int *) malloc(sizeof(int));
-    if (p == NULL) {
-      marpaESLIFLua_luaL_errorf(L, "malloc failure, %s", strerror(errno));
-      goto err;
-    }
-    *p = refi;
-
-    /* And remember that reference */
-    GENERICSTACK_PUSH_PTR(marpaESLIFLuaRecognizerContextp->lexemeStackp, p);
-    if (GENERICSTACK_ERROR(marpaESLIFLuaRecognizerContextp->lexemeStackp)) {
-      marpaESLIFLua_luaL_errorf(L, "lexemeStackp push failure, %s", strerror(errno));
-      goto err;
-    }
+    /* lexemes is valid until we remove it from the stack */
+    if (! marpaESLIFLua_lua_tostring((const char **) &(marpaESLIFAlternative.lexemes), L, 2)) goto err;
 
     if (! marpaESLIFLua_lua_type(&typei, L, 4)) goto err;
     if (typei != LUA_TNUMBER) {
@@ -4715,24 +4632,21 @@ static int marpaESLIFLua_marpaESLIFRecognizer_lexemeReadi(lua_State *L)
       goto err;
     }
     lengthl = (size_t) tmpi;
+    if (! marpaESLIFLua_lua_pop(L, 1)) goto err;  /* So that indice -1 points to the value */
+
+    /* We convert value at indice -1 to a marpaESLIFValueResult */
+    if (! marpaESLIFLua_stack_setb(L, NULL /* marpaESLIFValuep */, -1 /* resulti */, &(marpaESLIFAlternative.value))) goto err;
     break;
   default:
     marpaESLIFLua_luaL_error(L, "Usage: marpaESLIFRecognizer_lexemeRead(marpaESLIFRecognizerp, name, value, length[, grammarLength])");
     goto err;
   }
 
-  marpaESLIFAlternative.lexemes               = (char *) names;
-  marpaESLIFAlternative.value.contextp        = MARPAESLIFLUA_CONTEXT;
-  marpaESLIFAlternative.value.representationp = marpaESLIFLua_representationb;
-  marpaESLIFAlternative.value.type            = MARPAESLIF_VALUE_TYPE_PTR;
-  marpaESLIFAlternative.value.u.p.p           = p;
-  marpaESLIFAlternative.value.u.p.shallowb    = 0; /* C.f. marpaESLIFLua_valueFreeCallbackv */
-  marpaESLIFAlternative.grammarLengthl        = grammarLengthl;
+  /* Commit the alternative */
+  if (! marpaESLIFLua_lua_pushboolean(L, marpaESLIFRecognizer_lexeme_readb(marpaESLIFLuaRecognizerContextp->marpaESLIFRecognizerp, &marpaESLIFAlternative, lengthl))) goto err;
 
   /* Clear the stack */
   if (! marpaESLIFLua_lua_settop(L, 0)) goto err;
-
-  if (! marpaESLIFLua_lua_pushboolean(L, marpaESLIFRecognizer_lexeme_readb(marpaESLIFLuaRecognizerContextp->marpaESLIFRecognizerp, &marpaESLIFAlternative, lengthl))) goto err;
 
   return 1;
 
@@ -6370,7 +6284,9 @@ static short marpaESLIFLua_luaL_checktype(lua_State *L, int arg, int t)
 #endif /* MARPAESLIFLUA_EMBEDDED */
 
 /****************************************************************************/
-static short marpaESLIFLua_stack_setb(lua_State *L, marpaESLIFLuaValueContext_t *marpaESLIFLuaValueContextp, marpaESLIFValue_t *marpaESLIFValuep, int resulti)
+static short marpaESLIFLua_stack_setb(lua_State *L, marpaESLIFValue_t *marpaESLIFValuep, int resulti, marpaESLIFValueResult_t *marpaESLIFValueResultOutputp)
+/****************************************************************************/
+/* Take care: IF resulti is >= 0, then marpaESLIFValuep must be != NULL */
 /****************************************************************************/
 {
   static const char            *funcs          = "marpaESLIFLua_stack_setb";
@@ -6791,9 +6707,14 @@ static short marpaESLIFLua_stack_setb(lua_State *L, marpaESLIFLuaValueContext_t 
   /* We remove the "visitedTable" */
   if (! marpaESLIFLua_lua_remove(L, visitedTableIndicei)) goto err;                                    /* Stack: xxx */
 
-  if (! marpaESLIFValue_stack_setb(marpaESLIFValuep, resulti, &marpaESLIFValueResult)) {
-    marpaESLIFLua_luaL_errorf(L, "marpaESLIFValue_stack_setb failure, %s", strerror(errno));
-    goto err;
+  if (resulti >= 0) {
+    if (! marpaESLIFValue_stack_setb(marpaESLIFValuep, resulti, &marpaESLIFValueResult)) {
+      marpaESLIFLua_luaL_errorf(L, "marpaESLIFValue_stack_setb failure, %s", strerror(errno));
+      goto err;
+    }
+  }
+  if (marpaESLIFValueResultOutputp != NULL) {
+    *marpaESLIFValueResultOutputp = marpaESLIFValueResult;
   }
 
   rcb = 1;
