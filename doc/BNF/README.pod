@@ -208,7 +208,7 @@ Meaningful for both rule and symbol actions.
 
 =item C<::ascii>
 
-Creates a value of type PTR from the right-hand side representation, guaranteed to be a NUL byte terminated sequence of ASCII characters, or UNDEF if representation is empty. Please refer to the I<representation> section below.
+Creates a value of type STRING, with encoding "ASCII", from the right-hand side representation, guaranteed to be a NUL byte terminated sequence of ASCII characters, or UNDEF if representation is empty. Please refer to the I<representation> section below.
 
 Meaningful for both rule and symbol actions.
 

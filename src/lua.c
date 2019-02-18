@@ -1011,6 +1011,13 @@ static short marpaESLIFLua_luaL_checktype(lua_State *L, int arg, int t)
 }
 
 /****************************************************************************/
+static short marpaESLIFLua_lua_topointer(const void **rcpp, lua_State *L, int idx)
+/****************************************************************************/
+{
+  return ! luaunpanic_topointer(rcpp, L, idx);
+}
+
+/****************************************************************************/
 static short _marpaESLIF_lua_representationb(void *userDatavp, marpaESLIFValueResult_t *marpaESLIFValueResultp, char **inputcpp, size_t *inputlp, char **encodingasciisp)
 /****************************************************************************/
 {
