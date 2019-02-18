@@ -98,18 +98,8 @@ typedef struct marpaESLIFLuaValueContext {
   int                rulei;
 } marpaESLIFLuaValueContext_t;
 
-/* Opaque mode */
-typedef enum marpaESLIFLuaOpaqueType {
-  MARPAESLIFOPAQUETYPE_LUA = 0,
-  MARPAESLIFOPAQUETYPE_EXTERNAL
-} marpaESLIFLuaOpaqueType_t;
-typedef struct marpaESLIFLuaOpaque {
-  marpaESLIFLuaOpaqueType_t type;
-  union {
-    int refi;
-    int externali;
-  } u;
-} marpaESLIFLuaOpaque_t;
+/* Global table for the duplicated marpaESLIFValueResult's during import */
+#define MARPAESLIFOPAQUETABLE "__marpaESLIFLuaOpaqueTable"
 
 static void                            marpaESLIFLua_stackdumpv(lua_State* L, int forcelookupi);
 static void                            marpaESLIFLua_tabledumpv(lua_State *L, const char *texts, int indicei, unsigned int identi);
@@ -231,6 +221,7 @@ static short                           marpaESLIFLua_table_canarray_getb(lua_Sta
 static short                           marpaESLIFLua_table_opaque_getb(lua_State *L, int indicei, short *opaquebp);
 static int                             marpaESLIFLua_nexti(lua_State *L);
 static short                           marpaESLIFLua_luaL_pairsb(int *rcip, lua_State *L, int idx, int *iteratorip, int *statevariableip);
+static int                             marpaESLIFLua_marpaESLIFOpaque_freei(lua_State *L);
 
 #define MARPAESLIFLUA_NOOP
 
@@ -246,6 +237,7 @@ static short marpaESLIFLua_lua_setmetatable(lua_State *L, int index);
 static short marpaESLIFLua_lua_insert(lua_State *L, int index);
 static short marpaESLIFLua_lua_rawgeti(int *luaip, lua_State *L, int index, lua_Integer n);
 static short marpaESLIFLua_lua_rawget(int *luaip, lua_State *L, int index);
+static short marpaESLIFLua_lua_rawgetp(int *luaip, lua_State *L, int index, const void *p);
 static short marpaESLIFLua_lua_remove(lua_State *L, int index);
 static short marpaESLIFLua_lua_createtable(lua_State *L, int narr, int nrec);
 static short marpaESLIFLua_lua_rawseti(lua_State *L, int index, lua_Integer i);
@@ -295,6 +287,7 @@ static short marpaESLIFLua_luaL_callmeta(int *rcp, lua_State *L, int obj, const 
 static short marpaESLIFLua_luaL_getmetafield(int *rcp, lua_State *L, int obj, const char *e);
 static short marpaESLIFLua_luaL_checktype(lua_State *L, int arg, int t);
 static short marpaESLIFLua_lua_topointer(const void **rcpp, lua_State *L, int idx);
+static short marpaESLIFLua_lua_rawlen(size_t *rcp, lua_State *L, int idx);
 
 /* Grrr lua defines that with a macro */
 #ifndef marpaESLIFLua_luaL_newlib
@@ -3534,6 +3527,10 @@ static short marpaESLIFLua_valueCallbackb(void *userDatavp, marpaESLIFValue_t *m
   if (! marpaESLIFLua_stack_setb(L, marpaESLIFValuep, resulti, NULL /* marpaESLIFValueResultOutputp */)) goto err;
   if (! marpaESLIFLua_lua_pop(L, 1)) goto err;
 
+  /* After every valuation we clean the MARPAESLIFOPAQUETABLE global table */
+  if (! marpaESLIFLua_lua_pushnil(L)) goto err;
+  if (! marpaESLIFLua_lua_setglobal(L, MARPAESLIFOPAQUETABLE)) goto err;
+
   rcb = 1;
   goto done;
 
@@ -3613,7 +3610,7 @@ static short marpaESLIFLua_importb(marpaESLIFValue_t *marpaESLIFValuep, void *us
 #endif
   lua_State                   *L                          = marpaESLIFLuaValueContextp->L;
   size_t                       i;
-  marpaESLIFLuaOpaque_t       *marpaESLIFLuaOpaquep;
+  marpaESLIFValueResult_t     *marpaESLIFValueResultDupp;
   short                        rcb;
 
   switch (marpaESLIFValueResultp->type) {
@@ -3643,7 +3640,23 @@ static short marpaESLIFLua_importb(marpaESLIFValue_t *marpaESLIFValuep, void *us
       /* This is a pointer to an integer value that is a global reference to the real value */
       MARPAESLIFLUA_DEREF(L, * (int *) marpaESLIFValueResultp->u.p.p);
     } else {
-      if (! marpaESLIFLua_lua_pushlightuserdata(L, marpaESLIFValueResultp->u.p.p)) goto err;
+      /* We want to maintain all the marpaESLIFValueResult properties: we duplicate it. */
+      marpaESLIFValueResultDupp = (marpaESLIFValueResult_t *) malloc(sizeof(marpaESLIFValueResult_t));
+      if (marpaESLIFValueResultDupp == NULL) {
+        marpaESLIFLua_luaL_errorf(L, "malloc failure, %s", strerror(errno));
+        goto err;
+      }
+      fprintf(stderr, "%s: malloc => %p\n", funcs, marpaESLIFValueResultDupp);
+      *marpaESLIFValueResultDupp = *marpaESLIFValueResultp;;
+      if (! marpaESLIFLua_lua_pushlightuserdata(L, marpaESLIFValueResultDupp->u.p.p)) goto err;
+      /* We want to remember that marpaESLIFValueResultDupp->u.p.p is associated to marpaESLIFValueResultDupp */
+      /* If case there would be more than another marpaESLIFValueResult or type PTR with the same PTR */
+      /* it is considered as a user error if it would not have the exact and same context */
+      MARPAESLIFLUA_GETORCREATEGLOBAL(L, MARPAESLIFOPAQUETABLE, marpaESLIFLua_marpaESLIFOpaque_freei /* gcp */, "" /* mode */);  /* Stack: ..., marpaESLIFValueResultp->u.p.p, MARPAESLIFOPAQUETABLE */
+      if (! marpaESLIFLua_lua_pushlightuserdata(L, marpaESLIFValueResultDupp->u.p.p)) goto err;                                  /* Stack: ..., marpaESLIFValueResultp->u.p.p, MARPAESLIFOPAQUETABLE, marpaESLIFValueResultp->u.p.p */
+      if (! marpaESLIFLua_lua_pushlightuserdata(L, marpaESLIFValueResultDupp)) goto err;                                         /* Stack: ..., marpaESLIFValueResultp->u.p.p, MARPAESLIFOPAQUETABLE, marpaESLIFValueResultp->u.p.p, marpaESLIFValueResultDupp */
+      if (! marpaESLIFLua_lua_rawset(L, -3)) goto err;                                                                           /* Stack: ..., marpaESLIFValueResultp->u.p.p, MARPAESLIFOPAQUETABLE */
+      if (! marpaESLIFLua_lua_pop(L, 1)) goto err;                                                                               /* Stack: ..., marpaESLIFValueResultp->u.p.p */
     }
     break;
   case MARPAESLIF_VALUE_TYPE_ARRAY:
@@ -5802,6 +5815,18 @@ static short marpaESLIFLua_lua_rawget(int *luaip, lua_State *L, int index)
 }
 
 /****************************************************************************/
+static short marpaESLIFLua_lua_rawgetp(int *luaip, lua_State *L, int index, const void *p)
+/****************************************************************************/
+{
+  int luai;
+
+  luai = lua_rawgetp(L, index, p); /* Native lua call */
+  if (luaip != NULL) *luaip = luai;
+
+  return 1;
+}
+
+/****************************************************************************/
 static short marpaESLIFLua_lua_remove(lua_State *L, int index)
 /****************************************************************************/
 {
@@ -6310,6 +6335,20 @@ static short marpaESLIFLua_lua_topointer(const void **rcpp, lua_State *L, int id
   return 1;
 }
 
+/****************************************************************************/
+static short marpaESLIFLua_lua_rawlen(size_t *rcp, lua_State *L, int idx)
+/****************************************************************************/
+{
+  size_t rc;
+
+  rc = lua_rawlen(L, idx);
+  if (rcp != NULL) {
+    *rcp = rc;
+  }
+
+  return 1;
+}
+
 #endif /* MARPAESLIFLUA_EMBEDDED */
 
 /****************************************************************************/
@@ -6355,7 +6394,10 @@ static short marpaESLIFLua_stack_setb(lua_State *L, marpaESLIFValue_t *marpaESLI
   int                           statevariablei;
   int                           encodingtypei;
   const char                   *encodings;
+  marpaESLIFValueResult_t      *marpaESLIFValueResultDupp;
   const void                   *pointerp;
+  size_t                        pointerl;
+  int                           opaqueTypei;
 
   GENERICSTACK_INIT(marpaESLIFValueResultStackp);
   if (GENERICSTACK_ERROR(marpaESLIFValueResultStackp)) {
@@ -6708,15 +6750,22 @@ static short marpaESLIFLua_stack_setb(lua_State *L, marpaESLIFValue_t *marpaESLI
       break;
     case LUA_TLIGHTUSERDATA:
       if (! marpaESLIFLua_lua_topointer(&pointerp, L, currenti)) goto err;
-      marpaESLIFValueResultp->contextp        = MARPAESLIFLUA_CONTEXT;
-      marpaESLIFValueResultp->representationp = NULL;
-      marpaESLIFValueResultp->type            = MARPAESLIF_VALUE_TYPE_PTR;
-      marpaESLIFValueResultp->u.p.p           = (void *) pointerp;
-      marpaESLIFValueResultp->u.p.shallowb    = 1;
+      /* Is is a light user data that we created to duplicate a marpaESLIFValueResult ? */
+      MARPAESLIFLUA_GETORCREATEGLOBAL(L, MARPAESLIFOPAQUETABLE, marpaESLIFLua_marpaESLIFOpaque_freei /* gcp */, "" /* mode */);  /* Stack: ..., MARPAESLIFOPAQUETABLE */
+      if (! marpaESLIFLua_lua_rawgetp(&opaqueTypei, L, -1, pointerp)) goto err;                                                  /* Stack: ..., MARPAESLIFOPAQUETABLE, marpaESLIFValueResultDupp */
+      if (! marpaESLIFLua_lua_topointer((const void **) &marpaESLIFValueResultDupp, L, -1)) goto err;
+      if (! marpaESLIFLua_lua_pop(L, 2)) goto err;                                                                               /* Stack: ... */
+      if (marpaESLIFValueResultDupp != NULL) {
+        fprintf(stderr, "%s: back to eslif: %p\n", funcs, marpaESLIFValueResultDupp);
+        *marpaESLIFValueResultp = *marpaESLIFValueResultDupp;
+      } else {
+        marpaESLIFValueResultp->contextp        = MARPAESLIFLUA_CONTEXT;
+        marpaESLIFValueResultp->representationp = NULL;
+        marpaESLIFValueResultp->type            = MARPAESLIF_VALUE_TYPE_PTR;
+        marpaESLIFValueResultp->u.p.p           = (void *) pointerp;
+        marpaESLIFValueResultp->u.p.shallowb    = 1;
+      }
       eslifb = 1;
-      break;
-    case LUA_TUSERDATA:
-      /* Is it a userdata that we created ourself ? This can happen only when we duplicated a marpaESLIFValueResult */
       break;
     default:
       break;
@@ -6933,3 +6982,35 @@ static short marpaESLIFLua_luaL_pairsb(int *rcip, lua_State *L, int idx, int *it
   return rcb;
 }
 
+/****************************************************************************/
+static int marpaESLIFLua_marpaESLIFOpaque_freei(lua_State *L)
+/****************************************************************************/
+{
+  static const char                   *funcs = "marpaESLIFLua_marpaESLIFOpaque_freei";
+  int                                  nexti;
+  int                                  iteratori;
+  int                                  statevariablei;
+  void                                *p;
+  void                                *marpaESLIFValueResultDupp;
+
+  /* Loop on MARPAESLIFOPAQUETABLE */
+  if (! marpaESLIFLua_lua_pushnil(L)) goto err;                                            /* Stack: MARPAESLIFOPAQUETABLE, nil */
+  while (1) {
+    if (! marpaESLIFLua_luaL_pairsb(&nexti, L, -2, &iteratori, &statevariablei)) goto err; /* Stack: MARPAESLIFOPAQUETABLE, p, marpaESLIFValueResultDupp */
+    if (nexti == 0) break;
+    if (! marpaESLIFLua_lua_touserdata(&p, L, -2)) goto err;
+    if (! marpaESLIFLua_lua_touserdata((void **) &marpaESLIFValueResultDupp, L, -1)) goto err;
+
+    if (marpaESLIFValueResultDupp != NULL) {
+      fprintf(stderr, "%s: free(%p)\n", funcs, marpaESLIFValueResultDupp);
+      free(marpaESLIFValueResultDupp);
+    }
+
+    if (! marpaESLIFLua_lua_pop(L, 1)) goto err;                                           /* Stack: MARPAESLIFOPAQUETABLE, p */
+  }
+
+  return 0;
+
+ err:
+  return 0;
+}

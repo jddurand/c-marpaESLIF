@@ -717,6 +717,13 @@ static short marpaESLIFLua_lua_rawget(int *luaip, lua_State *L, int index)
 }
 
 /****************************************************************************/
+static short marpaESLIFLua_lua_rawgetp(int *luaip, lua_State *L, int index, const void *p)
+/****************************************************************************/
+{
+  return ! luaunpanic_rawgetp(luaip, L, index, p);
+}
+
+/****************************************************************************/
 static short marpaESLIFLua_lua_remove(lua_State *L, int index)
 /****************************************************************************/
 {
@@ -1015,6 +1022,13 @@ static short marpaESLIFLua_lua_topointer(const void **rcpp, lua_State *L, int id
 /****************************************************************************/
 {
   return ! luaunpanic_topointer(rcpp, L, idx);
+}
+
+/****************************************************************************/
+static short marpaESLIFLua_lua_rawlen(size_t *rcp, lua_State *L, int idx)
+/****************************************************************************/
+{
+  return ! luaunpanic_rawlen(rcp, L, idx);
 }
 
 /****************************************************************************/
