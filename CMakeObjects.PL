@@ -220,7 +220,7 @@ foreach my $source (@sources) {
     $cbuilder->compile(
 	source        => $source,
 	object_file   => $obj,
-        extra_compiler_flags => "-DPCRE2_CODE_UNIT_WIDTH=8 -DPCRE2_STATIC -DMARPAESLIF_BUFSIZ=1048576 -DMARPAESLIF_NTRACE=1 -DLUA_32BITS -DLUA_USE_C89 -DMARPAESLIFLUA_EMBEDDED",
+        extra_compiler_flags => "-DPCRE2_CODE_UNIT_WIDTH=8 -DPCRE2_STATIC -DMARPAESLIF_BUFSIZ=1048576 -DMARPAESLIF_NTRACE=1 -DMARPAESLIFLUA_EMBEDDED", #  -DLUA_32BITS -DLUA_USE_C89
 	include_dirs  => [ 'include', File::Spec->catdir('output', 'include'), @additional_includes ],
 	'C++'         => $is_cplusplus
 	);
