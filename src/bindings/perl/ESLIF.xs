@@ -1917,34 +1917,33 @@ static void marpaESLIFPerl_stack_setv(pTHX_ marpaESLIFValue_t *marpaESLIFValuep,
     marpaESLIFValueResult.type            = MARPAESLIF_VALUE_TYPE_BOOL;
     marpaESLIFValueResult.contextp        = MARPAESLIFPERL_CONTEXT;
     marpaESLIFValueResult.representationp = NULL;
+    /* Since boolean is not a true type in Perl, most booleans involves magic */
+    SvGETMAGIC(svp);
     marpaESLIFValueResult.u.b             = SvTRUE(svp) ? MARPAESLIFVALUERESULTBOOL_TRUE : MARPAESLIFVALUERESULTBOOL_FALSE;
     opaqueb = 0;
   } else if (marpaESLIFPerl_is_Types__Standard(aTHX_ svp, "Types::Standard::is_Int")) {
     iv = SvIV(svp);
-    if (sv_cmp(svp, sv_2mortal(newSViv(iv))) == 0) {
-      /* Ok if we loosed nothing */
-      if ((iv >= SHRT_MIN) && (iv <= SHRT_MAX)) {
-        /* Ok if it fits into [SHRT_MIN,SHRT_MAX] */
-        marpaESLIFValueResult.type            = MARPAESLIF_VALUE_TYPE_SHORT;
-        marpaESLIFValueResult.contextp        = MARPAESLIFPERL_CONTEXT;
-        marpaESLIFValueResult.representationp = NULL;
-        marpaESLIFValueResult.u.b             = (short) iv;
-        opaqueb = 0;
-      } else if ((iv >= INT_MIN) && (iv <= INT_MAX)) {
-        /* Ok if it fits into [INT_MIN,INT_MAX] */
-        marpaESLIFValueResult.type            = MARPAESLIF_VALUE_TYPE_INT;
-        marpaESLIFValueResult.contextp        = MARPAESLIFPERL_CONTEXT;
-        marpaESLIFValueResult.representationp = NULL;
-        marpaESLIFValueResult.u.i             = (int) iv;
-        opaqueb = 0;
-      } else if ((iv >= LONG_MIN) && (iv <= LONG_MAX)) {
-        /* Ok if it fits into [LONG_MIN,LONG_MAX] */
-        marpaESLIFValueResult.type            = MARPAESLIF_VALUE_TYPE_LONG;
-        marpaESLIFValueResult.contextp        = MARPAESLIFPERL_CONTEXT;
-        marpaESLIFValueResult.representationp = NULL;
-        marpaESLIFValueResult.u.l             = (long) iv;
-        opaqueb = 0;
-      }
+    if ((iv >= SHRT_MIN) && (iv <= SHRT_MAX)) {
+      /* Ok if it fits into [SHRT_MIN,SHRT_MAX] */
+      marpaESLIFValueResult.type            = MARPAESLIF_VALUE_TYPE_SHORT;
+      marpaESLIFValueResult.contextp        = MARPAESLIFPERL_CONTEXT;
+      marpaESLIFValueResult.representationp = NULL;
+      marpaESLIFValueResult.u.b             = (short) iv;
+      opaqueb = 0;
+    } else if ((iv >= INT_MIN) && (iv <= INT_MAX)) {
+      /* Ok if it fits into [INT_MIN,INT_MAX] */
+      marpaESLIFValueResult.type            = MARPAESLIF_VALUE_TYPE_INT;
+      marpaESLIFValueResult.contextp        = MARPAESLIFPERL_CONTEXT;
+      marpaESLIFValueResult.representationp = NULL;
+      marpaESLIFValueResult.u.i             = (int) iv;
+      opaqueb = 0;
+    } else if ((iv >= LONG_MIN) && (iv <= LONG_MAX)) {
+      /* Ok if it fits into [LONG_MIN,LONG_MAX] */
+      marpaESLIFValueResult.type            = MARPAESLIF_VALUE_TYPE_LONG;
+      marpaESLIFValueResult.contextp        = MARPAESLIFPERL_CONTEXT;
+      marpaESLIFValueResult.representationp = NULL;
+      marpaESLIFValueResult.u.l             = (long) iv;
+      opaqueb = 0;
     }
   } else if (marpaESLIFPerl_is_Types__Standard(aTHX_ svp, "Types::Standard::is_StrictNum")) {
     /* Ok if it fits into [DBL_MIN,DBL_MAX] and we loosed nothing */

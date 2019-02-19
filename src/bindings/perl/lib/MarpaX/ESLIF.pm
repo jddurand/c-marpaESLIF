@@ -34,6 +34,20 @@ sub _nvtype_is___float128 {
     return (($Config{nvtype} || '') eq '__float128') ? 1 : 0
 }
 
+#
+# At bootstrap we cache $true and $false so they must be available before the XS loader
+#
+our $true;
+our $false;
+BEGIN {
+    use JSON::MaybeXS 1.004000 qw/is_bool/;
+    $true = JSON::MaybeXS::true();
+    $false = JSON::MaybeXS::false();
+}
+
+#
+# Bootstrap
+#
 BEGIN {
     # VERSION
 
@@ -55,7 +69,6 @@ use MarpaX::ESLIF::Rule::PropertyBitSet;
 
 # Other modules
 use Math::BigFloat qw//;
-use JSON::MaybeXS 1.004000 qw/is_bool/;
 
 =head1 DESCRIPTION
 
@@ -205,11 +218,6 @@ Defaults to C<JSON::MaybeXS::false()>.
 Defaults to C<JSON::MaybeXS::is_bool($value)>
 
 =back
-
-=cut
-
-our $true = JSON::MaybeXS::true();
-our $false = JSON::MaybeXS::false();
 
 =head1 SEE ALSO
 
