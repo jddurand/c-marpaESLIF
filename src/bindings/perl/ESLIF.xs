@@ -358,6 +358,8 @@ SV *boot_MarpaX__ESLIF__UTF_8_svp;
 SV *boot_MarpaX__ESLIF__Math__BigFloat_svp;
 short boot_nvtype_is_long_doubleb;
 short boot_nvtype_is___float128;
+SV *boot_MarpaX__ESLIF__true_svp;
+SV *boot_MarpaX__ESLIF__false_svp;
 
 /*****************************************************************************/
 /* Macros                                                                    */
@@ -1883,14 +1885,14 @@ static short marpaESLIFPerl_is_bool(pTHX_ SV *svp)
 static SV *marpaESLIFPerl_true(pTHX_ void *notusedp)
 /*****************************************************************************/
 {
-  return marpaESLIFPerl_call_actionp(aTHX_ NULL /* interfacep */, "MarpaX::ESLIF::true", NULL /* avp */, NULL /* Perl_MarpaX_ESLIF_Valuep */, 0 /* evalb */, 0 /* evalSilentb */);
+  return newSVsv(boot_MarpaX__ESLIF__true_svp);
 }
 
 /*****************************************************************************/
 static SV *marpaESLIFPerl_false(pTHX_ void *notusedp)
 /*****************************************************************************/
 {
-  return marpaESLIFPerl_call_actionp(aTHX_ NULL /* interfacep */, "MarpaX::ESLIF::false", NULL /* avp */, NULL /* Perl_MarpaX_ESLIF_Valuep */, 0 /* evalb */, 0 /* evalSilentb */);
+  return newSVsv(boot_MarpaX__ESLIF__false_svp);
 }
 
 /*****************************************************************************/
@@ -2022,6 +2024,8 @@ BOOT:
   boot_MarpaX__ESLIF__Math__BigFloat_svp = newSVpvn("Math::BigFloat", strlen("Math::BigFloat"));
   boot_nvtype_is_long_doubleb = marpaESLIFPerl_call_methodb(aTHX_ boot_MarpaX__ESLIF_svp, "_nvtype_is_long_double");
   boot_nvtype_is___float128 = marpaESLIFPerl_call_methodb(aTHX_ boot_MarpaX__ESLIF_svp, "_nvtype_is___float128");
+  boot_MarpaX__ESLIF__true_svp = get_sv("MarpaX::ESLIF::true", 0);
+  boot_MarpaX__ESLIF__false_svp = get_sv("MarpaX::ESLIF::false", 0);
 
 PROTOTYPES: ENABLE
 
