@@ -3646,7 +3646,6 @@ static short marpaESLIFLua_importb(marpaESLIFValue_t *marpaESLIFValuep, void *us
         marpaESLIFLua_luaL_errorf(L, "malloc failure, %s", strerror(errno));
         goto err;
       }
-      fprintf(stderr, "%s: malloc => %p\n", funcs, marpaESLIFValueResultDupp);
       *marpaESLIFValueResultDupp = *marpaESLIFValueResultp;;
       if (! marpaESLIFLua_lua_pushlightuserdata(L, marpaESLIFValueResultDupp->u.p.p)) goto err;
       /* We want to remember that marpaESLIFValueResultDupp->u.p.p is associated to marpaESLIFValueResultDupp */
@@ -6756,7 +6755,6 @@ static short marpaESLIFLua_stack_setb(lua_State *L, marpaESLIFValue_t *marpaESLI
       if (! marpaESLIFLua_lua_topointer((const void **) &marpaESLIFValueResultDupp, L, -1)) goto err;
       if (! marpaESLIFLua_lua_pop(L, 2)) goto err;                                                                               /* Stack: ... */
       if (marpaESLIFValueResultDupp != NULL) {
-        fprintf(stderr, "%s: back to eslif: %p\n", funcs, marpaESLIFValueResultDupp);
         *marpaESLIFValueResultp = *marpaESLIFValueResultDupp;
       } else {
         marpaESLIFValueResultp->contextp        = MARPAESLIFLUA_CONTEXT;
@@ -7002,7 +7000,6 @@ static int marpaESLIFLua_marpaESLIFOpaque_freei(lua_State *L)
     if (! marpaESLIFLua_lua_touserdata((void **) &marpaESLIFValueResultDupp, L, -1)) goto err;
 
     if (marpaESLIFValueResultDupp != NULL) {
-      fprintf(stderr, "%s: free(%p)\n", funcs, marpaESLIFValueResultDupp);
       free(marpaESLIFValueResultDupp);
     }
 
