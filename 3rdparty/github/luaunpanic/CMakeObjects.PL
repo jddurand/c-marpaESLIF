@@ -27,7 +27,10 @@ my $config_h    = File::Spec->catfile('output', 'include', 'luaunpanic', 'lua', 
 make_path(dirname($config_h));
 
 my $ac = Config::AutoConf::INI->new(logfile => 'config.log');
-my @extra_compiler_flags = ("-DLUA_32BITS", "-DLUA_USE_C89");
+my @extra_compiler_flags = ();
+#
+# Lua defaults are ok in most applications
+# push(@extra_compiler_flags, "-DLUA_32BITS", "-DLUA_USE_C89");
 if (is_os_type('Windows')) {
     push(@extra_compiler_flags, '-DLUA_DL_DLL');
 } else {

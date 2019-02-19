@@ -4,8 +4,8 @@ IF (NOT MYPACKAGEBOOTSTRAP_DONE)
 ENDIF ()
 MYPACKAGESTART (luaunpanic 5 3 4)
 
-OPTION (LUA_32BITS "Use 32-bit integers and 32-bit floats" ON)
-OPTION (LUA_USE_C89 "Avoid the use of few C99 feature" ON)
+OPTION (LUA_32BITS "Use 32-bit integers and 32-bit floats" OFF)
+OPTION (LUA_USE_C89 "Avoid the use of few C99 feature" OFF)
 
 ###########
 # Library #
