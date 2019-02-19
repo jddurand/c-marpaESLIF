@@ -25,11 +25,12 @@ sub isWithNull         { 0 }
 sub maxParses          { 0 }
 sub getResult          { $_[0]->{result} }
 sub setResult          { $_[0]->{result} = $_[1] }
-sub perl_proxy         { print STDERR "perl_proxy(" . ($_[1] // 'undef') . ")\n"; $_[1] }
+sub perl_proxy         { $_[1] }
 
 package main;
 use strict;
 use warnings FATAL => 'all';
+use Test::Deep::NoTest qw/cmp_details deep_diag/;
 use Log::Log4perl qw/:easy/;
 use Log::Any::Adapter;
 use Log::Any qw/$log/;
@@ -41,24 +42,26 @@ BEGIN {
     use utf8;
     @input =
         (
-         # undef,
-         # "XXX",
-         # ["\xa0\xa1", 0],
-         # ["\xf0\x28\x8c\x28", 0],
-         # "Ḽơᶉëᶆ ȋṕšᶙṁ ḍỡḽǭᵳ ʂǐť ӓṁệẗ, ĉṓɲṩḙċťᶒțûɾ ấɖḯƥĭṩčįɳġ ḝłįʈ, șếᶑ ᶁⱺ ẽḭŭŝḿꝋď ṫĕᶆᶈṓɍ ỉñḉīḑȋᵭṵńť ṷŧ ḹẩḇőꝛế éȶ đꝍꞎôꝛȇ ᵯáꞡᶇā ąⱡîɋṹẵ.",
-         # ["Ḽơᶉëᶆ ȋṕšᶙṁ ḍỡḽǭᵳ ʂǐť ӓṁệẗ, ĉṓɲṩḙċťᶒțûɾ ấɖḯƥĭṩčįɳġ ḝłįʈ, șếᶑ ᶁⱺ ẽḭŭŝḿꝋď ṫĕᶆᶈṓɍ ỉñḉīḑȋᵭṵńť ṷŧ ḹẩḇőꝛế éȶ đꝍꞎôꝛȇ ᵯáꞡᶇā ąⱡîɋṹẵ.", 0],
-         # ["Ḽơᶉëᶆ ȋṕšᶙṁ ḍỡḽǭᵳ ʂǐť ӓṁệẗ, ĉṓɲṩḙċťᶒțûɾ ấɖḯƥĭṩčįɳġ ḝłįʈ, șếᶑ ᶁⱺ ẽḭŭŝḿꝋď ṫĕᶆᶈṓɍ ỉñḉīḑȋᵭṵńť ṷŧ ḹẩḇőꝛế éȶ đꝍꞎôꝛȇ ᵯáꞡᶇā ąⱡîɋṹẵ.", 1],
-         # 0,
-         # 1,
-         # -32768,
-         # 32767,
-         # -32769,
-         # 32768,
-         # 2.34,
-         # 1.6e+308,
+         undef,
+         "XXX",
+         ["\xa0\xa1", 0],
+         ["\xf0\x28\x8c\x28", 0],
+         "Ḽơᶉëᶆ ȋṕšᶙṁ ḍỡḽǭᵳ ʂǐť ӓṁệẗ, ĉṓɲṩḙċťᶒțûɾ ấɖḯƥĭṩčįɳġ ḝłįʈ, șếᶑ ᶁⱺ ẽḭŭŝḿꝋď ṫĕᶆᶈṓɍ ỉñḉīḑȋᵭṵńť ṷŧ ḹẩḇőꝛế éȶ đꝍꞎôꝛȇ ᵯáꞡᶇā ąⱡîɋṹẵ.",
+         ["Ḽơᶉëᶆ ȋṕšᶙṁ ḍỡḽǭᵳ ʂǐť ӓṁệẗ, ĉṓɲṩḙċťᶒțûɾ ấɖḯƥĭṩčįɳġ ḝłįʈ, șếᶑ ᶁⱺ ẽḭŭŝḿꝋď ṫĕᶆᶈṓɍ ỉñḉīḑȋᵭṵńť ṷŧ ḹẩḇőꝛế éȶ đꝍꞎôꝛȇ ᵯáꞡᶇā ąⱡîɋṹẵ.", 0],
+         ["Ḽơᶉëᶆ ȋṕšᶙṁ ḍỡḽǭᵳ ʂǐť ӓṁệẗ, ĉṓɲṩḙċťᶒțûɾ ấɖḯƥĭṩčįɳġ ḝłįʈ, șếᶑ ᶁⱺ ẽḭŭŝḿꝋď ṫĕᶆᶈṓɍ ỉñḉīḑȋᵭṵńť ṷŧ ḹẩḇőꝛế éȶ đꝍꞎôꝛȇ ᵯáꞡᶇā ąⱡîɋṹẵ.", 1],
+         0,
+         1,
+         -32768,
+         32767,
+         -32769,
+         32768,
+         2.34,
+         1.6e+308,
          Math::BigFloat->new("6.78E+9"),
          Math::BigInt->new("6.78E+9"),
-         $MarpaX::ESLIF::true
+         $MarpaX::ESLIF::true,
+         $MarpaX::ESLIF::false,
+         { one => "one", two => "two", perltrue => 1, true => $MarpaX::ESLIF::true }
         );
 }
 use Test::More tests => 1 + scalar(@input);
@@ -116,6 +119,7 @@ PERL_INPUT    ~ [^\s\S]
   io.stdout:setvbuf('no')
 
   function lua_proxy(value)
+    io.write("lua_proxy: ")
     table_print(value)
     return value
   end
@@ -135,7 +139,8 @@ foreach my $inputArray (@input) {
     my $eslifValue = MarpaX::ESLIF::Value->new($eslifRecognizer, $eslifValueInterface);
     $eslifValue->value();
     my $value = $eslifValueInterface->getResult;
-    is($value, $input, ($value // "undef") . " == " . ($input // "undef") . " (" . (ref($input) || 'scalar') . ")");
+    my ($ok, $stack) = cmp_details($value, $input);
+    diag(deep_diag($stack)) unless (ok($ok, "import/export of " . (ref($input) ? ref($input) : ($input // 'undef'))));
 }
 
 done_testing();
