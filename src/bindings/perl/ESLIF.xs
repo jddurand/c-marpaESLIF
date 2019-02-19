@@ -1919,7 +1919,7 @@ static void marpaESLIFPerl_stack_setv(pTHX_ marpaESLIFValue_t *marpaESLIFValuep,
     marpaESLIFValueResult.representationp = NULL;
     /* Since boolean is not a true type in Perl, most booleans involves magic */
     SvGETMAGIC(svp);
-    marpaESLIFValueResult.u.b             = SvTRUE(svp) ? MARPAESLIFVALUERESULTBOOL_TRUE : MARPAESLIFVALUERESULTBOOL_FALSE;
+    marpaESLIFValueResult.u.y             = SvTRUE(svp) ? MARPAESLIFVALUERESULTBOOL_TRUE : MARPAESLIFVALUERESULTBOOL_FALSE;
     opaqueb = 0;
   } else if (marpaESLIFPerl_is_Types__Standard(aTHX_ svp, "Types::Standard::is_Int")) {
     iv = SvIV(svp);
