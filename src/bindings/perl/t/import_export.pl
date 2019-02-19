@@ -59,17 +59,15 @@ BEGIN {
          1.6e+308,
          Math::BigFloat->new("6.78E+9"),
          Math::BigInt->new("6.78E+9"),
-         $MarpaX::ESLIF::true,
-         $MarpaX::ESLIF::false,
          { one => "one", two => "two", perltrue => 1, true => $MarpaX::ESLIF::true }
         );
 }
-use Test::More tests => 1 + scalar(@input);
+use Test::More tests => 1 + scalar(@input) + 2;
 use Test::More::UTF8;
 use open qw( :utf8 :std );
 
 BEGIN { require_ok('MarpaX::ESLIF') }
-
+push(@input, $MarpaX::ESLIF::true, $MarpaX::ESLIF::false);
 #
 # Init log
 #
@@ -140,7 +138,7 @@ foreach my $inputArray (@input) {
     $eslifValue->value();
     my $value = $eslifValueInterface->getResult;
     my ($ok, $stack) = cmp_details($value, $input);
-    diag(deep_diag($stack)) unless (ok($ok, "import/export of " . (ref($input) ? ref($input) : ($input // 'undef'))));
+    diag(deep_diag($stack)) unless (ok($ok, "import/export of " . (ref($input) ? ref($input) : (defined($input) ? "$input" : 'undef'))));
 }
 
 done_testing();
