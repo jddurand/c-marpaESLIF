@@ -55,7 +55,7 @@ use MarpaX::ESLIF::Rule::PropertyBitSet;
 
 # Other modules
 use Math::BigFloat qw//;
-use JSON::MaybeXS qw/is_bool/;
+use JSON::MaybeXS 1.004000 qw/is_bool/;
 
 =head1 DESCRIPTION
 
