@@ -68,7 +68,7 @@ use open qw( :utf8 :std );
 BEGIN { require_ok('MarpaX::ESLIF') }
 push(@input, $MarpaX::ESLIF::true);
 push(@input, $MarpaX::ESLIF::false);
-push(@input, { one => "one", two => "two", perltrue => 1, true => $MarpaX::ESLIF::true, false => $MarpaX::ESLIF::false, 'else' => 'again' }); # Take care: 'undef' => undef will cause trouble because natively lua discards it
+push(@input, { one => "one", two => "two", perltrue => 1, true => $MarpaX::ESLIF::true, false => $MarpaX::ESLIF::false, 'else' => 'again', 'undef' => undef }); # will cause trouble because natively lua discards it
 
 #
 # Init log
@@ -92,35 +92,7 @@ perl_input  ::= PERL_INPUT action => perl_proxy
 PERL_INPUT    ~ [^\s\S]
 
 <luascript>
-  function table_print (tt, indent, done)
-    done = done or {}
-    indent = indent or 0
-    if type(tt) == "table" then
-      for key, value in pairs (tt) do
-        io.write(string.rep (" ", indent)) -- indent it
-        if type (value) == "table" and not done [value] then
-          done [value] = true
-          io.write(string.format("[%s] => table\n", tostring (key)));
-          io.write(string.rep (" ", indent+4)) -- indent it
-          io.write("(\n");
-          table_print (value, indent + 7, done)
-          io.write(string.rep (" ", indent+4)) -- indent it
-          io.write(")\n");
-        else
-          io.write(string.format("[%s] => %s (%s)\n",
-              tostring (key), tostring(value), type(value)))
-        end
-      end
-    else
-      io.write(tostring(tt) .. "\n")
-    end
-  end
-
-  io.stdout:setvbuf('no')
-
   function lua_proxy(value)
-    io.write("lua_proxy:\n")
-    table_print(value)
     return value
   end
 </luascript>
