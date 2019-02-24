@@ -44,7 +44,7 @@ const static char *dsl = "\n"
   "           | array                                                            # ::shift (default action)\n"
   "           | 'true'                               action => ::true            # built-in true action\n"
   "           | 'false'                              action => ::false           # built-in false action\n"
-  "           | 'null'                               action => ::lua->lua_null\n"
+  "           | 'null'                               action => ::undef\n"
   "\n"
   "# -----------\n"
   "# JSON object\n"
@@ -203,16 +203,13 @@ const static char *dsl = "\n"
   "  end\n"
   "  -----------------------------------\n"
   "  function lua_members(...)\n"
-  "    local _result = {}\n"
+  "    local _result = niledtablekv()\n"
   "    for _i=1,select('#', ...) do\n"
   "      local _pair = select(_i, ...)\n"
   "      local _key = _pair[1]\n"
   "      local _value = _pair[2]\n"
   "      _result[_key] = _value\n"
   "    end\n"
-  "    local _mt = {}\n"
-  "    _mt.canarray = false -- hint to say that we never want that to appear as a marpaESLIF array\n"
-  "    setmetatable(_result, _mt)\n"
   "    return _result\n"
   "  end\n"
   "  -----------------------------------\n"
@@ -223,12 +220,13 @@ const static char *dsl = "\n"
   "  -----------------------------------\n"
   "  function lua_empty_string()\n"
   "    local _result = ''\n"
-  "    _result:encoding('UTF-8')\n"
+  "    -- Encoding will be guessed if not set. For an empty string, the guess is always UTF-8 -;\n"
   "    return _result\n"
   "  end\n"
   "  -----------------------------------\n"
   "  function lua_chars(chars)\n"
   "    local _result = chars\n"
+  "    -- Concatenation of lexemes always produces an UTF-8 string\n"
   "    _result:encoding('UTF-8')\n"
   "    return _result\n"
   "  end\n"
@@ -303,13 +301,17 @@ int main() {
   valueContext_t               valueContext;
 
   const static char           *inputs[] = {
+    "{\n"
+    "  \"Image\": {\n"
+    "    \"IDs\": [116]\n"
+    "  }\n"
+    "}",
     "[\n"
     "  {\n"
     "     \"precision\": \"zip\",\n"
     "     \"Country\":   \"US\"\n"
     "  }\n"
     "]",
-    "{\"test\":null}",
     "[\"a\",\"b\"]",
     "[\"\"]",
     "[\"\\uD801\\udc37\"]",
@@ -411,6 +413,7 @@ int main() {
     "{}",
     "[]",
     "{\"1\\u12343\":2}",
+    "{\"test\":null}"
   };
 
   genericLoggerp = GENERICLOGGER_NEW(GENERICLOGGER_LOGLEVEL_DEBUG);

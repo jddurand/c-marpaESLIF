@@ -298,12 +298,12 @@ static int   _marpaESLIF_lua_grammarWriteri(lua_State *L, const void* p, size_t 
     }                                                                 \
   } while (0)
 
-#define LUAL_REQUIREF(containerp, modname, openf, glb) do {	      \
-    if (luaunpanicL_requiref(containerp->L, modname, openf, glb)) {   \
-      LOG_PANIC_STRING(containerp, lual_requiref);		      \
-      errno = ENOSYS;                                                 \
-      goto err;                                                       \
-    }                                                                 \
+#define LUAL_REQUIREF(containerp, modname, openf, glb) do {             \
+    if (luaunpanicL_requiref(containerp->L, modname, openf, glb)) {     \
+      LOG_PANIC_STRING(containerp, lual_requiref);                      \
+      errno = ENOSYS;                                                   \
+      goto err;                                                         \
+    }                                                                   \
   } while (0)
 
 #define LUA_POP(containerp, n) do {                             \
@@ -745,6 +745,13 @@ static short marpaESLIFLua_lua_rawseti(lua_State *L, int index, lua_Integer i)
 }
 
 /****************************************************************************/
+static short marpaESLIFLua_lua_seti(lua_State *L, int index, lua_Integer i)
+/****************************************************************************/
+{
+  return ! luaunpanic_seti(L, index, i);
+}
+
+/****************************************************************************/
 static short marpaESLIFLua_lua_pushstring(const char **luasp, lua_State *L, const char *s)
 /****************************************************************************/
 {
@@ -1029,6 +1036,41 @@ static short marpaESLIFLua_lua_rawlen(size_t *rcp, lua_State *L, int idx)
 /****************************************************************************/
 {
   return ! luaunpanic_rawlen(rcp, L, idx);
+}
+
+/****************************************************************************/
+static short marpaESLIFLua_luaL_dostring(int *rcp, lua_State *L, const char *fn)
+/****************************************************************************/
+{
+  return ! luaunpanicL_dostring(rcp, L, fn);
+}
+
+/****************************************************************************/
+static short marpaESLIFLua_luaL_loadstring(int *rcp, lua_State *L, const char *fn)
+/****************************************************************************/
+{
+  return ! luaunpanicL_loadstring(rcp, L, fn);
+}
+
+/****************************************************************************/
+static short marpaESLIFLua_lua_pushglobaltable(lua_State *L)
+/****************************************************************************/
+{
+  return ! luaunpanic_pushglobaltable(L);
+}
+
+/****************************************************************************/
+static short marpaESLIFLua_lua_settable(lua_State *L, int idx)
+/****************************************************************************/
+{
+  return ! luaunpanic_settable(L, idx);
+}
+
+/****************************************************************************/
+static short marpaESLIFLua_lua_gettable(int *rcp, lua_State *L, int idx)
+/****************************************************************************/
+{
+  return ! luaunpanic_gettable(rcp, L, idx);
 }
 
 /****************************************************************************/
