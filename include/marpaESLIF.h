@@ -424,6 +424,9 @@ extern "C" {
   /* -------------------------------------------------------------------------------------------------------------------------------------------------------------- */
   marpaESLIF_EXPORT short                         marpaESLIFValue_importb(marpaESLIFValue_t *marpaESLIFValuep, marpaESLIFValueResult_t *marpaESLIFValueResultp, marpaESLIFValueResult_t *marpaESLIFValueResultResolvedp);
 
+  /* Helper routine to guess the encoding of a byte array. If it returns a non-NULL value it is the responsibility of the caller to free it */
+  marpaESLIF_EXPORT char                         *marpaESLIFValue_encodings(marpaESLIF_t *marpaESLIFp, char *bytep, size_t bytel);
+
   marpaESLIF_EXPORT void                          marpaESLIF_freev(marpaESLIF_t *marpaESLIFp);
 
 #ifdef __cplusplus

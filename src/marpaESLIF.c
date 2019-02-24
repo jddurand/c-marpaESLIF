@@ -16330,5 +16330,48 @@ static inline void _marpaESLIF_codepoint_to_json(marpaESLIF_uint32_t codepoint, 
   }
 }
 
+/*****************************************************************************/
+char *marpaESLIFValue_encodings(marpaESLIF_t *marpaESLIFp, char *bytep, size_t bytel)
+/*****************************************************************************/
+{
+  static const char   *funcs     = "marpaESLIFValue_encodings";
+  char                *encodings = NULL;
+  marpaESLIF_string_t *utf8p     = NULL;
+  marpaESLIF_string_t  string;
+
+  if (marpaESLIFp == NULL) {
+    errno = EINVAL;
+    goto err;
+  }
+
+  string.bytep          = bytep;
+  string.bytel          = bytel;
+  string.encodingasciis = NULL;
+  string.asciis         = NULL;
+
+  utf8p = _marpaESLIF_string2utf8p(marpaESLIFp, &string, 1 /* tconvsilentb */);
+  if (utf8p == NULL) {
+    goto err;
+  }
+
+  encodings = strdup(utf8p->encodingasciis);
+  if (encodings == NULL) {
+    MARPAESLIF_ERRORF(marpaESLIFp, "strdup failure, %s", strerror(errno));
+    goto err;
+  }
+
+  goto done;
+
+ err:
+  if (encodings != NULL) {
+    free(encodings);
+    encodings = NULL;
+  }
+
+ done:
+  _marpaESLIF_string_freev(utf8p, 0 /* onStackb */);
+  return encodings;
+}
+
 #include "bootstrap.c"
 #include "lua.c"
