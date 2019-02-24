@@ -59,15 +59,17 @@ BEGIN {
          1.6e+308,
          Math::BigFloat->new("6.78E+9"),
          Math::BigInt->new("6.78E+9"),
-         { one => "one", two => "two", perltrue => 1, true => $MarpaX::ESLIF::true }
         );
 }
-use Test::More tests => 1 + scalar(@input) + 2;
+use Test::More tests => 1 + scalar(@input) + 3; # 3 pushes after the require_ok
 use Test::More::UTF8;
 use open qw( :utf8 :std );
 
 BEGIN { require_ok('MarpaX::ESLIF') }
-push(@input, $MarpaX::ESLIF::true, $MarpaX::ESLIF::false);
+push(@input, $MarpaX::ESLIF::true);
+push(@input, $MarpaX::ESLIF::false);
+push(@input, { one => "one", two => "two", perltrue => 1, true => $MarpaX::ESLIF::true, false => $MarpaX::ESLIF::false, 'else' => 'again' }); # Take care: 'undef' => undef will cause trouble because natively lua discards it
+
 #
 # Init log
 #
@@ -105,8 +107,8 @@ PERL_INPUT    ~ [^\s\S]
           io.write(string.rep (" ", indent+4)) -- indent it
           io.write(")\n");
         else
-          io.write(string.format("[%s] => %s\n",
-              tostring (key), tostring(value)))
+          io.write(string.format("[%s] => %s (%s)\n",
+              tostring (key), tostring(value), type(value)))
         end
       end
     else
@@ -117,7 +119,7 @@ PERL_INPUT    ~ [^\s\S]
   io.stdout:setvbuf('no')
 
   function lua_proxy(value)
-    io.write("lua_proxy: ")
+    io.write("lua_proxy:\n")
     table_print(value)
     return value
   end
