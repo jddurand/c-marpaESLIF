@@ -58,6 +58,9 @@
       } else {                                                          \
         type luarc;							\
         luarc = call;							\
+        if (luarcp != NULL) {                                           \
+          *luarcp = luarc;                                              \
+        }                                                               \
         rc = 0;                                                         \
       }                                                                 \
     }                                                                   \
