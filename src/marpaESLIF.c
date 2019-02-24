@@ -16331,10 +16331,10 @@ static inline void _marpaESLIF_codepoint_to_json(marpaESLIF_uint32_t codepoint, 
 }
 
 /*****************************************************************************/
-char *marpaESLIFValue_encodings(marpaESLIF_t *marpaESLIFp, char *bytep, size_t bytel)
+char *marpaESLIF_encodings(marpaESLIF_t *marpaESLIFp, char *bytep, size_t bytel)
 /*****************************************************************************/
 {
-  static const char   *funcs     = "marpaESLIFValue_encodings";
+  static const char   *funcs     = "marpaESLIF_encodings";
   char                *encodings = NULL;
   marpaESLIF_string_t *utf8p     = NULL;
   marpaESLIF_string_t  string;
