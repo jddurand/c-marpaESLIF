@@ -570,7 +570,7 @@ short luaunpanicL_dofile(int *rcp, lua_State *L, const char *fn)
     if (rcp != NULL) {
       *rcp = rc;
     }
-    return 0;
+    return 1;
   }
 
   return luaunpanic_pcall(rcp, L, 0, LUA_MULTRET, 0);
@@ -589,7 +589,7 @@ short luaunpanicL_dostring(int *rcp, lua_State *L, const char *fn)
     if (rcp != NULL) {
       *rcp = rc;
     }
-    return 0;
+    return 1;
   }
 
   return luaunpanic_pcall(rcp, L, 0, LUA_MULTRET, 0);
