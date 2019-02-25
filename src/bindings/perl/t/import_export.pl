@@ -44,6 +44,7 @@ BEGIN {
         (
          undef,
          "XXX",
+         "\xa0\xa1",
          ["\xa0\xa1", 0],
          ["\xf0\x28\x8c\x28", 0],
          "Ḽơᶉëᶆ ȋṕšᶙṁ ḍỡḽǭᵳ ʂǐť ӓṁệẗ, ĉṓɲṩḙċťᶒțûɾ ấɖḯƥĭṩčįɳġ ḝłįʈ, șếᶑ ᶁⱺ ẽḭŭŝḿꝋď ṫĕᶆᶈṓɍ ỉñḉīḑȋᵭṵńť ṷŧ ḹẩḇőꝛế éȶ đꝍꞎôꝛȇ ᵯáꞡᶇā ąⱡîɋṹẵ.",
@@ -58,10 +59,11 @@ BEGIN {
          2.34,
          1.6e+308,
          Math::BigFloat->new("6.78E+9"),
-         Math::BigInt->new("6.78E+9"),
+         Math::BigInt->new("6.78E+9")
         );
 }
-use Test::More tests => 1 + scalar(@input) + 3; # 3 pushes after the require_ok
+use Safe::Isa;
+use Test::More tests => 1 + scalar(@input) + 4; # 4 pushes after the require_ok
 use Test::More::UTF8;
 use open qw( :utf8 :std );
 
@@ -69,7 +71,7 @@ BEGIN { require_ok('MarpaX::ESLIF') }
 push(@input, $MarpaX::ESLIF::true);
 push(@input, $MarpaX::ESLIF::false);
 push(@input, { one => "one", two => "two", perltrue => 1, true => $MarpaX::ESLIF::true, false => $MarpaX::ESLIF::false, 'else' => 'again', 'undef' => undef }); # will cause trouble because natively lua discards it
-
+push(@input, MarpaX::ESLIF::String->new("Ḽơᶉëᶆ", 'UTF-8'));
 #
 # Init log
 #
@@ -111,6 +113,7 @@ foreach my $inputArray (@input) {
     my $eslifValue = MarpaX::ESLIF::Value->new($eslifRecognizer, $eslifValueInterface);
     $eslifValue->value();
     my $value = $eslifValueInterface->getResult;
+    $value = $value->value if (! $input->$_isa('MarpaX::ESLIF::String')) && $value->$_isa('MarpaX::ESLIF::String'); # We want the raw value, without encoding information
     my ($ok, $stack) = cmp_details($value, $input);
     diag(deep_diag($stack)) unless (ok($ok, "import/export of " . (ref($input) ? ref($input) : (defined($input) ? "$input" : 'undef'))));
 }
