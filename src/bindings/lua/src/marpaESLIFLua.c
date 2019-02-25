@@ -14,6 +14,9 @@
 #include "lua_newkeywords.c"
 #include "lua_niledtable.c"
 
+/* Shall this module determine automatically string encoding ? */
+/* #define MARPAESLIFLUA_AUTO_ENCODING_DETECT */
+
 /* Global table for the multiton pattern */
 #define MARPAESLIFMULTITONSTABLE "__marpaESLIFLuaMultitonsTable"
 /* Every key   is a marpaESLIFLuaContext light userdata */
@@ -6514,7 +6517,9 @@ static short marpaESLIFLua_stack_setb(lua_State *L, marpaESLIFValue_t *marpaESLI
   const void                   *pointerp;
   size_t                        pointerl;
   int                           opaqueTypei;
+#ifdef MARPAESLIFLUA_AUTO_ENCODING_DETECT
   short                         encodingheapb;
+#endif
 
   /* fprintf(stdout, "export start\n"); fflush(stdout); fflush(stderr); */
   
@@ -6657,7 +6662,9 @@ static short marpaESLIFLua_stack_setb(lua_State *L, marpaESLIFValue_t *marpaESLI
       marpaESLIFValueResultp->representationp    = NULL;
 
       /* Does it have an associated encoding ? */
+#ifdef MARPAESLIFLUA_AUTO_ENCODING_DETECT
       encodingheapb = 0;
+#endif
       MARPAESLIFLUA_GETORCREATEGLOBAL(L, MARPAESLIFSTRINGTOENCODINGTABLE, NULL /* gcp */, "k" /* mode */);                      /* Stack: ..., MARPAESLIFSTRINGTOENCODINGTABLE */
       if (! marpaESLIFLua_lua_pushnil(L)) goto err;                                                                             /* Stack: ..., MARPAESLIFSTRINGTOENCODINGTABLE, nil */
       if (! marpaESLIFLua_lua_copy(L, currenti, -1)) goto err;                                                                  /* Stack: ..., MARPAESLIFSTRINGTOENCODINGTABLE, string */
@@ -6666,13 +6673,17 @@ static short marpaESLIFLua_stack_setb(lua_State *L, marpaESLIFValue_t *marpaESLI
       if (encodingtypei == LUA_TSTRING) {
 	if (! marpaESLIFLua_lua_tostring(&encodings, L, -1)) goto err;
       } else if (encodingtypei == LUA_TNIL) {
+#ifdef MARPAESLIFLUA_AUTO_ENCODING_DETECT
         /* We try to guess the encoding */
         encodings = marpaESLIF_encodings(marpaESLIFp, p, tmpl);
         if (encodings != NULL) {
           encodingheapb = 1;
         }
+#else
+        encodings = NULL;
+#endif
       } else {
-	marpaESLIFLua_luaL_errorf(L, "MARPAESLIFSTRINGTOENCODINGTABLE value type is not string or nil, got %d", encodingtypei);
+	marpaESLIFLua_luaL_errorf(L, "MARPAESLIFSTRINGTOENCODINGTABLE value type must be a string or nil, got %d", encodingtypei);
 	goto err;
       }
 
@@ -6680,9 +6691,14 @@ static short marpaESLIFLua_stack_setb(lua_State *L, marpaESLIFValue_t *marpaESLI
         /* We do not change the data - just propagate the information */
         /* If we are here, per def the lua stack contains a string and the workstack will not loop */
 
-        /* Duplicate the encoding - this is needed only if encodingheapb is 0 */
-        /* When encodingheapb is 1 it is guaranteed to be already on the heap and not NULL */
-        encodingasciis = encodingheapb ? (char *) encodings : strdup(encodings != NULL ? encodings : "UTF-8");
+        encodingasciis =
+#ifdef MARPAESLIFLUA_AUTO_ENCODING_DETECT
+          /* Duplicate the encoding - this is needed only if encodingheapb is 0 */
+          /* When encodingheapb is 1 it is guaranteed to be already on the heap and not NULL */
+          encodingheapb ? (char *) encodings
+          :
+#endif
+          strdup(encodings != NULL ? encodings : "UTF-8");
         if (encodingasciis == NULL) {
           marpaESLIFLua_luaL_errorf(L, "strdup failure, %s", strerror(errno));
           goto err;
