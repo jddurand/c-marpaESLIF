@@ -1992,7 +1992,7 @@ static void marpaESLIFPerl_stack_setv(pTHX_ marpaESLIFValue_t *marpaESLIFValuep,
       SvGETMAGIC(svp);
       marpaESLIFValueResultp->u.y             = SvTRUE(svp) ? MARPAESLIFVALUERESULTBOOL_TRUE : MARPAESLIFVALUERESULTBOOL_FALSE;
       eslifb = 1;
-    } else if (marpaESLIFPerl_is_Types__Standard(aTHX_ svp, "Types::Standard::is_Int", typei)) {
+    } else if (marpaESLIFPerl_is_Types__Standard(aTHX_ svp, "MarpaX::ESLIF::is_Int", typei)) {
       iv = SvIV(svp);
       if ((iv >= SHRT_MIN) && (iv <= SHRT_MAX)) {
         /* Ok if it fits into [SHRT_MIN,SHRT_MAX] */
@@ -2016,7 +2016,7 @@ static void marpaESLIFPerl_stack_setv(pTHX_ marpaESLIFValue_t *marpaESLIFValuep,
         marpaESLIFValueResultp->u.l             = (long) iv;
         eslifb = 1;
       }
-    } else if (marpaESLIFPerl_is_Types__Standard(aTHX_ svp, "Types::Standard::is_StrictNum", typei)) {
+    } else if (marpaESLIFPerl_is_Types__Standard(aTHX_ svp, "MarpaX::ESLIF::is_StrictNum", typei)) {
       /* Ok if it fits into [DBL_MIN,DBL_MAX] and we loosed nothing */
       nv = SvNV(svp);
       if (sv_cmp(svp, sv_2mortal(newSVnv(nv))) == 0) {
@@ -2036,7 +2036,7 @@ static void marpaESLIFPerl_stack_setv(pTHX_ marpaESLIFValue_t *marpaESLIFValuep,
           eslifb = 1;
         }
       }
-    } else if (marpaESLIFPerl_is_Types__Standard(aTHX_ svp, "Types::Standard::is_Str", typei)) {
+    } else if (marpaESLIFPerl_is_Types__Standard(aTHX_ svp, "MarpaX::ESLIF::is_Str", typei)) {
       /* Ok it this is a scalar in general - perl will recoerce it back */
                                                                         \
       if (marpaESLIFPerl_sv2byte(aTHX_ svp, &bytep, &bytel, 1 /* encodingInformationb */, NULL /* characterStreambp */, &encodings, NULL /* encodinglp */, 0 /* warnIsFatalb */) != NULL) {

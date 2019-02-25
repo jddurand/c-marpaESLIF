@@ -40,7 +40,7 @@ sub _nvtype_is___float128 {
 our $true;
 our $false;
 BEGIN {
-    use JSON::MaybeXS 1.004000 qw/is_bool/;
+    use JSON::MaybeXS 1.004000 qw//;
     $true = JSON::MaybeXS::true();
     $false = JSON::MaybeXS::false();
 }
@@ -207,21 +207,48 @@ ESLIF has a boolean type, perl has not. In order to not reinvent the wheel, the 
 
 =item true
 
+A I<true> value. You may localize C<$MarpaX::ESLIF::true> before using ESLIF to change it.
+
 Defaults to C<JSON::MaybeXS::true()>.
 
 =item false
+
+A I<false> value. You may localize C<$MarpaX::ESLIF::false> before using ESLIF to change it.
 
 Defaults to C<JSON::MaybeXS::false()>.
 
 =item is_bool($value)
 
+Returns a true value if C<$value> is a boolean. You may localize C<MarpaX::ESLIF::is_bool()> function before using ESLIF to change it.
+
 Defaults to C<JSON::MaybeXS::is_bool($value)>
 
 =back
 
+=cut
+
+sub is_bool { goto \&JSON::MaybeXS::is_bool }
+
+=head2 NUMERIC TYPES
+
+ESLIF has two functions C<MarpaX::ESLIF::is_Int()> and C<MarpaX::ESLIF::is_StrictNum()>, that maps by default to the L<Types::Standard> implementations. You may localize them before using ESLIF if needed.
+
+=cut
+
+sub is_Int       { goto \&Types::Standard::is_Int }
+sub is_StrictNum { goto \&Types::Standard::is_StrictNum }
+
+=head2 STRING TYPE
+
+ESLIF has the function C<MarpaX::ESLIF::is_Str()>, that maps by default to the L<Types::Standard> implementation. You may localize it before using ESLIF if needed.
+
+=cut
+
+sub is_Str { goto \&Types::Standard::is_Str }
+
 =head1 SEE ALSO
 
-L<MarpaX::ESLIF::Introduction>, L<PCRE2|http://www.pcre.org/>, L<MarpaX::ESLIF::BNF>, L<MarpaX::ESLIF::Logger::Interface>, L<MarpaX::ESLIF::Grammar>, L<MarpaX::ESLIF::Recognizer>.
+L<MarpaX::ESLIF::Introduction>, L<PCRE2|http://www.pcre.org/>, L<MarpaX::ESLIF::BNF>, L<MarpaX::ESLIF::Logger::Interface>, L<MarpaX::ESLIF::Grammar>, L<MarpaX::ESLIF::Recognizer>, L<Types::Standard>, L<JSON::MaybeXS>.
 
 =cut
 
