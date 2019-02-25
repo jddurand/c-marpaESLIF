@@ -62,7 +62,6 @@ BEGIN {
          Math::BigInt->new("6.78E+9")
         );
 }
-use Safe::Isa;
 use Test::More tests => 1 + scalar(@input) + 4; # 4 pushes after the require_ok
 use Test::More::UTF8;
 use open qw( :utf8 :std );
@@ -113,7 +112,6 @@ foreach my $inputArray (@input) {
     my $eslifValue = MarpaX::ESLIF::Value->new($eslifRecognizer, $eslifValueInterface);
     $eslifValue->value();
     my $value = $eslifValueInterface->getResult;
-    $value = $value->value if (! $input->$_isa('MarpaX::ESLIF::String')) && $value->$_isa('MarpaX::ESLIF::String'); # We want the raw value, without encoding information
     my ($ok, $stack) = cmp_details($value, $input);
     diag(deep_diag($stack)) unless (ok($ok, "import/export of " . (ref($input) ? ref($input) : (defined($input) ? "$input" : 'undef'))));
 }
