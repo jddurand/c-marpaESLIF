@@ -338,6 +338,7 @@ static void                            marpaESLIFPerl_generateStringWithLoggerCa
 static short                           marpaESLIFPerl_appendOpaqueDataToStringGenerator(marpaESLIFPerl_stringGenerator_t *marpaESLIFPerl_stringGeneratorp, char *p, size_t sizel);
 static short                           marpaESLIFPerl_is_undef(pTHX_ SV *svp, int typei);
 static short                           marpaESLIFPerl_is_arrayref(pTHX_ SV *svp, int typei);
+static short                           marpaESLIFPerl_is_MarpaX__ESLIF__String(pTHX_ SV *svp, int typei);
 static short                           marpaESLIFPerl_is_hashref(pTHX_ SV *svp, int typei);
 static short                           marpaESLIFPerl_is_Types__Standard(pTHX_ SV *svp, const char *types, int typei);
 static short                           marpaESLIFPerl_is_bool(pTHX_ SV *svp, int typei);
@@ -1658,7 +1659,7 @@ static short marpaESLIFPerl_importb(marpaESLIFValue_t *marpaESLIFValuep, void *u
     }
     break;
   case MARPAESLIF_VALUE_TYPE_ROW:
-    /* We pushed in the internal valueStack r.sizel elements, in the order valn...val0 */
+    /* We received elements in order: first, second, etc..., we pushed that in valueStack, so pop will say last, beforelast, etc..., second, first */
     avp = newAV();
     for (i = 0; i < marpaESLIFValueResultp->u.r.sizel; i++) {
       svp = (SV *) marpaESLIFPerl_GENERICSTACK_POP_PTR(&(Perl_MarpaX_ESLIF_Valuep->valueStack));
@@ -1671,7 +1672,7 @@ static short marpaESLIFPerl_importb(marpaESLIFValue_t *marpaESLIFValuep, void *u
     }
     break;
   case MARPAESLIF_VALUE_TYPE_TABLE:
-  /* We pushed in the internal valueStack t.sizel*2 elements, in the order valn, keyn, ... val0, key0 */
+    /* We received elements in order: firstkey, firstvalue, secondkey, secondvalue, etc..., we pushed that in valueStack, so pop will say lastvalue, lastkey, ..., firstvalue, firstkey */
     hvp = newHV();
     for (i = 0; i < marpaESLIFValueResultp->u.t.sizel; i++) {
       /* Note that Perl_MarpaX_ESLIF_Valuep->valueStack contains only new SV's, or &PL_sv_undef, &PL_sv_yes, &PL_sv_no */
@@ -1836,6 +1837,13 @@ static short marpaESLIFPerl_is_arrayref(pTHX_ SV *svp, int typei)
 }
 
 /*****************************************************************************/
+static short marpaESLIFPerl_is_MarpaX__ESLIF__String(pTHX_ SV *svp, int typei)
+/*****************************************************************************/
+{
+  return (((typei & OBJECT) == OBJECT) && sv_derived_from(svp, "MarpaX::ESLIF::String"));
+}
+
+/*****************************************************************************/
 static short marpaESLIFPerl_is_hashref(pTHX_ SV *svp, int typei)
 /*****************************************************************************/
 {
@@ -1918,6 +1926,10 @@ static void marpaESLIFPerl_stack_setv(pTHX_ marpaESLIFValue_t *marpaESLIFValuep,
   char                    *keys;
   I32                      reti;
   SV                      *iterp;
+  AV                      *avp;
+  SSize_t                  aviteratorl;
+  SV                      *encodingp;
+  SV                      *valuep;
 
   /* Note that we avoid recursivity by not allowing references */
 
@@ -1982,6 +1994,29 @@ static void marpaESLIFPerl_stack_setv(pTHX_ marpaESLIFValue_t *marpaESLIFValuep,
 	  MARPAESLIFPERL_CROAKF("marpaESLIFValueResultStackp push failure, %s", strerror(errno));
 	}
 	++iterl;
+      }
+      eslifb = 1;
+    } else if (marpaESLIFPerl_is_arrayref(aTHX_ svp, typei)) {
+      avp = (AV *) SvRV(svp);
+      marpaESLIFValueResultp->type            = MARPAESLIF_VALUE_TYPE_ROW;
+      marpaESLIFValueResultp->contextp        = MARPAESLIFPERL_CONTEXT;
+      marpaESLIFValueResultp->representationp = NULL;
+      marpaESLIFValueResultp->u.r.sizel       = (size_t) (av_len(avp) + 1);
+      Newx(marpaESLIFValueResultp->u.r.p, marpaESLIFValueResultp->u.r.sizel, marpaESLIFValueResult_t);
+      marpaESLIFValueResultp->u.r.shallowb    = 0;
+      for (aviteratorl = 0; aviteratorl < marpaESLIFValueResultp->u.r.sizel; aviteratorl++) {
+	SV **svpp = av_fetch(avp, aviteratorl, 0);
+	if (svpp == NULL) {
+	  MARPAESLIFPERL_CROAKF("av_fetch returned NULL during export at indice %ld", (unsigned long) aviteratorl);
+	}
+	marpaESLIFPerl_GENERICSTACK_PUSH_PTR(svStackp, (void *) newSVsv(*svpp));
+	if (marpaESLIFPerl_GENERICSTACK_ERROR(svStackp)) {
+	  MARPAESLIFPERL_CROAKF("svStackp push failure, %s", strerror(errno));
+	}
+	marpaESLIFPerl_GENERICSTACK_PUSH_PTR(marpaESLIFValueResultStackp, (void *) &(marpaESLIFValueResultp->u.r.p[aviteratorl]));
+	if (marpaESLIFPerl_GENERICSTACK_ERROR(marpaESLIFValueResultStackp)) {
+	  MARPAESLIFPERL_CROAKF("marpaESLIFValueResultStackp push failure, %s", strerror(errno));
+	}
       }
       eslifb = 1;
     } else if (marpaESLIFPerl_is_bool(aTHX_ svp, typei)) {
@@ -2059,6 +2094,16 @@ static void marpaESLIFPerl_stack_setv(pTHX_ marpaESLIFValue_t *marpaESLIFValuep,
           eslifb = 1;
         }
       }
+#ifdef MARPAESLIFPERL_STRING_EXPORT
+    } else if (marpaESLIFPerl_is_MarpaX__ESLIF__String(aTHX_ svp, typei)) {
+      fprintf(stderr, "==> Got MarpaX::ESLIF::String\n");
+      encodingp = marpaESLIFPerl_call_actionp(aTHX_ svp, "encoding", NULL /* avp */, NULL /* Perl_MarpaX_ESLIF_Valuep */, 0 /* evalb */, 0 /* evalSilentb */);
+      valuep    = marpaESLIFPerl_call_actionp(aTHX_ svp, "value", NULL /* avp */, NULL /* Perl_MarpaX_ESLIF_Valuep */, 0 /* evalb */, 0 /* evalSilentb */);
+      sv_dump(encodingp);
+      sv_dump(valuep);
+      MARPAESLIFPERL_REFCNT_DEC(encodingp);
+      MARPAESLIFPERL_REFCNT_DEC(valuep);
+#endif
     }
 
     if (! eslifb) {
