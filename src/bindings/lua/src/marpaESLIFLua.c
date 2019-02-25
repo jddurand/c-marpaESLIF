@@ -1823,9 +1823,6 @@ static void  marpaESLIFLua_recognizerContextFreev(marpaESLIFLuaRecognizerContext
 {
   static const char *funcs = "marpaESLIFLua_recognizerContextFreev";
   lua_State         *L;
-  int                i;
-  int                refi;
-  int               *p;
 
   if (marpaESLIFLuaRecognizerContextp != NULL) {
     L = marpaESLIFLuaRecognizerContextp->L;
@@ -6515,7 +6512,6 @@ static short marpaESLIFLua_stack_setb(lua_State *L, marpaESLIFValue_t *marpaESLI
   const char                   *encodings;
   marpaESLIFValueResult_t      *marpaESLIFValueResultDupp;
   const void                   *pointerp;
-  size_t                        pointerl;
   int                           opaqueTypei;
 #ifdef MARPAESLIFLUA_AUTO_ENCODING_DETECT
   short                         encodingheapb;

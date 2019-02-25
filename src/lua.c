@@ -429,12 +429,10 @@ static void _marpaESLIFValue_lua_freev(marpaESLIFValue_t *marpaESLIFValuep)
 static short _marpaESLIFValue_lua_actionb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb)
 /*****************************************************************************/
 {
-  static const char                *funcs                 = "_marpaESLIFValue_lua_actionb";
-  marpaESLIFRecognizer_t           *marpaESLIFRecognizerp = marpaESLIFValuep->marpaESLIFRecognizerp;
-  marpaESLIFLuaValueContext_t      *marpaESLIFLuaValueContextp;
-  marpaESLIFValueRuleCallback_t     ruleCallbackp;
-  int                               typei;
-  short                             rcb;
+  static const char             *funcs                 = "_marpaESLIFValue_lua_actionb";
+  marpaESLIFRecognizer_t        *marpaESLIFRecognizerp = marpaESLIFValuep->marpaESLIFRecognizerp;
+  marpaESLIFValueRuleCallback_t  ruleCallbackp;
+  short                          rcb;
 
   MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_INC;
 
@@ -468,12 +466,10 @@ static short _marpaESLIFValue_lua_actionb(void *userDatavp, marpaESLIFValue_t *m
 static short _marpaESLIFValue_lua_symbolb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, char *bytep, size_t bytel, int resulti)
 /*****************************************************************************/
 {
-  static const char                *funcs                 = "_marpaESLIFValue_lua_symbolb";
-  marpaESLIFRecognizer_t           *marpaESLIFRecognizerp = marpaESLIFValuep->marpaESLIFRecognizerp;
-  marpaESLIFLuaValueContext_t      *marpaESLIFLuaValueContextp;
-  marpaESLIFValueSymbolCallback_t   symbolCallbackp;
-  int                               typei;
-  short                             rcb;
+  static const char               *funcs                 = "_marpaESLIFValue_lua_symbolb";
+  marpaESLIFRecognizer_t          *marpaESLIFRecognizerp = marpaESLIFValuep->marpaESLIFRecognizerp;
+  marpaESLIFValueSymbolCallback_t  symbolCallbackp;
+  short                            rcb;
 
   MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_INC;
 
@@ -507,10 +503,8 @@ static short _marpaESLIFValue_lua_symbolb(void *userDatavp, marpaESLIFValue_t *m
 static void _marpaESLIF_lua_freeDefaultActionv(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, marpaESLIFValueResult_t *marpaESLIFValueResultp)
 /*****************************************************************************/
 {
-  static const char                *funcs            = "_marpaESLIF_lua_freeDefaultActionv";
-  marpaESLIFLuaValueContext_t      *marpaESLIFLuaValueContextp;
-  marpaESLIFValueFreeCallback_t     freeCallbackp;
-  int                               typei;
+  static const char             *funcs = "_marpaESLIF_lua_freeDefaultActionv";
+  marpaESLIFValueFreeCallback_t  freeCallbackp;
 
   /* We should never be called outside of a valuation, thus a lua_State must already exist */
   if (marpaESLIFValuep->L == NULL) {
