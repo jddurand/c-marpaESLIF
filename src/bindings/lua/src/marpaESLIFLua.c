@@ -6451,7 +6451,7 @@ static short marpaESLIFLua_lua_settable(lua_State *L, int idx)
 }
 
 /****************************************************************************/
-static short marpaESLIFLua_lua_gettable(int *rcp, lua_State *L, int idx)
+static short marpaESLIFLua_lua_gettable(int *rcip, lua_State *L, int idx)
 /****************************************************************************/
 {
   int rci;
