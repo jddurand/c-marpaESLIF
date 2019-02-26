@@ -5771,7 +5771,12 @@ static short marpaESLIFLua_lua_getglobal (int *luaip, lua_State *L, const char *
 {
   int luai;
 
+#if LUA_VERSION_NUM < 503
+  lua_getglobal(L, name); /* Native lua call */
+  luai = lua_type(L, -1);
+#else
   luai = lua_getglobal(L, name); /* Native lua call */
+#endif
   if (luaip != NULL) *luaip = luai;
 
   return 1;
@@ -5844,7 +5849,12 @@ static short marpaESLIFLua_lua_rawgeti(int *luaip, lua_State *L, int index, lua_
 {
   int luai;
 
+#if LUA_VERSION_NUM < 503
+  lua_rawgeti(L, index, n); /* Native lua call */
+  luai = lua_type(L, -1);
+#else
   luai = lua_rawgeti(L, index, n); /* Native lua call */
+#endif
   if (luaip != NULL) *luaip = luai;
 
   return 1;
@@ -5856,7 +5866,12 @@ static short marpaESLIFLua_lua_rawget(int *luaip, lua_State *L, int index)
 {
   int luai;
 
+#if LUA_VERSION_NUM < 503
+  lua_rawget(L, index); /* Native lua call */
+  luai = lua_type(L, -1);
+#else
   luai = lua_rawget(L, index); /* Native lua call */
+#endif
   if (luaip != NULL) *luaip = luai;
 
   return 1;
@@ -5868,7 +5883,12 @@ static short marpaESLIFLua_lua_rawgetp(int *luaip, lua_State *L, int index, cons
 {
   int luai;
 
+#if LUA_VERSION_NUM < 503
+  lua_rawgetp(L, index, p); /* Native lua call */
+  luai = lua_type(L, -1);
+#else
   luai = lua_rawgetp(L, index, p); /* Native lua call */
+#endif
   if (luaip != NULL) *luaip = luai;
 
   return 1;
@@ -5905,7 +5925,16 @@ static short marpaESLIFLua_lua_rawseti(lua_State *L, int index, lua_Integer i)
 static short marpaESLIFLua_lua_seti(lua_State *L, int index, lua_Integer i)
 /****************************************************************************/
 {
+#if LUA_VERSION_NUM < 503
+  /* C.f. https://github.com/keplerproject/lua-compat-5.3/blob/master/c-api/compat-5.3c */
+  luaL_checkstack(L, 1, "not enough stack slots available");
+  index = lua_absindex(L, index);
+  lua_pushinteger(L, i);                  /* Stack: ..., value at top of the stack, i */
+  lua_insert(L, -2);                      /* Stack: ..., i, value at top of the stack */
+  lua_settable(L, index);                 /* Stack: ... */
+#else
   lua_seti(L, index, i); /* Native lua call */
+#endif
 
   return 1;
 }
@@ -5949,7 +5978,12 @@ static short marpaESLIFLua_lua_getfield(int *luaip, lua_State *L, int index, con
 {
   int luai;
 
+#if LUA_VERSION_NUM < 503
+  lua_getfield(L, index, k); /* Native lua call */
+  luai = lua_type(L, -1);
+#else
   luai = lua_getfield(L, index, k); /* Native lua call */
+#endif
   if (luaip != NULL) *luaip = luai;
 
   return 1;
@@ -6456,10 +6490,13 @@ static short marpaESLIFLua_lua_gettable(int *rcip, lua_State *L, int idx)
 {
   int rci;
 
+#if LUA_VERSION_NUM < 503
+  lua_gettable(L, idx);
+  rci = lua_type(L, -1);
+#else
   rci = lua_gettable(L, idx);
-  if (rcip != NULL) {
-    *rcip = rci;
-  }
+#endif
+  if (rcip != NULL) *rcip = rci;
 
   return 1;
 }
@@ -6587,12 +6624,13 @@ static short marpaESLIFLua_stack_setb(lua_State *L, marpaESLIFValue_t *marpaESLI
           marpaESLIFValueResultp->u.l             = (long) tmpi;
           eslifb = 1;
         }
+      }
 #if defined(LUA_FLOAT_TYPE)
         /* Knowing which float type is used by lua is not that easy if we want to be */
         /* portable. From code introspection, IF the following defines exists: */
         /* LUA_FLOAT_FLOAT, LUA_FLOAT_DOUBLE, then, IF the following defines exists: */
         /* LUA_FLOAT_TYPE, then this give an internal representation that we can map to marpaESLIF. */
-      } else {
+      else {
         if (! marpaESLIFLua_lua_tonumberx(&tmpd, L, currenti, &isNumi)) goto err;
         if (isNumi) {
 #  if defined(LUA_FLOAT_FLOAT) && (LUA_FLOAT_FLOAT == LUA_FLOAT_TYPE)
@@ -6624,6 +6662,34 @@ static short marpaESLIFLua_stack_setb(lua_State *L, marpaESLIFValue_t *marpaESLI
 #  endif /* defined(LUA_FLOAT_FLOAT) && (LUA_FLOAT_FLOAT == LUA_FLOAT_TYPE) */
         }
       }
+#else
+  #if defined(LUA_NUMBER_FLOAT)
+      /* Lua uses native C float */
+      /* fprintf(stdout, "export float\n"); fflush(stdout); fflush(stderr); */
+      marpaESLIFValueResultp->contextp        = MARPAESLIFLUA_CONTEXT;
+      marpaESLIFValueResultp->representationp = NULL;
+      marpaESLIFValueResultp->type            = MARPAESLIF_VALUE_TYPE_FLOAT;
+      marpaESLIFValueResultp->u.f             = tmpd; /* We volontarily do not typecast, there should be no warning */
+      eslifb = 1;
+  #else
+    #if defined(LUA_NUMBER_DOUBLE)
+      /* fprintf(stdout, "export double\n"); fflush(stdout); fflush(stderr); */
+      marpaESLIFValueResultp->contextp        = MARPAESLIFLUA_CONTEXT;
+      marpaESLIFValueResultp->representationp = NULL;
+      marpaESLIFValueResultp->type            = MARPAESLIF_VALUE_TYPE_DOUBLE;
+      marpaESLIFValueResultp->u.d             = tmpd; /* We volontarily do not typecast, there should be no warning */
+      eslifb = 1;
+    #else
+      #if defined(LUA_NUMBER_LONGDOUBLE) || defined(LUA_NUMBER_LONG_DOUBLE)
+      /* fprintf(stdout, "export long double\n"); fflush(stdout); fflush(stderr); */
+      marpaESLIFValueResultp->contextp        = MARPAESLIFLUA_CONTEXT;
+      marpaESLIFValueResultp->representationp = NULL;
+      marpaESLIFValueResultp->type            = MARPAESLIF_VALUE_TYPE_LONG_DOUBLE;
+      marpaESLIFValueResultp->u.ld            = tmpd; /* We volontarily do not typecast, there should be no warning */
+      eslifb = 1;
+      #endif
+    #endif
+  #endif
 #endif /* defined(LUA_FLOAT_TYPE) */
       break;
     case LUA_TBOOLEAN:
