@@ -1,3 +1,9 @@
+/* Shall this module determine automatically string encoding ? */
+/* #define MARPAESLIFPERL_AUTO_ENCODING_DETECT */
+
+/* When we receive a string claimed to be in UTF-8, shall we cross check ? */
+/* #define MARPAESLIFPERL_UTF8_CROSSCHECK */
+
 #define PERL_NO_GET_CONTEXT 1     /* we want efficiency */
 #include "EXTERN.h"
 #include "perl.h"
@@ -58,8 +64,6 @@ typedef struct marpaESLIFPerl_stringGenerator {
 #define MARPAESLIFPERL_ENCODE_FB_QUIET      MARPAESLIFPERL_ENCODE_RETURN_ON_ERR
 #define MARPAESLIFPERL_ENCODE_FB_WARN       MARPAESLIFPERL_ENCODE_RETURN_ON_ERR | MARPAESLIFPERL_ENCODE_WARN_ON_ERR
 #define MARPAESLIFPERL_ENCODE_FB_PERLQQ     MARPAESLIFPERL_ENCODE_LEAVE_SRC     | MARPAESLIFPERL_ENCODE_PERLQQ
-
-/* #define MARPAESLIFPERL_UTF8_CROSSCHECK */ /* This will cross-check all marpESLIFValueString that claims to be UTF-8 */
 
 #define MARPAESLIFPERL_NEWSVPVN_UTF8(keys, sizel) newSVpvn_flags((const char *) keys, (STRLEN) sizel, is_utf8_string((const U8 *) keys, (STRLEN) sizel) ? SVf_UTF8 : 0)
 
@@ -332,7 +336,7 @@ static short                           marpaESLIFPerl_paramIsLoggerInterfaceOrUn
 static void                            marpaESLIFPerl_paramIsRecognizerInterfacev(pTHX_ SV *sv);
 static void                            marpaESLIFPerl_paramIsValueInterfacev(pTHX_ SV *sv);
 static short                           marpaESLIFPerl_representationb(void *userDatavp, marpaESLIFValueResult_t *marpaESLIFValueResultp, char **inputcpp, size_t *inputlp, char **encodingasciisp);
-static char                           *marpaESLIFPerl_sv2byte(pTHX_ SV *svp, char **bytepp, size_t *bytelp, short encodingInformationb, short *characterStreambp, char **encodingsp, size_t *encodinglp, short warnIsFatalb);
+static char                           *marpaESLIFPerl_sv2byte(pTHX_ marpaESLIF_t *marpaESLIFp, SV *svp, char **bytepp, size_t *bytelp, short encodingInformationb, short *characterStreambp, char **encodingsp, size_t *encodinglp, short warnIsFatalb, short marpaESLIFStringb);
 static short                           marpaESLIFPerl_importb(marpaESLIFValue_t *marpaESLIFValuep, void *userDatavp, marpaESLIFValueResult_t *marpaESLIFValueResultp);
 static void                            marpaESLIFPerl_generateStringWithLoggerCallback(void *userDatavp, genericLoggerLevel_t logLeveli, const char *msgs);
 static short                           marpaESLIFPerl_appendOpaqueDataToStringGenerator(marpaESLIFPerl_stringGenerator_t *marpaESLIFPerl_stringGeneratorp, char *p, size_t sizel);
@@ -1074,7 +1078,12 @@ static void marpaESLIFPerl_valueFreeCallbackv(void *userDatavp, marpaESLIFValue_
   switch (marpaESLIFValueResultp->type) {
   case MARPAESLIF_VALUE_TYPE_STRING:
     Safefree(marpaESLIFValueResultp->u.s.p);
-    /* encoding is always refering to the constant UTF8s */
+    /* encoding may refer to the constant UTF8s */
+    if (marpaESLIFValueResultp->u.s.encodingasciis != NULL) {
+      if (marpaESLIFValueResultp->u.s.encodingasciis != UTF8s) {
+	Safefree(marpaESLIFValueResultp->u.s.encodingasciis);
+      }
+    }
     break;
   case MARPAESLIF_VALUE_TYPE_ARRAY:
     Safefree(marpaESLIFValueResultp->u.a.p);
@@ -1411,6 +1420,7 @@ static short marpaESLIFPerl_representationb(void *userDatavp, marpaESLIFValueRes
 {
   static const char    *funcs                    = "marpaESLIFPerl_representationb";
   MarpaX_ESLIF_Value_t *Perl_MarpaX_ESLIF_Valuep = (MarpaX_ESLIF_Value_t *) userDatavp;
+  marpaESLIF_t         *marpaESLIFp;
   marpaESLIFPerlMYTHX(Perl_MarpaX_ESLIF_Valuep);
 
   marpaESLIFPerl_valueContextCleanupv(aTHX_ Perl_MarpaX_ESLIF_Valuep);
@@ -1423,26 +1433,34 @@ static short marpaESLIFPerl_representationb(void *userDatavp, marpaESLIFValueRes
   if (marpaESLIFValueResultp->contextp != MARPAESLIFPERL_CONTEXT) {
     MARPAESLIFPERL_CROAKF("User-defined value context is not MARPAESLIFPERL_CONTEXT but %p", marpaESLIFValueResultp->contextp);
   }
-  Perl_MarpaX_ESLIF_Valuep->previous_strings = marpaESLIFPerl_sv2byte(aTHX_ (SV *) marpaESLIFValueResultp->u.p.p, inputcpp, inputlp, 1 /* encodingInformationb */, NULL /* characterStreambp */, encodingasciisp, NULL /* encodinglp */, 0 /* warnIsFatalb */);
+  marpaESLIFp = marpaESLIFGrammar_eslifp(marpaESLIFRecognizer_grammarp(marpaESLIFValue_recognizerp(Perl_MarpaX_ESLIF_Valuep->marpaESLIFValuep)));
+  Perl_MarpaX_ESLIF_Valuep->previous_strings = marpaESLIFPerl_sv2byte(aTHX_ marpaESLIFp, (SV *) marpaESLIFValueResultp->u.p.p, inputcpp, inputlp, 1 /* encodingInformationb */, NULL /* characterStreambp */, encodingasciisp, NULL /* encodinglp */, 0 /* warnIsFatalb */, 0 /* marpaESLIFStringb */);
 
   /* Always return a true value, else ::concat will abort */
   return 1;
 }
 
 /*****************************************************************************/
-static char *marpaESLIFPerl_sv2byte(pTHX_ SV *svp, char **bytepp, size_t *bytelp, short encodingInformationb, short *characterStreambp, char **encodingsp, size_t *encodinglp, short warnIsFatalb)
+static char *marpaESLIFPerl_sv2byte(pTHX_ marpaESLIF_t *marpaESLIFp, SV *svp, char **bytepp, size_t *bytelp, short encodingInformationb, short *characterStreambp, char **encodingsp, size_t *encodinglp, short warnIsFatalb, short marpaESLIFStringb)
 /*****************************************************************************/
 {
   static const char *funcs = "marpaESLIFPerl_sv2byte";
   char              *rcp = NULL;
   short              okb   = 0;
   char              *strings;
-  STRLEN             len;
+  STRLEN             stringl;
   char              *bytep;
   size_t             bytel;
   short              characterStreamb;
   char              *encodings;
   size_t             encodingl;
+  SV                *encodingp;
+  SV                *valuep;
+  char              *tmps;
+  STRLEN             tmpl;
+#ifdef MARPAESLIFPERL_AUTO_ENCODING_DETECT
+  char              *guessedencodings;
+#endif
 
   /* svp == NULL should never happen because we always push an SV* out of actions
      but &PL_sv_undef is of course possible */
@@ -1450,16 +1468,115 @@ static char *marpaESLIFPerl_sv2byte(pTHX_ SV *svp, char **bytepp, size_t *bytelp
     return NULL;
   }
 
-  strings = SvPV(svp, len);
+  if (marpaESLIFStringb) {
+    /* Caller guarantees that the svp is a MarpaX::ESLIF::String instance. This is not crosschecked. */
+    if (encodingInformationb) {
+      encodingp = marpaESLIFPerl_call_actionp(aTHX_ svp, "encoding", NULL /* avp */, NULL /* Perl_MarpaX_ESLIF_Valuep */, 0 /* evalb */, 0 /* evalSilentb */);
+    }
+    valuep    = marpaESLIFPerl_call_actionp(aTHX_ svp, "value", NULL /* avp */, NULL /* Perl_MarpaX_ESLIF_Valuep */, 0 /* evalb */, 0 /* evalSilentb */);
 
-  if ((strings != NULL) && (len > 0)) {
+    /* Duplicate value */
+    tmps = SvPV(valuep, tmpl);
+    if ((tmps == NULL) || (tmpl <= 0)) {
+      /* Empty string */
+      Newx(bytep, 1, char);
+      bytel = 0;
+    } else {
+      /* Copy */
+      Newx(bytep, (int) tmpl, char);
+      bytel = (size_t) tmpl;
+      Copy(tmps, bytep, tmpl, char);
+    }
+    rcp = bytep;
+    MARPAESLIFPERL_REFCNT_DEC(valuep);
+
+    if (encodingInformationb) {
+      /* Check encoding */
+      tmps = SvPV(encodingp, tmpl);
+      if ((tmps == NULL) || (tmpl <= 0)) {
+#ifdef MARPAESLIFPERL_AUTO_ENCODING_DETECT
+	/* Guess */
+	guessedencodings = marpaESLIF_encodings(marpaESLIFp, bytep, bytel);
+	if (guessedencodings != NULL) {
+	  /* fprintf(stderr, "==> Encoding (MarpaX::ESLIF::String guess): %s\n", guessedencodings); */
+	  characterStreamb = 1;
+	  encodingl = strlen(guessedencodings);
+	  Newx(encodings, (int) (encodingl + 1), char);
+	  Copy(guessedencodings, encodings, encodingl, char);
+	  encodings[encodingl] = '\0';
+	  marpaESLIFPerl_SYSTEM_FREE(guessedencodings);
+	} else {
+#else
+          /* fprintf(stderr, "==> Encoding (MarpaX::ESLIF::String) : undef\n"); */
+#endif
+	  characterStreamb = 0;
+	  encodings = NULL;
+	  encodingl = 0;
+#ifdef MARPAESLIFPERL_AUTO_ENCODING_DETECT
+	}
+#endif
+      } else {
+	/* Copy */
+	/* fprintf(stderr, "==> Encoding (MarpaX::ESLIF::String) : %s\n", tmps); */
+	characterStreamb = 1;
+	Newx(encodings, (int) (tmpl + 1), char);
+	encodingl = (size_t) tmpl;
+	Copy(tmps, encodings, tmpl, char);
+	encodings[encodingl] = '\0';
+      }
+      MARPAESLIFPERL_REFCNT_DEC(encodingp);
+    } else {
+      characterStreamb = 0;
+      encodings = NULL;
+      encodingl = 0;
+    }
+
     okb = 1;
-    /* We voluntarily ignore the eventual :bytes pragma: encoding information is for export to marpaESLIF */
+    goto ok;
+  }
+
+  strings = SvPV(svp, stringl);
+
+  if (strings != NULL) {
+    okb = 1;
     /* We assume there is no character outside of UTF-8 (utf8 != UTF-8 -;) */
-    if (encodingInformationb && (SvUTF8(svp) || is_utf8_string((const U8 *) strings, len))) {
-      characterStreamb    = 1;
-      encodings           = (char *) UTF8s;
-      encodingl           = UTF8l;
+    if (encodingInformationb) {
+      /* We want to respect the eventual bytes pragma, so we use DO_UTF8 */
+      if (DO_UTF8(svp)) {
+	/* Declared UTF-8 as per perl - trust it and assume perl's utf8 == UTF-8, i.e. no more than 4 bytes for a bytecode -; */
+	/* fprintf(stderr, "==> Encoding (perl SvUTF8) : %s\n", UTF8s); */
+	characterStreamb    = 1;
+	encodings           = (char *) UTF8s;
+	encodingl           = UTF8l;
+      } else {
+#ifdef MARPAESLIFPERL_AUTO_ENCODING_DETECT
+	/* Guess */
+	guessedencodings = marpaESLIF_encodings(marpaESLIFp, strings, stringl);
+	if (guessedencodings != NULL) {
+	  /* In perl, only the utf8 attribute can be attached to a string - else it has to be an object aka MarpaX::ESLIF::String */
+	  if (strcmp(guessedencodings, "UTF-8") == 0) {
+	    /* fprintf(stderr, "==> Encoding (perl guess): %s\n", guessedencodings); */
+	    characterStreamb = 1;
+	    encodingl= strlen(guessedencodings);
+	    Newx(encodings, (int) (encodingl + 1), char);
+	    Copy(guessedencodings, encodings, encodingl, char);
+	    encodings[encodingl] = '\0';
+	  } else {
+	    /* fprintf(stderr, "==> Encoding (perl guess REJECTED): %s\n", guessedencodings); */
+	    characterStreamb = 0;
+	    encodings        = NULL;
+	    encodingl        = 0;
+	  }
+	  marpaESLIFPerl_SYSTEM_FREE(guessedencodings);
+	} else {
+#endif
+	  characterStreamb = 0;
+	  encodings        = NULL;
+	  encodingl        = 0;
+#ifdef MARPAESLIFPERL_AUTO_ENCODING_DETECT
+	}
+#endif
+      }
     } else {
       characterStreamb    = 0;
       encodings           = NULL;
@@ -1467,15 +1584,17 @@ static char *marpaESLIFPerl_sv2byte(pTHX_ SV *svp, char **bytepp, size_t *bytelp
     }
   } else {
     if (warnIsFatalb) {
-      MARPAESLIFPERL_CROAKF("SvPV() returned {pointer,length}={%p,%ld}", strings, (unsigned long) len);
+      MARPAESLIFPERL_CROAKF("SvPV() returned {pointer,length}={%p,%ld}", strings, (unsigned long) stringl);
     }
   }
 
   if (okb) { /* Else nothing will be appended */
-    Newx(rcp, (int) len, char);
-    bytep = CopyD(strings, rcp, (int) len, char);
-    bytel = (size_t) len;
+    Newx(rcp, (int) stringl, char);
+    bytep = CopyD(strings, rcp, (int) stringl, char);
+    bytel = (size_t) stringl;
   }
+
+ ok:
 
   if (okb) {
     if (bytepp != NULL) {
@@ -1640,9 +1759,11 @@ static short marpaESLIFPerl_importb(marpaESLIFValue_t *marpaESLIFValuep, void *u
       svp = stringp;
       SvUTF8_on(svp);
       utf8b = 1;
+      /* fprintf(stderr, "SvUTF8_on(\"%s\")\n", marpaESLIFValueResultp->u.s.p); */
 #endif
     }
     if (! utf8b) {
+      /* fprintf(stderr, "MarpaX::ESLIF::String->new(\"%s\", \"%s\")\n", marpaESLIFValueResultp->u.s.p, marpaESLIFValueResultp->u.s.encodingasciis); */
       /* This will be a MarpaX::ESLIF::String */
       encodingp = newSVpv(marpaESLIFValueResultp->u.s.encodingasciis, 0);
       listp = newAV();
@@ -1907,6 +2028,7 @@ static void marpaESLIFPerl_stack_setv(pTHX_ marpaESLIFValue_t *marpaESLIFValuep,
 /*****************************************************************************/
 {
   static const char       *funcs = "marpaESLIFPerl_stack_setv";
+  marpaESLIF_t            *marpaESLIFp = marpaESLIFGrammar_eslifp(marpaESLIFRecognizer_grammarp(marpaESLIFValue_recognizerp(marpaESLIFValuep)));
   genericStack_t           marpaESLIFValueResultStack;
   genericStack_t          *marpaESLIFValueResultStackp = &marpaESLIFValueResultStack;
   genericStack_t           svStack;
@@ -1930,6 +2052,7 @@ static void marpaESLIFPerl_stack_setv(pTHX_ marpaESLIFValue_t *marpaESLIFValuep,
   SSize_t                  aviteratorl;
   SV                      *encodingp;
   SV                      *valuep;
+  short                    marpaESLIFStringb;
 
   /* Note that we avoid recursivity by not allowing references */
 
@@ -2071,10 +2194,11 @@ static void marpaESLIFPerl_stack_setv(pTHX_ marpaESLIFValue_t *marpaESLIFValuep,
           eslifb = 1;
         }
       }
-    } else if (marpaESLIFPerl_is_Types__Standard(aTHX_ svp, "MarpaX::ESLIF::is_Str", typei)) {
-      /* Ok it this is a scalar in general - perl will recoerce it back */
-                                                                        \
-      if (marpaESLIFPerl_sv2byte(aTHX_ svp, &bytep, &bytel, 1 /* encodingInformationb */, NULL /* characterStreambp */, &encodings, NULL /* encodinglp */, 0 /* warnIsFatalb */) != NULL) {
+    } else if ((marpaESLIFStringb = marpaESLIFPerl_is_MarpaX__ESLIF__String(aTHX_ svp, typei)) || marpaESLIFPerl_is_Types__Standard(aTHX_ svp, "MarpaX::ESLIF::is_Str", typei)) {
+
+      /* fprintf(stderr, "marpaESLIFStringb=%d\n", marpaESLIFStringb); */
+      if (marpaESLIFPerl_sv2byte(aTHX_ marpaESLIFp, svp, &bytep, &bytel, 1 /* encodingInformationb */, NULL /* characterStreambp */, &encodings, NULL /* encodinglp */, 0 /* warnIsFatalb */, marpaESLIFStringb) != NULL) {
+        /* fprintf(stderr, "==> STRING, ENCODING=%s\n", encodings != NULL ? encodings : "(null)"); */
         if (encodings != NULL) {
           marpaESLIFValueResultp->type               = MARPAESLIF_VALUE_TYPE_STRING;
           marpaESLIFValueResultp->contextp           = MARPAESLIFPERL_CONTEXT;
@@ -2094,16 +2218,6 @@ static void marpaESLIFPerl_stack_setv(pTHX_ marpaESLIFValue_t *marpaESLIFValuep,
           eslifb = 1;
         }
       }
-#ifdef MARPAESLIFPERL_STRING_EXPORT
-    } else if (marpaESLIFPerl_is_MarpaX__ESLIF__String(aTHX_ svp, typei)) {
-      fprintf(stderr, "==> Got MarpaX::ESLIF::String\n");
-      encodingp = marpaESLIFPerl_call_actionp(aTHX_ svp, "encoding", NULL /* avp */, NULL /* Perl_MarpaX_ESLIF_Valuep */, 0 /* evalb */, 0 /* evalSilentb */);
-      valuep    = marpaESLIFPerl_call_actionp(aTHX_ svp, "value", NULL /* avp */, NULL /* Perl_MarpaX_ESLIF_Valuep */, 0 /* evalb */, 0 /* evalSilentb */);
-      sv_dump(encodingp);
-      sv_dump(valuep);
-      MARPAESLIFPERL_REFCNT_DEC(encodingp);
-      MARPAESLIFPERL_REFCNT_DEC(valuep);
-#endif
     }
 
     if (! eslifb) {
@@ -2278,6 +2392,7 @@ PREINIT:
   static const char           *funcs          = "MarpaX::ESLIF::Grammar::_new";
 CODE:
   SV                          *Perl_encodingp = &PL_sv_undef;
+  marpaESLIF_t                *marpaESLIFp    = ((MarpaX_ESLIF_Engine_t *)Perl_MarpaX_ESLIF_Enginep)->marpaESLIFp;
   void                        *string1s       = NULL;
   void                        *string2s       = NULL;
   void                        *string3s       = NULL;
@@ -2292,31 +2407,37 @@ CODE:
   marpaESLIFPerl_paramIsGrammarv(aTHX_ Perl_grammarp);
   if (items > 3) {
     marpaESLIFPerl_paramIsEncodingv(aTHX_ Perl_encodingp = ST(3));
-    string1s = marpaESLIFPerl_sv2byte(aTHX_ Perl_encodingp,
-                                  &(marpaESLIFGrammarOption.encodings),
-                                  &(marpaESLIFGrammarOption.encodingl),
-                                  1, /* encodingInformationb */
-                                  NULL, /* characterStreambp */
-                                  NULL, /* encodingsp */
-                                  NULL, /* encodinglp */
-                                  1 /* warnIsFatalb */);
-    string2s = marpaESLIFPerl_sv2byte(aTHX_ Perl_grammarp,
-                                  (char **) &(marpaESLIFGrammarOption.bytep),
-                                  &(marpaESLIFGrammarOption.bytel),
-                                  0, /* encodingInformationb */
-                                  NULL, /* characterStreambp */
-                                  NULL, /* encodingsp */
-                                  NULL, /* encodinglp */
-                                  1 /* warnIsFatalb */);
+    string1s = marpaESLIFPerl_sv2byte(aTHX_ marpaESLIFp,
+				      Perl_encodingp,
+				      &(marpaESLIFGrammarOption.encodings),
+				      &(marpaESLIFGrammarOption.encodingl),
+				      1, /* encodingInformationb */
+				      NULL, /* characterStreambp */
+				      NULL, /* encodingsp */
+				      NULL, /* encodinglp */
+				      1, /* warnIsFatalb */
+				      0 /* marpaESLIFStringb */);
+    string2s = marpaESLIFPerl_sv2byte(aTHX_ marpaESLIFp,
+				      Perl_grammarp,
+				      (char **) &(marpaESLIFGrammarOption.bytep),
+				      &(marpaESLIFGrammarOption.bytel),
+				      0, /* encodingInformationb */
+				      NULL, /* characterStreambp */
+				      NULL, /* encodingsp */
+				      NULL, /* encodinglp */
+				      1, /* warnIsFatalb */
+				      0 /* marpaESLIFStringb */);
   } else {
-    string3s = marpaESLIFPerl_sv2byte(aTHX_ Perl_grammarp,
-                                  (char **) &(marpaESLIFGrammarOption.bytep),
-                                  &(marpaESLIFGrammarOption.bytel),
-                                  1, /* encodingInformationb */
-                                  NULL, /* characterStreambp */
-                                  &(marpaESLIFGrammarOption.encodings),
-                                  &(marpaESLIFGrammarOption.encodingl),
-                                  1 /* warnIsFatalb */);
+    string3s = marpaESLIFPerl_sv2byte(aTHX_ marpaESLIFp,
+				      Perl_grammarp,
+				      (char **) &(marpaESLIFGrammarOption.bytep),
+				      &(marpaESLIFGrammarOption.bytel),
+				      1, /* encodingInformationb */
+				      NULL, /* characterStreambp */
+				      &(marpaESLIFGrammarOption.encodings),
+				      &(marpaESLIFGrammarOption.encodingl),
+				      1, /* warnIsFatalb */
+				      0 /* marpaESLIFStringb */);
   }
 
   Newx(Perl_MarpaX_ESLIF_Grammarp, 1, MarpaX_ESLIF_Grammar_t);

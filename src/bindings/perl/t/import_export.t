@@ -30,7 +30,7 @@ sub perl_proxy         { $_[1] }
 package main;
 use strict;
 use warnings FATAL => 'all';
-use Test::Deep::NoTest qw/cmp_details deep_diag/;
+use Test::Deep qw/cmp_details deep_diag/;
 use Log::Log4perl qw/:easy/;
 use Log::Any::Adapter;
 use Log::Any qw/$log/;
@@ -59,9 +59,12 @@ BEGIN {
          2.34,
          1.6e+308,
          Math::BigFloat->new("6.78E+9"),
-         Math::BigInt->new("6.78E+9")
+         Math::BigInt->new("6.78E+9"),
+         [[1, undef, 2], 0],
+         ""
         );
 }
+use Safe::Isa;
 use Test::More tests => 1 + scalar(@input) + 4; # 4 pushes after the require_ok
 use Test::More::UTF8;
 use open qw( :utf8 :std );
@@ -70,7 +73,7 @@ BEGIN { require_ok('MarpaX::ESLIF') }
 push(@input, $MarpaX::ESLIF::true);
 push(@input, $MarpaX::ESLIF::false);
 push(@input, { one => "one", two => "two", perltrue => 1, true => $MarpaX::ESLIF::true, false => $MarpaX::ESLIF::false, 'else' => 'again', 'undef' => undef }); # will cause trouble because natively lua discards it
-push(@input, MarpaX::ESLIF::String->new("Ḽơᶉëᶆ", 'UTF-8'));
+push(@input, MarpaX::ESLIF::String->new("XXXḼơᶉëᶆYYY", 'UTF-8'));
 #
 # Init log
 #
@@ -93,7 +96,41 @@ perl_input  ::= PERL_INPUT action => perl_proxy
 PERL_INPUT    ~ [^\s\S]
 
 <luascript>
+  function table_print (tt, indent, done)
+    done = done or {}
+    indent = indent or 0
+    if type(tt) == "table" then
+      for key, value in pairs (tt) do
+        io.write(string.rep (" ", indent)) -- indent it
+        if type (value) == "table" and not done [value] then
+          done [value] = true
+          io.write(string.format("[%s] => table\n", tostring (key)));
+          io.write(string.rep (" ", indent+4)) -- indent it
+          io.write("(\n");
+          table_print (value, indent + 7, done)
+          io.write(string.rep (" ", indent+4)) -- indent it
+          io.write(")\n");
+        else
+          io.write(string.format("[%s] => %s\n",
+              tostring (key), tostring(value)))
+        end
+      end
+    else
+      io.write(tostring(tt) .. "\n")
+    end
+  end
+  io.stdout:setvbuf('no')
+
   function lua_proxy(value)
+    -- print('lua_proxy received value of type: '..type(value))
+    -- if type(value) == 'string' then
+    --   print('lua_proxy value: '..tostring(value)..', encoding: '..tostring(value:encoding()))
+    -- else
+    --   print('lua_proxy value: '..tostring(value))
+    --   if type(value) == 'table' then
+    --     table_print(value)
+    --   end
+    -- end
     return value
   end
 </luascript>
@@ -112,8 +149,12 @@ foreach my $inputArray (@input) {
     my $eslifValue = MarpaX::ESLIF::Value->new($eslifRecognizer, $eslifValueInterface);
     $eslifValue->value();
     my $value = $eslifValueInterface->getResult;
+    if ($input->$_isa('MarpaX::ESLIF::String')) {
+        $input = "$input";
+        $value = "$value" if defined($value);
+    }
     my ($ok, $stack) = cmp_details($value, $input);
-    diag(deep_diag($stack)) unless (ok($ok, "import/export of " . (ref($input) ? ref($input) : (defined($input) ? "$input" : 'undef'))));
+    diag(deep_diag($stack)) unless (ok($ok, "import/export of " . (ref($input) ? ref($input) : (defined($input) ? ((length($input) > 0) ? "$input" : '<empty string>') : 'undef'))));
 }
 
 done_testing();

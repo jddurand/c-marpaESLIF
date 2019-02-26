@@ -13,7 +13,7 @@ package MarpaX::ESLIF::String;
 
 =head1 DESCRIPTION
 
-MarpaX::ESLIF::String is a string type wrapper that associates an encoding information to the string value. Without this wrapper, only valid utf8 perl string will be able to transport encoding information to MarpaX::ESLIF, with a fixed encoding value to C<UTF-8> or C<Latin-1>.
+MarpaX::ESLIF::String is a string type wrapper that associates an encoding information to the string value. Without this wrapper, only valid perl string having the utf8 flag will be able to transport encoding information to MarpaX::ESLIF.
 
 =cut
 
@@ -31,7 +31,7 @@ use Moo;
   my $encoding = 'UTF-8';
   my $s = MarpaX::ESLIF::String->new($string, $encoding)
 
-C<$string> parameter defaults to the empty string, and C<$encoding> parameters defaults to C<UTF-8> if string value is a well-formed C<UTF-8> sequence of bytes, C<Latin-1> otherwise.
+C<$string> parameter defaults to the empty string, and C<$encoding> parameter may be undef. In the later case, MarpaX::ESLIF will know you want to say this is a string, and will B<guess> the encoding.
 
 C<$s> overloads by default as if it was C<$string>.
 
@@ -57,9 +57,7 @@ sub BUILDARGS {
     $value //= '';
     $value = "$value"; # Make sure it is a PV
 
-    if (! $encoding) { # neither 0, neither undef, etc..
-	$encoding = Encode::is_utf8($value, 1) ? 'UTF-8' : 'Latin-1'
-    } else {
+    if (defined($encoding)) {
 	$encoding = "$encoding"; # Make sure it is a PV
     }
 
