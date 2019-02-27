@@ -2033,7 +2033,6 @@ static void marpaESLIFPerl_stack_setv(pTHX_ marpaESLIFValue_t *marpaESLIFValuep,
   genericStack_t          *marpaESLIFValueResultStackp = &marpaESLIFValueResultStack;
   genericStack_t           svStack;
   genericStack_t          *svStackp = &svStack;
-  HV                      *visitedp = newHV(); /* Even if stringified, keys are ok to check if we are recursing forever */
   marpaESLIFValueResult_t  marpaESLIFValueResult;
   marpaESLIFValueResult_t *marpaESLIFValueResultp;
   int                      typei;
@@ -2053,8 +2052,6 @@ static void marpaESLIFPerl_stack_setv(pTHX_ marpaESLIFValue_t *marpaESLIFValuep,
   SV                      *encodingp;
   SV                      *valuep;
   short                    marpaESLIFStringb;
-
-  /* Note that we avoid recursivity by not allowing references */
 
   /* We maintain in parallel a marpaESLIFValueResult and an SV stacks */
   marpaESLIFPerl_GENERICSTACK_INIT(marpaESLIFValueResultStackp);
@@ -2243,7 +2240,6 @@ static void marpaESLIFPerl_stack_setv(pTHX_ marpaESLIFValue_t *marpaESLIFValuep,
 
   marpaESLIFPerl_GENERICSTACK_RESET(svStackp);
   marpaESLIFPerl_GENERICSTACK_RESET(marpaESLIFValueResultStackp);
-  hv_undef(visitedp);
 }
 
 =for comment
