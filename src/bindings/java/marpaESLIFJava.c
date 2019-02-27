@@ -665,6 +665,7 @@ static short marpaESLIFJava_importb(marpaESLIFValue_t *marpaESLIFValuep, void *u
 static jstring                         marpaESLIF_marpaESLIFStringToJavap(JNIEnv *envp, marpaESLIFString_t *marpaESLIFStringp);
 static jstring                         marpaESLIF_marpaESLIFASCIIToJavap(JNIEnv *envp, char *asciis);
 static jstring                         marpaESLIF_marpaESLIFActionToJavap(JNIEnv *envp, marpaESLIFAction_t *actionp);
+static void                            marpaESLIF_stack_setv(JNIEnv *envp, marpaESLIFValue_t *marpaESLIFValuep, short resulti, jobject objectp, marpaESLIFValueResult_t *marpaESLIFValueResultOutputp);
 
 /* --------------- */
 /* Internal macros */
@@ -5360,4 +5361,24 @@ static jstring marpaESLIF_marpaESLIFActionToJavap(JNIEnv *envp, marpaESLIFAction
 
  done:
   return stringp;
+}
+
+/*****************************************************************************/
+static void marpaESLIF_stack_setv(JNIEnv *envp, marpaESLIFValue_t *marpaESLIFValuep, short resulti, jobject objectp, marpaESLIFValueResult_t *marpaESLIFValueResultOutputp)
+/*****************************************************************************/
+/* Take care: IF resulti is >= 0, then marpaESLIFValuep must be != NULL      */
+/*****************************************************************************/
+{
+  static const char *funcs = "marpaESLIF_stack_setv";
+  genericStack_t     marpaESLIFValueResultStack;
+  genericStack_t    *marpaESLIFValueResultStackp = &marpaESLIFValueResultStack;
+  genericStack_t     objectStack;
+  genericStack_t    *objectStackp = &objectStack;
+
+  /* We maintain in parallel a marpaESLIFValueResult and an SV stacks */
+  GENERICSTACK_INIT(marpaESLIFValueResultStackp);
+  GENERICSTACK_INIT(objectStackp);
+
+  GENERICSTACK_RESET(objectStackp);
+  GENERICSTACK_RESET(marpaESLIFValueResultStackp);
 }
