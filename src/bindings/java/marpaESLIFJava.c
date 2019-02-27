@@ -5105,10 +5105,17 @@ static short marpaESLIFJava_importb(marpaESLIFValue_t *marpaESLIFValuep, void *u
     }
     break;
   case MARPAESLIF_VALUE_TYPE_ROW:
-    /* We pushed in the internal valueStack r.sizel elements */
+    /* We received elements in order: first, second, etc..., we pushed that in valueStack, so pop will say last, beforelast, etc..., second, first */
     objectArrayp = (*envp)->NewObjectArray(envp, marpaESLIFValueResultp->u.r.sizel, JAVA_LANG_OBJECT_CLASSP, NULL /* initialElement */);
     if (objectArrayp == NULL) {
       RAISEEXCEPTION(envp, "NewObjectArray failure");
+    }
+    for (i = 0; i < marpaESLIFValueResultp->u.r.sizel; i++) {
+      objectp = (jobject) GENERICSTACK_POP_PTR(marpaESLIFValueContextp->objectStackp);
+      (*envp)->SetObjectArrayElement(envp, objectArrayp, (jsize) i, objectp);
+      if (HAVEEXCEPTION(envp)) {
+        goto err;
+      }
     }
     GENERICSTACK_PUSH_PTR(marpaESLIFValueContextp->objectStackp, objectArrayp);
     if (GENERICSTACK_ERROR(marpaESLIFValueContextp->objectStackp)) {
@@ -5120,8 +5127,8 @@ static short marpaESLIFJava_importb(marpaESLIFValue_t *marpaESLIFValuep, void *u
     if (objectHashMapp == NULL) {
       RAISEEXCEPTION(envp, "NewObject failure");
     }
-    /* We pushed in the internal valueStack t.sizel*2 elements */
-    for (i = marpaESLIFValueResultp->u.t.sizel; i > 0; i -= 2) {
+    /* We received elements in order: firstkey, firstvalue, secondkey, secondvalue, etc..., we pushed that in valueStack, so pop will say lastvalue, lastkey, ..., firstvalue, firstkey */
+    for (i = 0; i < marpaESLIFValueResultp->u.t.sizel; i++) {
       valuep = (jobject) GENERICSTACK_POP_PTR(marpaESLIFValueContextp->objectStackp);
       keyp = (jobject) GENERICSTACK_POP_PTR(marpaESLIFValueContextp->objectStackp);
       (*envp)->CallObjectMethod(envp, objectHashMapp, JAVA_UTIL_HASHMAP_CLASS_put_METHODP, keyp, valuep);
