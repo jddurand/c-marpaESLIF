@@ -323,7 +323,9 @@ int main() {
     "{\"test\":false}",
     "{\"test\":null, \"test2\":\"hello world\"}",
     "{\"test\":\"1.25\"}",
+    "{\"test\":1.25}",
     "{\"test\":\"1.25e4\"}",
+    "{\"test\":1.25e4}",
     "[]",
     "[\n"
     "  {\n"
