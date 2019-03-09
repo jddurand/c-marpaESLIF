@@ -69,6 +69,7 @@ use MarpaX::ESLIF::Rule::PropertyBitSet;
 
 # Other modules
 use Math::BigFloat qw//;
+use Math::BigInt qw//;
 
 =head1 DESCRIPTION
 
