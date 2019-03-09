@@ -291,6 +291,12 @@ struct marpaESLIFValue {
   marpaESLIF_string_t         *stringp; /* Not NULL only when is a literal - then callback is forced to be internal */
   lua_State                   *L;
   void                        *marpaESLIFLuaValueContextp;
+  genericStack_t               _beforePtrStack;
+  genericStack_t              *beforePtrStackp;
+  genericHash_t                _beforePtrHash;
+  genericHash_t               *beforePtrHashp;
+  genericHash_t                _afterPtrHash;
+  genericHash_t               *afterPtrHashp;
 };
 
 struct marpaESLIF_stream {
