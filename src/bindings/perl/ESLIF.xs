@@ -366,6 +366,7 @@ SV *boot_MarpaX__ESLIF__String_svp;
 SV *boot_MarpaX__ESLIF_svp;
 SV *boot_MarpaX__ESLIF__UTF_8_svp;
 SV *boot_MarpaX__ESLIF__Math__BigFloat_svp;
+SV *boot_MarpaX__ESLIF__Math__BigInt_svp;
 short boot_nvtype_is_long_doubleb;
 short boot_nvtype_is___float128;
 SV *boot_MarpaX__ESLIF__true_svp;
@@ -1620,8 +1621,29 @@ static short marpaESLIFPerl_importb(marpaESLIFValue_t *marpaESLIFValuep, void *u
   short                             utf8b;
   marpaESLIFPerl_stringGenerator_t  marpaESLIFPerl_stringGenerator;
   genericLogger_t                  *genericLoggerp;
+  IV                                ivdummy;
 
   marpaESLIFPerlMYTHX(Perl_MarpaX_ESLIF_Valuep);
+
+  /*
+    marpaESLIF Type                    C type  C nb_bits      Perl Type
+
+    MARPAESLIF_VALUE_TYPE_UNDEF                               &PL_sv_undef
+    MARPAESLIF_VALUE_TYPE_CHAR         char    CHAR_BIT       PV*
+    MARPAESLIF_VALUE_TYPE_SHORT        short   >= 16          IV or Math::BigInt
+    MARPAESLIF_VALUE_TYPE_INT          int     >= 16          IV or Math::BigInt
+    MARPAESLIF_VALUE_TYPE_LONG         long    >= 32          IV or Math::BigInt
+    MARPAESLIF_VALUE_TYPE_FLOAT        float   depends        NV (because NV is at least a double in perl)
+    MARPAESLIF_VALUE_TYPE_DOUBLE       double  depends        NV (because NV is at least a double in perl)
+    MARPAESLIF_VALUE_TYPE_PTR          char*                  SV* or PTR2IV()
+    MARPAESLIF_VALUE_TYPE_ARRAY                               PV*
+    MARPAESLIF_VALUE_TYPE_BOOL                                $MarpaX::ESLIF::true or $MarpaX::ESLIF::false
+    MARPAESLIF_VALUE_TYPE_STRING                              PV*
+    MARPAESLIF_VALUE_TYPE_ROW                                 AV*
+    MARPAESLIF_VALUE_TYPE_TABLE                               HV*
+    MARPAESLIF_VALUE_TYPE_LONG_DOUBLE                         NV* or Math::BigFloat
+
+  */
 
   switch (marpaESLIFValueResultp->type) {
   case MARPAESLIF_VALUE_TYPE_UNDEF:
@@ -1639,21 +1661,114 @@ static short marpaESLIFPerl_importb(marpaESLIFValue_t *marpaESLIFValuep, void *u
     }
     break;
   case MARPAESLIF_VALUE_TYPE_SHORT:
-    svp = newSViv((IV) marpaESLIFValueResultp->u.b);
+    if (sizeof(ivdummy) >= sizeof(short)) {
+      svp = newSViv((IV) marpaESLIFValueResultp->u.b);
+    } else {
+      /* Switch to Math::BigInt - we must first generate a string representation of this short. */
+#ifdef PERL_IMPLICIT_CONTEXT
+      marpaESLIFPerl_stringGenerator.PerlInterpreterp = Perl_MarpaX_ESLIF_Valuep->PerlInterpreterp;
+#endif
+      marpaESLIFPerl_stringGenerator.s      = NULL;
+      marpaESLIFPerl_stringGenerator.l      = 0;
+      marpaESLIFPerl_stringGenerator.okb    = 0;
+      marpaESLIFPerl_stringGenerator.allocl = 0;
+      genericLoggerp = GENERICLOGGER_CUSTOM(marpaESLIFPerl_generateStringWithLoggerCallback, (void *) &marpaESLIFPerl_stringGenerator, GENERICLOGGER_LOGLEVEL_TRACE);
+      if (genericLoggerp == NULL) {
+        MARPAESLIFPERL_CROAKF("GENERICLOGGER_CUSTOM failure, %s", strerror(errno));
+      }
+      GENERICLOGGER_TRACEF(genericLoggerp, "%d", (int) marpaESLIFValueResultp->u.b); /* This will croak by itself if needed */
+      if ((marpaESLIFPerl_stringGenerator.s == NULL) || (marpaESLIFPerl_stringGenerator.l <= 1)) {
+        /* This should never happen */
+        GENERICLOGGER_FREE(genericLoggerp);
+        MARPAESLIFPERL_CROAKF("Internal error when doing string representation of short %d", (int) marpaESLIFValueResultp->u.b);
+      }
+      stringp = newSVpvn((const char *) marpaESLIFPerl_stringGenerator.s, (STRLEN) (marpaESLIFPerl_stringGenerator.l - 1));
+      free(marpaESLIFPerl_stringGenerator.s);
+      marpaESLIFPerl_stringGenerator.s = NULL;
+      GENERICLOGGER_FREE(genericLoggerp);
+
+      /* Representation is in stringp. Call Math::BigFloat->new(stringp). */
+      listp = newAV();
+      av_push(listp, stringp); /* Ref count of stringp is transfered to av -; */
+      svp = marpaESLIFPerl_call_actionp(aTHX_ boot_MarpaX__ESLIF__Math__BigInt_svp, "new", listp, NULL /* Perl_MarpaX_ESLIF_Valuep */, 0 /* evalb */, 0 /* evalSilentb */);
+      av_undef(listp);
+    }
     marpaESLIFPerl_GENERICSTACK_PUSH_PTR(&(Perl_MarpaX_ESLIF_Valuep->valueStack), svp);
     if (marpaESLIFPerl_GENERICSTACK_ERROR(&(Perl_MarpaX_ESLIF_Valuep->valueStack))) {
       MARPAESLIFPERL_CROAKF("Perl_MarpaX_ESLIF_Valuep->valueStack push failure, %s", strerror(errno));
     }
     break;
   case MARPAESLIF_VALUE_TYPE_INT:
-    svp = newSViv((IV) marpaESLIFValueResultp->u.i);
+    if (sizeof(ivdummy) >= sizeof(int)) {
+      svp = newSViv((IV) marpaESLIFValueResultp->u.i);
+    } else {
+      /* Switch to Math::BigInt - we must first generate a string representation of this int. */
+#ifdef PERL_IMPLICIT_CONTEXT
+      marpaESLIFPerl_stringGenerator.PerlInterpreterp = Perl_MarpaX_ESLIF_Valuep->PerlInterpreterp;
+#endif
+      marpaESLIFPerl_stringGenerator.s      = NULL;
+      marpaESLIFPerl_stringGenerator.l      = 0;
+      marpaESLIFPerl_stringGenerator.okb    = 0;
+      marpaESLIFPerl_stringGenerator.allocl = 0;
+      genericLoggerp = GENERICLOGGER_CUSTOM(marpaESLIFPerl_generateStringWithLoggerCallback, (void *) &marpaESLIFPerl_stringGenerator, GENERICLOGGER_LOGLEVEL_TRACE);
+      if (genericLoggerp == NULL) {
+        MARPAESLIFPERL_CROAKF("GENERICLOGGER_CUSTOM failure, %s", strerror(errno));
+      }
+      GENERICLOGGER_TRACEF(genericLoggerp, "%d", marpaESLIFValueResultp->u.i); /* This will croak by itself if needed */
+      if ((marpaESLIFPerl_stringGenerator.s == NULL) || (marpaESLIFPerl_stringGenerator.l <= 1)) {
+        /* This should never happen */
+        GENERICLOGGER_FREE(genericLoggerp);
+        MARPAESLIFPERL_CROAKF("Internal error when doing string representation of int %d", marpaESLIFValueResultp->u.i);
+      }
+      stringp = newSVpvn((const char *) marpaESLIFPerl_stringGenerator.s, (STRLEN) (marpaESLIFPerl_stringGenerator.l - 1));
+      free(marpaESLIFPerl_stringGenerator.s);
+      marpaESLIFPerl_stringGenerator.s = NULL;
+      GENERICLOGGER_FREE(genericLoggerp);
+
+      /* Representation is in stringp. Call Math::BigFloat->new(stringp). */
+      listp = newAV();
+      av_push(listp, stringp); /* Ref count of stringp is transfered to av -; */
+      svp = marpaESLIFPerl_call_actionp(aTHX_ boot_MarpaX__ESLIF__Math__BigInt_svp, "new", listp, NULL /* Perl_MarpaX_ESLIF_Valuep */, 0 /* evalb */, 0 /* evalSilentb */);
+      av_undef(listp);
+    }
     marpaESLIFPerl_GENERICSTACK_PUSH_PTR(&(Perl_MarpaX_ESLIF_Valuep->valueStack), svp);
     if (marpaESLIFPerl_GENERICSTACK_ERROR(&(Perl_MarpaX_ESLIF_Valuep->valueStack))) {
       MARPAESLIFPERL_CROAKF("Perl_MarpaX_ESLIF_Valuep->valueStack push failure, %s", strerror(errno));
     }
     break;
   case MARPAESLIF_VALUE_TYPE_LONG:
-    svp = newSViv((IV) marpaESLIFValueResultp->u.l);
+    if (sizeof(ivdummy) >= sizeof(long)) {
+      svp = newSViv((IV) marpaESLIFValueResultp->u.l);
+    } else {
+      /* Switch to Math::BigInt - we must first generate a string representation of this long. */
+#ifdef PERL_IMPLICIT_CONTEXT
+      marpaESLIFPerl_stringGenerator.PerlInterpreterp = Perl_MarpaX_ESLIF_Valuep->PerlInterpreterp;
+#endif
+      marpaESLIFPerl_stringGenerator.s      = NULL;
+      marpaESLIFPerl_stringGenerator.l      = 0;
+      marpaESLIFPerl_stringGenerator.okb    = 0;
+      marpaESLIFPerl_stringGenerator.allocl = 0;
+      genericLoggerp = GENERICLOGGER_CUSTOM(marpaESLIFPerl_generateStringWithLoggerCallback, (void *) &marpaESLIFPerl_stringGenerator, GENERICLOGGER_LOGLEVEL_TRACE);
+      if (genericLoggerp == NULL) {
+        MARPAESLIFPERL_CROAKF("GENERICLOGGER_CUSTOM failure, %s", strerror(errno));
+      }
+      GENERICLOGGER_TRACEF(genericLoggerp, "%ld", marpaESLIFValueResultp->u.l); /* This will croak by itself if needed */
+      if ((marpaESLIFPerl_stringGenerator.s == NULL) || (marpaESLIFPerl_stringGenerator.l <= 1)) {
+        /* This should never happen */
+        GENERICLOGGER_FREE(genericLoggerp);
+        MARPAESLIFPERL_CROAKF("Internal error when doing string representation of long %ld", marpaESLIFValueResultp->u.ld);
+      }
+      stringp = newSVpvn((const char *) marpaESLIFPerl_stringGenerator.s, (STRLEN) (marpaESLIFPerl_stringGenerator.l - 1));
+      free(marpaESLIFPerl_stringGenerator.s);
+      marpaESLIFPerl_stringGenerator.s = NULL;
+      GENERICLOGGER_FREE(genericLoggerp);
+
+      /* Representation is in stringp. Call Math::BigFloat->new(stringp). */
+      listp = newAV();
+      av_push(listp, stringp); /* Ref count of stringp is transfered to av -; */
+      svp = marpaESLIFPerl_call_actionp(aTHX_ boot_MarpaX__ESLIF__Math__BigInt_svp, "new", listp, NULL /* Perl_MarpaX_ESLIF_Valuep */, 0 /* evalb */, 0 /* evalSilentb */);
+      av_undef(listp);
+    }
     marpaESLIFPerl_GENERICSTACK_PUSH_PTR(&(Perl_MarpaX_ESLIF_Valuep->valueStack), svp);
     if (marpaESLIFPerl_GENERICSTACK_ERROR(&(Perl_MarpaX_ESLIF_Valuep->valueStack))) {
       MARPAESLIFPERL_CROAKF("Perl_MarpaX_ESLIF_Valuep->valueStack push failure, %s", strerror(errno));
@@ -1836,10 +1951,10 @@ static short marpaESLIFPerl_importb(marpaESLIFValue_t *marpaESLIFValuep, void *u
     } else {
       /* NVTYPE here is long double or __float128 */
       svp = newSVnv((NVTYPE) marpaESLIFValueResultp->u.ld);
-      marpaESLIFPerl_GENERICSTACK_PUSH_PTR(&(Perl_MarpaX_ESLIF_Valuep->valueStack), svp);
-      if (marpaESLIFPerl_GENERICSTACK_ERROR(&(Perl_MarpaX_ESLIF_Valuep->valueStack))) {
-        MARPAESLIFPERL_CROAKF("Perl_MarpaX_ESLIF_Valuep->valueStack push failure, %s", strerror(errno));
-      }
+    }
+    marpaESLIFPerl_GENERICSTACK_PUSH_PTR(&(Perl_MarpaX_ESLIF_Valuep->valueStack), svp);
+    if (marpaESLIFPerl_GENERICSTACK_ERROR(&(Perl_MarpaX_ESLIF_Valuep->valueStack))) {
+      MARPAESLIFPERL_CROAKF("Perl_MarpaX_ESLIF_Valuep->valueStack push failure, %s", strerror(errno));
     }
     break;
   default:
@@ -2079,6 +2194,7 @@ static void marpaESLIFPerl_stack_setv(pTHX_ marpaESLIF_t *marpaESLIFp, marpaESLI
       iterl = 0;
       /* Note: we never do sv_2mortal, because either we successfully converted an svp, then MARPAESLIFPERL_REFCNT_DEC(svp) is called, */
       /* either we need it alive because it does not have an ESLIF equivalent */
+      hv_iterinit(hvp);
       while ((iterp = hv_iternextsv(hvp, &keys, &reti)) != NULL) {
 	if (iterl >= marpaESLIFValueResultp->u.t.sizel) {
 	  /* This should not happen */
@@ -2095,7 +2211,8 @@ static void marpaESLIFPerl_stack_setv(pTHX_ marpaESLIF_t *marpaESLIFp, marpaESLI
 	  MARPAESLIFPERL_CROAKF("marpaESLIFValueResultStackp push failure, %s", strerror(errno));
 	}
 	/* - Value */
-	marpaESLIFPerl_GENERICSTACK_PUSH_PTR(svStackp, (void *) newSVsv(iterp));
+        iterp = newSVsv(iterp);
+	marpaESLIFPerl_GENERICSTACK_PUSH_PTR(svStackp, (void *) iterp);
 	if (marpaESLIFPerl_GENERICSTACK_ERROR(svStackp)) {
 	  MARPAESLIFPERL_CROAKF("svStackp push failure, %s", strerror(errno));
 	}
@@ -2105,7 +2222,9 @@ static void marpaESLIFPerl_stack_setv(pTHX_ marpaESLIF_t *marpaESLIFp, marpaESLI
 	}
 	++iterl;
       }
+
       eslifb = 1;
+
     } else if (marpaESLIFPerl_is_arrayref(aTHX_ svp, typei)) {
       avp = (AV *) SvRV(svp);
       marpaESLIFValueResultp->type            = MARPAESLIF_VALUE_TYPE_ROW;
@@ -2246,6 +2365,7 @@ BOOT:
   boot_MarpaX__ESLIF__UTF_8_svp  = newSVpvn("UTF-8", strlen("UTF-8"));
   sprintf(long_double_fmts, "%%%d.%dLe", LDBL_DIG + 8, LDBL_DIG);
   boot_MarpaX__ESLIF__Math__BigFloat_svp = newSVpvn("Math::BigFloat", strlen("Math::BigFloat"));
+  boot_MarpaX__ESLIF__Math__BigInt_svp = newSVpvn("Math::BigInt", strlen("Math::BigInt"));
   boot_nvtype_is_long_doubleb = marpaESLIFPerl_call_methodb(aTHX_ boot_MarpaX__ESLIF_svp, "_nvtype_is_long_double");
   boot_nvtype_is___float128 = marpaESLIFPerl_call_methodb(aTHX_ boot_MarpaX__ESLIF_svp, "_nvtype_is___float128");
   boot_MarpaX__ESLIF__true_svp = get_sv("MarpaX::ESLIF::true", 0);
