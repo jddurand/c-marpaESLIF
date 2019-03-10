@@ -15,7 +15,7 @@ public class AppParse  {
 		AppLogger eslifLogger1 = new AppLogger();
 		AppLogger eslifLogger2 = new AppLogger();
 		AppLogger eslifLogger = eslifLogger2;
-		int       nbthread = 5;
+		int       nbthread = 1;
 		int       ithread;
 		ArrayList<Thread> threadlist = new ArrayList<Thread>();
 		int       nbalive;
@@ -64,5 +64,8 @@ public class AppParse  {
 				eslifLogger.info("All " + threadlist.size() + " threads finished");
 			}
 		}
+		
+		// Import/export test
+		new AppImportExport(eslifLogger).run();
 	}
 }
