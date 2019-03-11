@@ -1,5 +1,7 @@
 package org.parser.marpa;
 
+import java.io.BufferedReader;
+import java.io.StringReader;
 import java.io.UnsupportedEncodingException;
 
 /**
@@ -72,13 +74,50 @@ public class AppImportExport implements Runnable {
 				    "  end\n" + 
 				    "</luascript>\n"; 
 
+		Object[] inputArray = {
+				new Boolean(true),
+				new Boolean(false),
+				null,
+				new Character('X'),
+				};  
 
 		try {
 			ESLIFGrammar eslifGrammar = new ESLIFGrammar(eslif, grammar);
-		} catch (UnsupportedEncodingException e) {
-			e.printStackTrace();
-			return;
-		} catch (ESLIFException e) {
+			for (Object input : inputArray) {
+				ESLIFRecognizerInterface eslifRecognizerInterface = new AppEmptyRecognizer();
+			    ESLIFRecognizer eslifRecognizer = new ESLIFRecognizer(eslifGrammar, eslifRecognizerInterface);
+			    eslifRecognizer.scan(true); // Initial events
+			    eslifRecognizer.lexemeRead("JAVA_INPUT", input, 1, 1);
+			    ESLIFValueInterface eslifValueInterface = new AppValue();
+			    ESLIFValue eslifValue = new ESLIFValue(eslifRecognizer, eslifValueInterface);
+			    eslifValue.value();
+			    Object value = eslifValueInterface.getResult();
+			    if (input == null) {
+			    	// Generic object: then ESLIF guarantees it is the same that transit through all layers
+				    if (value != null) {
+				    	this.eslifLogger.error("KO for null");
+				    	throw new Exception("null != null");
+				    } else {
+				    	this.eslifLogger.info("OK for null");
+				    }
+			    } else if (input.getClass().equals(Object.class)) {
+			    	// Generic object: then ESLIF guarantees it is the same that transit through all layers
+				    if (! input.equals(value)) {
+				    	this.eslifLogger.error("KO for " + input);
+				    	throw new Exception(input + " != " + value);
+				    } else {
+				    	this.eslifLogger.info("OK for " + input);
+				    }
+			    } else {
+				    if (! input.toString().equals(value.toString())) {
+				    	this.eslifLogger.error("KO for " + input.toString());
+				    	throw new Exception(input.toString() + " != " + value.toString());
+				    } else {
+				    	this.eslifLogger.info("OK for " + input.toString());
+				    }
+			    }
+			}
+		} catch (Exception e) {
 			e.printStackTrace();
 			return;
 		}
