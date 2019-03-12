@@ -61,15 +61,15 @@ public class AppImportExport implements Runnable {
 				    "  io.stdout:setvbuf('no')\n" + 
 				    "\n" + 
 				    "  function lua_proxy(value)\n" + 
-				    "    -- print('lua_proxy received value of type: '..type(value))\n" + 
-				    "    -- if type(value) == 'string' then\n" + 
-				    "    --   print('lua_proxy value: '..tostring(value)..', encoding: '..tostring(value:encoding()))\n" + 
-				    "    -- else\n" + 
-				    "    --   print('lua_proxy value: '..tostring(value))\n" + 
-				    "    --   if type(value) == 'table' then\n" + 
-				    "    --     table_print(value)\n" + 
-				    "    --   end\n" + 
-				    "    -- end\n" + 
+				    "    print('lua_proxy received value of type: '..type(value))\n" + 
+				    "    if type(value) == 'string' then\n" + 
+				    "      print('lua_proxy value: '..tostring(value)..', encoding: '..tostring(value:encoding()))\n" + 
+				    "    else\n" + 
+				    "      print('lua_proxy value: '..tostring(value))\n" + 
+				    "      if type(value) == 'table' then\n" + 
+				    "        table_print(value)\n" + 
+				    "      end\n" + 
+				    "    end\n" + 
 				    "    return value\n" + 
 				    "  end\n" + 
 				    "</luascript>\n"; 
