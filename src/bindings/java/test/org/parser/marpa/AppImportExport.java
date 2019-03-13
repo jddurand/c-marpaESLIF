@@ -75,6 +75,11 @@ public class AppImportExport implements Runnable {
 				    "</luascript>\n"; 
 
 		Object[] inputArray = {
+				'J',
+				(short) 1,
+				(int) 1,
+				(long) 1,
+				new byte[] { },
 				new Boolean(true),
 				new Boolean(false),
 				null,
@@ -103,17 +108,17 @@ public class AppImportExport implements Runnable {
 			    } else if (input.getClass().equals(Object.class)) {
 			    	// Generic object: then ESLIF guarantees it is the same that transit through all layers
 				    if (! input.equals(value)) {
-				    	this.eslifLogger.error("KO for " + input);
+				    	this.eslifLogger.error("KO for " + input + " (input class " + input.getClass().getName() + ", value class " + value.getClass().getName() + ")");
 				    	throw new Exception(input + " != " + value);
 				    } else {
-				    	this.eslifLogger.info("OK for " + input);
+				    	this.eslifLogger.info("OK for " + input + " (input class " + input.getClass().getName() + ", value class " + value.getClass().getName() + ")");
 				    }
 			    } else {
 				    if (! input.toString().equals(value.toString())) {
-				    	this.eslifLogger.error("KO for " + input.toString());
+				    	this.eslifLogger.error("KO for " + input.toString() + " (input class " + input.getClass().getName() + ", value class " + value.getClass().getName() + ")");
 				    	throw new Exception(input.toString() + " != " + value.toString());
 				    } else {
-				    	this.eslifLogger.info("OK for " + input.toString());
+				    	this.eslifLogger.info("OK for " + input.toString() + " (input class " + input.getClass().getName() + ", value class " + value.getClass().getName() + ")");
 				    }
 			    }
 			}
