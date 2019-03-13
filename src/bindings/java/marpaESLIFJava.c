@@ -682,8 +682,48 @@ static marpaESLIFMethodCache_t marpaESLIFMethodCacheArrayp[] = {
   #define JAVA_UTIL_HASHMAP_CLASS_keySet_METHODP                                    marpaESLIFMethodCacheArrayp[101].methodp
   {      &JAVA_UTIL_HASHMAP_CLASSCACHE, "keySet",                                   "()Ljava/util/Set;", 0 /* staticb */, NULL, 1 /* requiredb */ },
 
+  #define JAVA_LANG_CLASS_CLASS_isPrimitive_METHODP                                 marpaESLIFMethodCacheArrayp[102].methodp
+  {      &JAVA_LANG_CLASS_CLASSCACHE, "isPrimitive",                                "()Z", 0 /* staticb */, NULL, 1 /* requiredb */ },
+
   { NULL }
 };
+
+static marpaESLIFFieldCache_t marpaESLIFFieldCacheArrayp[] = {
+  #define JAVA_LANG_BOOLEAN_CLASS_TYPE_FIELDP                                      marpaESLIFFieldCacheArrayp[0].fieldp
+  {      &JAVA_LANG_BOOLEAN_CLASSCACHE, "TYPE",                                    "Ljava/lang/Class;", 1 /* staticb */, NULL, 1 /* requiredb */ },
+
+  #define JAVA_LANG_CHARACTER_CLASS_TYPE_FIELDP                                    marpaESLIFFieldCacheArrayp[1].fieldp
+  {      &JAVA_LANG_CHARACTER_CLASSCACHE, "TYPE",                                  "Ljava/lang/Class;", 1 /* staticb */, NULL, 1 /* requiredb */ },
+
+  #define JAVA_LANG_BYTE_CLASS_TYPE_FIELDP                                         marpaESLIFFieldCacheArrayp[2].fieldp
+  {      &JAVA_LANG_BYTE_CLASSCACHE, "TYPE",                                       "Ljava/lang/Class;", 1 /* staticb */, NULL, 1 /* requiredb */ },
+
+  #define JAVA_LANG_SHORT_CLASS_TYPE_FIELDP                                        marpaESLIFFieldCacheArrayp[3].fieldp
+  {      &JAVA_LANG_SHORT_CLASSCACHE, "TYPE",                                      "Ljava/lang/Class;", 1 /* staticb */, NULL, 1 /* requiredb */ },
+
+  #define JAVA_LANG_INTEGER_CLASS_TYPE_FIELDP                                      marpaESLIFFieldCacheArrayp[4].fieldp
+  {      &JAVA_LANG_INTEGER_CLASSCACHE, "TYPE",                                    "Ljava/lang/Class;", 1 /* staticb */, NULL, 1 /* requiredb */ },
+
+  #define JAVA_LANG_LONG_CLASS_TYPE_FIELDP                                         marpaESLIFFieldCacheArrayp[5].fieldp
+  {      &JAVA_LANG_LONG_CLASSCACHE, "TYPE",                                       "Ljava/lang/Class;", 1 /* staticb */, NULL, 1 /* requiredb */ },
+
+  #define JAVA_LANG_FLOAT_CLASS_TYPE_FIELDP                                        marpaESLIFFieldCacheArrayp[6].fieldp
+  {      &JAVA_LANG_FLOAT_CLASSCACHE, "TYPE",                                      "Ljava/lang/Class;", 1 /* staticb */, NULL, 1 /* requiredb */ },
+
+  #define JAVA_LANG_DOUBLE_CLASS_TYPE_FIELDP                                       marpaESLIFFieldCacheArrayp[7].fieldp
+  {      &JAVA_LANG_DOUBLE_CLASSCACHE, "TYPE",                                     "Ljava/lang/Class;", 1 /* staticb */, NULL, 1 /* requiredb */ },
+
+  { NULL }
+};
+
+jclass booleanTypeClassp = NULL;
+jclass characterTypeClassp = NULL;
+jclass byteTypeClassp = NULL;
+jclass shortTypeClassp = NULL;
+jclass integerTypeClassp = NULL;
+jclass longTypeClassp = NULL;
+jclass floatTypeClassp = NULL;
+jclass doubleTypeClassp = NULL;
 
 #define MARPAESLIFJAVA_PUSH_PTR(stackp, p) do {                         \
     GENERICSTACK_PUSH_PTR(stackp, p);                                   \
@@ -928,10 +968,6 @@ static marpaESLIFMethodCache_t marpaESLIFMethodCacheArrayp[] = {
       eslifb = 1;                                                       \
     }                                                                   \
   } while (0)                                                           \
-
-static marpaESLIFFieldCache_t marpaESLIFFieldCacheArrayp[] = {
-  { NULL }
-};
 
 /* -------------- */
 /* Static methods */
@@ -1201,6 +1237,31 @@ JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM *JavaVMp, void* reservedp)
     }
     marpaESLIFFieldCachep++;
   }
+
+  /* Get some static fields values */
+  booleanTypeClassp = (*envp)->GetStaticObjectField(envp, JAVA_LANG_BOOLEAN_CLASSP, JAVA_LANG_BOOLEAN_CLASS_TYPE_FIELDP);
+  if (booleanTypeClassp == NULL) goto err;
+
+  characterTypeClassp = (*envp)->GetStaticObjectField(envp, JAVA_LANG_CHARACTER_CLASSP, JAVA_LANG_CHARACTER_CLASS_TYPE_FIELDP);
+  if (characterTypeClassp == NULL) goto err;
+
+  byteTypeClassp = (*envp)->GetStaticObjectField(envp, JAVA_LANG_BYTE_CLASSP, JAVA_LANG_BYTE_CLASS_TYPE_FIELDP);
+  if (byteTypeClassp == NULL) goto err;
+
+  shortTypeClassp = (*envp)->GetStaticObjectField(envp, JAVA_LANG_SHORT_CLASSP, JAVA_LANG_SHORT_CLASS_TYPE_FIELDP);
+  if (shortTypeClassp == NULL) goto err;
+
+  integerTypeClassp = (*envp)->GetStaticObjectField(envp, JAVA_LANG_INTEGER_CLASSP, JAVA_LANG_INTEGER_CLASS_TYPE_FIELDP);
+  if (integerTypeClassp == NULL) goto err;
+
+  longTypeClassp = (*envp)->GetStaticObjectField(envp, JAVA_LANG_LONG_CLASSP, JAVA_LANG_LONG_CLASS_TYPE_FIELDP);
+  if (longTypeClassp == NULL) goto err;
+
+  floatTypeClassp = (*envp)->GetStaticObjectField(envp, JAVA_LANG_FLOAT_CLASSP, JAVA_LANG_FLOAT_CLASS_TYPE_FIELDP);
+  if (floatTypeClassp == NULL) goto err;
+
+  doubleTypeClassp = (*envp)->GetStaticObjectField(envp, JAVA_LANG_DOUBLE_CLASSP, JAVA_LANG_DOUBLE_CLASS_TYPE_FIELDP);
+  if (doubleTypeClassp == NULL) goto err;
 
   /* Get endianness */
   is_bigendian = MARPAESLIF_IS_BIGENDIAN();
@@ -5734,44 +5795,51 @@ static short marpaESLIFJava_stack_setb(JNIEnv *envp, marpaESLIFValue_t *marpaESL
         /* An exception was (must have been) raised */
         RAISEEXCEPTION(envp, "GetObjectClass failure");
       }
-
-      if ((*envp)->CallBooleanMethod(envp, classp, JAVA_LANG_CLASS_CLASS_equals_METHODP, JAVA_LANG_BYTE_CLASSP) == JNI_TRUE) {
+      /* Because of boxing, there are two cases when checking a type: the wrapper boxed version, and the primitive version */
+      if (((*envp)->CallBooleanMethod(envp, classp, JAVA_LANG_CLASS_CLASS_equals_METHODP, JAVA_LANG_BYTE_CLASSP) == JNI_TRUE) ||
+          ((*envp)->CallBooleanMethod(envp, classp, JAVA_LANG_CLASS_CLASS_equals_METHODP, booleanTypeClassp) == JNI_TRUE)) {
         java_byte = (*envp)->CallByteMethod(envp, objectp, JAVA_LANG_BYTE_CLASS_byteValue_METHODP);
         if (HAVEEXCEPTION(envp)) {
           goto err;
         }
         MARPAESLIFJAVA_EXPORT_NUMBER_NOT_DECIMAL(envp, jbyte, java_byte, eslifb);
-      } else if ((*envp)->CallBooleanMethod(envp, classp, JAVA_LANG_CLASS_CLASS_equals_METHODP, JAVA_LANG_SHORT_CLASSP) == JNI_TRUE) {
+      } else if (((*envp)->CallBooleanMethod(envp, classp, JAVA_LANG_CLASS_CLASS_equals_METHODP, JAVA_LANG_SHORT_CLASSP) == JNI_TRUE) ||
+                 ((*envp)->CallBooleanMethod(envp, classp, JAVA_LANG_CLASS_CLASS_equals_METHODP, shortTypeClassp) == JNI_TRUE)) {
         java_short = (*envp)->CallShortMethod(envp, objectp, JAVA_LANG_SHORT_CLASS_shortValue_METHODP);
         if (HAVEEXCEPTION(envp)) {
           goto err;
         }
         MARPAESLIFJAVA_EXPORT_NUMBER_NOT_DECIMAL(envp, jshort, java_short, eslifb);
-      } else if ((*envp)->CallBooleanMethod(envp, classp, JAVA_LANG_CLASS_CLASS_equals_METHODP, JAVA_LANG_INTEGER_CLASSP) == JNI_TRUE) {
+      } else if (((*envp)->CallBooleanMethod(envp, classp, JAVA_LANG_CLASS_CLASS_equals_METHODP, JAVA_LANG_INTEGER_CLASSP) == JNI_TRUE) ||
+                 ((*envp)->CallBooleanMethod(envp, classp, JAVA_LANG_CLASS_CLASS_equals_METHODP, integerTypeClassp) == JNI_TRUE)) {
         java_int = (*envp)->CallIntMethod(envp, objectp, JAVA_LANG_INTEGER_CLASS_intValue_METHODP);
         if (HAVEEXCEPTION(envp)) {
           goto err;
         }
         MARPAESLIFJAVA_EXPORT_NUMBER_NOT_DECIMAL(envp, jint, java_int, eslifb);
-      } else if ((*envp)->CallBooleanMethod(envp, classp, JAVA_LANG_CLASS_CLASS_equals_METHODP, JAVA_LANG_LONG_CLASSP) == JNI_TRUE) {
+      } else if (((*envp)->CallBooleanMethod(envp, classp, JAVA_LANG_CLASS_CLASS_equals_METHODP, JAVA_LANG_LONG_CLASSP) == JNI_TRUE) ||
+                 ((*envp)->CallBooleanMethod(envp, classp, JAVA_LANG_CLASS_CLASS_equals_METHODP, longTypeClassp) == JNI_TRUE)) {
         java_long = (*envp)->CallLongMethod(envp, objectp, JAVA_LANG_LONG_CLASS_longValue_METHODP);
         if (HAVEEXCEPTION(envp)) {
           goto err;
         }
         MARPAESLIFJAVA_EXPORT_NUMBER_NOT_DECIMAL(envp, jlong, java_long, eslifb);
-      } else if ((*envp)->CallBooleanMethod(envp, classp, JAVA_LANG_CLASS_CLASS_equals_METHODP, JAVA_LANG_FLOAT_CLASSP) == JNI_TRUE) {
+      } else if (((*envp)->CallBooleanMethod(envp, classp, JAVA_LANG_CLASS_CLASS_equals_METHODP, JAVA_LANG_FLOAT_CLASSP) == JNI_TRUE) ||
+                 ((*envp)->CallBooleanMethod(envp, classp, JAVA_LANG_CLASS_CLASS_equals_METHODP, floatTypeClassp) == JNI_TRUE)) {
         java_float = (*envp)->CallFloatMethod(envp, objectp, JAVA_LANG_FLOAT_CLASS_floatValue_METHODP);
         if (HAVEEXCEPTION(envp)) {
           goto err;
         }
         MARPAESLIFJAVA_EXPORT_NUMBER_DECIMAL(envp, jfloat, java_float, eslifb);
-      } else if ((*envp)->CallBooleanMethod(envp, classp, JAVA_LANG_CLASS_CLASS_equals_METHODP, JAVA_LANG_DOUBLE_CLASSP) == JNI_TRUE) {
+      } else if (((*envp)->CallBooleanMethod(envp, classp, JAVA_LANG_CLASS_CLASS_equals_METHODP, JAVA_LANG_DOUBLE_CLASSP) == JNI_TRUE) ||
+                 ((*envp)->CallBooleanMethod(envp, classp, JAVA_LANG_CLASS_CLASS_equals_METHODP, doubleTypeClassp) == JNI_TRUE)) {
         java_double = (*envp)->CallDoubleMethod(envp, objectp, JAVA_LANG_DOUBLE_CLASS_doubleValue_METHODP);
         if (HAVEEXCEPTION(envp)) {
           goto err;
         }
         MARPAESLIFJAVA_EXPORT_NUMBER_DECIMAL(envp, jdouble, java_double, eslifb);
-      } else if ((*envp)->CallBooleanMethod(envp, classp, JAVA_LANG_CLASS_CLASS_equals_METHODP, JAVA_LANG_BOOLEAN_CLASSP) == JNI_TRUE) {
+      } else if (((*envp)->CallBooleanMethod(envp, classp, JAVA_LANG_CLASS_CLASS_equals_METHODP, JAVA_LANG_BOOLEAN_CLASSP) == JNI_TRUE) ||
+                 ((*envp)->CallBooleanMethod(envp, classp, JAVA_LANG_CLASS_CLASS_equals_METHODP, booleanTypeClassp) == JNI_TRUE)) {
         java_boolean = (*envp)->CallBooleanMethod(envp, objectp, JAVA_LANG_BOOLEAN_CLASS_booleanValue_METHODP);
         if (HAVEEXCEPTION(envp)) {
           goto err;
@@ -5784,7 +5852,8 @@ static short marpaESLIFJava_stack_setb(JNIEnv *envp, marpaESLIFValue_t *marpaESL
         marpaESLIFValueResultp->u.y             = (java_boolean == JNI_FALSE) ? MARPAESLIFVALUERESULTBOOL_FALSE : MARPAESLIFVALUERESULTBOOL_TRUE;
         eslifb = 1;
 
-      } else if (((*envp)->CallBooleanMethod(envp, classp, JAVA_LANG_CLASS_CLASS_equals_METHODP, JAVA_LANG_CHARACTER_CLASSP) == JNI_TRUE)
+      } else if (((*envp)->CallBooleanMethod(envp, classp, JAVA_LANG_CLASS_CLASS_equals_METHODP, JAVA_LANG_CHARACTER_CLASSP) == JNI_TRUE) ||
+                 ((*envp)->CallBooleanMethod(envp, classp, JAVA_LANG_CLASS_CLASS_equals_METHODP, characterTypeClassp) == JNI_TRUE)
                  ||
                  ((*envp)->CallBooleanMethod(envp, classp, JAVA_LANG_CLASS_CLASS_equals_METHODP, JAVA_LANG_STRING_CLASSP) == JNI_TRUE)) {
         /* Fake a PTR and make that an UTF-8 string */
@@ -5792,10 +5861,10 @@ static short marpaESLIFJava_stack_setb(JNIEnv *envp, marpaESLIFValue_t *marpaESL
         marpaESLIFValueResult.contextp             = MARPAESLIF_JNI_CONTEXT;
         marpaESLIFValueResult.u.p.p                = (void *) objectp;
         if (! marpaESLIFJava_representationCallbackb(NULL /* marpaESLIFValueContextp */,
-                                               &marpaESLIFValueResult,
-                                               (char **) &(marpaESLIFValueResultp->u.s.p),
-                                               &(marpaESLIFValueResultp->u.s.sizel),
-                                               &(marpaESLIFValueResultp->u.s.encodingasciis))) {
+                                                     &marpaESLIFValueResult,
+                                                     (char **) &(marpaESLIFValueResultp->u.s.p),
+                                                     &(marpaESLIFValueResultp->u.s.sizel),
+                                                     &(marpaESLIFValueResultp->u.s.encodingasciis))) {
           goto err;
         }
         /* fprintf(stderr, "==> %s: export STRING '%s' encoding '%s'\n", funcs, marpaESLIFValueResultp->u.s.p, marpaESLIFValueResultp->u.s.encodingasciis); fflush(stdout); fflush(stderr); */
@@ -5804,14 +5873,18 @@ static short marpaESLIFJava_stack_setb(JNIEnv *envp, marpaESLIFValue_t *marpaESL
         marpaESLIFValueResultp->representationp    = NULL;
         marpaESLIFValueResultp->u.s.shallowb       = 0;
         eslifb = 1;
+
       } else if ((*envp)->CallBooleanMethod(envp, classp, JAVA_LANG_CLASS_CLASS_isArray_METHODP) == JNI_TRUE) {
+        fprintf(stderr, "===> isArray returned true\n");
         /* Get component class */
         componentclassp = (*envp)->CallObjectMethod(envp, classp, JAVA_LANG_CLASS_CLASS_getComponentType_METHODP);
         if (componentclassp == NULL) {
           /* An exception was (must have been) raised */
           RAISEEXCEPTION(envp, "getComponentType failure");
         }
-        if ((*envp)->CallBooleanMethod(envp, componentclassp, JAVA_LANG_CLASS_CLASS_equals_METHODP, JAVA_LANG_BYTE_CLASSP) == JNI_TRUE) {
+        if (((*envp)->CallBooleanMethod(envp, componentclassp, JAVA_LANG_CLASS_CLASS_equals_METHODP, JAVA_LANG_BYTE_CLASSP) == JNI_TRUE) ||
+            ((*envp)->CallBooleanMethod(envp, componentclassp, JAVA_LANG_CLASS_CLASS_equals_METHODP, byteTypeClassp) == JNI_TRUE)) {
+          fprintf(stderr, "====> Component class equals to java.lang.Byte\n");
           /* This is a byte[] array */
           /* fprintf(stderr, "==> %s: export ARRAY\n", funcs); fflush(stdout); fflush(stderr); */
           marpaESLIFValueResultp->type               = MARPAESLIF_VALUE_TYPE_ARRAY;
