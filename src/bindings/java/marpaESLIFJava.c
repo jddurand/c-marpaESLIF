@@ -716,14 +716,31 @@ static marpaESLIFFieldCache_t marpaESLIFFieldCacheArrayp[] = {
   { NULL }
 };
 
-jclass booleanTypeClassp = NULL;
-jclass characterTypeClassp = NULL;
-jclass byteTypeClassp = NULL;
-jclass shortTypeClassp = NULL;
-jclass integerTypeClassp = NULL;
-jclass longTypeClassp = NULL;
-jclass floatTypeClassp = NULL;
-jclass doubleTypeClassp = NULL;
+static jclass booleanTypeClassp = NULL;
+static jclass characterTypeClassp = NULL;
+static jclass byteTypeClassp = NULL;
+static jclass shortTypeClassp = NULL;
+static jclass integerTypeClassp = NULL;
+static jclass longTypeClassp = NULL;
+static jclass floatTypeClassp = NULL;
+static jclass doubleTypeClassp = NULL;
+
+typedef struct fieldsValuesStorage {
+  jclass    classp;
+  jfieldID  fieldp;
+  jclass    *primitiveClasspp;
+} fieldsValuesStorage_t;
+
+fieldsValuesStorage_t fieldsValues[] = {
+  { NULL, NULL, &booleanTypeClassp },
+  { NULL, NULL, &characterTypeClassp },
+  { NULL, NULL, &byteTypeClassp },
+  { NULL, NULL, &shortTypeClassp },
+  { NULL, NULL, &integerTypeClassp },
+  { NULL, NULL, &longTypeClassp },
+  { NULL, NULL, &floatTypeClassp },
+  { NULL, NULL, &doubleTypeClassp }
+};
 
 #define MARPAESLIFJAVA_PUSH_PTR(stackp, p) do {                         \
     GENERICSTACK_PUSH_PTR(stackp, p);                                   \
@@ -1103,6 +1120,7 @@ JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM *JavaVMp, void* reservedp)
   marpaESLIFMethodCache_t *marpaESLIFMethodCachep = marpaESLIFMethodCacheArrayp;
   marpaESLIFFieldCache_t  *marpaESLIFFieldCachep  = marpaESLIFFieldCacheArrayp;
   jstring                  stringp                = NULL;
+  size_t                   i;
 
   /* ------------------------------------------------ */
   /* It is safe to store JavaVMp in a global variable */
@@ -1239,29 +1257,27 @@ JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM *JavaVMp, void* reservedp)
   }
 
   /* Get some static fields values */
-  booleanTypeClassp = (*envp)->GetStaticObjectField(envp, JAVA_LANG_BOOLEAN_CLASSP, JAVA_LANG_BOOLEAN_CLASS_TYPE_FIELDP);
-  if (booleanTypeClassp == NULL) goto err;
+  /* We have to fill the fieldsValues structure here for things that are not constant */
+  fieldsValues[0].classp = JAVA_LANG_BOOLEAN_CLASSP;   fieldsValues[0].fieldp = JAVA_LANG_BOOLEAN_CLASS_TYPE_FIELDP;
+  fieldsValues[1].classp = JAVA_LANG_CHARACTER_CLASSP; fieldsValues[1].fieldp = JAVA_LANG_CHARACTER_CLASS_TYPE_FIELDP;
+  fieldsValues[2].classp = JAVA_LANG_BYTE_CLASSP;      fieldsValues[2].fieldp = JAVA_LANG_BYTE_CLASS_TYPE_FIELDP;
+  fieldsValues[3].classp = JAVA_LANG_SHORT_CLASSP;     fieldsValues[3].fieldp = JAVA_LANG_SHORT_CLASS_TYPE_FIELDP;
+  fieldsValues[4].classp = JAVA_LANG_INTEGER_CLASSP;   fieldsValues[4].fieldp = JAVA_LANG_INTEGER_CLASS_TYPE_FIELDP;
+  fieldsValues[5].classp = JAVA_LANG_LONG_CLASSP;      fieldsValues[5].fieldp = JAVA_LANG_LONG_CLASS_TYPE_FIELDP;
+  fieldsValues[6].classp = JAVA_LANG_FLOAT_CLASSP;     fieldsValues[6].fieldp = JAVA_LANG_FLOAT_CLASS_TYPE_FIELDP;
+  fieldsValues[7].classp = JAVA_LANG_DOUBLE_CLASSP;    fieldsValues[7].fieldp = JAVA_LANG_DOUBLE_CLASS_TYPE_FIELDP;
 
-  characterTypeClassp = (*envp)->GetStaticObjectField(envp, JAVA_LANG_CHARACTER_CLASSP, JAVA_LANG_CHARACTER_CLASS_TYPE_FIELDP);
-  if (characterTypeClassp == NULL) goto err;
-
-  byteTypeClassp = (*envp)->GetStaticObjectField(envp, JAVA_LANG_BYTE_CLASSP, JAVA_LANG_BYTE_CLASS_TYPE_FIELDP);
-  if (byteTypeClassp == NULL) goto err;
-
-  shortTypeClassp = (*envp)->GetStaticObjectField(envp, JAVA_LANG_SHORT_CLASSP, JAVA_LANG_SHORT_CLASS_TYPE_FIELDP);
-  if (shortTypeClassp == NULL) goto err;
-
-  integerTypeClassp = (*envp)->GetStaticObjectField(envp, JAVA_LANG_INTEGER_CLASSP, JAVA_LANG_INTEGER_CLASS_TYPE_FIELDP);
-  if (integerTypeClassp == NULL) goto err;
-
-  longTypeClassp = (*envp)->GetStaticObjectField(envp, JAVA_LANG_LONG_CLASSP, JAVA_LANG_LONG_CLASS_TYPE_FIELDP);
-  if (longTypeClassp == NULL) goto err;
-
-  floatTypeClassp = (*envp)->GetStaticObjectField(envp, JAVA_LANG_FLOAT_CLASSP, JAVA_LANG_FLOAT_CLASS_TYPE_FIELDP);
-  if (floatTypeClassp == NULL) goto err;
-
-  doubleTypeClassp = (*envp)->GetStaticObjectField(envp, JAVA_LANG_DOUBLE_CLASSP, JAVA_LANG_DOUBLE_CLASS_TYPE_FIELDP);
-  if (doubleTypeClassp == NULL) goto err;
+  for (i = 0; i < sizeof(fieldsValues)/sizeof(fieldsValues[0]); i++) {
+    classp = (*envp)->GetStaticObjectField(envp, fieldsValues[i].classp, fieldsValues[i].fieldp);
+    if (classp == NULL) {
+      RAISEEXCEPTION(envp, "GetStaticObjectField failure");
+    }
+    *(fieldsValues[i].primitiveClasspp) = (*envp)->NewGlobalRef(envp, classp);
+    if (*(fieldsValues[i].primitiveClasspp) == NULL) {
+      RAISEEXCEPTION(envp, "NewGlobalRef failure");
+    }
+    (*envp)->DeleteLocalRef(envp, classp);
+  }
 
   /* Get endianness */
   is_bigendian = MARPAESLIF_IS_BIGENDIAN();
@@ -1296,6 +1312,7 @@ JNIEXPORT void JNICALL JNI_OnUnLoad(JavaVM *vmp, void* reservedp)
   static const char      *funcs = "JNI_OnUnLoad";
   JNIEnv                 *envp;
   marpaESLIFClassCache_t *marpaESLIFClassCachep  = marpaESLIFClassCacheArrayp;
+  size_t                  i;
 
   /* ------------------------------------------------- */
   /* It was safe to store JavaVMp in a global variable */
@@ -1315,6 +1332,12 @@ JNIEXPORT void JNICALL JNI_OnUnLoad(JavaVM *vmp, void* reservedp)
   }
   if (marpaESLIF_UTF8p != NULL) {
     (*envp)->DeleteGlobalRef(envp, (jobject) marpaESLIF_UTF8p);
+  }
+
+  for (i = 0; i < sizeof(fieldsValues)/sizeof(fieldsValues[0]); i++) {
+    if (*(fieldsValues[i].primitiveClasspp) != NULL) {
+      (*envp)->DeleteGlobalRef(envp, *(fieldsValues[i].primitiveClasspp));
+    }
   }
 
  err:
