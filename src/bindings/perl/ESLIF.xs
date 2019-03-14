@@ -345,6 +345,8 @@ static short                           marpaESLIFPerl_appendOpaqueDataToStringGe
 static short                           marpaESLIFPerl_is_undef(pTHX_ SV *svp, int typei);
 static short                           marpaESLIFPerl_is_arrayref(pTHX_ SV *svp, int typei);
 static short                           marpaESLIFPerl_is_MarpaX__ESLIF__String(pTHX_ SV *svp, int typei);
+static short                           marpaESLIFPerl_is_Math__BigInt(pTHX_ SV *svp, int typei);
+static short                           marpaESLIFPerl_is_Math__BigFloat(pTHX_ SV *svp, int typei);
 static short                           marpaESLIFPerl_is_hashref(pTHX_ SV *svp, int typei);
 static short                           marpaESLIFPerl_is_Types__Standard(pTHX_ SV *svp, const char *types, int typei);
 static short                           marpaESLIFPerl_is_bool(pTHX_ SV *svp, int typei);
@@ -2109,6 +2111,20 @@ static short marpaESLIFPerl_is_MarpaX__ESLIF__String(pTHX_ SV *svp, int typei)
 /*****************************************************************************/
 {
   return (((typei & OBJECT) == OBJECT) && sv_derived_from(svp, "MarpaX::ESLIF::String"));
+}
+
+/*****************************************************************************/
+static short marpaESLIFPerl_is_Math__BigInt(pTHX_ SV *svp, int typei)
+/*****************************************************************************/
+{
+  return (((typei & OBJECT) == OBJECT) && sv_derived_from(svp, "Math::BigInt"));
+}
+
+/*****************************************************************************/
+static short marpaESLIFPerl_is_Math__BigFloat(pTHX_ SV *svp, int typei)
+/*****************************************************************************/
+{
+  return (((typei & OBJECT) == OBJECT) && sv_derived_from(svp, "Math::BigFloat"));
 }
 
 /*****************************************************************************/
