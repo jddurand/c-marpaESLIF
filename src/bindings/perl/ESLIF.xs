@@ -1626,22 +1626,23 @@ static short marpaESLIFPerl_importb(marpaESLIFValue_t *marpaESLIFValuep, void *u
   marpaESLIFPerlMYTHX(Perl_MarpaX_ESLIF_Valuep);
 
   /*
-    marpaESLIF Type                    C type  C nb_bits      Perl Type
+    marpaESLIF Type                    C type    C nb_bits      Perl Type
 
-    MARPAESLIF_VALUE_TYPE_UNDEF                               &PL_sv_undef
-    MARPAESLIF_VALUE_TYPE_CHAR         char    CHAR_BIT       PV*
-    MARPAESLIF_VALUE_TYPE_SHORT        short   >= 16          IV or Math::BigInt
-    MARPAESLIF_VALUE_TYPE_INT          int     >= 16          IV or Math::BigInt
-    MARPAESLIF_VALUE_TYPE_LONG         long    >= 32          IV or Math::BigInt
-    MARPAESLIF_VALUE_TYPE_FLOAT        float   depends        NV (because NV is at least a double in perl)
-    MARPAESLIF_VALUE_TYPE_DOUBLE       double  depends        NV (because NV is at least a double in perl)
-    MARPAESLIF_VALUE_TYPE_PTR          char*                  SV* or PTR2IV()
-    MARPAESLIF_VALUE_TYPE_ARRAY                               PV*
-    MARPAESLIF_VALUE_TYPE_BOOL                                $MarpaX::ESLIF::true or $MarpaX::ESLIF::false
-    MARPAESLIF_VALUE_TYPE_STRING                              PV*
-    MARPAESLIF_VALUE_TYPE_ROW                                 AV*
-    MARPAESLIF_VALUE_TYPE_TABLE                               HV*
-    MARPAESLIF_VALUE_TYPE_LONG_DOUBLE                         NV* or Math::BigFloat
+    MARPAESLIF_VALUE_TYPE_UNDEF                                 &PL_sv_undef
+    MARPAESLIF_VALUE_TYPE_CHAR         char      CHAR_BIT       PV*
+    MARPAESLIF_VALUE_TYPE_SHORT        short     >= 16          IV or Math::BigInt
+    MARPAESLIF_VALUE_TYPE_INT          int       >= 16          IV or Math::BigInt
+    MARPAESLIF_VALUE_TYPE_LONG         long      >= 32          IV or Math::BigInt
+    MARPAESLIF_VALUE_TYPE_FLOAT        float     depends        NV (because NV is at least a double in perl)
+    MARPAESLIF_VALUE_TYPE_DOUBLE       double    depends        NV (because NV is at least a double in perl)
+    MARPAESLIF_VALUE_TYPE_PTR          char*                    SV* or PTR2IV()
+    MARPAESLIF_VALUE_TYPE_ARRAY                                 PV*
+    MARPAESLIF_VALUE_TYPE_BOOL                                  $MarpaX::ESLIF::true or $MarpaX::ESLIF::false
+    MARPAESLIF_VALUE_TYPE_STRING                                PV*
+    MARPAESLIF_VALUE_TYPE_ROW                                   AV*
+    MARPAESLIF_VALUE_TYPE_TABLE                                 HV*
+    MARPAESLIF_VALUE_TYPE_LONG_DOUBLE                           NV* or Math::BigFloat
+    MARPAESLIF_VALUE_TYPE_LONG_LONG    long long >= 64          IV or Math::BigInt
 
   */
 
@@ -1957,6 +1958,46 @@ static short marpaESLIFPerl_importb(marpaESLIFValue_t *marpaESLIFValuep, void *u
       MARPAESLIFPERL_CROAKF("Perl_MarpaX_ESLIF_Valuep->valueStack push failure, %s", strerror(errno));
     }
     break;
+#ifdef MARPAESLIF_HAVE_LONG_LONG
+  case MARPAESLIF_VALUE_TYPE_LONG_LONG:
+    if (sizeof(ivdummy) >= sizeof(MARPAESLIF_LONG_LONG)) {
+      svp = newSViv((IV) marpaESLIFValueResultp->u.ll);
+    } else {
+      /* Switch to Math::BigInt - we must first generate a string representation of this long. */
+#ifdef PERL_IMPLICIT_CONTEXT
+      marpaESLIFPerl_stringGenerator.PerlInterpreterp = Perl_MarpaX_ESLIF_Valuep->PerlInterpreterp;
+#endif
+      marpaESLIFPerl_stringGenerator.s      = NULL;
+      marpaESLIFPerl_stringGenerator.l      = 0;
+      marpaESLIFPerl_stringGenerator.okb    = 0;
+      marpaESLIFPerl_stringGenerator.allocl = 0;
+      genericLoggerp = GENERICLOGGER_CUSTOM(marpaESLIFPerl_generateStringWithLoggerCallback, (void *) &marpaESLIFPerl_stringGenerator, GENERICLOGGER_LOGLEVEL_TRACE);
+      if (genericLoggerp == NULL) {
+        MARPAESLIFPERL_CROAKF("GENERICLOGGER_CUSTOM failure, %s", strerror(errno));
+      }
+      GENERICLOGGER_TRACEF(genericLoggerp, MARPAESLIF_LONG_LONG_FMT, marpaESLIFValueResultp->u.ll); /* This will croak by itself if needed */
+      if ((marpaESLIFPerl_stringGenerator.s == NULL) || (marpaESLIFPerl_stringGenerator.l <= 1)) {
+        /* This should never happen */
+        GENERICLOGGER_FREE(genericLoggerp);
+        MARPAESLIFPERL_CROAKF("Internal error when doing string representation of long %ld", marpaESLIFValueResultp->u.ld);
+      }
+      stringp = newSVpvn((const char *) marpaESLIFPerl_stringGenerator.s, (STRLEN) (marpaESLIFPerl_stringGenerator.l - 1));
+      free(marpaESLIFPerl_stringGenerator.s);
+      marpaESLIFPerl_stringGenerator.s = NULL;
+      GENERICLOGGER_FREE(genericLoggerp);
+
+      /* Representation is in stringp. Call Math::BigFloat->new(stringp). */
+      listp = newAV();
+      av_push(listp, stringp); /* Ref count of stringp is transfered to av -; */
+      svp = marpaESLIFPerl_call_actionp(aTHX_ boot_MarpaX__ESLIF__Math__BigInt_svp, "new", listp, NULL /* Perl_MarpaX_ESLIF_Valuep */, 0 /* evalb */, 0 /* evalSilentb */);
+      av_undef(listp);
+    }
+    marpaESLIFPerl_GENERICSTACK_PUSH_PTR(&(Perl_MarpaX_ESLIF_Valuep->valueStack), svp);
+    if (marpaESLIFPerl_GENERICSTACK_ERROR(&(Perl_MarpaX_ESLIF_Valuep->valueStack))) {
+      MARPAESLIFPERL_CROAKF("Perl_MarpaX_ESLIF_Valuep->valueStack push failure, %s", strerror(errno));
+    }
+    break;
+#endif /* MARPAESLIF_HAVE_LONG_LONG */
   default:
     break;
   }
@@ -2279,6 +2320,15 @@ static void marpaESLIFPerl_stack_setv(pTHX_ marpaESLIF_t *marpaESLIFp, marpaESLI
         marpaESLIFValueResultp->representationp = NULL;
         marpaESLIFValueResultp->u.l             = (long) iv;
         eslifb = 1;
+#ifdef MARPAESLIF_HAVE_LONG_LONG
+      } else if ((iv >= MARPAESLIF_LLONG_MIN) && (iv <= MARPAESLIF_LLONG_MAX)) {
+        /* Ok if it fits into [MARPAESLIF_LLONG_MIN,MARPAESLIF_LLONG_MAX] */
+        marpaESLIFValueResultp->type            = MARPAESLIF_VALUE_TYPE_LONG_LONG;
+        marpaESLIFValueResultp->contextp        = MARPAESLIFPERL_CONTEXT;
+        marpaESLIFValueResultp->representationp = NULL;
+        marpaESLIFValueResultp->u.ll            = (MARPAESLIF_LONG_LONG) iv;
+        eslifb = 1;
+#endif
       }
     } else if (marpaESLIFPerl_is_Types__Standard(aTHX_ svp, "MarpaX::ESLIF::is_StrictNum", typei)) {
       /* Ok if it fits into [DBL_MIN,DBL_MAX] and we loosed nothing */

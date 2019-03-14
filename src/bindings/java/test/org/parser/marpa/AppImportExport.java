@@ -1,9 +1,5 @@
 package org.parser.marpa;
 
-import java.io.BufferedReader;
-import java.io.StringReader;
-import java.io.UnsupportedEncodingException;
-
 /**
  * Import/export Application
  */
@@ -75,15 +71,20 @@ public class AppImportExport implements Runnable {
 				    "</luascript>\n"; 
 
 		Object[] inputArray = {
-				'J',
-				(short) 1,
-				(int) 1,
-				(long) 1,
-				new byte[] { },
-				new Boolean(true),
-				new Boolean(false),
+				Character.MIN_VALUE,
+				Character.MAX_VALUE,
+				Short.MIN_VALUE,
+				Short.MAX_VALUE,
+				Integer.MIN_VALUE,
+				Integer.MAX_VALUE,
+				Long.MIN_VALUE,
+				Long.MAX_VALUE,
+				true,
+				false,
 				null,
-				new Character('X'),
+				/*
+				new byte[] { },
+				*/
 				};  
 
 		try {

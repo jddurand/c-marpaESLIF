@@ -761,8 +761,8 @@ fieldsValuesStorage_t fieldsValues[] = {
     }                                                                   \
   } while (0)
 
-#define MARPAESLIFJAVA_NEW_SHORT(envp, objectp, jshortvalue) do {         \
-    if (JAVA_LANG_SHORT_CLASS_valueOf_METHODP != NULL) {                 \
+#define MARPAESLIFJAVA_NEW_SHORT(envp, objectp, jshortvalue) do {       \
+    if (JAVA_LANG_SHORT_CLASS_valueOf_METHODP != NULL) {                \
       objectp = (*envp)->CallStaticObjectMethod(envp, JAVA_LANG_SHORT_CLASSP, JAVA_LANG_SHORT_CLASS_valueOf_METHODP, (jshort) jshortvalue); \
     } else {                                                            \
       objectp = (*envp)->NewObject(envp, JAVA_LANG_SHORT_CLASSP, JAVA_LANG_SHORT_CLASS_init_METHODP, (jshort) jshortvalue); \
@@ -772,8 +772,8 @@ fieldsValuesStorage_t fieldsValues[] = {
     }                                                                   \
   } while (0)
 
-#define MARPAESLIFJAVA_NEW_INTEGER(envp, objectp, jintegervalue) do {         \
-    if (JAVA_LANG_INTEGER_CLASS_valueOf_METHODP != NULL) {                 \
+#define MARPAESLIFJAVA_NEW_INTEGER(envp, objectp, jintegervalue) do {   \
+    if (JAVA_LANG_INTEGER_CLASS_valueOf_METHODP != NULL) {              \
       objectp = (*envp)->CallStaticObjectMethod(envp, JAVA_LANG_INTEGER_CLASSP, JAVA_LANG_INTEGER_CLASS_valueOf_METHODP, (jint) jintegervalue); \
     } else {                                                            \
       objectp = (*envp)->NewObject(envp, JAVA_LANG_INTEGER_CLASSP, JAVA_LANG_INTEGER_CLASS_init_METHODP, (jint) jintegervalue); \
@@ -805,8 +805,8 @@ fieldsValuesStorage_t fieldsValues[] = {
     }                                                                   \
   } while (0)
 
-#define MARPAESLIFJAVA_NEW_FLOAT(envp, objectp, jfloatvalue) do {         \
-    if (JAVA_LANG_FLOAT_CLASS_valueOf_METHODP != NULL) {                 \
+#define MARPAESLIFJAVA_NEW_FLOAT(envp, objectp, jfloatvalue) do {       \
+    if (JAVA_LANG_FLOAT_CLASS_valueOf_METHODP != NULL) {                \
       objectp = (*envp)->CallStaticObjectMethod(envp, JAVA_LANG_FLOAT_CLASSP, JAVA_LANG_FLOAT_CLASS_valueOf_METHODP, (jfloat) jfloatvalue); \
     } else {                                                            \
       objectp = (*envp)->NewObject(envp, JAVA_LANG_FLOAT_CLASSP, JAVA_LANG_FLOAT_CLASS_init_METHODP, (jfloat) jfloatvalue); \
@@ -817,8 +817,8 @@ fieldsValuesStorage_t fieldsValues[] = {
   } while (0)
 
 
-#define MARPAESLIFJAVA_NEW_DOUBLE(envp, objectp, jdoublevalue) do {         \
-    if (JAVA_LANG_DOUBLE_CLASS_valueOf_METHODP != NULL) {                 \
+#define MARPAESLIFJAVA_NEW_DOUBLE(envp, objectp, jdoublevalue) do {     \
+    if (JAVA_LANG_DOUBLE_CLASS_valueOf_METHODP != NULL) {               \
       objectp = (*envp)->CallStaticObjectMethod(envp, JAVA_LANG_DOUBLE_CLASSP, JAVA_LANG_DOUBLE_CLASS_valueOf_METHODP, (jdouble) jdoublevalue); \
     } else {                                                            \
       objectp = (*envp)->NewObject(envp, JAVA_LANG_DOUBLE_CLASSP, JAVA_LANG_DOUBLE_CLASS_init_METHODP, (jdouble) jdoublevalue); \
@@ -929,7 +929,50 @@ fieldsValuesStorage_t fieldsValues[] = {
     }                                                                   \
   } while (0)
 
-#define MARPAESLIFJAVA_EXPORT_NUMBER_NOT_DECIMAL(envp, jni_type, jni_value, eslifb) do { \
+#ifdef MARPAESLIF_HAVE_LONG_LONG
+
+#  define MARPAESLIFJAVA_EXPORT_NUMBER_NOT_DECIMAL(envp, jni_type, jni_value, eslifb) do { \
+    if (sizeof(jni_type) <= sizeof(char)) {                             \
+      /* fprintf(stderr, "%s: export CHAR '%c'\n", funcs, (char) jni_value); fflush(stdout); fflush(stderr); */ \
+      marpaESLIFValueResultp->type            = MARPAESLIF_VALUE_TYPE_CHAR; \
+      marpaESLIFValueResultp->contextp        = MARPAESLIF_JNI_CONTEXT; \
+      marpaESLIFValueResultp->representationp = NULL;                   \
+      marpaESLIFValueResultp->u.c            = (char) jni_value;        \
+      eslifb = 1;                                                       \
+    } else if (sizeof(jni_type) <= sizeof(short)) {                     \
+      /* fprintf(stderr, "%s: export SHORT '%d'\n", funcs, (int) jni_value); fflush(stdout); fflush(stderr); */ \
+      marpaESLIFValueResultp->type            = MARPAESLIF_VALUE_TYPE_SHORT; \
+      marpaESLIFValueResultp->contextp        = MARPAESLIF_JNI_CONTEXT; \
+      marpaESLIFValueResultp->representationp = NULL;                   \
+      marpaESLIFValueResultp->u.b            = (short) jni_value;       \
+      eslifb = 1;                                                       \
+    } else if (sizeof(jni_type) <= sizeof(int)) {                       \
+      /* fprintf(stderr, "%s: export INT '%d'\n", funcs, (int) jni_value); fflush(stdout); fflush(stderr); */ \
+      marpaESLIFValueResultp->type            = MARPAESLIF_VALUE_TYPE_INT; \
+      marpaESLIFValueResultp->contextp        = MARPAESLIF_JNI_CONTEXT; \
+      marpaESLIFValueResultp->representationp = NULL;                   \
+      marpaESLIFValueResultp->u.i            = (int) jni_value;         \
+      eslifb = 1;                                                       \
+    } else if (sizeof(jni_type) <= sizeof(long)) {                      \
+      /* fprintf(stderr, "%s: export LONG '%ld'\n", funcs, (long) jni_value); fflush(stdout); fflush(stderr); */ \
+      marpaESLIFValueResultp->type            = MARPAESLIF_VALUE_TYPE_LONG; \
+      marpaESLIFValueResultp->contextp        = MARPAESLIF_JNI_CONTEXT; \
+      marpaESLIFValueResultp->representationp = NULL;                   \
+      marpaESLIFValueResultp->u.l            = (long) jni_value;        \
+      eslifb = 1;                                                       \
+    } else if (sizeof(jni_type) <= sizeof(MARPAESLIF_LONG_LONG)) {      \
+      /* fprintf(stderr, "%s: export LONG_LONG\n", funcs); fflush(stdout); fflush(stderr); */ \
+      marpaESLIFValueResultp->type            = MARPAESLIF_VALUE_TYPE_LONG_LONG; \
+      marpaESLIFValueResultp->contextp        = MARPAESLIF_JNI_CONTEXT; \
+      marpaESLIFValueResultp->representationp = NULL;                   \
+      marpaESLIFValueResultp->u.ll           = (MARPAESLIF_LONG_LONG) jni_value; \
+      eslifb = 1;                                                       \
+    }                                                                   \
+  } while (0)
+
+#else /* MARPAESLIF_HAVE_LONG_LONG */
+
+#  define MARPAESLIFJAVA_EXPORT_NUMBER_NOT_DECIMAL(envp, jni_type, jni_value, eslifb) do { \
     if (sizeof(jni_type) <= sizeof(char)) {                               \
       /* fprintf(stderr, "%s: export CHAR '%c'\n", funcs, (char) jni_value); fflush(stdout); fflush(stderr); */ \
       marpaESLIFValueResultp->type            = MARPAESLIF_VALUE_TYPE_CHAR; \
@@ -959,7 +1002,9 @@ fieldsValuesStorage_t fieldsValues[] = {
       marpaESLIFValueResultp->u.l            = (long) jni_value;        \
       eslifb = 1;                                                       \
     }                                                                   \
-  } while (0)                                                           \
+  } while (0)
+
+#endif /* MARPAESLIF_HAVE_LONG_LONG */
 
 #define MARPAESLIFJAVA_EXPORT_NUMBER_DECIMAL(envp, jni_type, jni_value, eslifb) do { \
     if (sizeof(jni_type) <= sizeof(float)) {                            \
@@ -984,7 +1029,7 @@ fieldsValuesStorage_t fieldsValues[] = {
       marpaESLIFValueResultp->u.ld            = (long double) jni_value; \
       eslifb = 1;                                                       \
     }                                                                   \
-  } while (0)                                                           \
+  } while (0)
 
 /* -------------- */
 /* Static methods */
@@ -1104,7 +1149,7 @@ short is_bigendian;
 #define MARPAESLIF_PTR2BYTEBUFFER(what,ptr) do {                        \
     BYTEBUFFER(what) = (*envp)->NewDirectByteBuffer(envp, ptr, 1);      \
     if (BYTEBUFFER(what) == NULL) {                                     \
-      RAISEEXCEPTION(envp, "NewDirectByteBuffer failure");             \
+      RAISEEXCEPTION(envp, "NewDirectByteBuffer failure");              \
     }                                                                   \
   } while (0)
 
@@ -5414,22 +5459,23 @@ static short marpaESLIFJava_importb(marpaESLIFValue_t *marpaESLIFValuep, void *u
   size_t                        c_bits;
 
   /*
-    marpaESLIF Type                    C type  C nb_bits      Java Type
+    marpaESLIF Type                    C type    C nb_bits      Java Type
     
     MARPAESLIF_VALUE_TYPE_UNDEF
-    MARPAESLIF_VALUE_TYPE_CHAR         char    CHAR_BIT       java.lang.Byte or java.lang.Short or java.lang.Integer or java.lang.Long or java.math.BigInteger
-    MARPAESLIF_VALUE_TYPE_SHORT        short   >= 16          java.lang.Byte or java.lang.Short or java.lang.Integer or java.lang.Long or java.math.BigInteger
-    MARPAESLIF_VALUE_TYPE_INT          int     >= 16          java.lang.Byte or java.lang.Short or java.lang.Integer or java.lang.Long or java.math.BigInteger
-    MARPAESLIF_VALUE_TYPE_LONG         long    >= 32          java.lang.Byte or java.lang.Short or java.lang.Integer or java.lang.Long or java.math.BigInteger
-    MARPAESLIF_VALUE_TYPE_FLOAT        float   depends        java.lang.Float or java.lang.Double or java.math.BigDecimal
-    MARPAESLIF_VALUE_TYPE_DOUBLE       double  depends        java.lang.Float or java.lang.Double or java.math.BigDecimal
-    MARPAESLIF_VALUE_TYPE_PTR          char*                  java.lang.Object or java.lang.Long
-    MARPAESLIF_VALUE_TYPE_ARRAY                               byte[]
-    MARPAESLIF_VALUE_TYPE_BOOL                                java.lang.Bool
-    MARPAESLIF_VALUE_TYPE_STRING                              java.lang.String
-    MARPAESLIF_VALUE_TYPE_ROW                                 object[]
-    MARPAESLIF_VALUE_TYPE_TABLE                               java.util.HashMap
-    MARPAESLIF_VALUE_TYPE_LONG_DOUBLE                         Float or Double or java.math.BigDecimal
+    MARPAESLIF_VALUE_TYPE_CHAR         char      CHAR_BIT       java.lang.Byte or java.lang.Short or java.lang.Integer or java.lang.Long or java.math.BigInteger
+    MARPAESLIF_VALUE_TYPE_SHORT        short     >= 16          java.lang.Byte or java.lang.Short or java.lang.Integer or java.lang.Long or java.math.BigInteger
+    MARPAESLIF_VALUE_TYPE_INT          int       >= 16          java.lang.Byte or java.lang.Short or java.lang.Integer or java.lang.Long or java.math.BigInteger
+    MARPAESLIF_VALUE_TYPE_LONG         long      >= 32          java.lang.Byte or java.lang.Short or java.lang.Integer or java.lang.Long or java.math.BigInteger
+    MARPAESLIF_VALUE_TYPE_FLOAT        float     depends        java.lang.Float or java.lang.Double or java.math.BigDecimal
+    MARPAESLIF_VALUE_TYPE_DOUBLE       double    depends        java.lang.Float or java.lang.Double or java.math.BigDecimal
+    MARPAESLIF_VALUE_TYPE_PTR          char*                    java.lang.Object or java.lang.Long
+    MARPAESLIF_VALUE_TYPE_ARRAY                                 byte[]
+    MARPAESLIF_VALUE_TYPE_BOOL                                  java.lang.Bool
+    MARPAESLIF_VALUE_TYPE_STRING                                java.lang.String
+    MARPAESLIF_VALUE_TYPE_ROW                                   object[]
+    MARPAESLIF_VALUE_TYPE_TABLE                                 java.util.HashMap
+    MARPAESLIF_VALUE_TYPE_LONG_DOUBLE                           Float or Double or java.math.BigDecimal
+    MARPAESLIF_VALUE_TYPE_LONG_LONG    long long >= 64          java.lang.Byte or java.lang.Short or java.lang.Integer or java.lang.Long or java.math.BigInteger
     
   */
 
@@ -5583,6 +5629,13 @@ static short marpaESLIFJava_importb(marpaESLIFValue_t *marpaESLIFValuep, void *u
     MARPAESLIFJAVA_IMPORT_NUMBER_DECIMAL(envp, objectp, c_bits, long_double_fmts, long double, marpaESLIFValueResultp->u.d);
     MARPAESLIFJAVA_PUSH_PTR(marpaESLIFValueContextp->objectStackp, objectp);
     break;
+#ifdef MARPAESLIF_HAVE_LONG_LONG
+  case MARPAESLIF_VALUE_TYPE_LONG_LONG:
+    c_bits = CHAR_BIT * sizeof(MARPAESLIF_LONG_LONG);
+    MARPAESLIFJAVA_IMPORT_NUMBER_NOT_DECIMAL(envp, objectp, c_bits, MARPAESLIF_LONG_LONG_FMT, MARPAESLIF_LONG_LONG, marpaESLIFValueResultp->u.ll);
+    MARPAESLIFJAVA_PUSH_PTR(marpaESLIFValueContextp->objectStackp, objectp);
+    break;
+#endif
   default:
     break;
   }
@@ -5759,10 +5812,10 @@ static short marpaESLIFJava_stack_setb(JNIEnv *envp, marpaESLIFValue_t *marpaESL
     Java Type                        marpaESLIFType
 
     N/A                              N/A
-    java.lang.Byte                   CHAR or SHORT or INT or LONG or opaque
-    java.lang.Short                  CHAR or SHORT or INT or LONG or opaque
-    java.lang.Integer                CHAR or SHORT or INT or LONG or opaque
-    java.lang.Long                   CHAR or SHORT or INT or LONG or opaque
+    java.lang.Byte                   CHAR or SHORT or INT or LONG or LONG_LONG or opaque
+    java.lang.Short                  CHAR or SHORT or INT or LONG or LONG_LONG or opaque
+    java.lang.Integer                CHAR or SHORT or INT or LONG or LONG_LONG or opaque
+    java.lang.Long                   CHAR or SHORT or INT or LONG or LONG_LONG or opaque
     java.lang.Float                  FLOAT or DOUBLE or LONG_DOUBLE or opaque
     java.lang.Double                 FLOAT or DOUBLE or LONG_DOUBLE or opaque
     byte[]                           ARRAY

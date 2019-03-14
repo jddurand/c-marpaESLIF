@@ -2,8 +2,44 @@
 #define MARPAESLIF_H
 
 #include <stddef.h>                 /* For size_t */
+#include <stdio.h>                  /* For __int64, eventually */
+#include <limits.h>                 /* For long long, eventually */
 #include <genericLogger.h>
 #include <marpaESLIF/export.h>
+
+#if defined(LLONG_MAX) && defined(LLONG_MIN)
+#  define MARPAESLIF_HAVE_LONG_LONG
+#  define MARPAESLIF_LONG_LONG long long
+#  define MARPAESLIF_LLONG_MAX LLONG_MAX
+#  define MARPAESLIF_LLONG_MIN LLONG_MIN
+#  define MARPAESLIF_LONG_LONG_FMT "%ll"
+#else
+#  if defined(LONGLONG_MAX) && defined(LONGLONG_MIN)
+#    define MARPAESLIF_HAVE_LONG_LONG
+#    define MARPAESLIF_LONG_LONG long long
+#    define MARPAESLIF_LLONG_MAX LONGLONG_MAX
+#    define MARPAESLIF_LLONG_MIN LONGLONG_MIN
+#    define MARPAESLIF_LONG_LONG_FMT "%ll"
+#  else
+#    if defined(_MSC_VER) || defined(__BORLANDC__)
+/*     Just because of versions of these compilers might not have long long, but they */
+/*     always had __int64. Note that on Windows short is always 2, int is always 4,   */
+/*     long is always 4, __int64 is always 8 */
+#      define MARPAESLIF_HAVE_LONG_LONG
+#      define MARPAESLIF_LONG_LONG __int64
+#      if defined(_I64_MAX) && defined(_I64_MIN)
+#        define MARPAESLIF_LLONG_MAX _I64_MAX
+#        define MARPAESLIF_LLONG_MIN _I64_MIN
+#      else
+#        define MARPAESLIF_LLONG_MAX 9223372036854775807i64
+#        define MARPAESLIF_LLONG_MIN -9223372036854775808i64
+#      endif
+#      define MARPAESLIF_LONG_LONG_FMT "%I64"
+#    else
+#      undef MARPAESLIF_HAVE_LONG_LONG
+#    endif
+#  endif
+#endif
 
 typedef struct marpaESLIFOption {
   genericLogger_t *genericLoggerp;  /* Logger. Default: NULL */
@@ -82,6 +118,9 @@ typedef enum marpaESLIFValueType {
   MARPAESLIF_VALUE_TYPE_ROW,
   MARPAESLIF_VALUE_TYPE_TABLE,
   MARPAESLIF_VALUE_TYPE_LONG_DOUBLE
+#ifdef MARPAESLIF_HAVE_LONG_LONG
+  ,MARPAESLIF_VALUE_TYPE_LONG_LONG
+#endif
 } marpaESLIFValueType_t;
 
 typedef short (*marpaESLIFValueRuleCallback_t)(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
@@ -136,6 +175,10 @@ typedef struct marpaESLIFValueResultTable {
   size_t                       sizel;
 } marpaESLIFValueResultTable_t;
 typedef long double marpaESLIFValueResultLongDouble_t;
+#ifdef MARPAESLIF_HAVE_LONG_LONG
+typedef MARPAESLIF_LONG_LONG marpaESLIFValueResultLongLong_t;
+#endif
+
 struct marpaESLIFValueResult {
   void                      *contextp;          /* Free value meaningful only to the user */
   marpaESLIFRepresentation_t representationp;   /* How a user-land alternative is represented if it was in the input */
@@ -154,6 +197,9 @@ struct marpaESLIFValueResult {
     marpaESLIFValueResultRow_t         r; /* Value is a row of values */
     marpaESLIFValueResultTable_t       t; /* Value is a row of values, where sizel is even */
     marpaESLIFValueResultLongDouble_t ld; /* Value is a long double */
+#ifdef MARPAESLIF_HAVE_LONG_LONG
+    marpaESLIFValueResultLongLong_t   ll; /* Value is a long long */
+#endif
   } u;
 };
 /* Now that marpaESLIFValueResult is defined, we can define the pair */

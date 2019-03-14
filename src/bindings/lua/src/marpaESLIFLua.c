@@ -797,6 +797,9 @@ static int marpaESLIFLua_installi(lua_State *L)
   MARPAESLIFLUA_CREATEINTEGERCONSTANT(L, MARPAESLIF_VALUE_TYPE_ROW);
   MARPAESLIFLUA_CREATEINTEGERCONSTANT(L, MARPAESLIF_VALUE_TYPE_TABLE);
   MARPAESLIFLUA_CREATEINTEGERCONSTANT(L, MARPAESLIF_VALUE_TYPE_LONG_DOUBLE);
+#ifdef MARPAESLIF_HAVE_LONG_LONG
+  MARPAESLIFLUA_CREATEINTEGERCONSTANT(L, MARPAESLIF_VALUE_TYPE_LONG_LONG);
+#endif
   
   MARPAESLIFLUA_CREATEINTEGERCONSTANT(L, MARPAESLIF_RULE_IS_ACCESSIBLE);
   MARPAESLIFLUA_CREATEINTEGERCONSTANT(L, MARPAESLIF_RULE_IS_NULLABLE);
@@ -3776,6 +3779,12 @@ static short marpaESLIFLua_importb(marpaESLIFValue_t *marpaESLIFValuep, void *us
     /* fprintf(stdout, "import long double\n"); fflush(stdout); fflush(stderr); */
     if (! marpaESLIFLua_lua_pushnumber(L, (lua_Number) marpaESLIFValueResultp->u.ld)) goto err;
     break;
+#ifdef MARPAESLIF_HAVE_LONG_LONG
+  case MARPAESLIF_VALUE_TYPE_LONG_LONG:
+    /* fprintf(stdout, "import long long\n"); fflush(stdout); fflush(stderr); */
+    if (! marpaESLIFLua_lua_pushinteger(L, (lua_Integer) marpaESLIFValueResultp->u.ll)) goto err;
+    break;
+#endif
   default:
     marpaESLIFLua_luaL_errorf(L, "Unknown result type %d to import", marpaESLIFValueResultp->type);
     goto err;
@@ -6648,6 +6657,16 @@ static short marpaESLIFLua_stack_setb(lua_State *L, marpaESLIF_t *marpaESLIFp, m
           marpaESLIFValueResultp->type            = MARPAESLIF_VALUE_TYPE_LONG;
           marpaESLIFValueResultp->u.l             = (long) tmpi;
           eslifb = 1;
+#ifdef MARPAESLIF_HAVE_LONG_LONG
+        } else if ((tmpi >= MARPAESLIF_LLONG_MIN) && (tmpi <= MARPAESLIF_LLONG_MAX)) {
+          /* Does it fit in a native C long long ? */
+          /* fprintf(stdout, "export long long\n"); fflush(stdout); fflush(stderr); */
+          marpaESLIFValueResultp->contextp        = MARPAESLIFLUA_CONTEXT;
+          marpaESLIFValueResultp->representationp = NULL;
+          marpaESLIFValueResultp->type            = MARPAESLIF_VALUE_TYPE_LONG_LONG;
+          marpaESLIFValueResultp->u.ll            = (MARPAESLIF_LONG_LONG) tmpi;
+          eslifb = 1;
+#endif
         }
       }
 #if defined(LUA_FLOAT_TYPE)

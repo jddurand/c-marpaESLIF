@@ -245,10 +245,10 @@ static const char *GENERICSTACKITEMTYPE_INT_STRING          = "INT";
 static const char *GENERICSTACKITEMTYPE_LONG_STRING         = "LONG";
 static const char *GENERICSTACKITEMTYPE_FLOAT_STRING        = "FLOAT";
 static const char *GENERICSTACKITEMTYPE_DOUBLE_STRING       = "DOUBLE";
-static const char *GENERICSTACKITEMTYPE_LONG_DOUBLE_STRING  = "LONG_DOUBLE";
 static const char *GENERICSTACKITEMTYPE_PTR_STRING          = "PTR";
 static const char *GENERICSTACKITEMTYPE_ARRAY_STRING        = "ARRAY";
 static const char *GENERICSTACKITEMTYPE_CUSTOM_STRING       = "CUSTOM";
+static const char *GENERICSTACKITEMTYPE_LONG_DOUBLE_STRING  = "LONG_DOUBLE";
 static const char *GENERICSTACKITEMTYPE_UNKNOWN_STRING      = "UNKNOWN";
 
 static const char *MARPAESLIF_VALUE_TYPE_UNDEF_STRING       = "UNDEF";
@@ -258,13 +258,16 @@ static const char *MARPAESLIF_VALUE_TYPE_INT_STRING         = "INT";
 static const char *MARPAESLIF_VALUE_TYPE_LONG_STRING        = "LONG";
 static const char *MARPAESLIF_VALUE_TYPE_FLOAT_STRING       = "FLOAT";
 static const char *MARPAESLIF_VALUE_TYPE_DOUBLE_STRING      = "DOUBLE";
-static const char *MARPAESLIF_VALUE_TYPE_LONG_DOUBLE_STRING = "LONG_DOUBLE";
 static const char *MARPAESLIF_VALUE_TYPE_PTR_STRING         = "PTR";
 static const char *MARPAESLIF_VALUE_TYPE_ARRAY_STRING       = "ARRAY";
 static const char *MARPAESLIF_VALUE_TYPE_BOOL_STRING        = "BOOL";
 static const char *MARPAESLIF_VALUE_TYPE_STRING_STRING      = "STRING";
 static const char *MARPAESLIF_VALUE_TYPE_ROW_STRING         = "ROW";
 static const char *MARPAESLIF_VALUE_TYPE_TABLE_STRING       = "TABLE";
+static const char *MARPAESLIF_VALUE_TYPE_LONG_DOUBLE_STRING = "LONG_DOUBLE";
+#ifdef MARPAESLIF_HAVE_LONG_LONG
+static const char *MARPAESLIF_VALUE_TYPE_LONG_LONG_STRING   = "LONG_LONG";
+#endif
 static const char *MARPAESLIF_VALUE_TYPE_UNKNOWN_STRING     = "UNKNOWN";
 
 static const size_t copyl    = 6; /* strlen("::copy"); */
@@ -9726,9 +9729,6 @@ static inline const char *_marpaESLIF_genericStack_i_types(genericStack_t *stack
   case GENERICSTACKITEMTYPE_DOUBLE:
     s = GENERICSTACKITEMTYPE_DOUBLE_STRING;
     break;
-  case GENERICSTACKITEMTYPE_LONG_DOUBLE:
-    s = GENERICSTACKITEMTYPE_LONG_DOUBLE_STRING;
-    break;
   case GENERICSTACKITEMTYPE_PTR:
     s = GENERICSTACKITEMTYPE_PTR_STRING;
     break;
@@ -9737,6 +9737,9 @@ static inline const char *_marpaESLIF_genericStack_i_types(genericStack_t *stack
     break;
   case GENERICSTACKITEMTYPE_CUSTOM:
     s = GENERICSTACKITEMTYPE_CUSTOM_STRING;
+    break;
+  case GENERICSTACKITEMTYPE_LONG_DOUBLE:
+    s = GENERICSTACKITEMTYPE_LONG_DOUBLE_STRING;
     break;
   default:
     s = GENERICSTACKITEMTYPE_UNKNOWN_STRING;
@@ -9774,9 +9777,6 @@ static inline const char *_marpaESLIF_value_types(int typei)
   case MARPAESLIF_VALUE_TYPE_DOUBLE:
     s = MARPAESLIF_VALUE_TYPE_DOUBLE_STRING;
     break;
-  case MARPAESLIF_VALUE_TYPE_LONG_DOUBLE:
-    s = MARPAESLIF_VALUE_TYPE_LONG_DOUBLE_STRING;
-    break;
   case MARPAESLIF_VALUE_TYPE_PTR:
     s = MARPAESLIF_VALUE_TYPE_PTR_STRING;
     break;
@@ -9795,6 +9795,14 @@ static inline const char *_marpaESLIF_value_types(int typei)
   case MARPAESLIF_VALUE_TYPE_TABLE:
     s = MARPAESLIF_VALUE_TYPE_TABLE_STRING;
     break;
+  case MARPAESLIF_VALUE_TYPE_LONG_DOUBLE:
+    s = MARPAESLIF_VALUE_TYPE_LONG_DOUBLE_STRING;
+    break;
+#ifdef MARPAESLIF_HAVE_LONG_LONG
+  case MARPAESLIF_VALUE_TYPE_LONG_LONG:
+    s = MARPAESLIF_VALUE_TYPE_LONG_LONG_STRING;
+    break;
+#endif
   default:
     s = MARPAESLIF_VALUE_TYPE_UNKNOWN_STRING;
     break;
@@ -12411,10 +12419,13 @@ static inline short _marpaESLIFValue_eslif2hostb(marpaESLIFValue_t *marpaESLIFVa
     case MARPAESLIF_VALUE_TYPE_LONG:
     case MARPAESLIF_VALUE_TYPE_FLOAT:
     case MARPAESLIF_VALUE_TYPE_DOUBLE:
-    case MARPAESLIF_VALUE_TYPE_LONG_DOUBLE:
     case MARPAESLIF_VALUE_TYPE_PTR:
     case MARPAESLIF_VALUE_TYPE_BOOL:
     case MARPAESLIF_VALUE_TYPE_STRING:
+    case MARPAESLIF_VALUE_TYPE_LONG_DOUBLE:
+#ifdef MARPAESLIF_HAVE_LONG_LONG
+    case MARPAESLIF_VALUE_TYPE_LONG_LONG:
+#endif
       if (! importerp(marpaESLIFValuep, userDatavp, &marpaESLIFValueResult)) {
         goto err;
       }
@@ -13649,18 +13660,6 @@ static short _marpaESLIFRecognizer_concat_valueResultCallbackb(void *userDatavp,
         _marpaESLIF_appendOpaqueDataToStringGenerator(marpaESLIF_stringGeneratorp, (char *) &(marpaESLIFValueResult.u.d), sizeof(marpaESLIFValueResultDouble_t));
       }
       break;
-    case MARPAESLIF_VALUE_TYPE_LONG_DOUBLE:
-      /* fprintf(stdout, "LONG_DOUBLE %Lf\n", marpaESLIFValueResult.u.ld); fflush(stdout); */
-      /* Long double default representation:
-         - string mode: marpaESLIFp->long_double_fmts, json: marpaESLIFp->long_double_fmts
-         - binary mode: content
-      */
-      if (contextp->stringb) {
-        GENERICLOGGER_TRACEF(genericLoggerp, marpaESLIFp->long_double_fmts, marpaESLIFValueResult.u.ld);
-      } else {
-        _marpaESLIF_appendOpaqueDataToStringGenerator(marpaESLIF_stringGeneratorp, (char *) &(marpaESLIFValueResult.u.ld), sizeof(marpaESLIFValueResultLongDouble_t));
-      }
-      break;
     case MARPAESLIF_VALUE_TYPE_PTR:
       /* fprintf(stdout, "PTR %p\n", marpaESLIFValueResult.u.p.p); fflush(stdout); */
       /* Ptr default representation:
@@ -13813,6 +13812,32 @@ static short _marpaESLIFRecognizer_concat_valueResultCallbackb(void *userDatavp,
       }
       continueb = 1;
       break;
+    case MARPAESLIF_VALUE_TYPE_LONG_DOUBLE:
+      /* fprintf(stdout, "LONG_DOUBLE %Lf\n", marpaESLIFValueResult.u.ld); fflush(stdout); */
+      /* Long double default representation:
+         - string mode: marpaESLIFp->long_double_fmts, json: marpaESLIFp->long_double_fmts
+         - binary mode: content
+      */
+      if (contextp->stringb) {
+        GENERICLOGGER_TRACEF(genericLoggerp, marpaESLIFp->long_double_fmts, marpaESLIFValueResult.u.ld);
+      } else {
+        _marpaESLIF_appendOpaqueDataToStringGenerator(marpaESLIF_stringGeneratorp, (char *) &(marpaESLIFValueResult.u.ld), sizeof(marpaESLIFValueResultLongDouble_t));
+      }
+      break;
+#ifdef MARPAESLIF_HAVE_LONG_LONG
+    case MARPAESLIF_VALUE_TYPE_LONG_LONG:
+      fprintf(stdout, "LONG_LONG " MARPAESLIF_LONG_LONG_FMT "\n", marpaESLIFValueResult.u.ll); fflush(stdout);
+      /* Long double default representation:
+         - string mode: MARPAESLIF_LONG_LONG_FMT, json: MARPAESLIF_LONG_LONG_FMT
+         - binary mode: content
+      */
+      if (contextp->stringb) {
+        GENERICLOGGER_TRACEF(genericLoggerp, MARPAESLIF_LONG_LONG_FMT, marpaESLIFValueResult.u.ll);
+      } else {
+        _marpaESLIF_appendOpaqueDataToStringGenerator(marpaESLIF_stringGeneratorp, (char *) &(marpaESLIFValueResult.u.ll), sizeof(marpaESLIFValueResultLongLong_t));
+      }
+      break;
+#endif
     default:
       break;
     }
@@ -15111,6 +15136,9 @@ static short _marpaESLIFRecognizer_value_validb(marpaESLIFRecognizer_t *marpaESL
     case MARPAESLIF_VALUE_TYPE_DOUBLE:
     case MARPAESLIF_VALUE_TYPE_LONG_DOUBLE:
     case MARPAESLIF_VALUE_TYPE_PTR:
+#ifdef MARPAESLIF_HAVE_LONG_LONG
+    case MARPAESLIF_VALUE_TYPE_LONG_LONG:
+#endif
       break;
     case MARPAESLIF_VALUE_TYPE_ARRAY:
       /* Having p == NULL is possible only if there is a parent recognizer */
