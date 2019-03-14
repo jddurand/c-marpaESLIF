@@ -8,6 +8,11 @@
 #ifndef luaconf_h
 #define luaconf_h
 
+/* Prior to MSVC2015 snprintf is missing, the non-standard version _snprintf does not NUL terminate on truncation */
+#if defined(_MSC_VER) && (_MSC_VER < 1900)
+#define snprintf _snprintf
+#endif
+
 #include <limits.h>
 #include <stddef.h>
 #include <luaunpanic/export.h>
