@@ -77,6 +77,7 @@ static char *inputs[] = {
     "{\"test\":null, \"test2\":\"hello world\"}",
     "{\"test\":\"1.25\"}",
     "{\"test\":\"1.25e4\"}",
+    "{\"empty string\":\"\"}",
     "[]",
     "[\n"
     "  {\n"
