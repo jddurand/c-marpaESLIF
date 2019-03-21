@@ -42,38 +42,15 @@ BEGIN {
     use utf8;
     @input =
         (
-         undef,
-         "XXX",
-         "\xa0\xa1",
-         ["\xa0\xa1", 0],
-         ["\xf0\x28\x8c\x28", 0],
-         "Ḽơᶉëᶆ ȋṕšᶙṁ ḍỡḽǭᵳ ʂǐť ӓṁệẗ, ĉṓɲṩḙċťᶒțûɾ ấɖḯƥĭṩčįɳġ ḝłįʈ, șếᶑ ᶁⱺ ẽḭŭŝḿꝋď ṫĕᶆᶈṓɍ ỉñḉīḑȋᵭṵńť ṷŧ ḹẩḇőꝛế éȶ đꝍꞎôꝛȇ ᵯáꞡᶇā ąⱡîɋṹẵ.",
-         ["Ḽơᶉëᶆ ȋṕšᶙṁ ḍỡḽǭᵳ ʂǐť ӓṁệẗ, ĉṓɲṩḙċťᶒțûɾ ấɖḯƥĭṩčįɳġ ḝłįʈ, șếᶑ ᶁⱺ ẽḭŭŝḿꝋď ṫĕᶆᶈṓɍ ỉñḉīḑȋᵭṵńť ṷŧ ḹẩḇőꝛế éȶ đꝍꞎôꝛȇ ᵯáꞡᶇā ąⱡîɋṹẵ.", 0],
-         ["Ḽơᶉëᶆ ȋṕšᶙṁ ḍỡḽǭᵳ ʂǐť ӓṁệẗ, ĉṓɲṩḙċťᶒțûɾ ấɖḯƥĭṩčįɳġ ḝłįʈ, șếᶑ ᶁⱺ ẽḭŭŝḿꝋď ṫĕᶆᶈṓɍ ỉñḉīḑȋᵭṵńť ṷŧ ḹẩḇőꝛế éȶ đꝍꞎôꝛȇ ᵯáꞡᶇā ąⱡîɋṹẵ.", 1],
-         0,
-         1,
-         -32768,
-         32767,
-         -32769,
-         32768,
-         2.34,
-         1.6e+308,
-         Math::BigFloat->new("6.78E+9"),
-         Math::BigInt->new("6.78E+9"),
-         [[1, undef, 2], 0],
-         ""
+         [[], 0]
         );
 }
 use Safe::Isa;
-use Test::More tests => 1 + scalar(@input) + 4; # 4 pushes after the require_ok
+use Test::More tests => 1 + scalar(@input); # 4 pushes after the require_ok
 use Test::More::UTF8;
 use open qw( :utf8 :std );
 
 BEGIN { require_ok('MarpaX::ESLIF') }
-push(@input, $MarpaX::ESLIF::true);
-push(@input, $MarpaX::ESLIF::false);
-push(@input, { one => "one", two => "two", perltrue => 1, true => $MarpaX::ESLIF::true, false => $MarpaX::ESLIF::false, 'else' => 'again', 'undef' => undef }); # will cause trouble because natively lua discards it
-push(@input, MarpaX::ESLIF::String->new("XXXḼơᶉëᶆYYY", 'UTF-8'));
 #
 # Init log
 #
@@ -92,7 +69,7 @@ event ^perl_input = predicted perl_input
 
 perl_output ::= lua_proxy  action => perl_proxy
 lua_proxy   ::= perl_input action => ::lua->lua_proxy
-perl_input  ::= PERL_INPUT action => perl_proxy
+perl_input  ::= PERL_INPUT # action => perl_proxy
 PERL_INPUT    ~ [^\s\S]
 
 <luascript>
@@ -122,15 +99,15 @@ PERL_INPUT    ~ [^\s\S]
   io.stdout:setvbuf('no')
 
   function lua_proxy(value)
-    -- print('lua_proxy received value of type: '..type(value))
-    -- if type(value) == 'string' then
-    --   print('lua_proxy value: '..tostring(value)..', encoding: '..tostring(value:encoding()))
-    -- else
-    --   print('lua_proxy value: '..tostring(value))
-    --   if type(value) == 'table' then
-    --     table_print(value)
-    --   end
-    -- end
+    print('lua_proxy received value of type: '..type(value))
+    if type(value) == 'string' then
+      print('lua_proxy value: '..tostring(value)..', encoding: '..tostring(value:encoding()))
+    else
+      print('lua_proxy value: '..tostring(value))
+      if type(value) == 'table' then
+        table_print(value)
+      end
+    end
     return value
   end
 </luascript>

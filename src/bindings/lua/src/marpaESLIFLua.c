@@ -3726,6 +3726,7 @@ static short marpaESLIFLua_importb(marpaESLIFValue_t *marpaESLIFValuep, void *us
     }
     break;
   case MARPAESLIF_VALUE_TYPE_ARRAY:
+    /* Push a string without encoding - empty string with when sizel is 0 */
     /* fprintf(stdout, "import array\n"); fflush(stdout); fflush(stderr); */
     if (! marpaESLIFLua_lua_pushlstring(NULL, L, marpaESLIFValueResultp->u.a.p, marpaESLIFValueResultp->u.a.sizel)) goto err;
     break;
@@ -6793,7 +6794,7 @@ static short marpaESLIFLua_stack_setb(lua_State *L, marpaESLIF_t *marpaESLIFp, m
 	goto err;
       }
 
-      if ((tmpl <= 0) || (encodings != NULL)) { /* Take care! a null empty string could look as an alternative if we do not associate an encoding... */
+      if (encodings != NULL) {
         /* We do not change the data - just propagate the information */
         /* If we are here, per def the lua stack contains a string and the workstack will not loop */
 
@@ -6804,7 +6805,7 @@ static short marpaESLIFLua_stack_setb(lua_State *L, marpaESLIF_t *marpaESLIFp, m
           encodingheapb ? (char *) encodings
           :
 #endif
-          strdup(encodings != NULL ? encodings : "UTF-8");
+          strdup(encodings);
         if (encodingasciis == NULL) {
           marpaESLIFLua_luaL_errorf(L, "strdup failure, %s", strerror(errno));
           goto err;

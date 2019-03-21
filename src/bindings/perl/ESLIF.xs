@@ -1419,6 +1419,8 @@ static short marpaESLIFPerl_representationb(void *userDatavp, marpaESLIFValueRes
   if (marpaESLIFValueResultp->contextp != MARPAESLIFPERL_CONTEXT) {
     MARPAESLIFPERL_CROAKF("User-defined value context is not MARPAESLIFPERL_CONTEXT but %p", marpaESLIFValueResultp->contextp);
   }
+  fprintf(stderr, "===> %s called on:\n", funcs); fflush(stdout); fflush(stderr);
+  sv_dump((SV *) marpaESLIFValueResultp->u.p.p);
   marpaESLIFp = marpaESLIFGrammar_eslifp(marpaESLIFRecognizer_grammarp(marpaESLIFValue_recognizerp(Perl_MarpaX_ESLIF_Valuep->marpaESLIFValuep)));
   Perl_MarpaX_ESLIF_Valuep->previous_strings = marpaESLIFPerl_sv2byte(aTHX_ marpaESLIFp, (SV *) marpaESLIFValueResultp->u.p.p, inputcpp, inputlp, 1 /* encodingInformationb */, NULL /* characterStreambp */, encodingasciisp, NULL /* encodinglp */, 0 /* warnIsFatalb */, 0 /* marpaESLIFStringb */);
 
@@ -1809,6 +1811,7 @@ static short marpaESLIFPerl_importb(marpaESLIFValue_t *marpaESLIFValuep, void *u
     }
     break;
   case MARPAESLIF_VALUE_TYPE_ARRAY:
+    /* If sizel this will be the empty string, legal call with newSVpvn */
     svp = newSVpvn((const char *) marpaESLIFValueResultp->u.a.p, (STRLEN) marpaESLIFValueResultp->u.a.sizel);
     marpaESLIFPerl_GENERICSTACK_PUSH_PTR(&(Perl_MarpaX_ESLIF_Valuep->valueStack), svp);
     if (marpaESLIFPerl_GENERICSTACK_ERROR(&(Perl_MarpaX_ESLIF_Valuep->valueStack))) {
@@ -2370,8 +2373,8 @@ static void marpaESLIFPerl_stack_setv(pTHX_ marpaESLIF_t *marpaESLIFp, marpaESLI
 
       /* fprintf(stderr, "marpaESLIFStringb=%d\n", marpaESLIFStringb); */
       if (marpaESLIFPerl_sv2byte(aTHX_ marpaESLIFp, svp, &bytep, &bytel, 1 /* encodingInformationb */, NULL /* characterStreambp */, &encodings, NULL /* encodinglp */, 0 /* warnIsFatalb */, marpaESLIFStringb) != NULL) {
-        /* fprintf(stderr, "==> STRING, ENCODING=%s\n", encodings != NULL ? encodings : "(null)"); */
         if (encodings != NULL) {
+          /* fprintf(stderr, "==> STRING, ENCODING=%s, bytep=%p, bytel=%ld\n", encodings, bytep, (unsigned long) bytel); */
           marpaESLIFValueResultp->type               = MARPAESLIF_VALUE_TYPE_STRING;
           marpaESLIFValueResultp->contextp           = MARPAESLIFPERL_CONTEXT;
           marpaESLIFValueResultp->representationp    = NULL;
@@ -2380,7 +2383,9 @@ static void marpaESLIFPerl_stack_setv(pTHX_ marpaESLIF_t *marpaESLIFp, marpaESLI
           marpaESLIFValueResultp->u.s.encodingasciis = encodings;
           marpaESLIFValueResultp->u.s.shallowb       = 0;
           eslifb = 1;
-        } else if (bytel > 0) {
+        } else {
+          /* fprintf(stderr, "==> STRING, bytep=%p, bytel=%ld\n", bytep, (unsigned long) bytel); */
+          /* Note that having bytel == 0 is legal */
           marpaESLIFValueResultp->type               = MARPAESLIF_VALUE_TYPE_ARRAY;
           marpaESLIFValueResultp->contextp           = MARPAESLIFPERL_CONTEXT;
           marpaESLIFValueResultp->representationp    = NULL;

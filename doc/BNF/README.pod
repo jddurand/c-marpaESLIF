@@ -222,9 +222,21 @@ Meaningful for both rule and symbol actions.
 
 =item C<::concat>
 
-Creates a value of type ARRAY from the binary concatenatation all the RHS's representation, or UNDEF if representation is empty.
+A concatenation rule that tries to keep the nature of the RHS:
+
+=over
+
+=item In symbol context
+
+If the symbol was fed with a user alternative, the later is returned, else return value is always of type ARRAY.
+
+=item In rule context
+
+If there is a single RHS, the later is returned, else returns a value of type ARRAY from the binary concatenation all the RHS's representation, or UNDEF if global representation is empty or if it is nullable.
 
 Please refer to the I<representation> section below.
+
+=back
 
 Meaningful for both rule and symbol actions, and is the B<default rule action>.
 
