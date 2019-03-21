@@ -5544,9 +5544,12 @@ static short marpaESLIFJava_importb(marpaESLIFValue_t *marpaESLIFValuep, void *u
     if (byteArrayp == NULL) {
       goto err;
     }
-    (*envp)->SetByteArrayRegion(envp, byteArrayp, 0, (jsize) marpaESLIFValueResultp->u.a.sizel, (jbyte *) marpaESLIFValueResultp->u.a.p);
-    if (HAVEEXCEPTION(envp)) {
-      goto err;
+    if (marpaESLIFValueResultp->u.a.sizel > 0) {
+      /* Don't know if it is legal to call SetByteArrayRegion with a zero size -; */
+      (*envp)->SetByteArrayRegion(envp, byteArrayp, 0, (jsize) marpaESLIFValueResultp->u.a.sizel, (jbyte *) marpaESLIFValueResultp->u.a.p);
+      if (HAVEEXCEPTION(envp)) {
+        goto err;
+      }
     }
     objectp = (jobject) byteArrayp;
     MARPAESLIFJAVA_PUSH_PTR(marpaESLIFValueContextp->objectStackp, objectp);
@@ -5979,7 +5982,7 @@ static short marpaESLIFJava_stack_setb(JNIEnv *envp, marpaESLIFValue_t *marpaESL
               free(bytep);
             }
           } else {
-            /* We do not want to look like an alternative */
+            /* A NULL pointer is not allowed in marpaESLIF */
             marpaESLIFValueResultp->u.a.p = (char *) malloc(1);
             if (marpaESLIFValueResultp->u.a.p == NULL) {
               RAISEEXCEPTIONF(envp, "malloc failure, %s", strerror(errno));
