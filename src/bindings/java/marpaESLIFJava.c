@@ -1063,7 +1063,7 @@ static marpaESLIFValueSymbolCallback_t marpaESLIFValueSymbolActionResolver(void 
 static marpaESLIFValueFreeCallback_t   marpaESLIFValueFreeActionResolver(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, char *actions);
 static short marpaESLIFValueContextInject(JNIEnv *envp, marpaESLIFValue_t *marpaESLIFValuep, jobject eslifValueInterfacep, marpaESLIFValueContext_t *marpaESLIFValueContextp);
 static short marpaESLIFValueRuleCallback(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
-static short marpaESLIFJava_valueSymbolCallbackb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, char *bytep, size_t bytel, int resulti);
+static short marpaESLIFJava_valueSymbolCallbackb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, marpaESLIFValueResult_t *marpaESLIFValueResultp, int resulti);
 static void  marpaESLIFJava_valueFreeCallbackv(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, marpaESLIFValueResult_t *marpaESLIFValueResultp);
 static jmethodID marpaESLIFJava_valueActionResolveri(JNIEnv *envp, marpaESLIFValueContext_t *marpaESLIFValueContextp, char *methods, char *signatures);
 static void marpaESLIFJava_valueContextFreev(JNIEnv *envp, marpaESLIFValueContext_t *marpaESLIFValueContextp, short onStackb);
@@ -1074,7 +1074,7 @@ static short marpaESLIFJava_representationCallbackb(void *userDatavp, marpaESLIF
 static jobject marpaESLIFJava_grammarPropertiesp(JNIEnv *envp, marpaESLIFGrammarProperty_t *grammarPropertyp);
 static jobject marpaESLIFJava_rulePropertiesp(JNIEnv *envp, marpaESLIFRuleProperty_t *rulePropertyp);
 static jobject marpaESLIFJava_symbolPropertiesp(JNIEnv *envp, marpaESLIFSymbolProperty_t *symbolPropertyp);
-static jobject marpaESLIFJava_getObjectp(marpaESLIFValueContext_t *marpaESLIFValueContextp, marpaESLIFValue_t *marpaESLIFValuep, int stackindicei, char *bytep, size_t bytel, marpaESLIFValueResult_t *marpaESLIFValueResultp);
+static jobject marpaESLIFJava_getObjectp(marpaESLIFValueContext_t *marpaESLIFValueContextp, marpaESLIFValue_t *marpaESLIFValuep, int stackindicei, marpaESLIFValueResult_t *marpaESLIFValueResultLexemep);
 static short marpaESLIFJava_importb(marpaESLIFValue_t *marpaESLIFValuep, void *userDatavp, marpaESLIFValueResult_t *marpaESLIFValueResultp);
 static jstring marpaESLIFJava_marpaESLIFStringToJavap(JNIEnv *envp, marpaESLIFString_t *marpaESLIFStringp);
 static jstring marpaESLIFJava_marpaESLIFASCIIToJavap(JNIEnv *envp, char *asciis);
@@ -4558,7 +4558,7 @@ static short marpaESLIFValueRuleCallback(void *userDatavp, marpaESLIFValue_t *ma
     }
 
     for (i = arg0i; i <= argni; i++) {
-      objectp = marpaESLIFJava_getObjectp(marpaESLIFValueContextp, marpaESLIFValuep, i, NULL /* bytep */, 0 /* bytel */, NULL /* marpaESLIFValueResultp */);
+      objectp = marpaESLIFJava_getObjectp(marpaESLIFValueContextp, marpaESLIFValuep, i, NULL /* marpaESLIFValueResultLexeme */);
       (*envp)->SetObjectArrayElement(envp, list, i - arg0i, objectp);
     }
   }
@@ -4602,7 +4602,7 @@ static short marpaESLIFValueRuleCallback(void *userDatavp, marpaESLIFValue_t *ma
 }
 
 /*****************************************************************************/
-static short marpaESLIFJava_valueSymbolCallbackb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, char *bytep, size_t bytel, int resulti)
+static short marpaESLIFJava_valueSymbolCallbackb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, marpaESLIFValueResult_t *marpaESLIFValueResultp, int resulti)
 /*****************************************************************************/
 {
   /* Almost exactly like marpaESLIFValueRuleCallback except that we construct a list of one element containing a jbyteArray that we do ourself */
@@ -4621,7 +4621,7 @@ static short marpaESLIFJava_valueSymbolCallbackb(void *userDatavp, marpaESLIFVal
     goto err;
   }
 
-  objectp = marpaESLIFJava_getObjectp(marpaESLIFValueContextp, NULL /* marpaESLIFValuep */, -1 /* stackindicei */, bytep, bytel, NULL /* marpaESLIFValueResultp */);
+  objectp = marpaESLIFJava_getObjectp(marpaESLIFValueContextp, NULL /* marpaESLIFValuep */, -1 /* stackindicei */, marpaESLIFValueResultp);
 
   /* Inject the context */
   if (! marpaESLIFValueContextInject(envp, marpaESLIFValuep, marpaESLIFValueContextp->eslifValueInterfacep, marpaESLIFValueContextp)) {
@@ -5394,26 +5394,16 @@ static jobject marpaESLIFJava_symbolPropertiesp(JNIEnv *envp, marpaESLIFSymbolPr
 }
 
 /*****************************************************************************/
-static jobject marpaESLIFJava_getObjectp(marpaESLIFValueContext_t *marpaESLIFValueContextp, marpaESLIFValue_t *marpaESLIFValuep, int stackindicei, char *bytep, size_t bytel, marpaESLIFValueResult_t *marpaESLIFValueResultp)
+static jobject marpaESLIFJava_getObjectp(marpaESLIFValueContext_t *marpaESLIFValueContextp, marpaESLIFValue_t *marpaESLIFValuep, int stackindicei, marpaESLIFValueResult_t *marpaESLIFValueResultLexemep)
 /*****************************************************************************/
 {
-  static const char            *funcs = "marpaESLIFJava_getObjectp";
-  marpaESLIFValueResult_t        marpaESLIFValueResult;
-  jobject                        rcp;
+  static const char       *funcs = "marpaESLIFJava_getObjectp";
+  marpaESLIFValueResult_t *marpaESLIFValueResultp;
+  jobject                  rcp;
 
-  if (bytep != NULL) {
-    /* Fake a marpaESLIFValueResult */
-    marpaESLIFValueResult.type            = MARPAESLIF_VALUE_TYPE_ARRAY;
-    marpaESLIFValueResult.contextp        = NULL;
-    marpaESLIFValueResult.representationp = NULL;
-    marpaESLIFValueResult.u.a.p           = bytep;
-    marpaESLIFValueResult.u.a.sizel       = bytel;
-    marpaESLIFValueResult.u.a.shallowb    = 1;
-
-    marpaESLIFValueResultp = &marpaESLIFValueResult;
-  }
-
-  if (marpaESLIFValueResultp == NULL) {
+  if (marpaESLIFValueResultLexemep != NULL) {
+    marpaESLIFValueResultp = marpaESLIFValueResultLexemep;
+  } else {
     marpaESLIFValueResultp = marpaESLIFValue_stack_getp(marpaESLIFValuep, stackindicei);
     if (marpaESLIFValueResultp == NULL) {
       RAISEEXCEPTIONF(marpaESLIFValueContextp->envp, "marpaESLIFValueResultp is NULL at stack indice %d", stackindicei);

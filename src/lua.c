@@ -463,7 +463,7 @@ static short _marpaESLIFValue_lua_actionb(void *userDatavp, marpaESLIFValue_t *m
 }
 
 /*****************************************************************************/
-static short _marpaESLIFValue_lua_symbolb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, char *bytep, size_t bytel, int resulti)
+static short _marpaESLIFValue_lua_symbolb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, marpaESLIFValueResult_t *marpaESLIFValueResultp, int resulti)
 /*****************************************************************************/
 {
   static const char               *funcs                 = "_marpaESLIFValue_lua_symbolb";
@@ -484,7 +484,7 @@ static short _marpaESLIFValue_lua_symbolb(void *userDatavp, marpaESLIFValue_t *m
     goto err; /* Lua will shutdown anyway */
   }
 
-  rcb = symbolCallbackp(userDatavp, marpaESLIFValuep, bytep, bytel, resulti);
+  rcb = symbolCallbackp(userDatavp, marpaESLIFValuep, marpaESLIFValueResultp, resulti);
 
   if (! rcb) goto err;
 
