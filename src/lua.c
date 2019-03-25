@@ -500,30 +500,6 @@ static short _marpaESLIFValue_lua_symbolb(void *userDatavp, marpaESLIFValue_t *m
 }
 
 /*****************************************************************************/
-static void _marpaESLIF_lua_freeDefaultActionv(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, marpaESLIFValueResult_t *marpaESLIFValueResultp)
-/*****************************************************************************/
-{
-  static const char             *funcs = "_marpaESLIF_lua_freeDefaultActionv";
-  marpaESLIFValueFreeCallback_t  freeCallbackp;
-
-  /* We should never be called outside of a valuation, thus a lua_State must already exist */
-  if (marpaESLIFValuep->L == NULL) {
-    goto err;
-  }
-
-  freeCallbackp = marpaESLIFLua_valueFreeActionResolver(userDatavp, marpaESLIFValuep, ":defaultFreeActions" /* marpaESLIFValuep->actions */);
-  if (freeCallbackp == NULL) {
-    MARPAESLIF_ERROR(marpaESLIFValuep->marpaESLIFp, "Lua bindings returned no free callback");
-    goto err; /* Lua will shutdown anyway */
-  }
-
-  freeCallbackp(userDatavp, marpaESLIFValuep, marpaESLIFValueResultp);
-
- err:
-  return;
-}
-
-/*****************************************************************************/
 static short _marpaESLIFGrammar_lua_precompileb(marpaESLIFGrammar_t *marpaESLIFGrammarp)
 /*****************************************************************************/
 {

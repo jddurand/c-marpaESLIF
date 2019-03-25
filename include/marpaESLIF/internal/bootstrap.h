@@ -26,7 +26,6 @@ typedef enum _marpaESLIFBootstrapStackTypeEnum {
   marpaESLIFBootstrapStackTypeEnum_ADVERB_ITEM_LATM,
   marpaESLIFBootstrapStackTypeEnum_ADVERB_ITEM_NAMING,
   marpaESLIFBootstrapStackTypeEnum_ADVERB_ITEM_SYMBOLACTION,
-  marpaESLIFBootstrapStackTypeEnum_ADVERB_ITEM_FREEACTION,
   marpaESLIFBootstrapStackTypeEnum_ADVERB_ITEM_EVENT_INITIALIZATION,
   marpaESLIFBootstrapStackTypeEnum_ADVERB_LIST_ITEMS,
   marpaESLIFBootstrapStackTypeEnum_ALTERNATIVE,
@@ -66,7 +65,6 @@ static char _MARPAESLIF_BOOTSTRAP_STACK_TYPE[_marpaESLIFBootstrapStackTypeEnum_L
 #define MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_ITEM_LATM                 &(_MARPAESLIF_BOOTSTRAP_STACK_TYPE[marpaESLIFBootstrapStackTypeEnum_ADVERB_ITEM_LATM])
 #define MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_ITEM_NAMING               &(_MARPAESLIF_BOOTSTRAP_STACK_TYPE[marpaESLIFBootstrapStackTypeEnum_ADVERB_ITEM_NAMING])
 #define MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_ITEM_SYMBOLACTION         &(_MARPAESLIF_BOOTSTRAP_STACK_TYPE[marpaESLIFBootstrapStackTypeEnum_ADVERB_ITEM_SYMBOLACTION])
-#define MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_ITEM_FREEACTION           &(_MARPAESLIF_BOOTSTRAP_STACK_TYPE[marpaESLIFBootstrapStackTypeEnum_ADVERB_ITEM_FREEACTION])
 #define MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_ITEM_EVENT_INITIALIZATION &(_MARPAESLIF_BOOTSTRAP_STACK_TYPE[marpaESLIFBootstrapStackTypeEnum_ADVERB_ITEM_EVENT_INITIALIZATION])
 #define MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_LIST_ITEMS                &(_MARPAESLIF_BOOTSTRAP_STACK_TYPE[marpaESLIFBootstrapStackTypeEnum_ADVERB_LIST_ITEMS])
 #define MARPAESLIF_BOOTSTRAP_STACK_TYPE_ALTERNATIVE                      &(_MARPAESLIF_BOOTSTRAP_STACK_TYPE[marpaESLIFBootstrapStackTypeEnum_ALTERNATIVE])
@@ -125,7 +123,6 @@ enum marpaESLIF_bootstrap_adverb_list_item_type {
   MARPAESLIF_BOOTSTRAP_ADVERB_LIST_ITEM_TYPE_LATM,
   MARPAESLIF_BOOTSTRAP_ADVERB_LIST_ITEM_TYPE_NAMING,
   MARPAESLIF_BOOTSTRAP_ADVERB_LIST_ITEM_TYPE_SYMBOLACTION,
-  MARPAESLIF_BOOTSTRAP_ADVERB_LIST_ITEM_TYPE_FREEACTION,
   MARPAESLIF_BOOTSTRAP_ADVERB_LIST_ITEM_TYPE_EVENT_INITIALIZATION
 };
 
@@ -176,7 +173,6 @@ struct marpaESLIF_bootstrap_adverb_list_item {
     short                                        latmb;
     marpaESLIF_bootstrap_utf_string_t           *namingp;
     marpaESLIF_action_t                         *symbolactionp;
-    marpaESLIF_action_t                         *freeactionp;
     marpaESLIF_bootstrap_event_initialization_t *eventInitializationp;
   } u;
 };
@@ -270,7 +266,6 @@ struct marpaESLIF_bootstrap_event_initialization {
   marpaESLIF_bootstrap_event_initializer_type_t initializerb;
 };
 
-static void                          _marpaESLIF_bootstrap_freeDefaultActionv(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, marpaESLIFValueResult_t *marpaESLIFValueResultp);
 static marpaESLIFValueRuleCallback_t _marpaESLIF_bootstrap_ruleActionResolver(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, char *actions);
 
 #endif /* MARPAESLIF_INTERNAL_BOOTSTRAP_H */

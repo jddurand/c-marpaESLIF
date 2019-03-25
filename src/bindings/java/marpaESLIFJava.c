@@ -120,11 +120,13 @@ typedef struct genericLoggerContext {
 
 typedef struct marpaESLIFRecognizerContext {
   jobject         eslifRecognizerInterfacep;  /* Current recognizer interface instance - this can change at every call */
+  char           *actions;                    /* shallow copy of last resolved name */
   jbyteArray      previousByteArrayp;         /* to prevent exhaustion of local references */
   jbyte          *previousDatap;
   jstring         previousEncodingp;
   const char     *previousUTFCharp;
   genericStack_t *lexemeStackp;
+  JNIEnv         *envp;
 } marpaESLIFRecognizerContext_t;
 
 typedef struct marpaESLIFClassCache {
@@ -1061,10 +1063,13 @@ static short ESLIFValue_contextb(JNIEnv *envp, jobject eslifValuep, jobject obje
 static marpaESLIFValueRuleCallback_t   marpaESLIFValueRuleActionResolver(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, char *actions);
 static marpaESLIFValueSymbolCallback_t marpaESLIFValueSymbolActionResolver(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, char *actions);
 static marpaESLIFValueFreeCallback_t   marpaESLIFValueFreeActionResolver(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, char *actions);
+static marpaESLIFRecognizerFreeCallback_t marpaESLIFRecognizerFreeActionResolver(void *userDatavp, marpaESLIFRecognizer_t *marpaESLIFRecognizerp, char *actions);
 static short marpaESLIFValueContextInject(JNIEnv *envp, marpaESLIFValue_t *marpaESLIFValuep, jobject eslifValueInterfacep, marpaESLIFValueContext_t *marpaESLIFValueContextp);
 static short marpaESLIFValueRuleCallback(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
 static short marpaESLIFJava_valueSymbolCallbackb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, marpaESLIFValueResult_t *marpaESLIFValueResultp, int resulti);
 static void  marpaESLIFJava_valueFreeCallbackv(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, marpaESLIFValueResult_t *marpaESLIFValueResultp);
+static void  marpaESLIFJava_recognizerFreeCallbackv(void *userDatavp, marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFValueResult_t *marpaESLIFValueResultp);
+static void  marpaESLIFJava_genericFreeCallbackv(JNIEnv *envp, marpaESLIFValueResult_t *marpaESLIFValueResultp);
 static jmethodID marpaESLIFJava_valueActionResolveri(JNIEnv *envp, marpaESLIFValueContext_t *marpaESLIFValueContextp, char *methods, char *signatures);
 static void marpaESLIFJava_valueContextFreev(JNIEnv *envp, marpaESLIFValueContext_t *marpaESLIFValueContextp, short onStackb);
 static void marpaESLIFJava_recognizerContextFreev(JNIEnv *envp, marpaESLIFRecognizerContext_t *marpaESLIFRecognizerContextp, short onStackb);
@@ -2254,6 +2259,7 @@ JNIEXPORT jboolean JNICALL Java_org_parser_marpa_ESLIFGrammar_jniParse(JNIEnv *e
   marpaESLIFRecognizerContext.previousEncodingp         = NULL;
   marpaESLIFRecognizerContext.previousUTFCharp          = NULL;
   marpaESLIFRecognizerContext.lexemeStackp              = NULL;
+  marpaESLIFRecognizerContext.envp                      = envp;
 
   marpaESLIFRecognizerOption.userDatavp                = &marpaESLIFRecognizerContext;
   marpaESLIFRecognizerOption.readerCallbackp           = readerCallbackb;
@@ -2816,6 +2822,7 @@ JNIEXPORT void JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniNew(JNIEnv *envp
   marpaESLIFRecognizerContextp->previousEncodingp         = NULL;
   marpaESLIFRecognizerContextp->previousUTFCharp          = NULL;
   marpaESLIFRecognizerContextp->lexemeStackp              = NULL;
+  marpaESLIFRecognizerContextp->envp                      = envp;
 
   GENERICSTACK_NEW(marpaESLIFRecognizerContextp->lexemeStackp);
   if (GENERICSTACK_ERROR(marpaESLIFRecognizerContextp->lexemeStackp)) {
@@ -4443,12 +4450,29 @@ static marpaESLIFValueFreeCallback_t marpaESLIFValueFreeActionResolver(void *use
     return NULL;
   }
 
-  /* Remember the action name - perl will croak if calling this method fails */
+  /* Remember the action name */
   marpaESLIFValueContextp->actions = actions;
   /* There is no "java" associated method */
   marpaESLIFValueContextp->methodp = NULL;
 
   return marpaESLIFJava_valueFreeCallbackv;
+}
+
+/*****************************************************************************/
+static marpaESLIFRecognizerFreeCallback_t marpaESLIFRecognizerFreeActionResolver(void *userDatavp, marpaESLIFRecognizer_t *marpaESLIFRecognizerp, char *actions)
+/*****************************************************************************/
+{
+  marpaESLIFRecognizerContext_t *marpaESLIFRecognizerContextp = (marpaESLIFRecognizerContext_t *) userDatavp;
+
+  /* It HAS to be ":defaultFreeActions" */
+  if (strcmp(actions, ":defaultFreeActions") != 0) {
+    return NULL;
+  }
+
+  /* Remember the action name */
+  marpaESLIFRecognizerContextp->actions = actions;
+
+  return marpaESLIFJava_recognizerFreeCallbackv;
 }
 
 /*****************************************************************************/
@@ -4668,9 +4692,34 @@ static void marpaESLIFJava_valueFreeCallbackv(void *userDatavp, marpaESLIFValue_
   /* It is guaranteed to be non-NULL at this stage and to be a local reference */
   static const char        *funcs                   = "marpaESLIFJava_valueFreeCallbackv";
   marpaESLIFValueContext_t *marpaESLIFValueContextp = (marpaESLIFValueContext_t *) userDatavp;
-  JNIEnv                   *envp                    = marpaESLIFValueContextp->envp;
+
+  marpaESLIFJava_genericFreeCallbackv(marpaESLIFValueContextp->envp, marpaESLIFValueResultp);
+}
+
+/*****************************************************************************/
+static void  marpaESLIFJava_recognizerFreeCallbackv(void *userDatavp, marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFValueResult_t *marpaESLIFValueResultp)
+/*****************************************************************************/
+{
+  static const char             *funcs                        = "marpaESLIFJava_valueFreeCallbackv";
+  marpaESLIFRecognizerContext_t *marpaESLIFRecognizerContextp = (marpaESLIFRecognizerContext_t *) userDatavp;
+
+  marpaESLIFJava_genericFreeCallbackv(marpaESLIFRecognizerContextp->envp, marpaESLIFValueResultp);
+}
+
+/*****************************************************************************/
+static void marpaESLIFJava_genericFreeCallbackv(JNIEnv *envp, marpaESLIFValueResult_t *marpaESLIFValueResultp)
+/*****************************************************************************/
+{
+  static const char        *funcs                   = "marpaESLIFJava_genericFreeCallbackv";
 
   switch (marpaESLIFValueResultp->type) {
+  case MARPAESLIF_VALUE_TYPE_PTR:
+    /* This is a global reference */
+    (*envp)->DeleteGlobalRef(envp, (jobject) marpaESLIFValueResultp->u.p.p);
+    break;
+  case MARPAESLIF_VALUE_TYPE_ARRAY:
+    free(marpaESLIFValueResultp->u.a.p);
+    break;
   case MARPAESLIF_VALUE_TYPE_STRING:
     free(marpaESLIFValueResultp->u.s.p);
     /* encoding may refer to the constant UTF8s */
@@ -4680,12 +4729,8 @@ static void marpaESLIFJava_valueFreeCallbackv(void *userDatavp, marpaESLIFValue_
       }
     }
     break;
-  case MARPAESLIF_VALUE_TYPE_ARRAY:
-    free(marpaESLIFValueResultp->u.a.p);
-    break;
-  case MARPAESLIF_VALUE_TYPE_PTR:
-    /* This is a global reference */
-    (*envp)->DeleteGlobalRef(envp, (jobject) marpaESLIFValueResultp->u.p.p);
+  case MARPAESLIF_VALUE_TYPE_ROW:
+    free(marpaESLIFValueResultp->u.r.p);
     break;
   case MARPAESLIF_VALUE_TYPE_TABLE:
     free(marpaESLIFValueResultp->u.t.p);

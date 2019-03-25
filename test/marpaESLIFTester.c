@@ -189,21 +189,6 @@ int main() {
         } else {
           GENERICLOGGER_INFO(marpaESLIFOption.genericLoggerp, "... ... Default rule action   : ??? (NULL)");
         }
-        if (grammarProperty.defaultFreeActionp != NULL) {
-          switch (grammarProperty.defaultFreeActionp->type) {
-          case MARPAESLIF_ACTION_TYPE_NAME:
-            GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "... ... Default free action   : %s (type: name)", grammarProperty.defaultFreeActionp->u.names);
-            break;
-          case MARPAESLIF_ACTION_TYPE_STRING:
-            GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "... ... Default free action   : %s (type: string)", grammarProperty.defaultFreeActionp->u.stringp->asciis);
-            break;
-          default:
-            GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "... ... Default free action   : ??? (type: %d)", grammarProperty.defaultFreeActionp->type);
-            break;
-          }
-        } else {
-          GENERICLOGGER_INFO(marpaESLIFOption.genericLoggerp, "... ... Default free action   : ??? (NULL)");
-        }
         GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "... ... Start symbol Id       : %d", grammarProperty.starti);
         GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "... ... Discard symbol Id     : %d", grammarProperty.discardi);
         GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "... ... Number of symbols     : %ld", (unsigned long) grammarProperty.nsymboll);
@@ -392,7 +377,6 @@ int main() {
   marpaESLIFValueOption.userDatavp             = &marpaESLIFTester_context;
   marpaESLIFValueOption.ruleActionResolverp    = NULL;
   marpaESLIFValueOption.symbolActionResolverp  = NULL;
-  marpaESLIFValueOption.freeActionResolverp    = NULL;
   marpaESLIFValueOption.importerp              = importb;
   marpaESLIFValueOption.highRankOnlyb          = 1;
   marpaESLIFValueOption.orderByRankb           = 1;
@@ -417,7 +401,6 @@ int main() {
   if ((marpaESLIFValueOption.userDatavp            != marpaESLIFValueOption.userDatavp) ||
       (marpaESLIFValueOption.ruleActionResolverp   != marpaESLIFValueOption.ruleActionResolverp) ||
       (marpaESLIFValueOption.symbolActionResolverp != marpaESLIFValueOption.symbolActionResolverp) ||
-      (marpaESLIFValueOption.freeActionResolverp   != marpaESLIFValueOption.freeActionResolverp) ||
       (marpaESLIFValueOption.importerp             != marpaESLIFValueOption.importerp) ||
       (marpaESLIFValueOption.highRankOnlyb         != marpaESLIFValueOption.highRankOnlyb) ||
       (marpaESLIFValueOption.orderByRankb          != marpaESLIFValueOption.orderByRankb) ||

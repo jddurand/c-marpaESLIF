@@ -209,7 +209,6 @@ struct marpaESLIF_grammar {
   genericStack_t        *ruleStackp;                         /* Pointer to stack of rules */
   marpaESLIFAction_t    *defaultSymbolActionp;               /* Default action for symbols - never NULL */
   marpaESLIFAction_t    *defaultRuleActionp;                 /* Default action for rules - never NULL */
-  marpaESLIFAction_t    *defaultFreeActionp;                 /* Default action for free - can be NULL */
   int                    starti;                             /* Default start symbol ID - filled during grammar validation */
   char                  *starts;                             /* Default start symbol name - filled during grammar validation - shallow pointer */
   int                   *ruleip;                             /* Array of rule IDs - filled by grammar validation */
@@ -398,6 +397,17 @@ struct marpaESLIFRecognizer {
   marpaESLIF_grammar_t         grammarDiscard;
   marpaESLIFRecognizerOption_t marpaESLIFRecognizerOptionDiscard;
   marpaESLIFValueOption_t      marpaESLIFValueOptionDiscard;
+
+  /* Embedded lua */
+  void                        *marpaESLIFLuaRecognizerContextp;
+
+  /* Lexeme input stack is a marpaESLIFValueResult stack */
+  genericStack_t               _beforePtrStack;
+  genericStack_t              *beforePtrStackp;
+  genericHash_t                _beforePtrHash;
+  genericHash_t               *beforePtrHashp;
+  genericHash_t                _afterPtrHash;
+  genericHash_t               *afterPtrHashp;
 };
 
 struct marpaESLIF_lexeme_data {
@@ -474,7 +484,6 @@ marpaESLIFValueOption_t marpaESLIFValueOption_default_template = {
   NULL, /* userDatavp - filled at run-time */
   NULL, /* ruleActionResolverp */
   NULL, /* symbolActionResolverp */
-  NULL, /* freeActionResolverp */
   NULL, /* importerp */
   1,    /* highRankOnlyb */
   1,    /* orderByRankb */

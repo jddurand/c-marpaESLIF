@@ -52,6 +52,9 @@ typedef struct marpaESLIFValue       marpaESLIFValue_t;
 typedef struct marpaESLIFSymbol      marpaESLIFSymbol_t;
 typedef struct marpaESLIFValueResult marpaESLIFValueResult_t;
 
+/* General free callback */
+typedef void  (*marpaESLIFFreeCallback_t)(void *userDatavp, marpaESLIFValueResult_t *marpaESLIFValueResultp);
+
 /* A string */
 typedef struct marpaESLIFString {
   char   *bytep;            /* pointer bytes */
@@ -71,18 +74,20 @@ typedef struct marpaESLIFGrammarOption {
   size_t  encodingl;           /* Length of encoding itself. Default: 0 */
 } marpaESLIFGrammarOption_t;
 
+
 /* The reader can return encoding information, giving eventual encoding in *encodingsp, spreaded over *encodinglp bytes. Encoding of encoding is free. */
 typedef short (*marpaESLIFReader_t)(void *userDatavp, char **inputcpp, size_t *inputlp, short *eofbp, short *characterStreambp, char **encodingsp, size_t *encodinglp);
+
 typedef struct marpaESLIFRecognizerOption {
-  void                *userDatavp;                  /* User specific context */
-  marpaESLIFReader_t   readerCallbackp;             /* Reader */
-  short                disableThresholdb;           /* Default: 0 */
-  short                exhaustedb;                  /* Exhaustion event. Default: 0 */
-  short                newlineb;                    /* Count line/column numbers. Default: 0 */
-  short                trackb;                      /* Track absolute position. Default: 0 */
-  size_t               bufsizl;                     /* Minimum stream buffer size: Recommended: 0 (internally, a system default will apply) */
-  unsigned int         buftriggerperci;             /* Excess number of bytes, in percentage of bufsizl, where stream buffer size is reduced. Recommended: 50 */
-  unsigned int         bufaddperci;                 /* Policy of minimum of bytes for increase, in percentage of current allocated size, when stream buffer size need to augment. Recommended: 50 */
+  void               *userDatavp;          /* User specific context */
+  marpaESLIFReader_t  readerCallbackp;     /* Reader */
+  short               disableThresholdb;   /* Default: 0 */
+  short               exhaustedb;          /* Exhaustion event. Default: 0 */
+  short               newlineb;            /* Count line/column numbers. Default: 0 */
+  short               trackb;              /* Track absolute position. Default: 0 */
+  size_t              bufsizl;             /* Minimum stream buffer size: Recommended: 0 (internally, a system default will apply) */
+  unsigned int        buftriggerperci;     /* Excess number of bytes, in percentage of bufsizl, where stream buffer size is reduced. Recommended: 50 */
+  unsigned int        bufaddperci;         /* Policy of minimum of bytes for increase, in percentage of current allocated size, when stream buffer size need to augment. Recommended: 50 */
 } marpaESLIFRecognizerOption_t;
 
 typedef enum marpaESLIFEventType {
@@ -123,13 +128,12 @@ typedef enum marpaESLIFValueType {
 #endif
 } marpaESLIFValueType_t;
 
+/* Callback definitions */
 typedef short (*marpaESLIFValueRuleCallback_t)(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
 typedef short (*marpaESLIFValueSymbolCallback_t)(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, marpaESLIFValueResult_t *marpaESLIFValueResult, int resulti);
-typedef void  (*marpaESLIFValueFreeCallback_t)(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, marpaESLIFValueResult_t *marpaESLIFValueResultp);
 
 typedef marpaESLIFValueRuleCallback_t   (*marpaESLIFValueRuleActionResolver_t)(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, char *actions);
 typedef marpaESLIFValueSymbolCallback_t (*marpaESLIFValueSymbolActionResolver_t)(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, char *actions);
-typedef marpaESLIFValueFreeCallback_t   (*marpaESLIFValueFreeActionResolver_t)(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, char *actions);
 
 /* Valuation result */
 /* The representation returns a sequence of bytes, eventually meaning a string */
@@ -145,32 +149,42 @@ typedef long marpaESLIFValueResultLong_t;
 typedef float marpaESLIFValueResultFloat_t;
 typedef double marpaESLIFValueResultDouble_t;
 typedef struct marpaESLIFValueResultPtr {
-  void *p;
-  short shallowb;
+  void                     *p;
+  void                     *freeUserDatavp;
+  marpaESLIFFreeCallback_t  freeCallbackp;
+  short                     shallowb;
 } marpaESLIFValueResultPtr_t;
 typedef struct marpaESLIFValueResultArray {
-  char *p;
-  short shallowb;
-  size_t sizel;
+  char                     *p;
+  void                     *freeUserDatavp;
+  marpaESLIFFreeCallback_t  freeCallbackp;
+  short                     shallowb;
+  size_t                    sizel;
 } marpaESLIFValueResultArray_t;
 typedef enum marpaESLIFValueResultBool {
   MARPAESLIFVALUERESULTBOOL_FALSE = 0,
   MARPAESLIFVALUERESULTBOOL_TRUE = 1
 } marpaESLIFValueResultBool_t;
 typedef struct marpaESLIFValueResultString {
-  unsigned char *p;
-  short          shallowb;
-  size_t         sizel;
-  char          *encodingasciis;
+  unsigned char            *p;
+  void                     *freeUserDatavp;
+  marpaESLIFFreeCallback_t  freeCallbackp;
+  short                     shallowb;
+  size_t                    sizel;
+  char                     *encodingasciis;
 } marpaESLIFValueResultString_t;
 typedef struct marpaESLIFValueResultRow {
-  marpaESLIFValueResult_t    *p;
-  short                       shallowb;
-  size_t                      sizel;
+  marpaESLIFValueResult_t  *p;
+  void                     *freeUserDatavp;
+  marpaESLIFFreeCallback_t  freeCallbackp;
+  short                     shallowb;
+  size_t                    sizel;
 } marpaESLIFValueResultRow_t;
 typedef struct marpaESLIFValueResultPair marpaESLIFValueResultPair_t;
 typedef struct marpaESLIFValueResultTable {
   marpaESLIFValueResultPair_t *p;
+  void                        *freeUserDatavp;
+  marpaESLIFFreeCallback_t     freeCallbackp;
   short                        shallowb;
   size_t                       sizel;
 } marpaESLIFValueResultTable_t;
@@ -222,7 +236,6 @@ typedef struct marpaESLIFValueOption {
   void                                 *userDatavp;            /* User specific context */
   marpaESLIFValueRuleActionResolver_t   ruleActionResolverp;   /* Will return the function doing the wanted rule action */
   marpaESLIFValueSymbolActionResolver_t symbolActionResolverp; /* Will return the function doing the wanted symbol action */
-  marpaESLIFValueFreeActionResolver_t   freeActionResolverp;   /* Will return the function doing the free */
   marpaESLIFValueResultImport_t         importerp;             /* Will ask end-user to import a marpaESLIFValueResult */
   short                                 highRankOnlyb;         /* Default: 1 */
   short                                 orderByRankb;          /* Default: 1 */
@@ -256,7 +269,6 @@ typedef struct marpaESLIFAction {
 typedef struct marpaESLIFGrammarDefaults {
   marpaESLIFAction_t *defaultRuleActionp;   /* Default action for rules */
   marpaESLIFAction_t *defaultSymbolActionp; /* Default action for symbols */
-  marpaESLIFAction_t *defaultFreeActionp;   /* Default action for free - if not NULL, type can never be MARPAESLIF_ACION_TYPE_STRING */
 } marpaESLIFGrammarDefaults_t;
 
 /* Rule property */
@@ -286,7 +298,6 @@ typedef struct marpaESLIFGrammarProperty {
   short                  latmb;                        /* LATM ? */
   marpaESLIFAction_t    *defaultSymbolActionp;         /* Default action for symbols - never NULL */
   marpaESLIFAction_t    *defaultRuleActionp;           /* Default action for rules - never NULL */
-  marpaESLIFAction_t    *defaultFreeActionp;           /* Default action for free - can be NULL */
   int                    starti;                       /* Start symbol Id - always >= 0 */
   int                    discardi;                     /* Discard symbol Id (-1 if none) */
   size_t                 nsymboll;                     /* Number of symbols - always > 0*/
