@@ -238,8 +238,7 @@ struct marpaESLIF {
   int                     versionMinori;               /* Minor version */
   int                     versionPatchi;               /* Patch version */
   marpaESLIFValueResult_t marpaESLIFValueResultTrue;   /* Pre-filled ::true value result */
-  marpaESLIFValueResult_t marpaESLIFValueResultFalse;  /* Pre-filled ::true value result */
-  marpaESLIFValueResult_t marpaESLIFValueResultIntZero; /* Pre-filled ::int zero value result */
+  marpaESLIFValueResult_t marpaESLIFValueResultFalse;  /* Pre-filled ::false value result */
   char                    float_fmts[128];            /* Pre-filled format string for floats */
   char                    double_fmts[128];           /* Pre-filled format string for double */
   char                    long_double_fmts[128];      /* Pre-filled format string for double */
