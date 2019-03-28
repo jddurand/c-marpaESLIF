@@ -422,11 +422,10 @@ struct marpaESLIF_lexeme_data {
    - when this is a top-level recognizer, everything is allocated on the heap.
 */
 struct marpaESLIF_alternative {
-  marpaESLIF_symbol_t *symbolp;         /* Associated symbol */
-  void                *valuep;          /* Associated value and length */
-  size_t               valuel;          /* 0 when it is external */
-  int                  grammarLengthi;  /* Length within the grammar (1 in the token-stream model) */
-  short                usedb;           /* Is this structure in use ? */
+  marpaESLIF_symbol_t *symbolp;                  /* Associated symbol - shallow pointer */
+  marpaESLIFValueResult_t marpaESLIFValueResult; /* Associated value */
+  int                     grammarLengthi;        /* Length within the grammar (1 in the token-stream model) */
+  short                   usedb;                 /* Is this structure in use ? */
 };
 
 marpaESLIF_alternative_t marpaESLIF_alternative_default = {
