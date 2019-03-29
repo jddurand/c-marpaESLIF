@@ -128,15 +128,6 @@ sub do_symbol {
     return $do_symbol;
 }
 
-sub do_free {
-    my ($self, $result) = @_;
-
-    $self->{log}->fatalf("do_free(%s) called and this should never happen", $result);
-    $self->trace_local_variables('do_free');
-    die "do_free() called and this should never happen";
-    undef $result;
-}
-
 sub do_int {
     my ($self, $number) = @_;
 
@@ -336,8 +327,7 @@ ok($ngrammar > 0, "Number of grammars is > 0");
 my $currentLevel = $eslifGrammar->currentLevel;
 ok($currentLevel >= 0, "Current level is >= 0");
 my %GRAMMAR_PROPERTIES_BY_LEVEL = (
-    '0' => { defaultFreeAction   => ":defaultFreeActions",
-             defaultRuleAction   => "do_op",
+    '0' => { defaultRuleAction   => "do_op",
              defaultSymbolAction => "do_symbol",
              description         => "Grammar level 0",
              discardId           => 1,
@@ -347,8 +337,7 @@ my %GRAMMAR_PROPERTIES_BY_LEVEL = (
              ruleIds             => [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15],
              startId             => 0,
              symbolIds           => [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18] },
-    '1' => { defaultFreeAction   => ":defaultFreeActions",
-             defaultRuleAction   => "::concat",
+    '1' => { defaultRuleAction   => "::concat",
              defaultSymbolAction => "::transfer",
              description         => "Grammar level 1",
              discardId           => -1,
@@ -1697,7 +1686,6 @@ __DATA__
 :start   ::= Expression
 :default ::=             action        => do_op
                          symbol-action => do_symbol
-                         free-action   => do_free
 :discard ::= whitespaces event  => discard_whitespaces$
 :discard ::= comment     event  => discard_comment$
 

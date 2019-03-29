@@ -100,10 +100,6 @@ Grammar default symbol action
 
 Grammar default rule action
 
-=item defaultFreeAction
-
-Grammar default free action
-
 =item startId
 
 Start symbol Id
@@ -135,7 +131,6 @@ sub new {
                    latm                => $args{latm},
                    defaultSymbolAction => $args{defaultSymbolAction},
                    defaultRuleAction   => $args{defaultRuleAction},
-                   defaultFreeAction   => $args{defaultFreeAction},
                    startId             => $args{startId},
                    discardId           => $args{discardId},
                    symbolIds           => $args{symbolIds},
@@ -227,18 +222,6 @@ sub getDefaultRuleAction {
   my ($self) = @_;
 
   return $self->{defaultRuleAction}
-}
-
-=head2 $self->getDefaultFreeAction
-
-Returns grammar's default free action, never null and always ":defaultFreeActions" (hardcoded in the JNI interface)
-
-=cut
-
-sub getDefaultFreeAction {
-  my ($self) = @_;
-
-  return $self->{defaultFreeAction}
 }
 
 =head2 $self->getStartId
