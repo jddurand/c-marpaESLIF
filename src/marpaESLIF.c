@@ -458,9 +458,6 @@ static inline short                  _marpaESLIFRecognizer_lexeme_completeb(marp
 static inline short                  _marpaESLIFRecognizer_lexeme_tryb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIF_grammar_t *grammarp, marpaESLIF_symbol_t *symbolp, short *matchbp);
 static inline short                  _marpaESLIFRecognizer_discard_tryb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIF_grammar_t *grammarp, marpaESLIF_symbol_t *symbolp, short *matchbp);
 
-#ifndef MARPAESLIF_NTRACE
-static inline void                   _marpaESLIFRecognizer_alternativeStackSymbol_showv(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, char *contexts, genericStack_t *alternativeStackSymbolp);
-#endif
 static inline void                   _marpaESLIFRecognizer_alternativeStackSymbol_freev(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, genericStack_t *alternativeStackSymbolp);
 static inline short                  _marpaESLIFRecognizer_alternativeStackSymbol_setb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, genericStack_t *alternativeStackSymbolp, marpaESLIF_alternative_t *alternativep, int indicei);
 static inline short                  _marpaESLIFRecognizer_alternative_and_valueb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIF_alternative_t *alternativep, int valuei);
@@ -5916,37 +5913,6 @@ static inline short _marpaESLIFRecognizer_resumeb(marpaESLIFRecognizer_t *marpaE
   return rcb;
 }
 
-/* For performance reasons, the alternative stack of symbol can only grow - only pointers in it are changed */
-#ifndef MARPAESLIF_NTRACE
-/*****************************************************************************/
-static inline void _marpaESLIFRecognizer_alternativeStackSymbol_showv(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, char *contexts, genericStack_t *alternativeStackSymbolp)
-/*****************************************************************************/
-{
-  static const char        *funcs = "_marpaESLIFRecognizer_alternativeStackSymbol_showv";
-  int                       i;
-  marpaESLIF_alternative_t *alternativep;
-  char                     *valueTypes = (marpaESLIFRecognizerp->parentRecognizerp != NULL) ? "offsetp" : "valuep";
-
-  if (contexts != NULL) {
-    MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "%s alternativeStackSymbolp content follows", contexts);
-  }
-  for (i = 0; i < GENERICSTACK_USED(alternativeStackSymbolp); i++) {
-    if (GENERICSTACK_IS_PTR(alternativeStackSymbolp, i)) {
-      alternativep = (marpaESLIF_alternative_t *) GENERICSTACK_GET_PTR(alternativeStackSymbolp, i);
-      MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs,
-                                  "alternativeStackSymbolp[%d] = {symbol=%s, %s=%p, valuel=%ld, grammarLengthl=%ld, usedb=%d}",
-                                  i,
-                                  (alternativep->symbolp != NULL) ? alternativep->symbolp->descp->asciis : "(nil)",
-                                  valueTypes,
-                                  alternativep->valuep,
-                                  (unsigned long) alternativep->valuel,
-                                  (unsigned long) alternativep->grammarLengthi,
-                                  (int) alternativep->usedb);
-    }
-  }
-}
-#endif
-
 /*****************************************************************************/
 static inline void _marpaESLIFRecognizer_alternativeStackSymbol_freev(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, genericStack_t *alternativeStackSymbolp)
 /*****************************************************************************/
@@ -9622,7 +9588,7 @@ static inline marpaESLIFValueResult_t *_marpaESLIFRecognizer_lexemeStack_i_getp(
   rcp = NULL;
 
  done:
-  MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "return %d", (int) rcb);
+  MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "return %p", rcp);
   MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_DEC;
   return rcp;
 }
