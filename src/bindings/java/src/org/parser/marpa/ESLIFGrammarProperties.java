@@ -24,7 +24,6 @@ public class ESLIFGrammarProperties {
     private boolean latm;
     private String  defaultSymbolAction;
     private String  defaultRuleAction;
-    private String  defaultFreeAction;
     private int     startId;
     private int     discardId;
     private int[]   symbolIds;
@@ -44,20 +43,18 @@ public class ESLIFGrammarProperties {
 	 * @param latm Grammar is in LATM (Longest Accepted Token Mode) ?
 	 * @param defaultSymbolAction Grammar default symbol action
 	 * @param defaultRuleAction Grammar default rule action
-	 * @param defaultFreeAction Grammar default free action
 	 * @param startId Start symbol Id
 	 * @param discardId Discard symbol Id
 	 * @param symbolIds Symbol Ids
 	 * @param ruleIds Rule Ids
 	 */
-	public ESLIFGrammarProperties(int level, int maxLevel, String description, boolean latm, String defaultSymbolAction, String defaultRuleAction, String defaultFreeAction, int startId, int discardId, int[] symbolIds, int[] ruleIds) {
+	public ESLIFGrammarProperties(int level, int maxLevel, String description, boolean latm, String defaultSymbolAction, String defaultRuleAction, int startId, int discardId, int[] symbolIds, int[] ruleIds) {
 		this.level               = level;
 		this.maxLevel            = maxLevel;
 		this.description         = description;
 		this.latm                = latm;
 		this.defaultSymbolAction = defaultSymbolAction;
 		this.defaultRuleAction   = defaultRuleAction;
-		this.defaultFreeAction   = defaultFreeAction;
 		this.startId             = startId;
 		this.discardId           = discardId;
 		this.symbolIds           = symbolIds;
@@ -71,7 +68,6 @@ public class ESLIFGrammarProperties {
 	public int hashCode() {
 		final int prime = 31;
 		int result = 1;
-		result = prime * result + ((defaultFreeAction == null) ? 0 : defaultFreeAction.hashCode());
 		result = prime * result + ((defaultRuleAction == null) ? 0 : defaultRuleAction.hashCode());
 		result = prime * result + ((defaultSymbolAction == null) ? 0 : defaultSymbolAction.hashCode());
 		result = prime * result + ((description == null) ? 0 : description.hashCode());
@@ -100,13 +96,6 @@ public class ESLIFGrammarProperties {
 			return false;
 		}
 		ESLIFGrammarProperties other = (ESLIFGrammarProperties) obj;
-		if (defaultFreeAction == null) {
-			if (other.defaultFreeAction != null) {
-				return false;
-			}
-		} else if (!defaultFreeAction.equals(other.defaultFreeAction)) {
-			return false;
-		}
 		if (defaultRuleAction == null) {
 			if (other.defaultRuleAction != null) {
 				return false;
@@ -157,11 +146,16 @@ public class ESLIFGrammarProperties {
 	 */
 	@Override
 	public String toString() {
-		return "ESLIFGrammarProperties [level=" + level + ", maxLevel=" + maxLevel + ", description=" + description
-				+ ", latm=" + latm + ", defaultSymbolAction=" + defaultSymbolAction + ", defaultRuleAction="
-				+ defaultRuleAction + ", defaultFreeAction=" + defaultFreeAction + ", startId=" + startId
-				+ ", discardId=" + discardId + ", symbolIds=" + Arrays.toString(symbolIds) + ", ruleIds="
-				+ Arrays.toString(ruleIds) + "]";
+		return "ESLIFGrammarProperties [level="	+ level
+				+ ", maxLevel="	+ maxLevel
+				+ ", description=" + description
+				+ ", latm=" + latm
+				+ ", defaultSymbolAction=" + defaultSymbolAction
+				+ ", defaultRuleAction=" + defaultRuleAction
+				+ ", startId=" + startId
+				+ ", discardId=" + discardId
+				+ ", symbolIds=" + Arrays.toString(symbolIds)
+				+ ", ruleIds=" + Arrays.toString(ruleIds) + "]";
 	}
 
 	/**
@@ -213,13 +207,6 @@ public class ESLIFGrammarProperties {
 	 */
 	public String getDefaultRuleAction() {
 		return defaultRuleAction;
-	}
-
-	/**
-	 * @return Grammar's default free action, never null and always ":defaultFreeActions" (hardcoded in the JNI interface)
-	 */
-	public String getDefaultFreeAction() {
-		return defaultFreeAction;
 	}
 
 	/**

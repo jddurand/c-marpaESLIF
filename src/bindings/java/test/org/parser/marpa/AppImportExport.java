@@ -1,5 +1,7 @@
 package org.parser.marpa;
 
+import java.util.concurrent.TimeUnit;
+
 /**
  * Import/export Application
  */
@@ -20,6 +22,15 @@ public class AppImportExport implements Runnable {
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 			return;
+		}
+
+		if (true) {
+			eslifLogger.info(" ATTACH ME");
+			try {
+				TimeUnit.SECONDS.sleep(10);
+			} catch (InterruptedException e) {
+				System.err.println(e);
+			}
 		}
 
 		final String grammar = 
@@ -82,9 +93,7 @@ public class AppImportExport implements Runnable {
 				true,
 				false,
 				null,
-				/*
-				new byte[] { },
-				*/
+				new byte[] { }
 				};  
 
 		try {

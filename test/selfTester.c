@@ -255,7 +255,6 @@ int main() {
   marpaESLIFTester_context_t   marpaESLIFTester_context;
   marpaESLIFRecognizerOption_t marpaESLIFRecognizerOption;
   marpaESLIFGrammarDefaults_t  marpaESLIFGrammarDefaults;
-  marpaESLIFAction_t           defaultFreeAction;
   char                        *grammarscripts;
 
   genericLoggerp = GENERICLOGGER_NEW(GENERICLOGGER_LOGLEVEL_TRACE);
@@ -372,25 +371,6 @@ int main() {
   for (leveli = 0; leveli < ngrammari; leveli++) {
     GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "Getting defaults of grammar at level %d", leveli);
     if (! marpaESLIFGrammar_defaults_by_levelb(marpaESLIFGrammarp, &marpaESLIFGrammarDefaults, leveli, NULL /* descp */)) {
-      goto err;
-    }
-    GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "Overwriting defaultFreeActions of grammar at level %d", leveli);
-    defaultFreeAction.type    = MARPAESLIF_ACTION_TYPE_NAME;
-    defaultFreeAction.u.names = ":defaultFreeActions";
-    marpaESLIFGrammarDefaults.defaultFreeActionp = &defaultFreeAction;
-    if (! marpaESLIFGrammar_defaults_by_level_setb(marpaESLIFGrammarp, &marpaESLIFGrammarDefaults, leveli, NULL /* descp */)) {
-      goto err;
-    }
-    GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "Checking overwrite of defaultFreeActions for grammar at level %d", leveli);
-    if (! marpaESLIFGrammar_defaults_by_levelb(marpaESLIFGrammarp, &marpaESLIFGrammarDefaults, leveli, NULL /* descp */)) {
-      goto err;
-    }
-    if (marpaESLIFGrammarDefaults.defaultFreeActionp->type != MARPAESLIF_ACTION_TYPE_NAME) {
-      GENERICLOGGER_ERRORF(marpaESLIFOption.genericLoggerp, "Wrong defaultFreeActions type: %d instead of %d", marpaESLIFGrammarDefaults.defaultFreeActionp->type, MARPAESLIF_ACTION_TYPE_NAME);
-      goto err;
-    }
-    if (strncmp(marpaESLIFGrammarDefaults.defaultFreeActionp->u.names, ":defaultFreeActions", strlen(":defaultFreeActions")) != 0) {
-      GENERICLOGGER_ERRORF(marpaESLIFOption.genericLoggerp, "Wrong defaultFreeActions: %s instead of %s", marpaESLIFGrammarDefaults.defaultFreeActionp->u.names, ":defaultFreeActions");
       goto err;
     }
   }

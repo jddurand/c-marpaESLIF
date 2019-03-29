@@ -260,7 +260,6 @@ int main() {
     marpaESLIFValueOption.userDatavp            = NULL; /* User specific context */
     marpaESLIFValueOption.ruleActionResolverp   = ruleActionResolver; /* Will return the function doing the wanted rule action */
     marpaESLIFValueOption.symbolActionResolverp = NULL; /* Will return the function doing the wanted symbol action */
-    marpaESLIFValueOption.freeActionResolverp   = NULL; /* Will return the function doing the free */
     marpaESLIFValueOption.importerp             = NULL; /* We do not mind about final value */
     marpaESLIFValueOption.highRankOnlyb         = 1;    /* Default: 1 */
     marpaESLIFValueOption.orderByRankb          = 1;    /* Default: 1 */

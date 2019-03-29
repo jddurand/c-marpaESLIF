@@ -12301,11 +12301,9 @@ static inline short _marpaESLIFValue_eslif2hostb(marpaESLIFValue_t *marpaESLIFVa
       lazyb = 0;
     }
 
-  again:
     if (marpaESLIFValueResultResolvedp != NULL) {
       *marpaESLIFValueResultResolvedp = marpaESLIFValueResult;
     }
-
 
     switch (marpaESLIFValueResult.type) {
     case MARPAESLIF_VALUE_TYPE_UNDEF:
@@ -12322,22 +12320,9 @@ static inline short _marpaESLIFValue_eslif2hostb(marpaESLIFValue_t *marpaESLIFVa
 #ifdef MARPAESLIF_HAVE_LONG_LONG
     case MARPAESLIF_VALUE_TYPE_LONG_LONG:
 #endif
+    case MARPAESLIF_VALUE_TYPE_ARRAY:
       if (! importerp(marpaESLIFValuep, userDatavp, &marpaESLIFValueResult)) {
         goto err;
-      }
-      break;
-    case MARPAESLIF_VALUE_TYPE_ARRAY:
-      if (marpaESLIFValueResult.u.a.sizel <= 0) {
-        /* An alternative - by construction marpaESLIFValueResult.u.a.sizel is 0 and marpaESLIFValueResult.u.a.p points to another marpaESLIFValueResult */
-        marpaESLIFValueResult = * (marpaESLIFValueResult_t *) marpaESLIFValueResult.u.a.p;
-        /* ESLIF guarantees that an alternative cannot contain another alternative, */
-        /* so it is safe to do again the switch on this new value */
-        goto again;
-      } else {
-        /* Anything else, including lexemes */
-        if (! importerp(marpaESLIFValuep, userDatavp, &marpaESLIFValueResult)) {
-          goto err;
-        }
       }
       break;
     case MARPAESLIF_VALUE_TYPE_ROW:
@@ -14939,7 +14924,6 @@ static short _marpaESLIFRecognizer_value_validb(marpaESLIFRecognizer_t *marpaESL
   static const char      *funcs                       = "_marpaESLIFRecognizer_value_validb";
   genericStack_t          todoStack;
   genericStack_t         *todoStackp = &(todoStack);
-  short                   alternativeokb;
   short                   rcb;
   size_t                  i;
   marpaESLIFValueResult_t marpaESLIFValueResult;
@@ -14969,10 +14953,6 @@ static short _marpaESLIFRecognizer_value_validb(marpaESLIFRecognizer_t *marpaESL
 
   /* Iterate the worklist */
   while (GENERICSTACK_USED(todoStackp) > 0) {
-    /* The "again" label is for alternatives that are doing a direct "goto" to it */
-    alternativeokb = 1;
-
-  again:
     marpaESLIFValueResult = GENERICSTACK_POP_CUSTOM(todoStackp);
 
     switch (marpaESLIFValueResult.type) {
@@ -14999,31 +14979,11 @@ static short _marpaESLIFRecognizer_value_validb(marpaESLIFRecognizer_t *marpaESL
         MARPAESLIF_ERROR(marpaESLIFRecognizerp->marpaESLIFp, "MARPAESLIF_VALUE_TYPE_ARRAY: free callback must be set");
         goto err;
       }
-      /* Having p == NULL is possible only if there is a parent recognizer */
-      if (marpaESLIFValueResult.u.a.p == NULL) {
+      if ((marpaESLIFValueResult.u.a.sizel > 0) && (marpaESLIFValueResult.u.a.p == NULL)) {
+        /* This is legal only when there is no parent recognizer: sub recognizers uses this illegal value */
         if (marpaESLIFRecognizerp->parentRecognizerp == NULL) {
-          MARPAESLIF_ERROR(marpaESLIFRecognizerp->marpaESLIFp, "An array with NULL pointer is illegal");
+          MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "Array size is %ld but points to NULL", (unsigned long) marpaESLIFValueResult.u.a.sizel);
           goto err;
-        }
-      } else {
-        if (marpaESLIFValueResult.u.a.sizel <= 0) {
-          if (marpaESLIFRecognizerp->parentRecognizerp == NULL) {
-            /* User-alternative */
-            if (! alternativeokb) {
-              MARPAESLIF_ERROR(marpaESLIFRecognizerp->marpaESLIFp, "An alternative cannot reference another alternative");
-              goto err;
-            } else {
-              /* Do another round */
-              GENERICSTACK_PUSH_CUSTOMP(todoStackp, (marpaESLIFValueResult_t *) marpaESLIFValueResult.u.a.p);
-              if (GENERICSTACK_ERROR(todoStackp)) {
-                MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "todoStackp push failure, %s", strerror(errno));
-                goto err;
-              }
-              alternativeokb = 0;
-              /* Skip the alternativeokb = 1 */
-              goto again;
-            }
-          }
         }
       }
       break;
