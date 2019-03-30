@@ -9097,7 +9097,7 @@ static inline short _marpaESLIFValue_valueb(marpaESLIFValue_t *marpaESLIFValuep,
      - No lexeme is allocated
      - rule    callback is ALWAYS _marpaESLIF_lexeme_concatb()
      - symbol  callback is ALWAYS _marpaESLIF_lexeme_transferb()
-     - nulling callback is ALWAYS _marpaESLIF_lexeme_transferb()
+     - nulling callback is ALWAYS _marpaESLIF_lexeme_concatb()
   */
 
   rcb = marpaWrapperValue_valueb(marpaESLIFValuep->marpaWrapperValuep,
@@ -12871,7 +12871,7 @@ static short _marpaESLIF_lexeme_concatb(void *userDatavp, marpaESLIFValue_t *mar
     MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Total size to concat: %ld", (unsigned long) l);
     if (l > 0) {
       if (shallowb) {
-        /* Internal lexeme mode: we play with offsets */
+        /* Internal lexeme mode: we play with offsets. Only the first lexeme has the correct offset. */
         marpaESLIFValueResultp = _marpaESLIFValue_stack_getp(marpaESLIFValuep, arg0i);
         p = marpaESLIFValueResultp->u.a.p;
       } else {
@@ -15775,10 +15775,17 @@ static inline short _marpaESLIFValue_symbolActionCallbackb(marpaESLIFValue_t *ma
 
   if (marpaESLIFRecognizerp->parentRecognizerp != NULL) {
     /* Lexeme mode: everything is fixed */
-    symbolCallbackp           = _marpaESLIF_lexeme_transferb;
-    ruleCallbackp             = NULL;
-    marpaESLIFValuep->actions = (char *) MARPAESLIF_TRANSFER_INTERNAL_STRING;
-    marpaESLIFValuep->stringp = NULL;
+    if (nullableb) {
+      symbolCallbackp           = NULL;
+      ruleCallbackp             = _marpaESLIF_lexeme_concatb;
+      marpaESLIFValuep->actions = (char *) MARPAESLIF_CONCAT_INTERNAL_STRING;
+      marpaESLIFValuep->stringp = NULL;
+    } else {
+      symbolCallbackp           = _marpaESLIF_lexeme_transferb;
+      ruleCallbackp             = NULL;
+      marpaESLIFValuep->actions = (char *) MARPAESLIF_TRANSFER_INTERNAL_STRING;
+      marpaESLIFValuep->stringp = NULL;
+    }
   } else {
 
     if (nullableb) {
