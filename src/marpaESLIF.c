@@ -14935,49 +14935,59 @@ static short _marpaESLIFRecognizer_value_validb(marpaESLIFRecognizer_t *marpaESL
 #endif
       break;
     case MARPAESLIF_VALUE_TYPE_PTR:
-      if ((! marpaESLIFValueResult.u.p.shallowb) && (marpaESLIFValueResult.u.p.freeCallbackp == NULL)) {
-        MARPAESLIF_ERROR(marpaESLIFRecognizerp->marpaESLIFp, "MARPAESLIF_VALUE_TYPE_PTR: free callback must be set");
-        goto err;
+      if (marpaESLIFValueResult.u.p.p != NULL) {
+        if ((! marpaESLIFValueResult.u.p.shallowb) && (marpaESLIFValueResult.u.p.freeCallbackp == NULL)) {
+          MARPAESLIF_ERROR(marpaESLIFRecognizerp->marpaESLIFp, "MARPAESLIF_VALUE_TYPE_PTR: non-shallow pointer is set but free callback is not set");
+          goto err;
+        }
       }
       break;
     case MARPAESLIF_VALUE_TYPE_ARRAY:
-      if ((! marpaESLIFValueResult.u.a.shallowb) && (marpaESLIFValueResult.u.a.freeCallbackp == NULL)) {
-        MARPAESLIF_ERROR(marpaESLIFRecognizerp->marpaESLIFp, "MARPAESLIF_VALUE_TYPE_ARRAY: free callback must be set");
-        goto err;
-      }
-      if ((marpaESLIFValueResult.u.a.sizel > 0) && (marpaESLIFValueResult.u.a.p == NULL)) {
-        /* This is legal only when there is no parent recognizer: sub recognizers uses this illegal value */
-        if (marpaESLIFRecognizerp->parentRecognizerp == NULL) {
-          MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "Array size is %ld but points to NULL", (unsigned long) marpaESLIFValueResult.u.a.sizel);
+      if (marpaESLIFValueResult.u.a.p != NULL) {
+        if ((! marpaESLIFValueResult.u.a.shallowb) && (marpaESLIFValueResult.u.a.freeCallbackp == NULL)) {
+          MARPAESLIF_ERROR(marpaESLIFRecognizerp->marpaESLIFp, "MARPAESLIF_VALUE_TYPE_ARRAY: non-shallow pointer is set but free callback is not set");
           goto err;
+        }
+      } else {
+        if (marpaESLIFValueResult.u.a.sizel > 0) {
+          /* This is legal only when there is no parent recognizer: sub recognizers uses this illegal value */
+          if (marpaESLIFRecognizerp->parentRecognizerp == NULL) {
+            MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "MARPAESLIF_VALUE_TYPE_ARRAY: pointer is not set but array size is set to %ld", (unsigned long) marpaESLIFValueResult.u.a.sizel);
+            goto err;
+          }
         }
       }
       break;
     case MARPAESLIF_VALUE_TYPE_BOOL:
       break;
     case MARPAESLIF_VALUE_TYPE_STRING:
-      if ((! marpaESLIFValueResult.u.s.shallowb) && (marpaESLIFValueResult.u.s.freeCallbackp == NULL)) {
-        MARPAESLIF_ERROR(marpaESLIFRecognizerp->marpaESLIFp, "MARPAESLIF_VALUE_TYPE_STRING: free callback must be set");
-        goto err;
-      }
-      /* It is illegal to have a NULL pointer or a NULL encoding information */
-      if (marpaESLIFValueResult.u.s.p == NULL) {
-        MARPAESLIF_ERROR(marpaESLIFRecognizerp->marpaESLIFp, "String type but NULL pointer");
-        goto err;
-      }
-      if (marpaESLIFValueResult.u.s.encodingasciis == NULL) {
-        MARPAESLIF_ERROR(marpaESLIFRecognizerp->marpaESLIFp, "String type but NULL encoding information");
-        goto err;
+      if (marpaESLIFValueResult.u.s.p != NULL) {
+        if ((! marpaESLIFValueResult.u.s.shallowb) && (marpaESLIFValueResult.u.s.freeCallbackp == NULL)) {
+          MARPAESLIF_ERROR(marpaESLIFRecognizerp->marpaESLIFp, "MARPAESLIF_VALUE_TYPE_STRING: non-shallow pointer is set but free callback is not set");
+          goto err;
+        }
+      } else {
+        if (marpaESLIFValueResult.u.s.encodingasciis == NULL) {
+          MARPAESLIF_ERROR(marpaESLIFRecognizerp->marpaESLIFp, "MARPAESLIF_VALUE_TYPE_STRING: pointer is set but encoding is not set");
+          goto err;
+        }
       }
       break;
     case MARPAESLIF_VALUE_TYPE_ROW:
-      if ((! marpaESLIFValueResult.u.r.shallowb) && (marpaESLIFValueResult.u.r.freeCallbackp == NULL)) {
-        MARPAESLIF_ERROR(marpaESLIFRecognizerp->marpaESLIFp, "MARPAESLIF_VALUE_TYPE_ROW: free callback must be set");
-        goto err;
+      if (marpaESLIFValueResult.u.r.p != NULL) {
+        if ((! marpaESLIFValueResult.u.r.shallowb) && (marpaESLIFValueResult.u.r.freeCallbackp == NULL)) {
+          MARPAESLIF_ERROR(marpaESLIFRecognizerp->marpaESLIFp, "MARPAESLIF_VALUE_TYPE_ROW: non-shallow pointer is set but free callback is not set");
+          goto err;
+        }
+        if (marpaESLIFValueResult.u.r.sizel <= 0) {
+          MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "MARPAESLIF_VALUE_TYPE_ROW: pointer is set but size is %ld", (unsigned long) marpaESLIFValueResult.u.r.sizel);
+        }
+      } else {
+        if (marpaESLIFValueResult.u.r.sizel > 0) {
+          MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "MARPAESLIF_VALUE_TYPE_ROW: pointer is not set but size is %ld", (unsigned long) marpaESLIFValueResult.u.r.sizel);
+        }
       }
-      if ((marpaESLIFValueResult.u.r.sizel > 0) && (marpaESLIFValueResult.u.r.p == NULL)) {
-        MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "Row size is %ld but points to NULL", (unsigned long) marpaESLIFValueResult.u.r.sizel);
-      }
+
       for (i = 0; i < marpaESLIFValueResult.u.r.sizel; i++) {
         GENERICSTACK_PUSH_CUSTOM(todoStackp, marpaESLIFValueResult.u.r.p[i]);
         if (GENERICSTACK_ERROR(todoStackp)) {
@@ -14987,13 +14997,20 @@ static short _marpaESLIFRecognizer_value_validb(marpaESLIFRecognizer_t *marpaESL
       }
       break;
     case MARPAESLIF_VALUE_TYPE_TABLE:
-      if ((! marpaESLIFValueResult.u.t.shallowb) && (marpaESLIFValueResult.u.t.freeCallbackp == NULL)) {
-        MARPAESLIF_ERROR(marpaESLIFRecognizerp->marpaESLIFp, "MARPAESLIF_VALUE_TYPE_TABLE: free callback must be set");
-        goto err;
+      if (marpaESLIFValueResult.u.t.p != NULL) {
+        if ((! marpaESLIFValueResult.u.t.shallowb) && (marpaESLIFValueResult.u.t.freeCallbackp == NULL)) {
+          MARPAESLIF_ERROR(marpaESLIFRecognizerp->marpaESLIFp, "MARPAESLIF_VALUE_TYPE_TABLE: non-shallow pointer is set but free callback is not set");
+          goto err;
+        }
+        if (marpaESLIFValueResult.u.t.sizel <= 0) {
+          MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "MARPAESLIF_VALUE_TYPE_TABLE: pointer is set but size is %ld", (unsigned long) marpaESLIFValueResult.u.t.sizel);
+        }
+      } else {
+        if (marpaESLIFValueResult.u.t.sizel > 0) {
+          MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "MARPAESLIF_VALUE_TYPE_TABLE: pointer is not set but size is %ld", (unsigned long) marpaESLIFValueResult.u.t.sizel);
+        }
       }
-      if ((marpaESLIFValueResult.u.t.sizel > 0) && (marpaESLIFValueResult.u.t.p == NULL)) {
-        MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "Table size is %ld but points to NULL", (unsigned long) marpaESLIFValueResult.u.t.sizel);
-      }
+
       for (i = 0; i < marpaESLIFValueResult.u.t.sizel; i++) {
         GENERICSTACK_PUSH_CUSTOM(todoStackp, marpaESLIFValueResult.u.t.p[i].key);
         if (GENERICSTACK_ERROR(todoStackp)) {

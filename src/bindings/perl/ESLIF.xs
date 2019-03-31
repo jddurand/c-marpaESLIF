@@ -2223,42 +2223,45 @@ static void marpaESLIFPerl_stack_setv(pTHX_ marpaESLIF_t *marpaESLIFp, marpaESLI
       marpaESLIFValueResultp->contextp           = MARPAESLIFPERL_CONTEXT;
       marpaESLIFValueResultp->representationp    = NULL;
       marpaESLIFValueResultp->u.t.sizel          = (size_t) HvKEYS(hvp);
-      Newx(marpaESLIFValueResultp->u.t.p, marpaESLIFValueResultp->u.t.sizel, marpaESLIFValueResultPair_t);
       marpaESLIFValueResultp->u.t.shallowb       = 0;
       marpaESLIFValueResultp->u.t.freeUserDatavp = marpaESLIFPerlaTHX;
       marpaESLIFValueResultp->u.t.freeCallbackp  = marpaESLIFPerl_genericFreeCallbackv;
-      iterl = 0;
-      /* Note: we never do sv_2mortal, because either we successfully converted an svp, then MARPAESLIFPERL_REFCNT_DEC(svp) is called, */
-      /* either we need it alive because it does not have an ESLIF equivalent */
-      hv_iterinit(hvp);
-      while ((iterp = hv_iternextsv(hvp, &keys, &reti)) != NULL) {
-	if (iterl >= marpaESLIFValueResultp->u.t.sizel) {
-	  /* This should not happen */
-	  MARPAESLIFPERL_CROAKF("Iterating over hash reaches more than %ld coming from HvKEYS()", (unsigned long) marpaESLIFValueResultp->u.t.sizel);
-	}
-	/* Keep svStackp and marpaESLIFValueResultStackp in synch */
-	/* - Key */
-	marpaESLIFPerl_GENERICSTACK_PUSH_PTR(svStackp, (void *) MARPAESLIFPERL_NEWSVPVN_UTF8(keys, reti));
-	if (marpaESLIFPerl_GENERICSTACK_ERROR(svStackp)) {
-	  MARPAESLIFPERL_CROAKF("svStackp push failure, %s", strerror(errno));
-	}
-	marpaESLIFPerl_GENERICSTACK_PUSH_PTR(marpaESLIFValueResultStackp, (void *) &(marpaESLIFValueResultp->u.t.p[iterl].key));
-	if (marpaESLIFPerl_GENERICSTACK_ERROR(marpaESLIFValueResultStackp)) {
-	  MARPAESLIFPERL_CROAKF("marpaESLIFValueResultStackp push failure, %s", strerror(errno));
-	}
-	/* - Value */
-        iterp = newSVsv(iterp);
-	marpaESLIFPerl_GENERICSTACK_PUSH_PTR(svStackp, (void *) iterp);
-	if (marpaESLIFPerl_GENERICSTACK_ERROR(svStackp)) {
-	  MARPAESLIFPERL_CROAKF("svStackp push failure, %s", strerror(errno));
-	}
-	marpaESLIFPerl_GENERICSTACK_PUSH_PTR(marpaESLIFValueResultStackp, (void *) &(marpaESLIFValueResultp->u.t.p[iterl].value));
-	if (marpaESLIFPerl_GENERICSTACK_ERROR(marpaESLIFValueResultStackp)) {
-	  MARPAESLIFPERL_CROAKF("marpaESLIFValueResultStackp push failure, %s", strerror(errno));
-	}
-	++iterl;
+      if (marpaESLIFValueResultp->u.t.sizel > 0) {
+        Newx(marpaESLIFValueResultp->u.t.p, marpaESLIFValueResultp->u.t.sizel, marpaESLIFValueResultPair_t);
+        iterl = 0;
+        /* Note: we never do sv_2mortal, because either we successfully converted an svp, then MARPAESLIFPERL_REFCNT_DEC(svp) is called, */
+        /* either we need it alive because it does not have an ESLIF equivalent */
+        hv_iterinit(hvp);
+        while ((iterp = hv_iternextsv(hvp, &keys, &reti)) != NULL) {
+          if (iterl >= marpaESLIFValueResultp->u.t.sizel) {
+            /* This should not happen */
+            MARPAESLIFPERL_CROAKF("Iterating over hash reaches more than %ld coming from HvKEYS()", (unsigned long) marpaESLIFValueResultp->u.t.sizel);
+          }
+          /* Keep svStackp and marpaESLIFValueResultStackp in synch */
+          /* - Key */
+          marpaESLIFPerl_GENERICSTACK_PUSH_PTR(svStackp, (void *) MARPAESLIFPERL_NEWSVPVN_UTF8(keys, reti));
+          if (marpaESLIFPerl_GENERICSTACK_ERROR(svStackp)) {
+            MARPAESLIFPERL_CROAKF("svStackp push failure, %s", strerror(errno));
+          }
+          marpaESLIFPerl_GENERICSTACK_PUSH_PTR(marpaESLIFValueResultStackp, (void *) &(marpaESLIFValueResultp->u.t.p[iterl].key));
+          if (marpaESLIFPerl_GENERICSTACK_ERROR(marpaESLIFValueResultStackp)) {
+            MARPAESLIFPERL_CROAKF("marpaESLIFValueResultStackp push failure, %s", strerror(errno));
+          }
+          /* - Value */
+          iterp = newSVsv(iterp);
+          marpaESLIFPerl_GENERICSTACK_PUSH_PTR(svStackp, (void *) iterp);
+          if (marpaESLIFPerl_GENERICSTACK_ERROR(svStackp)) {
+            MARPAESLIFPERL_CROAKF("svStackp push failure, %s", strerror(errno));
+          }
+          marpaESLIFPerl_GENERICSTACK_PUSH_PTR(marpaESLIFValueResultStackp, (void *) &(marpaESLIFValueResultp->u.t.p[iterl].value));
+          if (marpaESLIFPerl_GENERICSTACK_ERROR(marpaESLIFValueResultStackp)) {
+            MARPAESLIFPERL_CROAKF("marpaESLIFValueResultStackp push failure, %s", strerror(errno));
+          }
+          ++iterl;
+        }
+      } else {
+        marpaESLIFValueResultp->u.t.p = NULL;
       }
-
       eslifb = 1;
 
     } else if (marpaESLIFPerl_is_arrayref(aTHX_ svp, typei)) {
@@ -2267,23 +2270,27 @@ static void marpaESLIFPerl_stack_setv(pTHX_ marpaESLIF_t *marpaESLIFp, marpaESLI
       marpaESLIFValueResultp->contextp           = MARPAESLIFPERL_CONTEXT;
       marpaESLIFValueResultp->representationp    = NULL;
       marpaESLIFValueResultp->u.r.sizel          = (size_t) (av_len(avp) + 1);
-      Newx(marpaESLIFValueResultp->u.r.p, marpaESLIFValueResultp->u.r.sizel, marpaESLIFValueResult_t);
       marpaESLIFValueResultp->u.r.shallowb       = 0;
       marpaESLIFValueResultp->u.r.freeUserDatavp = marpaESLIFPerlaTHX;
       marpaESLIFValueResultp->u.r.freeCallbackp  = marpaESLIFPerl_genericFreeCallbackv;
-      for (aviteratorl = 0; aviteratorl < marpaESLIFValueResultp->u.r.sizel; aviteratorl++) {
-	SV **svpp = av_fetch(avp, aviteratorl, 0);
-	if (svpp == NULL) {
-	  MARPAESLIFPERL_CROAKF("av_fetch returned NULL during export at indice %ld", (unsigned long) aviteratorl);
-	}
-	marpaESLIFPerl_GENERICSTACK_PUSH_PTR(svStackp, (void *) newSVsv(*svpp));
-	if (marpaESLIFPerl_GENERICSTACK_ERROR(svStackp)) {
-	  MARPAESLIFPERL_CROAKF("svStackp push failure, %s", strerror(errno));
-	}
-	marpaESLIFPerl_GENERICSTACK_PUSH_PTR(marpaESLIFValueResultStackp, (void *) &(marpaESLIFValueResultp->u.r.p[aviteratorl]));
-	if (marpaESLIFPerl_GENERICSTACK_ERROR(marpaESLIFValueResultStackp)) {
-	  MARPAESLIFPERL_CROAKF("marpaESLIFValueResultStackp push failure, %s", strerror(errno));
-	}
+      if (marpaESLIFValueResultp->u.r.sizel > 0) {
+        Newx(marpaESLIFValueResultp->u.r.p, marpaESLIFValueResultp->u.r.sizel, marpaESLIFValueResult_t);
+        for (aviteratorl = 0; aviteratorl < marpaESLIFValueResultp->u.r.sizel; aviteratorl++) {
+          SV **svpp = av_fetch(avp, aviteratorl, 0);
+          if (svpp == NULL) {
+            MARPAESLIFPERL_CROAKF("av_fetch returned NULL during export at indice %ld", (unsigned long) aviteratorl);
+          }
+          marpaESLIFPerl_GENERICSTACK_PUSH_PTR(svStackp, (void *) newSVsv(*svpp));
+          if (marpaESLIFPerl_GENERICSTACK_ERROR(svStackp)) {
+            MARPAESLIFPERL_CROAKF("svStackp push failure, %s", strerror(errno));
+          }
+          marpaESLIFPerl_GENERICSTACK_PUSH_PTR(marpaESLIFValueResultStackp, (void *) &(marpaESLIFValueResultp->u.r.p[aviteratorl]));
+          if (marpaESLIFPerl_GENERICSTACK_ERROR(marpaESLIFValueResultStackp)) {
+            MARPAESLIFPERL_CROAKF("marpaESLIFValueResultStackp push failure, %s", strerror(errno));
+          }
+        }
+      } else {
+        marpaESLIFValueResultp->u.r.p = NULL;
       }
       eslifb = 1;
     } else if (marpaESLIFPerl_is_bool(aTHX_ svp, typei)) {

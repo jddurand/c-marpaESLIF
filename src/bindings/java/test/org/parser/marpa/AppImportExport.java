@@ -1,5 +1,6 @@
 package org.parser.marpa;
 
+import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -82,18 +83,19 @@ public class AppImportExport implements Runnable {
 				    "</luascript>\n"; 
 
 		Object[] inputArray = {
-				Character.MIN_VALUE,
-				Character.MAX_VALUE,
-				Short.MIN_VALUE,
-				Short.MAX_VALUE,
-				Integer.MIN_VALUE,
-				Integer.MAX_VALUE,
-				Long.MIN_VALUE,
-				Long.MAX_VALUE,
-				true,
-				false,
+				// Character.MIN_VALUE,
+				// Character.MAX_VALUE,
+				// Short.MIN_VALUE,
+				// Short.MAX_VALUE,
+				// Integer.MIN_VALUE,
+				// Integer.MAX_VALUE,
+				// Long.MIN_VALUE,
+				// Long.MAX_VALUE,
+				// true,
+				// false,
 				null,
-				new byte[] { }
+				new byte[] { },
+				""
 				};  
 
 		try {
@@ -123,13 +125,27 @@ public class AppImportExport implements Runnable {
 				    } else {
 				    	this.eslifLogger.info("OK for " + input + " (input class " + input.getClass().getName() + ", value class " + value.getClass().getName() + ")");
 				    }
+			    } else if (input.getClass().equals(value.getClass())) {
+			    	// value is another instance of input but should be equal to input
+			    	// comparing byte array is special
+			    	if (value instanceof byte[]) {
+			    		if (! Arrays.equals((byte[])input, (byte[])value)) {
+					    	this.eslifLogger.error("KO for byte[]");
+					    	throw new Exception(input + " != " + value);
+			    		} else {
+					    	this.eslifLogger.info("OK for byte[]");
+			    		}
+			    	} else {
+					    if (! input.equals(value)) {
+					    	this.eslifLogger.error("KO for " + input + " (input class " + input.getClass().getName() + ", value class " + value.getClass().getName() + ")");
+					    	throw new Exception(input + " != " + value);
+					    } else {
+					    	this.eslifLogger.info("OK for " + input + " (input class " + input.getClass().getName() + ", value class " + value.getClass().getName() + ")");
+					    }
+			    	}
 			    } else {
-				    if (! input.toString().equals(value.toString())) {
-				    	this.eslifLogger.error("KO for " + input.toString() + " (input class " + input.getClass().getName() + ", value class " + value.getClass().getName() + ")");
-				    	throw new Exception(input.toString() + " != " + value.toString());
-				    } else {
-				    	this.eslifLogger.info("OK for " + input.toString() + " (input class " + input.getClass().getName() + ", value class " + value.getClass().getName() + ")");
-				    }
+			    	this.eslifLogger.error("KO for " + input.toString() + " (input class " + input.getClass().getName() + ", value class " + value.getClass().getName() + ")");
+			    	throw new Exception(input.toString() + " != " + value.toString());
 			    }
 			}
 		} catch (Exception e) {

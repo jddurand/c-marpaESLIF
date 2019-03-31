@@ -670,6 +670,9 @@ static marpaESLIFMethodCache_t marpaESLIFMethodCacheArrayp[] = {
   #define JAVA_LANG_CLASS_CLASS_isPrimitive_METHODP                                 marpaESLIFMethodCacheArrayp[102].methodp
   {      &JAVA_LANG_CLASS_CLASSCACHE, "isPrimitive",                                "()Z", 0 /* staticb */, NULL, 1 /* requiredb */ },
 
+  #define JAVA_LANG_STRING_CLASS_init_METHODP                                       marpaESLIFMethodCacheArrayp[103].methodp
+  {      &JAVA_LANG_STRING_CLASSCACHE, "<init>",                                    "()V", 0 /* staticb */, NULL, 0 /* requiredb */ },
+
   { NULL }
 };
 
@@ -4921,11 +4924,18 @@ static short marpaESLIFJava_representationCallbackb(void *userDatavp, marpaESLIF
       }
       memcpy(*inputcpp, UTF8Bytes, UTF8NbByte);
       *inputlp  = (size_t) UTF8NbByte;
-      *encodingasciisp = (char *) marpaESLIFJava_UTF8s;
       if (marpaESLIFValueContextp != NULL) {
         marpaESLIFValueContextp->previous_representation_utf8s = *inputcpp;
       }
+    } else {
+      *inputcpp = NULL;
+      *inputlp  = 0;
     }
+    *encodingasciisp = (char *) marpaESLIFJava_UTF8s;
+  } else {
+    *inputcpp = NULL;
+    *inputlp  = 0;
+    *encodingasciisp = NULL;
   }
 
   rcb = 1;
@@ -5432,24 +5442,24 @@ static short marpaESLIFJava_importb(marpaESLIFValue_t *marpaESLIFValuep, void *u
     break;
   case MARPAESLIF_VALUE_TYPE_STRING:
     /* fprintf(stderr, "==> %s: import String '%s' encoding '%s'\n", funcs, marpaESLIFValueResultp->u.s.p, marpaESLIFValueResultp->u.s.encodingasciis); fflush(stdout); fflush(stderr); */
-    /* Is that is an UTF-8 thingy of size 1, then it can always fit in a java.lang.Character */
-    encodingp = marpaESLIFJava_marpaESLIFASCIIToJavap(envp, marpaESLIFValueResultp->u.s.encodingasciis);
-    if (encodingp == NULL) {
-      /* We want OUR exception to be raised */
-      RAISEEXCEPTION(envp, "marpaESLIFJava_marpaESLIFASCIIToJavap failure");
-    }
-    byteArrayp = (*envp)->NewByteArray(envp, (jsize) marpaESLIFValueResultp->u.s.sizel);
-    if (byteArrayp == NULL) {
-        goto err;
-    }
     if (marpaESLIFValueResultp->u.s.sizel > 0) {
-      /* An empty string have non NULL pointers but a zero size */
+      encodingp = marpaESLIFJava_marpaESLIFASCIIToJavap(envp, marpaESLIFValueResultp->u.s.encodingasciis);
+      if (encodingp == NULL) {
+        /* We want OUR exception to be raised */
+        RAISEEXCEPTION(envp, "marpaESLIFJava_marpaESLIFASCIIToJavap failure");
+      }
+      byteArrayp = (*envp)->NewByteArray(envp, (jsize) marpaESLIFValueResultp->u.s.sizel);
+      if (byteArrayp == NULL) {
+        goto err;
+      }
       (*envp)->SetByteArrayRegion(envp, byteArrayp, (jsize) 0, (jsize) marpaESLIFValueResultp->u.s.sizel, (jbyte *) marpaESLIFValueResultp->u.s.p);
       if (HAVEEXCEPTION(envp)) {
         goto err;
       }
+      objectp = (*envp)->NewObject(envp, JAVA_LANG_STRING_CLASSP, JAVA_LANG_STRING_CLASS_init_byteArray_String_METHODP, byteArrayp, encodingp);
+    } else {
+      objectp = (*envp)->NewObject(envp, JAVA_LANG_STRING_CLASSP, JAVA_LANG_STRING_CLASS_init_METHODP);
     }
-    objectp = (*envp)->NewObject(envp, JAVA_LANG_STRING_CLASSP, JAVA_LANG_STRING_CLASS_init_byteArray_String_METHODP, byteArrayp, encodingp);
     if (objectp == NULL) {
       goto err;
     }

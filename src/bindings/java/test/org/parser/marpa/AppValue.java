@@ -119,15 +119,7 @@ public class AppValue implements ESLIFValueInterface {
 	}
 
 	public void setResult(Object result) {
-		if (result instanceof byte[]) {
-			try {
-				this.result = toString(result);
-			} catch (UnsupportedEncodingException e) {
-				this.result = null;
-			}
-		} else {
-			this.result = result;
-		}
+		this.result = result;
 	}
 
 	public void setSymbolName(String symbolName) {
