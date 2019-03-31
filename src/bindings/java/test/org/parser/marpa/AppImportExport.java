@@ -25,7 +25,7 @@ public class AppImportExport implements Runnable {
 			return;
 		}
 
-		if (true) {
+		if (false) {
 			eslifLogger.info(" ATTACH ME");
 			try {
 				TimeUnit.SECONDS.sleep(10);
@@ -83,19 +83,25 @@ public class AppImportExport implements Runnable {
 				    "</luascript>\n"; 
 
 		Object[] inputArray = {
-				// Character.MIN_VALUE,
-				// Character.MAX_VALUE,
-				// Short.MIN_VALUE,
-				// Short.MAX_VALUE,
-				// Integer.MIN_VALUE,
-				// Integer.MAX_VALUE,
-				// Long.MIN_VALUE,
-				// Long.MAX_VALUE,
-				// true,
-				// false,
+				/*
+				Character.MIN_VALUE,
+				Character.MAX_VALUE,
+				Short.MIN_VALUE,
+				Short.MAX_VALUE,
+				Integer.MIN_VALUE,
+				Integer.MAX_VALUE,
+				Long.MIN_VALUE,
+				Long.MAX_VALUE,
+				true,
+				false,
 				null,
 				new byte[] { },
-				""
+				"",
+				*/
+				new String[] {
+						"String No 1",
+						"String No 2",
+				}
 				};  
 
 		try {
@@ -143,7 +149,19 @@ public class AppImportExport implements Runnable {
 					    	this.eslifLogger.info("OK for " + input + " (input class " + input.getClass().getName() + ", value class " + value.getClass().getName() + ")");
 					    }
 			    	}
+			    } else if (input instanceof Character && value instanceof String && ((String) value).length() == 1) {
+			    	/* A character is always may be converted to a string when coming back - in particular when coming through Lua */
+			    	char valueAsChar = ((String) value).charAt(0);
+			    	if (!input.equals(valueAsChar)) {
+				    	this.eslifLogger.error("KO for character value " + (((Character) input).charValue()+0) + " (input class " + input.getClass().getName() + ", value class " + value.getClass().getName() + ")");
+				    	throw new Exception(input + " != " + value);
+			    	} else {
+				    	this.eslifLogger.info("OK for character value " + (((Character) input).charValue()+0) + " (input class " + input.getClass().getName() + ", value class " + value.getClass().getName() + ")");
+			    	}
 			    } else {
+			    	String inputToString = input.toString();
+			    	String inputClass = input.getClass().getName();
+			    	String valueClass = value.getClass().getName();
 			    	this.eslifLogger.error("KO for " + input.toString() + " (input class " + input.getClass().getName() + ", value class " + value.getClass().getName() + ")");
 			    	throw new Exception(input.toString() + " != " + value.toString());
 			    }
@@ -152,21 +170,5 @@ public class AppImportExport implements Runnable {
 			e.printStackTrace();
 			return;
 		}
-		
-		String[] strings = {
-				"(((3 * 4) + 2 * 7) / 2 - 1)/* This is a\n comment \n */** 3",
-				"5 / (2 * 3)",
-				"5 / 2 * 3",
-				"(5 ** 2) ** 3",
-				"5 * (2 * 3)",
-				"5 ** (2 ** 3)",
-				"5 ** (2 / 3)",
-				"1 + ( 2 + ( 3 + ( 4 + 5) )",
-				"1 + ( 2 + ( 3 + ( 4 + 50) ) )   /* comment after */",
-				" 100",
-				"not scannable at all",
-				"100\nsecond line not scannable",
-				"100 * /* incomplete */"
-				};
-		}
 	}
+}

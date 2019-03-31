@@ -1059,22 +1059,28 @@ static void marpaESLIFPerl_genericFreeCallbackv(void *userDatavp, marpaESLIFValu
     MARPAESLIFPERL_REFCNT_DEC(marpaESLIFValueResultp->u.p.p);
     break;
   case MARPAESLIF_VALUE_TYPE_ARRAY:
-    Safefree(marpaESLIFValueResultp->u.a.p);
+    if (marpaESLIFValueResultp->u.a.p != NULL) {
+      Safefree(marpaESLIFValueResultp->u.a.p);
+    }
     break;
   case MARPAESLIF_VALUE_TYPE_STRING:
-    Safefree(marpaESLIFValueResultp->u.s.p);
+    if (marpaESLIFValueResultp->u.s.p != NULL) {
+      Safefree(marpaESLIFValueResultp->u.s.p);
+    }
     /* encoding may refer to the constant UTF8s */
-    if (marpaESLIFValueResultp->u.s.encodingasciis != NULL) {
-      if (marpaESLIFValueResultp->u.s.encodingasciis != UTF8s) {
-	Safefree(marpaESLIFValueResultp->u.s.encodingasciis);
-      }
+    if ((marpaESLIFValueResultp->u.s.encodingasciis != NULL) && (marpaESLIFValueResultp->u.s.encodingasciis != UTF8s)) {
+      Safefree(marpaESLIFValueResultp->u.s.encodingasciis);
     }
     break;
   case MARPAESLIF_VALUE_TYPE_ROW:
-    Safefree(marpaESLIFValueResultp->u.r.p);
+    if (marpaESLIFValueResultp->u.r.p != NULL) {
+      Safefree(marpaESLIFValueResultp->u.r.p);
+    }
     break;
   case MARPAESLIF_VALUE_TYPE_TABLE:
-    Safefree(marpaESLIFValueResultp->u.t.p);
+    if (marpaESLIFValueResultp->u.t.p != NULL) {
+      Safefree(marpaESLIFValueResultp->u.t.p);
+    }
     break;
   default:
     break;
@@ -1442,13 +1448,14 @@ static char *marpaESLIFPerl_sv2byte(pTHX_ marpaESLIF_t *marpaESLIFp, SV *svp, ch
     tmps = SvPV(valuep, tmpl);
     if ((tmps == NULL) || (tmpl <= 0)) {
       /* Empty string */
-      Newx(bytep, 1, char);
+      bytep = NULL;
       bytel = 0;
     } else {
       /* Copy */
-      Newx(bytep, (int) tmpl, char);
+      Newx(bytep, (int) (tmpl + 1), char); /* Hiden NUL byte */
       bytel = (size_t) tmpl;
       Copy(tmps, bytep, tmpl, char);
+      bytep[tmpl] = '\0';
     }
     rcp = bytep;
     MARPAESLIFPERL_REFCNT_DEC(valuep);
@@ -1482,7 +1489,7 @@ static char *marpaESLIFPerl_sv2byte(pTHX_ marpaESLIF_t *marpaESLIFp, SV *svp, ch
 	/* Copy */
 	/* fprintf(stderr, "==> Encoding (MarpaX::ESLIF::String) : %s\n", tmps); */
 	characterStreamb = 1;
-	Newx(encodings, (int) (tmpl + 1), char);
+	Newx(encodings, (int) (tmpl + 1), char); /* ASCII is NUL byte terminated */
 	encodingl = (size_t) tmpl;
 	Copy(tmps, encodings, tmpl, char);
 	encodings[encodingl] = '\0';
@@ -1552,9 +1559,15 @@ static char *marpaESLIFPerl_sv2byte(pTHX_ marpaESLIF_t *marpaESLIFp, SV *svp, ch
   }
 
   if (okb) { /* Else nothing will be appended */
-    Newx(rcp, (int) stringl, char);
-    bytep = CopyD(strings, rcp, (int) stringl, char);
-    bytel = (size_t) stringl;
+    if (stringl > 0) {
+      Newx(rcp, (int) stringl, char);
+      bytep = CopyD(strings, rcp, (int) stringl, char);
+      bytel = (size_t) stringl;
+    } else {
+      /* Empty string */
+      bytep = NULL;
+      bytel = 0;
+    }
   }
 
  ok:
@@ -1800,7 +1813,12 @@ static short marpaESLIFPerl_importb(marpaESLIFValue_t *marpaESLIFValuep, void *u
     }
     break;
   case MARPAESLIF_VALUE_TYPE_STRING:
-    stringp = newSVpvn((const char *) marpaESLIFValueResultp->u.s.p, (STRLEN) marpaESLIFValueResultp->u.s.sizel);
+    if (marpaESLIFValueResultp->u.s.sizel > 0) {
+      stringp = newSVpvn((const char *) marpaESLIFValueResultp->u.s.p, (STRLEN) marpaESLIFValueResultp->u.s.sizel);
+    } else {
+      /* Empty string */
+      stringp = newSVpv();
+    }
     utf8b = 0;
     if (MARPAESLIFPERL_ENCODING_IS_UTF8(marpaESLIFValueResultp->u.s.encodingasciis, strlen(marpaESLIFValueResultp->u.s.encodingasciis))) {
 #ifdef MARPAESLIFPERL_UTF8_CROSSCHECK

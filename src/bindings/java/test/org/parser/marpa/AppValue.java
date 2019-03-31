@@ -186,8 +186,8 @@ public class AppValue implements ESLIFValueInterface {
 	 * @param object input object
 	 * @return result object
 	 */
-	public Object java_proxy(Object[] list) {
-		return list[0];
+	public Object java_proxy(Object object) {
+		return object;
 	}
 }
 
