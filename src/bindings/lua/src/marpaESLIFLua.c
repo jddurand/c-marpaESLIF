@@ -6722,75 +6722,101 @@ static short marpaESLIFLua_stack_setb(lua_State *L, marpaESLIF_t *marpaESLIFp, m
         goto err;
       }
 
-      if (tmpl <= 0) {
-        /* Empty string */
-
-        /* fprintf(stdout, "export array\n"); fflush(stdout); fflush(stderr); */
-        marpaESLIFValueResultp->type               = MARPAESLIF_VALUE_TYPE_ARRAY;
-        marpaESLIFValueResultp->contextp           = MARPAESLIFLUA_CONTEXT;
-        marpaESLIFValueResultp->representationp    = NULL;
-        marpaESLIFValueResultp->u.a.p              = NULL;
-        marpaESLIFValueResultp->u.a.shallowb       = 0;
-        marpaESLIFValueResultp->u.a.sizel          = 0;
-	marpaESLIFValueResultp->u.a.freeUserDatavp = NULL;
-	marpaESLIFValueResultp->u.a.freeCallbackp  = NULL;
-      } else {
-        /* Duplicate the data */
-        p = (char *) malloc(tmpl + 1); /* Hiden NUL byte */
-        if (p == NULL) {
-          marpaESLIFLua_luaL_errorf(L, "malloc failure, %s", strerror(errno));
-          goto err;
-        }
-        if (tmpl > 0) {
-          memcpy(p, tmps, tmpl);
-        }
-        p[tmpl] = '\0';
-
-        marpaESLIFValueResultp->contextp = MARPAESLIFLUA_CONTEXT;
-        marpaESLIFValueResultp->representationp    = NULL;
-
-        /* Does it have an associated encoding ? */
+      /* In Lua, the only thing that differentiate a string v.s. a byte array is the presence of the encoding information */
+      /* This is nevertheless just acting as "boolean" thingy: any implementation is free to NOT keep the encoding information */
+      /* because it is irrelevant when there is no byte */
 #ifdef MARPAESLIFLUA_AUTO_ENCODING_DETECT
-        encodingheapb = 0;
+      encodingheapb = 0;
 #endif
-        MARPAESLIFLUA_GETORCREATEGLOBAL(L, MARPAESLIFSTRINGTOENCODINGTABLE, NULL /* gcp */, "k" /* mode */);                      /* Stack: ..., MARPAESLIFSTRINGTOENCODINGTABLE */
-        if (! marpaESLIFLua_lua_pushnil(L)) goto err;                                                                             /* Stack: ..., MARPAESLIFSTRINGTOENCODINGTABLE, nil */
-        if (! marpaESLIFLua_lua_copy(L, currenti, -1)) goto err;                                                                  /* Stack: ..., MARPAESLIFSTRINGTOENCODINGTABLE, string */
-        if (! marpaESLIFLua_lua_gettable(NULL, L, -2)) goto err;                                                                  /* Stack: ..., MARPAESLIFSTRINGTOENCODINGTABLE, encoding */
-        if (! marpaESLIFLua_lua_type(&encodingtypei, L, -1)) goto err;
-        if (encodingtypei == LUA_TSTRING) {
-          if (! marpaESLIFLua_lua_tostring(&encodings, L, -1)) goto err;
-        } else if (encodingtypei == LUA_TNIL) {
+      MARPAESLIFLUA_GETORCREATEGLOBAL(L, MARPAESLIFSTRINGTOENCODINGTABLE, NULL /* gcp */, "k" /* mode */);                      /* Stack: ..., MARPAESLIFSTRINGTOENCODINGTABLE */
+      if (! marpaESLIFLua_lua_pushnil(L)) goto err;                                                                             /* Stack: ..., MARPAESLIFSTRINGTOENCODINGTABLE, nil */
+      if (! marpaESLIFLua_lua_copy(L, currenti, -1)) goto err;                                                                  /* Stack: ..., MARPAESLIFSTRINGTOENCODINGTABLE, string */
+      if (! marpaESLIFLua_lua_gettable(NULL, L, -2)) goto err;                                                                  /* Stack: ..., MARPAESLIFSTRINGTOENCODINGTABLE, encoding */
+      if (! marpaESLIFLua_lua_type(&encodingtypei, L, -1)) goto err;
+      if (encodingtypei == LUA_TSTRING) {
+        if (! marpaESLIFLua_lua_tostring(&encodings, L, -1)) goto err;
+      } else if (encodingtypei == LUA_TNIL) {
 #ifdef MARPAESLIFLUA_AUTO_ENCODING_DETECT
-          /* We try to guess the encoding */
-          encodings = marpaESLIF_encodings(marpaESLIFp, p, tmpl);
-          if (encodings != NULL) {
-            encodingheapb = 1;
-          }
-#else
-          encodings = NULL;
-#endif
-        } else {
-          marpaESLIFLua_luaL_errorf(L, "MARPAESLIFSTRINGTOENCODINGTABLE value type must be a string or nil, got %d", encodingtypei);
-          goto err;
-        }
-
+        /* We try to guess the encoding */
+        encodings = marpaESLIF_encodings(marpaESLIFp, p, tmpl);
         if (encodings != NULL) {
-          encodingasciis =
-#ifdef MARPAESLIFLUA_AUTO_ENCODING_DETECT
-            /* Duplicate the encoding - this is needed only if encodingheapb is 0 */
-            /* When encodingheapb is 1 it is guaranteed to be already on the heap and not NULL */
-            encodingheapb ? (char *) encodings
-            :
+          encodingheapb = 1;
+        }
+#else
+        encodings = NULL;
 #endif
-            strdup(encodings);
-          if (encodingasciis == NULL) {
-            marpaESLIFLua_luaL_errorf(L, "strdup failure, %s", strerror(errno));
+      } else {
+        marpaESLIFLua_luaL_errorf(L, "MARPAESLIFSTRINGTOENCODINGTABLE value type must be a string or nil, got %d", encodingtypei);
+        goto err;
+      }
+
+      if (encodings != NULL) {
+        encodingasciis =
+#ifdef MARPAESLIFLUA_AUTO_ENCODING_DETECT
+          /* Duplicate the encoding - this is needed only if encodingheapb is 0 */
+          /* When encodingheapb is 1 it is guaranteed to be already on the heap and not NULL */
+          encodingheapb ? (char *) encodings
+          :
+#endif
+          strdup(encodings);
+        if (encodingasciis == NULL) {
+          marpaESLIFLua_luaL_errorf(L, "strdup failure, %s", strerror(errno));
+          goto err;
+        }
+      } else {
+        encodingasciis = NULL;
+      }
+
+      if (encodingasciis == NULL) {
+        if (tmpl > 0) {
+          /* Duplicate the data */
+          p = (char *) malloc(tmpl + 1); /* Hiden NUL byte */
+          if (p == NULL) {
+            marpaESLIFLua_luaL_errorf(L, "malloc failure, %s", strerror(errno));
             goto err;
           }
+          if (tmpl > 0) {
+            memcpy(p, tmps, tmpl);
+          }
+          p[tmpl] = '\0';
+          /* fprintf(stdout, "export array of size %ld\n", (unsigned long) tmpl); fflush(stdout); fflush(stderr); */
+          marpaESLIFValueResultp->type               = MARPAESLIF_VALUE_TYPE_ARRAY;
+          marpaESLIFValueResultp->contextp           = MARPAESLIFLUA_CONTEXT;
+          marpaESLIFValueResultp->representationp    = NULL;
+          marpaESLIFValueResultp->u.a.p              = p;
+          marpaESLIFValueResultp->u.a.shallowb       = 0;
+          marpaESLIFValueResultp->u.a.sizel          = tmpl;
+          marpaESLIFValueResultp->u.a.freeUserDatavp = L;
+          marpaESLIFValueResultp->u.a.freeCallbackp  = marpaESLIFLua_genericFreeCallbackv;
 
-          /* fprintf(stdout, "export string\n"); fflush(stdout); fflush(stderr); */
+          p = NULL; /* p is in marpaESLIFValueResultp */
+        } else {
+          /* fprintf(stdout, "export empty array\n"); fflush(stdout); fflush(stderr); */
+          marpaESLIFValueResultp->type               = MARPAESLIF_VALUE_TYPE_ARRAY;
+          marpaESLIFValueResultp->contextp           = MARPAESLIFLUA_CONTEXT;
+          marpaESLIFValueResultp->representationp    = NULL;
+          marpaESLIFValueResultp->u.a.p              = NULL;
+          marpaESLIFValueResultp->u.a.shallowb       = 0;
+          marpaESLIFValueResultp->u.a.sizel          = 0;
+          marpaESLIFValueResultp->u.a.freeUserDatavp = NULL;
+          marpaESLIFValueResultp->u.a.freeCallbackp  = NULL;
+        }
+      } else {
+        if (tmpl > 0) {
+          /* Duplicate the data */
+          p = (char *) malloc(tmpl + 1); /* Hiden NUL byte */
+          if (p == NULL) {
+            marpaESLIFLua_luaL_errorf(L, "malloc failure, %s", strerror(errno));
+            goto err;
+          }
+          if (tmpl > 0) {
+            memcpy(p, tmps, tmpl);
+          }
+          p[tmpl] = '\0';
+          /* fprintf(stdout, "export string of size %ld and encoding %s\n", (unsigned long) tmpl, encodingasciis); fflush(stdout); fflush(stderr); */
           marpaESLIFValueResultp->type               = MARPAESLIF_VALUE_TYPE_STRING;
+          marpaESLIFValueResultp->contextp           = MARPAESLIFLUA_CONTEXT;
+          marpaESLIFValueResultp->representationp    = NULL;
           marpaESLIFValueResultp->u.s.p              = p;
           marpaESLIFValueResultp->u.s.shallowb       = 0;
           marpaESLIFValueResultp->u.s.sizel          = tmpl;
@@ -6798,16 +6824,21 @@ static short marpaESLIFLua_stack_setb(lua_State *L, marpaESLIF_t *marpaESLIFp, m
           marpaESLIFValueResultp->u.s.freeUserDatavp = L;
           marpaESLIFValueResultp->u.s.freeCallbackp  = marpaESLIFLua_genericFreeCallbackv;
 
+          p = NULL; /* p is in marpaESLIFValueResultp */
+          encodingasciis = NULL; /* encodingasciis is in marpaESLIFValueResultp */
         } else {
+          /* fprintf(stdout, "export empty string of encoding %s\n", encodingasciis); fflush(stdout); fflush(stderr); */
+          marpaESLIFValueResultp->type               = MARPAESLIF_VALUE_TYPE_STRING;
+          marpaESLIFValueResultp->contextp           = MARPAESLIFLUA_CONTEXT;
+          marpaESLIFValueResultp->representationp    = NULL;
+          marpaESLIFValueResultp->u.s.p              = NULL;
+          marpaESLIFValueResultp->u.s.shallowb       = 0;
+          marpaESLIFValueResultp->u.s.sizel          = 0;
+          marpaESLIFValueResultp->u.s.encodingasciis = encodingasciis;
+          marpaESLIFValueResultp->u.s.freeUserDatavp = L;
+          marpaESLIFValueResultp->u.s.freeCallbackp  = marpaESLIFLua_genericFreeCallbackv;
 
-          /* fprintf(stdout, "export array\n"); fflush(stdout); fflush(stderr); */
-          marpaESLIFValueResultp->type               = MARPAESLIF_VALUE_TYPE_ARRAY;
-          marpaESLIFValueResultp->u.a.p              = p;
-          marpaESLIFValueResultp->u.a.shallowb       = 0;
-          marpaESLIFValueResultp->u.a.sizel          = tmpl;
-          marpaESLIFValueResultp->u.a.freeUserDatavp = L;
-          marpaESLIFValueResultp->u.a.freeCallbackp  = marpaESLIFLua_genericFreeCallbackv;
-
+          encodingasciis = NULL; /* encodingasciis is in marpaESLIFValueResultp */
         }
 
         if (! marpaESLIFLua_lua_pop(L, 2)) goto err;                                                                              /* Stack: ... */

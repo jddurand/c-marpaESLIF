@@ -14966,7 +14966,6 @@ static short _marpaESLIFRecognizer_value_validb(marpaESLIFRecognizer_t *marpaESL
           MARPAESLIF_ERROR(marpaESLIFRecognizerp->marpaESLIFp, "MARPAESLIF_VALUE_TYPE_STRING: non-shallow pointer is set but free callback is not set");
           goto err;
         }
-      } else {
         if (marpaESLIFValueResult.u.s.encodingasciis == NULL) {
           MARPAESLIF_ERROR(marpaESLIFRecognizerp->marpaESLIFp, "MARPAESLIF_VALUE_TYPE_STRING: pointer is set but encoding is not set");
           goto err;
