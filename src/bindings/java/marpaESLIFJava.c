@@ -211,7 +211,7 @@ static char _MARPAESLIF_JNI_CONTEXT;
 #define JAVA_LANG_BYTE_CLASS                          "java/lang/Byte"
 #define JAVA_LANG_REFLECT_ARRAY_CLASS                 "java/lang/reflect/Array"
 
-#define MARPAESLIF_ESLIFVALUEINTERFACE_SYMBOLACTION_SIGNATURE "(Ljava/nio/ByteBuffer;)Ljava/lang/Object;"
+#define MARPAESLIF_ESLIFVALUEINTERFACE_SYMBOLACTION_SIGNATURE "(Ljava/lang/Object;)Ljava/lang/Object;"
 #define MARPAESLIF_ESLIFVALUEINTERFACE_RULEACTION_SIGNATURE   "([Ljava/lang/Object;)Ljava/lang/Object;"
 
 #ifdef HAVE_INTPTR_T
@@ -4365,41 +4365,55 @@ static short marpaESLIFValueContextInject(JNIEnv *envp, marpaESLIFValue_t *marpa
   jstring            symbolp = NULL;
   jstring            rulep = NULL;
 
+  fprintf(stderr, "%s: JDD 01\n", funcs);
   /* Get value context */
   if (! marpaESLIFValue_contextb(marpaESLIFValuep, &symbols, &symboli, &rules, &rulei)) {
     RAISEEXCEPTION(envp, "marpaESLIFValue_contextb");
   }
 
+  fprintf(stderr, "%s: JDD 02\n", funcs);
   /* Symbol name */
   if (symbols != NULL) {
     symbolp = marpaESLIFJava_marpaESLIFASCIIToJavap(envp, symbols);
   }
+
+  fprintf(stderr, "%s: JDD 03\n", funcs);
   (*envp)->CallVoidMethod(envp, eslifValueInterfacep, MARPAESLIF_ESLIFVALUEINTERFACE_CLASS_setSymbolName_METHODP, symbolp /* Can be NULL */);
   if (HAVEEXCEPTION(envp)) {
+    fprintf(stderr, "%s: JDD 03 oups\n", funcs);
+    RAISEEXCEPTION(envp, "JDD 03 oups");
     goto err;
   }
 
+  fprintf(stderr, "%s: JDD 04\n", funcs);
   /* Symbol number */
   (*envp)->CallVoidMethod(envp, eslifValueInterfacep, MARPAESLIF_ESLIFVALUEINTERFACE_CLASS_setSymbolNumber_METHODP, symboli);
   if (HAVEEXCEPTION(envp)) {
+    fprintf(stderr, "%s: JDD 04 oups\n", funcs);
+    RAISEEXCEPTION(envp, "JDD 04 oups");
     goto err;
   }
 
+  fprintf(stderr, "%s: JDD 05\n", funcs);
   /* Rule name */
   if (rules != NULL) {
     rulep = marpaESLIFJava_marpaESLIFASCIIToJavap(envp, rules);
   }
+
+  fprintf(stderr, "%s: JDD 06\n", funcs);
   (*envp)->CallVoidMethod(envp, eslifValueInterfacep, MARPAESLIF_ESLIFVALUEINTERFACE_CLASS_setRuleName_METHODP, rulep /* Can be NULL */);
   if (HAVEEXCEPTION(envp)) {
     goto err;
   }
 
+  fprintf(stderr, "%s: JDD 07\n", funcs);
   /* Rule number */
   (*envp)->CallVoidMethod(envp, eslifValueInterfacep, MARPAESLIF_ESLIFVALUEINTERFACE_CLASS_setRuleNumber_METHODP, rulei);
   if (HAVEEXCEPTION(envp)) {
     goto err;
   }
 
+  fprintf(stderr, "%s: JDD 08\n", funcs);
   /* Grammar instance - stored as a global reference in  marpaESLIFValueContextp */
   (*envp)->CallVoidMethod(envp, eslifValueInterfacep, MARPAESLIF_ESLIFVALUEINTERFACE_CLASS_setGrammar_METHODP, marpaESLIFValueContextp->eslifGrammarp);
   if (HAVEEXCEPTION(envp)) {
@@ -4514,6 +4528,7 @@ static short marpaESLIFJava_valueSymbolCallbackb(void *userDatavp, marpaESLIFVal
   if (! marpaESLIFValueContextInject(envp, marpaESLIFValuep, marpaESLIFValueContextp->eslifValueInterfacep, marpaESLIFValueContextp)) {
     goto err;
   }
+
   /* Call the symbol action */
   actionResultp = (*envp)->CallObjectMethod(envp, marpaESLIFValueContextp->eslifValueInterfacep, marpaESLIFValueContextp->methodp, objectp);
   if (HAVEEXCEPTION(envp)) {
@@ -4524,6 +4539,7 @@ static short marpaESLIFJava_valueSymbolCallbackb(void *userDatavp, marpaESLIFVal
     goto err;
   }
 
+  rcb = 1;
   goto done;
 
  err:

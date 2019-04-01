@@ -20,7 +20,7 @@ public class AppParse  {
 		ArrayList<Thread> threadlist = new ArrayList<Thread>();
 		int       nbalive;
 
-		if (true) {
+		if (false) {
 			eslifLogger.info(" ATTACH ME");
 			try {
 				TimeUnit.SECONDS.sleep(10);

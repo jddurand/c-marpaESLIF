@@ -35,6 +35,7 @@ public class AppImportExport implements Runnable {
 		}
 
 		final String grammar = 
+				    ":default ::= symbol-action => java_symbolAction\n" +
 				    "event ^java_input = predicted java_input\n" + 
 				    "\n" + 
 				    "java_output ::= lua_proxy  action => java_proxy\n" + 
