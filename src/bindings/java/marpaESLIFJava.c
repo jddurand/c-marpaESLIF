@@ -212,6 +212,7 @@ static char _MARPAESLIF_JNI_CONTEXT;
 #define JAVA_LANG_REFLECT_ARRAY_CLASS                 "java/lang/reflect/Array"
 #define JAVA_UTIL_ITERATOR_CLASS                      "java/util/Iterator"
 #define JAVA_UTIL_SET_CLASS                           "java/util/Set"
+#define JAVA_UTIL_MAP_CLASS                           "java/util/Map"
 
 #define MARPAESLIF_ESLIFVALUEINTERFACE_SYMBOLACTION_SIGNATURE "(Ljava/lang/Object;)Ljava/lang/Object;"
 #define MARPAESLIF_ESLIFVALUEINTERFACE_RULEACTION_SIGNATURE   "([Ljava/lang/Object;)Ljava/lang/Object;"
@@ -366,6 +367,10 @@ static marpaESLIFClassCache_t marpaESLIFClassCacheArrayp[] = {
   #define JAVA_UTIL_SET_CLASSCACHE                       marpaESLIFClassCacheArrayp[33]
   #define JAVA_UTIL_SET_CLASSP                           marpaESLIFClassCacheArrayp[33].classp
   {       JAVA_UTIL_SET_CLASS,                           NULL, 1 /* requiredb */ },
+
+  #define JAVA_UTIL_MAP_CLASSCACHE                       marpaESLIFClassCacheArrayp[34]
+  #define JAVA_UTIL_MAP_CLASSP                           marpaESLIFClassCacheArrayp[34].classp
+  {       JAVA_UTIL_MAP_CLASS,                           NULL, 1 /* requiredb */ },
 
   { NULL }
 };
@@ -674,29 +679,20 @@ static marpaESLIFMethodCache_t marpaESLIFMethodCacheArrayp[] = {
   #define JAVA_LANG_CLASS_CLASS_getComponentType_METHODP                            marpaESLIFMethodCacheArrayp[100].methodp
   {      &JAVA_LANG_CLASS_CLASSCACHE, "getComponentType",                           "()Ljava/lang/Class;", 0 /* staticb */, NULL, 1 /* requiredb */ },
 
-  #define JAVA_UTIL_HASHMAP_CLASS_keySet_METHODP                                    marpaESLIFMethodCacheArrayp[101].methodp
-  {      &JAVA_UTIL_HASHMAP_CLASSCACHE, "keySet",                                   "()Ljava/util/Set;", 0 /* staticb */, NULL, 1 /* requiredb */ },
-
-  #define JAVA_LANG_CLASS_CLASS_isPrimitive_METHODP                                 marpaESLIFMethodCacheArrayp[102].methodp
+  #define JAVA_LANG_CLASS_CLASS_isPrimitive_METHODP                                 marpaESLIFMethodCacheArrayp[101].methodp
   {      &JAVA_LANG_CLASS_CLASSCACHE, "isPrimitive",                                "()Z", 0 /* staticb */, NULL, 1 /* requiredb */ },
 
-  #define JAVA_LANG_STRING_CLASS_init_METHODP                                       marpaESLIFMethodCacheArrayp[103].methodp
+  #define JAVA_LANG_STRING_CLASS_init_METHODP                                       marpaESLIFMethodCacheArrayp[102].methodp
   {      &JAVA_LANG_STRING_CLASSCACHE, "<init>",                                    "()V", 0 /* staticb */, NULL, 0 /* requiredb */ },
 
-  #define JAVA_UTIL_HASHMAP_CLASS_get_METHODP                                       marpaESLIFMethodCacheArrayp[104].methodp
-  {      &JAVA_UTIL_HASHMAP_CLASSCACHE, "get",                                      "(Ljava/lang/Object;)Ljava/lang/Object;", 0 /* staticb */, NULL, 1 /* requiredb */ },
-
-  #define JAVA_UTIL_SET_CLASS_iterator_METHODP                                      marpaESLIFMethodCacheArrayp[105].methodp
+  #define JAVA_UTIL_SET_CLASS_iterator_METHODP                                      marpaESLIFMethodCacheArrayp[103].methodp
   {      &JAVA_UTIL_SET_CLASSCACHE, "iterator",                                     "()Ljava/util/Iterator;", 0 /* staticb */, NULL, 1 /* requiredb */ },
 
-  #define JAVA_UTIL_ITERATOR_CLASS_hasNext_METHODP                                  marpaESLIFMethodCacheArrayp[106].methodp
+  #define JAVA_UTIL_ITERATOR_CLASS_hasNext_METHODP                                  marpaESLIFMethodCacheArrayp[104].methodp
   {      &JAVA_UTIL_ITERATOR_CLASSCACHE, "hasNext",                                 "()Z", 0 /* staticb */, NULL, 1 /* requiredb */ },
 
-  #define JAVA_UTIL_ITERATOR_CLASS_next_METHODP                                     marpaESLIFMethodCacheArrayp[107].methodp
+  #define JAVA_UTIL_ITERATOR_CLASS_next_METHODP                                     marpaESLIFMethodCacheArrayp[105].methodp
   {      &JAVA_UTIL_ITERATOR_CLASSCACHE, "next",                                    "()Ljava/lang/Object;", 0 /* staticb */, NULL, 1 /* requiredb */ },
-
-  #define JAVA_UTIL_HASHMAP_CLASS_size_METHODP                                      marpaESLIFMethodCacheArrayp[106].methodp
-  {      &JAVA_UTIL_HASHMAP_CLASSCACHE, "size",                                     "()I", 0 /* staticb */, NULL, 1 /* requiredb */ },
 
   { NULL }
 };
@@ -5709,12 +5705,19 @@ static short marpaESLIFJava_stack_setb(JNIEnv *envp, marpaESLIFValue_t *marpaESL
   jsize                    arrayl;
   jsize                    i;
   jobject                  componentObjectp;
-  jobject                  keySetp;
+  jobject                  entrySetp;
   jobject                  iteratorp;
   jboolean                 hasNextb;
+  jobject                  nextp;
   jobject                  keyp;
   jobject                  valuep;
   jint                     sizei;
+  jmethodID                sizeMethodp;
+  jmethodID                getMethodp;
+  jmethodID                entrySetMethodp;
+  jmethodID                getKeyMethodp;
+  jmethodID                getValueMethodp;
+  jclass                   nextclassp;
 
   /*
     Java Type                        marpaESLIFType
@@ -5937,10 +5940,32 @@ static short marpaESLIFJava_stack_setb(JNIEnv *envp, marpaESLIFValue_t *marpaESL
           }
           eslifb = 1;
         }
-      } else if ((*envp)->CallBooleanMethod(envp, classp, JAVA_LANG_CLASS_CLASS_equals_METHODP, JAVA_UTIL_HASHMAP_CLASSP) == JNI_TRUE) {
+      } else if ((*envp)->IsInstanceOf(envp, objectp, JAVA_UTIL_MAP_CLASSP) == JNI_TRUE) {
 
         fprintf(stderr, "==> %s: export TABLE\n", funcs); fflush(stdout); fflush(stderr);
-        sizei = (*envp)->CallIntMethod(envp, objectp, JAVA_UTIL_HASHMAP_CLASS_size_METHODP);
+
+	sizeMethodp = (*envp)->GetMethodID(envp, classp, "size", "()I");
+	if (sizeMethodp == NULL) {
+          /* We want OUR exception to be raised */
+          (*envp)->ExceptionClear(envp);
+          RAISEEXCEPTIONF(envp, "Failed to find method \"size\" with signature \"()I\" in class being an instance of java/util/Map");
+	}
+
+	getMethodp = (*envp)->GetMethodID(envp, classp, "get", "(Ljava/lang/Object;)Ljava/lang/Object;");
+	if (getMethodp == NULL) {
+          /* We want OUR exception to be raised */
+          (*envp)->ExceptionClear(envp);
+          RAISEEXCEPTIONF(envp, "Failed to find method \"get\" with signature \"(Ljava/lang/Object;)Ljava/lang/Object;\" in class being an instance of java/util/Map");
+	}
+
+	entrySetMethodp = (*envp)->GetMethodID(envp, classp, "entrySet", "()Ljava/util/Set;");
+	if (entrySetMethodp == NULL) {
+          /* We want OUR exception to be raised */
+          (*envp)->ExceptionClear(envp);
+          RAISEEXCEPTIONF(envp, "Failed to find method \"entrySet\" with signature \"()Ljava/util/Set;\" in class being an instance of java/util/Map");
+	}
+
+        sizei = (*envp)->CallIntMethod(envp, objectp, sizeMethodp);
         fprintf(stderr, "==> %s: export TABLE: size=%ld\n", funcs, (unsigned long) sizei); fflush(stdout); fflush(stderr);
 
         marpaESLIFValueResultp->type               = MARPAESLIF_VALUE_TYPE_TABLE;
@@ -5957,16 +5982,16 @@ static short marpaESLIFJava_stack_setb(JNIEnv *envp, marpaESLIFValue_t *marpaESL
             RAISEEXCEPTIONF(envp, "malloc failure, %s", strerror(errno));
           }
 
-          fprintf(stderr, "==> %s: export TABLE: keySet\n", funcs); fflush(stdout); fflush(stderr);
-          keySetp = (*envp)->CallObjectMethod(envp, objectp, JAVA_UTIL_HASHMAP_CLASS_keySet_METHODP);
-          if (keySetp == NULL) {
+          fprintf(stderr, "==> %s: export TABLE: entrySet\n", funcs); fflush(stdout); fflush(stderr);
+          entrySetp = (*envp)->CallObjectMethod(envp, objectp, entrySetMethodp);
+          if (entrySetp == NULL) {
             /* An exception was (must have been) raised */
-            RAISEEXCEPTION(envp, "keySet failure");
+            RAISEEXCEPTION(envp, "entrySet failure");
           }
 
 
-          fprintf(stderr, "==> %s: export TABLE: iterator\n", funcs, (unsigned long) sizei); fflush(stdout); fflush(stderr);
-          iteratorp = (*envp)->CallObjectMethod(envp, keySetp, JAVA_UTIL_SET_CLASS_iterator_METHODP);
+          fprintf(stderr, "==> %s: export TABLE: iterator\n", funcs); fflush(stdout); fflush(stderr);
+          iteratorp = (*envp)->CallObjectMethod(envp, entrySetp, JAVA_UTIL_SET_CLASS_iterator_METHODP);
           if (iteratorp == NULL) {
             /* An exception was (must have been) raised */
             RAISEEXCEPTION(envp, "iterator failure");
@@ -5974,7 +5999,7 @@ static short marpaESLIFJava_stack_setb(JNIEnv *envp, marpaESLIFValue_t *marpaESL
 
           i = 0;
           while (1) {
-            fprintf(stderr, "==> %s: export TABLE: iterator: hasNext\n", funcs, (unsigned long) sizei); fflush(stdout); fflush(stderr);
+            fprintf(stderr, "==> %s: export TABLE: iterator: hasNext\n", funcs); fflush(stdout); fflush(stderr);
             hasNextb = (*envp)->CallBooleanMethod(envp, iteratorp, JAVA_UTIL_ITERATOR_CLASS_hasNext_METHODP);
             if (HAVEEXCEPTION(envp)) {
               goto err;
@@ -5983,8 +6008,27 @@ static short marpaESLIFJava_stack_setb(JNIEnv *envp, marpaESLIFValue_t *marpaESL
               break;
             }
 
-            fprintf(stderr, "==> %s: export TABLE: iterator: next\n", funcs, (unsigned long) sizei); fflush(stdout); fflush(stderr);
-            keyp = (*envp)->CallObjectMethod(envp, iteratorp, JAVA_UTIL_ITERATOR_CLASS_next_METHODP);
+            fprintf(stderr, "==> %s: export TABLE: iterator: next\n", funcs); fflush(stdout); fflush(stderr);
+            nextp = (*envp)->CallObjectMethod(envp, iteratorp, JAVA_UTIL_ITERATOR_CLASS_next_METHODP);
+            if (nextp == NULL) {
+              goto err;
+            }
+
+	    nextclassp = (*envp)->GetObjectClass(envp, nextp);
+	    if (nextclassp == NULL) {
+	      /* An exception was (must have been) raised */
+	      RAISEEXCEPTION(envp, "GetObjectClass failure");
+	    }
+
+	    getKeyMethodp = (*envp)->GetMethodID(envp, nextclassp, "getKey", "()Ljava/lang/Object;");
+	    if (getKeyMethodp == NULL) {
+	      /* We want OUR exception to be raised */
+	      (*envp)->ExceptionClear(envp);
+	      RAISEEXCEPTIONF(envp, "Failed to find method \"getKey\" with signature \"()Ljava/lang/Object;\"");
+	    }
+
+            fprintf(stderr, "==> %s: export TABLE: iterator: next: getKey\n", funcs); fflush(stdout); fflush(stderr);
+	    keyp = (*envp)->CallObjectMethod(envp, nextp, getKeyMethodp);
             if (HAVEEXCEPTION(envp)) {
               goto err;
             }
@@ -5997,8 +6041,15 @@ static short marpaESLIFJava_stack_setb(JNIEnv *envp, marpaESLIFValue_t *marpaESL
               RAISEEXCEPTIONF(envp, "marpaESLIFValueResultStackp push failure, %s", strerror(errno));
             }
 
-            fprintf(stderr, "==> %s: export TABLE: hmap: get\n", funcs, (unsigned long) sizei); fflush(stdout); fflush(stderr);
-            valuep = (*envp)->CallObjectMethod(envp, objectp, JAVA_UTIL_HASHMAP_CLASS_get_METHODP);
+	    getValueMethodp = (*envp)->GetMethodID(envp, nextclassp, "getValue", "()Ljava/lang/Object;");
+	    if (getValueMethodp == NULL) {
+	      /* We want OUR exception to be raised */
+	      (*envp)->ExceptionClear(envp);
+	      RAISEEXCEPTIONF(envp, "Failed to find method \"getValue\" with signature \"()Ljava/lang/Object;\"");
+	    }
+
+            fprintf(stderr, "==> %s: export TABLE: iterator: next: getValue\n", funcs); fflush(stdout); fflush(stderr);
+	    valuep = (*envp)->CallObjectMethod(envp, nextp, getValueMethodp);
             if (HAVEEXCEPTION(envp)) {
               goto err;
             }
@@ -6016,6 +6067,7 @@ static short marpaESLIFJava_stack_setb(JNIEnv *envp, marpaESLIFValue_t *marpaESL
         } else {
           marpaESLIFValueResultp->u.t.p = NULL;
         }
+	eslifb = 1;
       }
     }
 
