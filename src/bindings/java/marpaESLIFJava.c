@@ -210,6 +210,8 @@ static char _MARPAESLIF_JNI_CONTEXT;
 #define JAVA_MATH_BIGINTEGER_CLASS                    "java/math/BigInteger"
 #define JAVA_LANG_BYTE_CLASS                          "java/lang/Byte"
 #define JAVA_LANG_REFLECT_ARRAY_CLASS                 "java/lang/reflect/Array"
+#define JAVA_UTIL_ITERATOR_CLASS                      "java/util/Iterator"
+#define JAVA_UTIL_SET_CLASS                           "java/util/Set"
 
 #define MARPAESLIF_ESLIFVALUEINTERFACE_SYMBOLACTION_SIGNATURE "(Ljava/lang/Object;)Ljava/lang/Object;"
 #define MARPAESLIF_ESLIFVALUEINTERFACE_RULEACTION_SIGNATURE   "([Ljava/lang/Object;)Ljava/lang/Object;"
@@ -356,6 +358,14 @@ static marpaESLIFClassCache_t marpaESLIFClassCacheArrayp[] = {
   #define JAVA_LANG_REFLECT_ARRAY_CLASSCACHE             marpaESLIFClassCacheArrayp[31]
   #define JAVA_LANG_REFLECT_ARRAY_CLASSP                 marpaESLIFClassCacheArrayp[31].classp
   {       JAVA_LANG_REFLECT_ARRAY_CLASS,                 NULL, 1 /* requiredb */ },
+
+  #define JAVA_UTIL_ITERATOR_CLASSCACHE                  marpaESLIFClassCacheArrayp[32]
+  #define JAVA_UTIL_ITERATOR_CLASSP                      marpaESLIFClassCacheArrayp[32].classp
+  {       JAVA_UTIL_ITERATOR_CLASS,                      NULL, 1 /* requiredb */ },
+
+  #define JAVA_UTIL_SET_CLASSCACHE                       marpaESLIFClassCacheArrayp[33]
+  #define JAVA_UTIL_SET_CLASSP                           marpaESLIFClassCacheArrayp[33].classp
+  {       JAVA_UTIL_SET_CLASS,                           NULL, 1 /* requiredb */ },
 
   { NULL }
 };
@@ -672,6 +682,21 @@ static marpaESLIFMethodCache_t marpaESLIFMethodCacheArrayp[] = {
 
   #define JAVA_LANG_STRING_CLASS_init_METHODP                                       marpaESLIFMethodCacheArrayp[103].methodp
   {      &JAVA_LANG_STRING_CLASSCACHE, "<init>",                                    "()V", 0 /* staticb */, NULL, 0 /* requiredb */ },
+
+  #define JAVA_UTIL_HASHMAP_CLASS_get_METHODP                                       marpaESLIFMethodCacheArrayp[104].methodp
+  {      &JAVA_UTIL_HASHMAP_CLASSCACHE, "get",                                      "(Ljava/lang/Object;)Ljava/lang/Object;", 0 /* staticb */, NULL, 1 /* requiredb */ },
+
+  #define JAVA_UTIL_SET_CLASS_iterator_METHODP                                      marpaESLIFMethodCacheArrayp[105].methodp
+  {      &JAVA_UTIL_SET_CLASSCACHE, "iterator",                                     "()Ljava/util/Iterator;", 0 /* staticb */, NULL, 1 /* requiredb */ },
+
+  #define JAVA_UTIL_ITERATOR_CLASS_hasNext_METHODP                                  marpaESLIFMethodCacheArrayp[106].methodp
+  {      &JAVA_UTIL_ITERATOR_CLASSCACHE, "hasNext",                                 "()Z", 0 /* staticb */, NULL, 1 /* requiredb */ },
+
+  #define JAVA_UTIL_ITERATOR_CLASS_next_METHODP                                     marpaESLIFMethodCacheArrayp[107].methodp
+  {      &JAVA_UTIL_ITERATOR_CLASSCACHE, "next",                                    "()Ljava/lang/Object;", 0 /* staticb */, NULL, 1 /* requiredb */ },
+
+  #define JAVA_UTIL_HASHMAP_CLASS_size_METHODP                                      marpaESLIFMethodCacheArrayp[106].methodp
+  {      &JAVA_UTIL_HASHMAP_CLASSCACHE, "size",                                     "()I", 0 /* staticb */, NULL, 1 /* requiredb */ },
 
   { NULL }
 };
@@ -5684,6 +5709,12 @@ static short marpaESLIFJava_stack_setb(JNIEnv *envp, marpaESLIFValue_t *marpaESL
   jsize                    arrayl;
   jsize                    i;
   jobject                  componentObjectp;
+  jobject                  keySetp;
+  jobject                  iteratorp;
+  jboolean                 hasNextb;
+  jobject                  keyp;
+  jobject                  valuep;
+  jint                     sizei;
 
   /*
     Java Type                        marpaESLIFType
@@ -5907,6 +5938,84 @@ static short marpaESLIFJava_stack_setb(JNIEnv *envp, marpaESLIFValue_t *marpaESL
           eslifb = 1;
         }
       } else if ((*envp)->CallBooleanMethod(envp, classp, JAVA_LANG_CLASS_CLASS_equals_METHODP, JAVA_UTIL_HASHMAP_CLASSP) == JNI_TRUE) {
+
+        fprintf(stderr, "==> %s: export TABLE\n", funcs); fflush(stdout); fflush(stderr);
+        sizei = (*envp)->CallIntMethod(envp, objectp, JAVA_UTIL_HASHMAP_CLASS_size_METHODP);
+        fprintf(stderr, "==> %s: export TABLE: size=%ld\n", funcs, (unsigned long) sizei); fflush(stdout); fflush(stderr);
+
+        marpaESLIFValueResultp->type               = MARPAESLIF_VALUE_TYPE_TABLE;
+        marpaESLIFValueResultp->contextp           = MARPAESLIF_JNI_CONTEXT;
+        marpaESLIFValueResultp->representationp    = NULL;
+        marpaESLIFValueResultp->u.t.sizel          = (size_t) sizei;
+        marpaESLIFValueResultp->u.t.shallowb       = 0;
+        marpaESLIFValueResultp->u.t.freeUserDatavp = NULL; /* We will resolve JNIEnv using jvm that is a safe static */
+        marpaESLIFValueResultp->u.t.freeCallbackp  = marpaESLIFJava_genericFreeCallbackv;
+
+        if (marpaESLIFValueResultp->u.t.sizel > 0) {
+          marpaESLIFValueResultp->u.t.p = (marpaESLIFValueResultPair_t *) malloc(sizei * sizeof(marpaESLIFValueResultPair_t));
+          if (marpaESLIFValueResultp->u.t.p == NULL) {
+            RAISEEXCEPTIONF(envp, "malloc failure, %s", strerror(errno));
+          }
+
+          fprintf(stderr, "==> %s: export TABLE: keySet\n", funcs); fflush(stdout); fflush(stderr);
+          keySetp = (*envp)->CallObjectMethod(envp, objectp, JAVA_UTIL_HASHMAP_CLASS_keySet_METHODP);
+          if (keySetp == NULL) {
+            /* An exception was (must have been) raised */
+            RAISEEXCEPTION(envp, "keySet failure");
+          }
+
+
+          fprintf(stderr, "==> %s: export TABLE: iterator\n", funcs, (unsigned long) sizei); fflush(stdout); fflush(stderr);
+          iteratorp = (*envp)->CallObjectMethod(envp, keySetp, JAVA_UTIL_SET_CLASS_iterator_METHODP);
+          if (iteratorp == NULL) {
+            /* An exception was (must have been) raised */
+            RAISEEXCEPTION(envp, "iterator failure");
+          }
+
+          i = 0;
+          while (1) {
+            fprintf(stderr, "==> %s: export TABLE: iterator: hasNext\n", funcs, (unsigned long) sizei); fflush(stdout); fflush(stderr);
+            hasNextb = (*envp)->CallBooleanMethod(envp, iteratorp, JAVA_UTIL_ITERATOR_CLASS_hasNext_METHODP);
+            if (HAVEEXCEPTION(envp)) {
+              goto err;
+            }
+            if (hasNextb != JNI_TRUE) {
+              break;
+            }
+
+            fprintf(stderr, "==> %s: export TABLE: iterator: next\n", funcs, (unsigned long) sizei); fflush(stdout); fflush(stderr);
+            keyp = (*envp)->CallObjectMethod(envp, iteratorp, JAVA_UTIL_ITERATOR_CLASS_next_METHODP);
+            if (HAVEEXCEPTION(envp)) {
+              goto err;
+            }
+            GENERICSTACK_PUSH_PTR(objectStackp, keyp);
+            if (GENERICSTACK_ERROR(objectStackp)) {
+              RAISEEXCEPTIONF(envp, "objectStackp push failure, %s", strerror(errno));
+            }
+            GENERICSTACK_PUSH_PTR(marpaESLIFValueResultStackp, (void *) &(marpaESLIFValueResultp->u.t.p[i].key));
+            if (GENERICSTACK_ERROR(marpaESLIFValueResultStackp)) {
+              RAISEEXCEPTIONF(envp, "marpaESLIFValueResultStackp push failure, %s", strerror(errno));
+            }
+
+            fprintf(stderr, "==> %s: export TABLE: hmap: get\n", funcs, (unsigned long) sizei); fflush(stdout); fflush(stderr);
+            valuep = (*envp)->CallObjectMethod(envp, objectp, JAVA_UTIL_HASHMAP_CLASS_get_METHODP);
+            if (HAVEEXCEPTION(envp)) {
+              goto err;
+            }
+            GENERICSTACK_PUSH_PTR(objectStackp, valuep);
+            if (GENERICSTACK_ERROR(objectStackp)) {
+              RAISEEXCEPTIONF(envp, "objectStackp push failure, %s", strerror(errno));
+            }
+            GENERICSTACK_PUSH_PTR(marpaESLIFValueResultStackp, (void *) &(marpaESLIFValueResultp->u.t.p[i].value));
+            if (GENERICSTACK_ERROR(marpaESLIFValueResultStackp)) {
+              RAISEEXCEPTIONF(envp, "marpaESLIFValueResultStackp push failure, %s", strerror(errno));
+            }
+
+            i++;
+          }
+        } else {
+          marpaESLIFValueResultp->u.t.p = NULL;
+        }
       }
     }
 
