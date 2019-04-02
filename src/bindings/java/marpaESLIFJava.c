@@ -5948,21 +5948,21 @@ static short marpaESLIFJava_stack_setb(JNIEnv *envp, marpaESLIFValue_t *marpaESL
 	if (sizeMethodp == NULL) {
           /* We want OUR exception to be raised */
           (*envp)->ExceptionClear(envp);
-          RAISEEXCEPTIONF(envp, "Failed to find method \"size\" with signature \"()I\" in class being an instance of java/util/Map");
+          RAISEEXCEPTION(envp, "Failed to find method \"size\" with signature \"()I\" in class being an instance of java/util/Map");
 	}
 
 	getMethodp = (*envp)->GetMethodID(envp, classp, "get", "(Ljava/lang/Object;)Ljava/lang/Object;");
 	if (getMethodp == NULL) {
           /* We want OUR exception to be raised */
           (*envp)->ExceptionClear(envp);
-          RAISEEXCEPTIONF(envp, "Failed to find method \"get\" with signature \"(Ljava/lang/Object;)Ljava/lang/Object;\" in class being an instance of java/util/Map");
+          RAISEEXCEPTION(envp, "Failed to find method \"get\" with signature \"(Ljava/lang/Object;)Ljava/lang/Object;\" in class being an instance of java/util/Map");
 	}
 
 	entrySetMethodp = (*envp)->GetMethodID(envp, classp, "entrySet", "()Ljava/util/Set;");
 	if (entrySetMethodp == NULL) {
           /* We want OUR exception to be raised */
           (*envp)->ExceptionClear(envp);
-          RAISEEXCEPTIONF(envp, "Failed to find method \"entrySet\" with signature \"()Ljava/util/Set;\" in class being an instance of java/util/Map");
+          RAISEEXCEPTION(envp, "Failed to find method \"entrySet\" with signature \"()Ljava/util/Set;\" in class being an instance of java/util/Map");
 	}
 
         sizei = (*envp)->CallIntMethod(envp, objectp, sizeMethodp);
@@ -6024,7 +6024,7 @@ static short marpaESLIFJava_stack_setb(JNIEnv *envp, marpaESLIFValue_t *marpaESL
 	    if (getKeyMethodp == NULL) {
 	      /* We want OUR exception to be raised */
 	      (*envp)->ExceptionClear(envp);
-	      RAISEEXCEPTIONF(envp, "Failed to find method \"getKey\" with signature \"()Ljava/lang/Object;\"");
+	      RAISEEXCEPTION(envp, "Failed to find method \"getKey\" with signature \"()Ljava/lang/Object;\"");
 	    }
 
             fprintf(stderr, "==> %s: export TABLE: iterator: next: getKey\n", funcs); fflush(stdout); fflush(stderr);
@@ -6045,7 +6045,7 @@ static short marpaESLIFJava_stack_setb(JNIEnv *envp, marpaESLIFValue_t *marpaESL
 	    if (getValueMethodp == NULL) {
 	      /* We want OUR exception to be raised */
 	      (*envp)->ExceptionClear(envp);
-	      RAISEEXCEPTIONF(envp, "Failed to find method \"getValue\" with signature \"()Ljava/lang/Object;\"");
+	      RAISEEXCEPTION(envp, "Failed to find method \"getValue\" with signature \"()Ljava/lang/Object;\"");
 	    }
 
             fprintf(stderr, "==> %s: export TABLE: iterator: next: getValue\n", funcs); fflush(stdout); fflush(stderr);
