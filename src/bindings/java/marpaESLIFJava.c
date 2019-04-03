@@ -5942,7 +5942,7 @@ static short marpaESLIFJava_stack_setb(JNIEnv *envp, marpaESLIFValue_t *marpaESL
         }
       } else if ((*envp)->IsInstanceOf(envp, objectp, JAVA_UTIL_MAP_CLASSP) == JNI_TRUE) {
 
-        fprintf(stderr, "==> %s: export TABLE\n", funcs); fflush(stdout); fflush(stderr);
+        /* fprintf(stderr, "==> %s: export TABLE\n", funcs); fflush(stdout); fflush(stderr); */
 
 	sizeMethodp = (*envp)->GetMethodID(envp, classp, "size", "()I");
 	if (sizeMethodp == NULL) {
@@ -5966,7 +5966,7 @@ static short marpaESLIFJava_stack_setb(JNIEnv *envp, marpaESLIFValue_t *marpaESL
 	}
 
         sizei = (*envp)->CallIntMethod(envp, objectp, sizeMethodp);
-        fprintf(stderr, "==> %s: export TABLE: size=%ld\n", funcs, (unsigned long) sizei); fflush(stdout); fflush(stderr);
+        /* fprintf(stderr, "==> %s: export TABLE: size=%ld\n", funcs, (unsigned long) sizei); fflush(stdout); fflush(stderr); */
 
         marpaESLIFValueResultp->type               = MARPAESLIF_VALUE_TYPE_TABLE;
         marpaESLIFValueResultp->contextp           = MARPAESLIF_JNI_CONTEXT;
@@ -5982,15 +5982,14 @@ static short marpaESLIFJava_stack_setb(JNIEnv *envp, marpaESLIFValue_t *marpaESL
             RAISEEXCEPTIONF(envp, "malloc failure, %s", strerror(errno));
           }
 
-          fprintf(stderr, "==> %s: export TABLE: entrySet\n", funcs); fflush(stdout); fflush(stderr);
+          /* fprintf(stderr, "==> %s: export TABLE: entrySet\n", funcs); fflush(stdout); fflush(stderr); */
           entrySetp = (*envp)->CallObjectMethod(envp, objectp, entrySetMethodp);
           if (entrySetp == NULL) {
             /* An exception was (must have been) raised */
             RAISEEXCEPTION(envp, "entrySet failure");
           }
 
-
-          fprintf(stderr, "==> %s: export TABLE: iterator\n", funcs); fflush(stdout); fflush(stderr);
+          /* fprintf(stderr, "==> %s: export TABLE: iterator\n", funcs); fflush(stdout); fflush(stderr); */
           iteratorp = (*envp)->CallObjectMethod(envp, entrySetp, JAVA_UTIL_SET_CLASS_iterator_METHODP);
           if (iteratorp == NULL) {
             /* An exception was (must have been) raised */
@@ -5999,7 +5998,7 @@ static short marpaESLIFJava_stack_setb(JNIEnv *envp, marpaESLIFValue_t *marpaESL
 
           i = 0;
           while (1) {
-            fprintf(stderr, "==> %s: export TABLE: iterator: hasNext\n", funcs); fflush(stdout); fflush(stderr);
+            /* fprintf(stderr, "==> %s: export TABLE: iterator: hasNext\n", funcs); fflush(stdout); fflush(stderr); */
             hasNextb = (*envp)->CallBooleanMethod(envp, iteratorp, JAVA_UTIL_ITERATOR_CLASS_hasNext_METHODP);
             if (HAVEEXCEPTION(envp)) {
               goto err;
@@ -6008,7 +6007,7 @@ static short marpaESLIFJava_stack_setb(JNIEnv *envp, marpaESLIFValue_t *marpaESL
               break;
             }
 
-            fprintf(stderr, "==> %s: export TABLE: iterator: next\n", funcs); fflush(stdout); fflush(stderr);
+            /* fprintf(stderr, "==> %s: export TABLE: iterator: next\n", funcs); fflush(stdout); fflush(stderr); */
             nextp = (*envp)->CallObjectMethod(envp, iteratorp, JAVA_UTIL_ITERATOR_CLASS_next_METHODP);
             if (nextp == NULL) {
               goto err;
@@ -6027,7 +6026,7 @@ static short marpaESLIFJava_stack_setb(JNIEnv *envp, marpaESLIFValue_t *marpaESL
 	      RAISEEXCEPTION(envp, "Failed to find method \"getKey\" with signature \"()Ljava/lang/Object;\"");
 	    }
 
-            fprintf(stderr, "==> %s: export TABLE: iterator: next: getKey\n", funcs); fflush(stdout); fflush(stderr);
+            /* fprintf(stderr, "==> %s: export TABLE: iterator: next: getKey\n", funcs); fflush(stdout); fflush(stderr); */
 	    keyp = (*envp)->CallObjectMethod(envp, nextp, getKeyMethodp);
             if (HAVEEXCEPTION(envp)) {
               goto err;
@@ -6048,7 +6047,7 @@ static short marpaESLIFJava_stack_setb(JNIEnv *envp, marpaESLIFValue_t *marpaESL
 	      RAISEEXCEPTION(envp, "Failed to find method \"getValue\" with signature \"()Ljava/lang/Object;\"");
 	    }
 
-            fprintf(stderr, "==> %s: export TABLE: iterator: next: getValue\n", funcs); fflush(stdout); fflush(stderr);
+            /* fprintf(stderr, "==> %s: export TABLE: iterator: next: getValue\n", funcs); fflush(stdout); fflush(stderr); */
 	    valuep = (*envp)->CallObjectMethod(envp, nextp, getValueMethodp);
             if (HAVEEXCEPTION(envp)) {
               goto err;

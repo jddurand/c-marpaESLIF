@@ -1,6 +1,7 @@
 package org.parser.marpa;
 
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -83,7 +84,11 @@ public class AppImportExport implements Runnable {
 				    "  end\n" + 
 				    "</luascript>\n"; 
 
-		Object[] inputArray = {
+		HashMap<Integer, Object> hmap = new HashMap<Integer, Object>();
+		hmap.put(12, new String[] { "Chaitanya", "JDD" });
+		hmap.put(2, new Double[] { 1.0, 2.0 });
+	      
+	    Object[] inputArray = {
 				/*
 				Character.MIN_VALUE,
 				Character.MAX_VALUE,
@@ -98,11 +103,12 @@ public class AppImportExport implements Runnable {
 				null,
 				new byte[] { },
 				"",
-				*/
 				new String[] {
 						"String No 1",
 						"String No 2",
 				}
+				*/
+				hmap
 				};  
 
 		try {
@@ -116,6 +122,7 @@ public class AppImportExport implements Runnable {
 			    ESLIFValue eslifValue = new ESLIFValue(eslifRecognizer, eslifValueInterface);
 			    eslifValue.value();
 			    Object value = eslifValueInterface.getResult();
+			    
 			    if (input == null) {
 			    	// Generic object: then ESLIF guarantees it is the same that transit through all layers
 				    if (value != null) {
