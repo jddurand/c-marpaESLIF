@@ -190,11 +190,8 @@ By default, symbol action is C<::transfer> and rule action is C<::concat>, i.e. 
   :default ::= action        => defaultRuleAction
                latm          => 1
                symbol-action => defaultSymbolAction
-               free-action   => defaultFreeAction
 
 Predefined actions are available for rules and symbols. Please refer the API documentation to know more about value types.
-
-The C<free-action> adverb is required when the end-user is pushing an opaque value of type C<PTR> or C<ARRAY> that is not declared shallowed. The internal stack manipulation may decide it does not need this value anymore: the free action is then called. This is used in low-level programming, in practice interface to high-level languages like Perl, Java etc... should I<hide> that, making the presence of this keyword in the grammar meaningless.
 
 The C<symbol-action> adverb is how a match within a sub-grammar is transfered.
 
@@ -651,7 +648,6 @@ marpaESLIF BNF can be expressed in itself:
   <null adverb>                  ::= ','
   <symbol action>                ::= 'symbol-action' '=>' <symbol action name>
                                    | 'symbol-action' '=>' <string literal>
-  <free action>                  ::= 'free-action' '=>' <free name>
   <alternative name>             ::= <standard name>
                                    | <quoted name>
   <event name>                   ::= <restricted ascii graph name>
