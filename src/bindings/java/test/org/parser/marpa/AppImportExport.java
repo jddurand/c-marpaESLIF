@@ -88,90 +88,49 @@ public class AppImportExport implements Runnable {
 		hmap.put(12, new String[] { "Chaitanya", "JDD" });
 		hmap.put(2, new Double[] { 1.0, 2.0 });
 	      
-	    Object[] inputArray = {
-				/*
-				Character.MIN_VALUE,
-				Character.MAX_VALUE,
-				Short.MIN_VALUE,
-				Short.MAX_VALUE,
-				Integer.MIN_VALUE,
-				Integer.MAX_VALUE,
-				Long.MIN_VALUE,
-				Long.MAX_VALUE,
-				true,
-				false,
-				null,
-				new byte[] { },
-				"",
-				new String[] {
-						"String No 1",
-						"String No 2",
-				}
-				*/
-				hmap
-				};  
+		AppLexeme[] inputArray = {
+				new AppCharacter(Character.MIN_VALUE),
+				new AppCharacter(Character.MAX_VALUE),
+				new AppShort(Short.MIN_VALUE),
+				new AppShort(Short.MAX_VALUE),
+				new AppInteger(Integer.MIN_VALUE),
+				new AppInteger(Integer.MAX_VALUE),
+				new AppLong(Long.MIN_VALUE),
+				new AppLong(Long.MAX_VALUE),
+				new AppBoolean(true),
+				new AppBoolean(false),
+				new AppNull(),
+				new AppByteArray(new byte[] { }),
+				new AppByteArray(new byte[] { '\0', '\1'}),
+				new AppString(""),
+				new AppString("test"),
+				new AppArray(
+						new String[] {
+								new String("String No 1"),
+								new String("String No 2")
+						}
+						),
+				// hmap /* I should implement a comparable */
+		};  
 
 		try {
 			ESLIFGrammar eslifGrammar = new ESLIFGrammar(eslif, grammar);
-			for (Object input : inputArray) {
+			for (AppLexeme input : inputArray) {
 				ESLIFRecognizerInterface eslifRecognizerInterface = new AppEmptyRecognizer();
 			    ESLIFRecognizer eslifRecognizer = new ESLIFRecognizer(eslifGrammar, eslifRecognizerInterface);
 			    eslifRecognizer.scan(true); // Initial events
-			    eslifRecognizer.lexemeRead("JAVA_INPUT", input, 1, 1);
+			    eslifRecognizer.lexemeRead("JAVA_INPUT", input.Value(), 1, 1);
 			    ESLIFValueInterface eslifValueInterface = new AppValue();
 			    ESLIFValue eslifValue = new ESLIFValue(eslifRecognizer, eslifValueInterface);
 			    eslifValue.value();
 			    Object value = eslifValueInterface.getResult();
+			    Object fromValue = input.FromValue(value);
 			    
-			    if (input == null) {
-			    	// Generic object: then ESLIF guarantees it is the same that transit through all layers
-				    if (value != null) {
-				    	this.eslifLogger.error("KO for null");
-				    	throw new Exception("null != null");
-				    } else {
-				    	this.eslifLogger.info("OK for null");
-				    }
-			    } else if (input.getClass().equals(Object.class)) {
-			    	// Generic object: then ESLIF guarantees it is the same that transit through all layers
-				    if (! input.equals(value)) {
-				    	this.eslifLogger.error("KO for " + input + " (input class " + input.getClass().getName() + ", value class " + value.getClass().getName() + ")");
-				    	throw new Exception(input + " != " + value);
-				    } else {
-				    	this.eslifLogger.info("OK for " + input + " (input class " + input.getClass().getName() + ", value class " + value.getClass().getName() + ")");
-				    }
-			    } else if (input.getClass().equals(value.getClass())) {
-			    	// value is another instance of input but should be equal to input
-			    	// comparing byte array is special
-			    	if (value instanceof byte[]) {
-			    		if (! Arrays.equals((byte[])input, (byte[])value)) {
-					    	this.eslifLogger.error("KO for byte[]");
-					    	throw new Exception(input + " != " + value);
-			    		} else {
-					    	this.eslifLogger.info("OK for byte[]");
-			    		}
-			    	} else {
-					    if (! input.equals(value)) {
-					    	this.eslifLogger.error("KO for " + input + " (input class " + input.getClass().getName() + ", value class " + value.getClass().getName() + ")");
-					    	throw new Exception(input + " != " + value);
-					    } else {
-					    	this.eslifLogger.info("OK for " + input + " (input class " + input.getClass().getName() + ", value class " + value.getClass().getName() + ")");
-					    }
-			    	}
-			    } else if (input instanceof Character && value instanceof String && ((String) value).length() == 1) {
-			    	/* A character is always may be converted to a string when coming back - in particular when coming through Lua */
-			    	char valueAsChar = ((String) value).charAt(0);
-			    	if (!input.equals(valueAsChar)) {
-				    	this.eslifLogger.error("KO for character value " + (((Character) input).charValue()+0) + " (input class " + input.getClass().getName() + ", value class " + value.getClass().getName() + ")");
-				    	throw new Exception(input + " != " + value);
-			    	} else {
-				    	this.eslifLogger.info("OK for character value " + (((Character) input).charValue()+0) + " (input class " + input.getClass().getName() + ", value class " + value.getClass().getName() + ")");
-			    	}
+			    if (!input.equals(fromValue)) {
+			    	this.eslifLogger.error("KO for " + input + " (value: " + fromValue + ")");
+			    	throw new Exception(input + " != " + value);
 			    } else {
-			    	String inputToString = input.toString();
-			    	String inputClass = input.getClass().getName();
-			    	String valueClass = value.getClass().getName();
-			    	this.eslifLogger.error("KO for " + input.toString() + " (input class " + input.getClass().getName() + ", value class " + value.getClass().getName() + ")");
-			    	throw new Exception(input.toString() + " != " + value.toString());
+			    	this.eslifLogger.info("OK for " + input + " (value: " + fromValue + ")");
 			    }
 			}
 		} catch (Exception e) {
