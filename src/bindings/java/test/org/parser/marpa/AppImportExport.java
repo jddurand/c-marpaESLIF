@@ -84,9 +84,13 @@ public class AppImportExport implements Runnable {
 				    "  end\n" + 
 				    "</luascript>\n"; 
 
-		HashMap<Integer, Object> hmap = new HashMap<Integer, Object>();
-		hmap.put(12, new String[] { "Chaitanya", "JDD" });
-		hmap.put(2, new Double[] { 1.0, 2.0 });
+		HashMap<String, Object> hmap = new HashMap<String, Object>();
+		hmap.put("one", "one");
+		hmap.put("two", "two");
+		hmap.put("true", true);
+		hmap.put("false", false);
+		hmap.put("else", "again");
+		hmap.put("undef", null);
 	      
 		AppLexeme[] inputArray = {
 				new AppCharacter(Character.MIN_VALUE),
@@ -110,7 +114,7 @@ public class AppImportExport implements Runnable {
 								new String("String No 2")
 						}
 						),
-				// hmap /* I should implement a comparable */
+				new AppHashMap(hmap)
 		};  
 
 		try {
