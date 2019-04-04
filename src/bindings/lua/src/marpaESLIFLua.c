@@ -6840,10 +6840,9 @@ static short marpaESLIFLua_stack_setb(lua_State *L, marpaESLIF_t *marpaESLIFp, m
 
           encodingasciis = NULL; /* encodingasciis is in marpaESLIFValueResultp */
         }
-
-        if (! marpaESLIFLua_lua_pop(L, 2)) goto err;                                                                              /* Stack: ... */
       }
 
+      if (! marpaESLIFLua_lua_pop(L, 2)) goto err;                                                                              /* Stack: ... */
       eslifb = 1;
       break;
     case LUA_TTABLE:
