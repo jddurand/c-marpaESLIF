@@ -5,8 +5,8 @@ package org.parser.marpa;
  */
 public class AppLogger implements ESLIFLoggerInterface {
 	public void trace(String message) {
-		// System.out.println("[" + Thread.currentThread() + "] <TRACE> " + message);
-		// System.out.flush();
+		System.out.println("[" + Thread.currentThread() + "] <TRACE> " + message);
+		System.out.flush();
 	}
 
 	public void debug(String message) {

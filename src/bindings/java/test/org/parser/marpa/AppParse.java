@@ -68,5 +68,7 @@ public class AppParse  {
 		}		
 		// Import/export test
 		new AppImportExport(eslifLogger).run();
+		// JSON test
+		new AppJson(eslifLogger).run();
 	}
 }
