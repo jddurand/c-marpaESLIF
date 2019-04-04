@@ -72,7 +72,7 @@ use open qw( :utf8 :std );
 BEGIN { require_ok('MarpaX::ESLIF') }
 push(@input, $MarpaX::ESLIF::true);
 push(@input, $MarpaX::ESLIF::false);
-push(@input, { one => "one", two => "two", perltrue => 1, true => $MarpaX::ESLIF::true, false => $MarpaX::ESLIF::false, 'else' => 'again', 'undef' => undef }); # will cause trouble because natively lua discards it
+push(@input, { one => "one", two => "two", perltrue => 1, true => $MarpaX::ESLIF::true, false => $MarpaX::ESLIF::false, 'else' => 'again', 'undef' => undef });
 push(@input, MarpaX::ESLIF::String->new("XXXḼơᶉëᶆYYY", 'UTF-8'));
 #
 # Init log
