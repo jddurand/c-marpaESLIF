@@ -78,7 +78,7 @@ push(@input, MarpaX::ESLIF::String->new("XXXḼơᶉëᶆYYY", 'UTF-8'));
 # Init log
 #
 our $defaultLog4perlConf = '
-log4perl.rootLogger              = TRACE, Screen
+log4perl.rootLogger              = INFO, Screen
 log4perl.appender.Screen         = Log::Log4perl::Appender::Screen
 log4perl.appender.Screen.stderr  = 0
 log4perl.appender.Screen.layout  = PatternLayout
