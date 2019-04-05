@@ -1,15 +1,19 @@
 #ifndef MARPAESLIF_INTERNAL_LOGGING_H
 #define MARPAESLIF_INTERNAL_LOGGING_H
+
 #include <stdio.h>
+#include <errno.h>
 
 #define MARPAESLIF_LOC_FMT "[v%s/%s at %12s:%05d]"
 #define MARPAESLIF_LOC_VAR MARPAESLIF_VERSION, funcs, FILENAMES, __LINE__
 
 #define MARPAESLIF2LOG(marpaESLIFp, rest) do {				\
     genericLogger_t *_genericLoggerp = ((marpaESLIFp) != NULL) ? (marpaESLIFp)->marpaESLIFOption.genericLoggerp : NULL; \
+    int _errnoi = errno;                                                \
     if (_genericLoggerp != NULL) {					\
       rest;								\
     }									\
+    errno = _errnoi;                                                    \
   } while (0)
 
 #ifndef MARPAESLIF_NTRACE
@@ -65,6 +69,7 @@
     size_t                         _lengthl = (size_t) (lengthl);       \
     short                         _traceb = (short) (traceb);           \
     genericLogger_t               *_genericLoggerp;                     \
+    int                            _errnoi = errno;                     \
     size_t  _i;                                                         \
     size_t  _j;                                                         \
                                                                         \
@@ -125,6 +130,8 @@
       }                                                                 \
       GENERICLOGGER_FREE(_genericLoggerp);                              \
     }                                                                   \
+                                                                        \
+    errno = _errnoi;                                                    \
   } while (0)
 
 #endif /* MARPAESLIF_INTERNAL_LOGGING_H */
