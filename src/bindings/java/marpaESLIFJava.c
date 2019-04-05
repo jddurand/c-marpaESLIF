@@ -5473,7 +5473,7 @@ static short marpaESLIFJava_importb(marpaESLIFValue_t *marpaESLIFValuep, void *u
     if (byteArrayp == NULL) {
       goto err;
     }
-    if (marpaESLIFValueResultp->u.s.sizel > 0) {
+    if ((marpaESLIFValueResultp->u.s.p != NULL) && (marpaESLIFValueResultp->u.s.sizel > 0)) {
       (*envp)->SetByteArrayRegion(envp, byteArrayp, (jsize) 0, (jsize) marpaESLIFValueResultp->u.s.sizel, (jbyte *) marpaESLIFValueResultp->u.s.p);
       if (HAVEEXCEPTION(envp)) {
         goto err;

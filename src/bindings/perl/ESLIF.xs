@@ -1813,7 +1813,7 @@ static short marpaESLIFPerl_importb(marpaESLIFValue_t *marpaESLIFValuep, void *u
     }
     break;
   case MARPAESLIF_VALUE_TYPE_STRING:
-    if (marpaESLIFValueResultp->u.s.sizel > 0) {
+    if ((marpaESLIFValueResultp->u.s.p != NULL) && (marpaESLIFValueResultp->u.s.sizel > 0)) {
       stringp = newSVpvn((const char *) marpaESLIFValueResultp->u.s.p, (STRLEN) marpaESLIFValueResultp->u.s.sizel);
     } else {
       /* Empty string */

@@ -14,6 +14,8 @@
 #include "lua_newkeywords.c"
 #include "lua_niledtable.c"
 
+static const char *MARPAESLIFLUA_EMPTY_STRING = "";
+
 /* Shall this module determine automatically string encoding ? */
 /* #define MARPAESLIFLUA_AUTO_ENCODING_DETECT */
 
@@ -3710,7 +3712,11 @@ static short marpaESLIFLua_importb(marpaESLIFValue_t *marpaESLIFValuep, void *us
     /* fprintf(stdout, "import string\n"); fflush(stdout); fflush(stderr); */
     /* We take register this string in our MARPAESLIFSTRINGTOENCODINGTABLE internal table */
     MARPAESLIFLUA_GETORCREATEGLOBAL(L, MARPAESLIFSTRINGTOENCODINGTABLE, NULL /* gcp */, "k" /* mode */);                      /* Stack: ..., MARPAESLIFSTRINGTOENCODINGTABLE */
-    if (! marpaESLIFLua_lua_pushlstring(NULL, L, marpaESLIFValueResultp->u.s.p, marpaESLIFValueResultp->u.s.sizel)) goto err; /* Stack: ..., MARPAESLIFSTRINGTOENCODINGTABLE, string */
+    if ((marpaESLIFValueResultp->u.s.p != NULL) && (marpaESLIFValueResultp->u.s.sizel > 0)) {
+      if (! marpaESLIFLua_lua_pushlstring(NULL, L, marpaESLIFValueResultp->u.s.p, marpaESLIFValueResultp->u.s.sizel)) goto err; /* Stack: ..., MARPAESLIFSTRINGTOENCODINGTABLE, string */
+    } else {
+      if (! marpaESLIFLua_lua_pushlstring(NULL, L, MARPAESLIFLUA_EMPTY_STRING, 0)) goto err;                                  /* Stack: ..., MARPAESLIFSTRINGTOENCODINGTABLE, "" */
+    }
     if (! marpaESLIFLua_lua_pushstring(NULL, L, marpaESLIFValueResultp->u.s.encodingasciis)) goto err;                        /* Stack: ..., MARPAESLIFSTRINGTOENCODINGTABLE, string, encodingasciis */
     if (! marpaESLIFLua_lua_settable(L, -3)) goto err;                                                                        /* Stack: ..., MARPAESLIFSTRINGTOENCODINGTABLE */
     if (! marpaESLIFLua_lua_pop(L, 1)) goto err;                                                                              /* Stack: ... */
