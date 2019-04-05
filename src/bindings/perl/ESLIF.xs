@@ -424,14 +424,14 @@ SV *boot_MarpaX__ESLIF__false_svp;
 /* Remember that hv_store() and av_push() takes over one reference count. */
 #define MARPAESLIFPERL_XV_STORE(xvp, key, svp) do {     \
     if (SvTYPE((SV *)xvp) == SVt_PVHV) {                \
-      hv_store((HV *) xvp, key, strlen(key), svp, 0);   \
+      hv_store((HV *) xvp, key, strlen(key), (svp == &PL_sv_undef) ? newSV(0) : svp, 0); \
     } else {                                            \
       av_push((AV *) xvp, MARPAESLIFPERL_NEWSVPVN_UTF8(key, strlen(key))); \
-      av_push((AV *) xvp, svp);                         \
+      av_push((AV *) xvp, (svp == &PL_sv_undef) ? newSV(0) : svp);	\
     }                                                   \
   } while (0)
 
-#define MARPAESLIFPERL_XV_STORE_UNDEF(xvp, key) MARPAESLIFPERL_XV_STORE(xvp, key, newSVsv(&PL_sv_undef))
+#define MARPAESLIFPERL_XV_STORE_UNDEF(xvp, key) MARPAESLIFPERL_XV_STORE(xvp, key, newSV(0))
 
 #define MARPAESLIFPERL_XV_STORE_ACTION(hvp, key, actionp) do {          \
     SV *_svp;                                                           \
@@ -1003,7 +1003,7 @@ static short marpaESLIFPerl_valueRuleCallbackb(void *userDatavp, marpaESLIFValue
     for (i = arg0i; i <= argni; i++) {
       svp = marpaESLIFPerl_getSvp(aTHX_ Perl_MarpaX_ESLIF_Valuep, marpaESLIFValuep, i, NULL /* marpaESLIFValueResultLexemep */);
       /* One reference count ownership is transfered to the array */
-      av_push(list, svp);
+      av_push(list, (svp == &PL_sv_undef) ? newSV(0) : svp);
     }
   }
 
@@ -1038,7 +1038,7 @@ static short marpaESLIFPerl_valueSymbolCallbackb(void *userDatavp, marpaESLIFVal
   list = newAV();
   svp = marpaESLIFPerl_getSvp(aTHX_ Perl_MarpaX_ESLIF_Valuep, marpaESLIFValuep, -1 /* stackindicei */, marpaESLIFValueResultp);
   /* One reference count ownership is transfered to the array */
-  av_push(list, svp);
+  av_push(list, (svp == &PL_sv_undef) ? newSV(0) : svp);
   actionResult = marpaESLIFPerl_call_actionp(aTHX_ Perl_MarpaX_ESLIF_Valuep->Perl_valueInterfacep, Perl_MarpaX_ESLIF_Valuep->actions, list, Perl_MarpaX_ESLIF_Valuep, 0 /* evalb */, 0 /* evalSilentb */);
   /* This will decrement by one the inner element reference count */
   av_undef(list);
@@ -1904,7 +1904,7 @@ static short marpaESLIFPerl_importb(marpaESLIFValue_t *marpaESLIFValuep, void *u
       /* This is why it is not necessary to SvREFCNT_inc/SvREFCNT_dec on valuep: all we do is create an SV and move it in the hash */
       valuep = (SV *) marpaESLIFPerl_GENERICSTACK_POP_PTR(&(Perl_MarpaX_ESLIF_Valuep->valueStack));
       keyp = (SV *) marpaESLIFPerl_GENERICSTACK_POP_PTR(&(Perl_MarpaX_ESLIF_Valuep->valueStack));
-      if (hv_store_ent(hvp, keyp, valuep, 0) == NULL) {
+      if (hv_store_ent(hvp, keyp, (valuep == &PL_sv_undef) ? newSV(0) : valuep, 0) == NULL) {
         /* We never play with tied hashes, so hv_store_ent() must return a non-NULL value */
         MARPAESLIFPERL_CROAK("hv_store_ent failure");
       }
@@ -2137,7 +2137,7 @@ static short marpaESLIFPerl_is_Types__Standard(pTHX_ SV *svp, const char *types,
   short rcb;
 
   avp = newAV();
-  av_push(avp, newSVsv(svp)); /* Ref count of stringp is transfered to av -; */
+  av_push(avp, (svp == &PL_sv_undef) ? newSV(0) : newSVsv(svp)); /* Ref count of stringp is transfered to av -; */
   svp = marpaESLIFPerl_call_actionp(aTHX_ NULL /* interfacep */, types, avp, NULL /* Perl_MarpaX_ESLIF_Valuep */, 0 /* evalb */, 0 /* evalSilentb */);
   av_undef(avp);
 
@@ -2155,7 +2155,7 @@ static short marpaESLIFPerl_is_bool(pTHX_ SV *svp, int typei)
   short rcb;
 
   avp = newAV();
-  av_push(avp, newSVsv(svp)); /* Ref count of stringp is transfered to av -; */
+  av_push(avp, (svp == &PL_sv_undef) ? newSV(0) : newSVsv(svp)); /* Ref count of stringp is transfered to av -; */
   svp = marpaESLIFPerl_call_actionp(aTHX_ NULL /* interfacep */, "MarpaX::ESLIF::is_bool", avp, NULL /* Perl_MarpaX_ESLIF_Valuep */, 0 /* evalb */, 0 /* evalSilentb */);
   av_undef(avp);
 
@@ -3920,7 +3920,7 @@ CODE:
       } else {
         svp = &PL_sv_undef;
       }
-      av_push(list, svp);
+      av_push(list, (svp == &PL_sv_undef) ? newSV(0) : svp);
     }
   }
   RETVAL = newRV((SV *)list);
