@@ -281,6 +281,7 @@ public class AppJson implements Runnable {
 						" ";
 
 		String[] strings = {
+						"     [ " +
 						"       { " +
 						"          \"precision\": \"zip\", " +
 						"          \"Latitude\":  37.7668, " +
