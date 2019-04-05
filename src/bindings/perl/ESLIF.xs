@@ -1884,7 +1884,7 @@ static short marpaESLIFPerl_importb(marpaESLIFValue_t *marpaESLIFValuep, void *u
 	svp = (SV *) marpaESLIFPerl_GENERICSTACK_POP_PTR(&(Perl_MarpaX_ESLIF_Valuep->valueStack));
         /* No need to MARPAESLIFPERL_REFCNT_INC(svp) because we always increase any SV that it is valueStack */
 	/* MARPAESLIFPERL_REFCNT_INC(svp); */
-	if (av_store(avp, (SSize_t) j, svp) == NULL) {
+	if (av_store(avp, (SSize_t) j, (svp == &PL_sv_undef) ? newSV(0) : svp) == NULL) {
 	  /* MARPAESLIFPERL_REFCNT_DEC(svp); */
 	  MARPAESLIFPERL_CROAKF("av_store failure at indice %ld", (unsigned long) i);
 	}
