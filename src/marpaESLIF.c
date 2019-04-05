@@ -15942,7 +15942,7 @@ static inline marpaESLIF_string_t *_marpaESLIF_string2utf8p(marpaESLIF_t *marpaE
 
   if ((stringp == NULL) || (stringp->bytep == NULL)) {
     errno = EINVAL;
-    MARPAESLIF_ERRORF(marpaESLIFp, "%s failure, %s", strerror(errno));
+    MARPAESLIF_ERRORF(marpaESLIFp, "%s failure, %s", funcs, strerror(errno));
     goto err;
   } else {
     /* When stringp->encodingasciis is MARPAESLIF_UTF8_STRING this is a string that marpaESLIF generated. */
