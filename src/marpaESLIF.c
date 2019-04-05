@@ -14938,6 +14938,7 @@ static short _marpaESLIFRecognizer_value_validb(marpaESLIFRecognizer_t *marpaESL
       if (marpaESLIFValueResult.u.p.p != NULL) {
         if ((! marpaESLIFValueResult.u.p.shallowb) && (marpaESLIFValueResult.u.p.freeCallbackp == NULL)) {
           MARPAESLIF_ERROR(marpaESLIFRecognizerp->marpaESLIFp, "MARPAESLIF_VALUE_TYPE_PTR: non-shallow pointer is set but free callback is not set");
+          errno = EINVAL;
           goto err;
         }
       }
@@ -14946,6 +14947,7 @@ static short _marpaESLIFRecognizer_value_validb(marpaESLIFRecognizer_t *marpaESL
       if (marpaESLIFValueResult.u.a.p != NULL) {
         if ((! marpaESLIFValueResult.u.a.shallowb) && (marpaESLIFValueResult.u.a.freeCallbackp == NULL)) {
           MARPAESLIF_ERROR(marpaESLIFRecognizerp->marpaESLIFp, "MARPAESLIF_VALUE_TYPE_ARRAY: non-shallow pointer is set but free callback is not set");
+          errno = EINVAL;
           goto err;
         }
       } else {
@@ -14953,6 +14955,7 @@ static short _marpaESLIFRecognizer_value_validb(marpaESLIFRecognizer_t *marpaESL
           /* This is legal only when there is no parent recognizer: sub recognizers uses this illegal value */
           if (marpaESLIFRecognizerp->parentRecognizerp == NULL) {
             MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "MARPAESLIF_VALUE_TYPE_ARRAY: pointer is not set but array size is set to %ld", (unsigned long) marpaESLIFValueResult.u.a.sizel);
+            errno = EINVAL;
             goto err;
           }
         }
@@ -14964,12 +14967,18 @@ static short _marpaESLIFRecognizer_value_validb(marpaESLIFRecognizer_t *marpaESL
       if (marpaESLIFValueResult.u.s.p != NULL) {
         if ((! marpaESLIFValueResult.u.s.shallowb) && (marpaESLIFValueResult.u.s.freeCallbackp == NULL)) {
           MARPAESLIF_ERROR(marpaESLIFRecognizerp->marpaESLIFp, "MARPAESLIF_VALUE_TYPE_STRING: non-shallow pointer is set but free callback is not set");
+          errno = EINVAL;
           goto err;
+        }
+      } else {
+        if (marpaESLIFValueResult.u.s.sizel > 0) {
+          MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "MARPAESLIF_VALUE_TYPE_STRING: pointer is not set but size is %ld", (unsigned long) marpaESLIFValueResult.u.s.sizel);
         }
       }
       /* In any case, even for an empty string, encoding must be set */
       if (marpaESLIFValueResult.u.s.encodingasciis == NULL) {
         MARPAESLIF_ERROR(marpaESLIFRecognizerp->marpaESLIFp, "MARPAESLIF_VALUE_TYPE_STRING: encoding is not set");
+        errno = EINVAL;
         goto err;
       }
       break;
@@ -14977,6 +14986,7 @@ static short _marpaESLIFRecognizer_value_validb(marpaESLIFRecognizer_t *marpaESL
       if (marpaESLIFValueResult.u.r.p != NULL) {
         if ((! marpaESLIFValueResult.u.r.shallowb) && (marpaESLIFValueResult.u.r.freeCallbackp == NULL)) {
           MARPAESLIF_ERROR(marpaESLIFRecognizerp->marpaESLIFp, "MARPAESLIF_VALUE_TYPE_ROW: non-shallow pointer is set but free callback is not set");
+          errno = EINVAL;
           goto err;
         }
         if (marpaESLIFValueResult.u.r.sizel <= 0) {
@@ -15000,6 +15010,7 @@ static short _marpaESLIFRecognizer_value_validb(marpaESLIFRecognizer_t *marpaESL
       if (marpaESLIFValueResult.u.t.p != NULL) {
         if ((! marpaESLIFValueResult.u.t.shallowb) && (marpaESLIFValueResult.u.t.freeCallbackp == NULL)) {
           MARPAESLIF_ERROR(marpaESLIFRecognizerp->marpaESLIFp, "MARPAESLIF_VALUE_TYPE_TABLE: non-shallow pointer is set but free callback is not set");
+          errno = EINVAL;
           goto err;
         }
         if (marpaESLIFValueResult.u.t.sizel <= 0) {
@@ -15026,6 +15037,7 @@ static short _marpaESLIFRecognizer_value_validb(marpaESLIFRecognizer_t *marpaESL
       break;
     default:
       MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "marpaESLIFValueResult.type is not supported (got %d, %s)", marpaESLIFValueResult.type, _marpaESLIF_value_types(marpaESLIFValueResult.type));
+      errno = EINVAL;
       goto err;
     }
   }
@@ -15930,6 +15942,7 @@ static inline marpaESLIF_string_t *_marpaESLIF_string2utf8p(marpaESLIF_t *marpaE
 
   if ((stringp == NULL) || (stringp->bytep == NULL)) {
     errno = EINVAL;
+    MARPAESLIF_ERRORF(marpaESLIFp, "%s failure, %s", strerror(errno));
     goto err;
   } else {
     /* When stringp->encodingasciis is MARPAESLIF_UTF8_STRING this is a string that marpaESLIF generated. */
