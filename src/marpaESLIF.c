@@ -15940,63 +15940,63 @@ static inline marpaESLIF_string_t *_marpaESLIF_string2utf8p(marpaESLIF_t *marpaE
   marpaESLIF_uint32_t  codepointi;
   short                utf8b;
 
-  if ((stringp == NULL) || (stringp->bytep == NULL)) {
+  if (stringp == NULL) {
     errno = EINVAL;
     MARPAESLIF_ERRORF(marpaESLIFp, "%s failure, %s", funcs, strerror(errno));
     goto err;
+  }
+
+  /* When stringp->encodingasciis is MARPAESLIF_UTF8_STRING this is a string that marpaESLIF generated. */
+  /* Then we know it is a valid UTF-8. No need to validate it. */
+  if (stringp->encodingasciis == (char *) MARPAESLIF_UTF8_STRING) {
+    rcp = stringp;
   } else {
-    /* When stringp->encodingasciis is MARPAESLIF_UTF8_STRING this is a string that marpaESLIF generated. */
-    /* Then we know it is a valid UTF-8. No need to validate it. */
-    if (stringp->encodingasciis == (char *) MARPAESLIF_UTF8_STRING) {
-      rcp = stringp;
+    rcp = (marpaESLIF_string_t *) malloc(sizeof(marpaESLIF_string_t));
+    if (rcp == NULL) {
+      MARPAESLIF_ERRORF(marpaESLIFp, "malloc failure, %s", strerror(errno));
+      goto err;
+    }
+
+    if ((stringp->bytep == NULL) || (stringp->bytel <= 0)) {
+      /* Empty string */
+      rcp->bytep          = (char *) MARPAESLIF_EMPTY_STRING;
+      rcp->bytel          = 0;
+      rcp->encodingasciis = (char *) MARPAESLIF_UTF8_STRING;
+      rcp->asciis         = (char *) MARPAESLIF_EMPTY_STRING;
     } else {
-      rcp = (marpaESLIF_string_t *) malloc(sizeof(marpaESLIF_string_t));
-      if (rcp == NULL) {
-	MARPAESLIF_ERRORF(marpaESLIFp, "malloc failure, %s", strerror(errno));
-	goto err;
+      rcp->bytep          = NULL;
+      rcp->bytel          = 0;
+      rcp->encodingasciis = NULL;
+      rcp->asciis         = NULL;
+
+      /* When there is no encoding, we know that if the buffer is too small charset detection */
+      /* can fail. We protect against this case in known situations. */
+      fromencodingasciis = stringp->encodingasciis;
+      if (fromencodingasciis == NULL) {
+        p = stringp->bytep;
+        maxp = p + stringp->bytel;
+        utf8b = 1;
+        while (p < maxp) {
+          utf82ordi = _marpaESLIF_utf82ordi((PCRE2_SPTR8) p, &codepointi);
+          if (utf82ordi <= 0) {
+            utf8b = 0;
+            break;
+          }
+          p += utf82ordi;
+        }
+        if (utf8b) {
+          MARPAESLIF_TRACE(marpaESLIFp, funcs, "UTF-8 string detected using byte lookup");
+          fromencodingasciis = (char *) MARPAESLIF_UTF8_STRING;
+        }
       }
 
-      if (stringp->bytel <= 0) {
-	/* Empty string */
-	rcp->bytep          = (char *) MARPAESLIF_EMPTY_STRING;
-	rcp->bytel          = 0;
-	rcp->encodingasciis = (char *) MARPAESLIF_UTF8_STRING;
-	rcp->asciis         = (char *) MARPAESLIF_EMPTY_STRING;
-      } else {
-	rcp->bytep          = NULL;
-	rcp->bytel          = 0;
-	rcp->encodingasciis = NULL;
-	rcp->asciis         = NULL;
+      /* No need of rcp->asciis, this is why we do not use _marpaESLIF_string_newp() */
+      if ((rcp->bytep = _marpaESLIF_charconvb(marpaESLIFp, (char *) MARPAESLIF_UTF8_STRING, fromencodingasciis, stringp->bytep, stringp->bytel, &(rcp->bytel), &(rcp->encodingasciis), NULL /* tconvpp */, 1 /* eofb */, NULL /* byteleftsp */, NULL /* byteleftlp */, NULL /* byteleftalloclp */, tconvsilentb)) == NULL) {
+        goto err;
+      }
 
-	/* When there is no encoding, we know that if the buffer is too small charset detection */
-	/* can fail. We protect against this case in known situations. */
-	fromencodingasciis = stringp->encodingasciis;
-	if (fromencodingasciis == NULL) {
-	  p = stringp->bytep;
-	  maxp = p + stringp->bytel;
-	  utf8b = 1;
-	  while (p < maxp) {
-	    utf82ordi = _marpaESLIF_utf82ordi((PCRE2_SPTR8) p, &codepointi);
-	    if (utf82ordi <= 0) {
-	      utf8b = 0;
-	      break;
-	    }
-	    p += utf82ordi;
-	  }
-	  if (utf8b) {
-	    MARPAESLIF_TRACE(marpaESLIFp, funcs, "UTF-8 string detected using byte lookup");
-	    fromencodingasciis = (char *) MARPAESLIF_UTF8_STRING;
-	  }
-	}
-
-	/* No need of rcp->asciis, this is why we do not use _marpaESLIF_string_newp() */
-	if ((rcp->bytep = _marpaESLIF_charconvb(marpaESLIFp, (char *) MARPAESLIF_UTF8_STRING, fromencodingasciis, stringp->bytep, stringp->bytel, &(rcp->bytel), &(rcp->encodingasciis), NULL /* tconvpp */, 1 /* eofb */, NULL /* byteleftsp */, NULL /* byteleftlp */, NULL /* byteleftalloclp */, tconvsilentb)) == NULL) {
-	  goto err;
-	}
-
-	if (! _marpaESLIF_string_removebomb(marpaESLIFp, rcp->bytep, &(rcp->bytel), (char *) MARPAESLIF_UTF8_STRING, NULL /* bomsizelp */)) {
-	  goto err;
-	}
+      if (! _marpaESLIF_string_removebomb(marpaESLIFp, rcp->bytep, &(rcp->bytel), (char *) MARPAESLIF_UTF8_STRING, NULL /* bomsizelp */)) {
+        goto err;
       }
     }
   }
