@@ -2134,6 +2134,8 @@ Puts the C<marpaESLIFValueResultp> pointer at stack number C<indicei>.
 
 Returns a true value on success, a false value otherwise.
 
+In case C<marpaESLIFValueResultp> is a container, any non-shallow pointer will have to occur once only.
+
 =head3 C<marpaESLIFValue_stack_getb>
 
   marpaESLIFValue_stack_getb(marpaESLIFValue_t *marpaESLIFValuep,
