@@ -2199,46 +2199,45 @@ static short _marpaESLIF_bootstrap_G1_action_string_literalb(void *userDatavp, m
 
   /* Total concatenated size is empty ? */
   if (charl <= 0) {
-    MARPAESLIF_ERROR(marpaESLIFp, "Concatenated string literal is of zero size - this is not allowed in action adverb");
-    goto err;
-  }
-
-  charp = (char *) malloc(charl + 1);
-  if (charp == NULL) {
-    MARPAESLIF_ERRORF(marpaESLIFp, "malloc failure, %s", strerror(errno));
-    goto err;
-  }
-  p = charp;
-  for (i = arg0i; i<= argni; i++) {
-    MARPAESLIF_BOOTSTRAP_IS_UNDEF(marpaESLIFValuep, i, undefb);
-    if (undefb) {
-      continue;
+    stringp = _marpaESLIF_string_newp(marpaESLIFp, (char *) MARPAESLIF_UTF8_STRING, NULL, 0); /* Will produce empty string */
+  } else {
+    charp = (char *) malloc(charl + 1);
+    if (charp == NULL) {
+      MARPAESLIF_ERRORF(marpaESLIFp, "malloc failure, %s", strerror(errno));
+      goto err;
     }
-    MARPAESLIF_BOOTSTRAP_GET_ARRAY(marpaESLIFValuep, i, bytep, bytel);
-    memcpy(p, bytep, bytel);
-    p += bytel;
-  }
-  *p = '\0'; /* For convenience */
+    p = charp;
+    for (i = arg0i; i<= argni; i++) {
+      MARPAESLIF_BOOTSTRAP_IS_UNDEF(marpaESLIFValuep, i, undefb);
+      if (undefb) {
+      continue;
+      }
+      MARPAESLIF_BOOTSTRAP_GET_ARRAY(marpaESLIFValuep, i, bytep, bytel);
+      memcpy(p, bytep, bytel);
+      p += bytel;
+    }
+    *p = '\0'; /* For convenience */
 
-  /* Call for conversion in any case, this is a way to validate UTF-8 correctness */
-  converteds = _marpaESLIF_charconvb(marpaESLIFp,
-                                     "UTF-8",
-                                     (char *) MARPAESLIF_UTF8_STRING, /* We request that input is an UTF-8 string */
-                                     charp,
-                                     charl, /* Skip the automatic NUL byte in the source */
-                                     &convertedl,
-                                     NULL, /* fromEncodingsp */
-                                     NULL, /* tconvpp */
-                                     1, /* eofb */
-                                     NULL, /* byteleftsp */
-                                     NULL, /* byteleftlp */
-                                     NULL, /* byteleftalloclp */
-                                     0 /* tconvsilentb */);
-  if (converteds == NULL) {
-    goto err;
+    /* Call for conversion in any case, this is a way to validate UTF-8 correctness */
+    converteds = _marpaESLIF_charconvb(marpaESLIFp,
+                                       "UTF-8",
+                                       (char *) MARPAESLIF_UTF8_STRING, /* We request that input is an UTF-8 string */
+                                       charp,
+                                       charl, /* Skip the automatic NUL byte in the source */
+                                       &convertedl,
+                                       NULL, /* fromEncodingsp */
+                                       NULL, /* tconvpp */
+                                       1, /* eofb */
+                                       NULL, /* byteleftsp */
+                                       NULL, /* byteleftlp */
+                                       NULL, /* byteleftalloclp */
+                                       0 /* tconvsilentb */);
+    if (converteds == NULL) {
+      goto err;
+    }
+    stringp = _marpaESLIF_string_newp(marpaESLIFp, (char *) MARPAESLIF_UTF8_STRING, charp, charl);
   }
 
-  stringp = _marpaESLIF_string_newp(marpaESLIFp, (char *) MARPAESLIF_UTF8_STRING, charp, charl);
   if (stringp == NULL) {
     goto err;
   }
