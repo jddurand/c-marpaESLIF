@@ -5,9 +5,8 @@
 #include <genericLogger.h>
 #include <marpaESLIF.h>
 
-static short                         inputReaderb(void *userDatavp, char **inputsp, size_t *inputlp, short *eofbp, short *characterStreambp, char **encodingsp, size_t *encodinglp);
-static marpaESLIFValueRuleCallback_t ruleActionResolver(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, char *actions);
-short                                noop(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
+static short inputReaderb(void *userDatavp, char **inputsp, size_t *inputlp, short *eofbp, short *characterStreambp, char **encodingsp, size_t *encodinglp);
+short        importb(marpaESLIFValue_t *marpaESLIFValuep, void *userDatavp, marpaESLIFValueResult_t *marpaESLIFValueResultp);
 
 typedef struct marpaESLIFTester_context {
   genericLogger_t *genericLoggerp;
@@ -46,7 +45,7 @@ const static char *dsl =
   "           | array                                                            # ::shift (default action)\n"
   "           | 'true'                               action => ::true            # built-in true action\n"
   "           | 'false'                              action => ::false           # built-in false action\n"
-  "           | 'null'                               action => ::lua->lua_null   # built-in undef action\n"
+  "           | 'null'                               action => ::undef           # built-in undef action\n"
   "\n"
   "# -----------\n"
   "# JSON object\n"
@@ -57,7 +56,7 @@ const static char *dsl =
   "                                                  proper         => 1         # ... with no trailing separator\n"
   "                                                  hide-separator => 1         # ... and hide separator in the action\n"
   "                                                  \n"
-  "pairs    ::= string (-':'-) value                 action         => ::lua->lua_pairs     # Returns [ string, value ]\n"
+  "pairs    ::= string (-':'-) value                 action         => ::row     # Returns [ string, value ]\n"
   "\n"
   "# -----------\n"
   "# JSON Arrays\n"
@@ -99,9 +98,9 @@ const static char *dsl =
   "event :discard[on]  = nulled discardOn                                                # Implementation of discard disabing using reserved ':discard[on]' keyword\n"
   "event :discard[off] = nulled discardOff                                               # Implementation of discard enabling using reserved ':discard[off]' keyword\n"
   "\n"
-  "chars   ::= filled                                  action => ::lua->lua_chars\n"
-  "filled  ::= char+                                   action => ::concat                # Returns join('', char1, ..., charn)\n"
-  "chars   ::=                                         action => ::lua->lua_empty_string # Prefering empty string instead of undef\n"
+  "chars   ::= filled                                                                    # ::shift (default action)\n"
+  "filled  ::= char+                                   action => ::convert[UTF-8]        # Returns join('', char1, ..., charn)\n"
+  "chars   ::=                                         action => ::u8\"\"                # Prefering empty string instead of undef\n"
   "char    ::= /[^\"\\\\\\x00-\\x1F]+/                                                   # ::shift (default action) - take care PCRE2 [:cntrl:] includes DEL character\n"
   "          | '\\\\' '\"'                             action => ::copy[1]               # Returns double quote, already ok in data\n"
   "          | '\\\\' '\\\\'                           action => ::copy[1]               # Returns backslash, already ok in data\n"
@@ -164,54 +163,19 @@ const static char *dsl =
   "# -----------------\n"
   "<luascript>\n"
   "  -----------------------------------\n"
-  "  function lua_null()\n"
-  "    -- Special case to have nil persistency: we will return a table saying we want it to be opaque to marpaESLIF:\n"
-  "\n"
-  "    -- This table's metatable will host: an opaque flag and the representation.\n"
-  "    -- The __marpaESLIF_opaque boolean metafield gives the opaque flag.\n"
-  "    -- The __tostring standard metafield gives the representation, and must be a function that returns a string.\n"
-  "    local _mt = {}\n"
-  "    _mt.opaque = true\n"
-  "    _mt.__tostring = function() return 'null' end\n"
-  "\n"
-  "    local _result = {}\n"
-  "    setmetatable(_result, _mt) \n"
-  "    return _result\n"
-  "  end\n"
-  "  -----------------------------------\n"
   "  function lua_members(...)\n"
-  "    local _result = {}\n"
+  "    local _result = niledtablekv()\n"
   "    for _i=1,select('#', ...) do\n"
   "      local _pair = select(_i, ...)\n"
   "      local _key = _pair[1]\n"
   "      local _value = _pair[2]\n"
   "      _result[_key] = _value\n"
   "    end\n"
-  "    local _mt = {}\n"
-  "    _mt.canarray = false -- hint to say that we never want that to appear as a marpaESLIF array\n"
-  "    setmetatable(_result, _mt)\n"
   "    return _result\n"
-  "  end\n"
-  "  -----------------------------------\n"
-  "  function lua_pairs(key, value)\n"
-  "    local _pair = {[1] = key, [2] = value}\n"
-  "    return _pair\n"
   "  end\n"
   "  -----------------------------------\n"
   "  function lua_number(number)\n"
   "    local _result = tonumber(number)\n"
-  "    return _result\n"
-  "  end\n"
-  "  -----------------------------------\n"
-  "  function lua_empty_string()\n"
-  "    local _result = ''\n"
-  "    _result:encoding('UTF-8')\n"
-  "    return _result\n"
-  "  end\n"
-  "  -----------------------------------\n"
-  "  function lua_chars(chars)\n"
-  "    local _result = chars\n"
-  "    _result:encoding('UTF-8')\n"
   "    return _result\n"
   "  end\n"
   "  -----------------------------------\n"
@@ -455,9 +419,9 @@ int main() {
 
     /* Call for valuation, letting marpaESLIF free the result */
     marpaESLIFValueOption.userDatavp            = NULL; /* User specific context */
-    marpaESLIFValueOption.ruleActionResolverp   = ruleActionResolver; /* Will return the function doing the wanted rule action */
+    marpaESLIFValueOption.ruleActionResolverp   = NULL; /* Will return the function doing the wanted rule action */
     marpaESLIFValueOption.symbolActionResolverp = NULL; /* Will return the function doing the wanted symbol action */
-    marpaESLIFValueOption.importerp             = NULL; /* We do not mind about final value */
+    marpaESLIFValueOption.importerp             = importb;
     marpaESLIFValueOption.highRankOnlyb         = 1;    /* Default: 1 */
     marpaESLIFValueOption.orderByRankb          = 1;    /* Default: 1 */
     marpaESLIFValueOption.ambiguousb            = 0;    /* Default: 0 */
@@ -506,16 +470,20 @@ static short inputReaderb(void *userDatavp, char **inputsp, size_t *inputlp, sho
 }
 
 /*****************************************************************************/
-static marpaESLIFValueRuleCallback_t ruleActionResolver(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, char *actions)
+short importb(marpaESLIFValue_t *marpaESLIFValuep, void *userDatavp, marpaESLIFValueResult_t *marpaESLIFValueResultp)
 /*****************************************************************************/
 {
-  return noop;
-}
+  short rcb;
 
-/*****************************************************************************/
-short noop(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb)
-/*****************************************************************************/
-{
-  return 1;
-}
+  switch (marpaESLIFValueResultp->type) {
+  case MARPAESLIF_VALUE_TYPE_STRING:
+    fprintf(stdout, "Stringified value:\n%s\n", marpaESLIFValueResultp->u.s.p);
+    rcb = 1;
+    break;
+  default:
+    fprintf(stdout, "Unexpected value type %d\n", marpaESLIFValueResultp->type);
+    rcb = 0;
+  }
 
+  return rcb;
+}
