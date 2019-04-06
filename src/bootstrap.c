@@ -2170,6 +2170,8 @@ static short _marpaESLIF_bootstrap_G1_action_string_literalb(void *userDatavp, m
   marpaESLIF_string_t *stringp     = NULL;
   char                *charp       = NULL;
   size_t               charl       = 0;
+  char                *converteds  = NULL;
+  size_t               convertedl;
   int                  i;
   char                *p;
   void                *bytep;
@@ -2218,6 +2220,24 @@ static short _marpaESLIF_bootstrap_G1_action_string_literalb(void *userDatavp, m
   }
   *p = '\0'; /* For convenience */
 
+  /* Call for conversion in any case, this is a way to validate UTF-8 correctness */
+  converteds = _marpaESLIF_charconvb(marpaESLIFp,
+                                     "UTF-8",
+                                     (char *) MARPAESLIF_UTF8_STRING, /* We request that input is an UTF-8 string */
+                                     charp,
+                                     charl, /* Skip the automatic NUL byte in the source */
+                                     &convertedl,
+                                     NULL, /* fromEncodingsp */
+                                     NULL, /* tconvpp */
+                                     1, /* eofb */
+                                     NULL, /* byteleftsp */
+                                     NULL, /* byteleftlp */
+                                     NULL, /* byteleftalloclp */
+                                     0 /* tconvsilentb */);
+  if (converteds == NULL) {
+    goto err;
+  }
+
   stringp = _marpaESLIF_string_newp(marpaESLIFp, (char *) MARPAESLIF_UTF8_STRING, charp, charl);
   if (stringp == NULL) {
     goto err;
@@ -2233,6 +2253,9 @@ static short _marpaESLIF_bootstrap_G1_action_string_literalb(void *userDatavp, m
   rcb = 0;
 
  done:
+  if (converteds != NULL) {
+    free(converteds);
+  }
   if (charp != NULL) {
     free(charp);
   }

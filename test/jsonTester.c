@@ -16,13 +16,13 @@ typedef struct marpaESLIFTester_context {
 } marpaESLIFTester_context_t;
 
 const static char *dsl = "\n"
-":default ::= action => ::shift symbol-action => ::u8\"\\a\\x{FF}\\u{0972}\\U{0001F600}\\r/* Symbol: Comment Inside */\" /* Comment */ ::u8\"\" /* Comment again */ ::u8\"xxx\"\n"
+":default ::= action => ::shift symbol-action => ::u8\"\\a\\u{0972}\\U{0001F600}\\r/* Symbol: Comment Inside */\" /* Comment */ ::u8\"\" /* Comment again */ ::u8\"xxx\"\n"
 ":start       ::= json\n"
 "json         ::= object\n"
 "               | array\n"
 "# comma is provided as a char class here, to ensure that char classes\n"
 "# as separators are in the test suite.\n"
-"object       ::= '{' members '}'       action => ::u8\"\\a\\x{FF}\\u{0972}\\U{0001F600}\\r/* Rule: Comment Inside */\" /* Comment */ ::u8\"\" /* Comment again */ ::u8\"xxx\"\n"
+"object       ::= '{' members '}'       action => ::u8\"\\a\\u{0972}\\U{0001F600}\\r/* Rule: Comment Inside */\" /* Comment */ ::u8\"\" /* Comment again */ ::u8\"xxx\"\n"
 "members      ::= pair*                 action => do_array separator => ','\n"
 "pair         ::= string ':' value      action => do_array\n"
 "value        ::= string\n"
