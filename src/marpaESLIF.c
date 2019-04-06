@@ -14964,23 +14964,24 @@ static short _marpaESLIFRecognizer_value_validb(marpaESLIFRecognizer_t *marpaESL
     case MARPAESLIF_VALUE_TYPE_BOOL:
       break;
     case MARPAESLIF_VALUE_TYPE_STRING:
-      if (marpaESLIFValueResult.u.s.p != NULL) {
-        if ((! marpaESLIFValueResult.u.s.shallowb) && (marpaESLIFValueResult.u.s.freeCallbackp == NULL)) {
-          MARPAESLIF_ERROR(marpaESLIFRecognizerp->marpaESLIFp, "MARPAESLIF_VALUE_TYPE_STRING: non-shallow pointer is set but free callback is not set");
-          errno = EINVAL;
-          goto err;
-        }
-      } else {
-        if (marpaESLIFValueResult.u.s.sizel > 0) {
-          MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "MARPAESLIF_VALUE_TYPE_STRING: pointer is not set but size is %ld", (unsigned long) marpaESLIFValueResult.u.s.sizel);
-        }
+      /* A string MUST have p and encodingasciis != NULL, even when this is an empty string */
+      /* (in which case the caller can allocate a dummy one byte, or return a fixed adress) */
+      if (marpaESLIFValueResult.u.s.p == NULL) {
+        MARPAESLIF_ERROR(marpaESLIFRecognizerp->marpaESLIFp, "MARPAESLIF_VALUE_TYPE_STRING: pointer is not set");
+        errno = EINVAL;
+        goto err;
       }
-      /* In any case, even for an empty string, encoding must be set */
       if (marpaESLIFValueResult.u.s.encodingasciis == NULL) {
         MARPAESLIF_ERROR(marpaESLIFRecognizerp->marpaESLIFp, "MARPAESLIF_VALUE_TYPE_STRING: encoding is not set");
         errno = EINVAL;
         goto err;
       }
+      if ((! marpaESLIFValueResult.u.s.shallowb) && (marpaESLIFValueResult.u.s.freeCallbackp == NULL)) {
+        MARPAESLIF_ERROR(marpaESLIFRecognizerp->marpaESLIFp, "MARPAESLIF_VALUE_TYPE_STRING: non-shallow flag is set but free callback is not set");
+        errno = EINVAL;
+        goto err;
+      }
+      /* In any case, even for an empty string, encoding must be set */
       break;
     case MARPAESLIF_VALUE_TYPE_ROW:
       if (marpaESLIFValueResult.u.r.p != NULL) {

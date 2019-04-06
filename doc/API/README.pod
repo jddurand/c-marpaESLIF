@@ -912,7 +912,7 @@ Value type is C<marpaESLIFValueResultBool_t>, typedef'ed to: C<enum>. Recommende
 
 =item MARPAESLIF_VALUE_TYPE_STRING
 
-Value type is C<marpaESLIFValueResultString_t>, typedef'ed to: C<struct { unsigned char *p; short shallowb; size_t sizel; char *encodingasciis; }>.
+Value type is C<marpaESLIFValueResultString_t>, typedef'ed to: C<struct { unsigned char *p; short shallowb; size_t sizel; char *encodingasciis; }>. C<p> and C<encodingasciis> I<must> be set, even for an empty string.
 
 =back
 

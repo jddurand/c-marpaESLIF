@@ -228,6 +228,7 @@ static char _MARPAESLIF_JNI_CONTEXT;
 /* Globals and accessors as macros */
 /* -------------------------------- */
 static JavaVM  *marpaESLIF_vmp;
+static const char *marpaESLIFJava_EMPTY_STRING = "";
 static const char *marpaESLIFJava_UTF8s = "UTF-8";
 static jstring marpaESLIF_UTF8p;
 
@@ -4557,7 +4558,10 @@ static void marpaESLIFJava_genericFreeCallbackv(void *userDatavp, marpaESLIFValu
     break;
   case MARPAESLIF_VALUE_TYPE_STRING:
     if (marpaESLIFValueResultp->u.s.p != NULL) {
-      free(marpaESLIFValueResultp->u.s.p);
+      /* string may refer to the constant empty string */
+      if (marpaESLIFValueResultp->u.s.p != (unsigned char*) marpaESLIFJava_EMPTY_STRING) {
+        free(marpaESLIFValueResultp->u.s.p);
+      }
     }
     /* encoding may refer to the constant UTF8s */
     if ((marpaESLIFValueResultp->u.s.encodingasciis != NULL) && (marpaESLIFValueResultp->u.s.encodingasciis != marpaESLIFJava_UTF8s)) {
@@ -4936,11 +4940,11 @@ static short marpaESLIFJava_representationCallbackb(void *userDatavp, marpaESLIF
         marpaESLIFValueContextp->previous_representation_utf8s = *inputcpp;
       }
     } else {
-      *inputcpp = NULL;
+      *inputcpp = (char *) marpaESLIFJava_EMPTY_STRING; /* pointer must be set */
       *inputlp  = 0;
     }
   } else {
-    *inputcpp = NULL;
+    *inputcpp = (char *) marpaESLIFJava_EMPTY_STRING; /* pointer must be set */
     *inputlp  = 0;
   }
 

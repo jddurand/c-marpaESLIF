@@ -14,8 +14,6 @@
 #include "lua_newkeywords.c"
 #include "lua_niledtable.c"
 
-static const char *MARPAESLIFLUA_EMPTY_STRING = "";
-
 /* Shall this module determine automatically string encoding ? */
 /* #define MARPAESLIFLUA_AUTO_ENCODING_DETECT */
 
@@ -3715,7 +3713,7 @@ static short marpaESLIFLua_importb(marpaESLIFValue_t *marpaESLIFValuep, void *us
     if ((marpaESLIFValueResultp->u.s.p != NULL) && (marpaESLIFValueResultp->u.s.sizel > 0)) {
       if (! marpaESLIFLua_lua_pushlstring(NULL, L, marpaESLIFValueResultp->u.s.p, marpaESLIFValueResultp->u.s.sizel)) goto err; /* Stack: ..., MARPAESLIFSTRINGTOENCODINGTABLE, string */
     } else {
-      if (! marpaESLIFLua_lua_pushlstring(NULL, L, MARPAESLIFLUA_EMPTY_STRING, 0)) goto err;                                  /* Stack: ..., MARPAESLIFSTRINGTOENCODINGTABLE, "" */
+      if (! marpaESLIFLua_lua_pushlstring(NULL, L, "", 0)) goto err;                                                          /* Stack: ..., MARPAESLIFSTRINGTOENCODINGTABLE, "" */
     }
     if (! marpaESLIFLua_lua_pushstring(NULL, L, marpaESLIFValueResultp->u.s.encodingasciis)) goto err;                        /* Stack: ..., MARPAESLIFSTRINGTOENCODINGTABLE, string, encodingasciis */
     if (! marpaESLIFLua_lua_settable(L, -3)) goto err;                                                                        /* Stack: ..., MARPAESLIFSTRINGTOENCODINGTABLE */
@@ -6837,7 +6835,11 @@ static short marpaESLIFLua_stack_setb(lua_State *L, marpaESLIF_t *marpaESLIFp, m
           marpaESLIFValueResultp->type               = MARPAESLIF_VALUE_TYPE_STRING;
           marpaESLIFValueResultp->contextp           = MARPAESLIFLUA_CONTEXT;
           marpaESLIFValueResultp->representationp    = NULL;
-          marpaESLIFValueResultp->u.s.p              = NULL;
+          marpaESLIFValueResultp->u.s.p              = strdup("");
+          if (marpaESLIFValueResultp->u.s.p == NULL) {
+            marpaESLIFLua_luaL_errorf(L, "strdup failure, %s", strerror(errno));
+            goto err;
+          }
           marpaESLIFValueResultp->u.s.shallowb       = 0;
           marpaESLIFValueResultp->u.s.sizel          = 0;
           marpaESLIFValueResultp->u.s.encodingasciis = encodingasciis;
