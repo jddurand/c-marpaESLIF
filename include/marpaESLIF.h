@@ -12,14 +12,14 @@
 #  define MARPAESLIF_LONG_LONG long long
 #  define MARPAESLIF_LLONG_MAX LLONG_MAX
 #  define MARPAESLIF_LLONG_MIN LLONG_MIN
-#  define MARPAESLIF_LONG_LONG_FMT "%ll"
+#  define MARPAESLIF_LONG_LONG_FMT "%lld"
 #else
 #  if defined(LONGLONG_MAX) && defined(LONGLONG_MIN)
 #    define MARPAESLIF_HAVE_LONG_LONG
 #    define MARPAESLIF_LONG_LONG long long
 #    define MARPAESLIF_LLONG_MAX LONGLONG_MAX
 #    define MARPAESLIF_LLONG_MIN LONGLONG_MIN
-#    define MARPAESLIF_LONG_LONG_FMT "%ll"
+#    define MARPAESLIF_LONG_LONG_FMT "%lld"
 #  else
 #    if defined(_MSC_VER) || defined(__BORLANDC__)
 /*     Just because of versions of these compilers might not have long long, but they */
@@ -34,7 +34,7 @@
 #        define MARPAESLIF_LLONG_MAX 9223372036854775807i64
 #        define MARPAESLIF_LLONG_MIN -9223372036854775808i64
 #      endif
-#      define MARPAESLIF_LONG_LONG_FMT "%I64"
+#      define MARPAESLIF_LONG_LONG_FMT "%I64d"
 #    else
 #      undef MARPAESLIF_HAVE_LONG_LONG
 #    endif
