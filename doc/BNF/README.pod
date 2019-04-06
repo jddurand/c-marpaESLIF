@@ -211,7 +211,7 @@ Meaningful for both rule and symbol actions.
 
 =item C<::convert[[^]]+]>
 
-Creates a value of type ARRAY from the right-hand side representation encoded in the charset specified within the brackets, or UNDEF if representation is empty. I<iconv> convention is used for the charset, i.e. a charset name, followed by eventual options like C<//TRANSLIT> and/or C<//IGNORE>. Any other option depend on how the L<tconv|https://github.com/jddurand/c-tconv> library is built, and may probably not be supported. Note that using the I<iconv> notation does not mean that this is iconv running behind.
+Creates a value of type STRING from the right-hand side representation encoded in the charset specified within the brackets, or UNDEF if representation is empty. I<iconv> convention is used for the charset, i.e. a charset name, followed by eventual options like C<//TRANSLIT> and/or C<//IGNORE>. Any other option depend on how the L<tconv|https://github.com/jddurand/c-tconv> library is built, and may probably not be supported. Note that using the I<iconv> notation does not mean that this is iconv running behind.
 
 Please refer to the I<representation> section below.
 
