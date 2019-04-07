@@ -1637,7 +1637,7 @@ static short marpaESLIFPerl_importb(marpaESLIFValue_t *marpaESLIFValuep, void *u
     MARPAESLIF_VALUE_TYPE_PTR          char*                    SV* or PTR2IV()
     MARPAESLIF_VALUE_TYPE_ARRAY                                 PV*
     MARPAESLIF_VALUE_TYPE_BOOL                                  $MarpaX::ESLIF::true or $MarpaX::ESLIF::false
-    MARPAESLIF_VALUE_TYPE_STRING                                PV*
+    MARPAESLIF_VALUE_TYPE_STRING                                PV* or MarpaX::ESLIF::String instance
     MARPAESLIF_VALUE_TYPE_ROW                                   AV*
     MARPAESLIF_VALUE_TYPE_TABLE                                 HV*
     MARPAESLIF_VALUE_TYPE_LONG_DOUBLE                           NV* or Math::BigFloat
