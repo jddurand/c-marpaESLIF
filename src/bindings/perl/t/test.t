@@ -259,7 +259,7 @@ package main;
 use strict;
 use warnings FATAL => 'all';
 use Test::More;
-use Test::Deep::NoTest 1.128 qw/cmp_details deep_diag/;
+use Test::Deep::NoTest qw/cmp_details deep_diag/;
 use Log::Log4perl qw/:easy/;
 use Log::Any::Adapter;
 use Log::Any qw/$log/;
