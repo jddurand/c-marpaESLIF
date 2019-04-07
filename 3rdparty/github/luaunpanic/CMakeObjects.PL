@@ -37,6 +37,14 @@ if (is_os_type('Windows')) {
     push(@extra_compiler_flags, '-DLUA_DL_DLOPEN');
     push(@extra_compiler_flags, '-DLUA_USE_POSIX');
 }
+$ac->msg_checking(sprintf "if this is solaris compiler");
+if ($ac->link_if_else("#if defined(__sun) && defined(__SVR4)\n#else\n#error \"this is not solaris compiler\"\n#endif\nint main() { return 0; }")) {
+    $ac->msg_result('yes');
+    $ac->msg_notice("Adding -xc99 to extra compiler flags");
+    push(@extra_compiler_flags, '-xc99');
+} else {
+    $ac->msg_result('no');
+}
 my $extra_compiler_flags = join(' ', @extra_compiler_flags);
 $ac->check;
 write_config($version, $config_h_in, $config_h);

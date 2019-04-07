@@ -97,6 +97,21 @@ IF (LUA_PUBLIC_CFLAGS_LENGTH GREATER 0)
   ENDFOREACH ()
 ENDIF ()
 
+#
+# Those definitions are private
+#
+SET (LUA_PRIVATE_C_FLAGS)
+IF (CMAKE_C_COMPILER_ID STREQUAL SunPro)
+  SET (LUA_PRIVATE_C_FLAGS "-xc99")
+ENDIF ()
+
+IF (NOT "x${LUA_PRIVATE_C_FLAGS}" STREQUAL x)
+  #
+  # Fortunately this will remain local to this CMakeLists.txt -;
+  #
+  SET (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${LUA_PRIVATE_C_FLAGS}")
+ENDIF ()
+
 ###############
 # Executables #
 ###############
