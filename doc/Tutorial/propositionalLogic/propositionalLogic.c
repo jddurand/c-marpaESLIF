@@ -48,7 +48,7 @@ const static char *grammars =
   "\n"
   "    Sentence        ::= SYMBOL\n"
   "                      | LPAREN Sentence RPAREN              assoc => group action => ::copy[1]\n"
-  "                     || NOT Sentence                                       action => action_not\n"
+  "                     || NOT    Sentence                                    action => action_not\n"
   "                     ||        Sentence        AND Sentence                action => action_and\n"
   "                     ||        Sentence         OR Sentence                action => action_or\n"
   "                     ||        Sentence    IMPLIES Sentence                action => action_implies\n"
@@ -73,6 +73,7 @@ static short                         action_implies(void *userDatavp, marpaESLIF
 static short                         action_equivalent(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
 
 short                                importb(marpaESLIFValue_t *marpaESLIFValuep, void *userDatavp, marpaESLIFValueResult_t *marpaESLIFValueResultp);
+static short                         getFromstack(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int indicei);
 
 typedef struct valueContext {
   genericLogger_t *genericLoggerp;
@@ -158,7 +159,6 @@ int main() {
         marpaESLIFValueOption.userDatavp             = &valueContext;
         marpaESLIFValueOption.ruleActionResolverp    = ruleActionResolverp;
         marpaESLIFValueOption.symbolActionResolverp  = NULL; /* No symbol action resolver... Okay we use the default */
-        marpaESLIFValueOption.freeActionResolverp    = NULL; /* No free action resolver... Okay if we generate no pointer */
         marpaESLIFValueOption.importerp              = importb;
         marpaESLIFValueOption.highRankOnlyb          = 1;    /* Recommended value */
         marpaESLIFValueOption.orderByRankb           = 1;    /* Recommended value */
@@ -244,12 +244,12 @@ static marpaESLIFValueRuleCallback_t ruleActionResolverp(void *userDatavp, marpa
 static short action_not(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb)
 /*****************************************************************************/
 {
-  valueContext_t         *valueContextp = (valueContext_t *) userDatavp;
-  short                   valb;
-  short                   resultb;
-  marpaESLIFValueResult_t marpaESLIFValueResult;
+  valueContext_t          *valueContextp = (valueContext_t *) userDatavp;
+  short                    valb;
+  short                    resultb;
+  marpaESLIFValueResult_t  marpaESLIFValueResult;
 
-  if (! marpaESLIFValue_stack_get_importb(marpaESLIFValuep, argni)) return 0;
+  if (! getFromstack(userDatavp, marpaESLIFValuep, argni)) return 0;
 
   resultb = (valueContextp->result ? 0 : 1);
   GENERICLOGGER_DEBUGF(valueContextp->genericLoggerp, ".............. {P, Q, R} = {%d, %d, %d}... NOT %d : %d", (int) valueContextp->p, (int) valueContextp->q, (int) valueContextp->r, (int) valb, (int) resultb);
@@ -272,10 +272,10 @@ static short action_and(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, i
   short                   resultb;
   marpaESLIFValueResult_t marpaESLIFValueResult;
 
-  if (! marpaESLIFValue_stack_get_importb(marpaESLIFValuep, arg0i)) return 0;
+  if (! getFromstack(userDatavp, marpaESLIFValuep, arg0i)) return 0;
   leftb = valueContextp->result;
 
-  if (! marpaESLIFValue_stack_get_importb(marpaESLIFValuep, argni)) return 0;
+  if (! getFromstack(userDatavp, marpaESLIFValuep, argni)) return 0;
   rightb = valueContextp->result;
 
   resultb = (leftb && rightb) ? 1 : 0;
@@ -299,10 +299,10 @@ static short action_or(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, in
   short                   resultb;
   marpaESLIFValueResult_t marpaESLIFValueResult;
 
-  if (! marpaESLIFValue_stack_get_importb(marpaESLIFValuep, arg0i)) return 0;
+  if (! getFromstack(userDatavp, marpaESLIFValuep, arg0i)) return 0;
   leftb = valueContextp->result;
 
-  if (! marpaESLIFValue_stack_get_importb(marpaESLIFValuep, argni)) return 0;
+  if (! getFromstack(userDatavp, marpaESLIFValuep, argni)) return 0;
   rightb = valueContextp->result;
 
   resultb = (leftb || rightb) ? 1 : 0;
@@ -326,10 +326,10 @@ static short action_implies(void *userDatavp, marpaESLIFValue_t *marpaESLIFValue
   short                   resultb;
   marpaESLIFValueResult_t marpaESLIFValueResult;
 
-  if (! marpaESLIFValue_stack_get_importb(marpaESLIFValuep, arg0i)) return 0;
+  if (! getFromstack(userDatavp, marpaESLIFValuep, arg0i)) return 0;
   leftb = valueContextp->result;
 
-  if (! marpaESLIFValue_stack_get_importb(marpaESLIFValuep, argni)) return 0;
+  if (! getFromstack(userDatavp, marpaESLIFValuep, argni)) return 0;
   rightb = valueContextp->result;
 
   resultb = leftb ? rightb : 1;
@@ -353,10 +353,10 @@ static short action_equivalent(void *userDatavp, marpaESLIFValue_t *marpaESLIFVa
   short                   resultb;
   marpaESLIFValueResult_t marpaESLIFValueResult;
 
-  if (! marpaESLIFValue_stack_get_importb(marpaESLIFValuep, arg0i)) return 0;
+  if (! getFromstack(userDatavp, marpaESLIFValuep, arg0i)) return 0;
   leftb = valueContextp->result;
 
-  if (! marpaESLIFValue_stack_get_importb(marpaESLIFValuep, argni)) return 0;
+  if (! getFromstack(userDatavp, marpaESLIFValuep, argni)) return 0;
   rightb = valueContextp->result;
 
   resultb = (leftb == rightb) ? 1 : 0;
@@ -409,3 +409,25 @@ short importb(marpaESLIFValue_t *marpaESLIFValuep, void *userDatavp, marpaESLIFV
 
   return rcb;
 }
+
+/*****************************************************************************/
+static short getFromstack(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int indicei)
+/*****************************************************************************/
+{
+  valueContext_t          *valueContextp = (valueContext_t *) userDatavp;
+  marpaESLIFValueResult_t *marpaESLIFValueResultp;
+
+  marpaESLIFValueResultp = marpaESLIFValue_stack_getp(marpaESLIFValuep, indicei);
+  if (marpaESLIFValueResultp == NULL) {
+    GENERICLOGGER_DEBUGF(valueContextp->genericLoggerp, "marpaESLIFValueResultp is NULL at stack indice %d", indicei);
+    return 0;
+  }
+
+  if (! marpaESLIFValue_importb(marpaESLIFValuep, marpaESLIFValueResultp, NULL /* marpaESLIFValueResultResolvedp */)) {
+    GENERICLOGGER_DEBUGF(valueContextp->genericLoggerp, "marpaESLIFValue_importb failure, %s", strerror(errno));
+    return 0;
+  }
+
+  return 1;
+}
+

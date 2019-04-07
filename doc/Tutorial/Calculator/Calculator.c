@@ -135,7 +135,6 @@ int main() {
   marpaESLIFValueOption.userDatavp             = &value_context;
   marpaESLIFValueOption.ruleActionResolverp    = ruleActionResolverp;
   marpaESLIFValueOption.symbolActionResolverp  = NULL; /* No symbol action resolver... Okay we use the default */
-  marpaESLIFValueOption.freeActionResolverp    = NULL; /* No free action resolver... Okay if we generate no pointer */
   marpaESLIFValueOption.importerp              = importb;
   marpaESLIFValueOption.highRankOnlyb          = 1;    /* Recommended value */
   marpaESLIFValueOption.orderByRankb           = 1;    /* Recommended value */
