@@ -1,0 +1,108 @@
+=encoding UTF-8
+
+=head1 NAME
+
+marpaESLIFBindings - Extended Marpa's Scanless Interface Bindings
+
+=head1 DESCRIPTION
+
+marpaESLIF is a Scanless Interface expressed in a BNF format, that is using L<marpaWrapper|https://github.com/jddurand/c-marpaWrapper>, itself being a thin interface on top of L<libmarpa|https://jeffreykegler.github.io/Marpa-web-site/libmarpa.html> parser.
+
+The L<marpaESLIF BNF|https://github.com/jddurand/c-marpaESLIF/tree/master/doc/BNF> is inspired from L<Marpa::R2's DSL|https://metacpan.org/pod/distribution/Marpa-R2/pod/Scanless/DSL.pod>, though with some incompatible changes and add-ons:
+
+This document explains language bindings to the perl, java and lua languages.
+
+=head1 BINDINGS
+
+Language bindings involves transformation in and our of marpaESLIF. Every host language, e.g. java, perl, lua is specific and interfaced via a C module compiled specifically for it.
+
+=head2 JAVA
+
+Java version 1.4 or later is required.
+
+Note that autoboxing is used implicitely in the interface, e.g. Java's C<byte> native type and Java's C<java.lang.Byte> object are equivalent, and so on.
+
+=head3 Java to marpaESLIF
+
+   --------------------------------------------------------------------------
+  | Java     | marpaESLIF Type                                               |
+   --------------------------------------------------------------------------
+  | null     | UNDEF                                                         |
+  | byte     | CHAR, SHORT, INT, LONG, LONG_LONG or PTR (opaque) [1]         |
+  | short    | CHAR, SHORT, INT, LONG, LONG_LONG or PTR (opaque) [1]         |
+  | float    | FLOAT, DOUBLE, LONG_DOUBLE (if available) or PTR (opaque) [2] |
+  | double   | FLOAT, DOUBLE, LONG_DOUBLE (if available) or PTR (opaque) [2] |
+  | byte[]   | ARRAY                                                         |
+  | bool     | BOOL                                                          |
+  | char     | STRING [3]                                                    |
+  | String   | STRING                                                        |
+  | object[] | ROW                                                           |
+  | Map      | TABLE [4]                                                     |
+  | other    | PTR [5]                                                       |
+   --------------------------------------------------------------------------
+
+=over
+
+=item [1]
+
+Every non decimal number goes to a generic method that looks to the size of the data in JNI, i.e. the size of C<jbyte>, C<jshort>, C<jint>, C<jlong>. This JNI size is compared to the shortest C<C> integral integer types, i.e. C<char>, C<short>, C<int>, C<long> and C<long long>, that maps exactly to marpaESLIF types C<CHAR>, C<SHORT>, C<INT>, C<LONG> and C<LONG_LONG>, respectively. The shortest C<C> type is taken. If not found then the java value is kept into a global reference, and exported using a marpaESLIF's C<PTR> type, that only JNI will be able to understand when it comes back.
+
+=item [2]
+
+Every decimal number goes to a generic method that looks to the size of the data in JNI, i.e. the size of C<jfloat>, C<jdouble>. This JNI size is compared to the shortest C<C> floating types, i.e. C<float>, C<double>, C<long double> (if available), that maps exactly to marpaESLIF types C<FLOAT>, C<DOUBLE>, C<LONG_DOUBLE> (if available), respectively. The shortest C<C> type is taken. If not found then the java value is kept into a global reference, and exported using a marpaESLIF's C<PTR> type, that only JNI will be able to understand when it comes back.
+
+=item [2]
+
+A character embeds a charset, therefore it is exported as a marpaESLIF's C<STRING>.
+
+=item [4]
+
+Every object that is an instance of C<java.util.Map> abstract class is mapped to a marpaESLIF's C<TABLE>.
+
+=item [4]
+
+Every object that is not mappable into a marpaESLIF type, is exported using marpaESLIF's C<PTR>. The JNI takes a global reference to it, and will be able to recognizes ot when it comes back, derefencing it to the native object.
+
+=back
+
+=head3 marpaESLIF to Java
+
+   --------------------------------------------------------------------------
+  | marpaESLIF Type | Java type | Java value                                 |
+   --------------------------------------------------------------------------
+  | UNDEF           | Object with a null value                               |
+  | CHAR            | byte or short or int or long or Math.BigInteger [1]    |
+  | SHORT           | byte or short or int or long or Math.BigInteger [1]    |
+  | INT             | byte or short or int or long or Math.BigInteger [1]    |
+  | LONG            | byte or short or int or long or Math.BigInteger [1]    |
+  | FLOAT           | float or double or Math.BigDecimal [2]                 |
+  | DOUBLE          | float or double or Math.BigDecimal [2]                 |
+  | PTR             | Java specific value or long [3]                        |
+  | ARRAY           | byte[]                                                 |
+  | BOOL            | bool                                                   |
+  | STRING          | String                                                 |
+  | ROW             | Object[]                                               |
+  | TABLE           | HashMap                                                |
+  | LONG_DOUBLE     | float or double or Math.BigDecimal [2]                 |
+  | LONG_LONG       | byte or short or int or long or Math.BigInteger [1]    |
+   --------------------------------------------------------------------------
+
+=over
+
+=item [1]
+
+The number of bits of the C<C> type is compared to the number of bits in java, that is fixed whatever the java version. The shortest java type is used, else a Math.BigInteger default if not java type is found.
+
+=item [2]
+
+The number of bits of the C<C> type is compared to the number of bits in java, that is fixed whatever the java version. The shortest java type is used, else a Math.BigDecimal default if not java type is found.
+
+=item [3]
+
+A java specific value is something that the JNI exported to marpaESLIF using an opaque pointer. In such a case, when it comes back to JNI, the binding recognizes this case, and dereferences the native java object as it was originally, via a global reference that it maintained. In any other case, this is a pointer not owned by Java, and it is transformed to a Java's C<long>.
+
+=back
+
+=head1 SEE ALSO
+
+L<marpaESLIF|https://github.com/jddurand/c-marpaESLIF/tree/master>
