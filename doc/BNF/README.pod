@@ -740,6 +740,30 @@ marpaESLIF BNF can be expressed in itself:
   <regular expression>             ~ /(?:(?|(?:\/(?![*\/]))(?:[^\\\/]*(?:\\.[^\\\/]*)*)(?:\/)))/su
                                    | /(?:(?|(?:\/(?![*\/]))(?:[^\\\/]*(?:\\.[^\\\/]*)*)(?:\/)))/su /[eijmnsxDJUuaNbcA]+/
 
+=head1 NOTES
+
+The embedded lua language always have the following globals when executing its actions:
+
+=over
+
+=item marpaESLIF
+
+Lua object representing current marpaESLIF instance.
+
+=item marpaESLIFGrammar
+
+Lua object representing current marpaESLIFGrammar instance.
+
+=item marpaESLIFRecognizer
+
+Lua object representing current marpaESLIFRecognizer instance.
+
+=item marpaESLIFValue
+
+Lua object representing current marpaESLIFValue instance.
+
+=back
+
 =head1 SEE ALSO
 
 L<marpaESLIF|https://github.com/jddurand/c-marpaESLIF>, L<tconv|https://github.com/jddurand/c-tconv>, L<ICU|http://site.icu-project.org/>
