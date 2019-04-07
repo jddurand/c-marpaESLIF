@@ -318,7 +318,7 @@ When the pointer is not Lua specific, the whole original information is kept, so
 
 =item [5]
 
-Table with niled values support, explicitly marked to be exported to a marpaESLIF's ARRAY if it ever happens.
+Table with niled values support, explicitly marked to be exported to a marpaESLIF's ROW if it ever happens.
 
 =item [6]
 
