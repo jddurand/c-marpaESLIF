@@ -105,7 +105,7 @@ static const int   MARPAESLIF_VERSION_PATCH_STATIC = MARPAESLIF_VERSION_PATCH;
 #endif
 
 #ifndef MARPAESLIF_HASH_SIZE
-#define MARPAESLIF_HASH_SIZE GENERICSTACK_DEFAULT_LENGTH
+#define MARPAESLIF_HASH_SIZE 16 /* Suggestive number - raising too high leads to unnecessary CPU when doing relax */
 #endif
 
 /* Internal marpaESLIFValueResult used to do lazy row transformation: we use an INVALID type */
@@ -16217,6 +16217,7 @@ static inline short _marpaESLIF_flatten_pointers(marpaESLIF_t *marpaESLIFp, gene
   short                    findResultb;
   short                    rcb;
   marpaESLIFValueType_t    type;
+  int                      hashindexi;
 
   /* This method has a big cost - we know that we will have nothing by looking at the type marpaESLIFValueResultp */
   switch (marpaESLIFValueResultp->type) {
@@ -16299,13 +16300,15 @@ static inline short _marpaESLIF_flatten_pointers(marpaESLIF_t *marpaESLIFp, gene
       }
       /* Remember this pointer, value is the corresponding marpaESLIFValueResult pointer */
       findResultb = 0;
-      GENERICHASH_FIND(flattenPtrHashp,
-                       NULL, /* userDatavp */
-                       PTR,
-                       p,
-                       SHORT,
-                       &shallowb,
-                       findResultb);
+      hashindexi = _marpaESLIF_ptrhashi(NULL /* userDatavp */, GENERICSTACKITEMTYPE_PTR, (void **) &p);
+      GENERICHASH_FIND_BY_IND(flattenPtrHashp,
+                              NULL, /* userDatavp */
+                              PTR,
+                              p,
+                              SHORT,
+                              &shallowb,
+                              findResultb,
+                              hashindexi);
       if (GENERICHASH_ERROR(flattenPtrHashp)) {
         MARPAESLIF_ERRORF(marpaESLIFp, "flattenPtrHashp find failure, %s", strerror(errno));
         goto err;
@@ -16314,7 +16317,7 @@ static inline short _marpaESLIF_flatten_pointers(marpaESLIF_t *marpaESLIFp, gene
         MARPAESLIF_ERROR(marpaESLIFp, "Recursive marpaESLIFValueResult is not allowed");
         goto err;
       }
-      GENERICHASH_SET(flattenPtrHashp, NULL /* userDatavp */, PTR, p, PTR, marpaESLIFValueResultTmpp);
+      GENERICHASH_SET_BY_IND(flattenPtrHashp, NULL /* userDatavp */, PTR, p, PTR, marpaESLIFValueResultTmpp, hashindexi);
       if (GENERICHASH_ERROR(flattenPtrHashp)) {
         MARPAESLIF_ERRORF(marpaESLIFp, "flattenPtrHashp failure, %s", strerror(errno));
         goto err;
