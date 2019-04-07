@@ -25,7 +25,7 @@ Note that autoboxing is used implicitely in the interface, e.g. Java's C<byte> n
 =head3 Java to marpaESLIF
 
   [--------------------------------------------------------------------------]
-  | Java     | marpaESLIF Type                                               |
+  | Java     | marpaESLIF                                                    |
   [--------------------------------------------------------------------------]
   | null     | UNDEF                                                         |
   | byte     | CHAR, SHORT, INT, LONG, LONG_LONG or PTR (opaque) [1]         |
@@ -67,25 +67,25 @@ Every object that is not mappable into a marpaESLIF type, is exported using marp
 
 =head3 marpaESLIF to Java
 
-  [--------------------------------------------------------------------------]
-  | marpaESLIF Type | Java type | Java value                                 |
-  [--------------------------------------------------------------------------]
-  | UNDEF           | Object with a null value                               |
-  | CHAR            | byte or short or int or long or Math.BigInteger [1]    |
-  | SHORT           | byte or short or int or long or Math.BigInteger [1]    |
-  | INT             | byte or short or int or long or Math.BigInteger [1]    |
-  | LONG            | byte or short or int or long or Math.BigInteger [1]    |
-  | FLOAT           | float or double or Math.BigDecimal [2]                 |
-  | DOUBLE          | float or double or Math.BigDecimal [2]                 |
-  | PTR             | Java specific value or long [3]                        |
-  | ARRAY           | byte[]                                                 |
-  | BOOL            | bool                                                   |
-  | STRING          | String                                                 |
-  | ROW             | Object[]                                               |
-  | TABLE           | HashMap                                                |
-  | LONG_DOUBLE     | float or double or Math.BigDecimal [2]                 |
-  | LONG_LONG       | byte or short or int or long or Math.BigInteger [1]    |
-  [--------------------------------------------------------------------------]
+  [----------------------------------------------------------------------]
+  | marpaESLIF  | Java                                                   |
+  [----------------------------------------------------------------------]
+  | UNDEF       | Object with a null value                               |
+  | CHAR        | byte or short or int or long or Math.BigInteger [1]    |
+  | SHORT       | byte or short or int or long or Math.BigInteger [1]    |
+  | INT         | byte or short or int or long or Math.BigInteger [1]    |
+  | LONG        | byte or short or int or long or Math.BigInteger [1]    |
+  | FLOAT       | float or double or Math.BigDecimal [2]                 |
+  | DOUBLE      | float or double or Math.BigDecimal [2]                 |
+  | PTR         | Java specific value or long [3]                        |
+  | ARRAY       | byte[]                                                 |
+  | BOOL        | bool                                                   |
+  | STRING      | String                                                 |
+  | ROW         | Object[]                                               |
+  | TABLE       | HashMap                                                |
+  | LONG_DOUBLE | float or double or Math.BigDecimal [2]                 |
+  | LONG_LONG   | byte or short or int or long or Math.BigInteger [1]    |
+  [----------------------------------------------------------------------]
 
 =over
 
