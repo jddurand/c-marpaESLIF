@@ -70,7 +70,7 @@ Every object that is not mappable into a marpaESLIF type, is exported using marp
   [----------------------------------------------------------------------]
   | marpaESLIF  | Java                                                   |
   [----------------------------------------------------------------------]
-  | UNDEF       | Object with a null value                               |
+  | UNDEF       | null                                                   |
   | CHAR        | byte or short or int or long or Math.BigInteger [1]    |
   | SHORT       | byte or short or int or long or Math.BigInteger [1]    |
   | INT         | byte or short or int or long or Math.BigInteger [1]    |
