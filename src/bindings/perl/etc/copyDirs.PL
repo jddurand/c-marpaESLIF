@@ -131,6 +131,27 @@ print BNF $BNF;
 close(BNF) || warn "Cannot close $dst, $!";
 
 #
+# Idem for src/bindings/README.pod
+#
+$src = File::Spec->catfile(($updir) x 3, 'src', 'bindings', 'README.pod');
+$dst = File::Spec->catfile('lib', 'MarpaX', 'ESLIF', 'Bindings.pod');
+print "... Copying file $src to $dst\n";
+copy($src, $dst)|| die "$!";
+print "... Adapting $dst to perl\n";
+open(BINDINGS, '<', $dst) || die "Cannot open $dst, $!";
+my $BINDINGS = do { local $/; <BINDINGS>; };
+close(BINDINGS) || warn "Cannot close $dst, $!";
+$BINDINGS =~ s/^=for html.*?$//sm;
+$BINDINGS =~ s/^marpaESLIF_BINDINGS.*?$//sxmg;
+$BINDINGS =~ s/marpaESLIF_/MarpaX::ESLIF::/g;
+$BINDINGS =~ s/marpaESLIF /MarpaX::ESLIF /g;
+open(BINDINGS, '>', $dst) || die "Cannot open $dst, $!";
+print BINDINGS "# PODNAME: MarpaX::ESLIF::Bindings\n\n";
+print BINDINGS "# ABSTRACT: MarpaX::ESLIF's Bindings\n\n";
+print BINDINGS $BINDINGS;
+close(BINDINGS) || warn "Cannot close $dst, $!";
+
+#
 # Idem for README.pod
 #
 $src = File::Spec->catfile(($updir) x 3, 'README.pod');
