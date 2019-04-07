@@ -194,6 +194,138 @@ If the encoding is "UTF-8", returns a true perl string (using a perl C<PV>), els
 
 =back
 
+=head1 LUA
+
+Lua version 5.2 or later is required.
+
+The following lua specifics are added by the lua binding library:
+
+=over
+
+=item embedded version
+
+Embedded lua is fixed to version 5.3.4. Any lua panic is catched by marpaESLIF.
+
+=item pairs
+
+Lua bindings never loops on table using the "next", but always with the "pairs" metamethod if it exists (fallbacking to "next").
+
+=item string encoding metadata
+
+string metatable has a new string "encoding" metatada, defaults to nil. Because strings in lua are always unique, two instances of string cannot have different encoding information.
+
+=item canarray table metadata
+
+The "canarray" boolean metadata is looked up on table, to determine if the the end-user definitely wants the binding to see table as an array or not. This applies only to table than <can> be exported as an array, i.e. that have adjacent integer keys.
+
+=item opaque table metadata
+
+The "opaue" boolean metadata is looked up on table, to determine if the the end-user definitely wants the binding to never transform data when doing through marpaESLIF. Then only the lua interpreter will be able to understand what is behind, any other host language will see an opaque ununderstable pointer.
+
+=item Niled table support
+
+An implementation quite similar to L<Storing Nils In Tables|http://lua-users.org/wiki/StoringNilsInTables> is available, using these methods:
+
+=over
+
+=item NiledTable
+
+=item niledarray
+
+=item niledtablekv
+
+=back
+
+=back
+
+=head2 Lua to marpaESLIF
+
+  [--------------------------------------------------------------------------]
+  | Lua      | marpaESLIF                                                    |
+  [--------------------------------------------------------------------------]
+  | nil      | UNDEF                                                         |
+  | integer  | SHORT, INT, LONG, LONG_LONG or PTR (opaque) [1]               |
+  | number   | FLOAT, DOUBLE, LONG_DOUBLE or PTR (opaque) [2]                |
+  | bool     | BOOL                                                          |
+  | string   | STRING, ARRAY [3]                                             |
+  | userdata | ROW, TABLE [4]                                                |
+  | other    | PTR [5]                                                       |
+  [--------------------------------------------------------------------------]
+
+=over
+
+=item [1]
+
+The shortest C's integral integer type is used, else the value is exported as an opaque pointer that only Lua can understand.
+
+=item [2]
+
+The shortest C's float type is used, else the value is exported as an opaque pointer that only Lua can understand.
+
+=item [3]
+
+In Lua, strings are as in C: an opaque byte array. The lua binding adds the "encoding" meta data to the string object, and if set a lua string will be exported to a marpaESLIF's STRING, else as a marpaESLIF's ARRAY.
+
+=item [4]
+
+In Lua, arrays are just a simple form of tables. Lua binding add the support of a "canarray" table meta data, which defaults to true. If the lua table looks like an array and this flag is true, data will be exported as a marpaESLIF's ROW, else as a marpaESLIF's TABLE.
+
+=item [5]
+
+Fallback is to export lua value as an opaque pointer, that only Lua can understand. Then lua binding keeps a reference internally to this value as long as necessary.
+
+=back
+
+=head2 marpaESLIF to Lua
+
+  [----------------------------------------------------------------------]
+  | marpaESLIF  | Perl                                                   |
+  [----------------------------------------------------------------------]
+  | UNDEF       | nil                                                    |
+  | CHAR        | string [1]                                             |
+  | SHORT       | integer [2]                                            |
+  | INT         | integer [2]                                            |
+  | LONG        | integer [2]                                            |
+  | FLOAT       | number [3]                                             |
+  | DOUBLE      | number [3]                                             |
+  | PTR         | Lua specific value or light user data [4]              |
+  | ARRAY       | string [1]                                             |
+  | BOOL        | bool                                                   |
+  | STRING      | string [4]                                             |
+  | ROW         | niledtable [5]                                         |
+  | TABLE       | niledtable [6]                                         |
+  | LONG_DOUBLE | number [3]                                             |
+  | LONG_LONG   | integer [2]                                            |
+  [----------------------------------------------------------------------]
+
+=over
+
+=item [1]
+
+String with no associated encoding.
+
+=item [2]
+
+Casted to a Lua's C<lua_Integer>, i.e. truncation if possible.
+
+=item [3]
+
+Casted to a Lua's C<lua_Number>, i.e. truncation if possible.
+
+=item [4]
+
+When the pointer is not Lua specific, the whole original information is kept, so that opaque information coming from host languages is kept as-is.
+
+=item [5]
+
+Table with niled values support, explicitly marked to be exported to a marpaESLIF's ARRAY if it ever happens.
+
+=item [6]
+
+Table with niled values support, explicitly marked to be exported to a marpaESLIF's TABLE if it ever happens.
+
+=back
+
 =head1 SEE ALSO
 
 L<marpaESLIF|https://github.com/jddurand/c-marpaESLIF/tree/master>
