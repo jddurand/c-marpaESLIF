@@ -7343,7 +7343,7 @@ static short marpaESLIFLua_metatypeb(int *luaip, lua_State *L, int index)
       if (! marpaESLIFLua_lua_type(&metatypei, L, -1)) goto err;
       if (metatypei == LUA_TFUNCTION) {
         if (! marpaESLIFLua_lua_pushnil(L)) goto err;                   /* Stack: ..., __type(), nil */
-        if (! marpaESLIFLua_lua_copy(L, index, -1));                    /* Stack: ..., __type(), value */
+        if (! marpaESLIFLua_lua_copy(L, index, -1)) goto err;           /* Stack: ..., __type(), value */
         if (! marpaESLIFLua_lua_call(L, 1, 1)) goto err;                /* Stack: ..., __type(value) */
         if (! marpaESLIFLua_lua_type(&metavaluetypei, L, -1)) goto err;
         if (metavaluetypei != LUA_TNIL) {
@@ -7437,7 +7437,7 @@ static short marpaESLIFLua_metanextb(int *rcip, lua_State *L, int idx)
     if (metatypei == LUA_TFUNCTION) {
       if (! marpaESLIFLua_lua_insert(L, -2)) goto err;                /* Stack: ..., __next(), <key> */
       if (! marpaESLIFLua_lua_pushnil(L)) goto err;                   /* Stack: ..., __next(), <key>, nil */
-      if (! marpaESLIFLua_lua_copy(L, idx, -1));                      /* Stack: ..., __next(), <key>, table */
+      if (! marpaESLIFLua_lua_copy(L, idx, -1)) goto err;             /* Stack: ..., __next(), <key>, table */
       if (! marpaESLIFLua_lua_insert(L, -2)) goto err;                /* Stack: ..., __next(), table, <key> */
       if (! marpaESLIFLua_lua_call(L, 2, 2)) goto err;                /* Stack: ..., nextkey, nextvalue */
       if (! marpaESLIFLua_metatypeb(&metakeytypei, L, -2)) goto err;
