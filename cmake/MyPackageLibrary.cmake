@@ -64,6 +64,38 @@ MACRO (MYPACKAGELIBRARY config_in config_out)
       )
   ENDFOREACH ()
   #
+  # We always enable C99 when available
+  #
+  IF (MYPACKAGE_DEBUG)
+    MESSAGE(STATUS "Enabling c99 features on the C compiler if possible")
+  ENDIF ()
+  FOREACH (_target ${PROJECT_NAME} ${PROJECT_NAME}_static)
+    SET_PROPERTY(TARGET ${_target} PROPERTY C_STANDARD 99)
+  ENDFOREACH ()
+  #
+  # Which is quite C11 in the XX world - in particular only c++11 guarantees the long long type existence
+  #
+  # IF (MYPACKAGE_DEBUG)
+  #   MESSAGE(STATUS "Enabling c++11 features on the CXX compiler, if any")
+  # ENDIF ()
+  # FOREACH (_target ${PROJECT_NAME} ${PROJECT_NAME}_static)
+  #   TARGET_COMPILE_FEATURES(${_target} PUBLIC cxx_std_11)
+  # ENDFOREACH ()
+  #
+  # OS Specifics
+  #
+  IF (CMAKE_SYSTEM_NAME MATCHES "NetBSD")
+    IF (MYPACKAGE_DEBUG)
+      MESSAGE(STATUS "NetBSD: Force -D_NETBSD_SOURCE=1 compile definition")
+    ENDIF ()
+    #
+    # On NetBSD, enable this platform features. This makes sure we always have "long long" btw.
+    #
+    FOREACH (_target ${PROJECT_NAME} ${PROJECT_NAME}_static)
+      TARGET_COMPILE_DEFINITIONS (${_target} PUBLIC -D_NETBSD_SOURCE=1)
+    ENDFOREACH ()
+  ENDIF ()
+  #
   # Project's own include directories
   #
   SET (_project_include_directories "${PROJECT_SOURCE_DIR}/output/include" "${PROJECT_SOURCE_DIR}/include")
