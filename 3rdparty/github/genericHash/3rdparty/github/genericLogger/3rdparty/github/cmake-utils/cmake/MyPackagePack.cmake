@@ -34,6 +34,47 @@ MACRO (MYPACKAGEPACK VENDOR SUMMARY)
     #
     SET (CPACK_ARCHIVE_COMPONENT_INSTALL ON)
     #
+    # We want to recuperate some cmake variables to do a temporary install
+    # and the only way with via the CPackProperties.cmake file.
+    # This file must contain only CPack compatible commands -;
+    #
+    # Any variable starting with CPACK_ is exported to cpack...
+    #
+    SET (CPACK_PROJECT_SOURCE_DIR ${PROJECT_SOURCE_DIR})
+    SET (CPACK_PROJECT_CONFIG_FILE "${PROJECT_SOURCE_DIR}/CPackCustomProjectConfig.cmake")
+    SET (CPACK_CMAKE_MAKE_PROGRAM ${CMAKE_MAKE_PROGRAM})
+    SET (CPACK_TEMP_BASENAME "CpackTempDestdir")
+    SET (CPACK_TEMP_DIRNAME ${PROJECT_SOURCE_DIR})
+    SET (CPACK_TEMP_FULLPATH "${CPACK_TEMP_DIRNAME}/${CPACK_TEMP_BASENAME}")
+    #
+    # Generate CPACK_PROJECT_CONFIG_FILE
+    #
+    IF (EXISTS ${CPACK_PROJECT_CONFIG_FILE})
+      MESSAGE (STATUS "Removing ${CPACK_PROJECT_CONFIG_FILE}")
+      FILE (REMOVE ${CPACK_PROJECT_CONFIG_FILE})
+    ENDIF ()
+    MESSAGE (STATUS "Generating ${CPACK_PROJECT_CONFIG_FILE}")
+    FILE (APPEND ${CPACK_PROJECT_CONFIG_FILE} "MESSAGE (STATUS \"Removing \${CPACK_TEMP_FULLPATH}\")\n")
+    FILE (APPEND ${CPACK_PROJECT_CONFIG_FILE} "FILE (REMOVE_RECURSE \${CPACK_TEMP_FULLPATH})\n")
+    FILE (APPEND ${CPACK_PROJECT_CONFIG_FILE} "MESSAGE (STATUS \"Installing to \${CPACK_TEMP_FULLPATH}\")\n")
+    FILE (APPEND ${CPACK_PROJECT_CONFIG_FILE} "EXECUTE_PROCESS (COMMAND \${CPACK_CMAKE_MAKE_PROGRAM} install DESTDIR=\${CPACK_TEMP_BASENAME} WORKING_DIRECTORY \${CPACK_TEMP_DIRNAME})\n")
+    #
+    # Rework internal variables to avoid zombies
+    #
+    GET_CMAKE_PROPERTY(COMPONENTS _components)
+    FILE (APPEND ${CPACK_PROJECT_CONFIG_FILE} "SET (_component_ok_list)\n")
+    FILE (APPEND ${CPACK_PROJECT_CONFIG_FILE} "FOREACH (_component IN LISTS CPACK_COMPONENTS_ALL)\n")
+    FILE (APPEND ${CPACK_PROJECT_CONFIG_FILE} "  SET (_install_manifest__path \"\${CPACK_PROJECT_SOURCE_DIR}/install_manifest_\${_component}.txt\")\n")
+    FILE (APPEND ${CPACK_PROJECT_CONFIG_FILE} "  IF (EXISTS \${_install_manifest__path})\n")
+    FILE (APPEND ${CPACK_PROJECT_CONFIG_FILE} "    FILE( READ \${_install_manifest__path} _content HEX)\n")
+    FILE (APPEND ${CPACK_PROJECT_CONFIG_FILE} "    STRING (LENGTH \"\${_content}\" _content_length)\n")
+    FILE (APPEND ${CPACK_PROJECT_CONFIG_FILE} "    IF (\${_content_length} GREATER 0)\n")
+    FILE (APPEND ${CPACK_PROJECT_CONFIG_FILE} "      LIST (APPEND _component_ok_list \${_component})\n")
+    FILE (APPEND ${CPACK_PROJECT_CONFIG_FILE} "    ENDIF ()\n")
+    FILE (APPEND ${CPACK_PROJECT_CONFIG_FILE} "  ENDIF ()\n")
+    FILE (APPEND ${CPACK_PROJECT_CONFIG_FILE} "ENDFOREACH ()\n")
+    FILE (APPEND ${CPACK_PROJECT_CONFIG_FILE} "SET (CPACK_COMPONENTS_ALL \"\${_component_ok_list}\")\n")
+    #
     # Include CPack - from now on we will have access to CPACK own macros
     #
     INCLUDE (CPack)
@@ -191,6 +232,6 @@ MACRO (MYPACKAGEPACK VENDOR SUMMARY)
       COMMENT "Packaging ${PROJECT_NAME}"
 	  DEPENDS man
       VERBATIM
-    )
+      )
   ENDIF ()		    
 ENDMACRO()
