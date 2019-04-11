@@ -2000,27 +2000,9 @@ Returns C<NULL> is no valuation is possible at this stage, else return a non-C<N
 
 =item Final result
 
-ESLIF never keeps in memory the I<final> result. Before freeing its internal stack, it will ask the user to do a <transformation> using C<transformerp>. If a transformer is C<NULL> for a given value type, it will raise an error.
+ESLIF never keeps in memory the I<final> result. Before freeing its internal stack, it will ask the user to do an import using C<importp> marpaESLIFValueResult's option, if set.
 
-The goal of the transformer is to get into user's space a managable equivalent to an ESLIF value. For example, the provided bindings are doing this transformation:
-
-  |------------------------------------------------------------------------------------------|
-  | value type                    | perl (XS)            | java       | lua (C)              |
-  |------------------------------------------------------------------------------------------|
-  | undefined                     | &PL_sv_undef         | null       | LUA_TNIL             |
-  | marpaESLIFValueResultChar_t   | PV                   | Character  | LUA_TSTRING          |
-  | marpaESLIFValueResultShort_t  | IV                   | Short      | LUA_TNUMBER          |
-  | marpaESLIFValueResultInt_t    | IV                   | Integer    | LUA_TNUMBER          |
-  | marpaESLIFValueResultLong_t   | IV                   | Long       | LUA_TNUMBER          |
-  | marpaESLIFValueResultFloat_t  | NV                   | Float      | LUA_TNUMBER          |
-  | marpaESLIFValueResultDouble_t | NV                   | Double     | LUA_TNUMBER          |
-  | marpaESLIFValueResultPtr_t    | IV                   | Long       | LUA_TLIGHTUSERDATA   |
-  | marpaESLIFValueResultArray_t  | PV                   | byte[]     | LUA_TSTRING          |
-  | marpaESLIFValueResultBool_t   | &PL_sv_no/&PL_sv_yes | Boolean    | LUA_TBOOLEAN         |
-  | marpaESLIFValueResultString_t | UTF-8'ed PV          | String     | UTF-8'ed LUA_TSTRING |
-  |------------------------------------------------------------------------------------------|
-
-The transformer callbacks are called only during valuation, and always have a valid C<marpaESLIFValuep>, even if called via C<marpaESLIFGrammar_parseb()> method: in the later case, an internal C<marpaESLIFValuep> is generated.
+The goal of the transformer is to get into user's space a managable equivalent to an ESLIF value. Please refer to the L<marpaESLIF_BINDINGS> bindings documentation.
 
 =back
 
@@ -2351,4 +2333,4 @@ This type include character class. In such a case, the UTF-8 byte sequence corre
 
 =head1 SEE ALSO
 
-L<genericLogger|https://github.com/jddurand/c-genericLogger>,  L<PCRE2|http://www.pcre.org/>, L<libmarpa|https://jeffreykegler.github.io/Marpa-web-site/libmarpa.html>, L<marpaWrapper|https://github.com/jddurand/c-marpaWrapper>
+L<genericLogger|https://github.com/jddurand/c-genericLogger>,  L<PCRE2|http://www.pcre.org/>, L<libmarpa|https://jeffreykegler.github.io/Marpa-web-site/libmarpa.html>, L<marpaWrapper|https://github.com/jddurand/c-marpaWrapper>, L<marpaESLIF_BINDINGS|https://github.com/jddurand/c-marpaESLIF/tree/master/src/bindings>
