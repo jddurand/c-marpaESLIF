@@ -10,16 +10,6 @@ use MarpaX::ESLIF::String;   # Make sure it is loaded, the XS is using it
 
 use vars qw/$VERSION/;
 use Config;
-#
-# It is difficult to make perl communicate with other languages using
-# a "native" type, and the only unambiguous thingies are:
-# - undef (managed directly the XS)
-# - strict number (uses Types::Standard)
-# - integer (subset of the above)
-# - string is sort of catch-all fallback for scalars
-# - else data will remain opaque to perl
-#
-use Types::Standard qw//;
 
 #
 # Internal routine used at bootstrap that says is nvtype is a double
@@ -230,22 +220,17 @@ Defaults to C<JSON::MaybeXS::is_bool($value)>
 
 sub is_bool { goto \&JSON::MaybeXS::is_bool }
 
-=head2 NUMERIC TYPES
+=head2 INTEGER TYPE
 
-ESLIF has two functions C<MarpaX::ESLIF::is_Int()> and C<MarpaX::ESLIF::is_StrictNum()>, that maps by default to the L<Types::Standard> implementations. You may localize them before using ESLIF if needed.
+ESLIF consider scalars that have only the internal IV flag.
 
-=cut
+=head2 FLOAT TYPE
 
-sub is_Int       { goto \&Types::Standard::is_Int }
-sub is_StrictNum { goto \&Types::Standard::is_StrictNum }
+ESLIF consider scalars that have only the internal NV flag.
 
 =head2 STRING TYPE
 
-ESLIF has the function C<MarpaX::ESLIF::is_Str()>, that maps by default to the L<Types::Standard> implementation. You may localize it before using ESLIF if needed.
-
-=cut
-
-sub is_Str { goto \&Types::Standard::is_Str }
+ESLIF consider scalars that have only the internal PV flag.
 
 =head1 SEE ALSO
 
