@@ -28,7 +28,6 @@
   /* Compiler will optimize that */
 #define LDBL_DIG ((sizeof(long double) == 10) ? 18 : (sizeof(long double) == 12) ? 18 : (sizeof(long double) == 16) ? 33 : DBL_DIG)
 #endif
-static const char *MARPAESLIFPERL_EMPTY_STRING = "";
 static char long_double_fmts[128];      /* Pre-filled format string for double */
 
 #define MARPAESLIFPERL_CHUNKED_SIZE_UPPER(size, chunk) ((size) < (chunk)) ? (chunk) : ((1 + ((size) / (chunk))) * (chunk))
@@ -1064,16 +1063,12 @@ static void marpaESLIFPerl_genericFreeCallbackv(void *userDatavp, marpaESLIFValu
     if (marpaESLIFValueResultp->u.a.p != NULL) {
       /* We use marpaESLIFPerl_sv2byte() to get the pointer out of an SV, and this */
       /* may become an ARRAY type if there is no encoding */
-      if (marpaESLIFValueResultp->u.a.p != (char *) MARPAESLIFPERL_EMPTY_STRING) {
-        Safefree(marpaESLIFValueResultp->u.a.p);
-      }
+      Safefree(marpaESLIFValueResultp->u.a.p);
     }
     break;
   case MARPAESLIF_VALUE_TYPE_STRING:
     if (marpaESLIFValueResultp->u.s.p != NULL) {
-      if (marpaESLIFValueResultp->u.s.p != (unsigned char *) MARPAESLIFPERL_EMPTY_STRING) {
-        Safefree(marpaESLIFValueResultp->u.s.p);
-      }
+      Safefree(marpaESLIFValueResultp->u.s.p);
     }
     /* encoding may refer to the constant UTF8s */
     if ((marpaESLIFValueResultp->u.s.encodingasciis != NULL) && (marpaESLIFValueResultp->u.s.encodingasciis != UTF8s)) {
@@ -1456,7 +1451,8 @@ static char *marpaESLIFPerl_sv2byte(pTHX_ marpaESLIF_t *marpaESLIFp, SV *svp, ch
     tmps = SvPV(valuep, tmpl);
     if ((tmps == NULL) || (tmpl <= 0)) {
       /* Empty string */
-      bytep = (char *) MARPAESLIFPERL_EMPTY_STRING;
+      Newx(bytep, 1, char); /* Hiden NUL byte */
+      bytep[0] = '\0';
       bytel = 0;
     } else {
       /* Copy */
@@ -1573,7 +1569,8 @@ static char *marpaESLIFPerl_sv2byte(pTHX_ marpaESLIF_t *marpaESLIFp, SV *svp, ch
       bytel = (size_t) stringl;
     } else {
       /* Empty string */
-      bytep = (char *) MARPAESLIFPERL_EMPTY_STRING;
+      Newx(bytep, 1, char); /* Hiden NUL byte */
+      bytep[0] = '\0';
       bytel = 0;
     }
   }
