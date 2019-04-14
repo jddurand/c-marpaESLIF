@@ -19,6 +19,7 @@ MarpaX::ESLIF::String is a string type wrapper that associates an encoding infor
 
 use namespace::autoclean;
 use Encode qw//;
+use Carp qw/croak/;
 use Moo;
 
 # VERSION
@@ -54,12 +55,11 @@ has 'encoding' => ( is => 'ro' );
 sub BUILDARGS {
     my ($class, $value, $encoding) = @_;
 
-    $value //= '';
-    $value = "$value"; # Make sure it is a PV
+    croak 'Undefined value' unless defined($value);
+    croak 'Undefined encoding' unless defined($encoding);
 
-    if (defined($encoding)) {
-	$encoding = "$encoding"; # Make sure it is a PV
-    }
+    $value = "$value"; # Make sure it is a PV
+    $encoding = "$encoding"; # Make sure it is a PV
 
     return {value => $value, encoding => $encoding}
 }
