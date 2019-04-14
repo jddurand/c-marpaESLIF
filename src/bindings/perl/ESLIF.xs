@@ -1565,16 +1565,14 @@ static char *marpaESLIFPerl_sv2byte(pTHX_ marpaESLIF_t *marpaESLIFp, SV *svp, ch
   }
 
   if (okb) { /* Else nothing will be appended */
+    Newx(rcp, (int) (stringl + 1), char); /* Hiden NUL byte */
     if (stringl > 0) {
-      Newx(rcp, (int) stringl, char);
       bytep = CopyD(strings, rcp, (int) stringl, char);
-      bytel = (size_t) stringl;
     } else {
-      /* Empty string */
-      Newx(bytep, 1, char); /* Hiden NUL byte */
-      bytep[0] = '\0';
-      bytel = 0;
+      bytep = rcp;
     }
+    bytep[stringl] = '\0';
+    bytel = (size_t) stringl;
   }
 
  ok:
@@ -1806,7 +1804,12 @@ static short marpaESLIFPerl_importb(marpaESLIFValue_t *marpaESLIFValuep, void *u
     }
     break;
   case MARPAESLIF_VALUE_TYPE_ARRAY:
-    svp = newSVpvn((const char *) marpaESLIFValueResultp->u.a.p, (STRLEN) marpaESLIFValueResultp->u.a.sizel);
+    if ((marpaESLIFValueResultp->u.a.p != NULL) && (marpaESLIFValueResultp->u.a.sizel > 0)) {
+      svp = newSVpvn((const char *) marpaESLIFValueResultp->u.a.p, (STRLEN) marpaESLIFValueResultp->u.a.sizel);
+    } else {
+      /* Empty string */
+      svp = newSVpv("", 0);
+    }
     marpaESLIFPerl_GENERICSTACK_PUSH_PTR(&(Perl_MarpaX_ESLIF_Valuep->valueStack), svp);
     if (marpaESLIFPerl_GENERICSTACK_ERROR(&(Perl_MarpaX_ESLIF_Valuep->valueStack))) {
       MARPAESLIFPERL_CROAKF("Perl_MarpaX_ESLIF_Valuep->valueStack push failure, %s", strerror(errno));
@@ -2417,7 +2420,7 @@ static void marpaESLIFPerl_stack_setv(pTHX_ marpaESLIF_t *marpaESLIFp, marpaESLI
 	  marpaESLIFValueResultp->u.s.freeUserDatavp = marpaESLIFPerlaTHX;
 	  marpaESLIFValueResultp->u.s.freeCallbackp  = marpaESLIFPerl_genericFreeCallbackv;
           eslifb = 1;
-        } else if (bytel > 0) {
+        } else if (bytep != NULL) {
           marpaESLIFValueResultp->type               = MARPAESLIF_VALUE_TYPE_ARRAY;
           marpaESLIFValueResultp->contextp           = MARPAESLIFPERL_CONTEXT;
           marpaESLIFValueResultp->representationp    = NULL;
