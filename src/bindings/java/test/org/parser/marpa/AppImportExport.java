@@ -45,43 +45,46 @@ public class AppImportExport implements Runnable {
 				    "JAVA_INPUT    ~ [^\\s\\S]\n" + 
 				    "\n" + 
 				    "<luascript>\n" + 
-				    "  function table_print (tt, indent, done)\n" + 
-				    "    done = done or {}\n" + 
-				    "    indent = indent or 0\n" + 
-				    "    if type(tt) == \"table\" then\n" + 
-				    "      for key, value in pairs (tt) do\n" + 
-				    "        io.write(string.rep (\" \", indent)) -- indent it\n" + 
-				    "        if type (value) == \"table\" and not done [value] then\n" + 
-				    "          done [value] = true\n" + 
-				    "          io.write(string.format(\"[%s] => table\\n\", tostring (key)));\n" + 
-				    "          io.write(string.rep (\" \", indent+4)) -- indent it\n" + 
-				    "          io.write(\"(\\n\");\n" + 
-				    "          table_print (value, indent + 7, done)\n" + 
-				    "          io.write(string.rep (\" \", indent+4)) -- indent it\n" + 
-				    "          io.write(\")\\n\");\n" + 
-				    "        else\n" + 
-				    "          io.write(string.format(\"[%s] => %s\\n\",\n" + 
-				    "              tostring (key), tostring(value)))\n" + 
-				    "        end\n" + 
-				    "      end\n" + 
-				    "    else\n" + 
-				    "      io.write(tostring(tt) .. \"\\n\")\n" + 
-				    "    end\n" + 
-				    "  end\n" + 
-				    "  io.stdout:setvbuf('no')\n" + 
-				    "\n" + 
-				    "  function lua_proxy(value)\n" + 
-				    "    print('lua_proxy received value of type: '..type(value))\n" + 
-				    "    if type(value) == 'string' then\n" + 
-				    "      print('lua_proxy value: '..tostring(value)..', encoding: '..tostring(value:encoding()))\n" + 
-				    "    else\n" + 
-				    "      print('lua_proxy value: '..tostring(value))\n" + 
-				    "      if type(value) == 'table' then\n" + 
-				    "        table_print(value)\n" + 
-				    "      end\n" + 
-				    "    end\n" + 
-				    "    return value\n" + 
-				    "  end\n" + 
+				    "function table_print (tt, indent, done)\n" +
+				    "  done = done or {}\n" +
+				    "  indent = indent or 0\n" +
+				    "  if type(tt) == 'table' then\n" +
+				    "    for key, value in pairs (tt) do\n" +
+				    "      io.write(string.rep (' ', indent)) -- indent it\n" +
+				    "      if type (value) == 'table' and not done [value] then\n" +
+				    "        done [value] = true\n" +
+				    "        io.write(string.format(\"  [%s] => table\\n\", tostring(key)));\n" +
+				    "        io.write(string.rep (' ', indent+4)) -- indent it\n" +
+				    "        io.write(\"(\\n\");\n" +
+				    "        table_print (value, indent + 7, done)\n" +
+				    "        io.write(string.rep (\" \", indent+4)) -- indent it\n" +
+				    "        io.write(\")\\n\");\n" +
+				    "      else\n" +
+				    "        if type(value) == 'string' then\n" +
+				    "          io.write(string.format(\"  [%s] => %s (type: %s, encoding: %s, length: %d bytes)\\n\", tostring (key), tostring(value), type(value), tostring(value:encoding()), string.len(value)))\n" +
+				    "        else\n" +
+				    "          io.write(string.format(\"  [%s] => %s (type: %s)\\n\", tostring (key), tostring(value), type(value)))\n" +
+				    "        end\n" +
+				    "      end\n" +
+				    "    end\n" +
+				    "  else\n" +
+				    "    io.write(tostring(tt) .. \"\\n\")\n" +
+				    "  end\n" +
+				    "end\n" +
+				    "io.stdout:setvbuf('no')\n" +
+				    "\n" +
+				    "function lua_proxy(value)\n" +
+				    "  print('  lua_proxy received value of type: '..type(value))\n" +
+				    "  if type(value) == 'string' then\n" +
+				    "    print('  lua_proxy value: '..tostring(value)..', encoding: '..tostring(value:encoding())..', length: '..string.len(value)..' bytes')\n" +
+				    "  else\n" +
+				    "    print('  lua_proxy value: '..tostring(value))\n" +
+				    "    if type(value) == 'table' then\n" +
+				    "      table_print(value)\n" +
+				    "    end\n" +
+				    "  end\n" +
+				    "  return value\n" +
+				    "end\n" +
 				    "</luascript>\n"; 
 
 		HashMap<String, Object> hmap = new HashMap<String, Object>();
@@ -91,6 +94,15 @@ public class AppImportExport implements Runnable {
 		hmap.put("false", false);
 		hmap.put("else", "again");
 		hmap.put("undef", null);
+		HashMap<String, Object> hmapinner = new HashMap<String, Object>();
+		hmapinner.put("one", "one");
+		hmapinner.put("two", "two");
+		hmapinner.put("true", true);
+		hmapinner.put("false", false);
+		hmapinner.put("else", "again");
+		hmapinner.put("undef", null);
+
+		hmap.put("inner", hmapinner);
 	      
 		AppLexeme[] inputArray = {
 				new AppCharacter(Character.MIN_VALUE),
