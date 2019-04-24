@@ -2473,8 +2473,11 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
     symbolStackp = grammarp->symbolStackp;
     for (symboli = 0; symboli < GENERICSTACK_USED(symbolStackp); symboli++) {
       MARPAESLIF_INTERNAL_GET_SYMBOL_FROM_STACK(marpaESLIFp, symbolp, symbolStackp, symboli);
-      /* Always fetch properties - this is used in the grammar show */
+      /* Always fetch properties and events - this is used in the grammar show */
       if (! marpaWrapperGrammar_symbolPropertyb(grammarp->marpaWrapperGrammarStartp, symbolp->idi, &(symbolp->propertyBitSet))) {
+        goto err;
+      }
+      if (! marpaWrapperGrammar_symbolEventb(grammarp->marpaWrapperGrammarStartp, symbolp->idi, &(symbolp->eventBitSet))) {
         goto err;
       }
       if (GENERICSTACK_USED(symbolp->nullableRuleStackp) <= 0) {
@@ -3314,6 +3317,7 @@ static inline marpaESLIF_symbol_t *_marpaESLIF_symbol_newp(marpaESLIF_t *marpaES
   symbolp->nullableRuleStackp     = NULL; /* Take care, this is a pointer to an stack inside symbol structure */
   symbolp->nullableActionp        = NULL;
   symbolp->propertyBitSet         = 0; /* Filled by grammar validation */
+  symbolp->eventBitSet            = 0; /* Filled by grammar validation */
   symbolp->lhsRuleStackp          = NULL;
   symbolp->exceptionp             = NULL;
 
@@ -5727,6 +5731,10 @@ short marpaESLIFGrammar_symbolproperty_by_levelb(marpaESLIFGrammar_t *marpaESLIF
   if ((symbolp->propertyBitSet & MARPAESLIF_SYMBOL_IS_PRODUCTIVE) == MARPAESLIF_SYMBOL_IS_PRODUCTIVE) { marpaESLIFSymbolProperty.propertyBitSet |= MARPAESLIF_SYMBOL_IS_PRODUCTIVE; }
   if ((symbolp->propertyBitSet & MARPAESLIF_SYMBOL_IS_START)      == MARPAESLIF_SYMBOL_IS_START)      { marpaESLIFSymbolProperty.propertyBitSet |= MARPAESLIF_SYMBOL_IS_START; }
   if ((symbolp->propertyBitSet & MARPAESLIF_SYMBOL_IS_TERMINAL)   == MARPAESLIF_SYMBOL_IS_TERMINAL)   { marpaESLIFSymbolProperty.propertyBitSet |= MARPAESLIF_SYMBOL_IS_TERMINAL; }
+  marpaESLIFSymbolProperty.eventBitSet = 0;
+  if ((symbolp->eventBitSet & MARPAESLIF_SYMBOL_EVENT_COMPLETION) == MARPAESLIF_SYMBOL_EVENT_COMPLETION) { marpaESLIFSymbolProperty.eventBitSet |= MARPAESLIF_SYMBOL_EVENT_COMPLETION; }
+  if ((symbolp->eventBitSet & MARPAESLIF_SYMBOL_EVENT_NULLED) == MARPAESLIF_SYMBOL_EVENT_NULLED)         { marpaESLIFSymbolProperty.eventBitSet |= MARPAESLIF_SYMBOL_EVENT_NULLED; }
+  if ((symbolp->eventBitSet & MARPAESLIF_SYMBOL_EVENT_PREDICTION) == MARPAESLIF_SYMBOL_EVENT_PREDICTION) { marpaESLIFSymbolProperty.eventBitSet |= MARPAESLIF_SYMBOL_EVENT_PREDICTION; }
 
   if (marpaESLIFSymbolPropertyp != NULL) {
     *marpaESLIFSymbolPropertyp = marpaESLIFSymbolProperty;
@@ -10283,6 +10291,7 @@ static inline void _marpaESLIF_grammar_createshowv(marpaESLIFGrammar_t *marpaESL
   marpaESLIF_rule_t            *rulep;
   int                           rulei;
   int                           npropertyi;
+  int                           neventi;
   genericLogger_t              *genericLoggerp = NULL;
   marpaESLIF_stringGenerator_t  marpaESLIF_stringGenerator;
   marpaESLIF_uint32_t           pcre2Optioni = 0;
@@ -10686,6 +10695,26 @@ static inline void _marpaESLIF_grammar_createshowv(marpaESLIFGrammar_t *marpaESL
         MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, ", ");
       }
       MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "TERMINAL");
+    }
+    MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "\n");
+    MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "#       Events: ");
+
+    neventi = 0;
+    if ((symbolp->eventBitSet & MARPAESLIF_SYMBOL_EVENT_COMPLETION) == MARPAESLIF_SYMBOL_EVENT_COMPLETION) {
+      MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "COMPLETION");
+      neventi++;
+    }
+    if ((symbolp->eventBitSet & MARPAESLIF_SYMBOL_EVENT_NULLED) == MARPAESLIF_SYMBOL_EVENT_NULLED) {
+      if (neventi++ > 0) {
+        MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, ", ");
+      }
+      MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "NULLED");
+    }
+    if ((symbolp->eventBitSet & MARPAESLIF_SYMBOL_EVENT_PREDICTION) == MARPAESLIF_SYMBOL_EVENT_PREDICTION) {
+      if (neventi++ > 0) {
+        MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, ", ");
+      }
+      MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "PREDICTION");
     }
     MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "\n");
     if (symbolp->type == MARPAESLIF_SYMBOL_TYPE_TERMINAL) {
