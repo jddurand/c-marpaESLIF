@@ -14916,12 +14916,12 @@ short marpaESLIFRecognizer_hook_discardb(marpaESLIFRecognizer_t *marpaESLIFRecog
 static short _marpaESLIFRecognizer_value_validb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFValueResult_t *marpaESLIFValueResultp, void *userDatavp, _marpaESLIFRecognizer_valueResultCallback_t callbackp)
 /*****************************************************************************/
 {
-  static const char      *funcs                       = "_marpaESLIFRecognizer_value_validb";
-  genericStack_t          todoStack;
-  genericStack_t         *todoStackp = &(todoStack);
-  short                   rcb;
-  size_t                  i;
-  marpaESLIFValueResult_t marpaESLIFValueResult;
+  static const char       *funcs                       = "_marpaESLIFRecognizer_value_validb";
+  genericStack_t           todoStack;
+  genericStack_t          *todoStackp = &(todoStack);
+  short                    rcb;
+  size_t                   i;
+  marpaESLIFValueResult_t *marpaESLIFValueResultWorkp;
 
   MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_INC;
   MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "start");
@@ -14940,7 +14940,7 @@ static short _marpaESLIFRecognizer_value_validb(marpaESLIFRecognizer_t *marpaESL
   /* - an alternative cannot refer to an alternative and so on. */
 
   /* Initialize the worklist */
-  GENERICSTACK_PUSH_CUSTOMP(todoStackp, marpaESLIFValueResultp);
+  GENERICSTACK_PUSH_PTR(todoStackp, marpaESLIFValueResultp);
   if (GENERICSTACK_ERROR(todoStackp)) {
     MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "todoStackp push failure, %s", strerror(errno));
     goto err;
@@ -14948,9 +14948,9 @@ static short _marpaESLIFRecognizer_value_validb(marpaESLIFRecognizer_t *marpaESL
 
   /* Iterate the worklist */
   while (GENERICSTACK_USED(todoStackp) > 0) {
-    marpaESLIFValueResult = GENERICSTACK_POP_CUSTOM(todoStackp);
+    marpaESLIFValueResultWorkp = (marpaESLIFValueResult_t *) GENERICSTACK_POP_PTR(todoStackp);
 
-    switch (marpaESLIFValueResult.type) {
+    switch (marpaESLIFValueResultWorkp->type) {
     case MARPAESLIF_VALUE_TYPE_UNDEF:
     case MARPAESLIF_VALUE_TYPE_CHAR:
     case MARPAESLIF_VALUE_TYPE_SHORT:
@@ -14964,8 +14964,8 @@ static short _marpaESLIFRecognizer_value_validb(marpaESLIFRecognizer_t *marpaESL
 #endif
       break;
     case MARPAESLIF_VALUE_TYPE_PTR:
-      if (marpaESLIFValueResult.u.p.p != NULL) {
-        if ((! marpaESLIFValueResult.u.p.shallowb) && (marpaESLIFValueResult.u.p.freeCallbackp == NULL)) {
+      if (marpaESLIFValueResultWorkp->u.p.p != NULL) {
+        if ((! marpaESLIFValueResultWorkp->u.p.shallowb) && (marpaESLIFValueResultWorkp->u.p.freeCallbackp == NULL)) {
           MARPAESLIF_ERROR(marpaESLIFRecognizerp->marpaESLIFp, "MARPAESLIF_VALUE_TYPE_PTR: non-shallow pointer is set but free callback is not set");
           errno = EINVAL;
           goto err;
@@ -14973,17 +14973,17 @@ static short _marpaESLIFRecognizer_value_validb(marpaESLIFRecognizer_t *marpaESL
       }
       break;
     case MARPAESLIF_VALUE_TYPE_ARRAY:
-      if (marpaESLIFValueResult.u.a.p != NULL) {
-        if ((! marpaESLIFValueResult.u.a.shallowb) && (marpaESLIFValueResult.u.a.freeCallbackp == NULL)) {
+      if (marpaESLIFValueResultWorkp->u.a.p != NULL) {
+        if ((! marpaESLIFValueResultWorkp->u.a.shallowb) && (marpaESLIFValueResultWorkp->u.a.freeCallbackp == NULL)) {
           MARPAESLIF_ERROR(marpaESLIFRecognizerp->marpaESLIFp, "MARPAESLIF_VALUE_TYPE_ARRAY: non-shallow pointer is set but free callback is not set");
           errno = EINVAL;
           goto err;
         }
       } else {
-        if (marpaESLIFValueResult.u.a.sizel > 0) {
+        if (marpaESLIFValueResultWorkp->u.a.sizel > 0) {
           /* This is legal only when there is no parent recognizer: sub recognizers uses this illegal value */
           if (marpaESLIFRecognizerp->parentRecognizerp == NULL) {
-            MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "MARPAESLIF_VALUE_TYPE_ARRAY: pointer is not set but array size is set to %ld", (unsigned long) marpaESLIFValueResult.u.a.sizel);
+            MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "MARPAESLIF_VALUE_TYPE_ARRAY: pointer is not set but array size is set to %ld", (unsigned long) marpaESLIFValueResultWorkp->u.a.sizel);
             errno = EINVAL;
             goto err;
           }
@@ -14995,17 +14995,17 @@ static short _marpaESLIFRecognizer_value_validb(marpaESLIFRecognizer_t *marpaESL
     case MARPAESLIF_VALUE_TYPE_STRING:
       /* A string MUST have p and encodingasciis != NULL, even when this is an empty string */
       /* (in which case the caller can allocate a dummy one byte, or return a fixed adress) */
-      if (marpaESLIFValueResult.u.s.p == NULL) {
+      if (marpaESLIFValueResultWorkp->u.s.p == NULL) {
         MARPAESLIF_ERROR(marpaESLIFRecognizerp->marpaESLIFp, "MARPAESLIF_VALUE_TYPE_STRING: pointer is not set");
         errno = EINVAL;
         goto err;
       }
-      if (marpaESLIFValueResult.u.s.encodingasciis == NULL) {
+      if (marpaESLIFValueResultWorkp->u.s.encodingasciis == NULL) {
         MARPAESLIF_ERROR(marpaESLIFRecognizerp->marpaESLIFp, "MARPAESLIF_VALUE_TYPE_STRING: encoding is not set");
         errno = EINVAL;
         goto err;
       }
-      if ((! marpaESLIFValueResult.u.s.shallowb) && (marpaESLIFValueResult.u.s.freeCallbackp == NULL)) {
+      if ((! marpaESLIFValueResultWorkp->u.s.shallowb) && (marpaESLIFValueResultWorkp->u.s.freeCallbackp == NULL)) {
         MARPAESLIF_ERROR(marpaESLIFRecognizerp->marpaESLIFp, "MARPAESLIF_VALUE_TYPE_STRING: non-shallow flag is set but free callback is not set");
         errno = EINVAL;
         goto err;
@@ -15013,23 +15013,23 @@ static short _marpaESLIFRecognizer_value_validb(marpaESLIFRecognizer_t *marpaESL
       /* In any case, even for an empty string, encoding must be set */
       break;
     case MARPAESLIF_VALUE_TYPE_ROW:
-      if (marpaESLIFValueResult.u.r.p != NULL) {
-        if ((! marpaESLIFValueResult.u.r.shallowb) && (marpaESLIFValueResult.u.r.freeCallbackp == NULL)) {
+      if (marpaESLIFValueResultWorkp->u.r.p != NULL) {
+        if ((! marpaESLIFValueResultWorkp->u.r.shallowb) && (marpaESLIFValueResultWorkp->u.r.freeCallbackp == NULL)) {
           MARPAESLIF_ERROR(marpaESLIFRecognizerp->marpaESLIFp, "MARPAESLIF_VALUE_TYPE_ROW: non-shallow pointer is set but free callback is not set");
           errno = EINVAL;
           goto err;
         }
-        if (marpaESLIFValueResult.u.r.sizel <= 0) {
-          MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "MARPAESLIF_VALUE_TYPE_ROW: pointer is set but size is %ld", (unsigned long) marpaESLIFValueResult.u.r.sizel);
+        if (marpaESLIFValueResultWorkp->u.r.sizel <= 0) {
+          MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "MARPAESLIF_VALUE_TYPE_ROW: pointer is set but size is %ld", (unsigned long) marpaESLIFValueResultWorkp->u.r.sizel);
         }
       } else {
-        if (marpaESLIFValueResult.u.r.sizel > 0) {
-          MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "MARPAESLIF_VALUE_TYPE_ROW: pointer is not set but size is %ld", (unsigned long) marpaESLIFValueResult.u.r.sizel);
+        if (marpaESLIFValueResultWorkp->u.r.sizel > 0) {
+          MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "MARPAESLIF_VALUE_TYPE_ROW: pointer is not set but size is %ld", (unsigned long) marpaESLIFValueResultWorkp->u.r.sizel);
         }
       }
 
-      for (i = 0; i < marpaESLIFValueResult.u.r.sizel; i++) {
-        GENERICSTACK_PUSH_CUSTOM(todoStackp, marpaESLIFValueResult.u.r.p[i]);
+      for (i = 0; i < marpaESLIFValueResultWorkp->u.r.sizel; i++) {
+        GENERICSTACK_PUSH_PTR(todoStackp, &(marpaESLIFValueResultWorkp->u.r.p[i]));
         if (GENERICSTACK_ERROR(todoStackp)) {
           MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "todoStackp push failure, %s", strerror(errno));
           goto err;
@@ -15037,28 +15037,28 @@ static short _marpaESLIFRecognizer_value_validb(marpaESLIFRecognizer_t *marpaESL
       }
       break;
     case MARPAESLIF_VALUE_TYPE_TABLE:
-      if (marpaESLIFValueResult.u.t.p != NULL) {
-        if ((! marpaESLIFValueResult.u.t.shallowb) && (marpaESLIFValueResult.u.t.freeCallbackp == NULL)) {
+      if (marpaESLIFValueResultWorkp->u.t.p != NULL) {
+        if ((! marpaESLIFValueResultWorkp->u.t.shallowb) && (marpaESLIFValueResultWorkp->u.t.freeCallbackp == NULL)) {
           MARPAESLIF_ERROR(marpaESLIFRecognizerp->marpaESLIFp, "MARPAESLIF_VALUE_TYPE_TABLE: non-shallow pointer is set but free callback is not set");
           errno = EINVAL;
           goto err;
         }
-        if (marpaESLIFValueResult.u.t.sizel <= 0) {
-          MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "MARPAESLIF_VALUE_TYPE_TABLE: pointer is set but size is %ld", (unsigned long) marpaESLIFValueResult.u.t.sizel);
+        if (marpaESLIFValueResultWorkp->u.t.sizel <= 0) {
+          MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "MARPAESLIF_VALUE_TYPE_TABLE: pointer is set but size is %ld", (unsigned long) marpaESLIFValueResultWorkp->u.t.sizel);
         }
       } else {
-        if (marpaESLIFValueResult.u.t.sizel > 0) {
-          MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "MARPAESLIF_VALUE_TYPE_TABLE: pointer is not set but size is %ld", (unsigned long) marpaESLIFValueResult.u.t.sizel);
+        if (marpaESLIFValueResultWorkp->u.t.sizel > 0) {
+          MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "MARPAESLIF_VALUE_TYPE_TABLE: pointer is not set but size is %ld", (unsigned long) marpaESLIFValueResultWorkp->u.t.sizel);
         }
       }
 
-      for (i = 0; i < marpaESLIFValueResult.u.t.sizel; i++) {
-        GENERICSTACK_PUSH_CUSTOM(todoStackp, marpaESLIFValueResult.u.t.p[i].key);
+      for (i = 0; i < marpaESLIFValueResultWorkp->u.t.sizel; i++) {
+        GENERICSTACK_PUSH_PTR(todoStackp, &(marpaESLIFValueResultWorkp->u.t.p[i].key));
         if (GENERICSTACK_ERROR(todoStackp)) {
           MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "todoStackp push failure, %s", strerror(errno));
           goto err;
         }
-        GENERICSTACK_PUSH_CUSTOM(todoStackp, marpaESLIFValueResult.u.t.p[i].value);
+        GENERICSTACK_PUSH_PTR(todoStackp, &(marpaESLIFValueResultWorkp->u.t.p[i].value));
         if (GENERICSTACK_ERROR(todoStackp)) {
           MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "todoStackp push failure, %s", strerror(errno));
           goto err;
@@ -15066,7 +15066,7 @@ static short _marpaESLIFRecognizer_value_validb(marpaESLIFRecognizer_t *marpaESL
       }
       break;
     default:
-      MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "marpaESLIFValueResult.type is not supported (got %d, %s)", marpaESLIFValueResult.type, _marpaESLIF_value_types(marpaESLIFValueResult.type));
+      MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "marpaESLIFValueResultWorkp->type is not supported (got %d, %s)", marpaESLIFValueResultWorkp->type, _marpaESLIF_value_types(marpaESLIFValueResultWorkp->type));
       errno = EINVAL;
       goto err;
     }
