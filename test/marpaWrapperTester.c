@@ -60,6 +60,7 @@ int main(int argc, char **argv)
   int                            outputStackSizei;
   valueContext_t                 valueContext = { NULL, NULL, NULL, symbolip, ruleip, NULL, NULL, GENERICLOGGER_NEW(GENERICLOGGER_LOGLEVEL_TRACE) };
   int                            symbolPropertyBitSet;
+  int                            symbolEventBitSet;
   int                            rulePropertyBitSet;
   
   marpaWrapperGrammarOption_t    marpaWrapperGrammarOption    = { GENERICLOGGER_NEW(GENERICLOGGER_LOGLEVEL_TRACE),
@@ -134,6 +135,8 @@ int main(int argc, char **argv)
   }
   if (rci == 0) {
     if (marpaWrapperGrammar_symbolPropertyb(marpaWrapperGrammarp, symbolip[S], &symbolPropertyBitSet) == 0) {
+      rci = 1;
+    } else {
       if ((symbolPropertyBitSet & MARPAWRAPPER_SYMBOL_IS_START) != MARPAWRAPPER_SYMBOL_IS_START) {
         perror("symbolip[S] does not have the MARPAWRAPPER_SYMBOL_IS_START bit set");
         rci = 1;
@@ -141,7 +144,19 @@ int main(int argc, char **argv)
     }
   }
   if (rci == 0) {
+    if (marpaWrapperGrammar_symbolEventb(marpaWrapperGrammarp, symbolip[S], &symbolEventBitSet) == 0) {
+      rci = 1;
+    } else {
+      if (symbolEventBitSet != 0) {
+        perror("symbolip[S] has an event");
+        rci = 1;
+      }
+    }
+  }
+  if (rci == 0) {
     if (marpaWrapperGrammar_rulePropertyb(marpaWrapperGrammarp, ruleip[NUMBER_RULE], &rulePropertyBitSet) == 0) {
+      rci = 1;
+    } else {
       if ((rulePropertyBitSet & MARPAWRAPPER_RULE_IS_PRODUCTIVE) != MARPAWRAPPER_RULE_IS_PRODUCTIVE) {
         perror("ruleip[NUMBER_RULE] does not have the MARPAWRAPPER_RULE_IS_PRODUCTIVE bit set");
         rci = 1;
@@ -454,7 +469,7 @@ int main(int argc, char **argv)
   }
   GENERICSTACK_FREE(valueContext.outputStackp);
   
-  return rci;
+  exit(rci);
 }
 
 /* One have to know that symbol and rule indices always start at 0 and increase by 1   */
