@@ -247,7 +247,7 @@ int main(int argc, char **argv) {
   /* Input stack has no inner PTR */
   GENERICSTACK_FREE(traverseContext.inputStackp);
   
-  return rci;
+  exit(rci);
 }
 
 /********************************************************************************/
