@@ -618,23 +618,26 @@ typedef struct genericStack {
 /* Memory release                                                         */
 /* We intentionnaly loop on size and not used.                            */
 /* ====================================================================== */
-#define GENERICSTACK_FREE(stackName) do {				\
+#define GENERICSTACK_RESET(stackName) do {				\
     if ((stackName) != NULL) {						\
       if ((stackName)->heapItems != NULL) {				\
         free((stackName)->heapItems);					\
+        (stackName)->heapLength = 0;					\
       }									\
+      (stackName)->used = 0;						\
+    }									\
+  } while (0)
+
+#define GENERICSTACK_FREE(stackName) do {				\
+    if ((stackName) != NULL) {						\
+      GENERICSTACK_RESET(stackName);                                    \
       free((stackName));						\
       (stackName) = NULL;						\
     }									\
   } while (0)
 
-#define GENERICSTACK_RESET(stackName) do {				\
+#define GENERICSTACK_RELAX(stackName) do {				\
     if ((stackName) != NULL) {						\
-      if ((stackName)->heapItems != NULL) {				\
-        free((stackName)->heapItems);					\
-        (stackName)->heapItems = NULL;					\
-      }									\
-      (stackName)->heapLength = 0;					\
       (stackName)->used = 0;						\
     }									\
   } while (0)
