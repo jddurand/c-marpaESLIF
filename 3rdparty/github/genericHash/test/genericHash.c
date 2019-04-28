@@ -1,4 +1,7 @@
 #include <stdlib.h>
+#include <string.h>
+/* For the internal stacks to use heap memory */
+#define GENERICSTACK_DEFAULT_LENGTH 0
 #include "genericHash.h"
 #include <genericLogger.h>
 
@@ -41,62 +44,117 @@ static int myHashTest(short withAllocb) {
 
   if (withAllocb) {
     GENERICHASH_NEW(myHashp, myHashIndFunction);
+    if (GENERICHASH_ERROR(myHashp)) {
+      rci = 1;
+      goto err;
+    }
+    GENERICLOGGER_TRACEF(genericLoggerp, "Created hash at %p, alloc mode=%d", myHashp, (int) withAllocb);
   } else {
     myHashp = &myHash;
     GENERICHASH_INIT(myHashp, myHashIndFunction);
-  }
-  if (GENERICHASH_ERROR(myHashp)) {
-    GENERICLOGGER_ERROR(genericLoggerp, "Error when creating generic hash");
-    rci = 1;
-    goto err;
-  }
-  if (withAllocb) {
-    GENERICHASH_KEYCMPFUNCTION(myHashp)  = myHashKeyCmpFunction;
-    GENERICHASH_KEYCOPYFUNCTION(myHashp) = myHashKeyCopyFunction;
-    GENERICHASH_KEYFREEFUNCTION(myHashp) = myHashKeyFreeFunction;
-    GENERICHASH_VALCOPYFUNCTION(myHashp) = myHashValCopyFunction;
-    GENERICHASH_VALFREEFUNCTION(myHashp) = myHashValFreeFunction;
-  }
-  if (withAllocb) {
-    GENERICLOGGER_TRACEF(genericLoggerp, "Created hash at %p, alloc mode=%d", myHashp, (int) withAllocb);
-  } else {
+    if (GENERICHASH_ERROR(myHashp)) {
+      rci = 1;
+      goto err;
+    }
     GENERICLOGGER_TRACEF(genericLoggerp, "Initialized hash at %p, alloc mode=%d", myHashp, (int) withAllocb);
   }
 
+  GENERICHASH_KEYCMPFUNCTION(myHashp)  = myHashKeyCmpFunction;
+  GENERICHASH_KEYCOPYFUNCTION(myHashp) = myHashKeyCopyFunction;
+  GENERICHASH_KEYFREEFUNCTION(myHashp) = myHashKeyFreeFunction;
+  GENERICHASH_VALCOPYFUNCTION(myHashp) = myHashValCopyFunction;
+  GENERICHASH_VALFREEFUNCTION(myHashp) = myHashValFreeFunction;
+
+  GENERICLOGGER_INFOF(genericLoggerp, "Setting key=1001 val=%p", (int) 1001, myContextp);
   GENERICHASH_SET(myHashp, myContextp, SHORT, 1001, PTR, myContextp);
+  if (GENERICHASH_ERROR(myHashp)) {
+    rci = 1;
+    goto err;
+  }
+  GENERICLOGGER_TRACEF(genericLoggerp, "Setted key=1001 val=%p", (int) 1001, myContextp);
+
+  GENERICLOGGER_INFOF(genericLoggerp, "Setting key=1002 val=%d", (int) 1002, (int) 1003);
   GENERICHASH_SET(myHashp, myContextp, SHORT, 1002, SHORT, 1003);
+  if (GENERICHASH_ERROR(myHashp)) {
+    rci = 1;
+    goto err;
+  }
+  GENERICLOGGER_TRACEF(genericLoggerp, "Setted key=1002 val=%d", (int) 1002, (int) 1003);
+
+  GENERICLOGGER_INFOF(genericLoggerp, "Setting key=%p val=%p", myContextp, myContextp);
   GENERICHASH_SET(myHashp, myContextp, PTR, myContextp, PTR, myContextp);
+  if (GENERICHASH_ERROR(myHashp)) {
+    rci = 1;
+    goto err;
+  }
+  GENERICLOGGER_TRACEF(genericLoggerp, "Setted key=%p val=%p", myContextp, myContextp);
+
+  GENERICLOGGER_INFOF(genericLoggerp, "Setting key=%p val=%d", myContextp, (int) 1004);
   GENERICHASH_SET(myHashp, myContextp, PTR, myContextp, SHORT, 1004);
+  if (GENERICHASH_ERROR(myHashp)) {
+    rci = 1;
+    goto err;
+  }
+  GENERICLOGGER_TRACEF(genericLoggerp, "Setted key=%p val=%d", myContextp, (int) 1004);
+
   for (i = 0; i < 2; i++) {
     myHashDump(myContextp, myHashp);
   
     /* hash->{myContextp} = myContextp */
     GENERICHASH_SET(myHashp, myContextp, PTR, myContextp, PTR, myContextp);
+    if (GENERICHASH_ERROR(myHashp)) {
+      rci = 1;
+      goto err;
+    }
     GENERICLOGGER_TRACEF(genericLoggerp, "... Setted PTR %p indexed by itself", myContextp);
     myHashDump(myContextp, myHashp);
     /* hash->{myContextp} = myContextp */
     GENERICHASH_SET(myHashp, myContextp, PTR, myContextp, PTR, myContextp);
+    if (GENERICHASH_ERROR(myHashp)) {
+      rci = 1;
+      goto err;
+    }
     GENERICLOGGER_TRACEF(genericLoggerp, "... Setted again PTR %p indexed by itself", myContextp);
     myHashDump(myContextp, myHashp);
     /* hash->{myContextp} = myContextp */
     GENERICHASH_SET(myHashp, myContextp, PTR, myContextp, PTR, myContextp);
+    if (GENERICHASH_ERROR(myHashp)) {
+      rci = 1;
+      goto err;
+    }
     GENERICLOGGER_TRACEF(genericLoggerp, "... Setted again PTR %p indexed by itself", myContextp);
     myHashDump(myContextp, myHashp);
 
     /* hash->{NULL} = NULL */
     GENERICHASH_SET(myHashp, myContextp, PTR, NULL, PTR, NULL);
+    if (GENERICHASH_ERROR(myHashp)) {
+      rci = 1;
+      goto err;
+    }
     GENERICLOGGER_TRACE(genericLoggerp, "... Setted NULL indexed by NULL");
     myHashDump(myContextp, myHashp);
 
     GENERICHASH_SET(myHashp, myContextp, PTR, myContextp, PTR, myContextp);
+    if (GENERICHASH_ERROR(myHashp)) {
+      rci = 1;
+      goto err;
+    }
     GENERICLOGGER_TRACEF(genericLoggerp, "... Setted again PTR %p indexed by itself", myContextp);
     myHashDump(myContextp, myHashp);
     GENERICHASH_SET_BY_IND(myHashp, myContextp, PTR, myContextp, PTR, myContextp, myHashIndFunction(myContextp, GENERICSTACKITEMTYPE_PTR, (void **) &myContextp));
+    if (GENERICHASH_ERROR(myHashp)) {
+      rci = 1;
+      goto err;
+    }
     GENERICLOGGER_TRACEF(genericLoggerp, "... Setted again PTR %p using IND indexed by itself", myContextp);
     myHashDump(myContextp, myHashp);
 
     GENERICLOGGER_TRACEF(genericLoggerp, "... Looking for PTR %p", myContextp);
     GENERICHASH_FIND(myHashp, myContextp, PTR, myContextp, PTR, &myContextFoundp, findResultb);
+    if (GENERICHASH_ERROR(myHashp)) {
+      rci = 1;
+      goto err;
+    }
     if (! findResultb) {
       GENERICLOGGER_ERRORF(genericLoggerp, "... Failed to find PTR %p in keys", myContextp);
     } else {
@@ -109,6 +167,10 @@ static int myHashTest(short withAllocb) {
 
     GENERICLOGGER_TRACEF(genericLoggerp, "... Looking for PTR %p using IND", myContextp);
     GENERICHASH_FIND_BY_IND(myHashp, myContextp, PTR, myContextp, PTR, &myContextFoundp, findResultb, myHashIndFunction(myContextp, GENERICSTACKITEMTYPE_PTR, (void **) &myContextp));
+    if (GENERICHASH_ERROR(myHashp)) {
+      rci = 1;
+      goto err;
+    }
     if (! findResultb) {
       GENERICLOGGER_ERRORF(genericLoggerp, "... Failed to find PTR %p", myContextp);
     } else {
@@ -121,20 +183,27 @@ static int myHashTest(short withAllocb) {
 
     GENERICLOGGER_TRACEF(genericLoggerp, "... Removing PTR %p", myContextp);
     GENERICHASH_REMOVE(myHashp, myContextp, PTR, myContextp, PTR, &myContextFoundp, removeResultb);
+    if (GENERICHASH_ERROR(myHashp)) {
+      rci = 1;
+      goto err;
+    }
     myHashDump(myContextp, myHashp);
     if (! removeResultb) {
       GENERICLOGGER_ERRORF(genericLoggerp, "... Failed to remove PTR %p", myContextp);
     } else {
       if (myContextp->genericLoggerp == myContextFoundp->genericLoggerp) {
-	if (withAllocb) {
-	  myHashValFreeFunction(myContextp, (void **) &myContextFoundp);
-	}
+        /* We gave the myContextFoundp pointer, this mean we said the hash to not free the value */
+        myHashValFreeFunction(myContextp, (void **) &myContextFoundp);
 	GENERICLOGGER_TRACEF(genericLoggerp, "... Success removing PTR %p", myContextFoundp);
       } else {
 	GENERICLOGGER_TRACEF(genericLoggerp, "... Success removing PTR but found a bad pointer %p", myContextFoundp);
       }
       GENERICLOGGER_TRACEF(genericLoggerp, "... Looking again for PTR %p", myContextp);
       GENERICHASH_FIND(myHashp, myContextp, PTR, myContextp, PTR, &myContextFoundp, removeResultb);
+      if (GENERICHASH_ERROR(myHashp)) {
+        rci = 1;
+        goto err;
+      }
       if (! removeResultb) {
 	GENERICLOGGER_TRACEF(genericLoggerp, "... Failed to find PTR %p and this is ok", myContextp);
       } else {
@@ -152,14 +221,19 @@ static int myHashTest(short withAllocb) {
   goto done;
 
  err:
+  GENERICLOGGER_ERRORF(genericLoggerp, "Error %d, %s", errno, strerror(errno));
   rci = 0;
 
  done:
   if (withAllocb) {
-    GENERICLOGGER_TRACEF(genericLoggerp, "Freeing hash at %p", myHashp);
+    GENERICLOGGER_TRACE(genericLoggerp, "........................");
+    GENERICLOGGER_TRACE(genericLoggerp, "... Freeing the hash ...");
+    GENERICLOGGER_TRACE(genericLoggerp, "........................");
     GENERICHASH_FREE(myHashp, myContextp);
   } else {
-    GENERICLOGGER_TRACEF(genericLoggerp, "Resetting hash at %p", myHashp);
+    GENERICLOGGER_TRACE(genericLoggerp, "..........................");
+    GENERICLOGGER_TRACE(genericLoggerp, "... Resetting the hash ...");
+    GENERICLOGGER_TRACE(genericLoggerp, "..........................");
     GENERICHASH_RESET(myHashp, myContextp);
   }
   
@@ -189,6 +263,17 @@ static int myHashIndFunction(void *userDatavp, genericStackItemType_t itemType, 
 
       GENERICLOGGER_TRACEF(genericLoggerp, "... ... [%s] PTR is %p", funcs, cp);
       absi = abs(i);
+      rcl = (absi % 50);
+      GENERICLOGGER_TRACEF(genericLoggerp, "... ... [%s] Index %d", funcs, (int) rcl);
+    }
+    break;
+  case GENERICSTACKITEMTYPE_SHORT:
+    {
+      short b = * (short *) pp;
+      int  absi;
+
+      GENERICLOGGER_TRACEF(genericLoggerp, "... ... [%s] SHORT is %d", funcs, (int) b);
+      absi = abs(b);
       rcl = (absi % 50);
       GENERICLOGGER_TRACEF(genericLoggerp, "... ... [%s] Index %d", funcs, (int) rcl);
     }
@@ -279,7 +364,7 @@ static void  myHashKeyFreeFunction(void *userDatavp, void **pp)
   genericLogger_t *genericLoggerp = myContextp->genericLoggerp;
 
   if (cp != NULL) {
-    GENERICLOGGER_TRACEF(genericLoggerp, "... [%s] Freeing malloced area %p", funcs, cp);
+    GENERICLOGGER_TRACEF(genericLoggerp, "... [%s] Freeing malloced area %p for key", funcs, cp);
     free(cp);
   }
 }
@@ -294,7 +379,7 @@ static void  myHashValFreeFunction(void *userDatavp, void **pp)
   genericLogger_t *genericLoggerp = myContextp->genericLoggerp;
 
   if (cp != NULL) {
-    GENERICLOGGER_TRACEF(genericLoggerp, "... [%s] Freeing malloced area %p", funcs, cp);
+    GENERICLOGGER_TRACEF(genericLoggerp, "... [%s] Freeing malloced area %p for val", funcs, cp);
     free(cp);
   }
 }
