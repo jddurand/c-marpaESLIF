@@ -395,4 +395,8 @@ sub getHideseparator {
     goto &isHideseparator
 }
 
+=head1 SEE ALSO
+
+L<MarpaX::ESLIF::Rule::PropertyBitSet>
+
 1;

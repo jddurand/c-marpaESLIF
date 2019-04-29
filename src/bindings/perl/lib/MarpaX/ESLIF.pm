@@ -53,6 +53,7 @@ use MarpaX::ESLIF::Grammar::Rule::Properties;
 use MarpaX::ESLIF::Grammar::Symbol::Properties;
 use MarpaX::ESLIF::Logger::Level;
 use MarpaX::ESLIF::Symbol::PropertyBitSet;
+use MarpaX::ESLIF::Symbol::EventBitSet;
 use MarpaX::ESLIF::Symbol::Type;
 use MarpaX::ESLIF::Value::Type;
 use MarpaX::ESLIF::Rule::PropertyBitSet;

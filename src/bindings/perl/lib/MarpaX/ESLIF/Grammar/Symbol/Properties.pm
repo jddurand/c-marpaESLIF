@@ -94,7 +94,8 @@ sub new {
         'lookupResolvedLeveli'       => $args{lookupResolvedLeveli},
         'priority'                   => $args{priority},
         'nullableAction'             => $args{nullableAction},
-        'propertyBitSet'             => $args{propertyBitSet}
+        'propertyBitSet'             => $args{propertyBitSet},
+        'eventBitSet'                => $args{eventBitSet}
     };
 
     return bless $self, $pkg
@@ -520,8 +521,20 @@ sub getPropertyBitSet {
     return $self->{propertyBitSet}
 }
 
+=head2 $self->getEventBitSet
+
+Returns the low-level events (combination of MarpaX::ESLIF::Symbol::EventBitSet values)
+
+=cut
+
+sub getEventBitSet {
+    my ($self) = @_;
+
+    return $self->{eventBitSet}
+}
+
 =head1 SEE ALSO
 
-L<MarpaX::ESLIF::Symbol::Type>
+L<MarpaX::ESLIF::Symbol::Type>, L<MarpaX::ESLIF::Symbol::PropertyBitSet>, L<MarpaX::ESLIF::Symbol::EventBitSet>
 
 1;
