@@ -5,7 +5,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * ESLIFSymbolPropertyBitSet is an enumeration of all low-level Rule properties, directly coming from libmarpa.
+ * ESLIFSymbolPropertyBitSet is an enumeration of all low-level symbol properties, directly coming from libmarpa.
  */
 public enum ESLIFSymbolPropertyBitSet {
 
@@ -50,19 +50,19 @@ public enum ESLIFSymbolPropertyBitSet {
 	}
 
 	/**
-	 * Get the log level value associated to an instance of ESLIFLoggerLevel
+	 * Get the code value associated to an ESLIFSymbolPropertyBitSet
 	 * 
-	 * @return the log level value
+	 * @return the code value
 	 */
 	public int getCode() {
 		return code;
 	}
 
 	/**
-	 * Get an instance of ESLIFLoggerLevel from a log level value
+	 * Get a ESLIFSymbolPropertyBitSet from a code value
 	 * 
-	 * @param code the log level value
-	 * @return the ESLIFLoggerLevel instance
+	 * @param code the code value
+	 * @return the ESLIFSymbolPropertyBitSet
 	 */
 	public static ESLIFSymbolPropertyBitSet get(int code) { 
 		return lookup.get(code); 

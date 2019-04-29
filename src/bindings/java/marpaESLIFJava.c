@@ -213,6 +213,7 @@ static char _MARPAESLIF_JNI_CONTEXT;
 #define JAVA_UTIL_ITERATOR_CLASS                      "java/util/Iterator"
 #define JAVA_UTIL_SET_CLASS                           "java/util/Set"
 #define JAVA_UTIL_MAP_CLASS                           "java/util/Map"
+#define MARPAESLIF_ESLIFSYMBOLEVENTBITSET_CLASS       "org/parser/marpa/ESLIFSymbolEventBitSet"
 
 #define MARPAESLIF_ESLIFVALUEINTERFACE_SYMBOLACTION_SIGNATURE "(Ljava/lang/Object;)Ljava/lang/Object;"
 #define MARPAESLIF_ESLIFVALUEINTERFACE_RULEACTION_SIGNATURE   "([Ljava/lang/Object;)Ljava/lang/Object;"
@@ -371,6 +372,10 @@ static marpaESLIFClassCache_t marpaESLIFClassCacheArrayp[] = {
   #define JAVA_UTIL_MAP_CLASSCACHE                       marpaESLIFClassCacheArrayp[34]
   #define JAVA_UTIL_MAP_CLASSP                           marpaESLIFClassCacheArrayp[34].classp
   {       JAVA_UTIL_MAP_CLASS,                           NULL, 1 /* requiredb */ },
+
+  #define MARPAESLIF_ESLIFSYMBOLEVENTBITSET_CLASSCACHE   marpaESLIFClassCacheArrayp[35]
+  #define MARPAESLIF_ESLIFSYMBOLEVENTBITSET_CLASSP       marpaESLIFClassCacheArrayp[35].classp
+  {       MARPAESLIF_ESLIFSYMBOLEVENTBITSET_CLASS,       NULL, 1 /* requiredb */ },
 
   { NULL }
 };
@@ -569,7 +574,7 @@ static marpaESLIFMethodCache_t marpaESLIFMethodCacheArrayp[] = {
   {      &MARPAESLIF_ESLIFGRAMMARRULEPROPERTIES_CLASSCACHE, "<init>",               "(ILjava/lang/String;Ljava/lang/String;II[I[ZILjava/lang/String;Ljava/lang/String;ZIZZZIZIZ)V", 0 /* staticb */, NULL, 1 /* requiredb */ },
 
   #define MARPAESLIF_ESLIFGRAMMARSYMBOLPROPERTIES_CLASS_init_METHODP                marpaESLIFMethodCacheArrayp[64].methodp
-  {      &MARPAESLIF_ESLIFGRAMMARSYMBOLPROPERTIES_CLASSCACHE, "<init>",             "(Lorg/parser/marpa/ESLIFSymbolType;ZZZZZILjava/lang/String;Ljava/lang/String;ZLjava/lang/String;ZLjava/lang/String;ZLjava/lang/String;ZLjava/lang/String;ZLjava/lang/String;ZIILjava/lang/String;I)V", 0 /* staticb */, NULL, 1 /* requiredb */ },
+  {      &MARPAESLIF_ESLIFGRAMMARSYMBOLPROPERTIES_CLASSCACHE, "<init>",             "(Lorg/parser/marpa/ESLIFSymbolType;ZZZZZILjava/lang/String;Ljava/lang/String;ZLjava/lang/String;ZLjava/lang/String;ZLjava/lang/String;ZLjava/lang/String;ZLjava/lang/String;ZIILjava/lang/String;II)V", 0 /* staticb */, NULL, 1 /* requiredb */ },
 
   #define MARPAESLIF_ESLIFSYMBOLTYPE_CLASS_get_METHODP                              marpaESLIFMethodCacheArrayp[65].methodp
   {      &MARPAESLIF_ESLIFSYMBOLTYPE_CLASSCACHE, "get",                             "(I)Lorg/parser/marpa/ESLIFSymbolType;", 1 /* staticb */, NULL, 1 /* requiredb */ },
@@ -5228,6 +5233,7 @@ static jobject marpaESLIFJava_symbolPropertiesp(JNIEnv *envp, marpaESLIFSymbolPr
   jint               priority;
   jstring            nullableAction;
   jint               propertyBitSet;
+  jint               eventBitSet;
 
   type = (*envp)->CallStaticObjectMethod(envp, MARPAESLIF_ESLIFSYMBOLTYPE_CLASSP, MARPAESLIF_ESLIFSYMBOLTYPE_CLASS_get_METHODP, symbolPropertyp->type);
   if (type == NULL) {
@@ -5258,6 +5264,7 @@ static jobject marpaESLIFJava_symbolPropertiesp(JNIEnv *envp, marpaESLIFSymbolPr
   priority                   = (jint) symbolPropertyp->priorityi;
   nullableAction             = marpaESLIFJava_marpaESLIFActionToJavap(envp, symbolPropertyp->nullableActionp);
   propertyBitSet             = (jint) symbolPropertyp->propertyBitSet;
+  eventBitSet                = (jint) symbolPropertyp->eventBitSet;
 
   propertiesp = (*envp)->NewObject(envp,
                                    MARPAESLIF_ESLIFGRAMMARSYMBOLPROPERTIES_CLASSP,
@@ -5285,7 +5292,8 @@ static jobject marpaESLIFJava_symbolPropertiesp(JNIEnv *envp, marpaESLIFSymbolPr
                                    lookupResolvedLeveli,
                                    priority,
                                    nullableAction,
-                                   propertyBitSet
+                                   propertyBitSet,
+                                   eventBitSet
                                    );
 
  err: /* err and done share the same code */

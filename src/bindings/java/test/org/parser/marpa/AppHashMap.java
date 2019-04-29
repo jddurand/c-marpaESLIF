@@ -1,6 +1,5 @@
 package org.parser.marpa;
 
-import java.util.Arrays;
 import java.util.HashMap;
 
 public class AppHashMap implements AppLexeme {

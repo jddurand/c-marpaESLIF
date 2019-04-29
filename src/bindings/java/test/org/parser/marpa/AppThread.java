@@ -302,6 +302,7 @@ public class AppThread implements Runnable {
 	//
 	// We replace current NUMBER by the Integer object representing value
 	//
+	@SuppressWarnings("deprecation")
 	private static boolean doLexemeRead(ESLIFLoggerInterface eslifLogger, ESLIFRecognizer eslifRecognizer, String symbol, int value, byte[] bytes) throws Exception {
 		String context;
 		String old = new String(bytes, "UTF-8");

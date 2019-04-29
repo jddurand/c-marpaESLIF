@@ -20,6 +20,7 @@ public class AppValue implements ESLIFValueInterface {
 	/*
 	 * https://java.net/jira/browse/TYRUS-216
 	 */
+	@SuppressWarnings("deprecation")
 	private Double toDouble(Object object) {
 		return (object instanceof Integer) ? new Double(((Integer) object).doubleValue()) : (Double) object;
 	}
@@ -37,6 +38,7 @@ public class AppValue implements ESLIFValueInterface {
 	 * @return resulting object
 	 * @throws UnsupportedEncodingException unsupported encoding exception
 	 */
+	@SuppressWarnings("deprecation")
 	public Object do_int(Object[] list) throws UnsupportedEncodingException {
 		Object result;
 		
@@ -56,6 +58,7 @@ public class AppValue implements ESLIFValueInterface {
 	 * @return result object
 	 * @throws UnsupportedEncodingException unsupported encoding exception
 	 */
+	@SuppressWarnings("deprecation")
 	public Object do_op(Object[] list) throws UnsupportedEncodingException {
 		Object left   = list[0];
 		String op     = toString(list[1]); 

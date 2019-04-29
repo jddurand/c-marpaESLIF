@@ -46,19 +46,19 @@ public enum ESLIFRulePropertyBitSet {
 	}
 
 	/**
-	 * Get the log level value associated to an instance of ESLIFLoggerLevel
+	 * Get the code value associated to an ESLIFRulePropertyBitSet
 	 * 
-	 * @return the log level value
+	 * @return the code value
 	 */
 	public int getCode() {
 		return code;
 	}
 
 	/**
-	 * Get an instance of ESLIFLoggerLevel from a log level value
+	 * Get a ESLIFRulePropertyBitSet from a code value
 	 * 
-	 * @param code the log level value
-	 * @return the ESLIFLoggerLevel instance
+	 * @param code the code value
+	 * @return the ESLIFRulePropertyBitSet
 	 */
 	public static ESLIFRulePropertyBitSet get(int code) { 
 		return lookup.get(code); 
