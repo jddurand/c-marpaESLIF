@@ -12639,31 +12639,6 @@ static inline short _marpaESLIFValueResult_stack_i_setb(marpaESLIF_t *marpaESLIF
       MARPAESLIF_WARNF(marpaESLIFp, "%p not found in beforePtrHashp", p);
       continue;
     }
-    /* Get original shallow mode */
-    switch (marpaESLIFValueResultOrigp->type) {
-    case MARPAESLIF_VALUE_TYPE_PTR:
-      shallowb = marpaESLIFValueResultOrigp->u.p.shallowb;
-      break;
-    case MARPAESLIF_VALUE_TYPE_ARRAY:
-      shallowb = marpaESLIFValueResultOrigp->u.a.shallowb;
-      break;
-    case MARPAESLIF_VALUE_TYPE_STRING:
-      shallowb = marpaESLIFValueResultOrigp->u.s.shallowb;
-      break;
-    case MARPAESLIF_VALUE_TYPE_ROW:
-      shallowb = marpaESLIFValueResultOrigp->u.r.shallowb;
-      break;
-    case MARPAESLIF_VALUE_TYPE_TABLE:
-      shallowb = marpaESLIFValueResultOrigp->u.t.shallowb;
-      break;
-    default:
-      shallowb = 0;
-      break;
-    }
-
-    if (shallowb) {
-      continue;
-    }
 
     findResultb = 0;
     GENERICHASH_FIND(afterPtrHashp,
@@ -16243,6 +16218,7 @@ static inline short _marpaESLIF_flatten_pointers(marpaESLIF_t *marpaESLIFp, gene
   size_t                   i;
   short                    shallowb;
   void                    *p;
+  void                    *tmpp;
   short                    findResultb;
   short                    rcb;
   marpaESLIFValueType_t    type;
@@ -16334,8 +16310,8 @@ static inline short _marpaESLIF_flatten_pointers(marpaESLIF_t *marpaESLIFp, gene
                               NULL, /* userDatavp */
                               PTR,
                               p,
-                              SHORT,
-                              &shallowb,
+                              PTR,
+                              &tmpp,
                               findResultb,
                               hashindexi);
       if (GENERICHASH_ERROR(flattenPtrHashp)) {
