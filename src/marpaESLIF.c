@@ -16451,6 +16451,7 @@ static inline short _marpaESLIFRecognizer_expectedb(marpaESLIFRecognizer_t *marp
   short                             findResultb;
   size_t                            nSymboll;
   int                              *symbolArrayp = NULL;
+  marpaESLIF_lexemesExpected_t      marpaESLIF_lexemesExpected;
   marpaESLIF_lexemesExpected_t     *marpaESLIF_lexemesExpectedp;
   short                             rcb;
 
@@ -16530,25 +16531,20 @@ static inline short _marpaESLIFRecognizer_expectedb(marpaESLIFRecognizer_t *marp
     *symbolArraypp = symbolArrayp;
     if (nSymboll > 0) {
       /* We know this will stop when is nSymboll <= 0 so we do not bother to store it */
-      marpaESLIF_lexemesExpectedp = (marpaESLIF_lexemesExpected_t *) malloc(sizeof(marpaESLIF_lexemesExpected_t));
-      if (marpaESLIF_lexemesExpectedp == NULL) {
+      marpaESLIF_lexemesExpected.nSymboll     = nSymboll;
+      marpaESLIF_lexemesExpected.symbolArrayp = (int *) malloc(nSymboll * sizeof(int));
+      if (marpaESLIF_lexemesExpected.symbolArrayp == NULL) {
 	MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "malloc failure, %s", strerror(errno));
 	goto err;
       }
-      marpaESLIF_lexemesExpectedp->nSymboll     = nSymboll;
-      marpaESLIF_lexemesExpectedp->symbolArrayp = (int *) malloc(nSymboll * sizeof(int));
-      if (marpaESLIF_lexemesExpectedp->symbolArrayp == NULL) {
-	MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "malloc failure, %s", strerror(errno));
-	goto err;
-      }
-      MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Key: %s put to cache: {nSymboll=%ld,symbolArrayp=%p}", marpaESLIF_stringGenerator.s, (unsigned long) marpaESLIF_lexemesExpectedp->nSymboll, marpaESLIF_lexemesExpectedp->symbolArrayp);
-      memcpy(marpaESLIF_lexemesExpectedp->symbolArrayp, symbolArrayp, nSymboll * sizeof(int));
+      MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Key: %s put to cache: {nSymboll=%ld,symbolArrayp=%p}", marpaESLIF_stringGenerator.s, (unsigned long) marpaESLIF_lexemesExpected.nSymboll, marpaESLIF_lexemesExpected.symbolArrayp);
+      memcpy(marpaESLIF_lexemesExpected.symbolArrayp, symbolArrayp, nSymboll * sizeof(int));
       GENERICHASH_SET(lexemesExpectedHashp,
                       marpaESLIFRecognizerp,
                       PTR,
                       marpaESLIF_stringGenerator.s,
                       PTR,
-                      marpaESLIF_lexemesExpectedp);
+                      &marpaESLIF_lexemesExpected);
       if (GENERICHASH_ERROR(lexemesExpectedHashp)) {
         MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "lexemesExpectedHashp failure, %s", strerror(errno));
         goto err;
@@ -16560,16 +16556,13 @@ static inline short _marpaESLIFRecognizer_expectedb(marpaESLIFRecognizer_t *marp
   goto done;
 
  err:
-  if (marpaESLIF_lexemesExpectedp != NULL) {
-    if (marpaESLIF_lexemesExpectedp->symbolArrayp != NULL) {
-      free(marpaESLIF_lexemesExpectedp->symbolArrayp);
-    }
-    free(marpaESLIF_lexemesExpectedp);
-  }
   rcb = 0;
   goto done;
 
   done:
+  if (marpaESLIF_stringGenerator.s != NULL) {
+    free(marpaESLIF_stringGenerator.s);
+  }
   GENERICLOGGER_FREE(genericLoggerp);
   return rcb;
 }
