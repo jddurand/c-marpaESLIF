@@ -390,7 +390,6 @@ struct marpaESLIFRecognizer {
   int                          maxStartCompletionsi;
   int                          numberOfStartCompletionsi; /* Computed only if maxStartCompletionsi != 0 */
   size_t                       lastSizeBeforeCompletionl; /* Computed only if maxStartCompletionsi is != 0 */
-  short                        tokenStreamModelb;    /* true when all alternatives have a grammar length equal to 1, else false - use for expected lexemes optimization */
 
   /* When a recognizer needs to discard, we prepare storage for marpaESLIFGrammarp, marpaESLIFRecognizerOptionp and marpaESLIFValueOptionp. */
   /* This a lazy initialization, driven by the grammarDiscardInitializedb flag. */

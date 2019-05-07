@@ -8405,7 +8405,6 @@ static inline marpaESLIFRecognizer_t *_marpaESLIFRecognizer_newp(marpaESLIFGramm
   marpaESLIFRecognizerp->afterEventStatebp               = NULL;
   marpaESLIFRecognizerp->discardOnOffb                   = 1; /* By default :discard is enabled */
   marpaESLIFRecognizerp->pristineb                       = 1; /* Until at least one alternative was pushed */
-  marpaESLIFRecognizerp->tokenStreamModelb               = 1; /* Until an alternative have a grammar length greater than 1 */
   marpaESLIFRecognizerp->previousMaxMatchedl             = 0;
   marpaESLIFRecognizerp->lastSizel                       = 0;
   marpaESLIFRecognizerp->maxStartCompletionsi            = maxStartCompletionsi;
@@ -8656,13 +8655,15 @@ static inline marpaESLIFRecognizer_t *_marpaESLIFRecognizer_newp(marpaESLIFGramm
     goto err;
   }
 
+  /* This hash is special: we will only insert entries that do not yet exists. So there is no */
+  /* need of the "copy" callbacks, just the "free" callbacks. */
   marpaESLIFRecognizerp->lexemesExpectedHashp = &(marpaESLIFRecognizerp->_lexemesExpectedHash);
   GENERICHASH_INIT_ALL(marpaESLIFRecognizerp->lexemesExpectedHashp,
                        _marpaESLIF_string_hash_callbacki,
                        _marpaESLIFRecognizer_lexemesExpectedHash_KeyCmpp,
-                       _marpaESLIFRecognizer_lexemesExpectedHash_KeyCopyp,
+                       NULL, /* _marpaESLIFRecognizer_lexemesExpectedHash_KeyCopyp */
                        _marpaESLIFRecognizer_lexemesExpectedHash_KeyFreeb, 
-                       _marpaESLIFRecognizer_lexemesExpectedHash_ValCopyp,
+                       NULL, /* _marpaESLIFRecognizer_lexemesExpectedHash_ValCopyp */
                        _marpaESLIFRecognizer_lexemesExpectedHash_ValFreeb,
                        MARPAESLIF_HASH_SIZE,
                        0 /* wantedSubSize */);
@@ -15404,7 +15405,6 @@ static inline marpaESLIFRecognizer_t *_marpaESLIFRecognizer_getFromCachep(marpaE
         /* marpaESLIFRecognizerp->afterEventStatebp               = NULL; */
         /* marpaESLIFRecognizerp->discardOnOffb                   = 1; */
         /* marpaESLIFRecognizerp->pristineb                       = 1; */
-        /* marpaESLIFRecognizerp->tokenStreamModelb               = 1 */;
         marpaESLIFRecognizerp->grammarDiscardInitializedb         = 0;
         /*
           marpaESLIFRecognizerp->marpaESLIFGrammarDiscard           = c.f. MARPAESLIFRECOGNIZER_GRAMMARDISCARD_INITIALIZER() macro
@@ -16451,18 +16451,9 @@ static inline short _marpaESLIFRecognizer_expectedb(marpaESLIFRecognizer_t *marp
   short                             findResultb;
   size_t                            nSymboll;
   int                              *symbolArrayp = NULL;
-  marpaESLIF_lexemesExpected_t      marpaESLIF_lexemesExpected;
-  marpaESLIF_lexemesExpected_t     *marpaESLIF_lexemesExpectedp;
+  marpaESLIF_lexemesExpected_t     *marpaESLIF_lexemesExpectedp = NULL;
   short                             rcb;
-
-  if (! marpaESLIFRecognizerp->tokenStreamModelb) {
-    rcb = marpaWrapperRecognizer_expectedb(marpaWrapperRecognizerp, nSymbollp, symbolArraypp);
-    goto done;
-  }
-
-
-  /* In token-stream model, there is a single position at a time, and the list of expected lexemes will always be the same */
-  /* for a given position */
+  char                             *tmps;
 
   /* We will build dynamically a string that a concatenation of: "rulei.positioni" */
   marpaESLIF_stringGenerator.marpaESLIFp = marpaESLIFRecognizerp->marpaESLIFp;
@@ -16498,10 +16489,9 @@ static inline short _marpaESLIFRecognizer_expectedb(marpaESLIFRecognizer_t *marp
     }
   }
 
-  if (! marpaESLIF_stringGenerator.okb) {
-    /* Nothing - this is likely to fail saying that nothing is expected -; ? */
-    rcb = marpaWrapperRecognizer_expectedb(marpaWrapperRecognizerp, nSymbollp, symbolArraypp);
-    goto done;
+  if (marpaESLIF_stringGenerator.s == NULL) {
+    errno = ENOENT; /* Mostly probably exhausted grammar - caller will check */
+    goto err;
   }
 
   MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Key: %s", marpaESLIF_stringGenerator.s);
@@ -16523,32 +16513,42 @@ static inline short _marpaESLIFRecognizer_expectedb(marpaESLIFRecognizer_t *marp
     MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Key: %s found in cache: {nSymboll=%ld,symbolArrayp=%p}", marpaESLIF_stringGenerator.s, (unsigned long) marpaESLIF_lexemesExpectedp->nSymboll, marpaESLIF_lexemesExpectedp->symbolArrayp);
     *nSymbollp     = marpaESLIF_lexemesExpectedp->nSymboll;
     *symbolArraypp = marpaESLIF_lexemesExpectedp->symbolArrayp;
+    marpaESLIF_lexemesExpectedp = NULL; /* For the cleanup */
   } else {
+    MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Key: %s not found in cache", marpaESLIF_stringGenerator.s);
     if (! marpaWrapperRecognizer_expectedb(marpaWrapperRecognizerp, &nSymboll, &symbolArrayp)) {
       goto err;
     }
     *nSymbollp     = nSymboll;
     *symbolArraypp = symbolArrayp;
     if (nSymboll > 0) {
-      /* We know this will stop when is nSymboll <= 0 so we do not bother to store it */
-      marpaESLIF_lexemesExpected.nSymboll     = nSymboll;
-      marpaESLIF_lexemesExpected.symbolArrayp = (int *) malloc(nSymboll * sizeof(int));
-      if (marpaESLIF_lexemesExpected.symbolArrayp == NULL) {
+      marpaESLIF_lexemesExpectedp = (marpaESLIF_lexemesExpected_t *) malloc(sizeof(marpaESLIF_lexemesExpected_t));
+      if (marpaESLIF_lexemesExpectedp == NULL) {
 	MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "malloc failure, %s", strerror(errno));
 	goto err;
       }
-      MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Key: %s put to cache: {nSymboll=%ld,symbolArrayp=%p}", marpaESLIF_stringGenerator.s, (unsigned long) marpaESLIF_lexemesExpected.nSymboll, marpaESLIF_lexemesExpected.symbolArrayp);
-      memcpy(marpaESLIF_lexemesExpected.symbolArrayp, symbolArrayp, nSymboll * sizeof(int));
+      /* We know this will stop when is nSymboll <= 0 so we do not bother to store it */
+      marpaESLIF_lexemesExpectedp->nSymboll     = nSymboll;
+      marpaESLIF_lexemesExpectedp->symbolArrayp = (int *) malloc(nSymboll * sizeof(int));
+      if (marpaESLIF_lexemesExpectedp->symbolArrayp == NULL) {
+	MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "malloc failure, %s", strerror(errno));
+	goto err;
+      }
+      MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Key: %s put to cache: {nSymboll=%ld,symbolArrayp=%p}", marpaESLIF_stringGenerator.s, (unsigned long) marpaESLIF_lexemesExpectedp->nSymboll, marpaESLIF_lexemesExpectedp->symbolArrayp);
+      memcpy(marpaESLIF_lexemesExpectedp->symbolArrayp, symbolArrayp, nSymboll * sizeof(int));
+      /* Hash is not really atomic, so we protect against that in case of failure */
       GENERICHASH_SET(lexemesExpectedHashp,
                       marpaESLIFRecognizerp,
                       PTR,
                       marpaESLIF_stringGenerator.s,
                       PTR,
-                      &marpaESLIF_lexemesExpected);
+                      marpaESLIF_lexemesExpectedp);
       if (GENERICHASH_ERROR(lexemesExpectedHashp)) {
         MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "lexemesExpectedHashp failure, %s", strerror(errno));
         goto err;
       }
+      marpaESLIF_stringGenerator.s = NULL; /* This is in the hash */
+      marpaESLIF_lexemesExpectedp = NULL; /* Ditto */
     }
   }
 
@@ -16562,6 +16562,12 @@ static inline short _marpaESLIFRecognizer_expectedb(marpaESLIFRecognizer_t *marp
   done:
   if (marpaESLIF_stringGenerator.s != NULL) {
     free(marpaESLIF_stringGenerator.s);
+  }
+  if (marpaESLIF_lexemesExpectedp != NULL) {
+    if (marpaESLIF_lexemesExpectedp->symbolArrayp != NULL) {
+      free(marpaESLIF_lexemesExpectedp->symbolArrayp);
+    }
+    free(marpaESLIF_lexemesExpectedp);
   }
   GENERICLOGGER_FREE(genericLoggerp);
   return rcb;
