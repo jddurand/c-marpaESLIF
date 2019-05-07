@@ -42,6 +42,7 @@ typedef struct  marpaESLIF_alternative     marpaESLIF_alternative_t;
 typedef         marpaESLIFAction_t         marpaESLIF_action_t;
 typedef         marpaESLIFActionType_t     marpaESLIF_action_type_t;
 typedef struct  marpaESLIF_stream          marpaESLIF_stream_t;
+typedef struct  marpaESLIF_lexemesExpected marpaESLIF_lexemesExpected_t;
 
 /* Symbol types */
 enum marpaESLIF_symbol_type {
@@ -389,6 +390,7 @@ struct marpaESLIFRecognizer {
   int                          maxStartCompletionsi;
   int                          numberOfStartCompletionsi; /* Computed only if maxStartCompletionsi != 0 */
   size_t                       lastSizeBeforeCompletionl; /* Computed only if maxStartCompletionsi is != 0 */
+  short                        tokenStreamModelb;    /* true when all alternatives have a grammar length equal to 1, else false - use for expected lexemes optimization */
 
   /* When a recognizer needs to discard, we prepare storage for marpaESLIFGrammarp, marpaESLIFRecognizerOptionp and marpaESLIFValueOptionp. */
   /* This a lazy initialization, driven by the grammarDiscardInitializedb flag. */
@@ -408,6 +410,8 @@ struct marpaESLIFRecognizer {
   genericHash_t               *beforePtrHashp;
   genericHash_t                _afterPtrHash;
   genericHash_t               *afterPtrHashp;
+  genericHash_t               _lexemesExpectedHash;
+  genericHash_t               *lexemesExpectedHashp;
 };
 
 struct marpaESLIF_lexeme_data {
@@ -495,6 +499,11 @@ marpaESLIFValueOption_t marpaESLIFValueOption_default_template = {
 struct marpaESLIFStringHelper {
   marpaESLIF_t       *marpaESLIFp;
   marpaESLIFString_t *marpaESLIFStringp;
+};
+
+struct marpaESLIF_lexemesExpected {
+  size_t  nSymboll;
+  int    *symbolArrayp;
 };
 
 #include "marpaESLIF/internal/eslif.h"
