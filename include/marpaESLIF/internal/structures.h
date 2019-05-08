@@ -23,26 +23,36 @@
 #define INTERNAL_CHARACTERCLASSMODIFIERS_PATTERN "[eijmnsxDJUuaNubcA]+$"
 #define INTERNAL_REGEXMODIFIERS_PATTERN "[eijmnsxDJUuaNubcA]*$"
 
-typedef struct  marpaESLIF_regex           marpaESLIF_regex_t;
-typedef         marpaESLIFString_t         marpaESLIF_string_t;
-typedef enum    marpaESLIF_symbol_type     marpaESLIF_symbol_type_t;
-typedef enum    marpaESLIF_terminal_type   marpaESLIF_terminal_type_t;
-typedef struct  marpaESLIF_terminal        marpaESLIF_terminal_t;
-typedef struct  marpaESLIF_meta            marpaESLIF_meta_t;
-typedef         marpaESLIFSymbol_t         marpaESLIF_symbol_t;
-typedef struct  marpaESLIF_rule            marpaESLIF_rule_t;
-typedef struct  marpaESLIF_grammar         marpaESLIF_grammar_t;
-typedef enum    marpaESLIF_matcher_value   marpaESLIF_matcher_value_t;
-typedef enum    marpaESLIF_event_type      marpaESLIF_event_type_t;
-typedef struct  marpaESLIF_readerContext   marpaESLIF_readerContext_t;
-typedef struct  marpaESLIF_cloneContext    marpaESLIF_cloneContext_t;
-typedef         marpaESLIFValueType_t      marpaESLIF_stack_type_t;
-typedef struct  marpaESLIF_lexeme_data     marpaESLIF_lexeme_data_t;
-typedef struct  marpaESLIF_alternative     marpaESLIF_alternative_t;
-typedef         marpaESLIFAction_t         marpaESLIF_action_t;
-typedef         marpaESLIFActionType_t     marpaESLIF_action_type_t;
-typedef struct  marpaESLIF_stream          marpaESLIF_stream_t;
-typedef struct  marpaESLIF_lexemesExpected marpaESLIF_lexemesExpected_t;
+typedef struct  marpaESLIF_regex            marpaESLIF_regex_t;
+typedef         marpaESLIFString_t          marpaESLIF_string_t;
+typedef enum    marpaESLIF_symbol_type      marpaESLIF_symbol_type_t;
+typedef enum    marpaESLIF_terminal_type    marpaESLIF_terminal_type_t;
+typedef struct  marpaESLIF_terminal         marpaESLIF_terminal_t;
+typedef struct  marpaESLIF_meta             marpaESLIF_meta_t;
+typedef         marpaESLIFSymbol_t          marpaESLIF_symbol_t;
+typedef struct  marpaESLIF_rule             marpaESLIF_rule_t;
+typedef struct  marpaESLIF_grammar          marpaESLIF_grammar_t;
+typedef enum    marpaESLIF_matcher_value    marpaESLIF_matcher_value_t;
+typedef enum    marpaESLIF_event_type       marpaESLIF_event_type_t;
+typedef struct  marpaESLIF_readerContext    marpaESLIF_readerContext_t;
+typedef struct  marpaESLIF_cloneContext     marpaESLIF_cloneContext_t;
+typedef         marpaESLIFValueType_t       marpaESLIF_stack_type_t;
+typedef struct  marpaESLIF_lexeme_data      marpaESLIF_lexeme_data_t;
+typedef struct  marpaESLIF_alternative      marpaESLIF_alternative_t;
+typedef         marpaESLIFAction_t          marpaESLIF_action_t;
+typedef         marpaESLIFActionType_t      marpaESLIF_action_type_t;
+typedef struct  marpaESLIF_stream           marpaESLIF_stream_t;
+typedef struct  marpaESLIF_lexemesExpected  marpaESLIF_lexemesExpected_t;
+typedef struct  marpaESLIF_stringGenerator  marpaESLIF_stringGenerator_t;
+
+/* Internal string generator */
+struct marpaESLIF_stringGenerator {
+  marpaESLIF_t *marpaESLIFp;
+  char         *s;      /* Pointer */
+  size_t        l;      /* Used size */
+  short         okb;    /* Status */
+  size_t        allocl; /* Allocated size */
+};
 
 /* Symbol types */
 enum marpaESLIF_symbol_type {
@@ -411,6 +421,8 @@ struct marpaESLIFRecognizer {
   genericHash_t               *afterPtrHashp;
   genericHash_t               _lexemesExpectedHash;
   genericHash_t               *lexemesExpectedHashp;
+  genericLogger_t             *genericLoggerLexemesExpectedp;
+  marpaESLIF_stringGenerator_t marpaESLIF_stringGeneratorLexemesExpected;
 };
 
 struct marpaESLIF_lexeme_data {
