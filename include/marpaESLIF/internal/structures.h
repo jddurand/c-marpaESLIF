@@ -230,6 +230,18 @@ struct marpaESLIF_grammar {
   unsigned int           nbupdatei;                          /* Number of updates - used in grammar ESLIF actions */
   char                  *asciishows;                         /* Grammar show (ASCII) */
   int                    discardi;                           /* Discard symbol ID - filled during grammar validation */
+  /* Expected Lexemes prediction for grammar at :start */
+  genericHash_t                 _lexemesExpectedHashStart;
+  genericHash_t                *lexemesExpectedHashStartp;
+  genericLogger_t              *genericLoggerLexemesExpectedStartp;
+  marpaESLIF_stringGenerator_t  _stringGeneratorLexemesExpectedStart;
+  marpaESLIF_stringGenerator_t *stringGeneratorLexemesExpectedStartp;
+  /* Expected Lexemes prediction for grammar at :discard */
+  genericHash_t                 _lexemesExpectedHashDiscard;
+  genericHash_t                *lexemesExpectedHashDiscardp;
+  genericLogger_t              *genericLoggerLexemesExpectedDiscardp;
+  marpaESLIF_stringGenerator_t  _stringGeneratorLexemesExpectedDiscard;
+  marpaESLIF_stringGenerator_t *stringGeneratorLexemesExpectedDiscardp;
 };
 
 /* ----------------------------------- */
@@ -419,10 +431,11 @@ struct marpaESLIFRecognizer {
   genericHash_t               *beforePtrHashp;
   genericHash_t                _afterPtrHash;
   genericHash_t               *afterPtrHashp;
-  genericHash_t               _lexemesExpectedHash;
+
+  /* Lexemes prediction optimization (shallow pointers) */
   genericHash_t               *lexemesExpectedHashp;
   genericLogger_t             *genericLoggerLexemesExpectedp;
-  marpaESLIF_stringGenerator_t marpaESLIF_stringGeneratorLexemesExpected;
+  marpaESLIF_stringGenerator_t *stringGeneratorLexemesExpectedp;
 };
 
 struct marpaESLIF_lexeme_data {
