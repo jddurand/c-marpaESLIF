@@ -2827,11 +2827,7 @@ static inline marpaESLIF_grammar_t *_marpaESLIF_grammar_newp(marpaESLIFGrammar_t
   grammarp->asciishows                             = NULL;
   grammarp->discardi                               = -1;   /* Eventually filled to a value >= 0 during grammar validation */
   grammarp->lexemesExpectedHashStartp              = NULL; /* Expected lexemes optimization for default grammar */
-  grammarp->genericLoggerLexemesExpectedStartp     = NULL;
-  grammarp->stringGeneratorLexemesExpectedStartp   = &(grammarp->_stringGeneratorLexemesExpectedStart);
   grammarp->lexemesExpectedHashDiscardp            = NULL; /* Expected lexemes optimization for discard grammar */
-  grammarp->genericLoggerLexemesExpectedDiscardp   = NULL;
-  grammarp->stringGeneratorLexemesExpectedDiscardp = &(grammarp->_stringGeneratorLexemesExpectedDiscard);
 
   grammarp->marpaWrapperGrammarStartp = marpaWrapperGrammar_newp(marpaWrapperGrammarOptionp);
   if (grammarp->marpaWrapperGrammarStartp == NULL) {
@@ -2902,13 +2898,15 @@ static inline marpaESLIF_grammar_t *_marpaESLIF_grammar_newp(marpaESLIFGrammar_t
     }
   }
 
-  /* These hashes are special: we will only insert entries that do not yet exists. So there is no */
-  /* need of the "copy" callbacks, just the "free" callbacks. */
+  /* These hashes are special: we will only insert entries that do not yet exists: */
+  /* Key comes from a memory we do not control: progress report. */
+  /* Value comes is a memory we own. */
+  /* Since we only insert in the hash new keys, no need of the valCopy callback. */
   grammarp->lexemesExpectedHashStartp = &(grammarp->_lexemesExpectedHashStart);
   GENERICHASH_INIT_ALL(grammarp->lexemesExpectedHashStartp,
                        _marpaESLIF_string_hash_callbacki,
                        _marpaESLIF_grammar_lexemesExpectedHash_KeyCmpp,
-                       NULL, /* _marpaESLIF_grammar_lexemesExpectedHash_KeyCopyp */
+                       _marpaESLIF_grammar_lexemesExpectedHash_KeyCopyp,
                        _marpaESLIF_grammar_lexemesExpectedHash_KeyFreeb,
                        NULL, /* _marpaESLIF_grammar_lexemesExpectedHash_ValCopyp */
                        _marpaESLIF_grammar_lexemesExpectedHash_ValFreeb,
@@ -2920,17 +2918,11 @@ static inline marpaESLIF_grammar_t *_marpaESLIF_grammar_newp(marpaESLIFGrammar_t
     goto err;
   }
 
-  grammarp->genericLoggerLexemesExpectedStartp = GENERICLOGGER_CUSTOM(_marpaESLIF_generateStringWithLoggerCallback, (void *) grammarp->stringGeneratorLexemesExpectedStartp, GENERICLOGGER_LOGLEVEL_TRACE);
-  if (grammarp->genericLoggerLexemesExpectedStartp == NULL) {
-    MARPAESLIF_ERRORF(marpaESLIFp, "GENERICLOGGER_CUSTOM failure, %s", strerror(errno));
-    goto err;
-  }
-
   grammarp->lexemesExpectedHashDiscardp = &(grammarp->_lexemesExpectedHashDiscard);
   GENERICHASH_INIT_ALL(grammarp->lexemesExpectedHashDiscardp,
                        _marpaESLIF_string_hash_callbacki,
                        _marpaESLIF_grammar_lexemesExpectedHash_KeyCmpp,
-                       NULL, /* _marpaESLIF_grammar_lexemesExpectedHash_KeyCopyp */
+                       _marpaESLIF_grammar_lexemesExpectedHash_KeyCopyp,
                        _marpaESLIF_grammar_lexemesExpectedHash_KeyFreeb,
                        NULL, /* _marpaESLIF_grammar_lexemesExpectedHash_ValCopyp */
                        _marpaESLIF_grammar_lexemesExpectedHash_ValFreeb,
@@ -2939,12 +2931,6 @@ static inline marpaESLIF_grammar_t *_marpaESLIF_grammar_newp(marpaESLIFGrammar_t
   if (GENERICHASH_ERROR(grammarp->lexemesExpectedHashDiscardp)) {
     MARPAESLIF_ERRORF(marpaESLIFp, "lexemesExpectedHashDiscardp init failure, %s", strerror(errno));
     grammarp->lexemesExpectedHashDiscardp = NULL;
-    goto err;
-  }
-
-  grammarp->genericLoggerLexemesExpectedDiscardp = GENERICLOGGER_CUSTOM(_marpaESLIF_generateStringWithLoggerCallback, (void *) grammarp->stringGeneratorLexemesExpectedDiscardp, GENERICLOGGER_LOGLEVEL_TRACE);
-  if (grammarp->genericLoggerLexemesExpectedDiscardp == NULL) {
-    MARPAESLIF_ERRORF(marpaESLIFp, "GENERICLOGGER_CUSTOM failure, %s", strerror(errno));
     goto err;
   }
 
@@ -2994,11 +2980,9 @@ static inline void _marpaESLIF_grammar_freev(marpaESLIF_grammar_t *grammarp)
     if (grammarp->lexemesExpectedHashStartp != NULL) {
       GENERICHASH_RESET(grammarp->lexemesExpectedHashStartp, NULL);
     }
-    GENERICLOGGER_FREE(grammarp->genericLoggerLexemesExpectedStartp);
     if (grammarp->lexemesExpectedHashDiscardp != NULL) {
       GENERICHASH_RESET(grammarp->lexemesExpectedHashDiscardp, NULL);
     }
-    GENERICLOGGER_FREE(grammarp->genericLoggerLexemesExpectedDiscardp);
     free(grammarp);
   }
 }
@@ -8466,8 +8450,6 @@ static inline marpaESLIFRecognizer_t *_marpaESLIFRecognizer_newp(marpaESLIFGramm
   marpaESLIFRecognizerp->beforePtrHashp                  = NULL;
   marpaESLIFRecognizerp->afterPtrHashp                   = NULL;
   marpaESLIFRecognizerp->lexemesExpectedHashp            = NULL;
-  marpaESLIFRecognizerp->genericLoggerLexemesExpectedp   = NULL;
-  marpaESLIFRecognizerp->stringGeneratorLexemesExpectedp = NULL;
 
   marpaWrapperRecognizerOption.genericLoggerp            = silentb ? NULL : marpaESLIFp->marpaESLIFOption.genericLoggerp;
   marpaWrapperRecognizerOption.disableThresholdb         = marpaESLIFRecognizerOptionp->disableThresholdb;
@@ -8493,13 +8475,9 @@ static inline marpaESLIFRecognizer_t *_marpaESLIFRecognizer_newp(marpaESLIFGramm
     if (discardb) {
       marpaESLIFRecognizerp->marpaWrapperGrammarp            = noEventb ? grammarp->marpaWrapperGrammarDiscardNoEventp : grammarp->marpaWrapperGrammarDiscardp;
       marpaESLIFRecognizerp->lexemesExpectedHashp            = grammarp->lexemesExpectedHashDiscardp;
-      marpaESLIFRecognizerp->genericLoggerLexemesExpectedp   = grammarp->genericLoggerLexemesExpectedDiscardp;
-      marpaESLIFRecognizerp->stringGeneratorLexemesExpectedp = grammarp->stringGeneratorLexemesExpectedDiscardp;
     } else {
       marpaESLIFRecognizerp->marpaWrapperGrammarp            = noEventb ? grammarp->marpaWrapperGrammarStartNoEventp : grammarp->marpaWrapperGrammarStartp;
       marpaESLIFRecognizerp->lexemesExpectedHashp            = grammarp->lexemesExpectedHashStartp;
-      marpaESLIFRecognizerp->genericLoggerLexemesExpectedp   = grammarp->genericLoggerLexemesExpectedStartp;
-      marpaESLIFRecognizerp->stringGeneratorLexemesExpectedp = grammarp->stringGeneratorLexemesExpectedStartp;
     }
 
     marpaESLIFRecognizerp->marpaWrapperRecognizerp = marpaWrapperRecognizer_newp(marpaESLIFRecognizerp->marpaWrapperGrammarp, &marpaWrapperRecognizerOption);
@@ -16481,53 +16459,35 @@ static inline short _marpaESLIFRecognizer_expectedb(marpaESLIFRecognizer_t *marp
   marpaWrapperRecognizer_t         *marpaWrapperRecognizerp = marpaESLIFRecognizerp->marpaWrapperRecognizerp;
   marpaESLIF_grammar_t             *grammarp                = marpaESLIFRecognizerp->marpaESLIFGrammarp->grammarp;
   genericHash_t                    *lexemesExpectedHashp    = marpaESLIFRecognizerp->lexemesExpectedHashp;
-  genericLogger_t                  *genericLoggerp          = marpaESLIFRecognizerp->genericLoggerLexemesExpectedp;
-  marpaESLIF_stringGenerator_t     *stringGeneratorp        = marpaESLIFRecognizerp->stringGeneratorLexemesExpectedp;
-  size_t                            nProgressl;
-  marpaWrapperRecognizerProgress_t *progressp;
+  marpaESLIF_progress_t             marpaESLIF_progress;
+  marpaESLIF_progress_t            *marpaESLIF_progressp    = &marpaESLIF_progress;
+  marpaESLIF_lexemesExpected_t     *marpaESLIF_lexemesExpectedp;
   size_t                            progressl;
+  marpaWrapperRecognizerProgress_t *progressp;
   int                               rulei;
   int                               positioni;
   short                             findResultb;
   size_t                            nSymboll;
-  int                              *symbolArrayp = NULL;
-  marpaESLIF_lexemesExpected_t     *marpaESLIF_lexemesExpectedp = NULL;
+  int                              *symbolArrayp;
   short                             rcb;
   char                             *tmps;
 
-  /* We will build dynamically a string that a concatenation of: "rulei.positioni" */
-  *stringGeneratorp = marpaESLIF_stringGeneratorTemplate;
-  stringGeneratorp->marpaESLIFp = marpaESLIFRecognizerp->marpaESLIFp;
-
-  if (! marpaWrapperRecognizer_progressb(marpaWrapperRecognizerp, -1, -1, &nProgressl, &progressp)) {
+  if (! marpaWrapperRecognizer_progressb(marpaWrapperRecognizerp, -1, -1, &progressl, &progressp)) {
     goto err;
   }
 
-  /* We want to make sure that progress report is ordered by predictions first, then positions */
-  qsort(progressp, nProgressl, sizeof(marpaWrapperRecognizerProgress_t), _marpaESLIF_progress_sorti);
-  
-  for (progressl = 0; progressl < nProgressl; progressl++) {
-    positioni = progressp[progressl].positioni;
-    rulei = progressp[progressl].rulei;
-    GENERICLOGGER_TRACEF(genericLoggerp, "%s%d.%d", (stringGeneratorp->s != NULL) ? "/" : "", rulei, positioni);
-    if (! stringGeneratorp->okb) {
-      goto err;
-    }
-  }
+  /* The key IS the progress report. We want to make sure that progress report is comparable using rule Ids first, then position Ids. */
+  qsort(progressp, progressl, sizeof(marpaWrapperRecognizerProgress_t), _marpaESLIF_progress_sorti);
 
-  if (stringGeneratorp->s == NULL) {
-    errno = ENOENT; /* Mostly probably exhausted grammar - caller will check */
-    goto err;
-  }
+  marpaESLIF_progress.progressl = progressl;
+  marpaESLIF_progress.progressp = progressp;
 
-  MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Key: %s", stringGeneratorp->s);
-  
   /* Already in the cache ? */
   findResultb = 0;
   GENERICHASH_FIND(lexemesExpectedHashp,
 		   marpaESLIFRecognizerp,
 		   PTR,
-		   stringGeneratorp->s,
+		   marpaESLIF_progressp,
 		   PTR,
 		   &marpaESLIF_lexemesExpectedp,
 		   findResultb);
@@ -16536,12 +16496,10 @@ static inline short _marpaESLIFRecognizer_expectedb(marpaESLIFRecognizer_t *marp
     goto err;
   }
   if (findResultb) {
-    MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Key: %s found in cache: {nSymboll=%ld,symbolArrayp=%p}", stringGeneratorp->s, (unsigned long) marpaESLIF_lexemesExpectedp->nSymboll, marpaESLIF_lexemesExpectedp->symbolArrayp);
     *nSymbollp     = marpaESLIF_lexemesExpectedp->nSymboll;
     *symbolArraypp = marpaESLIF_lexemesExpectedp->symbolArrayp;
     marpaESLIF_lexemesExpectedp = NULL; /* For the cleanup */
   } else {
-    MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Key: %s not found in cache", stringGeneratorp->s);
     if (! marpaWrapperRecognizer_expectedb(marpaWrapperRecognizerp, &nSymboll, &symbolArrayp)) {
       goto err;
     }
@@ -16560,20 +16518,18 @@ static inline short _marpaESLIFRecognizer_expectedb(marpaESLIFRecognizer_t *marp
 	MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "malloc failure, %s", strerror(errno));
 	goto err;
       }
-      MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Key: %s put to cache: {nSymboll=%ld,symbolArrayp=%p}", stringGeneratorp->s, (unsigned long) marpaESLIF_lexemesExpectedp->nSymboll, marpaESLIF_lexemesExpectedp->symbolArrayp);
       memcpy(marpaESLIF_lexemesExpectedp->symbolArrayp, symbolArrayp, nSymboll * sizeof(int));
       /* Hash is not really atomic, so we protect against that in case of failure */
       GENERICHASH_SET(lexemesExpectedHashp,
                       marpaESLIFRecognizerp,
                       PTR,
-                      stringGeneratorp->s,
+                      marpaESLIF_progressp,
                       PTR,
                       marpaESLIF_lexemesExpectedp);
       if (GENERICHASH_ERROR(lexemesExpectedHashp)) {
         MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "lexemesExpectedHashp failure, %s", strerror(errno));
         goto err;
       }
-      stringGeneratorp->s = NULL; /* This is in the hash */
       marpaESLIF_lexemesExpectedp = NULL; /* Ditto */
     }
   }
@@ -16586,9 +16542,6 @@ static inline short _marpaESLIFRecognizer_expectedb(marpaESLIFRecognizer_t *marp
   goto done;
 
   done:
-  if (stringGeneratorp->s != NULL) {
-    free(stringGeneratorp->s);
-  }
   if (marpaESLIF_lexemesExpectedp != NULL) {
     if (marpaESLIF_lexemesExpectedp->symbolArrayp != NULL) {
       free(marpaESLIF_lexemesExpectedp->symbolArrayp);
@@ -16603,47 +16556,88 @@ static inline short _marpaESLIFRecognizer_expectedb(marpaESLIFRecognizer_t *marp
 static short _marpaESLIF_grammar_lexemesExpectedHash_KeyCmpp(void *userDatavp, void **pp1, void **pp2)
 /*****************************************************************************/
 {
-  return strcmp(* (char **) pp1, * (char **) pp2) == 0;
+  marpaESLIF_progress_t *p1 = * (marpaESLIF_progress_t **) pp1;
+  marpaESLIF_progress_t *p2 = * (marpaESLIF_progress_t **) pp2;
+  size_t                 progressl;
+
+  /* Why is it safe? Unless you play with bizarre compiler options, there is no padding */
+  /* in the marpaWrapperRecognizerProgress_t structure. If there is, cross fingers the  */
+  /* padding is always made with the same bytes. */
+  if (p1->progressl != p2->progressl) {
+    return 0;
+  }
+  for (progressl = 0; progressl < p1->progressl; progressl++) {
+    if ((p1->progressp[progressl].rulei != p2->progressp[progressl].rulei)
+        ||
+        (p1->progressp[progressl].positioni != p2->progressp[progressl].positioni)) {
+      return 0;
+    }
+  }
+
+  return 1;
 }
 
 /*****************************************************************************/
 static void *_marpaESLIF_grammar_lexemesExpectedHash_KeyCopyp(void *userDatavp, void **pp)
 /*****************************************************************************/
 {
-  return strdup(* (char **) pp);
+  marpaESLIF_progress_t *inputp = * (marpaESLIF_progress_t **) pp;
+  marpaESLIF_progress_t *outputp;
+  size_t                 sizel;
+
+  outputp = (marpaESLIF_progress_t *) malloc(sizeof(marpaESLIF_progress_t));
+  if (outputp == NULL) {
+    MARPAESLIF_ERRORF(((marpaESLIFRecognizer_t *) userDatavp)->marpaESLIFp, "malloc failure, %s", strerror(errno));
+    return NULL;
+  }
+
+  outputp->progressl = inputp->progressl;
+  sizel = inputp->progressl * sizeof(marpaWrapperRecognizerProgress_t);
+  outputp->progressp = (marpaWrapperRecognizerProgress_t *) malloc(sizel);
+  if (outputp->progressp == NULL) {
+    MARPAESLIF_ERRORF(((marpaESLIFRecognizer_t *) userDatavp)->marpaESLIFp, "malloc failure, %s", strerror(errno));
+    free(outputp);
+    return NULL;
+  }
+
+  memcpy(outputp->progressp, inputp->progressp, sizel);
+  return outputp;
 }
 
 /*****************************************************************************/
 static void _marpaESLIF_grammar_lexemesExpectedHash_KeyFreeb(void *userDatavp, void **pp)
 /*****************************************************************************/
 {
-  free(*pp);
+  marpaESLIF_progress_t *inputp = * (marpaESLIF_progress_t **) pp;
+
+  free(inputp->progressp);
+  free(inputp);
 }
 
 /*****************************************************************************/
 static void *_marpaESLIF_grammar_lexemesExpectedHash_ValCopyp(void *userDatavp, void **pp)
 /*****************************************************************************/
 {
-  marpaESLIF_lexemesExpected_t *marpaESLIF_lexemesExpectedp;
+  marpaESLIF_lexemesExpected_t *lexemesExpectedp;
 
-  marpaESLIF_lexemesExpectedp = (marpaESLIF_lexemesExpected_t *) malloc(sizeof(marpaESLIF_lexemesExpected_t));
-  if (marpaESLIF_lexemesExpectedp == NULL) {
+  lexemesExpectedp = (marpaESLIF_lexemesExpected_t *) malloc(sizeof(marpaESLIF_lexemesExpected_t));
+  if (lexemesExpectedp == NULL) {
     MARPAESLIF_ERRORF(((marpaESLIFRecognizer_t *) userDatavp)->marpaESLIFp, "malloc failure, %s", strerror(errno));
     return NULL;
   }
-  memcpy(marpaESLIF_lexemesExpectedp, *pp, sizeof(marpaESLIF_lexemesExpected_t));
+  memcpy(lexemesExpectedp, *pp, sizeof(marpaESLIF_lexemesExpected_t));
   
-  return marpaESLIF_lexemesExpectedp;
+  return lexemesExpectedp;
 }
 
 /*****************************************************************************/
 static void _marpaESLIF_grammar_lexemesExpectedHash_ValFreeb(void *userDatavp, void **pp)
 /*****************************************************************************/
 {
-  marpaESLIF_lexemesExpected_t *marpaESLIF_lexemesExpectedp = * (marpaESLIF_lexemesExpected_t **) pp;
+  marpaESLIF_lexemesExpected_t *lexemesExpectedp = * (marpaESLIF_lexemesExpected_t **) pp;
 
-  free(marpaESLIF_lexemesExpectedp->symbolArrayp);
-  free(marpaESLIF_lexemesExpectedp);
+  free(lexemesExpectedp->symbolArrayp);
+  free(lexemesExpectedp);
 }
 
 #include "bootstrap.c"

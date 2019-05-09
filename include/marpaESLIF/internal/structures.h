@@ -42,6 +42,7 @@ typedef struct  marpaESLIF_alternative      marpaESLIF_alternative_t;
 typedef         marpaESLIFAction_t          marpaESLIF_action_t;
 typedef         marpaESLIFActionType_t      marpaESLIF_action_type_t;
 typedef struct  marpaESLIF_stream           marpaESLIF_stream_t;
+typedef struct  marpaESLIF_progress         marpaESLIF_progress_t;
 typedef struct  marpaESLIF_lexemesExpected  marpaESLIF_lexemesExpected_t;
 typedef struct  marpaESLIF_stringGenerator  marpaESLIF_stringGenerator_t;
 
@@ -233,15 +234,9 @@ struct marpaESLIF_grammar {
   /* Expected Lexemes prediction for grammar at :start */
   genericHash_t                 _lexemesExpectedHashStart;
   genericHash_t                *lexemesExpectedHashStartp;
-  genericLogger_t              *genericLoggerLexemesExpectedStartp;
-  marpaESLIF_stringGenerator_t  _stringGeneratorLexemesExpectedStart;
-  marpaESLIF_stringGenerator_t *stringGeneratorLexemesExpectedStartp;
   /* Expected Lexemes prediction for grammar at :discard */
   genericHash_t                 _lexemesExpectedHashDiscard;
   genericHash_t                *lexemesExpectedHashDiscardp;
-  genericLogger_t              *genericLoggerLexemesExpectedDiscardp;
-  marpaESLIF_stringGenerator_t  _stringGeneratorLexemesExpectedDiscard;
-  marpaESLIF_stringGenerator_t *stringGeneratorLexemesExpectedDiscardp;
 };
 
 /* ----------------------------------- */
@@ -434,8 +429,6 @@ struct marpaESLIFRecognizer {
 
   /* Lexemes prediction optimization (shallow pointers) */
   genericHash_t               *lexemesExpectedHashp;
-  genericLogger_t             *genericLoggerLexemesExpectedp;
-  marpaESLIF_stringGenerator_t *stringGeneratorLexemesExpectedp;
 };
 
 struct marpaESLIF_lexeme_data {
@@ -523,6 +516,11 @@ marpaESLIFValueOption_t marpaESLIFValueOption_default_template = {
 struct marpaESLIFStringHelper {
   marpaESLIF_t       *marpaESLIFp;
   marpaESLIFString_t *marpaESLIFStringp;
+};
+
+struct marpaESLIF_progress {
+  size_t                            progressl;
+  marpaWrapperRecognizerProgress_t *progressp;
 };
 
 struct marpaESLIF_lexemesExpected {
