@@ -2112,9 +2112,6 @@ static int marpaESLIFLua_marpaESLIFGrammar_newi(lua_State *L)
 {
   static const char              *funcs = "marpaESLIFLua_marpaESLIFGrammar_newi";
   marpaESLIFLuaContext_t         *marpaESLIFLuaContextp;
-  int                            ngrammari;
-  int                            i;
-  marpaESLIFGrammarDefaults_t    marpaESLIFGrammarDefaults;
   marpaESLIFLuaGrammarContext_t *marpaESLIFLuaGrammarContextp;
   marpaESLIFGrammarOption_t      marpaESLIFGrammarOption = {
     NULL, /* bytep */
@@ -3790,7 +3787,6 @@ static short marpaESLIFLua_pushValueb(marpaESLIFLuaValueContext_t *marpaESLIFLua
   static const char       *funcs = "marpaESLIFLua_pushValueb";
   lua_State               *L     = marpaESLIFLuaValueContextp->L;
   marpaESLIFValueResult_t *marpaESLIFValueResultp;
-  marpaESLIFValueResult_t  marpaESLIFValueResult;
 
   /* fprintf(stdout, "... push value %s start\n", marpaESLIFLuaValueContextp->actions); fflush(stdout); fflush(stderr); */
   if (marpaESLIFValueResultLexemep != NULL) {
