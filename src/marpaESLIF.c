@@ -6699,7 +6699,6 @@ static inline short _marpaESLIFRecognizer_resume_oneb(marpaESLIFRecognizer_t *ma
 #endif
     goto err;
   }
-  marpaESLIFRecognizerp->previousMaxMatchedl = maxMatchedl;
 
   /* Is there a limit on start symbol completions ? Note that the value -1 is used to trigger the call to _marpaESLIF_recognizer_start_is_completeb() */
   if (maxStartCompletionsi != 0) {
@@ -7210,6 +7209,9 @@ static inline short _marpaESLIFRecognizer_lexeme_completeb(marpaESLIFRecognizer_
 
   /* Reset any internal flag that prevent continutation */
   marpaESLIFRecognizerp->cannotcontinueb = 0;
+
+  /* Remember the length */
+  marpaESLIFRecognizerp->previousMaxMatchedl = lengthl;
 
   rcb = 1;
   goto done;
