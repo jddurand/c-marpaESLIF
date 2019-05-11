@@ -6693,10 +6693,7 @@ static inline short _marpaESLIFRecognizer_resume_oneb(marpaESLIFRecognizer_t *ma
     }
 
     /* Remember that this recognizer is not pristine anymore and increment lastSizeBeforeCompletionl */
-    if (marpaESLIFRecognizerp->pristineb != 0) {
-      MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "lastSizel 0 (unchanged)");
-      marpaESLIFRecognizerp->pristineb = 0;
-    } else {
+    if (! marpaESLIFRecognizerp->pristineb) {
       lastSizel = marpaESLIFRecognizerp->lastSizel;
       MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "lastSizel %ld -> %ld", (unsigned long) lastSizel, (unsigned long) (lastSizel + marpaESLIFRecognizerp->previousMaxMatchedl));
       if ((marpaESLIFRecognizerp->lastSizel += marpaESLIFRecognizerp->previousMaxMatchedl) < lastSizel) {
@@ -6926,6 +6923,10 @@ static inline short _marpaESLIFRecognizer_lexeme_alternativeb(marpaESLIFRecogniz
   if (! _marpaESLIFRecognizer_alternative_and_valueb(marpaESLIFRecognizerp, alternativep, GENERICSTACK_USED(lexemeInputStackp) - 1)) {
     goto err;
   }
+
+  /* Remember that this recognizer is not pristine anymore */
+  MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "Remembering that recognizer is not pristine");
+  marpaESLIFRecognizerp->pristineb = 0;
 
   rcb = 1;
   goto done;
