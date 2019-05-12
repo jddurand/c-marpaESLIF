@@ -12631,7 +12631,8 @@ static inline short _marpaESLIFValueResult_stack_i_setb(marpaESLIF_t *marpaESLIF
 /* If marpaESLIFValueResultOrigp then valueResultStackp and indicei must be set */
 /*****************************************************************************/
 {
-  static const char        *funcs = "_marpaESLIFValueResult_stack_i_setb";
+  static const char        *funcs    = "_marpaESLIFValueResult_stack_i_setb";
+  short                     restoreb = 0; /* If true, then marpaESLIFValueResultOrig can be used to restore original value */
   marpaESLIFValueResult_t   marpaESLIFValueResultOrig;
   marpaESLIFValueResult_t  *marpaESLIFValueResultNewp;
   short                     rcb;
@@ -12639,6 +12640,7 @@ static inline short _marpaESLIFValueResult_stack_i_setb(marpaESLIF_t *marpaESLIF
   void                     *p;
   marpaESLIFFreeCallback_t  freeCallbackp;
   void                     *freeUserDatavp;
+  int                       hashindexi;
 
   if (marpaESLIFValueResultOrigp == NULL) {
     /* Look at original value */
@@ -12687,6 +12689,7 @@ static inline short _marpaESLIFValueResult_stack_i_setb(marpaESLIF_t *marpaESLIF
 
   /* Keep a copy of what we are going to replace */
   marpaESLIFValueResultOrig = *marpaESLIFValueResultOrigp;
+  restoreb = 1;
 
   /* Do the replacement */
   *marpaESLIFValueResultOrigp = *marpaESLIFValueResultp;
@@ -12732,13 +12735,15 @@ static inline short _marpaESLIFValueResult_stack_i_setb(marpaESLIF_t *marpaESLIF
   while (GENERICSTACK_USED(beforePtrStackp) > 0) {
     p = GENERICSTACK_POP_PTR(beforePtrStackp);
     findResultb = 0;
-    GENERICHASH_FIND(beforePtrHashp,
-                     NULL, /* userDatavp */
-                     PTR,
-                     p,
-                     PTR,
-                     &marpaESLIFValueResultOrigp,
-                     findResultb);
+    hashindexi = _marpaESLIF_ptrhashi(NULL /* userDatavp */, GENERICSTACKITEMTYPE_PTR, (void **) &p);
+    GENERICHASH_FIND_BY_IND(beforePtrHashp,
+                            NULL, /* userDatavp */
+                            PTR,
+                            p,
+                            PTR,
+                            &marpaESLIFValueResultOrigp,
+                            findResultb,
+                            hashindexi);
     if (GENERICHASH_ERROR(beforePtrHashp)) {
       MARPAESLIF_ERRORF(marpaESLIFp, "beforePtrHashp find failure, %s", strerror(errno));
       goto err;
@@ -12750,13 +12755,14 @@ static inline short _marpaESLIFValueResult_stack_i_setb(marpaESLIF_t *marpaESLIF
     }
 
     findResultb = 0;
-    GENERICHASH_FIND(afterPtrHashp,
-                     NULL, /* userDatavp */
-                     PTR,
-                     p,
-                     PTR,
-                     &marpaESLIFValueResultNewp,
-                     findResultb);
+    GENERICHASH_FIND_BY_IND(afterPtrHashp,
+                            NULL, /* userDatavp */
+                            PTR,
+                            p,
+                            PTR,
+                            &marpaESLIFValueResultNewp,
+                            findResultb,
+                            hashindexi);
     if (GENERICHASH_ERROR(afterPtrHashp)) {
       MARPAESLIF_ERRORF(marpaESLIFp, "afterPtrHashp find failure, %s", strerror(errno));
       goto err;
@@ -12801,6 +12807,10 @@ static inline short _marpaESLIFValueResult_stack_i_setb(marpaESLIF_t *marpaESLIF
   goto done;
 
  err:
+  if (restoreb) {
+    /* We can restore what was at indice indicei */
+    *marpaESLIFValueResultOrigp = marpaESLIFValueResultOrig;
+  }
   rcb = 0;
 
  done:
@@ -16428,13 +16438,17 @@ static inline short _marpaESLIF_flatten_pointers(marpaESLIF_t *marpaESLIFp, gene
         goto err;
       }
       if (findResultb) {
-        MARPAESLIF_ERROR(marpaESLIFp, "Recursive marpaESLIFValueResult is not allowed");
-        goto err;
-      }
-      GENERICHASH_SET_BY_IND(flattenPtrHashp, NULL /* userDatavp */, PTR, p, PTR, marpaESLIFValueResultTmpp, hashindexi);
-      if (GENERICHASH_ERROR(flattenPtrHashp)) {
-        MARPAESLIF_ERRORF(marpaESLIFp, "flattenPtrHashp failure, %s", strerror(errno));
-        goto err;
+        /* This is an error unless the marpaESLIFValueResult is shallow */
+        if (! shallowb) {
+          MARPAESLIF_ERRORF(marpaESLIFp, "Recursive marpaESLIFValueResult is not allowed, type: %s", _marpaESLIF_value_types(marpaESLIFValueResultTmpp->type));
+          goto err;
+        }
+      } else {
+        GENERICHASH_SET_BY_IND(flattenPtrHashp, NULL /* userDatavp */, PTR, p, PTR, marpaESLIFValueResultTmpp, hashindexi);
+        if (GENERICHASH_ERROR(flattenPtrHashp)) {
+          MARPAESLIF_ERRORF(marpaESLIFp, "flattenPtrHashp failure, %s", strerror(errno));
+          goto err;
+        }
       }
       if (flattenPtrStackb) {
         GENERICSTACK_PUSH_PTR(flattenPtrStackp, p);
