@@ -726,7 +726,7 @@ marpaESLIF BNF can be expressed in itself:
   <word character>                 ~ /[\w]/
   <one or more word characters>    ~ <word character>+ proper => 1
   <zero or more word characters>   ~ <word character>* proper => 1
-  <restricted ascii graph name>    ~ /[!#$%&*+.\/;?\[\\\]^_`~A-Za-z0-9][!#$%&*+.\/;?\[\\\]^_`~A-Za-z0-9]*/
+  <restricted ascii graph name>    ~ /[!$%&*+.;?\[\\\]^_`~A-Za-z0-9][!$%&*+.;?\[\\\]^_`~A-Za-z0-9]*/
   <lua action name>                ~ /::lua->[a-zA-Z_][a-zA-Z0-9_]*/
   <bare name>                      ~ <word character>+ proper => 1
   <standard name>                  ~ /[a-zA-Z]/ <zero or more word characters>
