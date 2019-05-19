@@ -622,6 +622,7 @@ marpaESLIF BNF can be expressed in itself:
                                    | <hide separator specification>
   <action>                       ::= 'action' '=>' <action name>
                                    | 'action' '=>' <string literal>
+                                   | 'action' '=>' <regular substitution>
   <left association>             ::= 'assoc' '=>' 'left'
   <right association>            ::= 'assoc' '=>' 'right'
   <group association>            ::= 'assoc' '=>' 'group'
@@ -650,6 +651,7 @@ marpaESLIF BNF can be expressed in itself:
   <null adverb>                  ::= ','
   <symbol action>                ::= 'symbol-action' '=>' <symbol action name>
                                    | 'symbol-action' '=>' <string literal>
+                                   | 'symbol-action' '=>' <regular substitution>
   <alternative name>             ::= <standard name>
                                    | <quoted name>
   <event name>                   ::= <restricted ascii graph name>
@@ -741,6 +743,8 @@ marpaESLIF BNF can be expressed in itself:
                                    | /((?:\[(?:(?>[^\[\]]+)|(?-1))*\]))/ ':' /[eijmnsxDJUuaNbcA]+/
   <regular expression>             ~ /(?:(?|(?:\/(?![*\/]))(?:[^\\\/]*(?:\\.[^\\\/]*)*)(?:\/)))/su
                                    | /(?:(?|(?:\/(?![*\/]))(?:[^\\\/]*(?:\\.[^\\\/]*)*)(?:\/)))/su /[eijmnsxDJUuaNbcA]+/
+  <regular substitution>           ~ /\/(?![*\/])(?:[^\\\/]*(?:\\.[^\\\/]*)*)\/(?:[^\\\/]*(?:\\.[^\\\/]*)*)\//su
+                                   | /\/(?![*\/])(?:[^\\\/]*(?:\\.[^\\\/]*)*)\/(?:[^\\\/]*(?:\\.[^\\\/]*)*)\//su /[eijmnsxDJUuaNbcAgE]+/
 
 =head1 NOTES
 
