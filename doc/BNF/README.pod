@@ -101,24 +101,26 @@ The PCRE2 syntax is supported in its entirety, this include any PCRE2 add-on. Ch
 
 Internally this correspond to this set of options in PCRE2:
 
-  ----------------------------------------------------------------
-  Modifiers         PCRE2 flag unset   PCR2 flag set
-  ----------------------------------------------------------------
-  e                                    PCRE2_MATCH_UNSET_BACKREF
-  i                                    PCRE2_CASELESS
-  j                                    PCRE2_ALT_BSUX|PCRE2_MATCH_UNSET_BACKREF
-  m                                    PCRE2_MULTILINE
-  n                                    PCRE2_UCP
-  s                                    PCRE2_DOTALL
-  x                                    PCRE2_EXTENDED
-  D                                    PCRE2_DOLLAR_ENDONLY
-  J                                    PCRE2_DUPNAMES
-  U                                    PCRE2_UNGREEDY
+  ---------------------------------------------------------------------------------------------------------------
+  Modifiers         PCRE2 match flag unset   PCRE2 match flag set                       PCRE2 substitute flag set
+  ---------------------------------------------------------------------------------------------------------------
+  e                                          PCRE2_MATCH_UNSET_BACKREF                  PCRE2_SUBSTITUTE_UNSET_EMPTY
+  E                                                                                     PCRE2_SUBSTITUTE_UNSET_EMPTY|PCRE2_SUBSTITUTE_UNKNOWN_UNSET
+  g                                                                                     PCRE2_SUBSTITUTE_GLOBAL
+  i                                          PCRE2_CASELESS
+  j                                          PCRE2_ALT_BSUX|PCRE2_MATCH_UNSET_BACKREF
+  m                                          PCRE2_MULTILINE
+  n                                          PCRE2_UCP
+  s                                          PCRE2_DOTALL
+  x                                          PCRE2_EXTENDED                             PCRE2_SUBSTITUTE_EXTENDED
+  D                                          PCRE2_DOLLAR_ENDONLY
+  J                                          PCRE2_DUPNAMES
+  U                                          PCRE2_UNGREEDY
   a                 PCRE2_UTF
   N                 PCRE2_UCP
-  u                                    PCRE2_UTF
-  b                 PCRE2_UTF          PCRE2_NEVER_UTF
-  c                 PCRE2_NEVER_UTF    PCRE2_UTF
+  u                                          PCRE2_UTF
+  b                 PCRE2_UTF                PCRE2_NEVER_UTF
+  c                 PCRE2_NEVER_UTF          PCRE2_UTF
   A                 PCRE2_ANCHORED
   ----------------------------------------------------------------
 

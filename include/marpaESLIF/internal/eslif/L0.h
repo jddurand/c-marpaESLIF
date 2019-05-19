@@ -36,8 +36,10 @@ typedef enum bootstrap_grammar_L0_enum {
   L0_TERMINAL_VALUES,
   L0_TERMINAL_QUOTED_STRING,
   L0_TERMINAL_REGULAR_EXPRESSION,
+  L0_TERMINAL_REGULAR_SUBSTITUTION,
   L0_TERMINAL_CHARACTER_CLASS_REGEXP,
   L0_TERMINAL_REGULAR_EXPRESSION_MODIFIERS,
+  L0_TERMINAL_REGULAR_SUBSTITUTION_MODIFIERS,
   L0_TERMINAL_STRING_MODIFIERS,
   L0_TERMINAL_RESTRICTED_ASCII_GRAPH_CHARACTERS,
   L0_TERMINAL_LUA_ACTION_NAME,
@@ -65,7 +67,8 @@ typedef enum bootstrap_grammar_L0_enum {
   L0_META_QUOTED_STRING,
   L0_META_QUOTED_NAME,
   L0_META_CHARACTER_CLASS,
-  L0_META_REGULAR_EXPRESSION
+  L0_META_REGULAR_EXPRESSION,
+  L0_META_REGULAR_SUBSTITUTION
 } bootstrap_grammar_L0_enum_t;
 
 /* All non-terminals are listed here */
@@ -93,7 +96,8 @@ bootstrap_grammar_meta_t bootstrap_grammar_L0_metas[] = {
   { L0_META_QUOTED_STRING,                L0_JOIN_G1_META_QUOTED_STRING,               0,       0,           0,            0 },
   { L0_META_QUOTED_NAME,                  L0_JOIN_G1_META_QUOTED_NAME,                 0,       0,           0,            0 },
   { L0_META_CHARACTER_CLASS,              L0_JOIN_G1_META_CHARACTER_CLASS,             0,       0,           0,            0 },
-  { L0_META_REGULAR_EXPRESSION,           L0_JOIN_G1_META_REGULAR_EXPRESSION,          0,       0,           0,            0 }
+  { L0_META_REGULAR_EXPRESSION,           L0_JOIN_G1_META_REGULAR_EXPRESSION,          0,       0,           0,            0 },
+  { L0_META_REGULAR_SUBSTITUTION,         L0_JOIN_G1_META_REGULAR_SUBSTITUTION,        0,       0,           0,            0 }
 };
 
 /* Here it is very important that all the string constants are UTF-8 compatible - this is the case */
@@ -333,6 +337,20 @@ __DATA__
 #endif
   },
   /* --------------------------------------------------------------------------------------------------------------------------------- */
+  /* Taken from Regexp::Common::delimited, $RE{delimited}{-delim=>"/"}{-cdelim=>"/"} */
+  /* Perl stringified version is: (?:(?|(?:\/)(?:[^\\\/]*(?:\\.[^\\\/]*)*)(?:\/))) */
+  /* We add a protection against so that it does not conflict with C++ comments. */
+  /* And it appears that is ok because a regexp starting with C comment have no sense, as well */
+  /* as an empty regexp starting with // */
+  { L0_TERMINAL_REGULAR_SUBSTITUTION, MARPAESLIF_TERMINAL_TYPE_REGEX, "su",
+    "/(?![*/])(?:[^\\\\/]*(?:\\\\.[^\\\\/]*)*)/(?:[^\\\\/]*(?:\\\\.[^\\\\/]*)*)/",
+#ifndef MARPAESLIF_NTRACE
+    "/a(b)c/$1/", "/a(b)c/$/"
+#else
+    NULL, NULL
+#endif
+  },
+  /* --------------------------------------------------------------------------------------------------------------------------------- */
   /* Taken from Regexp::Common::balanced, $RE{balanced}{-parens=>'[]'} */
   /* Perl stringified version is: (?^:((?:\[(?:(?>[^\[\]]+)|(?-1))*\]))) */
   /* Perl stringified version is revisited without the (?^:XXX): ((?:\[(?:(?>[^\[\]]+)|(?-1))*\])) */
@@ -347,6 +365,11 @@ __DATA__
   /* --------------------------------------------------------------------------------------------------------------------------------- */
   { L0_TERMINAL_REGULAR_EXPRESSION_MODIFIERS, MARPAESLIF_TERMINAL_TYPE_REGEX, NULL,
     "[eijmnsxDJUuaNbcA]+",
+    NULL, NULL
+  },
+  /* --------------------------------------------------------------------------------------------------------------------------------- */
+  { L0_TERMINAL_REGULAR_SUBSTITUTION_MODIFIERS, MARPAESLIF_TERMINAL_TYPE_REGEX, NULL,
+    "[eijmnsxDJUuaNbcAgE]+",
     NULL, NULL
   },
   /* --------------------------------------------------------------------------------------------------------------------------------- */
@@ -426,7 +449,10 @@ bootstrap_grammar_rule_t bootstrap_grammar_L0_rules[] = {
   */
   { L0_META_REGULAR_EXPRESSION,               "regular expression 1",                         MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { L0_TERMINAL_REGULAR_EXPRESSION               }, -1,                        -1,      -1,             0, NULL },
   { L0_META_REGULAR_EXPRESSION,               "regular expression 2",                         MARPAESLIF_RULE_TYPE_ALTERNATIVE, 2, { L0_TERMINAL_REGULAR_EXPRESSION,
-                                                                                                                                     L0_TERMINAL_REGULAR_EXPRESSION_MODIFIERS     }, -1,                        -1,      -1,             0, NULL }
+                                                                                                                                     L0_TERMINAL_REGULAR_EXPRESSION_MODIFIERS     }, -1,                        -1,      -1,             0, NULL },
+  { L0_META_REGULAR_SUBSTITUTION,             "regular substitution 1",                       MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { L0_TERMINAL_REGULAR_SUBSTITUTION             }, -1,                        -1,      -1,             0, NULL },
+  { L0_META_REGULAR_SUBSTITUTION,             "regular substitution 2",                       MARPAESLIF_RULE_TYPE_ALTERNATIVE, 2, { L0_TERMINAL_REGULAR_SUBSTITUTION,
+                                                                                                                                     L0_TERMINAL_REGULAR_SUBSTITUTION_MODIFIERS   }, -1,                        -1,      -1,             0, NULL }
 };
 
 #endif /* MARPAESLIF_INTERNAL_ESLIF_L0_H */
