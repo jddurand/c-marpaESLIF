@@ -10356,6 +10356,12 @@ static inline void _marpaESLIF_rule_createshowv(marpaESLIF_t *marpaESLIFp, marpa
     case MARPAESLIF_ACTION_TYPE_LUA:
       MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "::lua->");
       MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, rulep->actionp->u.luas);
+      break;
+    case MARPAESLIF_ACTION_TYPE_SUBSTITUTION:
+      MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "/");
+      MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, rulep->actionp->u.substitutionp->asciis); /* Best effort ASCII */
+      MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "/");
+      break;
     default:
       break;
     }
@@ -10461,6 +10467,11 @@ static inline void _marpaESLIF_grammar_createshowv(marpaESLIFGrammar_t *marpaESL
         MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "::lua->");
         MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, grammarp->defaultRuleActionp->u.luas);
         break;
+      case MARPAESLIF_ACTION_TYPE_SUBSTITUTION:
+        MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "/");
+        MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, grammarp->defaultRuleActionp->u.substitutionp->asciis); /* Best effort ASCII */
+        MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "/");
+        break;
       default:
         break;
       }
@@ -10479,6 +10490,11 @@ static inline void _marpaESLIF_grammar_createshowv(marpaESLIFGrammar_t *marpaESL
       case MARPAESLIF_ACTION_TYPE_LUA:
         MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "::lua->");
         MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, grammarp->defaultSymbolActionp->u.luas);
+        break;
+      case MARPAESLIF_ACTION_TYPE_SUBSTITUTION:
+        MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "/");
+        MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, grammarp->defaultSymbolActionp->u.substitutionp->asciis); /* Best effort ASCII */
+        MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "/");
         break;
       default:
         break;
@@ -15634,6 +15650,8 @@ static inline char *_marpaESLIF_action2asciis(marpaESLIF_action_t *actionp)
     return actionp->u.stringp->asciis;
   case MARPAESLIF_ACTION_TYPE_LUA:
     return actionp->u.luas;
+  case MARPAESLIF_ACTION_TYPE_SUBSTITUTION:
+    return actionp->u.substitutionp->asciis;
   default:
     return (char *) MARPAESLIF_UNKNOWN_STRING;
   }
@@ -15667,6 +15685,13 @@ static inline short _marpaESLIF_action_validb(marpaESLIF_t *marpaESLIFp, marpaES
   case MARPAESLIF_ACTION_TYPE_LUA:
     if (actionp->u.luas == NULL) {
       MARPAESLIF_ERROR(marpaESLIFp, "actionp->type is MARPAESLIF_ACTION_TYPE_LUA but actionp->u.luas is NULL");
+      goto err;    
+    }
+    break;
+  case MARPAESLIF_ACTION_TYPE_SUBSTITUTION:
+    /* This is invalid for a free action */
+    if (actionp->u.substitutionp == NULL) {
+      MARPAESLIF_ERROR(marpaESLIFp, "actionp->type is MARPAESLIF_ACTION_TYPE_SUBSTITUTION but actionp->u.substitutionp is NULL");
       goto err;    
     }
     break;
@@ -15711,6 +15736,8 @@ static inline short _marpaESLIF_action_eqb(marpaESLIF_action_t *action1p, marpaE
     return _marpaESLIF_string_utf8_eqb(action1p->u.stringp, action2p->u.stringp);
   case MARPAESLIF_ACTION_TYPE_LUA:
     return (strcmp(action1p->u.luas, action2p->u.luas) == 0);
+  case MARPAESLIF_ACTION_TYPE_SUBSTITUTION:
+    return _marpaESLIF_string_utf8_eqb(action1p->u.substitutionp, action2p->u.substitutionp);
   default:
     return 0;
   }
@@ -15751,6 +15778,12 @@ static inline marpaESLIF_action_t *_marpaESLIF_action_clonep(marpaESLIF_t *marpa
       goto err;
     }
     break;
+  case MARPAESLIF_ACTION_TYPE_SUBSTITUTION:
+    dup->u.substitutionp = _marpaESLIF_string_clonep(marpaESLIFp, actionp->u.substitutionp);
+    if (dup->u.stringp == NULL) {
+      goto err;
+    }
+    break;
   default:
     MARPAESLIF_ERRORF(marpaESLIFp, "Invalid actionp->type %d", actionp->type);
     goto err;    
@@ -15784,6 +15817,9 @@ static inline void _marpaESLIF_action_freev(marpaESLIF_action_t *actionp)
       if (actionp->u.luas != NULL) {
         free(actionp->u.luas);
       }
+      break;
+    case MARPAESLIF_ACTION_TYPE_SUBSTITUTION:
+      _marpaESLIF_string_freev(actionp->u.substitutionp, 0 /* onStackb */);
       break;
     default:
       break;
@@ -15891,6 +15927,12 @@ static inline short _marpaESLIFValue_ruleActionCallbackb(marpaESLIFValue_t *marp
       marpaESLIFValuep->actions = actionp->u.luas;
       marpaESLIFValuep->stringp = NULL;
       break;
+
+    case MARPAESLIF_ACTION_TYPE_SUBSTITUTION:
+      /* Substitution literal: this is a built-in */
+      /* TO DO */
+      MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "Invalid action type %d", actionp->type);
+      goto err;
 
     default:
       MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "Invalid action type %d", actionp->type);
@@ -16021,6 +16063,12 @@ static inline short _marpaESLIFValue_symbolActionCallbackb(marpaESLIFValue_t *ma
         marpaESLIFValuep->actions = actionp->u.luas;
         marpaESLIFValuep->stringp = NULL;
         break;
+
+      case MARPAESLIF_ACTION_TYPE_SUBSTITUTION:
+        /* Substitution literal: this is a built-in */
+        /* TO DO */
+        MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "Invalid action type %d", actionp->type);
+        goto err;
 
       default:
         MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "Invalid action type %d", actionp->type);
