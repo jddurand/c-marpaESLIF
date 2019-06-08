@@ -260,10 +260,10 @@ struct marpaESLIFGrammar {
   short                      autorankb;          /* Current autorank setting */
   char                      *luabytep;           /* Lua script source */
   size_t                     luabytel;           /* Lua script source length in byte */
-  char                      *luaprecompiledp;    /* Lua script source precompiled */
-  size_t                     luaprecompiledl;    /* Lua script source precompiled length in byte */
+  int                        luaprecompiledi;    /* Reference of lua script in global registry */
   marpaESLIF_string_t       *luadescp;           /* Delayed until show is requested */
   int                        internalRuleCounti; /* Internal counter when creating internal rules (groups '(-...-)' and '(...)' */
+  lua_State                 *L;                  /* This is the result of a call to lua_newstate */
 };
 
 struct marpaESLIF_meta {
@@ -294,7 +294,8 @@ struct marpaESLIFValue {
   marpaESLIF_rule_t           *rulep;
   char                        *actions; /* True external name of best-effort ASCII in case of literal */
   marpaESLIF_string_t         *stringp; /* Not NULL only when is a literal - then callback is forced to be internal */
-  lua_State                   *L;
+  lua_State                   *L;       /* This is the result of a call to lua_newthread */
+  int                          Lrefi;   /* Reference in parent's L global registry */
   void                        *marpaESLIFLuaValueContextp;
   genericStack_t               _beforePtrStack;
   genericStack_t              *beforePtrStackp;
