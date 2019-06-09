@@ -211,9 +211,7 @@ Defaults to C<JSON::MaybeXS::false()>.
 
 =item is_bool($value)
 
-Returns a true value if C<$value> is a boolean. You may localize C<MarpaX::ESLIF::is_bool()> function before using ESLIF to change it.
-
-Defaults to C<JSON::MaybeXS::is_bool($value)>
+Returns a true value if C<$value> is a boolean. You may localize C<MarpaX::ESLIF::is_bool()> function before using ESLIF to change it. ESLIF always requires at least that C<$value> is an object, object nature then defaults to C<JSON::MaybeXS::is_bool($value)>
 
 =back
 
