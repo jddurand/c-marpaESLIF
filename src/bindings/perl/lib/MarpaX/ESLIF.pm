@@ -219,7 +219,7 @@ Defaults to C<JSON::MaybeXS::is_bool($value)>
 
 =cut
 
-sub is_bool { goto \&JSON::MaybeXS::is_bool }
+*is_bool = \&JSON::MaybeXS::is_bool;
 
 =head2 INTEGER TYPE
 
