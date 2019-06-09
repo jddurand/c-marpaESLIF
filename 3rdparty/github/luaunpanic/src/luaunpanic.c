@@ -163,6 +163,70 @@ short luaunpanic_close(lua_State *L)
   return rc;
 }
 
+static short _luaunpanic_newthread(lua_State **LNp, lua_State *L)
+{
+  short rc = 1;
+  luaunpanic_userdata_t *LW;
+  if (L == NULL) {
+    errno = EINVAL;
+  } else {
+    LW = lua_getuserdata(L);
+    if (LW != NULL) {
+      if (LW->panicstring != NULL) {
+        if ((LW->panicstring != LUAUNPANIC_DEFAULT_PANICSTRING) && (LW->panicstring != LUAUNPANIC_UNKNOWN_PANICSTRING)) {
+          free(LW->panicstring);
+        }
+        LW->panicstring = LUAUNPANIC_DEFAULT_PANICSTRING;
+      }
+      TRY(LW) {
+        lua_State *LN = lua_newthread(L);
+        if (LNp != NULL) {
+	  *LNp = LN;
+	}
+	rc = 0;
+      }
+      ETRY(LW);
+    } else {
+      lua_State *LN = lua_newthread(L);
+      if (LNp != NULL) {
+	*LNp = LN;
+      }
+      rc = 0;
+    }
+  }
+  return rc;
+}
+
+/****************************************************************************/
+short luaunpanic_newthread(lua_State **Lp, lua_State *L)
+/****************************************************************************/
+{
+  luaunpanic_userdata_t *LW = (luaunpanic_userdata_t *) lua_getuserdata(L);
+  lua_State *LN;
+  short rc;
+
+  if (_luaunpanic_newthread(&LN, L)) {
+    goto err;
+  }
+
+  /* Set our userdata and panic handler - this is shared with parent */
+  lua_setuserdata(LN, (void *) LW);
+  lua_atpanic(LN, &luaunpanic_atpanic);
+
+  if (Lp != NULL) {
+    *Lp = LN;
+  }
+
+  rc = 0;
+  goto done;
+
+ err:
+  rc = 1;
+
+ done:
+  return rc;
+}
+
 /****************************************************************************/
 short luaunpanicL_newstate(lua_State **Lp)
 /****************************************************************************/
@@ -217,7 +281,6 @@ short luaunpanicL_newstate(lua_State **Lp)
 /* ------------------------------------------------------------------------------------------------------------------------------------------- */
 /* MACRO                        wrappername              L_decl_hook,     outputttype         nativecall                      nativeparameters */
 /* ------------------------------------------------------------------------------------------------------------------------------------------- */
-LUAUNPANIC_ON_NON_VOID_FUNCTION(luaunpanic_newthread,    ,                lua_State *,        lua_newthread(L),               lua_State *L)
 LUAUNPANIC_ON_NON_VOID_FUNCTION(luaunpanic_version,      ,                const lua_Number *, lua_version(L),                 lua_State *L)
 /*
 ** basic stack manipulation
