@@ -122,7 +122,7 @@ Internally this correspond to this set of options in PCRE2:
   A                 PCRE2_ANCHORED
   ----------------------------------------------------------------
 
-=item Lexemes
+=item Lexemes and Terminals
 
 Lexemes are meta-symbols that does appear as the LHS symbol anywhere within the current grammar. Therefore they behave like terminals, except that their definition is not in the current grammar. By default such meta-symbol is looked up at the next level. For example:
 
@@ -130,6 +130,10 @@ Lexemes are meta-symbols that does appear as the LHS symbol anywhere within the 
   something   ~ [\d]
 
 say that symbol C<something> at grammar level C<0> is a reference to C<something> at grammar level C<1>.
+
+In contrast a terminal is an explicit quoted string, character class or regular expression, e.g.:
+
+  the_rhs_is_a_terminal ::= '"'
 
 Lexemes can be references:
 
@@ -163,7 +167,7 @@ The unsigned integer is interpreted as an explicit grammar level.
 
 =item Discard
 
-Everytime expected terminals cannot be match, marpaESLIF will try to match the special rule C<:discard>. The C<:discard> rule also have precedence if it matches longer than the longest acceptable lexeme. and can not be ambiguous (else discard silently fail).
+Everytime expected terminals cannot be match, marpaESLIF will try to match the special rule C<:discard>. The C<:discard> rule also have precedence if it matches longer than the longest acceptable lexeme or terminal. and can not be ambiguous (else discard silently fail).
 
 =back
 
@@ -320,7 +324,7 @@ By default, events are on, this is equivalent to appending C<=on> after the even
 
 =back
 
-Lexemes are different than non-lexeme symbols because they are treated in the grammar are I<terminals>, others are not.
+Lexemes are different than non-lexeme symbols because they are treated in the grammar as I<terminals>, others are not.
 
 =over
 
@@ -329,21 +333,28 @@ Lexemes are different than non-lexeme symbols because they are treated in the gr
 Meta symbols that are lexemes can have pause events, C<before> mean that the scanning recognized them, C<after> mean they have been consumed, e.g.:
 
   :lexeme ::= symbolname1 pause => before event => ^symbolname1
-  :lexeme ::= symbolname2 pause => after  event =>  symbolname2$2
+  :lexeme ::= symbolname2 pause => after  event =>  symbolname2$
 
 It is not allowed to set a lexeme event on a symbol that is not a lexeme.
 
+=item Terminal events
+
+Explicit terminals can have pause events, C<before> mean that the scanning recognized them, C<after> mean they have been consumed, e.g.:
+
+  :terminal ::= '"' pause => before event => ^beforeDquote
+  :terminal ::= "'" pause => after  event =>  afterSquote$
+
+Only an explicit terminal can be set using the :terminal keyword.
+
 =item Non-lexeme events
 
-Completion, predicted or nulled events are supported, targetting a symbol name.
+Completion, predicted or nulled events are supported, targetting a symbol name. These are I<grammar> events.
 
 For example:
 
   event a     = completed  symbolname
   event b=off = nulled     symbolname
   event c=on  = predicted ^symbolname
-
-It is not allowed to a a non-lexeme event on a symbol that is a lexeme.
 
 =back
 
@@ -530,13 +541,13 @@ Nulling symbols can rank high low, the default is low.
 
 =item Priority specification
 
-Lexemes can be prioritized, using a signed integer:
+Lexemes and terminals can be prioritized, using a signed integer:
 
   priority => 15
 
 =item Pause specification
 
-Scanner can be paused before a lexeme is recognized, or just after it has been completed:
+Scanner can be paused before a lexeme or a terminal is recognized, or just after it has been completed:
 
   pause => before
   pause => after
@@ -704,7 +715,8 @@ marpaESLIF BNF can be expressed in itself:
   <rhs primary>                  ::= <single symbol>
                                    | <symbol name> '@' <grammar reference>
   <single symbol>                ::= <symbol>
-                                   | <character class>
+                                   | <terminal>
+  <terminal>                     ::= <character class>
                                    | <regular expression>
                                    | <quoted string>
   <symbol>                       ::= <symbol name>
@@ -779,6 +791,8 @@ marpaESLIF BNF can be expressed in itself:
 
 =head1 NOTES
 
+=over
+
 The embedded lua language always have the following globals when executing its actions:
 
 =over
@@ -798,6 +812,12 @@ Lua object representing current marpaESLIFRecognizer instance.
 =item marpaESLIFValue
 
 Lua object representing current marpaESLIFValue instance.
+
+=back
+
+=over
+
+Grammar events have a cost, and when possible lexeme or terminal events should be prefered.
 
 =back
 
