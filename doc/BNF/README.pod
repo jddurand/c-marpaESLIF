@@ -306,6 +306,10 @@ Hook that is disabling C<:discard> rule for the current recognizer. Equivalent t
 
 Hook that is enabling C<:discard> rule for the current recognizer. Equivalent to a call to C<marpaESLIF_recognizer_hook_discardb(0)>. Not propagated. Take care, this is a permanent setting.
 
+=item C<:discard[switch]>
+
+Hook that is switching C<:discard> rule for the current recognizer. Equivalent to a call to C<marpaESLIF_recognizer_hook_discard_switchb()>. Not propagated. Take care, this is a permanent setting.
+
 =back
 
 Please note that the C<:discard[on]> and C<:discard[off]> events will I<always> happen if specified in the grammar, at any level of parsing, regardless if you use the grammar's C<parse()> method (that is never propagating any event to the end user) or not. This is because these are internal events, not visible by the end user, and categorized as parsing hooks, not as a facility in the user-space.

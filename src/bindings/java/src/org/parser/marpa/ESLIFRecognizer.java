@@ -45,6 +45,8 @@ public class ESLIFRecognizer {
 	private native boolean 			 jniResume(int deltaLength) throws ESLIFException;
 	private native ESLIFEvent[]      jniEvent() throws ESLIFException;
 	private native void              jniEventOnOff(String symbol, ESLIFEventType[] eventTypes, boolean onOff) throws ESLIFException;
+	private native void              jniHookDiscard(boolean onOff) throws ESLIFException;
+	private native void              jniHookDiscardSwitch() throws ESLIFException;
 	private native boolean       	 jniLexemeAlternative(String name, Object object, int grammarLength) throws ESLIFException;
 	private native boolean			 jniLexemeComplete(int length) throws ESLIFException;
 	private native boolean           jniLexemeRead(String name, Object object, int grammarLength, int length) throws ESLIFException;
@@ -183,6 +185,25 @@ public class ESLIFRecognizer {
 	 */
 	public synchronized void eventOnOff(String symbol, ESLIFEventType[] eventTypes, boolean onOff) throws ESLIFException {
 		jniEventOnOff(symbol, eventTypes, onOff);
+	}
+
+	/**
+	 * Discard can be switched on or off. This is a grammar hook, somewhat dangerous and a permanent setting.
+	 *
+	 * @param onOff the boolean indicating the state of the event types.
+	 * @throws ESLIFException if the interface failed
+	 */
+	public synchronized void hookDiscard(boolean onOff) throws ESLIFException {
+		jniHookDiscard(onOff);
+	}
+
+	/**
+	 * Discard can be switched on or off, it if was off or on, respectively. This is a grammar hook, somewhat dangerous and a permanent setting.
+	 *
+	 * @throws ESLIFException if the interface failed
+	 */
+	public synchronized void hookDiscardSwitch() throws ESLIFException {
+		jniHookDiscardSwitch();
 	}
 
 	/**

@@ -104,6 +104,7 @@
 #define G1_RULE_EVENT_NAME_2                     "G1_rule_event_name_2"
 #define G1_RULE_EVENT_NAME_3                     "G1_rule_event_name_3"
 #define G1_RULE_EVENT_NAME_4                     "G1_rule_event_name_4"
+#define G1_RULE_EVENT_NAME_5                     "G1_rule_event_name_4"
 #define G1_RULE_LHS                              "G1_rule_lhs"
 #define G1_RULE_RHS                              "G1_rule_rhs"
 #define G1_RULE_RHS_ALTERNATIVE_1                "G1_rule_rhs_alternative_1"
@@ -164,8 +165,9 @@
 #define G1_RULE_STRING_LITERAL_INSIDE_3          "G1_rule_string_literal_inside_3"
 #define G1_RULE_STRING_LITERAL_INSIDE_4          "G1_rule_string_literal_inside_4"
 #define G1_RULE_STRING_LITERAL_INSIDE_5          "G1_rule_string_literal_inside_5"
-#define G1_RULE_DISCARD_OFF                      "G1_rule_discard_off"
 #define G1_RULE_DISCARD_ON                       "G1_rule_discard_on"
+#define G1_RULE_DISCARD_OFF                      "G1_rule_discard_off"
+#define G1_RULE_DISCARD_SWITCH                   "G1_rule_discard_switch"
 #define G1_RULE_LUASCRIPT_STATEMENT              "G1_rule_luascript_statement"
 #define G1_RULE_LUASCRIPT_SOURCE                 "G1_rule_luascript_source"
 
@@ -271,6 +273,7 @@
 #define G1_ACTION_EVENT_NAME_2                     "::ascii" /* <event name> ::= ':symbol' */
 #define G1_ACTION_EVENT_NAME_3                     "::ascii" /* <event name> ::= ':discard[on]' */
 #define G1_ACTION_EVENT_NAME_4                     "::ascii" /* <event name> ::= ':discard[off]' */
+#define G1_ACTION_EVENT_NAME_5                     "::ascii" /* <event name> ::= ':discard[switch]' */
 #define G1_ACTION_LHS                              "::shift" /* lhs ::= <symbol name> */
 #define G1_ACTION_RHS                              "G1_action_rhs"                              /* done */
 #define G1_ACTION_RHS_ALTERNATIVE_1                "G1_action_rhs_alternative_1"                /* done */
@@ -328,8 +331,9 @@
 #define G1_ACTION_STRING_LITERAL_INSIDE_3          "G1_action_string_literal_inside_3"          /* done */
 #define G1_ACTION_STRING_LITERAL_INSIDE_4          "G1_action_string_literal_inside_4"          /* done */
 #define G1_ACTION_STRING_LITERAL_INSIDE_5          "G1_action_string_literal_inside_5"          /* done */
-#define G1_ACTION_DISCARD_OFF                      "::undef"
 #define G1_ACTION_DISCARD_ON                       "::undef"
+#define G1_ACTION_DISCARD_OFF                      "::undef"
+#define G1_ACTION_DISCARD_SWITCH                   "::undef"
 #define G1_ACTION_LUASCRIPT_STATEMENT              "G1_action_luascript_statement"
 #define G1_ACTION_LUASCRIPT_SOURCE                 "::concat"
 
