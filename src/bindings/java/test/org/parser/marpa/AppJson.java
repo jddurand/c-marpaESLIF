@@ -116,7 +116,8 @@ public class AppJson implements Runnable {
 						"discardOff ::=                                                                        # Nullable rule used to disable discard \n" +
 						"discardOn  ::=                                                                        # Nullable rule used to enable discard \n" +
 						" \n" +
-						"event :discard[on]  = nulled discardOn                                                # Implementation of discard disabing using reserved ':discard[on]' keyword \n" +
+						"# event :discard[on]  = nulled discardOn                                                # Implementation of discard disabing using reserved ':discard[on]' keyword \n" +
+						"event :discard[switch]  = nulled discardOn                                            # Implementation of discard disabing using reserved ':discard[switch]' keyword \n" +
 						"event :discard[off] = nulled discardOff                                               # Implementation of discard enabling using reserved ':discard[off]' keyword \n" +
 						" \n" +
 						"chars   ::= filled                                  action => ::lua->lua_chars \n" +
