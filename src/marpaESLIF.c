@@ -7956,6 +7956,30 @@ short marpaESLIFRecognizer_eventb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp,
   if (marpaESLIFRecognizerp->parentRecognizerp != NULL) {
     goto no_push;
   }
+
+  /* Detect hook events and process them instead of pushing to the end-user */
+  if ((events != NULL) && (events[0] == ':')) {
+    if (strcmp(events, ":discard[on]") == 0) {
+      MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "%s: event %s: enabling discard", (symbolp != NULL) ? symbolp->descp->asciis : "??", events);
+      if (! _marpaESLIFRecognizer_hook_discardb(marpaESLIFRecognizerp, 1)) {
+        goto err;
+      }
+      goto no_push;
+    } else if (strcmp(events, ":discard[off]") == 0) {
+      MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "%s: event %s: disabling discard", (symbolp != NULL) ? symbolp->descp->asciis : "??", events);
+      if (! _marpaESLIFRecognizer_hook_discardb(marpaESLIFRecognizerp, 0)) {
+        goto err;
+      }
+      goto no_push;
+    } else if (strcmp(events, ":discard[switch]") == 0) {
+      MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "%s: event %s: switching discard", (symbolp != NULL) ? symbolp->descp->asciis : "??", events);
+      if (! _marpaESLIFRecognizer_hook_discard_switchb(marpaESLIFRecognizerp)) {
+        goto err;
+      }
+      goto no_push;
+    }
+  }
+
   /* These statements have a cost - execute them only if we really push the event */
   eventArrayp     = marpaESLIFRecognizerp->eventArrayp;
   eventArraySizel = marpaESLIFRecognizerp->eventArraySizel;
@@ -8201,29 +8225,6 @@ static inline short _marpaESLIFRecognizer_push_grammar_eventsb(marpaESLIFRecogni
       default:
         MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "%s: unsupported event type %d", (symbolp != NULL) ? symbolp->descp->asciis : "??", grammarEventp[i].eventType);
         break;
-      }
-
-      /* Detect hook events and process them instead of pushing to the end-user */
-      if ((events != NULL) && (events[0] == ':')) {
-        if (strcmp(events, ":discard[on]") == 0) {
-          MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "%s: event %s: enabling discard", (symbolp != NULL) ? symbolp->descp->asciis : "??", events);
-          if (! _marpaESLIFRecognizer_hook_discardb(marpaESLIFRecognizerp, 1)) {
-            goto err;
-          }
-          continue;
-        } else if (strcmp(events, ":discard[off]") == 0) {
-          MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "%s: event %s: disabling discard", (symbolp != NULL) ? symbolp->descp->asciis : "??", events);
-          if (! _marpaESLIFRecognizer_hook_discardb(marpaESLIFRecognizerp, 0)) {
-            goto err;
-          }
-          continue;
-        } else if (strcmp(events, ":discard[switch]") == 0) {
-          MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "%s: event %s: switching discard", (symbolp != NULL) ? symbolp->descp->asciis : "??", events);
-          if (! _marpaESLIFRecognizer_hook_discard_switchb(marpaESLIFRecognizerp)) {
-            goto err;
-          }
-          continue;
-        }
       }
       if (! _marpaESLIFRecognizer_push_eventb(marpaESLIFRecognizerp, type, symbolp, events)) {
         goto err;
@@ -8620,20 +8621,24 @@ static inline marpaESLIFRecognizer_t *_marpaESLIFRecognizer_newp(marpaESLIFGramm
         }
       }
     } else {
-      /* Events outside of marpa that need to be switched off: before, after and exhaustion */
+      /* Events outside of marpa that need to be switched off: "before" and "after", except for grammar hooks (i.e. :discard[on/off/switch]) that keep their initial state as per the grammar */
       for (symboli = 0; symboli < GENERICSTACK_USED(symbolStackp); symboli++) {
         MARPAESLIF_INTERNAL_GET_SYMBOL_FROM_STACK(marpaESLIFp, symbolp, symbolStackp, symboli);
         if (symbolp->eventBefores != NULL) {
-          MARPAESLIF_TRACEF(marpaESLIFp, funcs,
-                            "Setting \"before\" event state for symbol %d <%s> at grammar level %d (%s) to off (recognizer discard mode: %d)",
-                            symbolp->idi, symbolp->descp->asciis, grammarp->leveli, grammarp->descp->asciis, (int) discardb);
-          marpaESLIFRecognizerp->beforeEventStatebp[symbolp->idi] = 0;
+          if (strstr(symbolp->eventBefores, ":discard[") == NULL) {
+            MARPAESLIF_TRACEF(marpaESLIFp, funcs,
+                              "Setting \"before\" event state for symbol %d <%s> at grammar level %d (%s) to off (recognizer discard mode: %d)",
+                              symbolp->idi, symbolp->descp->asciis, grammarp->leveli, grammarp->descp->asciis, (int) discardb);
+            marpaESLIFRecognizerp->beforeEventStatebp[symbolp->idi] = 0;
+          }
         }
         if (symbolp->eventAfters != NULL) {
-          MARPAESLIF_TRACEF(marpaESLIFp, funcs,
-                            "Setting \"after\" event state for symbol %d <%s> at grammar level %d (%s) to off (recognizer discard mode: %d)",
-                            symbolp->idi, symbolp->descp->asciis, grammarp->leveli, grammarp->descp->asciis, (int) discardb);
-          marpaESLIFRecognizerp->afterEventStatebp[symbolp->idi] = 0;
+          if (strstr(symbolp->eventAfters, ":discard[") == NULL) {
+            MARPAESLIF_TRACEF(marpaESLIFp, funcs,
+                              "Setting \"after\" event state for symbol %d <%s> at grammar level %d (%s) to off (recognizer discard mode: %d)",
+                              symbolp->idi, symbolp->descp->asciis, grammarp->leveli, grammarp->descp->asciis, (int) discardb);
+            marpaESLIFRecognizerp->afterEventStatebp[symbolp->idi] = 0;
+          }
         }
       }
     }
@@ -15056,6 +15061,10 @@ short marpaESLIFRecognizer_hook_discardb(marpaESLIFRecognizer_t *marpaESLIFRecog
 static inline short _marpaESLIFRecognizer_hook_discardb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, short discardOnOffb)
 /*****************************************************************************/
 {
+  static const char *funcs = "_marpaESLIFRecognizer_hook_discardb";
+
+  MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Setting marpaESLIFRecognizerp->discardOnOffb to %d", (int) discardOnOffb ? 1 : 0);
+
   marpaESLIFRecognizerp->discardOnOffb = discardOnOffb ? 1 : 0;
 
   return 1;
@@ -15077,6 +15086,10 @@ short marpaESLIFRecognizer_hook_discard_switchb(marpaESLIFRecognizer_t *marpaESL
 static inline short _marpaESLIFRecognizer_hook_discard_switchb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp)
 /*****************************************************************************/
 {
+  static const char *funcs = "_marpaESLIFRecognizer_hook_discard_switchb";
+
+  MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Setting marpaESLIFRecognizerp->discardOnOffb to %d", (int) marpaESLIFRecognizerp->discardOnOffb);
+
   marpaESLIFRecognizerp->discardOnOffb = marpaESLIFRecognizerp->discardOnOffb ? 0 : 1;
 
   return 1;
@@ -15579,7 +15592,7 @@ static inline marpaESLIFRecognizer_t *_marpaESLIFRecognizer_getFromCachep(marpaE
           marpaESLIFRecognizerp->marpaESLIFRecognizerOptionDiscard  = c.f. MARPAESLIFRECOGNIZER_GRAMMARDISCARD_INITIALIZER() macro
           marpaESLIFRecognizerp->marpaESLIFValueOptionDiscard       = c.f. MARPAESLIFRECOGNIZER_GRAMMARDISCARD_INITIALIZER() macro
         */
-        MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Recognizer %p coming from reusable stack of recognizers for grammar %p (length %d)", marpaESLIFRecognizerp, marpaWrapperGrammarp, GENERICSTACK_USED(marpaESLIFRecognizerStackp));
+        MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Recognizer %p coming from reusable stack of recognizers for grammar %p (remains %d of them)", marpaESLIFRecognizerp, marpaWrapperGrammarp, GENERICSTACK_USED(marpaESLIFRecognizerStackp));
       }
     }
   }
