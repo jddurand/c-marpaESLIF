@@ -8621,11 +8621,11 @@ static inline marpaESLIFRecognizer_t *_marpaESLIFRecognizer_newp(marpaESLIFGramm
         }
       }
     } else {
-      /* Events outside of marpa that need to be switched off: "before" and "after", except for grammar hooks (i.e. :discard[on/off/switch]) that keep their initial state as per the grammar */
+      /* Events outside of marpa that need to be switched off: "before" and "after", except for grammar hooks at the top level (i.e. :discard[on/off/switch]) that keep their initial state as per the grammar */
       for (symboli = 0; symboli < GENERICSTACK_USED(symbolStackp); symboli++) {
         MARPAESLIF_INTERNAL_GET_SYMBOL_FROM_STACK(marpaESLIFp, symbolp, symbolStackp, symboli);
         if (symbolp->eventBefores != NULL) {
-          if (strstr(symbolp->eventBefores, ":discard[") == NULL) {
+          if ((marpaESLIFRecognizerParentp != NULL) || (strstr(symbolp->eventBefores, ":discard[") == NULL)) {
             MARPAESLIF_TRACEF(marpaESLIFp, funcs,
                               "Setting \"before\" event state for symbol %d <%s> at grammar level %d (%s) to off (recognizer discard mode: %d)",
                               symbolp->idi, symbolp->descp->asciis, grammarp->leveli, grammarp->descp->asciis, (int) discardb);
@@ -8633,7 +8633,7 @@ static inline marpaESLIFRecognizer_t *_marpaESLIFRecognizer_newp(marpaESLIFGramm
           }
         }
         if (symbolp->eventAfters != NULL) {
-          if (strstr(symbolp->eventAfters, ":discard[") == NULL) {
+          if ((marpaESLIFRecognizerParentp != NULL) || (strstr(symbolp->eventAfters, ":discard[") == NULL)) {
             MARPAESLIF_TRACEF(marpaESLIFp, funcs,
                               "Setting \"after\" event state for symbol %d <%s> at grammar level %d (%s) to off (recognizer discard mode: %d)",
                               symbolp->idi, symbolp->descp->asciis, grammarp->leveli, grammarp->descp->asciis, (int) discardb);
