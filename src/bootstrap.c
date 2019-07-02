@@ -5530,7 +5530,7 @@ static short _marpaESLIF_bootstrap_G1_action_lexeme_ruleb(void *userDatavp, marp
 
   /* Unpack the adverb list */
   if (! _marpaESLIF_bootstrap_unpack_adverbListItemStackb(marpaESLIFp,
-                                                          ":default rule",
+                                                          ":lexeme rule",
                                                           adverbListItemStackp,
                                                           NULL, /* actionpp */
                                                           NULL, /* left_associationbp */
@@ -5682,7 +5682,7 @@ static short _marpaESLIF_bootstrap_G1_action_terminal_ruleb(void *userDatavp, ma
 
   /* Unpack the adverb list */
   if (! _marpaESLIF_bootstrap_unpack_adverbListItemStackb(marpaESLIFp,
-                                                          ":default rule",
+                                                          ":terminal rule",
                                                           adverbListItemStackp,
                                                           NULL, /* actionpp */
                                                           NULL, /* left_associationbp */
