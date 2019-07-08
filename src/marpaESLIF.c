@@ -5909,7 +5909,7 @@ short marpaESLIFRecognizer_scanb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, 
   MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "start");
 
   if (marpaESLIFRecognizerp->scanb) {
-    MARPAESLIF_ERROR(marpaESLIFp, "Scan can be done one once only");
+    MARPAESLIF_ERROR(marpaESLIFp, "Scan can be done only once");
     goto err;
   }
 
