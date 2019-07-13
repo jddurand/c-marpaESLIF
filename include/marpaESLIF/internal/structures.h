@@ -487,7 +487,8 @@ marpaESLIFRecognizerOption_t marpaESLIFRecognizerOption_default_template = {
   0,                 /* trackb */
   MARPAESLIF_BUFSIZ, /* bufsizl */
   50,                /* buftriggerperci */
-  50                 /* bufaddperci */
+  50,                /* bufaddperci */
+  NULL               /* ifActionResolverp */
 };
 
 marpaESLIFValueOption_t marpaESLIFValueOption_default_template = {
