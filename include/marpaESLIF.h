@@ -366,6 +366,7 @@ typedef struct marpaESLIFSymbolProperty {
   marpaESLIFAction_t          *nullableActionp;        /* Nullable semantic */
   int                          propertyBitSet;
   int                          eventBitSet;
+  marpaESLIFAction_t          *symbolActionp;          /* Symbol specific action */
 } marpaESLIFSymbolProperty_t;
 
 #ifdef __cplusplus

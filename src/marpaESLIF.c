@@ -492,7 +492,7 @@ static inline short                  _marpaESLIFValue_ruleActionCallbackb(marpaE
 static        short                  _marpaESLIFValue_symbolCallbackWrapperb(void *userDatavp, int symboli, int argi, int resulti);
 static        short                  _marpaESLIFValue_nullingCallbackWrapperb(void *userDatavp, int symboli, int resulti);
 static inline short                  _marpaESLIFValue_anySymbolCallbackWrapperb(void *userDatavp, int symboli, int argi, int resulti, short nullableb);
-static inline short                  _marpaESLIFValue_symbolActionCallbackb(marpaESLIFValue_t *marpaESLIFValuep, char *asciishows, short nullableb, marpaESLIF_action_t *nullableActionp, marpaESLIFValueSymbolCallback_t *symbolCallbackpp, marpaESLIFValueRuleCallback_t *ruleCallbackpp);
+static inline short                  _marpaESLIFValue_symbolActionCallbackb(marpaESLIFValue_t *marpaESLIFValuep, char *asciishows, short nullableb, marpaESLIF_action_t *nullableActionp, marpaESLIFValueSymbolCallback_t *symbolCallbackpp, marpaESLIFValueRuleCallback_t *ruleCallbackpp, marpaESLIF_action_t *symbolActionp);
 static inline short                  _marpaESLIFValue_eslif2hostb(marpaESLIFValue_t *marpaESLIFValuep, marpaESLIFValueResult_t *marpaESLIFValueResultp, marpaESLIFValueResult_t *marpaESLIFValueResultResolvedp, void *forcedUserDatavp, marpaESLIFValueResultImport_t forcedImporterp);
 
 static inline short                  _marpaESLIFValue_valueb(marpaESLIFValue_t *marpaESLIFValuep, marpaESLIFValueResult_t *marpaESLIFValueResultp);
@@ -3423,6 +3423,7 @@ static inline marpaESLIF_symbol_t *_marpaESLIF_symbol_newp(marpaESLIF_t *marpaES
   symbolp->eventBitSet            = 0; /* Filled by grammar validation */
   symbolp->lhsRuleStackp          = NULL;
   symbolp->exceptionp             = NULL;
+  symbolp->symbolActionp          = NULL;
 
   symbolp->nullableRuleStackp = &(symbolp->_nullableRuleStack);
   GENERICSTACK_INIT(symbolp->nullableRuleStackp);
@@ -5825,6 +5826,7 @@ short marpaESLIFGrammar_symbolproperty_by_levelb(marpaESLIFGrammar_t *marpaESLIF
   marpaESLIFSymbolProperty.lookupResolvedLeveli = symbolp->lookupResolvedLeveli;
   marpaESLIFSymbolProperty.priorityi            = symbolp->priorityi;
   marpaESLIFSymbolProperty.nullableActionp      = symbolp->nullableActionp;
+  marpaESLIFSymbolProperty.symbolActionp        = symbolp->symbolActionp;
   /* I could have copied symbolp->propertyBitSet directly, though I believe the code is more maintanable */
   /* and extensible doing that bit per bit. */
   marpaESLIFSymbolProperty.propertyBitSet = 0;
@@ -9557,7 +9559,7 @@ static inline short _marpaESLIFValue_anySymbolCallbackWrapperb(void *userDatavp,
 
   MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Grammar %d Symbol %d %s", grammarp->leveli, symbolp->idi, symbolp->descp->asciis);
 
-  if (! _marpaESLIFValue_symbolActionCallbackb(marpaESLIFValuep, symbolp->descp->asciis, nullableb, symbolp->nullableActionp, &symbolCallbackp, &ruleCallbackp)) {
+  if (! _marpaESLIFValue_symbolActionCallbackb(marpaESLIFValuep, symbolp->descp->asciis, nullableb, symbolp->nullableActionp, &symbolCallbackp, &ruleCallbackp, symbolp->symbolActionp)) {
     goto err;
   }
 
@@ -10545,9 +10547,9 @@ static inline void _marpaESLIF_grammar_createshowv(marpaESLIFGrammar_t *marpaESL
 
   MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "\n");
   MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "/*\n");
-  MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, " * ***************\n");
-  MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, " * Event settings:\n");
-  MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, " * ***************\n");
+  MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, " * ****************\n");
+  MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, " * Symbol settings:\n");
+  MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, " * ****************\n");
   MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, " */\n");
 
   /* Lexeme information - this is all about events */
@@ -10586,6 +10588,25 @@ static inline void _marpaESLIF_grammar_createshowv(marpaESLIFGrammar_t *marpaESL
         MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, " priority => ");
         sprintf(tmps, "%d", symbolp->priorityi);
         MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, tmps);
+      }
+      if (symbolp->symbolActionp != NULL) {
+        MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, " symbol-action => ");
+        switch (symbolp->symbolActionp->type) {
+        case MARPAESLIF_ACTION_TYPE_NAME:
+          MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, symbolp->symbolActionp->u.names);
+          break;
+        case MARPAESLIF_ACTION_TYPE_STRING:
+          MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "::u8\"");
+          MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, symbolp->symbolActionp->u.stringp->asciis); /* Best effort ASCII */
+          MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "\"");
+          break;
+        case MARPAESLIF_ACTION_TYPE_LUA:
+          MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "::lua->");
+          MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, symbolp->symbolActionp->u.luas);
+          break;
+        default:
+          break;
+        }
       }
       MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "\n");
     }
@@ -10633,6 +10654,7 @@ static inline void _marpaESLIF_grammar_createshowv(marpaESLIFGrammar_t *marpaESL
       MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, ">");
       MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "\n");
     }
+
   }
 
   MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "\n");
@@ -16000,7 +16022,7 @@ static inline short _marpaESLIFValue_ruleActionCallbackb(marpaESLIFValue_t *marp
 }
 
 /*****************************************************************************/
-static inline short _marpaESLIFValue_symbolActionCallbackb(marpaESLIFValue_t *marpaESLIFValuep, char *asciishows, short nullableb, marpaESLIF_action_t *nullableActionp, marpaESLIFValueSymbolCallback_t *symbolCallbackpp, marpaESLIFValueRuleCallback_t *ruleCallbackpp)
+static inline short _marpaESLIFValue_symbolActionCallbackb(marpaESLIFValue_t *marpaESLIFValuep, char *asciishows, short nullableb, marpaESLIF_action_t *nullableActionp, marpaESLIFValueSymbolCallback_t *symbolCallbackpp, marpaESLIFValueRuleCallback_t *ruleCallbackpp, marpaESLIF_action_t *symbolActionp)
 /*****************************************************************************/
 {
   /* In case of a nullable a symbol callback can fallback to a rule callback */
@@ -16040,7 +16062,7 @@ static inline short _marpaESLIFValue_symbolActionCallbackb(marpaESLIFValue_t *ma
       /* This will truely be a symbol callback */
       ruleCallbackp   = NULL;
       /* Symbol action is a constant at the grammar level */
-      actionp = grammarp->defaultSymbolActionp;
+      actionp = (symbolActionp != NULL) ? symbolActionp : grammarp->defaultSymbolActionp;
       if (actionp == NULL) {
         /* Still no action ? */
         MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "At grammar level %d (%s): %s requires symbol-action => action_name",

@@ -157,12 +157,13 @@ struct marpaESLIFSymbol {
   int                          priorityi;              /* Symbol priority */
   genericStack_t               _nullableRuleStack;     /* Used during validation, to determine nullable semantics */
   genericStack_t              *nullableRuleStackp;     /* Pointer to _nullableRuleStack */
-  marpaESLIFAction_t          *nullableActionp;        /* Nullable semantic */
+  marpaESLIFAction_t          *nullableActionp;        /* Nullable semantic, only for meta symbols that are not lexemes */
   int                          propertyBitSet;
   int                          eventBitSet;
   genericStack_t               _lhsRuleStack;          /* Stack of rules having this symbol as LHS */
   genericStack_t              *lhsRuleStackp;          /* Pointer to stack of rules having this symbol as LHS */
   marpaESLIF_symbol_t         *exceptionp;             /* Pointer to an exception itself, the one after the '-' character */
+  marpaESLIFAction_t          *symbolActionp;          /* Custom symbol, only for terminals or lexemes */
 };
 
 /* A rule */

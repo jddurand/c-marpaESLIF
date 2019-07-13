@@ -54,7 +54,7 @@ static inline short _marpaESLIF_bootstrap_unpack_adverbListItemStackb(marpaESLIF
                                                                       short                                        *hideseparatorbp,
                                                                       int                                          *rankip,
                                                                       short                                        *nullRanksHighbp,
-                                                                      int                                          *priorityip,
+                                                                      int                                         **priorityipp,
                                                                       marpaESLIF_bootstrap_pause_type_t            *pauseip,
                                                                       short                                        *latmbp,
                                                                       marpaESLIF_bootstrap_utf_string_t           **namingpp,
@@ -1119,7 +1119,7 @@ static inline marpaESLIF_symbol_t  *_marpaESLIF_bootstrap_check_rhsPrimaryp(marp
                                                             NULL, /* hideseparatorbp */
                                                             &ranki,
                                                             &nullRanksHighb,
-                                                            NULL, /* priorityip */
+                                                            NULL, /* priorityipp */
                                                             NULL, /* pauseip */
                                                             NULL, /* latmbp */
                                                             &namingp,
@@ -1186,7 +1186,7 @@ static inline marpaESLIF_symbol_t  *_marpaESLIF_bootstrap_check_rhsPrimaryp(marp
                                                             &hideseparatorb,
                                                             &ranki,
                                                             &nullRanksHighb,
-                                                            NULL, /* priorityip */
+                                                            NULL, /* priorityipp */
                                                             NULL, /* pauseip */
                                                             NULL, /* latmbp */
                                                             &namingp,
@@ -1266,7 +1266,7 @@ static inline short _marpaESLIF_bootstrap_unpack_adverbListItemStackb(marpaESLIF
                                                                       short                                        *hideseparatorbp,
                                                                       int                                          *rankip,
                                                                       short                                        *nullRanksHighbp,
-                                                                      int                                          *priorityip,
+                                                                      int                                         **priorityipp,
                                                                       marpaESLIF_bootstrap_pause_type_t            *pauseip,
                                                                       short                                        *latmbp,
                                                                       marpaESLIF_bootstrap_utf_string_t           **namingpp,
@@ -1307,8 +1307,8 @@ static inline short _marpaESLIF_bootstrap_unpack_adverbListItemStackb(marpaESLIF
   if (nullRanksHighbp != NULL) {
     *nullRanksHighbp = 0;
   }
-  if (priorityip != NULL) {
-    *priorityip = 0;
+  if (priorityipp != NULL) {
+    *priorityipp = NULL;
   }
   if (pauseip != NULL) {
     *pauseip = MARPAESLIF_BOOTSTRAP_PAUSE_TYPE_NA;
@@ -1401,11 +1401,11 @@ static inline short _marpaESLIF_bootstrap_unpack_adverbListItemStackb(marpaESLIF
         *nullRanksHighbp = adverbListItemp->u.nullRanksHighb;
         break;
       case MARPAESLIF_BOOTSTRAP_ADVERB_LIST_ITEM_TYPE_PRIORITY:
-        if (priorityip == NULL) {
+        if (priorityipp == NULL) {
           MARPAESLIF_ERRORF(marpaESLIFp, "priority adverb is not allowed in %s context", contexts);
           goto err;
         }
-        *priorityip = adverbListItemp->u.priorityi;
+        *priorityipp = &(adverbListItemp->u.priorityi);
         break;
       case MARPAESLIF_BOOTSTRAP_ADVERB_LIST_ITEM_TYPE_PAUSE:
         if (pauseip == NULL) {
@@ -3532,7 +3532,7 @@ static inline short _marpaESLIF_bootstrap_G1_action_priority_loosen_ruleb(marpaE
                                                               NULL, /* hideseparatorbp */
                                                               &ranki,
                                                               &nullRanksHighb,
-                                                              NULL, /* priorityip */
+                                                              NULL, /* priorityipp */
                                                               NULL, /* pauseip */
                                                               NULL, /* latmbp */
                                                               &namingp,
@@ -3772,7 +3772,7 @@ static inline short _marpaESLIF_bootstrap_G1_action_priority_flat_ruleb(marpaESL
                                                               NULL, /* hideseparatorbp */
                                                               &ranki,
                                                               &nullRanksHighb,
-                                                              NULL, /* priorityip */
+                                                              NULL, /* priorityipp */
                                                               NULL, /* pauseip */
                                                               NULL, /* latmbp */
                                                               &namingp,
@@ -4615,7 +4615,7 @@ static short _marpaESLIF_bootstrap_G1_action_quantified_ruleb(void *userDatavp, 
                                                           &hideseparatorb,
                                                           &ranki,
                                                           &nullRanksHighb,
-                                                          NULL, /* priorityip */
+                                                          NULL, /* priorityipp */
                                                           NULL, /* pauseip */
                                                           NULL, /* latmbp */
                                                           &namingp,
@@ -4861,7 +4861,7 @@ static short _marpaESLIF_bootstrap_G1_action_empty_ruleb(void *userDatavp, marpa
                                                           NULL, /* hideseparatorbp */
                                                           &ranki,
                                                           &nullRanksHighb,
-                                                          NULL, /* priorityip */
+                                                          NULL, /* priorityipp */
                                                           NULL, /* pauseip */
                                                           NULL, /* latmbp */
                                                           &namingp,
@@ -4974,7 +4974,7 @@ static short _marpaESLIF_bootstrap_G1_action_default_ruleb(void *userDatavp, mar
                                                           NULL, /* hideseparatorbp */
                                                           NULL, /* rankip */
                                                           NULL, /* nullRanksHighbp */
-                                                          NULL, /* priorityip */
+                                                          NULL, /* priorityipp */
                                                           NULL, /* pauseip */
                                                           &latmb,
                                                           NULL, /* namingpp */
@@ -5496,10 +5496,11 @@ static short _marpaESLIF_bootstrap_G1_action_lexeme_ruleb(void *userDatavp, marp
   marpaESLIF_symbol_t                         *symbolp;
   int                                          leveli;
   marpaESLIF_grammar_t                        *grammarp;
-  int                                          priorityi;
+  int                                         *priorityip;
   marpaESLIF_bootstrap_pause_type_t            pausei;
   marpaESLIF_bootstrap_event_initialization_t *eventInitializationp;
   short                                        undefb;
+  marpaESLIF_action_t                         *symbolactionp;
   short                                        rcb;
 
   MARPAESLIF_BOOTSTRAP_GET_INT(marpaESLIFValuep, arg0i+1, leveli);
@@ -5541,18 +5542,28 @@ static short _marpaESLIF_bootstrap_G1_action_lexeme_ruleb(void *userDatavp, marp
                                                           NULL, /* hideseparatorbp */
                                                           NULL, /* rankip */
                                                           NULL, /* nullRanksHighbp */
-                                                          &priorityi,
+                                                          &priorityip,
                                                           &pausei,
                                                           NULL, /* latmbp */
                                                           NULL, /* namingpp */
-                                                          NULL, /* symbolactionpp */
+                                                          &symbolactionp,
                                                           &eventInitializationp
                                                           )) {
     goto err;
   }
 
   /* Update the symbol */
-  symbolp->priorityi = priorityi;
+  if (priorityip != NULL) {
+    symbolp->priorityi = *priorityip;
+  }
+
+  if (symbolactionp != NULL) {
+    _marpaESLIF_action_freev(symbolp->symbolActionp);
+    symbolp->symbolActionp = _marpaESLIF_action_clonep(marpaESLIFp, symbolactionp);
+    if (symbolp->symbolActionp == NULL) {
+      goto err;
+    }
+  }
 
   if (eventInitializationp != NULL) {
     /* It is a non-sense to have an event initialization without pause information */
@@ -5648,10 +5659,11 @@ static short _marpaESLIF_bootstrap_G1_action_terminal_ruleb(void *userDatavp, ma
   marpaESLIF_symbol_t                         *symbolp;
   int                                          leveli;
   marpaESLIF_grammar_t                        *grammarp;
-  int                                          priorityi;
+  int                                         *priorityip;
   marpaESLIF_bootstrap_pause_type_t            pausei;
   marpaESLIF_bootstrap_event_initialization_t *eventInitializationp;
   short                                        undefb;
+  marpaESLIF_action_t                         *symbolactionp;
   short                                        rcb;
 
   MARPAESLIF_BOOTSTRAP_GET_INT(marpaESLIFValuep, arg0i+1, leveli);
@@ -5693,18 +5705,28 @@ static short _marpaESLIF_bootstrap_G1_action_terminal_ruleb(void *userDatavp, ma
                                                           NULL, /* hideseparatorbp */
                                                           NULL, /* rankip */
                                                           NULL, /* nullRanksHighbp */
-                                                          &priorityi,
+                                                          &priorityip,
                                                           &pausei,
                                                           NULL, /* latmbp */
                                                           NULL, /* namingpp */
-                                                          NULL, /* symbolactionpp */
+                                                          &symbolactionp,
                                                           &eventInitializationp
                                                           )) {
     goto err;
   }
 
   /* Update the symbol */
-  symbolp->priorityi = priorityi;
+  if (priorityip != NULL) {
+    symbolp->priorityi = *priorityip;
+  }
+
+  if (symbolactionp != NULL) {
+    _marpaESLIF_action_freev(symbolp->symbolActionp);
+    symbolp->symbolActionp = _marpaESLIF_action_clonep(marpaESLIFp, symbolactionp);
+    if (symbolp->symbolActionp == NULL) {
+      goto err;
+    }
+  }
 
   if (eventInitializationp != NULL) {
     /* It is a non-sense to have an event initialization without pause information */
@@ -5843,7 +5865,7 @@ static short _marpaESLIF_bootstrap_G1_action_discard_ruleb(void *userDatavp, mar
 
   /* Check the adverb list */
   if (! _marpaESLIF_bootstrap_unpack_adverbListItemStackb(marpaESLIFp,
-                                                          "discard rule",
+                                                          ":discard rule",
                                                           adverbListItemStackp,
                                                           NULL, /* actionpp */
                                                           NULL, /* left_associationbp */
@@ -5854,7 +5876,7 @@ static short _marpaESLIF_bootstrap_G1_action_discard_ruleb(void *userDatavp, mar
                                                           NULL, /* hideseparatorbp */
                                                           NULL, /* ranki */
                                                           NULL, /* nullRanksHighb */
-                                                          NULL, /* priorityip */
+                                                          NULL, /* priorityipp */
                                                           NULL, /* pauseip */
                                                           NULL, /* latmbp */
                                                           NULL, /* namingpp */
@@ -6278,7 +6300,7 @@ static short _marpaESLIF_bootstrap_G1_action_exception_statementb(void *userData
                                                           NULL, /* hideseparatorbp */
                                                           &ranki,
                                                           &nullRanksHighb,
-                                                          NULL, /* priorityip */
+                                                          NULL, /* priorityipp */
                                                           NULL, /* pauseip */
                                                           NULL, /* latmbp */
                                                           &namingp,

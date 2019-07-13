@@ -2895,6 +2895,7 @@ static int  marpaESLIFLua_marpaESLIFGrammar_currentSymbolPropertiesi(lua_State *
   MARPAESLIFLUA_STORE_ACTION       (L, "nullableAction",             symbolProperty.nullableActionp);
   MARPAESLIFLUA_STORE_INTEGER      (L, "propertyBitSet",             symbolProperty.propertyBitSet);
   MARPAESLIFLUA_STORE_INTEGER      (L, "eventBitSet",                symbolProperty.eventBitSet);
+  MARPAESLIFLUA_STORE_ACTION       (L, "symbolAction",               symbolProperty.symbolActionp);
 
   rci = 1;
   goto done;
@@ -2968,6 +2969,7 @@ static int  marpaESLIFLua_marpaESLIFGrammar_symbolPropertiesByLeveli(lua_State *
   MARPAESLIFLUA_STORE_ACTION       (L, "nullableAction",             symbolProperty.nullableActionp);
   MARPAESLIFLUA_STORE_INTEGER      (L, "propertyBitSet",             symbolProperty.propertyBitSet);
   MARPAESLIFLUA_STORE_INTEGER      (L, "eventBitSet",                symbolProperty.eventBitSet);
+  MARPAESLIFLUA_STORE_ACTION       (L, "symbolAction",               symbolProperty.symbolActionp);
 
   rci = 1;
   goto done;

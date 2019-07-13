@@ -119,6 +119,12 @@ sub trace_rule_property {
     }
 }
 
+sub perl_number {
+    my ($self, $number) = @_;
+
+    return $number
+}
+
 sub do_symbol {
     my ($self, $symbol) = @_;
 
@@ -738,6 +744,7 @@ my %SYMBOL_PROPERTIES_BY_LEVEL = (
                  lhs => 1,
                  lookupResolvedLeveli => 0,
                  nullableAction => undef,
+                 symbolAction => undef,
                  priority => 0,
                  propertyBitSet => MarpaX::ESLIF::Symbol::PropertyBitSet->MARPAESLIF_SYMBOL_IS_ACCESSIBLE|
                                    MarpaX::ESLIF::Symbol::PropertyBitSet->MARPAESLIF_SYMBOL_IS_PRODUCTIVE|
@@ -766,6 +773,7 @@ my %SYMBOL_PROPERTIES_BY_LEVEL = (
                  lhs => 1,
                  lookupResolvedLeveli => 0,
                  nullableAction => undef,
+                 symbolAction => undef,
                  priority => 0,
                  propertyBitSet => MarpaX::ESLIF::Symbol::PropertyBitSet->MARPAESLIF_SYMBOL_IS_PRODUCTIVE,
                  eventBitSet => 0,
@@ -791,6 +799,7 @@ my %SYMBOL_PROPERTIES_BY_LEVEL = (
                  lhs => 1,
                  lookupResolvedLeveli => 0,
                  nullableAction => undef,
+                 symbolAction => undef,
                  priority => 0,
                  propertyBitSet => MarpaX::ESLIF::Symbol::PropertyBitSet->MARPAESLIF_SYMBOL_IS_PRODUCTIVE,
                  eventBitSet => 0,
@@ -816,6 +825,7 @@ my %SYMBOL_PROPERTIES_BY_LEVEL = (
                  lhs => 1,
                  lookupResolvedLeveli => 0,
                  nullableAction => undef,
+                 symbolAction => undef,
                  priority => 0,
                  propertyBitSet => MarpaX::ESLIF::Symbol::PropertyBitSet->MARPAESLIF_SYMBOL_IS_PRODUCTIVE,
                  eventBitSet => 0,
@@ -841,6 +851,7 @@ my %SYMBOL_PROPERTIES_BY_LEVEL = (
                  lhs => 1,
                  lookupResolvedLeveli => 0,
                  nullableAction => undef,
+                 symbolAction => undef,
                  priority => 0,
                  propertyBitSet => MarpaX::ESLIF::Symbol::PropertyBitSet->MARPAESLIF_SYMBOL_IS_ACCESSIBLE|
                                    MarpaX::ESLIF::Symbol::PropertyBitSet->MARPAESLIF_SYMBOL_IS_PRODUCTIVE,
@@ -868,6 +879,7 @@ my %SYMBOL_PROPERTIES_BY_LEVEL = (
                  lhs => 0,
                  lookupResolvedLeveli => 1,
                  nullableAction => undef,
+                 symbolAction => 'perl_number',
                  priority => 0,
                  propertyBitSet => MarpaX::ESLIF::Symbol::PropertyBitSet->MARPAESLIF_SYMBOL_IS_ACCESSIBLE|
                                    MarpaX::ESLIF::Symbol::PropertyBitSet->MARPAESLIF_SYMBOL_IS_PRODUCTIVE|
@@ -895,6 +907,7 @@ my %SYMBOL_PROPERTIES_BY_LEVEL = (
                  lhs => 1,
                  lookupResolvedLeveli => 0,
                  nullableAction => undef,
+                 symbolAction => undef,
                  priority => 0,
                  propertyBitSet => MarpaX::ESLIF::Symbol::PropertyBitSet->MARPAESLIF_SYMBOL_IS_ACCESSIBLE|
                                    MarpaX::ESLIF::Symbol::PropertyBitSet->MARPAESLIF_SYMBOL_IS_PRODUCTIVE,
@@ -921,6 +934,7 @@ my %SYMBOL_PROPERTIES_BY_LEVEL = (
                  lhs => 1,
                  lookupResolvedLeveli => 0,
                  nullableAction => undef,
+                 symbolAction => undef,
                  priority => 0,
                  propertyBitSet => MarpaX::ESLIF::Symbol::PropertyBitSet->MARPAESLIF_SYMBOL_IS_ACCESSIBLE|
                                    MarpaX::ESLIF::Symbol::PropertyBitSet->MARPAESLIF_SYMBOL_IS_PRODUCTIVE,
@@ -947,6 +961,7 @@ my %SYMBOL_PROPERTIES_BY_LEVEL = (
                  lhs => 1,
                  lookupResolvedLeveli => 0,
                  nullableAction => undef,
+                 symbolAction => undef,
                  priority => 0,
                  propertyBitSet => MarpaX::ESLIF::Symbol::PropertyBitSet->MARPAESLIF_SYMBOL_IS_ACCESSIBLE|
                                    MarpaX::ESLIF::Symbol::PropertyBitSet->MARPAESLIF_SYMBOL_IS_PRODUCTIVE,
@@ -973,6 +988,7 @@ my %SYMBOL_PROPERTIES_BY_LEVEL = (
                  lhs => 1,
                  lookupResolvedLeveli => 0,
                  nullableAction => undef,
+                 symbolAction => undef,
                  priority => 0,
                  propertyBitSet => MarpaX::ESLIF::Symbol::PropertyBitSet->MARPAESLIF_SYMBOL_IS_ACCESSIBLE|
                                    MarpaX::ESLIF::Symbol::PropertyBitSet->MARPAESLIF_SYMBOL_IS_PRODUCTIVE,
@@ -999,6 +1015,7 @@ my %SYMBOL_PROPERTIES_BY_LEVEL = (
                  lhs => 0,
                  lookupResolvedLeveli => 0,
                  nullableAction => undef,
+                 symbolAction => undef,
                  priority => 0,
                  propertyBitSet => MarpaX::ESLIF::Symbol::PropertyBitSet->MARPAESLIF_SYMBOL_IS_ACCESSIBLE|
                                    MarpaX::ESLIF::Symbol::PropertyBitSet->MARPAESLIF_SYMBOL_IS_PRODUCTIVE|
@@ -1026,6 +1043,7 @@ my %SYMBOL_PROPERTIES_BY_LEVEL = (
                  lhs => 0,
                  lookupResolvedLeveli => 0,
                  nullableAction => undef,
+                 symbolAction => undef,
                  priority => 0,
                  propertyBitSet => MarpaX::ESLIF::Symbol::PropertyBitSet->MARPAESLIF_SYMBOL_IS_ACCESSIBLE|
                                    MarpaX::ESLIF::Symbol::PropertyBitSet->MARPAESLIF_SYMBOL_IS_PRODUCTIVE|
@@ -1053,6 +1071,7 @@ my %SYMBOL_PROPERTIES_BY_LEVEL = (
                  lhs => 0,
                  lookupResolvedLeveli => 0,
                  nullableAction => undef,
+                 symbolAction => undef,
                  priority => 0,
                  propertyBitSet => MarpaX::ESLIF::Symbol::PropertyBitSet->MARPAESLIF_SYMBOL_IS_ACCESSIBLE|
                                    MarpaX::ESLIF::Symbol::PropertyBitSet->MARPAESLIF_SYMBOL_IS_PRODUCTIVE|
@@ -1080,6 +1099,7 @@ my %SYMBOL_PROPERTIES_BY_LEVEL = (
                  lhs => 0,
                  lookupResolvedLeveli => 0,
                  nullableAction => undef,
+                 symbolAction => undef,
                  priority => 0,
                  propertyBitSet => MarpaX::ESLIF::Symbol::PropertyBitSet->MARPAESLIF_SYMBOL_IS_ACCESSIBLE|
                                    MarpaX::ESLIF::Symbol::PropertyBitSet->MARPAESLIF_SYMBOL_IS_PRODUCTIVE|
@@ -1107,6 +1127,7 @@ my %SYMBOL_PROPERTIES_BY_LEVEL = (
                  lhs => 0,
                  lookupResolvedLeveli => 0,
                  nullableAction => undef,
+                 symbolAction => undef,
                  priority => 0,
                  propertyBitSet => MarpaX::ESLIF::Symbol::PropertyBitSet->MARPAESLIF_SYMBOL_IS_ACCESSIBLE|
                                    MarpaX::ESLIF::Symbol::PropertyBitSet->MARPAESLIF_SYMBOL_IS_PRODUCTIVE|
@@ -1134,6 +1155,7 @@ my %SYMBOL_PROPERTIES_BY_LEVEL = (
                  lhs => 0,
                  lookupResolvedLeveli => 0,
                  nullableAction => undef,
+                 symbolAction => undef,
                  priority => 0,
                  propertyBitSet => MarpaX::ESLIF::Symbol::PropertyBitSet->MARPAESLIF_SYMBOL_IS_ACCESSIBLE|
                                    MarpaX::ESLIF::Symbol::PropertyBitSet->MARPAESLIF_SYMBOL_IS_PRODUCTIVE|
@@ -1161,6 +1183,7 @@ my %SYMBOL_PROPERTIES_BY_LEVEL = (
                  lhs => 0,
                  lookupResolvedLeveli => 0,
                  nullableAction => undef,
+                 symbolAction => undef,
                  priority => 0,
                  propertyBitSet => MarpaX::ESLIF::Symbol::PropertyBitSet->MARPAESLIF_SYMBOL_IS_ACCESSIBLE|
                                    MarpaX::ESLIF::Symbol::PropertyBitSet->MARPAESLIF_SYMBOL_IS_PRODUCTIVE|
@@ -1188,6 +1211,7 @@ my %SYMBOL_PROPERTIES_BY_LEVEL = (
                  lhs => 0,
                  lookupResolvedLeveli => 1,
                  nullableAction => undef,
+                 symbolAction => undef,
                  priority => 0,
                  propertyBitSet => MarpaX::ESLIF::Symbol::PropertyBitSet->MARPAESLIF_SYMBOL_IS_PRODUCTIVE|
                                    MarpaX::ESLIF::Symbol::PropertyBitSet->MARPAESLIF_SYMBOL_IS_TERMINAL,
@@ -1214,6 +1238,7 @@ my %SYMBOL_PROPERTIES_BY_LEVEL = (
                  lhs => 0,
                  lookupResolvedLeveli => 0,
                  nullableAction => undef,
+                 symbolAction => undef,
                  priority => 0,
                  propertyBitSet => MarpaX::ESLIF::Symbol::PropertyBitSet->MARPAESLIF_SYMBOL_IS_PRODUCTIVE|
                                    MarpaX::ESLIF::Symbol::PropertyBitSet->MARPAESLIF_SYMBOL_IS_TERMINAL,
@@ -1242,6 +1267,7 @@ my %SYMBOL_PROPERTIES_BY_LEVEL = (
                  lhs => 1,
                  lookupResolvedLeveli => 1,
                  nullableAction => undef,
+                 symbolAction => undef,
                  priority => 0,
                  propertyBitSet => MarpaX::ESLIF::Symbol::PropertyBitSet->MARPAESLIF_SYMBOL_IS_ACCESSIBLE|
                                    MarpaX::ESLIF::Symbol::PropertyBitSet->MARPAESLIF_SYMBOL_IS_PRODUCTIVE|
@@ -1269,6 +1295,7 @@ my %SYMBOL_PROPERTIES_BY_LEVEL = (
                  lhs => 0,
                  lookupResolvedLeveli => 1,
                  nullableAction => undef,
+                 symbolAction => undef,
                  priority => 0,
                  propertyBitSet => MarpaX::ESLIF::Symbol::PropertyBitSet->MARPAESLIF_SYMBOL_IS_ACCESSIBLE|
                                    MarpaX::ESLIF::Symbol::PropertyBitSet->MARPAESLIF_SYMBOL_IS_PRODUCTIVE|
@@ -1296,6 +1323,7 @@ my %SYMBOL_PROPERTIES_BY_LEVEL = (
                  lhs => 1,
                  lookupResolvedLeveli => 1,
                  nullableAction => undef,
+                 symbolAction => undef,
                  priority => 0,
                  propertyBitSet => MarpaX::ESLIF::Symbol::PropertyBitSet->MARPAESLIF_SYMBOL_IS_PRODUCTIVE,
                  eventBitSet => 0,
@@ -1321,6 +1349,7 @@ my %SYMBOL_PROPERTIES_BY_LEVEL = (
                  lhs => 0,
                  lookupResolvedLeveli => 1,
                  nullableAction => undef,
+                 symbolAction => undef,
                  priority => 0,
                  propertyBitSet => MarpaX::ESLIF::Symbol::PropertyBitSet->MARPAESLIF_SYMBOL_IS_PRODUCTIVE|
                                    MarpaX::ESLIF::Symbol::PropertyBitSet->MARPAESLIF_SYMBOL_IS_TERMINAL,
@@ -1736,8 +1765,8 @@ Expression ::=
    ||     Expression  '+' Expression                                             name => 'Expression is +'
     |     Expression  '-' Expression                                             name => 'Expression is -'
 
-:lexeme ::= NUMBER pause => before event => ^NUMBER
-:lexeme ::= NUMBER pause => after  event => NUMBER$
+:lexeme ::= NUMBER pause => before event => ^NUMBER symbol-action => perl_number priority => 1
+:lexeme ::= NUMBER pause => after  event => NUMBER$ priority => 0
 NUMBER     ~ /[\d]+/
 whitespaces ::= WHITESPACES
 WHITESPACES ~ [\s]+

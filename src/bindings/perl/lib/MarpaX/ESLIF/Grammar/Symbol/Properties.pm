@@ -95,7 +95,8 @@ sub new {
         'priority'                   => $args{priority},
         'nullableAction'             => $args{nullableAction},
         'propertyBitSet'             => $args{propertyBitSet},
-        'eventBitSet'                => $args{eventBitSet}
+        'eventBitSet'                => $args{eventBitSet},
+        'symbolAction'               => $args{symbolAction}
     };
 
     return bless $self, $pkg
@@ -531,6 +532,18 @@ sub getEventBitSet {
     my ($self) = @_;
 
     return $self->{eventBitSet}
+}
+
+=head2 $self->getSymbolAction
+
+Returns the symbol specific action, null if there is none
+
+=cut
+
+sub getSymbolAction {
+    my ($self) = @_;
+
+    return $self->{symbolAction}
 }
 
 =head1 SEE ALSO

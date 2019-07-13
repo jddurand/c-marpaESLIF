@@ -3124,6 +3124,7 @@ CODE:
   MARPAESLIFPERL_XV_STORE_ACTION     (avp, "nullableAction",             symbolProperty.nullableActionp);
   MARPAESLIFPERL_XV_STORE_IV         (avp, "propertyBitSet",             symbolProperty.propertyBitSet);
   MARPAESLIFPERL_XV_STORE_IV         (avp, "eventBitSet",                symbolProperty.eventBitSet);
+  MARPAESLIFPERL_XV_STORE_ACTION     (avp, "symbolAction",               symbolProperty.symbolActionp);
 
   RETVAL = marpaESLIFPerl_call_actionp(aTHX_ boot_MarpaX__ESLIF__Grammar__Symbol__Properties_svp, "new", avp, NULL /* Perl_MarpaX_ESLIF_Valuep */, 0 /* evalb */, 0 /* evalSilentb */);
   av_undef(avp);
@@ -3177,6 +3178,7 @@ CODE:
   MARPAESLIFPERL_XV_STORE_ACTION     (avp, "nullableAction",             symbolProperty.nullableActionp);
   MARPAESLIFPERL_XV_STORE_IV         (avp, "propertyBitSet",             symbolProperty.propertyBitSet);
   MARPAESLIFPERL_XV_STORE_IV         (avp, "eventBitSet",                symbolProperty.eventBitSet);
+  MARPAESLIFPERL_XV_STORE_ACTION     (avp, "symbolAction",               symbolProperty.symbolActionp);
 
   RETVAL = marpaESLIFPerl_call_actionp(aTHX_ boot_MarpaX__ESLIF__Grammar__Symbol__Properties_svp, "new", avp, NULL /* Perl_MarpaX_ESLIF_Valuep */, 0 /* evalb */, 0 /* evalSilentb */);
   av_undef(avp);

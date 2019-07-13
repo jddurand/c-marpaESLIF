@@ -70,8 +70,9 @@ const static char *dsl = "\n"
   "# ------------\n"
   "# JSON Numbers\n"
   "# ------------\n"
-  "number ::= NUMBER                                 action => ::lua->lua_number # Prepare for eventual bignum extension\n"
+  "number ::= NUMBER                                                             # ::shift (default action)\n"
   "\n"
+  ":lexeme ::= NUMBER symbol-action => ::lua->lua_number                         # Implementation of discard enabling using reserved ':discard[switch]' keyword\n"
   "NUMBER   ~ _INT\n"
   "         | _INT _FRAC\n"
   "         | _INT _EXP\n"
@@ -90,7 +91,7 @@ const static char *dsl = "\n"
   "# -----------\n"
   "# JSON String\n"
   "# -----------\n"
-  "string     ::= '\"' chars '\"' action => ::copy[2]\n"
+  "string     ::= '\"' chars '\"' action => ::copy[1]\n"
   ":terminal ::= '\"' pause => after event => :discard[switch]                           # Implementation of discard enabling using reserved ':discard[switch]' keyword\n"
   "\n"
   "chars   ::= filled                                  action => ::lua->lua_chars\n"
@@ -407,7 +408,8 @@ int main() {
     "{}",
     "[]",
     "{\"1\\u12343\":2}",
-    "{\"test\":null}"
+    "{\"test\":null}",
+    "987654321"
   };
 
   genericLoggerp = GENERICLOGGER_NEW(GENERICLOGGER_LOGLEVEL_DEBUG);

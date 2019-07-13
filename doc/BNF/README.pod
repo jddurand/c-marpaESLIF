@@ -346,6 +346,14 @@ Explicit terminals can have pause events, C<before> mean that the scanning recog
 
 Only an explicit terminal can be set using the :terminal keyword.
 
+=item Lexeme and terminal specific actions
+
+The grammar's C<symbol-action> can be overwritten by setting such entry in C<:lexeme> and C<:terminal> settings, e.g.:
+
+  :lexeme   ::= symbolname1 symbol-action => ::u8"Custom String"
+  :lexeme   ::= symbolname2 symbol-action => Custom_action
+  :terminal ::= 'ThisTerminal' symbol-action => ::lua->lua_custom_action
+
 =item Non-lexeme events
 
 Completion, predicted or nulled events are supported, targetting a symbol name. These are I<grammar> events.
