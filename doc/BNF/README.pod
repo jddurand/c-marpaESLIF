@@ -679,6 +679,7 @@ marpaESLIF BNF can be expressed in itself:
                                    | <free action>
                                    | <event specification>
                                    | <hide separator specification>
+                                   | <if action>
   <action>                       ::= 'action' '=>' <action name>
                                    | 'action' '=>' <string literal>
   <left association>             ::= 'assoc' '=>' 'left'
@@ -709,6 +710,7 @@ marpaESLIF BNF can be expressed in itself:
   <null adverb>                  ::= ','
   <symbol action>                ::= 'symbol-action' '=>' <symbol action name>
                                    | 'symbol-action' '=>' <string literal>
+  <if action>                    ::= 'if-action' '=>' <if action name>
   <alternative name>             ::= <standard name>
                                    | <quoted name>
   <event name>                   ::= <restricted ascii graph name>
@@ -756,6 +758,7 @@ marpaESLIF BNF can be expressed in itself:
                                    | <lua action name>
                                    | '::true'
                                    | '::false'
+  <if action name>               ::= <restricted ascii graph name>
   <quantifier>                   ::= '*'
                                    | '+'
   <signed integer>               ::= /[+-]?\d+/
