@@ -128,15 +128,17 @@ public class AppImportExport implements Runnable {
 				new AppHashMap(hmap)
 		};  
 
+		ESLIFGrammar eslifGrammar = null;
+	    ESLIFValue eslifValue = null;
 		try {
-			ESLIFGrammar eslifGrammar = new ESLIFGrammar(eslif, grammar);
+			eslifGrammar = new ESLIFGrammar(eslif, grammar);
 			for (AppLexeme input : inputArray) {
 				ESLIFRecognizerInterface eslifRecognizerInterface = new AppEmptyRecognizer();
 			    ESLIFRecognizer eslifRecognizer = new ESLIFRecognizer(eslifGrammar, eslifRecognizerInterface);
 			    eslifRecognizer.scan(true); // Initial events
 			    eslifRecognizer.lexemeRead("JAVA_INPUT", input.Value(), 1, 1);
 			    ESLIFValueInterface eslifValueInterface = new AppValue();
-			    ESLIFValue eslifValue = new ESLIFValue(eslifRecognizer, eslifValueInterface);
+			    eslifValue = new ESLIFValue(eslifRecognizer, eslifValueInterface);
 			    eslifValue.value();
 			    Object value = eslifValueInterface.getResult();
 			    Object fromValue = input.FromValue(value);
@@ -147,10 +149,27 @@ public class AppImportExport implements Runnable {
 			    } else {
 			    	this.eslifLogger.info("OK for " + input + " (value: " + fromValue + ")");
 			    }
+			    eslifValue.free();
+			    eslifValue = null;
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
 			return;
+		} finally {
+			if (eslifGrammar != null) {
+				try {
+					eslifGrammar.free();
+				} catch (ESLIFException e) {
+					e.printStackTrace();
+				}
+			}
+			if (eslifValue != null) {
+				try {
+					eslifValue.free();
+				} catch (ESLIFException e) {
+					e.printStackTrace();
+				}
+			}
 		}
 	}
 }

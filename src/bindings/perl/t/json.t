@@ -4,6 +4,7 @@
 package MyRecognizerInterface;
 use strict;
 use diagnostics;
+use Log::Any qw/$log/;
 
 sub new                    { my ($pkg, $string) = @_; bless { string => $string }, $pkg }
 sub read                   { 1 }
@@ -15,6 +16,8 @@ sub isWithDisableThreshold { 0 }
 sub isWithExhaustion       { 0 }
 sub isWithNewline          { 1 }
 sub isWithTrack            { 1 }
+sub if_number              { 1 }
+sub if_char                { 1 }
 
 package MyValueInterface;
 use strict;
@@ -42,7 +45,7 @@ use Log::Any qw/$log/;
 # Init log
 #
 our $defaultLog4perlConf = '
-log4perl.rootLogger              = INFO, Screen
+log4perl.rootLogger              = DEBUG, Screen
 log4perl.appender.Screen         = Log::Log4perl::Appender::Screen
 log4perl.appender.Screen.stderr  = 0
 log4perl.appender.Screen.layout  = PatternLayout
@@ -252,6 +255,7 @@ elements ::= value*                               action => ::row             # 
 # JSON Numbers
 # ------------
 number ::= NUMBER                                 action => ::lua->lua_number # Prepare for eventual bignum extension
+:lexeme ::= NUMBER if-action => if_number
 
 NUMBER   ~ _INT
          | _INT _FRAC
@@ -281,17 +285,18 @@ event :discard[off] = nulled discardOff                                         
 chars   ::= filled                                  action => ::lua->lua_chars
 filled  ::= char+                                   action => ::concat                # Returns join('', char1, ..., charn)
 chars   ::=                                         action => ::lua->lua_empty_string # Prefering empty string instead of undef
-char    ::= /[^"\\\x00-\x1F]+/                                                   # ::shift (default action) - take care PCRE2 [:cntrl:] includes DEL character
-          | '\\' '"'                             action => ::copy[1]               # Returns double quote, already ok in data
-          | '\\' '\\'                           action => ::copy[1]               # Returns backslash, already ok in data
-          | '\\' '/'                              action => ::copy[1]               # Returns slash, already ok in data
-          | '\\' 'b'                              action => ::u8"\x{08}"
-          | '\\' 'f'                              action => ::u8"\x{0C}"
-          | '\\' 'n'                              action => ::u8"\x{0A}"
-          | '\\' 'r'                              action => ::u8"\x{0D}"
-          | '\\' 't'                              action => ::u8"\x{09}"
-          | /(?:\\u[[:xdigit:]]{4})+/             action => ::lua->lua_unicode
+char    ::= /[^"\\\x00-\x1F]+/                                                        # ::shift (default action) - take care PCRE2 [:cntrl:] includes DEL character
+          | '\\' '"'                                action => ::copy[1]               # Returns double quote, already ok in data
+          | '\\' '\\'                               action => ::copy[1]               # Returns backslash, already ok in data
+          | '\\' '/'                                action => ::copy[1]               # Returns slash, already ok in data
+          | '\\' 'b'                                action => ::u8"\x{08}"
+          | '\\' 'f'                                action => ::u8"\x{0C}"
+          | '\\' 'n'                                action => ::u8"\x{0A}"
+          | '\\' 'r'                                action => ::u8"\x{0D}"
+          | '\\' 't'                                action => ::u8"\x{09}"
+          | /(?:\\u[[:xdigit:]]{4})+/               action => ::lua->lua_unicode
 
+:terminal ::= /[^"\\\x00-\x1F]+/ if-action => if_char
 
 # -------------------------
 # Unsignificant whitespaces

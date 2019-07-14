@@ -572,8 +572,8 @@ int main() {
   marpaESLIFRecognizerOption.trackb            = 1; /* Absolute position tracking. Default: 0 */
   marpaESLIFRecognizerOption.bufsizl           = 0; /* Minimum stream buffer size: Recommended: 0 (internally, a system default will apply) */
   marpaESLIFRecognizerOption.buftriggerperci   = 50; /* Excess number of bytes, in percentage of bufsizl, where stream buffer size is reduced. Recommended: 50 */
-  marpaESLIFRecognizerOption.bufaddperci       = 50; /* Policy of minimum of bytes for increase, in percentage of current allocated size, when stream buffer size need 
-to augment. Recommended: 50 */
+  marpaESLIFRecognizerOption.bufaddperci       = 50; /* Policy of minimum of bytes for increase, in percentage of current allocated size, when stream buffer size need to augment. Recommended: 50 */
+  marpaESLIFRecognizerOption.ifActionResolverp = NULL;
 
   marpaESLIFTester_context.genericLoggerp = genericLoggerp;
   marpaESLIFTester_context.inputs         =

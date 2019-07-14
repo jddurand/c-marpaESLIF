@@ -221,6 +221,7 @@ int main() {
     marpaESLIFRecognizerOption.bufsizl           = 0;
     marpaESLIFRecognizerOption.buftriggerperci   = 50;
     marpaESLIFRecognizerOption.bufaddperci       = 50;
+    marpaESLIFRecognizerOption.ifActionResolverp = NULL;
 
     marpaESLIFRecognizerJsonp = marpaESLIFRecognizer_newp(marpaESLIFGrammarArrayp[JSON], &marpaESLIFRecognizerOption);
     if (marpaESLIFRecognizerJsonp == NULL) {

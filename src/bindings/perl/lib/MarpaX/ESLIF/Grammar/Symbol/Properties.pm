@@ -96,7 +96,8 @@ sub new {
         'nullableAction'             => $args{nullableAction},
         'propertyBitSet'             => $args{propertyBitSet},
         'eventBitSet'                => $args{eventBitSet},
-        'symbolAction'               => $args{symbolAction}
+        'symbolAction'               => $args{symbolAction},
+        'ifAction'                   => $args{ifAction}
     };
 
     return bless $self, $pkg
@@ -544,6 +545,18 @@ sub getSymbolAction {
     my ($self) = @_;
 
     return $self->{symbolAction}
+}
+
+=head2 $self->getIfAction
+
+Returns the symbol if action, null if there is none
+
+=cut
+
+sub getIfAction {
+    my ($self) = @_;
+
+    return $self->{ifAction}
 }
 
 =head1 SEE ALSO

@@ -72,7 +72,8 @@ const static char *dsl = "\n"
   "# ------------\n"
   "number ::= NUMBER                                                             # ::shift (default action)\n"
   "\n"
-  ":lexeme ::= NUMBER symbol-action => ::lua->lua_number                         # Implementation of discard enabling using reserved ':discard[switch]' keyword\n"
+  ":lexeme ::= NUMBER symbol-action => ::lua->lua_number\n"
+  ":lexeme ::= NUMBER if-action => if_action\n"
   "NUMBER   ~ _INT\n"
   "         | _INT _FRAC\n"
   "         | _INT _EXP\n"
@@ -461,6 +462,7 @@ int main() {
     marpaESLIFRecognizerOption.bufsizl           = 0;
     marpaESLIFRecognizerOption.buftriggerperci   = 50;
     marpaESLIFRecognizerOption.bufaddperci       = 50;
+    marpaESLIFRecognizerOption.ifActionResolverp = NULL;
 
     /* Free previous round */
     if (marpaESLIFValuep != NULL) {

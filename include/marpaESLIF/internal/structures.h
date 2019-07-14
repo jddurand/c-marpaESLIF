@@ -164,6 +164,7 @@ struct marpaESLIFSymbol {
   genericStack_t              *lhsRuleStackp;          /* Pointer to stack of rules having this symbol as LHS */
   marpaESLIF_symbol_t         *exceptionp;             /* Pointer to an exception itself, the one after the '-' character */
   marpaESLIFAction_t          *symbolActionp;          /* Custom symbol, only for terminals or lexemes */
+  marpaESLIFAction_t          *ifActionp;              /* if semantic, only for meta symbols that are lexemes or terminals */
 };
 
 /* A rule */

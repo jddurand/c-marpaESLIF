@@ -134,7 +134,7 @@ public class AppThread implements Runnable {
 				String string = new String(strings[i]);
 	
 				BufferedReader reader = new BufferedReader(new StringReader(string));
-				AppRecognizer eslifAppRecognizer = new AppRecognizer(reader);
+				AppRecognizer eslifAppRecognizer = new AppRecognizer(reader, eslifLogger);
 				AppValue eslifAppValue = new AppValue();
 				eslifLogger.info("Testing parse() on " + string);
 				try {
@@ -155,7 +155,7 @@ public class AppThread implements Runnable {
 				String string = new String(strings[i]);
 	
 				BufferedReader reader = new BufferedReader(new StringReader(string));
-				AppRecognizer eslifAppRecognizer = new AppRecognizer(reader);
+				AppRecognizer eslifAppRecognizer = new AppRecognizer(reader, eslifLogger);
 				ESLIFRecognizer eslifRecognizerShared = new ESLIFRecognizer(eslifGrammar, eslifAppRecognizer);
 				ESLIFRecognizer eslifRecognizer = new ESLIFRecognizer(eslifGrammar, eslifAppRecognizer);
 				eslifRecognizer.share(eslifRecognizerShared);
@@ -212,15 +212,19 @@ public class AppThread implements Runnable {
 					try {
 						AppValue eslifAppValue = new AppValue();
 						eslifLogger.info("Testing value() on " + string);
+						ESLIFValue value = null;
 						try {
-							ESLIFValue value = new ESLIFValue(eslifRecognizer, eslifAppValue);
+							value = new ESLIFValue(eslifRecognizer, eslifAppValue);
 							while (value.value()) {
 								Object result = eslifAppValue.getResult();
 								eslifLogger.info("Result: " + result);
 							}
-							value.free();
 						} catch (Exception e) {
 							eslifLogger.error("Failed to parse " + string + ": " + e.getMessage());
+						} finally {
+							if (value != null) {
+								value.free();
+							}
 						}
 					} catch (Exception e){
 						eslifLogger.error("Cannot value the input: " + e);

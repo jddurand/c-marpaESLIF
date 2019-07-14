@@ -43,6 +43,7 @@ public class ESLIFGrammarSymbolProperties {
 	  private int             propertyBitSet;
 	  private int             eventBitSet;
 	  private String          symbolAction;
+	  private String          ifAction;
 
 	/*
 	 * ********************************************
@@ -78,9 +79,10 @@ public class ESLIFGrammarSymbolProperties {
 	 * @param propertyBitSet low-level grammar properties
 	 * @param eventBitSet low-level grammar events
 	 * @param symbolAction specific action, null if there is none
+	 * @param ifAction if action, null if there is none
 	 * 
 	 */
-	public ESLIFGrammarSymbolProperties(ESLIFSymbolType type, boolean start, boolean discard, boolean discardRhs, boolean lhs, boolean top, int id, String description, String eventBefore, boolean eventBeforeInitialState, String eventAfter, boolean eventAfterInitialState, String eventPredicted, boolean eventPredictedInitialState, String eventNulled, boolean eventNulledInitialState, String eventCompleted, boolean eventCompletedInitialState, String discardEvent, boolean discardEventInitialState, int lookupResolvedLeveli, int priority, String nullableAction, int propertyBitSet, int eventBitSet, String symbolAction) {
+	public ESLIFGrammarSymbolProperties(ESLIFSymbolType type, boolean start, boolean discard, boolean discardRhs, boolean lhs, boolean top, int id, String description, String eventBefore, boolean eventBeforeInitialState, String eventAfter, boolean eventAfterInitialState, String eventPredicted, boolean eventPredictedInitialState, String eventNulled, boolean eventNulledInitialState, String eventCompleted, boolean eventCompletedInitialState, String discardEvent, boolean discardEventInitialState, int lookupResolvedLeveli, int priority, String nullableAction, int propertyBitSet, int eventBitSet, String symbolAction, String ifAction) {
 		this.type                       = type;
 		this.start                      = start;
 		this.discard                    = discard;
@@ -107,6 +109,7 @@ public class ESLIFGrammarSymbolProperties {
 		this.propertyBitSet             = propertyBitSet;
 		this.eventBitSet                = eventBitSet;
 		this.symbolAction               = symbolAction;
+		this.ifAction                   = ifAction;
 	}
 	
 	/* (non-Javadoc)
@@ -133,6 +136,7 @@ public class ESLIFGrammarSymbolProperties {
 		result = prime * result + ((eventPredicted == null) ? 0 : eventPredicted.hashCode());
 		result = prime * result + (eventPredictedInitialState ? 1231 : 1237);
 		result = prime * result + id;
+		result = prime * result + ((ifAction == null) ? 0 : ifAction.hashCode());
 		result = prime * result + (lhs ? 1231 : 1237);
 		result = prime * result + lookupResolvedLeveli;
 		result = prime * result + ((nullableAction == null) ? 0 : nullableAction.hashCode());
@@ -212,6 +216,11 @@ public class ESLIFGrammarSymbolProperties {
 			return false;
 		if (id != other.id)
 			return false;
+		if (ifAction == null) {
+			if (other.ifAction != null)
+				return false;
+		} else if (!ifAction.equals(other.ifAction))
+			return false;
 		if (lhs != other.lhs)
 			return false;
 		if (lookupResolvedLeveli != other.lookupResolvedLeveli)
@@ -254,7 +263,7 @@ public class ESLIFGrammarSymbolProperties {
 				+ ", discardEvent=" + discardEvent + ", discardEventInitialState=" + discardEventInitialState
 				+ ", lookupResolvedLeveli=" + lookupResolvedLeveli + ", priority=" + priority + ", nullableAction="
 				+ nullableAction + ", propertyBitSet=" + propertyBitSet + ", eventBitSet=" + eventBitSet
-				+ ", symbolAction=" + symbolAction + "]";
+				+ ", symbolAction=" + symbolAction + ", ifAction=" + ifAction + "]";
 	}
 
 	/**
@@ -529,6 +538,20 @@ public class ESLIFGrammarSymbolProperties {
 	 */
 	public int getEventBitSet() {
 		return eventBitSet;
+	}
+
+	/**
+	 * @return the symbol action
+	 */
+	public String getSymbolAction() {
+		return symbolAction;
+	}
+
+	/**
+	 * @return the if action
+	 */
+	public String getIfAction() {
+		return ifAction;
 	}
 
 }

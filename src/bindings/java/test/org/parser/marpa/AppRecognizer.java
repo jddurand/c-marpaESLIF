@@ -1,24 +1,30 @@
 package org.parser.marpa;
 
 import java.io.BufferedReader;
+import java.io.UnsupportedEncodingException;
 import java.nio.charset.Charset;
 
 /**
  * Test Application Recognizer
  */
 public class AppRecognizer implements ESLIFRecognizerInterface {
-		private String         line           = null;
-		private BufferedReader bufferedReader = null;
+		private String               line           = null;
+		private BufferedReader       bufferedReader = null;
+		private ESLIFLoggerInterface eslifLoggerInterface = null;
 
 		/**
 		 * @param bufferedReader buffered reader
 		 * @throws Exception exception
 		 */
-		public AppRecognizer(BufferedReader bufferedReader) throws Exception {
+		public AppRecognizer(BufferedReader bufferedReader, ESLIFLoggerInterface eslifLoggerInterface) throws Exception {
 			if (bufferedReader == null) {
 				throw new Exception("bufferedReader is null");
 			}
-			this.bufferedReader = bufferedReader;
+			this.bufferedReader       = bufferedReader;
+			if (eslifLoggerInterface == null) {
+				throw new Exception("eslifLoggerInterface is null");
+			}
+			this.eslifLoggerInterface = eslifLoggerInterface;
 		}
 
 		public boolean read() {
@@ -64,5 +70,9 @@ public class AppRecognizer implements ESLIFRecognizerInterface {
 			return true;
 		}
 		
+		public boolean if_number(byte[] byteArray) throws UnsupportedEncodingException {
+			String string = new String(byteArray, "UTF-8");
+			eslifLoggerInterface.debug("if_number(" + string + ")");
+			return true;
+		}	
 	}
-

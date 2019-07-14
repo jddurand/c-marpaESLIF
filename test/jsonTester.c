@@ -375,6 +375,7 @@ int main() {
     marpaESLIFRecognizerOption.bufsizl           = 0;
     marpaESLIFRecognizerOption.buftriggerperci   = 50;
     marpaESLIFRecognizerOption.bufaddperci       = 50;
+    marpaESLIFRecognizerOption.ifActionResolverp = NULL;
 
     /* Free previous round */
     if (marpaESLIFValuep != NULL) {

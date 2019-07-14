@@ -131,6 +131,8 @@ Expression ::=
 
 :lexeme ::= NUMBER pause => before event => ^NUMBER
 :lexeme ::= NUMBER pause => after  event => NUMBER$
+:lexeme ::= NUMBER if-action => if_number
+
 NUMBER     ~ /[\d]+/
 whitespaces ::= WHITESPACES
 WHITESPACES ~ [\s]+
@@ -413,6 +415,11 @@ local recognizerInterface = {
       local isWithTrack = true
       logger:tracef("isWithTrack => %s", tostring(isWithTrack))
       return isWithTrack
+   end,
+   ["if_number"]            = function(self, lexeme)
+      local if_number = true
+      logger:tracef("if_number => %s", tostring(if_number))
+      return if_number
    end
 }
 

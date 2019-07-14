@@ -94,6 +94,7 @@ public class AppJson implements Runnable {
 						"# ------------ \n" +
 						"number ::= NUMBER                                 action => ::lua->lua_number # Prepare for eventual bignum extension \n" +
 						" \n" +
+						":lexeme ::= NUMBER if-action => if_number\n" +
 						"NUMBER   ~ _INT \n" +
 						"         | _INT _FRAC \n" +
 						"         | _INT _EXP \n" +
@@ -306,13 +307,14 @@ public class AppJson implements Runnable {
 						" "
 						};  
 
+		ESLIFGrammar eslifGrammar = null;
 		try {
-			ESLIFGrammar eslifGrammar = new ESLIFGrammar(eslif, grammar);
+			eslifGrammar = new ESLIFGrammar(eslif, grammar);
 			for (int i = 0; i < strings.length; i++) {
 				String string = new String(strings[i]);
 	
 				BufferedReader reader = new BufferedReader(new StringReader(string));
-				AppRecognizer eslifAppRecognizer = new AppRecognizer(reader);
+				AppRecognizer eslifAppRecognizer = new AppRecognizer(reader, eslifLogger);
 				AppValue eslifAppValue = new AppValue();
 				eslifLogger.info("Testing parse() on " + string);
 				try {
@@ -326,6 +328,14 @@ public class AppJson implements Runnable {
 		} catch (Exception e) {
 			e.printStackTrace();
 			return;
+		} finally {
+			if (eslifGrammar != null) {
+				try {
+					eslifGrammar.free();
+				} catch (ESLIFException e) {
+					e.printStackTrace();
+				}
+			}
 		}
 	}
 }
