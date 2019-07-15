@@ -624,6 +624,9 @@ Returns a true value on failure, a false value on failure. C<*symbolipp> is neve
     int                          priorityi;              /* Symbol priority */
     marpaESLIFAction_t          *nullableActionp;        /* Nullable semantic */
     int                          propertyBitSet;
+    int                          eventBitSet;
+    marpaESLIFAction_t          *symbolActionp;          /* Symbol specific action */
+    marpaESLIFAction_t          *ifActionp;              /* Symbol if action */
   } marpaESLIFSymbolProperty_t;
 
   short marpaESLIFGrammar_symbolproperty_currentb(marpaESLIFGrammar_t *marpaESLIFGrammarp,
@@ -1071,6 +1074,15 @@ At any location in the grammar, possible alternatives can be of the two major ty
                                       short   *characterStreambp,
                                       char   **encodingsp,
                                       size_t  *encodinglp);
+  /* Recognizer callback definitions */
+  typedef short (*marpaESLIFRecognizerIfCallback_t)(void *userDatavp,
+                                                    marpaESLIFRecognizer_t *marpaESLIFRecognizerp,
+                                                    marpaESLIFValueResult_t *marpaESLIFValueResultLexemep,
+                                                    marpaESLIFValueResultBool_t *marpaESLIFValueResultBoolp);
+  typedef marpaESLIFRecognizerIfCallback_t (*marpaESLIFRecognizerIfActionResolver_t)(void *userDatavp,
+                                                                                     marpaESLIFRecognizer_t *marpaESLIFRecognizerp,
+                                                                                     char *actions);
+
   typedef struct marpaESLIFRecognizerOption {
     void                *userDatavp;                  /* User specific context */
     marpaESLIFReader_t   readerCallbackp;             /* Reader callback */
@@ -1079,13 +1091,12 @@ At any location in the grammar, possible alternatives can be of the two major ty
     short                newlineb;                    /* Count line/column numbers.  Recommended: 0 */
     short                trackb;                      /* Absolute position tracking. Recommended: 0 */
     size_t               bufsizl;                     /* Minimum stream buffer size. Recommended: 0 */
-
     /* Excess number of bytes, in % of bufsizl, where stream buffer size is reduced */
     unsigned int         buftriggerperci;             /*                             Recommended: 50 */
-
     /* Policy of minimum of bytes for increase, in % of current allocated size, when */
-    /*  stream buffer size need to augment */
+    /*  stream buffer size augment policy in % */
     unsigned int         bufaddperci;                 /*                             Recommended: 50 */
+    marpaESLIFRecognizerIfActionResolver_t ifActionResolverp; /* symbol if action resolver. */
   } marpaESLIFRecognizerOption_t;
 
   marpaESLIFRecognizer_t *marpaESLIFRecognizer_newp(marpaESLIFGrammar_t          *marpaESLIFGrammarp,
@@ -1212,6 +1223,12 @@ In order to prevent internal buffer to grow indefinitely, C<buftriggerperci> is 
 =item C<bufaddperci>
 
 To prevent too many memory allocations, when marpaESLIF need to increase its internal buffer, it will do so by requesting C<bufaddperci> percent of current allocated size more bytes. Recommended value: C<50>.
+
+=item C<ifActionResolverp>
+
+If a lexeme or a terminal is a candidate for automatic parsing (I<scan> or I<parse> modes), this callback must not be C<NULL> and return a function pointer. The later will be be called with a C<marpaESLIFValueResultLexemep> argument that is guaranteed to be of type C<ARRAY>, and must return in C<marpaESLIFValueResultBoolp>, guaranteed to not be C<NULL>, a boolean value saying of the lexeme or terminal can be taken in account in the parse tree.
+
+The function will return a true value in case of success, a false value otherwise.
 
 =back
 
