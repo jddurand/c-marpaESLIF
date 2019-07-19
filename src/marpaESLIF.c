@@ -13606,11 +13606,15 @@ static short _marpaESLIFRecognizer_concat_valueResultCallbackb(void *userDatavp,
     case MARPAESLIF_VALUE_TYPE_UNDEF:
       /* fprintf(stdout, "UNDEF\n"); fflush(stdout); */
       /* Undef default representation:
-         - string mode: null, json: null
+         - string mode: "", json: "null"
          - binary mode: N/A
       */
       if (contextp->stringb) {
-        GENERICLOGGER_TRACEF(genericLoggerp, "%s", "null");
+        if (contextp->jsonb) {
+          GENERICLOGGER_TRACE(genericLoggerp, "null");
+        } else {
+          GENERICLOGGER_TRACE(genericLoggerp, "");
+        }
       } else {
         continueb = 1;
       }
