@@ -1405,7 +1405,7 @@ static void marpaESLIFLua_stackdumpv(lua_State* L, int forcelookupi)
       printf("  [%d] nil\n", i);
       break;
     case LUA_TNUMBER:
-      printf("  [%d] number: %g\n", i, lua_tonumber(L, i));
+      printf("  [%d] number: %f\n", i, (double) lua_tonumber(L, i));
       break;
     case LUA_TBOOLEAN:
       printf("  [%d] boolean %s\n", i, lua_toboolean(L, i) ? "true" : "false");
