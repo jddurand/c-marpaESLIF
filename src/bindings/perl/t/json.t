@@ -147,18 +147,18 @@ $log->info('Creating JSON grammar');
 my $GRAMMAR = MarpaX::ESLIF::Grammar->new($eslif, $DATA);
 
 foreach (0..$#inputs) {
-    my $recognizerInterface = MyRecognizerInterface->new($inputs[$_]);
-    my $marpaESLIFRecognizerJson = MarpaX::ESLIF::Recognizer->new($GRAMMAR, $recognizerInterface);
-    if (! doparse($marpaESLIFRecognizerJson, $inputs[$_], 0)) {
+    if (! doparse($GRAMMAR, $inputs[$_], 0)) {
         BAIL_OUT("Failure when parsing:\n$inputs[$_]\n");
     }
 }
 
 my $newFromOrshared = 0;
 sub doparse {
-    my ($marpaESLIFRecognizer, $inputs, $recursionLevel) = @_;
+    my ($grammar, $inputs, $recursionLevel) = @_;
     my $rc;
 
+    my $recognizerInterface = MyRecognizerInterface->new($inputs);
+    my $valueInterface = MyValueInterface->new();
     if (defined($inputs)) {
         $log->infof('[%d] Scanning JSON', $recursionLevel);
         $log->info ('-------------');
@@ -167,23 +167,15 @@ sub doparse {
     } else {
         $log->infof("[%d] Scanning JSON's object", $recursionLevel);
     }
-    my $ok = $marpaESLIFRecognizer->scan(1); # Initial events
-    while ($ok && $marpaESLIFRecognizer->isCanContinue()) {
-        #
-        # Resume
-        #
-        $ok = $marpaESLIFRecognizer->resume();
-    }
-    if (! $ok) {
+    if (! $grammar->parse($recognizerInterface, $valueInterface)) {
         BAIL_OUT("Failure when parsing:\n$inputs\n");
     }
-    my $valueInterface = MyValueInterface->new();
-    my $status = MarpaX::ESLIF::Value->new($marpaESLIFRecognizer, $valueInterface)->value();
-    if (! $status) {
-        BAIL_OUT("Failure when valuating:\n$inputs\n");
-    }
 
-    my $value = $valueInterface->getResult(); use Data::Dumper; print "RESULT: " . Dumper($value);
+    my $value = $valueInterface->getResult();
+    if (! defined($value)) {
+        BAIL_OUT("Failure with valuation:\n$inputs\n");
+    }
+    $log->infof('Result: %s', $value);
 
     $rc = 1;
     goto done;
