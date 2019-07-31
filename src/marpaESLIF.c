@@ -6489,12 +6489,21 @@ static inline short _marpaESLIFRecognizer_resume_oneb(marpaESLIFRecognizer_t *ma
         marpaESLIF_streamp->inputl -= marpaESLIFValueResult.u.a.sizel;
         /* We NEVER free because we called for parsing in lexeme mode */
         /* free(marpaESLIFValueResult.u.a.p); */
-        /* If there is an event, get out of this method */
+
+        /* We want to do as if we would have done a lexeme complete before */
+        MARPAESLIFRECOGNIZER_RESET_EVENTS(marpaESLIFRecognizerp);
+        if (! _marpaESLIFRecognizer_push_grammar_eventsb(marpaESLIFRecognizerp)) {
+          goto err;
+        }
         if ((marpaESLIFRecognizerp->discardEvents != NULL) && (marpaESLIFRecognizerp->discardSymbolp != NULL)) {
           /* Push discard event */
           if (! _marpaESLIFRecognizer_push_eventb(marpaESLIFRecognizerp, MARPAESLIF_EVENTTYPE_DISCARD, marpaESLIFRecognizerp->discardSymbolp, marpaESLIFRecognizerp->discardEvents)) {
             goto err;
           }
+        }
+
+        /* If there is an event, get out of this method */
+        if (marpaESLIFRecognizerp->eventArrayl > 0) {
           rcb = 1;
           goto done;
         } else {
@@ -6666,12 +6675,21 @@ static inline short _marpaESLIFRecognizer_resume_oneb(marpaESLIFRecognizer_t *ma
         /* These lines are important so that this specific retry is clean */
         alternativeStackSymboli = 0;
         maxMatchedl = 0;
-        /* If there is an event, get out of this method */
+
+        /* We want to do as if we would have done a lexeme complete before */
+        MARPAESLIFRECOGNIZER_RESET_EVENTS(marpaESLIFRecognizerp);
+        if (! _marpaESLIFRecognizer_push_grammar_eventsb(marpaESLIFRecognizerp)) {
+          goto err;
+        }
         if ((marpaESLIFRecognizerp->discardEvents != NULL) && (marpaESLIFRecognizerp->discardSymbolp != NULL)) {
           /* Push discard event */
           if (! _marpaESLIFRecognizer_push_eventb(marpaESLIFRecognizerp, MARPAESLIF_EVENTTYPE_DISCARD, marpaESLIFRecognizerp->discardSymbolp, marpaESLIFRecognizerp->discardEvents)) {
             goto err;
           }
+        }
+
+        /* If there is an event, get out of this method */
+        if (marpaESLIFRecognizerp->eventArrayl > 0) {
           rcb = 1;
           goto done;
         } else {
