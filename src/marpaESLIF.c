@@ -8047,11 +8047,10 @@ short marpaESLIFRecognizer_eventb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp,
   }
 
   eventArrayp[eventArrayl] = eventArray;
-  if (++eventArrayl > 1) {
+  if ((marpaESLIFRecognizerp->eventArrayl = ++eventArrayl) > 1) {
     /* Sort the events if there is more than one */
     _marpaESLIFRecognizer_sort_eventsb(marpaESLIFRecognizerp);
   }
-  marpaESLIFRecognizerp->eventArrayl = eventArrayl;
 
  no_push:
   rcb = 1;
