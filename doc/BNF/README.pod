@@ -832,8 +832,6 @@ Lua object representing current marpaESLIFValue instance.
 
 =back
 
-=over
-
 Grammar events have a cost, and when possible lexeme or terminal events should be prefered.
 
 =back
