@@ -277,6 +277,12 @@ Creates a value of type TABLE, that contains all RHS's values. The number of RHS
 
 Meaningful only for rule actions.
 
+=item C<::ast>
+
+Creates a value of type TABLE, where the single key is a string containing the lhs name, and the single value is a row containing all RHS's values, or UNDEF if rule is nullable.
+
+Meaningful only for rule actions.
+
 =back
 
 =item Discard
