@@ -754,6 +754,10 @@ marpaESLIF BNF can be expressed in itself:
                                    | <lua action name>
                                    | '::true'
                                    | '::false'
+                                   | '::json'
+                                   | '::row'
+                                   | '::table'
+                                   | '::ast'
   <free name>                    ::= <restricted ascii graph name>
   <symbol action name>           ::= <restricted ascii graph name>
                                    | '::transfer'
