@@ -3235,7 +3235,7 @@ static inline marpaESLIF_rule_t *_marpaESLIF_rule_newp(marpaESLIF_t *marpaESLIFp
       }
     }
     if (! separatorFoundb) {
-      MARPAESLIF_ERRORF(marpaESLIFp, "At grammar level %d: LHS separator No %d does not exist", grammarp->leveli, separatori);
+      MARPAESLIF_ERRORF(marpaESLIFp, "At grammar level %d: Rule <%s>: LHS separator No %d does not exist", grammarp->leveli, rulep->lhsp->descp->asciis, separatori);
       goto err;
     }
     rulep->separatorp = symbolp;
@@ -3279,7 +3279,7 @@ static inline marpaESLIF_rule_t *_marpaESLIF_rule_newp(marpaESLIF_t *marpaESLIFp
     MARPAESLIF_INTERNAL_GET_SYMBOL_FROM_STACK(marpaESLIFp, rulep->exceptionp, symbolStackp, exceptioni);
     /* ... and make sure that there is only one RHS */
     if (nrhsl != 1) {
-      MARPAESLIF_ERRORF(marpaESLIFp, "At grammar level %d: There must be exactly one RHS, instead of %ld, before the '-' exception sign", grammarp->leveli, (unsigned long) nrhsl);
+      MARPAESLIF_ERRORF(marpaESLIFp, "At grammar level %d: Rule <%s>: There must be exactly one RHS, instead of %ld, before the '-' exception sign", grammarp->leveli, rulep->lhsp->descp->asciis, (unsigned long) nrhsl);
       goto err;
     }
   }
@@ -3294,16 +3294,19 @@ static inline marpaESLIF_rule_t *_marpaESLIF_rule_newp(marpaESLIF_t *marpaESLIFp
   /* ----------- Meta Identifier ------------ */
   rulep->idi = marpaWrapperGrammar_newRulei(grammarp->marpaWrapperGrammarStartp, &marpaWrapperGrammarRuleOption, lhsi, nrhsl, rhsip);
   if (rulep->idi < 0) {
+    MARPAESLIF_ERRORF(marpaESLIFp, "At grammar level %d: Rule <%s>: Creation failure", grammarp->leveli, rulep->lhsp->descp->asciis);
     goto err;
   }
 
   /* ---------------- Action ---------------- */
   if (actionp != NULL) {
     if (! _marpaESLIF_action_validb(marpaESLIFp, actionp)) {
+      MARPAESLIF_ERRORF(marpaESLIFp, "At grammar level %d: Rule <%s>: Invalid action", grammarp->leveli, rulep->lhsp->descp->asciis);
       goto err;
     }
     rulep->actionp = _marpaESLIF_action_clonep(marpaESLIFp, actionp);
     if (rulep->actionp == NULL) {
+      MARPAESLIF_ERRORF(marpaESLIFp, "At grammar level %d: Rule <%s>: Clone failure", grammarp->leveli, rulep->lhsp->descp->asciis);
       goto err;
     }
   }
