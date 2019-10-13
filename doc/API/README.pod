@@ -1724,6 +1724,18 @@ For the recognizer instance pointed by C<marpaESLIFRecognizerp>, returns a point
 
 This function should never fail, a false value indicates something fatal happened or the arguments are not correct.
 
+=head3 C<marpaESLIFRecognizer_discard_lastb>
+
+  short marpaESLIFRecognizer_discard_lastb(marpaESLIFRecognizer_t  *marpaESLIFRecognizerp,
+                                           char                   **lastsp,
+                                           size_t                  *lastlp);
+
+For the recognizer instance pointed by C<marpaESLIFRecognizerp>, returns a pointer to the last portion of input stream into the value pointed by C<lastsp>, when it is non-C<NULL>, and corresponding length in the value pointed by C<lastsp> when it is is non-C<NULL>, of the last successful discard. If C<*lastsp> is non-NULL, it is guaranteed that C<*lastlp> is greater than zero, and the block of memory is NUL-terminated, even if the additional NUL byte will not be included into C<lastlp>.
+
+For performance reasons, last discard data is available only if the recognizer interface has a true value for C<trackb>, I<and> if there is a discard event for the C<:discard> rule that matched.
+
+This function should never fail, a false value indicates something fatal happened or the arguments are not correct.
+
 =head3 C<marpaESLIFRecognizer_readb>
 
   short marpaESLIFRecognizer_readb(marpaESLIFRecognizer_t  *marpaESLIFRecognizerp,

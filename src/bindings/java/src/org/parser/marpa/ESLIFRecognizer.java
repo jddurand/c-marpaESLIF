@@ -56,6 +56,7 @@ public class ESLIFRecognizer {
 	private native byte[]            jniLexemeLastPause(String lexeme) throws ESLIFException;
 	private native byte[]            jniLexemeLastTry(String lexeme) throws ESLIFException;
 	private native byte[]            jniDiscardLastTry() throws ESLIFException;
+	private native byte[]            jniDiscardLast() throws ESLIFException;
 	private native boolean           jniIsEof() throws ESLIFException;
 	private native boolean           jniIsExhausted() throws ESLIFException;
 	private native void              jniSetExhaustedFlag(boolean flag) throws ESLIFException;
@@ -326,7 +327,7 @@ public class ESLIFRecognizer {
 	/**
 	 * Ask the recognizer the end-user data associated to last successful lexeme try.
 	 * This data will be an exact copy of the last bytes that matched for a given lexeme, where data is the internal representation of end-user data,
-	 * meaning that it may be UTF-8 sequence of bytes in case of character stream, and always an UTF-8 seauence of bytes in case of end-user data
+	 * meaning that it may be UTF-8 sequence of bytes in case of character stream, and always an UTF-8 sequence of bytes in case of end-user data
 	 * (end-user data representation is always the toString() result converted to UTF8).
 	 * 
 	 * @param lexeme the lexeme name
@@ -338,10 +339,9 @@ public class ESLIFRecognizer {
 	}
 
 	/**
-	 * Ask the recognizer the end-user data associated to last successful discard try.
-	 * This data will be an exact copy of the last bytes that matched for a given lexeme, where data is the internal representation of end-user data,
-	 * meaning that it may be UTF-8 sequence of bytes in case of character stream, and always an UTF-8 seauence of bytes in case of end-user data
-	 * (end-user data representation is always the toString() result converted to UTF8).
+	 * Ask the recognizer the bytes associated to last successful discard try.
+	 * This data will be an exact copy of the last bytes that matched for the latest :discard try,
+	 * meaning that it may be UTF-8 sequence of bytes in case of character stream.
 	 * 
 	 * @return an array of bytes
 	 * @throws ESLIFException if the interface failed
@@ -349,6 +349,22 @@ public class ESLIFRecognizer {
 	public synchronized byte[] discardLastTry() throws ESLIFException {
 		return jniDiscardLastTry();
 	}
+
+	/**
+	 * Ask the recognizer the bytes associated to last successful discard.
+	 * This data will be an exact copy of the last bytes that matched for the latest :discard,
+	 * meaning that it may be UTF-8 sequence of bytes in case of character stream.
+	 * 
+	 * For performance reasons, latest discard data is available only of the recognizer interface returned true for the isWithTrack method,
+	 * and if there an event associated to the :discard rule that matched.
+	 * 
+	 * @return an array of bytes
+	 * @throws ESLIFException if the interface failed
+	 */
+	public synchronized byte[] discardLast() throws ESLIFException {
+		return jniDiscardLast();
+	}
+
 
 	/**
 	 * This method is similar to the isEof()'s recognizer interface. Except that this is asking the question directly to the recognizer's

@@ -112,7 +112,8 @@ const static char *dsl = "\n"
   "# -------------------------\n"
   "# Unsignificant whitespaces\n"
   "# -------------------------\n"
-  ":discard ::= /[\\x{9}\\x{A}\\x{D}\\x{20}]+/\n"
+  ":discard    ::= whitespaces event => whitespaces$\n"
+  "whitespaces ::= /[\\x{9}\\x{A}\\x{D}\\x{20}]+/\n"
   "\n"
   "                   #######################################################\n"
   "                   # >>>>>>>>>>>>>>>>>> JSON Extensions <<<<<<<<<<<<<<<<<<\n"
@@ -126,7 +127,8 @@ const static char *dsl = "\n"
   "# --------------------------\n"
   "# Perl comment extension\n"
   "# --------------------------\n"
-  ":discard ::= /(?:(?:#)(?:[^\\n]*)(?:\\n|\\z))/u\n"
+  ":discard ::= perl_comment event => perl_comment$\n"
+  "perl_comment ::= /(?:(?:#)(?:[^\\n]*)(?:\\n|\\z))/u\n"
   "\n"
   "# --------------------------\n"
   "# C++ comment extension\n"
@@ -292,6 +294,8 @@ int main() {
   marpaESLIFValue_t           *marpaESLIFValuep = NULL;
   marpaESLIFValueOption_t      marpaESLIFValueOption;
   valueContext_t               valueContext;
+  char                        *lastDiscards;
+  size_t                       lastDiscardl;
 
   const static char           *inputs[] = {
     "{\n"
@@ -409,7 +413,7 @@ int main() {
     "[]",
     "{\"1\\u12343\":2}",
     "{\"test\":null}",
-    "987654321"
+    "987654321 # Last discarded data is a perl comment"
   };
 
   genericLoggerp = GENERICLOGGER_NEW(GENERICLOGGER_LOGLEVEL_DEBUG);
@@ -457,7 +461,7 @@ int main() {
     marpaESLIFRecognizerOption.disableThresholdb = 0;
     marpaESLIFRecognizerOption.exhaustedb        = 0;
     marpaESLIFRecognizerOption.newlineb          = 1;
-    marpaESLIFRecognizerOption.trackb            = 0;
+    marpaESLIFRecognizerOption.trackb            = 1;
     marpaESLIFRecognizerOption.bufsizl           = 0;
     marpaESLIFRecognizerOption.buftriggerperci   = 50;
     marpaESLIFRecognizerOption.bufaddperci       = 50;
@@ -499,6 +503,14 @@ int main() {
       }
     }
 
+    /* Get last discarded value (note: trackb was on) */
+    if (! marpaESLIFRecognizer_discard_lastb(marpaESLIFRecognizerp, &lastDiscards, &lastDiscardl)) {
+      goto err;
+    }
+    if ((lastDiscards != NULL) && (lastDiscardl > 0)) {
+      GENERICLOGGER_INFOF(genericLoggerp, "Last discarded data: <%s>", lastDiscards);
+    }
+    
     /* Call for valuation, letting marpaESLIF free the result */
     marpaESLIFValueOption.userDatavp            = &valueContext; /* User specific context */
     marpaESLIFValueOption.ruleActionResolverp   = NULL; /* Will return the function doing the wanted rule action */

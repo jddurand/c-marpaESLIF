@@ -462,8 +462,9 @@ static inline short                  _marpaESLIFRecognizer_discard_tryb(marpaESL
 static inline void                   _marpaESLIFRecognizer_alternativeStackSymbol_freev(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, genericStack_t *alternativeStackSymbolp);
 static inline short                  _marpaESLIFRecognizer_alternativeStackSymbol_setb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, genericStack_t *alternativeStackSymbolp, marpaESLIF_alternative_t *alternativep, int indicei);
 static inline short                  _marpaESLIFRecognizer_alternative_and_valueb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIF_alternative_t *alternativep, int valuei);
-static inline short                  _marpaESLIFRecognizer_push_eventb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFEventType_t type, marpaESLIFSymbol_t *symbolp, char *events);
+static inline short                  _marpaESLIFRecognizer_push_eventb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFEventType_t type, marpaESLIFSymbol_t *symbolp, char *events, marpaESLIFValueResultArray_t *discardArrayp);
 static inline short                  _marpaESLIFRecognizer_last_lexemeDatab(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, char *lexemes, char **bytesp, size_t *bytelp, marpaESLIF_lexeme_data_t **lexemeDatapp, short forPauseb);
+static inline short                  _marpaESLIFRecognizer_discard_lastb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, char **bytesp, size_t *bytelp);
 static inline short                  _marpaESLIFRecognizer_set_lexemeDatab(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIF_grammar_t *grammarp, marpaESLIF_symbol_t *symbolp, char *xsbytes, size_t bytel, marpaESLIF_lexeme_data_t **lexemeDatapp);
 static inline short                  _marpaESLIFRecognizer_set_pauseb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIF_grammar_t *grammarp, marpaESLIF_symbol_t *symbolp, char *bytes, size_t bytel);
 static inline short                  _marpaESLIFRecognizer_set_tryb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIF_grammar_t *grammarp, marpaESLIF_symbol_t *symbolp, char *bytes, size_t bytel);
@@ -6501,7 +6502,7 @@ static inline short _marpaESLIFRecognizer_resume_oneb(marpaESLIFRecognizer_t *ma
         }
         if ((marpaESLIFRecognizerp->discardEvents != NULL) && (marpaESLIFRecognizerp->discardSymbolp != NULL)) {
           /* Push discard event */
-          if (! _marpaESLIFRecognizer_push_eventb(marpaESLIFRecognizerp, MARPAESLIF_EVENTTYPE_DISCARD, marpaESLIFRecognizerp->discardSymbolp, marpaESLIFRecognizerp->discardEvents)) {
+          if (! _marpaESLIFRecognizer_push_eventb(marpaESLIFRecognizerp, MARPAESLIF_EVENTTYPE_DISCARD, marpaESLIFRecognizerp->discardSymbolp, marpaESLIFRecognizerp->discardEvents, &(marpaESLIFValueResult.u.a))) {
             goto err;
           }
         }
@@ -6540,7 +6541,7 @@ static inline short _marpaESLIFRecognizer_resume_oneb(marpaESLIFRecognizer_t *ma
         }
         if (! isExhaustedb) {
           /* Fake an exhaustion event */
-          if (! _marpaESLIFRecognizer_push_eventb(marpaESLIFRecognizerp, MARPAESLIF_EVENTTYPE_EXHAUSTED, NULL /* symbolp */, MARPAESLIF_EVENTTYPE_EXHAUSTED_NAME)) {
+          if (! _marpaESLIFRecognizer_push_eventb(marpaESLIFRecognizerp, MARPAESLIF_EVENTTYPE_EXHAUSTED, NULL /* symbolp */, MARPAESLIF_EVENTTYPE_EXHAUSTED_NAME, NULL /* discardARrayp */)) {
             goto err;
           }
         }
@@ -6687,7 +6688,7 @@ static inline short _marpaESLIFRecognizer_resume_oneb(marpaESLIFRecognizer_t *ma
         }
         if ((marpaESLIFRecognizerp->discardEvents != NULL) && (marpaESLIFRecognizerp->discardSymbolp != NULL)) {
           /* Push discard event */
-          if (! _marpaESLIFRecognizer_push_eventb(marpaESLIFRecognizerp, MARPAESLIF_EVENTTYPE_DISCARD, marpaESLIFRecognizerp->discardSymbolp, marpaESLIFRecognizerp->discardEvents)) {
+          if (! _marpaESLIFRecognizer_push_eventb(marpaESLIFRecognizerp, MARPAESLIF_EVENTTYPE_DISCARD, marpaESLIFRecognizerp->discardSymbolp, marpaESLIFRecognizerp->discardEvents, &(marpaESLIFValueResult.u.a))) {
             goto err;
           }
         }
@@ -6731,7 +6732,7 @@ static inline short _marpaESLIFRecognizer_resume_oneb(marpaESLIFRecognizer_t *ma
       if (! _marpaESLIFRecognizer_set_pauseb(marpaESLIFRecognizerp, grammarp, symbolp, alternativep->marpaESLIFValueResult.u.a.p, alternativep->marpaESLIFValueResult.u.a.sizel)) {
         goto err;
       }
-      if (! _marpaESLIFRecognizer_push_eventb(marpaESLIFRecognizerp, MARPAESLIF_EVENTTYPE_BEFORE, symbolp, symbolp->eventBefores)) {
+      if (! _marpaESLIFRecognizer_push_eventb(marpaESLIFRecognizerp, MARPAESLIF_EVENTTYPE_BEFORE, symbolp, symbolp->eventBefores, NULL /* discardArrayp */)) {
         goto err;
       }
     }
@@ -7259,7 +7260,7 @@ static inline short _marpaESLIFRecognizer_lexeme_completeb(marpaESLIFRecognizer_
       if (! _marpaESLIFRecognizer_set_pauseb(marpaESLIFRecognizerp, grammarp, symbolp, inputs, lengthl)) {
         goto err;
       }
-      if (! _marpaESLIFRecognizer_push_eventb(marpaESLIFRecognizerp, MARPAESLIF_EVENTTYPE_AFTER, symbolp, symbolp->eventAfters)) {
+      if (! _marpaESLIFRecognizer_push_eventb(marpaESLIFRecognizerp, MARPAESLIF_EVENTTYPE_AFTER, symbolp, symbolp->eventAfters, NULL /* discardArrayp */)) {
         goto err;
       }
     }
@@ -7979,7 +7980,7 @@ short marpaESLIFRecognizer_eventb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp,
 }
 
 /*****************************************************************************/
- static inline short _marpaESLIFRecognizer_push_eventb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFEventType_t type, marpaESLIF_symbol_t *symbolp, char *events)
+ static inline short _marpaESLIFRecognizer_push_eventb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFEventType_t type, marpaESLIF_symbol_t *symbolp, char *events, marpaESLIFValueResultArray_t *discardArrayp)
 /*****************************************************************************/
 {
   static const char *funcs        = "_marpaESLIFRecognizer_push_eventb";
@@ -7987,6 +7988,7 @@ short marpaESLIFRecognizer_eventb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp,
   size_t             eventArrayl;
   size_t             eventArraySizel;
   marpaESLIFEvent_t  eventArray;
+  char              *tmpp;
   short              rcb;
 
   MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_INC;
@@ -8032,6 +8034,29 @@ short marpaESLIFRecognizer_eventb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp,
       }
       goto no_push;
     }
+  }
+
+  /* Hook for MARPAESLIF_EVENTTYPE_DISCARD: the associated symbol is NOT pushed to the grammar */
+  /* because a discard is a transversal thing. So if the end user wants to retreive the last */
+  /* discarded data, when trackb is on, he cannot. */
+  if ((discardArrayp != NULL) && (discardArrayp->p != NULL) && (discardArrayp->sizel > 0)) {
+    if (marpaESLIFRecognizerp->lastDiscards == NULL) {
+      marpaESLIFRecognizerp->lastDiscards = (char *) malloc(discardArrayp->sizel + 1); /* Hiden NUL byte */
+      if (marpaESLIFRecognizerp->lastDiscards == NULL) {
+        MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "malloc failure, %s", strerror(errno));
+        goto err;
+      }
+    } else if (marpaESLIFRecognizerp->lastDiscardl < discardArrayp->sizel) {
+      tmpp = (char *) realloc(marpaESLIFRecognizerp->lastDiscards, discardArrayp->sizel + 1); /* Hiden NUL byte */
+      if (tmpp == NULL) {
+        MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "malloc failure, %s", strerror(errno));
+        goto err;
+      }
+      marpaESLIFRecognizerp->lastDiscards = tmpp;
+    }
+    memcpy(marpaESLIFRecognizerp->lastDiscards, discardArrayp->p, discardArrayp->sizel);
+    marpaESLIFRecognizerp->lastDiscardl = discardArrayp->sizel;
+    marpaESLIFRecognizerp->lastDiscards[marpaESLIFRecognizerp->lastDiscardl] = '\0';
   }
 
   /* These statements have a cost - execute them only if we really push the event */
@@ -8279,7 +8304,7 @@ static inline short _marpaESLIFRecognizer_push_grammar_eventsb(marpaESLIFRecogni
         MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "%s: unsupported event type %d", (symbolp != NULL) ? symbolp->descp->asciis : "??", grammarEventp[i].eventType);
         break;
       }
-      if (! _marpaESLIFRecognizer_push_eventb(marpaESLIFRecognizerp, type, symbolp, events)) {
+      if (! _marpaESLIFRecognizer_push_eventb(marpaESLIFRecognizerp, type, symbolp, events, NULL /* discardArrayp */)) {
         goto err;
       }
     }
@@ -8292,7 +8317,7 @@ static inline short _marpaESLIFRecognizer_push_grammar_eventsb(marpaESLIFRecogni
       goto err;
     }
     if (isExhaustedb) {
-      if (! _marpaESLIFRecognizer_push_eventb(marpaESLIFRecognizerp, MARPAESLIF_EVENTTYPE_EXHAUSTED, NULL /* symbolp */, MARPAESLIF_EVENTTYPE_EXHAUSTED_NAME)) {
+      if (! _marpaESLIFRecognizer_push_eventb(marpaESLIFRecognizerp, MARPAESLIF_EVENTTYPE_EXHAUSTED, NULL /* symbolp */, MARPAESLIF_EVENTTYPE_EXHAUSTED_NAME, NULL /* discardArrayp */)) {
         goto err;
       }
       /* Force discard of remaining data */
@@ -8359,7 +8384,7 @@ static inline short _marpaESLIFRecognizer_push_grammar_eventsb(marpaESLIFRecogni
           /* If there is an event, push it */
           if ((marpaESLIFRecognizerp->discardEvents != NULL) && (marpaESLIFRecognizerp->discardSymbolp != NULL)) {
             /* Push discard event */
-            if (! _marpaESLIFRecognizer_push_eventb(marpaESLIFRecognizerp, MARPAESLIF_EVENTTYPE_DISCARD, marpaESLIFRecognizerp->discardSymbolp, marpaESLIFRecognizerp->discardEvents)) {
+            if (! _marpaESLIFRecognizer_push_eventb(marpaESLIFRecognizerp, MARPAESLIF_EVENTTYPE_DISCARD, marpaESLIFRecognizerp->discardSymbolp, marpaESLIFRecognizerp->discardEvents, &(marpaESLIFValueResult.u.a))) {
               goto err;
             }
           }
@@ -8584,6 +8609,8 @@ static inline marpaESLIFRecognizer_t *_marpaESLIFRecognizer_newp(marpaESLIFGramm
   marpaESLIFRecognizerp->afterPtrHashp                   = NULL;
   marpaESLIFRecognizerp->nSymbolPristinel                = 0;
   marpaESLIFRecognizerp->symbolArrayPristinep            = NULL;
+  marpaESLIFRecognizerp->lastDiscardl                    = 0;
+  marpaESLIFRecognizerp->lastDiscards                    = NULL;
 
   marpaWrapperRecognizerOption.genericLoggerp            = silentb ? NULL : marpaESLIFp->marpaESLIFOption.genericLoggerp;
   marpaWrapperRecognizerOption.disableThresholdb         = marpaESLIFRecognizerOptionp->disableThresholdb;
@@ -14882,7 +14909,7 @@ static inline short _marpaESLIFRecognizer_last_lexemeDatab(marpaESLIFRecognizer_
 
   if (marpaESLIFRecognizerp == NULL) {
     errno = EINVAL;
-    return 0;
+    goto err;
   }
 
   marpaESLIFp        = marpaESLIFRecognizerp->marpaESLIFp;
@@ -14940,6 +14967,34 @@ static inline short _marpaESLIFRecognizer_last_lexemeDatab(marpaESLIFRecognizer_
 }
 
 /*****************************************************************************/
+static inline short _marpaESLIFRecognizer_discard_lastb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, char **bytesp, size_t *bytelp)
+/*****************************************************************************/
+{
+  short rcb;
+
+  if (marpaESLIFRecognizerp == NULL) {
+    errno = EINVAL;
+    goto err;
+  }
+
+  if (bytesp != NULL) {
+    *bytesp = marpaESLIFRecognizerp->lastDiscards;
+  }
+  if (bytelp != NULL) {
+    *bytelp = marpaESLIFRecognizerp->lastDiscardl;
+  }
+
+  rcb = 1;
+  goto done;
+
+ err:
+  rcb = 0;
+
+ done:
+  return rcb;
+}
+
+/*****************************************************************************/
 short marpaESLIFRecognizer_lexeme_last_pauseb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, char *lexemes, char **pausesp, size_t *pauselp)
 /*****************************************************************************/
 {
@@ -14973,6 +15028,18 @@ short marpaESLIFRecognizer_discard_last_tryb(marpaESLIFRecognizer_t *marpaESLIFR
   }
 
   return _marpaESLIFRecognizer_last_lexemeDatab(marpaESLIFRecognizerp, ":discard", trysp, trylp, marpaESLIFRecognizerp->lastTrypp, 0 /* forPauseb */);
+}
+
+/*****************************************************************************/
+short marpaESLIFRecognizer_discard_lastb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, char **trysp, size_t *trylp)
+/*****************************************************************************/
+{
+  if (marpaESLIFRecognizerp == NULL) {
+    errno = EINVAL;
+    return 0;
+  }
+
+  return _marpaESLIFRecognizer_discard_lastb(marpaESLIFRecognizerp, trysp, trylp);
 }
 
 /*****************************************************************************/
@@ -15688,6 +15755,9 @@ static inline void _marpaESLIFRecognizer_freev(marpaESLIFRecognizer_t *marpaESLI
   }
   if (marpaESLIFRecognizerp->beforePtrStackp != NULL) {
     GENERICSTACK_RESET(marpaESLIFRecognizerp->beforePtrStackp);
+  }
+  if (marpaESLIFRecognizerp->lastDiscards != NULL) {
+    free(marpaESLIFRecognizerp->lastDiscards);
   }
 
   MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "return");

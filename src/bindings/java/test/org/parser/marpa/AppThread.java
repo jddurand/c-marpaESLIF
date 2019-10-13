@@ -209,6 +209,11 @@ public class AppThread implements Runnable {
 						showLastCompletion("Loop No " + j, eslifLogger, eslifRecognizer, "Number", string);
 						j++;
 					}
+					byte[] discardLast = eslifRecognizer.discardLast();
+					if (discardLast != null) {
+						String discardLastString = new String(discardLast, "UTF-8");
+						eslifLogger.debug("... Latest discarded string is \"" + discardLastString + "\"");
+					}
 					try {
 						AppValue eslifAppValue = new AppValue();
 						eslifLogger.info("Testing value() on " + string);

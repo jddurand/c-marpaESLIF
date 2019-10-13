@@ -96,6 +96,7 @@ JNIEXPORT jbyteArray   JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniInput   
 JNIEXPORT jbyteArray   JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniLexemeLastPause        (JNIEnv *envp, jobject eslifRecognizerp, jstring lexemep);
 JNIEXPORT jbyteArray   JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniLexemeLastTry          (JNIEnv *envp, jobject eslifRecognizerp, jstring lexemep);
 JNIEXPORT jbyteArray   JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniDiscardLastTry         (JNIEnv *envp, jobject eslifRecognizerp);
+JNIEXPORT jbyteArray   JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniDiscardLast            (JNIEnv *envp, jobject eslifRecognizerp);
 JNIEXPORT jobjectArray JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniEvent                  (JNIEnv *envp, jobject eslifRecognizerp);
 JNIEXPORT jlong        JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniLastCompletedOffset    (JNIEnv *envp, jobject eslifRecognizerp, jstring namep);
 JNIEXPORT jlong        JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniLastCompletedLength    (JNIEnv *envp, jobject eslifRecognizerp, jstring namep);
@@ -3583,6 +3584,54 @@ JNIEXPORT jbyteArray JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniDiscardLas
       goto err;
     }
     (*envp)->SetByteArrayRegion(envp, byteArrayp, (jsize) 0, (jsize) tryl, (jbyte *) trys);
+    if (HAVEEXCEPTION(envp)) {
+      goto err;
+    }
+  }
+
+  goto done;
+
+ err:
+  if (envp != NULL) {
+    if (byteArrayp != NULL) {
+      (*envp)->DeleteLocalRef(envp, byteArrayp);
+    }
+  }
+  byteArrayp = NULL;
+
+ done:
+  return byteArrayp;
+}
+
+/*****************************************************************************/
+JNIEXPORT jbyteArray JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniDiscardLast(JNIEnv *envp, jobject eslifRecognizerp)
+/*****************************************************************************/
+{
+  static const char      *funcs = "Java_org_parser_marpa_ESLIFRecognizer_jniDiscardLast";
+  marpaESLIFRecognizer_t *marpaESLIFRecognizerp;
+  jbyteArray              byteArrayp = NULL;
+  char                   *lasts;
+  size_t                  lastl;
+
+  if (! ESLIFRecognizer_contextb(envp, eslifRecognizerp, eslifRecognizerp, MARPAESLIF_ESLIFRECOGNIZER_CLASS_getLoggerInterfacep_METHODP,
+                                 NULL /* genericLoggerpp */,
+                                 NULL /* marpaESLIFpp */,
+                                 NULL /* marpaESLIFGrammarpp */,
+                                 &marpaESLIFRecognizerp,
+                                 NULL /* marpaESLIFRecognizerContextpp */)) {
+    goto err;
+  }
+
+  if (!  marpaESLIFRecognizer_discard_lastb(marpaESLIFRecognizerp, &lasts, &lastl)) {
+    RAISEEXCEPTION(envp, "marpaESLIFRecognizer_discard_lastb failure");
+  }
+
+  if ((lasts != NULL) && (lastl > 0)) {
+    byteArrayp = (*envp)->NewByteArray(envp, (jsize) lastl);
+    if (byteArrayp == NULL) {
+      goto err;
+    }
+    (*envp)->SetByteArrayRegion(envp, byteArrayp, (jsize) 0, (jsize) lastl, (jbyte *) lasts);
     if (HAVEEXCEPTION(envp)) {
       goto err;
     }

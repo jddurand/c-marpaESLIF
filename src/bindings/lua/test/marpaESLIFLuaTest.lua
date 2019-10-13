@@ -651,6 +651,8 @@ for _, localstring in pairs(strings) do
          showLastCompletion(string.format("Loop No %d", j), eslifRecognizer, "Number", localstring)
          j = j + 1
       end
+      local discardLast = eslifRecognizer:discardLast()
+      logger:infof("Last discard: %s", discardLast)
       try {
          function()
             logger:infof("Testing value() on %s", localstring)
