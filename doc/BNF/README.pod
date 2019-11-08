@@ -415,9 +415,9 @@ Constraints are:
 
 =over
 
-=item Both C<RHS1> and <RHS2> must be lexemes
+=item Both C<RHS1> and C<RHS2> must be lexemes
 
-=item Both C<RHS1> and <RHS2> must not contain sub-lexemes
+=item Both C<RHS1> and C<RHS2> must not contain sub-lexemes
 
 =back
 
