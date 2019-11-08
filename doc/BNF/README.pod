@@ -421,7 +421,7 @@ Constraints are:
 
 =back
 
-This mean that the C<LHS> of an exception statement can never be nullable. You must add explicitely declare so if this is wanted, i.e.:
+This mean that the C<LHS> of an exception statement can never be nullable. You must explicitely declare so if this is wanted, i.e.:
 
   LHS ::=
 
