@@ -23,7 +23,7 @@ MACRO (FINDVACOPY)
         MESSAGE(STATUS "Looking for ${KEYWORD}")
         TRY_COMPILE (C_HAS_${KEYWORD} ${CMAKE_CURRENT_BINARY_DIR}
           ${source_dir}/va_copy.c
-          COMPILE_DEFINITIONS "-DC_VA_COPY=${KEYWORD} -DHAVE_STDARG_H=${_HAVE_STDARG_H}")
+          COMPILE_DEFINITIONS -DC_VA_COPY=${KEYWORD} -DHAVE_STDARG_H=${_HAVE_STDARG_H})
         IF (C_HAS_${KEYWORD})
           MESSAGE(STATUS "Looking for ${KEYWORD} - found")
           SET (_C_VA_COPY ${KEYWORD})

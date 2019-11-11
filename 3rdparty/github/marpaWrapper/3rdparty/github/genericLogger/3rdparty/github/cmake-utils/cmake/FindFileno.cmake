@@ -23,7 +23,7 @@ MACRO (FINDFILENO)
         MESSAGE(STATUS "Looking for ${KEYWORD}")
         TRY_COMPILE (C_HAS_${KEYWORD} ${CMAKE_CURRENT_BINARY_DIR}
           ${source_dir}/fileno.c
-          COMPILE_DEFINITIONS "-DC_FILENO=${KEYWORD} -DHAVE_STDIO_H=${_HAVE_STDIO_H}")
+          COMPILE_DEFINITIONS -DC_FILENO=${KEYWORD} -DHAVE_STDIO_H=${_HAVE_STDIO_H})
         IF (C_HAS_${KEYWORD})
           MESSAGE(STATUS "Looking for ${KEYWORD} - found")
           SET (_C_FILENO ${KEYWORD})
