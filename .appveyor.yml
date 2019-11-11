@@ -122,7 +122,7 @@ artifacts:
 deploy:
   provider: GitHub
   auth_token:
-    secure: "bmcVUsidG/IGa3gmGchH9xR+TpPT6p3FN/vWxgBU2jP4ymEbr4555cTNQuztbVvl"
+    secure: "Z4xhplTHN8iqMJJQSho73tcUnKrNiP38Kh02PFom4rNxjqkHhIdQRfnrg36EqjB3"
   artifacts: MyArtifact
   draft: false
   prerelease: false
