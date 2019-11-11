@@ -1,0 +1,131 @@
+shallow_clone: true  # For GitHub abd BitBucket
+clone_depth: 100     # For other git providers
+
+# -------------------------------------------------------------------------------------------------------------------
+# The important thing is to know what AppVeyor images hosts what. As of 11-oct-2019:
+#
+#  Image              "Visual Studio 2013"     "Visual Studio 2015"         "Visual Studio 2017" "Visual Studio 2019"
+#  CMake               3.12.2                   3.15.5                       3.15.5               3.15.5
+#  Visual C++          2008/2010/2012/2013      2008/2010/2012/2013/2015     2015/2017            2019
+#
+# Note that 2010 x64 will not have redistributables because they are absent from AppVeyor image.
+# -------------------------------------------------------------------------------------------------------------------
+#
+environment:
+  upload_token:
+    secure: 
+  matrix:
+   - _CC: VS2019
+     _ARCH: x86
+     _GENERATOR: "NMake Makefiles"
+     APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
+   - _CC: VS2019
+     _ARCH: x64
+     _GENERATOR: "NMake Makefiles"
+     APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
+   - _CC: VS2017
+     _ARCH: x86
+     _GENERATOR: "NMake Makefiles"
+     APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
+   - _CC: VS2017
+     _ARCH: x64
+     _GENERATOR: "NMake Makefiles"
+     APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
+   - _CC: VS2015
+     _ARCH: x86
+     _GENERATOR: "NMake Makefiles"
+     APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
+   - _CC: VS2015
+     _ARCH: x64
+     _GENERATOR: "NMake Makefiles"
+     APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
+   - _CC: VS2013
+     _ARCH: x86
+     _GENERATOR: "NMake Makefiles"
+     APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2013
+   - _CC: VS2013
+     _ARCH: x64
+     _GENERATOR: "NMake Makefiles"
+     APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2013
+   - _CC: VS2012
+     _ARCH: x86
+     _GENERATOR: "NMake Makefiles"
+     APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2013
+   - _CC: VS2012
+     _ARCH: x64
+     _GENERATOR: "NMake Makefiles"
+     APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2013
+   - _CC: VS2010
+     _ARCH: x86
+     _GENERATOR: "NMake Makefiles"
+     APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2013
+   - _CC: VS2010
+     _ARCH: x64
+     _GENERATOR: "NMake Makefiles"
+     APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2013
+   - _CC: VS2008
+     _ARCH: x86
+     _GENERATOR: "NMake Makefiles"
+     APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2013
+   - _CC: VS2008
+     _ARCH: x64
+     _GENERATOR: "NMake Makefiles"
+     APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2013
+
+build:
+  verbosity: detailed
+  parallel: true
+
+clone_folder: C:\projects\%APPVEYOR_PROJECT_NAME%
+
+# matrix:
+#   fast_finish: true # Immediately finish build once one of the jobs fails
+
+init:
+  - IF "%_CC%" == "VS2019" IF "%_GENERATOR%"=="NMake Makefiles" IF "%_ARCH%" == "x86" call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvars32.bat"
+  - IF "%_CC%" == "VS2019" IF "%_GENERATOR%"=="NMake Makefiles" IF "%_ARCH%" == "x64" call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvars64.bat"
+  - IF "%_CC%" == "VS2017" IF "%_GENERATOR%"=="NMake Makefiles" IF "%_ARCH%" == "x86" call "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Auxiliary\Build\vcvars32.bat"
+  - IF "%_CC%" == "VS2017" IF "%_GENERATOR%"=="NMake Makefiles" IF "%_ARCH%" == "x64" call "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Auxiliary\Build\vcvars64.bat"
+  - IF "%_CC%" == "VS2015" IF "%_GENERATOR%"=="NMake Makefiles" IF "%_ARCH%" == "x86" call "C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\vcvarsall.bat" x86
+  - IF "%_CC%" == "VS2015" IF "%_GENERATOR%"=="NMake Makefiles" IF "%_ARCH%" == "x64" call "C:\Program Files\Microsoft SDKs\Windows\v7.1\Bin\SetEnv.cmd" /x64
+  - IF "%_CC%" == "VS2015" IF "%_GENERATOR%"=="NMake Makefiles" IF "%_ARCH%" == "x64" call "C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\vcvarsall.bat" x86_amd64
+  - IF "%_CC%" == "VS2013" IF "%_GENERATOR%"=="NMake Makefiles" IF "%_ARCH%" == "x86" call "C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\vcvarsall.bat" x86
+  - IF "%_CC%" == "VS2013" IF "%_GENERATOR%"=="NMake Makefiles" IF "%_ARCH%" == "x64" call "C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\vcvarsall.bat" x86_amd64
+  - IF "%_CC%" == "VS2012" IF "%_GENERATOR%"=="NMake Makefiles" IF "%_ARCH%" == "x86" call "C:\Program Files (x86)\Microsoft Visual Studio 11.0\VC\vcvarsall.bat" x86
+  - IF "%_CC%" == "VS2012" IF "%_GENERATOR%"=="NMake Makefiles" IF "%_ARCH%" == "x64" call "C:\Program Files (x86)\Microsoft Visual Studio 11.0\VC\vcvarsall.bat" x86_amd64
+  - IF "%_CC%" == "VS2010" IF "%_GENERATOR%"=="NMake Makefiles" IF "%_ARCH%" == "x86" call "C:\Program Files (x86)\Microsoft Visual Studio 10.0\VC\bin\vcvars32.bat"
+  - IF "%_CC%" == "VS2010" IF "%_GENERATOR%"=="NMake Makefiles" IF "%_ARCH%" == "x64" call "C:\Program Files\Microsoft SDKs\Windows\v7.1\Bin\SetEnv.cmd" /x64 /release
+  - IF "%_CC%" == "VS2008" IF "%_GENERATOR%"=="NMake Makefiles" IF "%_ARCH%" == "x86" call "C:\Program Files (x86)\Microsoft Visual Studio 9.0\VC\vcvarsall.bat" x86
+  - IF "%_CC%" == "VS2008" IF "%_GENERATOR%"=="NMake Makefiles" IF "%_ARCH%" == "x64" call "C:\Program Files (x86)\Microsoft Visual Studio 9.0\VC\bin\vcvarsx86_amd64.bat"
+  - ECHO %PATH%
+
+build_script:
+  - cd C:\projects\%APPVEYOR_PROJECT_NAME%
+  - cmake -Wno-dev -G "%_GENERATOR%" -DCMAKE_BUILD_TYPE=Release -DALL_IN_ONE=TRUE .
+  - nmake
+
+test_script:
+  - cd C:\projects\%APPVEYOR_PROJECT_NAME%
+  - nmake check
+  - nmake install
+  - nmake pack
+  - for %%a in ("*.exe") do ren "%%~a" "%%~Na-%_CC%%%~Xa"
+
+on_failure:
+  - ps: if(Test-Path C:\projects\%APPVEYOR_PROJECT_NAME%\CMakeFiles\CMakeOutput.log) { cat C:\projects\%APPVEYOR_PROJECT_NAME%\CMakeFiles\CMakeOutput.log }
+  - ps: if(Test-Path C:\projects\%APPVEYOR_PROJECT_NAME%\CMakeFiles\CMakeError.log) { cat C:\projects\%APPVEYOR_PROJECT_NAME%\CMakeFiles\CMakeError.log }
+
+artifacts:
+  - path: "*.exe"
+    name: MyArtifact
+
+deploy:
+  provider: GitHub
+  auth_token:
+    secure: "fEAB3xYZ5qzMzndC986dN2rtp1tEAXP76gpp7qWpzzwVuWDDuWcLUH7fPNzDyVeb"
+  artifacts: MyArtifact
+  draft: false
+  prerelease: false
+  tag: $(APPVEYOR_REPO_TAG_NAME)
+  on:
+    APPVEYOR_REPO_TAG: true
