@@ -115,8 +115,10 @@ int main(int argc, char **argv)
   if (rci == 0) {
     /* We will work on a cloned grammar */
     genericLogger_t *tmpLoggerp = GENERICLOGGER_NEW(GENERICLOGGER_LOGLEVEL_TRACE);
+    marpaWrapperGrammar_t *marpaWrapperGrammarClonep;
+
     marpaWrapperGrammarCloneOption.userDatavp = (void *) tmpLoggerp;
-    marpaWrapperGrammar_t *marpaWrapperGrammarClonep = marpaWrapperGrammar_clonep(marpaWrapperGrammarp, &marpaWrapperGrammarCloneOption);
+    marpaWrapperGrammarClonep = marpaWrapperGrammar_clonep(marpaWrapperGrammarp, &marpaWrapperGrammarCloneOption);
     GENERICLOGGER_FREE(tmpLoggerp);
     if (marpaWrapperGrammarClonep == NULL) {
       rci = 1;
