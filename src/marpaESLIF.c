@@ -6902,7 +6902,7 @@ static inline short _marpaESLIF_recognizer_start_is_completeb(marpaESLIFRecogniz
   marpaESLIFGrammar_t              *marpaESLIFGrammarp      = marpaESLIFRecognizerp->marpaESLIFGrammarp;
   marpaESLIF_grammar_t             *grammarp                = marpaESLIFGrammarp->grammarp;
   genericStack_t                   *ruleStackp              = grammarp->ruleStackp;
-  marpaWrapperRecognizer_t         *marpaWrapperRecognizerp = marpaESLIFRecognizerp->marpaWrapperRecognizerp;;
+  marpaWrapperRecognizer_t         *marpaWrapperRecognizerp = marpaESLIFRecognizerp->marpaWrapperRecognizerp;
   marpaESLIF_rule_t                *rulep;
   short                             completeb;
   short                             rcb;
@@ -8483,7 +8483,7 @@ static inline short _marpaESLIF_stream_initb(marpaESLIFRecognizer_t *marpaESLIFR
   marpaESLIFRecognizerp->_marpaESLIF_stream.inputs               = NULL;
   marpaESLIFRecognizerp->_marpaESLIF_stream.inputl               = 0;
   marpaESLIFRecognizerp->_marpaESLIF_stream.bufsizl              = bufsizl;
-  marpaESLIFRecognizerp->_marpaESLIF_stream.buftriggerl          = (bufsizl * (100 + buftriggerperci)) / 100;;
+  marpaESLIFRecognizerp->_marpaESLIF_stream.buftriggerl          = (bufsizl * (100 + buftriggerperci)) / 100;
   marpaESLIFRecognizerp->_marpaESLIF_stream.nextReadIsFirstReadb = 1;
   marpaESLIFRecognizerp->_marpaESLIF_stream.noAnchorIsOkb        = eofb;
   marpaESLIFRecognizerp->_marpaESLIF_stream.encodings            = NULL;
@@ -11633,7 +11633,7 @@ static inline short _marpaESLIFRecognizer_createBeforeStateb(marpaESLIFRecognize
 
     marpaESLIFGrammarp  = marpaESLIFRecognizerp->marpaESLIFGrammarp;
     grammarp            = marpaESLIFGrammarp->grammarp;
-    symbolStackp        = grammarp->symbolStackp;;
+    symbolStackp        = grammarp->symbolStackp;
 
     beforeEventStatebp = (short *) malloc(sizeof(short) * GENERICSTACK_USED(symbolStackp));
     if (beforeEventStatebp == NULL) {
@@ -11682,7 +11682,7 @@ static inline short _marpaESLIFRecognizer_createAfterStateb(marpaESLIFRecognizer
 
     marpaESLIFGrammarp  = marpaESLIFRecognizerp->marpaESLIFGrammarp;
     grammarp            = marpaESLIFGrammarp->grammarp;
-    symbolStackp        = grammarp->symbolStackp;;
+    symbolStackp        = grammarp->symbolStackp;
 
     afterEventStatebp = (short *) malloc(sizeof(short) * GENERICSTACK_USED(symbolStackp));
     if (afterEventStatebp == NULL) {
@@ -11732,7 +11732,7 @@ static inline short _marpaESLIFRecognizer_createLexemeDatab(marpaESLIFRecognizer
 
     marpaESLIFGrammarp  = marpaESLIFRecognizerp->marpaESLIFGrammarp;
     grammarp            = marpaESLIFGrammarp->grammarp;
-    symbolStackp        = grammarp->symbolStackp;;
+    symbolStackp        = grammarp->symbolStackp;
 
     if (marpaESLIFp->NULLisZeroBytesb) {
       lexemeDatapp = (marpaESLIF_lexeme_data_t **) calloc(GENERICSTACK_USED(symbolStackp), sizeof(marpaESLIF_lexeme_data_t *));
@@ -14497,7 +14497,7 @@ static short _marpaESLIF_rule_action___astb(void *userDatavp, marpaESLIFValue_t 
   keyp->u.s.freeCallbackp  = NULL;
   keyp->u.s.shallowb       = 1;
   keyp->u.s.sizel          = symbolp->descp->bytel;
-  keyp->u.s.encodingasciis = symbolp->descp->encodingasciis;;
+  keyp->u.s.encodingasciis = symbolp->descp->encodingasciis;
 
   *valuep = marpaESLIFValueResultUndef;
 
@@ -15900,8 +15900,8 @@ static inline short _marpaESLIFRecognizer_putToCacheb(marpaESLIFRecognizer_t *ma
 /*****************************************************************************/
 {
   static const char         *funcs                       = "_marpaESLIFRecognizer_putToCacheb";
-  marpaESLIFRecognizer_t    *marpaESLIFRecognizerParentp = marpaESLIFRecognizerp->parentRecognizerp;;
-  marpaESLIF_stream_t       *marpaESLIF_streamp          = marpaESLIFRecognizerp->marpaESLIF_streamp;;
+  marpaESLIFRecognizer_t    *marpaESLIFRecognizerParentp = marpaESLIFRecognizerp->parentRecognizerp;
+  marpaESLIF_stream_t       *marpaESLIF_streamp          = marpaESLIFRecognizerp->marpaESLIF_streamp;
   genericHash_t             *marpaESLIFRecognizerHashp   = marpaESLIFRecognizerp->marpaESLIFRecognizerHashp;
   marpaWrapperGrammar_t     *marpaWrapperGrammarp        = marpaESLIFRecognizerp->marpaWrapperGrammarp;
   genericStack_t            *marpaESLIFRecognizerStackp;

@@ -3780,7 +3780,7 @@ static short marpaESLIFLua_importb(marpaESLIFValue_t *marpaESLIFValuep, void *us
         marpaESLIFLua_luaL_errorf(L, "malloc failure, %s", strerror(errno));
         goto err;
       }
-      *marpaESLIFValueResultDupp = *marpaESLIFValueResultp;;
+      *marpaESLIFValueResultDupp = *marpaESLIFValueResultp;
       if (! marpaESLIFLua_lua_pushlightuserdata(L, marpaESLIFValueResultDupp->u.p.p)) goto err;
       /* We want to remember that marpaESLIFValueResultDupp->u.p.p is associated to marpaESLIFValueResultDupp */
       /* If case there would be more than another marpaESLIFValueResult or type PTR with the same PTR */

@@ -4180,7 +4180,7 @@ JNIEXPORT void JNICALL Java_org_parser_marpa_ESLIFValue_jniNew(JNIEnv *envp, job
   
   /* Create C object */
   marpaESLIFValueOption.userDatavp            = marpaESLIFValueContextp;
-  marpaESLIFValueOption.ruleActionResolverp   = marpaESLIFValueRuleActionResolver;;
+  marpaESLIFValueOption.ruleActionResolverp   = marpaESLIFValueRuleActionResolver;
   marpaESLIFValueOption.symbolActionResolverp = marpaESLIFValueSymbolActionResolver;
   marpaESLIFValueOption.importerp             = marpaESLIFJava_importb;
   marpaESLIFValueOption.highRankOnlyb         = ((*envp)->CallBooleanMethod(envp, eslifValueInterfacep, MARPAESLIF_ESLIFVALUEINTERFACE_CLASS_isWithHighRankOnly_METHODP) == JNI_TRUE);
