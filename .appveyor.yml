@@ -15,38 +15,38 @@ environment:
   upload_token:
     secure: 
   matrix:
-    - _CC: VS2019
-      _ARCH: x86
-      _GENERATOR: "NMake Makefiles"
-      APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
-    - _CC: VS2019
-      _ARCH: x64
-      _GENERATOR: "NMake Makefiles"
-      APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
-    - _CC: VS2017
-      _ARCH: x86
-      _GENERATOR: "NMake Makefiles"
-      APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
-    - _CC: VS2017
-      _ARCH: x64
-      _GENERATOR: "NMake Makefiles"
-      APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
-    - _CC: VS2015
-      _ARCH: x86
-      _GENERATOR: "NMake Makefiles"
-      APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
-    - _CC: VS2015
-      _ARCH: x64
-      _GENERATOR: "NMake Makefiles"
-      APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
-    - _CC: VS2013
-      _ARCH: x86
-      _GENERATOR: "NMake Makefiles"
-      APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2013
-    - _CC: VS2013
-      _ARCH: x64
-      _GENERATOR: "NMake Makefiles"
-      APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2013
+   - _CC: VS2019
+     _ARCH: x86
+     _GENERATOR: "NMake Makefiles"
+     APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
+   - _CC: VS2019
+     _ARCH: x64
+     _GENERATOR: "NMake Makefiles"
+     APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
+   - _CC: VS2017
+     _ARCH: x86
+     _GENERATOR: "NMake Makefiles"
+     APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
+   - _CC: VS2017
+     _ARCH: x64
+     _GENERATOR: "NMake Makefiles"
+     APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
+   - _CC: VS2015
+     _ARCH: x86
+     _GENERATOR: "NMake Makefiles"
+     APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
+   - _CC: VS2015
+     _ARCH: x64
+     _GENERATOR: "NMake Makefiles"
+     APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
+   - _CC: VS2013
+     _ARCH: x86
+     _GENERATOR: "NMake Makefiles"
+     APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2013
+   - _CC: VS2013
+     _ARCH: x64
+     _GENERATOR: "NMake Makefiles"
+     APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2013
    - _CC: VS2012
      _ARCH: x86
      _GENERATOR: "NMake Makefiles"
