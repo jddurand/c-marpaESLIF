@@ -38,6 +38,9 @@ static float C_LOG2F(float x)
 {
   return (float) C_LOG2((double) x);
 }
+#else /* C_LOG2F */
+#  undef  C_LOG2f
+#  define C_LOG2f C_LOG2F
 #endif /* C_LOG2F */
 
 #ifndef C_LOG2L
@@ -50,6 +53,9 @@ static long double C_LOG2L(long double x)
   return (long double) C_LOG2((long double) x);
 }
 #  endif  /* HAVE_SIZEOF_LONG_DOUBLE */
+#else /* C_LOG2L */
+#  undef  C_LOG2l
+#  define C_LOG2l C_LOG2L
 #endif /* C_LOG2L */
 
 #if !defined(l_rand)		/* { */
