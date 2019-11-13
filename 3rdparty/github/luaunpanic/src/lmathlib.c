@@ -36,6 +36,8 @@ static double C_LOG2(double x)
 
 #ifndef C_LOG2F
 #  define C_LOG2F math_log2f
+#  undef  C_LOG2f
+#  define C_LOG2f C_LOG2F
 static float C_LOG2F(float x)
 {
   return (float) C_LOG2((double) x);
@@ -45,6 +47,8 @@ static float C_LOG2F(float x)
 #ifndef C_LOG2L
 #  ifdef HAVE_SIZEOF_LONG_DOUBLE
 #    define C_LOG2L math_log2l
+#    undef  C_LOG2l
+#    define C_LOG2l C_LOG2L
 static long double C_LOG2L(long double x)
 {
   return (long double) C_LOG2((long double) x);
