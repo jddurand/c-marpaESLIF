@@ -111,6 +111,12 @@ INCLUDE(CheckIncludeFile)
 INCLUDE(CheckFunctionExists)
 INCLUDE(CheckTypeSize)
 
+# Forced include path, if any
+OPTION(PCRE2_CMAKE_INCLUDE "Force CMake code inclusion" OFF)
+IF (PCRE2_CMAKE_INCLUDE)
+   INCLUDE(${PCRE2_CMAKE_INCLUDE})  
+ENDIF ()
+
 CHECK_INCLUDE_FILE(dirent.h     HAVE_DIRENT_H)
 CHECK_INCLUDE_FILE(stdint.h     HAVE_STDINT_H)
 CHECK_INCLUDE_FILE(inttypes.h   HAVE_INTTYPES_H)
@@ -395,12 +401,6 @@ endforeach()
 CONFIGURE_FILE(src/pcre2.h.in
                ${PROJECT_BINARY_DIR}/pcre2.h
                @ONLY)
-
-# Forced include path, if any
-OPTION(PCRE2_CMAKE_INCLUDE "Force CMake code inclusion" OFF)
-IF (PCRE2_CMAKE_INCLUDE)
-   INCLUDE(${PCRE2_CMAKE_INCLUDE})
-ENDIF ()
 
 # What about pcre2-config and libpcre2.pc?
 
