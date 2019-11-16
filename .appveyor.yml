@@ -112,8 +112,9 @@ test_script:
   - for %%a in ("*.exe") do ren "%%~a" "%%~Na-%_CC%%%~Xa"
 
 on_failure:
-  - ps: if(Test-Path C:\projects\%APPVEYOR_PROJECT_NAME%\CMakeFiles\CMakeOutput.log) { cat C:\projects\%APPVEYOR_PROJECT_NAME%\CMakeFiles\CMakeOutput.log }
-  - ps: if(Test-Path C:\projects\%APPVEYOR_PROJECT_NAME%\CMakeFiles\CMakeError.log) { cat C:\projects\%APPVEYOR_PROJECT_NAME%\CMakeFiles\CMakeError.log }
+  - ps: if(Test-Path C:\projects\%APPVEYOR_PROJECT_NAME%\__generated_include_dir__\stdint.h) { type C:\projects\%APPVEYOR_PROJECT_NAME%\__generated_include_dir__\stdint.h }
+  - ps: if(Test-Path C:\projects\%APPVEYOR_PROJECT_NAME%\CMakeFiles\CMakeOutput.log) { type C:\projects\%APPVEYOR_PROJECT_NAME%\CMakeFiles\CMakeOutput.log }
+  - ps: if(Test-Path C:\projects\%APPVEYOR_PROJECT_NAME%\CMakeFiles\CMakeError.log) { type C:\projects\%APPVEYOR_PROJECT_NAME%\CMakeFiles\CMakeError.log }
 
 artifacts:
   - path: "*.exe"
