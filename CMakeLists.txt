@@ -12,13 +12,13 @@ MYPACKAGESTART (marpaESLIF 3 0 25)
 ###########
 # Library #
 ###########
-IF(MSVC)
+IF (MSVC)
   #
   # Some MSVC warnings are literally polluting the output, in particular in Visual Studio 2008
   #
   SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} /wd4305 /wd4309")
-  SET(CMAKE_CXX_FLAGS "${CMAKE_C_FLAGS} /wd4305 /wd4309")
-ENDIF(MSVC)
+  SET(CMAKE_CXX_FLAGS "${CMAKE_C_FLAGS} /wd4018 /wd4067 /wd4305 /wd4309")
+ENDIF (MSVC)
 #
 # We have some specifics -;
 #
