@@ -459,6 +459,9 @@ static short marpaESLIFLua_lua_gettable(int *rcp, lua_State *L, int idx);
                                case MARPAESLIF_ACTION_TYPE_STRING:      \
                                  if (! marpaESLIFLua_lua_pushlstring(NULL, L, (const char *) actionp->u.stringp->bytep, actionp->u.stringp->bytel)) goto err; \
                                  break;                                 \
+                               case MARPAESLIF_ACTION_TYPE_LUA:        \
+                                 if (! marpaESLIFLua_lua_pushstring(NULL, L, actionp->u.luas)) goto err; \
+                                 break;                                 \
                                default:                                 \
                                  marpaESLIFLua_luaL_errorf(L, "Unsupported action type %d", actionp->type); \
                                  goto err;                              \

@@ -6015,6 +6015,9 @@ static jstring marpaESLIFJava_marpaESLIFActionToJavap(JNIEnv *envp, marpaESLIFAc
     case MARPAESLIF_ACTION_TYPE_STRING:
       stringp = marpaESLIFJava_marpaESLIFStringToJavap(envp, actionp->u.stringp);
       break;
+    case MARPAESLIF_ACTION_TYPE_LUA:
+      stringp = marpaESLIFJava_marpaESLIFASCIIToJavap(envp, actionp->u.luas);
+      break;
     default:
       RAISEEXCEPTIONF(envp, "Unsuported action type %d", actionp->type);
     }

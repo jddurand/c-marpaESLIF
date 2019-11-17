@@ -451,6 +451,9 @@ SV *boot_MarpaX__ESLIF__false_svp;
         _svp = MARPAESLIFPERL_NEWSVPVN_UTF8(actionp->u.stringp->bytep, actionp->u.stringp->bytel); \
         MARPAESLIFPERL_XV_STORE(hvp, key, _svp);                        \
         break;                                                          \
+      case MARPAESLIF_ACTION_TYPE_LUA:                                  \
+        MARPAESLIFPERL_XV_STORE(hvp, key, newSVpv(actionp->u.luas, 0)); \
+        break;                                                          \
       default:                                                          \
         warn("Unsupported action type %d", actionp->type);              \
         MARPAESLIFPERL_XV_STORE_UNDEF(hvp, key);                        \
