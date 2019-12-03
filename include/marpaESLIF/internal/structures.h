@@ -216,6 +216,7 @@ struct marpaESLIF_grammar {
   genericStack_t        *ruleStackp;                         /* Pointer to stack of rules */
   marpaESLIFAction_t    *defaultSymbolActionp;               /* Default action for symbols - never NULL */
   marpaESLIFAction_t    *defaultRuleActionp;                 /* Default action for rules - never NULL */
+  marpaESLIFAction_t    *defaultEventActionp;                /* Default action for events - can be NULL */
   int                    starti;                             /* Default start symbol ID - filled during grammar validation */
   char                  *starts;                             /* Default start symbol name - filled during grammar validation - shallow pointer */
   int                   *ruleip;                             /* Array of rule IDs - filled by grammar validation */

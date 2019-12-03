@@ -98,6 +98,7 @@ typedef enum bootstrap_grammar_G1_enum {
   G1_TERMINAL___TABLE,
   G1_TERMINAL_IF_ACTION,
   G1_TERMINAL___AST,
+  G1_TERMINAL_EVENT_ACTION,
   /* ----- Non terminals ------ */
   G1_META_STATEMENTS,
   G1_META_STATEMENT,
@@ -178,6 +179,8 @@ typedef enum bootstrap_grammar_G1_enum {
   G1_META_LUASCRIPT_SOURCE,
   G1_META_IF_ACTION,
   G1_META_IFACTION_NAME,
+  G1_META_EVENT_ACTION,
+  G1_META_EVENTACTION_NAME,
   /* These meta identifiers are handled by L0 */
   G1_META_FALSE,
   G1_META_TRUE,
@@ -277,6 +280,8 @@ bootstrap_grammar_meta_t bootstrap_grammar_G1_metas[] = {
   { G1_META_LUASCRIPT_SOURCE,                 "lua script source",                         0,       0,           0,            0 },
   { G1_META_IF_ACTION,                        "if action",                                 0,       0,           0,            0 },
   { G1_META_IFACTION_NAME,                    "if action name",                            0,       0,           0,            0 },
+  { G1_META_EVENT_ACTION,                     "event action",                              0,       0,           0,            0 },
+  { G1_META_EVENTACTION_NAME,                 "event action name",                         0,       0,           0,            0 },
   /* L0 join */
   { G1_META_FALSE,                            L0_JOIN_G1_META_FALSE,                       0,       0,           0,            0 },
   { G1_META_TRUE,                             L0_JOIN_G1_META_TRUE,                        0,       0,           0,            0 },
@@ -999,6 +1004,14 @@ bootstrap_grammar_terminal_t bootstrap_grammar_G1_terminals[] = {
 #else
     NULL, NULL
 #endif
+  },
+  { G1_TERMINAL_EVENT_ACTION, MARPAESLIF_TERMINAL_TYPE_STRING, NULL,
+    "'event-action'",
+#ifndef MARPAESLIF_NTRACE
+    "event-action", "event"
+#else
+    NULL, NULL
+#endif
   }
 };
 
@@ -1173,6 +1186,7 @@ bootstrap_grammar_rule_t bootstrap_grammar_G1_rules[] = {
   { G1_META_ADVERB_ITEM,                      G1_RULE_ADVERB_ITEM_16,                         MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_EVENT_SPECIFICATION                  }, -1,                        -1,      -1,              0, G1_ACTION_ADVERB_ITEM_16 },
   { G1_META_ADVERB_ITEM,                      G1_RULE_ADVERB_ITEM_17,                         MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_HIDESEPARATOR_SPECIFICATION          }, -1,                        -1,      -1,              0, G1_ACTION_ADVERB_ITEM_17 },
   { G1_META_ADVERB_ITEM,                      G1_RULE_ADVERB_ITEM_18,                         MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_IF_ACTION                            }, -1,                        -1,      -1,              0, G1_ACTION_ADVERB_ITEM_18 },
+  { G1_META_ADVERB_ITEM,                      G1_RULE_ADVERB_ITEM_19,                         MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_EVENT_ACTION                         }, -1,                        -1,      -1,              0, G1_ACTION_ADVERB_ITEM_18 },
   { G1_META_ACTION,                           G1_RULE_ACTION_1,                               MARPAESLIF_RULE_TYPE_ALTERNATIVE, 3, { G1_TERMINAL_ACTION,
                                                                                                                                      G1_TERMINAL_THEN,
                                                                                                                                      G1_META_ACTION_NAME                          }, -1,                        -1,      -1,              0, G1_ACTION_ACTION_1 },
@@ -1416,7 +1430,12 @@ bootstrap_grammar_rule_t bootstrap_grammar_G1_rules[] = {
                                                                                                                                      G1_META_LUASCRIPT_SOURCE,
                                                                                                                                      G1_TERMINAL_LUASCRIPT_TAG_END,
                                                                                                                                      G1_META_DISCARD_ON },                                 -1,                  -1,      -1,              0, G1_ACTION_LUASCRIPT_STATEMENT },
-  { G1_META_LUASCRIPT_SOURCE,                 G1_RULE_LUASCRIPT_SOURCE,                       MARPAESLIF_RULE_TYPE_SEQUENCE,    1, { G1_TERMINAL_ANY_CHARACTER },                           0,                  -1,       0,              0, G1_ACTION_LUASCRIPT_SOURCE }
+  { G1_META_LUASCRIPT_SOURCE,                 G1_RULE_LUASCRIPT_SOURCE,                       MARPAESLIF_RULE_TYPE_SEQUENCE,    1, { G1_TERMINAL_ANY_CHARACTER },                           0,                  -1,       0,              0, G1_ACTION_LUASCRIPT_SOURCE },
+  { G1_META_EVENT_ACTION,                     G1_RULE_EVENT_ACTION,                           MARPAESLIF_RULE_TYPE_ALTERNATIVE, 3, { G1_TERMINAL_EVENT_ACTION,
+                                                                                                                                     G1_TERMINAL_THEN,
+                                                                                                                                     G1_META_EVENTACTION_NAME                      }, -1,                        -1,      -1,              0, G1_ACTION_EVENTACTION },
+  { G1_META_EVENTACTION_NAME,                 G1_RULE_EVENTACTION_NAME_1,                     MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_RESTRICTED_ASCII_GRAPH_NAME           }, -1,                        -1,      -1,              0, G1_ACTION_EVENTACTION_NAME_1 },
+  { G1_META_EVENTACTION_NAME,                 G1_RULE_EVENTACTION_NAME_2,                     MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_LUA_ACTION_NAME                       }, -1,                        -1,      -1,              0, G1_ACTION_EVENTACTION_NAME_2 }
 };
 
 #endif /* MARPAESLIF_INTERNAL_ESLIF_G1_H */

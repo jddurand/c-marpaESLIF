@@ -275,6 +275,7 @@ typedef struct marpaESLIFAction {
 typedef struct marpaESLIFGrammarDefaults {
   marpaESLIFAction_t *defaultRuleActionp;   /* Default action for rules */
   marpaESLIFAction_t *defaultSymbolActionp; /* Default action for symbols */
+  marpaESLIFAction_t *defaultEventActionp;  /* Default action for events */
 } marpaESLIFGrammarDefaults_t;
 
 /* Rule property */
@@ -310,6 +311,7 @@ typedef struct marpaESLIFGrammarProperty {
   short                  latmb;                        /* LATM ? */
   marpaESLIFAction_t    *defaultSymbolActionp;         /* Default action for symbols - never NULL */
   marpaESLIFAction_t    *defaultRuleActionp;           /* Default action for rules - never NULL */
+  marpaESLIFAction_t    *defaultEventActionp;          /* Default action for event - can be NULL */
   int                    starti;                       /* Start symbol Id - always >= 0 */
   int                    discardi;                     /* Discard symbol Id (-1 if none) */
   size_t                 nsymboll;                     /* Number of symbols - always > 0*/
