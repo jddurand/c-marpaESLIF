@@ -19,7 +19,7 @@ const static char *dsl =
   "#\n"
   "# Default action is to propagate the first RHS value\n"
   "#\n"
-  ":default ::= action => ::shift\n"
+  ":default ::= action \xE2\x87\x92 ::shift\n"
   "\n"
   "                   #######################################################\n"
   "                   # >>>>>>>>>>>>>>>> Strict JSON Grammar <<<<<<<<<<<<<<<<\n"
@@ -342,8 +342,8 @@ int main() {
 
   marpaESLIFGrammarOption.bytep               = (void *) dsl;
   marpaESLIFGrammarOption.bytel               = strlen(dsl);
-  marpaESLIFGrammarOption.encodings           = NULL;
-  marpaESLIFGrammarOption.encodingl           = 0;
+  marpaESLIFGrammarOption.encodings           = "UTF-8";
+  marpaESLIFGrammarOption.encodingl           = 5;
 
   marpaESLIFGrammarp = marpaESLIFGrammar_newp(marpaESLIFp, &marpaESLIFGrammarOption);
   if (marpaESLIFGrammarp == NULL) {

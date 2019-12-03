@@ -492,10 +492,10 @@ bootstrap_grammar_terminal_t bootstrap_grammar_G1_terminals[] = {
     NULL, NULL
 #endif
   },
-  { G1_TERMINAL_THEN, MARPAESLIF_TERMINAL_TYPE_STRING, NULL,
-    "'=>'",
+  { G1_TERMINAL_THEN, MARPAESLIF_TERMINAL_TYPE_REGEX, "u",
+    "=>|\\x{21D2}",
 #ifndef MARPAESLIF_NTRACE
-    "=>", "="
+    "\xE2\x87\x92", "="
 #else
     NULL, NULL
 #endif
