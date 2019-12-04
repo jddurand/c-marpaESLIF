@@ -111,6 +111,7 @@ local marpaESLIFGrammarp = marpaESLIFp:marpaESLIFGrammar_new(
 :start   ::= Expression
 :default ::=             action        => do_op
                          symbol-action => do_symbol
+                         event-action  => do_event
 :discard ::= whitespaces event  => discard_whitespaces$
 :discard ::= comment     event  => discard_comment$
 
@@ -418,8 +419,14 @@ local recognizerInterface = {
    end,
    ["if_number"]            = function(self, lexeme)
       local if_number = true
-      logger:tracef("if_number => %s", tostring(if_number))
+      logger:tracef("if_number('%s') => %s", tostring(lexeme), tostring(if_number))
       return if_number
+   end,
+   ["do_event"]            = function(self, events)
+      local do_event = true
+      logger:tracef('%s', tableDump(events))
+      logger:tracef("do_event => true", tostring(do_event))
+      return do_event
    end
 }
 

@@ -6053,8 +6053,8 @@ static inline short _marpaESLIFRecognizer_resumeb(marpaESLIFRecognizer_t *marpaE
         if (marpaESLIFValueResultBool == MARPAESLIFVALUERESULTBOOL_FALSE) {
           /* The event callback failed */
           MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "Event callback failure");
+          goto err;
         }
-        goto err;
       }
       break;
     }
@@ -16640,7 +16640,7 @@ static inline short _marpaESLIFRecognizer_recognizerEventActionCallbackb(marpaES
       MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "Action \"%s\" resolved to NULL", eventactions);
       goto err;
     } else {
-      MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Action \"%s\" resolved to %p", eventactions, ifCallbackp);
+      MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Action \"%s\" resolved to %p", eventactions, eventCallbackp);
     }
     break;
   case MARPAESLIF_ACTION_TYPE_LUA:
