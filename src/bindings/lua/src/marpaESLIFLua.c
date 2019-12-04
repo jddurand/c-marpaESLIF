@@ -178,11 +178,14 @@ static short                              marpaESLIFLua_readerCallbackb(void *us
 static marpaESLIFValueRuleCallback_t      marpaESLIFLua_valueRuleActionResolver(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, char *actions);
 static marpaESLIFValueSymbolCallback_t    marpaESLIFLua_valueSymbolActionResolver(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, char *actions);
 static marpaESLIFRecognizerIfCallback_t   marpaESLIFLua_recognizerIfActionResolver(void *userDatavp, marpaESLIFRecognizer_t *marpaESLIFRecognizerp, char *actions);
+static marpaESLIFRecognizerEventCallback_t marpaESLIFLua_recognizerEventActionResolver(void *userDatavp, marpaESLIFRecognizer_t *marpaESLIFRecognizerp, char *actions);
 static short                              marpaESLIFLua_valueRuleCallbackb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
 static short                              marpaESLIFLua_valueSymbolCallbackb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, marpaESLIFValueResult_t *marpaESLIFValueResultp, int resulti);
 static short                              marpaESLIFLua_recognizerIfCallbackb(void *userDatavp, marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFValueResult_t *marpaESLIFValueResultLexemep, marpaESLIFValueResultBool_t *marpaESLIFValueResultBoolp);
+static short                              marpaESLIFLua_recognizerEventCallbackb(void *userDatavp, marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFEvent_t *eventArrayp, size_t eventArrayl, marpaESLIFValueResultBool_t *marpaESLIFValueResultBoolp);
 static short                              marpaESLIFLua_valueCallbackb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, marpaESLIFValueResult_t *marpaESLIFValueResultLexemep, int resulti, short nullableb, short symbolb);
 static short                              marpaESLIFLua_ifCallbackb(void *userDatavp, marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFValueResult_t *marpaESLIFValueResultLexemep, marpaESLIFValueResultBool_t *marpaESLIFValueResultBoolp);
+static short                              marpaESLIFLua_eventCallbackb(void *userDatavp, marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFEvent_t *eventArrayp, size_t eventArrayl, marpaESLIFValueResultBool_t *marpaESLIFValueResultBoolp);
 static void                               marpaESLIFLua_valueFreeCallbackv(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, marpaESLIFValueResult_t *marpaESLIFValueResultp);
 static void                               marpaESLIFLua_recognizerFreeCallbackv(void *userDatavp, marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFValueResult_t *marpaESLIFValueResultp);
 static void                               marpaESLIFLua_genericFreeCallbackv(void *userDatavp, marpaESLIFValueResult_t *marpaESLIFValueResultp);
@@ -3369,10 +3372,11 @@ static int  marpaESLIFLua_marpaESLIFGrammar_parsei(lua_State *L)
   MARPAESLIFLUA_CALLBACKB(L, marpaESLIFLuaRecognizerContext.recognizerInterface_r, "isWithExhaustion",       0 /* nargs */, MARPAESLIFLUA_NOOP, &(marpaESLIFRecognizerOption.exhaustedb));
   MARPAESLIFLUA_CALLBACKB(L, marpaESLIFLuaRecognizerContext.recognizerInterface_r, "isWithNewline",          0 /* nargs */, MARPAESLIFLUA_NOOP, &(marpaESLIFRecognizerOption.newlineb));
   MARPAESLIFLUA_CALLBACKB(L, marpaESLIFLuaRecognizerContext.recognizerInterface_r, "isWithTrack",            0 /* nargs */, MARPAESLIFLUA_NOOP, &(marpaESLIFRecognizerOption.trackb));
-  marpaESLIFRecognizerOption.bufsizl           = 0; /* Recommended value */
-  marpaESLIFRecognizerOption.buftriggerperci   = 50; /* Recommended value */
-  marpaESLIFRecognizerOption.bufaddperci       = 50; /* Recommended value */
-  marpaESLIFRecognizerOption.ifActionResolverp = marpaESLIFLua_recognizerIfActionResolver;
+  marpaESLIFRecognizerOption.bufsizl              = 0; /* Recommended value */
+  marpaESLIFRecognizerOption.buftriggerperci      = 50; /* Recommended value */
+  marpaESLIFRecognizerOption.bufaddperci          = 50; /* Recommended value */
+  marpaESLIFRecognizerOption.ifActionResolverp    = marpaESLIFLua_recognizerIfActionResolver;
+  marpaESLIFRecognizerOption.eventActionResolverp = marpaESLIFLua_recognizerEventActionResolver;
 
   marpaESLIFValueOption.userDatavp             = &marpaESLIFLuaValueContext;
   marpaESLIFValueOption.ruleActionResolverp    = marpaESLIFLua_valueRuleActionResolver;
@@ -3502,6 +3506,24 @@ static marpaESLIFRecognizerIfCallback_t marpaESLIFLua_recognizerIfActionResolver
 }
 
 /*****************************************************************************/
+static marpaESLIFRecognizerEventCallback_t marpaESLIFLua_recognizerEventActionResolver(void *userDatavp, marpaESLIFRecognizer_t *marpaESLIFRecognizerp, char *actions)
+/*****************************************************************************/
+{
+  static const char           *funcs                      = "marpaESLIFLua_recognizerEventActionResolver";
+#ifdef MARPAESLIFLUA_EMBEDDED
+  marpaESLIFLuaRecognizerContext_t *marpaESLIFLuaRecognizerContextp = (marpaESLIFLuaRecognizerContext_t *) marpaESLIFRecognizerp->marpaESLIFLuaRecognizerContextp;
+#else
+  marpaESLIFLuaRecognizerContext_t *marpaESLIFLuaRecognizerContextp = (marpaESLIFLuaRecognizerContext_t *) userDatavp;
+#endif
+  lua_State                   *L                          = marpaESLIFLuaRecognizerContextp->L;
+
+  /* Just remember the action name - lua will croak if calling this method fails */
+  marpaESLIFLuaRecognizerContextp->actions = actions;
+
+  return marpaESLIFLua_recognizerEventCallbackb;
+}
+
+/*****************************************************************************/
 static short marpaESLIFLua_valueRuleCallbackb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb)
 /*****************************************************************************/
 {
@@ -3520,6 +3542,13 @@ static short marpaESLIFLua_recognizerIfCallbackb(void *userDatavp, marpaESLIFRec
 /*****************************************************************************/
 {
   return marpaESLIFLua_ifCallbackb(userDatavp, marpaESLIFRecognizerp, marpaESLIFValueResultLexemep, marpaESLIFValueResultBoolp);
+}
+
+/*****************************************************************************/
+static short marpaESLIFLua_recognizerEventCallbackb(void *userDatavp, marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFEvent_t *eventArrayp, size_t eventArrayl, marpaESLIFValueResultBool_t *marpaESLIFValueResultBoolp)
+/*****************************************************************************/
+{
+  return marpaESLIFLua_eventCallbackb(userDatavp, marpaESLIFRecognizerp, eventArrayp, eventArrayl, marpaESLIFValueResultBoolp);
 }
 
 /*****************************************************************************/
@@ -3632,6 +3661,78 @@ static short marpaESLIFLua_ifCallbackb(void *userDatavp, marpaESLIFRecognizer_t 
     marpaESLIFLua_luaL_errorf(L, "Function %s must return a boolean value", marpaESLIFLuaRecognizerContextp->actions);
     goto err;
   }
+
+  if (! marpaESLIFLua_lua_toboolean(&tmpi, L, 1)) goto err;
+
+  *marpaESLIFValueResultBoolp = (tmpi != 0) ? MARPAESLIFVALUERESULTBOOL_TRUE : MARPAESLIFVALUERESULTBOOL_FALSE;
+  if (! marpaESLIFLua_lua_pop(L, 1)) goto err;
+
+  /* fprintf(stdout, "... action %s done\n", marpaESLIFLuaRecognizerContextp->actions); fflush(stdout); fflush(stderr); */
+
+  rcb = 1;
+  goto done;
+
+ err:
+  rcb = 0;
+
+ done:
+  return rcb;
+}
+
+/*****************************************************************************/
+static short marpaESLIFLua_eventCallbackb(void *userDatavp, marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFEvent_t *eventArrayp, size_t eventArrayl, marpaESLIFValueResultBool_t *marpaESLIFValueResultBoolp)
+/*****************************************************************************/
+{
+  static const char           *funcs                      = "marpaESLIFLua_eventCallbackb";
+#ifdef MARPAESLIFLUA_EMBEDDED
+  marpaESLIFLuaRecognizerContext_t *marpaESLIFLuaRecognizerContextp = (marpaESLIFLuaRecognizerContext_t *) marpaESLIFRecognizerp->marpaESLIFLuaRecognizerContextp;
+#else
+  marpaESLIFLuaRecognizerContext_t *marpaESLIFLuaRecognizerContextp = (marpaESLIFLuaRecognizerContext_t *) userDatavp;
+#endif
+  lua_State                   *L                          = marpaESLIFLuaRecognizerContextp->L;
+  size_t                       i;
+  int                          topi;
+  int                          newtopi;
+  int                          typei;
+  int                          tmpi;
+  short                        rcb;
+
+  /* fprintf(stdout, "... action %s start\n", marpaESLIFLuaRecognizerContextp->actions); fflush(stdout); fflush(stderr); */
+
+  if (! marpaESLIFLua_lua_gettop(&topi, L)) goto err;
+  MARPAESLIFLUA_CALLBACK(L, marpaESLIFLuaRecognizerContextp->recognizerInterface_r, marpaESLIFLuaRecognizerContextp->actions, 1 /* nargs */,
+                         fprintf(stderr, "JDD 01\n");
+                         if (! marpaESLIFLua_lua_newtable(L)) goto err;                          /* Stack: {} */
+                         fprintf(stderr, "JDD 02\n");
+                         for (i = 0; i < eventArrayl; i++) {
+                           fprintf(stderr, "JDD 03 %d\n",(int) i);
+                           if (! marpaESLIFLua_lua_newtable(L)) goto err;                        /* Stack: {}, {} */
+                           fprintf(stderr, "JDD 04 %d\n",(int) i);
+                           MARPAESLIFLUA_STORE_INTEGER(L, "type", eventArrayp[i].type);          /* Stack: {}, {"type" => type} */
+                           fprintf(stderr, "JDD 05 %d\n",(int) i);
+                           MARPAESLIFLUA_STORE_ASCIISTRING(L, "symbol", eventArrayp[i].symbols); /* Stack: {}, {"type" => type, "symbol" => symbol} */
+                           fprintf(stderr, "JDD 06 %d\n",(int) i);
+                           MARPAESLIFLUA_STORE_ASCIISTRING(L, "event", eventArrayp[i].events);   /* Stack: {}, {"type" => type, "symbol" => symbol, "event" => event} */
+                           fprintf(stderr, "JDD 07 %d\n",(int) i);
+                           if (! marpaESLIFLua_lua_seti(L, 1, (lua_Integer) i)) goto err;        /* Stack: {i => {"type" => type, "symbol" => symbol, "event" => event}} */
+                           fprintf(stderr, "JDD 08 %d\n",(int) i);
+                         }
+                         );
+
+  fprintf(stderr, "JDD 08\n");
+  if (! marpaESLIFLua_lua_gettop(&newtopi, L)) goto err;
+  if (newtopi != (topi + 1)) {
+    marpaESLIFLua_luaL_errorf(L, "Function %s must return exactly one value", marpaESLIFLuaRecognizerContextp->actions);
+    goto err;
+  }
+  fprintf(stderr, "JDD 10\n");
+
+  if (! marpaESLIFLua_lua_type(&typei, L, 1)) goto err;
+  if (typei != LUA_TBOOLEAN) {
+    marpaESLIFLua_luaL_errorf(L, "Function %s must return a boolean value", marpaESLIFLuaRecognizerContextp->actions);
+    goto err;
+  }
+  fprintf(stderr, "JDD 11\n");
 
   if (! marpaESLIFLua_lua_toboolean(&tmpi, L, 1)) goto err;
 
@@ -4059,10 +4160,11 @@ static int marpaESLIFLua_marpaESLIFRecognizer_newi(lua_State *L)
   MARPAESLIFLUA_CALLBACKB(L, marpaESLIFLuaRecognizerContextp->recognizerInterface_r, "isWithExhaustion",       0 /* nargs */, MARPAESLIFLUA_NOOP, &(marpaESLIFRecognizerOption.exhaustedb));
   MARPAESLIFLUA_CALLBACKB(L, marpaESLIFLuaRecognizerContextp->recognizerInterface_r, "isWithNewline",          0 /* nargs */, MARPAESLIFLUA_NOOP, &(marpaESLIFRecognizerOption.newlineb));
   MARPAESLIFLUA_CALLBACKB(L, marpaESLIFLuaRecognizerContextp->recognizerInterface_r, "isWithTrack",            0 /* nargs */, MARPAESLIFLUA_NOOP, &(marpaESLIFRecognizerOption.trackb));
-  marpaESLIFRecognizerOption.bufsizl           = 0; /* Recommended value */
-  marpaESLIFRecognizerOption.buftriggerperci   = 50; /* Recommended value */
-  marpaESLIFRecognizerOption.bufaddperci       = 50; /* Recommended value */
-  marpaESLIFRecognizerOption.ifActionResolverp = marpaESLIFLua_recognizerIfActionResolver;
+  marpaESLIFRecognizerOption.bufsizl              = 0; /* Recommended value */
+  marpaESLIFRecognizerOption.buftriggerperci      = 50; /* Recommended value */
+  marpaESLIFRecognizerOption.bufaddperci          = 50; /* Recommended value */
+  marpaESLIFRecognizerOption.ifActionResolverp    = marpaESLIFLua_recognizerIfActionResolver;
+  marpaESLIFRecognizerOption.eventActionResolverp = marpaESLIFLua_recognizerEventActionResolver;
 
   marpaESLIFLuaRecognizerContextp->marpaESLIFRecognizerp = marpaESLIFRecognizer_newp(marpaESLIFLuaGrammarContextp->marpaESLIFGrammarp, &marpaESLIFRecognizerOption);
   marpaESLIFLuaRecognizerContextp->managedb = 1;

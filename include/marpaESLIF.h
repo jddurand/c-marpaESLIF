@@ -52,6 +52,7 @@ typedef struct marpaESLIFValue           marpaESLIFValue_t;
 typedef struct marpaESLIFSymbol          marpaESLIFSymbol_t;
 typedef struct marpaESLIFValueResult     marpaESLIFValueResult_t;
 typedef enum   marpaESLIFValueResultBool marpaESLIFValueResultBool_t;
+typedef struct marpaESLIFEvent           marpaESLIFEvent_t;
 
 /* General free callback */
 typedef void  (*marpaESLIFFreeCallback_t)(void *userDatavp, marpaESLIFValueResult_t *marpaESLIFValueResultp);
@@ -82,18 +83,21 @@ typedef short (*marpaESLIFReader_t)(void *userDatavp, char **inputcpp, size_t *i
 /* Recognizer callback definitions */
 typedef short (*marpaESLIFRecognizerIfCallback_t)(void *userDatavp, marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFValueResult_t *marpaESLIFValueResultLexemep, marpaESLIFValueResultBool_t *marpaESLIFValueResultBoolp);
 typedef marpaESLIFRecognizerIfCallback_t (*marpaESLIFRecognizerIfActionResolver_t)(void *userDatavp, marpaESLIFRecognizer_t *marpaESLIFRecognizerp, char *actions);
+typedef short (*marpaESLIFRecognizerEventCallback_t)(void *userDatavp, marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFEvent_t *eventArrayp, size_t eventArrayl, marpaESLIFValueResultBool_t *marpaESLIFValueResultBoolp);
+typedef marpaESLIFRecognizerEventCallback_t (*marpaESLIFRecognizerEventActionResolver_t)(void *userDatavp, marpaESLIFRecognizer_t *marpaESLIFRecognizerp, char *actions);
 
 typedef struct marpaESLIFRecognizerOption {
-  void                                  *userDatavp;          /* User specific context */
-  marpaESLIFReader_t                     readerCallbackp;     /* Reader */
-  short                                  disableThresholdb;   /* Default: 0 */
-  short                                  exhaustedb;          /* Exhaustion event. Default: 0 */
-  short                                  newlineb;            /* Count line/column numbers. Default: 0 */
-  short                                  trackb;              /* Track absolute position. Default: 0 */
-  size_t                                 bufsizl;             /* Minimum stream buffer size: Recommended: 0 (internally, a system default will apply) */
-  unsigned int                           buftriggerperci;     /* Excess number of bytes, in percentage of bufsizl, where stream buffer size is reduced. Recommended: 50 */
-  unsigned int                           bufaddperci;         /* Policy of minimum of bytes for increase, in percentage of current allocated size, when stream buffer size need to augment. Recommended: 50 */
-  marpaESLIFRecognizerIfActionResolver_t ifActionResolverp;   /* Will return the function doing the wanted if action */
+  void                                     *userDatavp;          /* User specific context */
+  marpaESLIFReader_t                        readerCallbackp;     /* Reader */
+  short                                     disableThresholdb;   /* Default: 0 */
+  short                                     exhaustedb;          /* Exhaustion event. Default: 0 */
+  short                                     newlineb;            /* Count line/column numbers. Default: 0 */
+  short                                     trackb;              /* Track absolute position. Default: 0 */
+  size_t                                    bufsizl;             /* Minimum stream buffer size: Recommended: 0 (internally, a system default will apply) */
+  unsigned int                              buftriggerperci;     /* Excess number of bytes, in percentage of bufsizl, where stream buffer size is reduced. Recommended: 50 */
+  unsigned int                              bufaddperci;         /* Policy of minimum of bytes for increase, in percentage of current allocated size, when stream buffer size need to augment. Recommended: 50 */
+  marpaESLIFRecognizerIfActionResolver_t    ifActionResolverp;   /* Will return the function doing the wanted if action */
+  marpaESLIFRecognizerEventActionResolver_t eventActionResolverp;   /* Will return the function doing the wanted event action */
 } marpaESLIFRecognizerOption_t;
 
 typedef enum marpaESLIFEventType {
@@ -107,11 +111,11 @@ typedef enum marpaESLIFEventType {
   MARPAESLIF_EVENTTYPE_DISCARD    = 0x40  /* Discard */
 } marpaESLIFEventType_t;
 
-typedef struct marpaESLIFEvent {
+struct marpaESLIFEvent {
   marpaESLIFEventType_t type;
   char                 *symbols; /* Symbol name, always NULL if exhausted event, always ':discard' if discard event */
   char                 *events;  /* Event name, always NULL if exhaustion eent */
-} marpaESLIFEvent_t;
+};
 
 /* Value types */
 typedef enum marpaESLIFValueType {

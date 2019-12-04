@@ -496,6 +496,7 @@ static        short                  _marpaESLIFValue_nullingCallbackWrapperb(vo
 static inline short                  _marpaESLIFValue_anySymbolCallbackWrapperb(void *userDatavp, int symboli, int argi, int resulti, short nullableb);
 static inline short                  _marpaESLIFValue_symbolActionCallbackb(marpaESLIFValue_t *marpaESLIFValuep, char *asciishows, short nullableb, marpaESLIF_action_t *nullableActionp, marpaESLIFValueSymbolCallback_t *symbolCallbackpp, marpaESLIFValueRuleCallback_t *ruleCallbackpp, marpaESLIF_action_t *symbolActionp);
 static inline short                  _marpaESLIFRecognizer_recognizerIfActionCallbackb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, char *asciishows, marpaESLIF_action_t *ifActionp, marpaESLIFRecognizerIfCallback_t *ifCallbackpp);
+static inline short                  _marpaESLIFRecognizer_recognizerEventActionCallbackb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIF_action_t *eventActionp, marpaESLIFRecognizerEventCallback_t *eventCallbackpp);
 static inline short                  _marpaESLIFValue_eslif2hostb(marpaESLIFValue_t *marpaESLIFValuep, marpaESLIFValueResult_t *marpaESLIFValueResultp, marpaESLIFValueResult_t *marpaESLIFValueResultResolvedp, void *forcedUserDatavp, marpaESLIFValueResultImport_t forcedImporterp);
 
 static inline short                  _marpaESLIFValue_valueb(marpaESLIFValue_t *marpaESLIFValuep, marpaESLIFValueResult_t *marpaESLIFValueResultp);
@@ -5994,11 +5995,16 @@ short marpaESLIFRecognizer_resumeb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp
 static inline short _marpaESLIFRecognizer_resumeb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, size_t deltaLengthl, short initialEventsb, short *canContinuebp, short *isExhaustedbp)
 /*****************************************************************************/
 {
-  static const char   *funcs              = "_marpaESLIFRecognizer_resumeb";
-  marpaESLIF_stream_t *marpaESLIF_streamp = marpaESLIFRecognizerp->marpaESLIF_streamp;
-  short                canContinueb;
-  short                isExhaustedb;
-  short                rcb;
+  static const char                    *funcs              = "_marpaESLIFRecognizer_resumeb";
+  marpaESLIF_stream_t                  *marpaESLIF_streamp = marpaESLIFRecognizerp->marpaESLIF_streamp;
+  marpaESLIFGrammar_t                  *marpaESLIFGrammarp = marpaESLIFRecognizerp->marpaESLIFGrammarp;
+  marpaESLIF_grammar_t                 *grammarp           = marpaESLIFGrammarp->grammarp;
+  marpaESLIFRecognizerEventCallback_t   eventCallbackp;
+  short                                 canContinueb;
+  short                                 isExhaustedb;
+  short                                 rcb;
+  marpaESLIFValueResultBool_t           marpaESLIFValueResultBool;
+
   /* Top level resume is looping on _marpaESLIFRecognizer_resume_oneb() until:
      - failure
      - event
@@ -6036,6 +6042,20 @@ static inline short _marpaESLIFRecognizer_resumeb(marpaESLIFRecognizer_t *marpaE
       initialEventsb = 0;
     }
     if (marpaESLIFRecognizerp->eventArrayl > 0) {
+      /* If grammar has an event-action, check it */
+      if (grammarp->defaultEventActionp != NULL) {
+        if (! _marpaESLIFRecognizer_recognizerEventActionCallbackb(marpaESLIFRecognizerp, grammarp->defaultEventActionp, &eventCallbackp)) {
+          goto err;
+        }
+        if (! eventCallbackp(marpaESLIFRecognizerp->marpaESLIFRecognizerOption.userDatavp, marpaESLIFRecognizerp, marpaESLIFRecognizerp->eventArrayp, marpaESLIFRecognizerp->eventArrayl, &marpaESLIFValueResultBool)) {
+          goto err;
+        }
+        if (marpaESLIFValueResultBool == MARPAESLIFVALUERESULTBOOL_FALSE) {
+          /* The event callback failed */
+          MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "Event callback failure");
+        }
+        goto err;
+      }
       break;
     }
   } while (canContinueb);
@@ -8640,6 +8660,7 @@ static inline marpaESLIFRecognizer_t *_marpaESLIFRecognizer_newp(marpaESLIFGramm
   marpaESLIFRecognizerp->lastDiscards                    = NULL;
   marpaESLIFRecognizerp->L                               = NULL;
   marpaESLIFRecognizerp->ifactions                       = NULL;
+  marpaESLIFRecognizerp->eventactions                    = NULL;
 
   marpaWrapperRecognizerOption.genericLoggerp            = silentb ? NULL : marpaESLIFp->marpaESLIFOption.genericLoggerp;
   marpaWrapperRecognizerOption.disableThresholdb         = marpaESLIFRecognizerOptionp->disableThresholdb;
@@ -16583,6 +16604,56 @@ static inline short _marpaESLIFRecognizer_recognizerIfActionCallbackb(marpaESLIF
   }
 
   *ifCallbackpp = ifCallbackp;
+
+  rcb = 1;
+  goto done;
+
+ err:
+  rcb = 0;
+
+ done:
+  return rcb;
+}
+
+/*****************************************************************************/
+static inline short _marpaESLIFRecognizer_recognizerEventActionCallbackb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIF_action_t *eventActionp, marpaESLIFRecognizerEventCallback_t *eventCallbackpp)
+/*****************************************************************************/
+{
+  static const char                         *funcs                      = "_marpaESLIFRecognizer_recognizerEventActionCallbackb";
+  marpaESLIFRecognizerOption_t               marpaESLIFRecognizerOption = marpaESLIFRecognizerp->marpaESLIFRecognizerOption;
+  marpaESLIFRecognizerEventActionResolver_t  eventActionResolverp       = marpaESLIFRecognizerOption.eventActionResolverp;
+  marpaESLIFRecognizerEventCallback_t        eventCallbackp             = NULL;
+  char                                      *eventactions;
+  short                                      rcb;
+
+  switch (eventActionp->type) {
+  case MARPAESLIF_ACTION_TYPE_NAME:
+    /* Action is a normal name */
+    eventactions = eventActionp->u.names;
+    /* Get the callback pointer */
+    if (eventActionResolverp == NULL) {
+      MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "Cannot execute event action \"%s\": no event action resolver", eventactions);
+      goto err;
+    }
+    eventCallbackp = eventActionResolverp(marpaESLIFRecognizerOption.userDatavp, marpaESLIFRecognizerp, eventactions);
+    if (eventCallbackp == NULL) {
+      MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "Action \"%s\" resolved to NULL", eventactions);
+      goto err;
+    } else {
+      MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Action \"%s\" resolved to %p", eventactions, ifCallbackp);
+    }
+    break;
+  case MARPAESLIF_ACTION_TYPE_LUA:
+    /* Lua action: this is a built-in */
+    eventCallbackp                      = _marpaESLIFRecognizer_lua_eventactionb;
+    marpaESLIFRecognizerp->eventactions = eventActionp->u.luas;
+    break;
+  default:
+    MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "Invalid action type %d", eventActionp->type);
+    goto err;
+  }
+
+  *eventCallbackpp = eventCallbackp;
 
   rcb = 1;
   goto done;

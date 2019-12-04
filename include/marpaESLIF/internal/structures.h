@@ -431,6 +431,7 @@ struct marpaESLIFRecognizer {
   /* For lua if-action callback */
   lua_State                   *L;
   char                        *ifactions;
+  char                        *eventactions;
 };
 
 struct marpaESLIF_lexeme_data {

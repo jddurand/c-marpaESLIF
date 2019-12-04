@@ -1206,3 +1206,36 @@ static short _marpaESLIFValue_lua_representationb(void *userDatavp, marpaESLIFVa
   return rcb;
 }
 
+/*****************************************************************************/
+static short _marpaESLIFRecognizer_lua_eventactionb(void *userDatavp, marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFEvent_t *eventArrayp, size_t eventArrayl, marpaESLIFValueResultBool_t *marpaESLIFValueResultBoolp)
+/*****************************************************************************/
+{
+  static const char                   *funcs = "_marpaESLIFRecognizer_lua_eventactionb";
+  marpaESLIFRecognizerEventCallback_t  eventCallbackp;
+  short                                rcb;
+
+  /* Create the lua state if needed */
+  if (! _marpaESLIFRecognizer_lua_newb(marpaESLIFRecognizerp)) {
+    goto err;
+  }
+
+  eventCallbackp = marpaESLIFLua_recognizerEventActionResolver(userDatavp, marpaESLIFRecognizerp, marpaESLIFRecognizerp->eventactions);
+  if (eventCallbackp == NULL) {
+    MARPAESLIF_ERROR(marpaESLIFRecognizerp->marpaESLIFp, "Lua bindings returned no event-action callback");
+    goto err; /* Lua will shutdown anyway */
+  }
+
+  rcb = eventCallbackp(userDatavp, marpaESLIFRecognizerp, eventArrayp, eventArrayl, marpaESLIFValueResultBoolp);
+
+  if (! rcb) goto err;
+
+  goto done;
+
+ err:
+  LOG_LATEST_ERROR(marpaESLIFRecognizerp);
+  rcb = 0;
+
+ done:
+  return rcb;
+}
+
