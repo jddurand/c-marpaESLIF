@@ -3637,35 +3637,22 @@ static short marpaESLIFLua_ifCallbackb(void *userDatavp, marpaESLIFRecognizer_t 
   marpaESLIFLuaRecognizerContext_t *marpaESLIFLuaRecognizerContextp = (marpaESLIFLuaRecognizerContext_t *) userDatavp;
 #endif
   lua_State                   *L                          = marpaESLIFLuaRecognizerContextp->L;
-  int                          topi;
-  int                          newtopi;
-  int                          typei;
   int                          tmpi;
   short                        rcb;
 
   /* fprintf(stdout, "... action %s start\n", marpaESLIFLuaRecognizerContextp->actions); fflush(stdout); fflush(stderr); */
 
-  if (! marpaESLIFLua_lua_gettop(&topi, L)) goto err;
-  MARPAESLIFLUA_CALLBACK(L, marpaESLIFLuaRecognizerContextp->recognizerInterface_r, marpaESLIFLuaRecognizerContextp->actions, 1 /* nargs */,
-                         if (! marpaESLIFLua_pushRecognizerb(marpaESLIFLuaRecognizerContextp, marpaESLIFRecognizerp, marpaESLIFValueResultLexemep)) goto err;
-                         );
-
-  if (! marpaESLIFLua_lua_gettop(&newtopi, L)) goto err;
-  if (newtopi != (topi + 1)) {
-    marpaESLIFLua_luaL_errorf(L, "Function %s must return exactly one value", marpaESLIFLuaRecognizerContextp->actions);
-    goto err;
-  }
-
-  if (! marpaESLIFLua_lua_type(&typei, L, 1)) goto err;
-  if (typei != LUA_TBOOLEAN) {
-    marpaESLIFLua_luaL_errorf(L, "Function %s must return a boolean value", marpaESLIFLuaRecognizerContextp->actions);
-    goto err;
-  }
-
-  if (! marpaESLIFLua_lua_toboolean(&tmpi, L, 1)) goto err;
+  MARPAESLIFLUA_CALLBACKB(L,
+                          marpaESLIFLuaRecognizerContextp->recognizerInterface_r,
+                          marpaESLIFLuaRecognizerContextp->actions,
+                          1 /* nargs */,
+                          {
+                            if (! marpaESLIFLua_pushRecognizerb(marpaESLIFLuaRecognizerContextp, marpaESLIFRecognizerp, marpaESLIFValueResultLexemep)) goto err;
+                          },
+                          &tmpi
+                          );
 
   *marpaESLIFValueResultBoolp = (tmpi != 0) ? MARPAESLIFVALUERESULTBOOL_TRUE : MARPAESLIFVALUERESULTBOOL_FALSE;
-  if (! marpaESLIFLua_lua_pop(L, 1)) goto err;
 
   /* fprintf(stdout, "... action %s done\n", marpaESLIFLuaRecognizerContextp->actions); fflush(stdout); fflush(stderr); */
 
@@ -3691,43 +3678,29 @@ static short marpaESLIFLua_eventCallbackb(void *userDatavp, marpaESLIFRecognizer
 #endif
   lua_State                   *L                          = marpaESLIFLuaRecognizerContextp->L;
   size_t                       i;
-  int                          topi;
-  int                          newtopi;
-  int                          typei;
   int                          tmpi;
   short                        rcb;
 
   /* fprintf(stdout, "... action %s start\n", marpaESLIFLuaRecognizerContextp->actions); fflush(stdout); fflush(stderr); */
 
-  if (! marpaESLIFLua_lua_gettop(&topi, L)) goto err;
-  MARPAESLIFLUA_CALLBACK(L, marpaESLIFLuaRecognizerContextp->recognizerInterface_r, marpaESLIFLuaRecognizerContextp->actions, 1 /* nargs */,
-                         if (! marpaESLIFLua_lua_newtable(L)) goto err;                          /* Stack: function, {} */
-                         for (i = 0; i < eventArrayl; i++) {
-                           if (! marpaESLIFLua_lua_newtable(L)) goto err;                        /* Stack: function, {}, {} */
-                           MARPAESLIFLUA_STORE_INTEGER(L, "type", eventArrayp[i].type);          /* Stack: function, {}, {"type" => type} */
-                           MARPAESLIFLUA_STORE_ASCIISTRING(L, "symbol", eventArrayp[i].symbols); /* Stack: function, {}, {"type" => type, "symbol" => symbol} */
-                           MARPAESLIFLUA_STORE_ASCIISTRING(L, "event", eventArrayp[i].events);   /* Stack: function, {}, {"type" => type, "symbol" => symbol, "event" => event} */
-                           /* Take care, at index 1 there is the function */
-                           if (! marpaESLIFLua_lua_seti(L, 2, (lua_Integer) i)) goto err;        /* Stack: function, {i => {"type" => type, "symbol" => symbol, "event" => event}} */
-                         }
+  MARPAESLIFLUA_CALLBACKB(L,
+                          marpaESLIFLuaRecognizerContextp->recognizerInterface_r,
+                          marpaESLIFLuaRecognizerContextp->actions,
+                          1 /* nargs */,
+                          {
+                            if (! marpaESLIFLua_lua_newtable(L)) goto err;                          /* Stack: function, {} */
+                            for (i = 0; i < eventArrayl; i++) {
+                              if (! marpaESLIFLua_lua_newtable(L)) goto err;                        /* Stack: function, {}, {} */
+                              MARPAESLIFLUA_STORE_INTEGER(L, "type", eventArrayp[i].type);          /* Stack: function, {}, {"type" => type} */
+                              MARPAESLIFLUA_STORE_ASCIISTRING(L, "symbol", eventArrayp[i].symbols); /* Stack: function, {}, {"type" => type, "symbol" => symbol} */
+                              MARPAESLIFLUA_STORE_ASCIISTRING(L, "event", eventArrayp[i].events);   /* Stack: function, {}, {"type" => type, "symbol" => symbol, "event" => event} */
+                              if (! marpaESLIFLua_lua_seti(L, -2, (lua_Integer) i)) goto err;       /* Stack: function, {i => {"type" => type, "symbol" => symbol, "event" => event}} */
+                            }
+                          },
+                          &tmpi
                          );
 
-  if (! marpaESLIFLua_lua_gettop(&newtopi, L)) goto err;
-  if (newtopi != (topi + 1)) {
-    marpaESLIFLua_luaL_errorf(L, "Function %s must return exactly one value", marpaESLIFLuaRecognizerContextp->actions);
-    goto err;
-  }
-
-  if (! marpaESLIFLua_lua_type(&typei, L, 1)) goto err;
-  if (typei != LUA_TBOOLEAN) {
-    marpaESLIFLua_luaL_errorf(L, "Function %s must return a boolean value", marpaESLIFLuaRecognizerContextp->actions);
-    goto err;
-  }
-
-  if (! marpaESLIFLua_lua_toboolean(&tmpi, L, 1)) goto err;
-
   *marpaESLIFValueResultBoolp = (tmpi != 0) ? MARPAESLIFVALUERESULTBOOL_TRUE : MARPAESLIFVALUERESULTBOOL_FALSE;
-  if (! marpaESLIFLua_lua_pop(L, 1)) goto err;
 
   /* fprintf(stdout, "... action %s done, tmpi=%d\n", marpaESLIFLuaRecognizerContextp->actions, (int) tmpi); fflush(stdout); fflush(stderr); */
 
@@ -4636,7 +4609,7 @@ static int marpaESLIFLua_marpaESLIFRecognizer_eventsi(lua_State *L)
     MARPAESLIFLUA_STORE_INTEGER(L, "type", eventArrayp[i].type);          /* Stack: {}, {"type" => type} */
     MARPAESLIFLUA_STORE_ASCIISTRING(L, "symbol", eventArrayp[i].symbols); /* Stack: {}, {"type" => type, "symbol" => symbol} */
     MARPAESLIFLUA_STORE_ASCIISTRING(L, "event", eventArrayp[i].events);   /* Stack: {}, {"type" => type, "symbol" => symbol, "event" => event} */
-    if (! marpaESLIFLua_lua_seti(L, 1, (lua_Integer) i)) goto err;        /* Stack: {i => {"type" => type, "symbol" => symbol, "event" => event}} */
+    if (! marpaESLIFLua_lua_seti(L, -2, (lua_Integer) i)) goto err;       /* Stack: {i => {"type" => type, "symbol" => symbol, "event" => event}} */
   }
 
   rci = 1;
