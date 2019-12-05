@@ -6044,6 +6044,10 @@ static inline short _marpaESLIFRecognizer_resumeb(marpaESLIFRecognizer_t *marpaE
     if (marpaESLIFRecognizerp->eventArrayl > 0) {
       /* If grammar has an event-action, check it */
       if (grammarp->defaultEventActionp != NULL) {
+        /* Do as if user would have called marpaESLIFRecognizer_eventb */
+        if (! marpaESLIFRecognizer_eventb(marpaESLIFRecognizerp, NULL /* eventArraylp */, NULL /* eventArraypp */)) {
+          goto err;
+        }
         if (! _marpaESLIFRecognizer_recognizerEventActionCallbackb(marpaESLIFRecognizerp, grammarp->defaultEventActionp, &eventCallbackp)) {
           goto err;
         }
