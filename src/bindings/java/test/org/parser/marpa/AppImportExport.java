@@ -35,7 +35,7 @@ public class AppImportExport implements Runnable {
 		}
 
 		final String grammar = 
-				    ":default ::= symbol-action => java_symbolAction\n" +
+				    ":default ::= symbol-action => java_symbolAction event-action => java_eventAction\n" +
 				    "event ^java_input = predicted java_input\n" + 
 				    "\n" + 
 				    "java_output ::= lua_proxy  action => java_proxy\n" + 
@@ -133,7 +133,7 @@ public class AppImportExport implements Runnable {
 		try {
 			eslifGrammar = new ESLIFGrammar(eslif, grammar);
 			for (AppLexeme input : inputArray) {
-				ESLIFRecognizerInterface eslifRecognizerInterface = new AppEmptyRecognizer();
+				ESLIFRecognizerInterface eslifRecognizerInterface = new AppEmptyRecognizer(this.eslifLogger);
 			    ESLIFRecognizer eslifRecognizer = new ESLIFRecognizer(eslifGrammar, eslifRecognizerInterface);
 			    eslifRecognizer.scan(true); // Initial events
 			    eslifRecognizer.lexemeRead("JAVA_INPUT", input.Value(), 1, 1);

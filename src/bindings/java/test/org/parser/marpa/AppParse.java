@@ -21,7 +21,7 @@ public class AppParse  {
 		int       nbalive;
 
 		if (false) {
-			eslifLogger.info(" ATTACH ME");
+			eslifLogger.info(" ATTACH ME - SLEEPING 10 SECONDS");
 			try {
 				TimeUnit.SECONDS.sleep(10);
 			} catch (InterruptedException e) {

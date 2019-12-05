@@ -1,6 +1,14 @@
 package org.parser.marpa;
 
+import java.util.Arrays;
+
 public class AppEmptyRecognizer implements ESLIFRecognizerInterface {
+	private ESLIFLoggerInterface eslifLogger;
+	
+	public AppEmptyRecognizer(ESLIFLoggerInterface eslifLogger) {
+		this.eslifLogger = eslifLogger;
+	}
+
 	public boolean read() {
 		return true;
 	}
@@ -36,4 +44,9 @@ public class AppEmptyRecognizer implements ESLIFRecognizerInterface {
 	public boolean isWithTrack() {
 		return true;
 	}
+
+	public boolean java_eventAction(ESLIFEvent[] eventArray) {
+		this.eslifLogger.debug("event_action(" + Arrays.toString(eventArray) + ")");
+		return true;
+	}	
 }

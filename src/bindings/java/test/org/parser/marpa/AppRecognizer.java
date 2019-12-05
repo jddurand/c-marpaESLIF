@@ -3,6 +3,7 @@ package org.parser.marpa;
 import java.io.BufferedReader;
 import java.io.UnsupportedEncodingException;
 import java.nio.charset.Charset;
+import java.util.Arrays;
 
 /**
  * Test Application Recognizer
@@ -75,4 +76,9 @@ public class AppRecognizer implements ESLIFRecognizerInterface {
 			eslifLoggerInterface.debug("if_number(" + string + ")");
 			return true;
 		}	
-	}
+
+		public boolean event_action(ESLIFEvent[] eventArray) {
+			eslifLoggerInterface.debug("event_action(" + Arrays.toString(eventArray) + ")");
+			return true;
+		}	
+}

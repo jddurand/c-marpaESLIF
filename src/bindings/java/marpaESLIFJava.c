@@ -225,6 +225,7 @@ static char _MARPAESLIF_JNI_CONTEXT;
 #define MARPAESLIF_ESLIFVALUEINTERFACE_SYMBOLACTION_SIGNATURE "(Ljava/lang/Object;)Ljava/lang/Object;"
 #define MARPAESLIF_ESLIFVALUEINTERFACE_RULEACTION_SIGNATURE   "([Ljava/lang/Object;)Ljava/lang/Object;"
 #define MARPAESLIF_ESLIFRECOGNIZERINTERFACE_IFACTION_SIGNATURE "([B)Z"
+#define MARPAESLIF_ESLIFRECOGNIZERINTERFACE_EVENTACTION_SIGNATURE "([Lorg/parser/marpa/ESLIFEvent;)Z"
 
 #ifdef HAVE_INTPTR_T
 #define PTR_TO_JLONG(p) ((jlong) ((intptr_t) (p)))
@@ -1083,10 +1084,12 @@ static short ESLIFValue_contextb(JNIEnv *envp, jobject eslifValuep, jobject obje
 static marpaESLIFValueRuleCallback_t   marpaESLIFValueRuleActionResolver(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, char *actions);
 static marpaESLIFValueSymbolCallback_t marpaESLIFValueSymbolActionResolver(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, char *actions);
 static marpaESLIFRecognizerIfCallback_t marpaESLIFRecognizerIfActionResolver(void *userDatavp, marpaESLIFRecognizer_t *marpaESLIFRecognizerp, char *actions);
+static marpaESLIFRecognizerEventCallback_t marpaESLIFRecognizerEventActionResolver(void *userDatavp, marpaESLIFRecognizer_t *marpaESLIFRecognizerp, char *actions);
 static short marpaESLIFValueContextInject(JNIEnv *envp, marpaESLIFValue_t *marpaESLIFValuep, jobject eslifValueInterfacep, marpaESLIFValueContext_t *marpaESLIFValueContextp);
 static short marpaESLIFValueRuleCallback(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
 static short marpaESLIFJava_valueSymbolCallbackb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, marpaESLIFValueResult_t *marpaESLIFValueResultp, int resulti);
 static short marpaESLIFJava_recognizerIfCallbackb(void *userDatavp, marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFValueResult_t *marpaESLIFValueResultLexemep, marpaESLIFValueResultBool_t *marpaESLIFValueResultBoolp);
+static short marpaESLIFJava_recognizerEventCallbackb(void *userDatavp, marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFEvent_t *eventArrayp, size_t eventArrayl, marpaESLIFValueResultBool_t *marpaESLIFValueResultBoolp);
 static void  marpaESLIFJava_genericFreeCallbackv(void *userDatavp, marpaESLIFValueResult_t *marpaESLIFValueResultp);
 static jmethodID marpaESLIFJava_valueActionResolveri(JNIEnv *envp, marpaESLIFValueContext_t *marpaESLIFValueContextp, char *methods, char *signatures);
 static jmethodID marpaESLIFJava_recognizerActionResolveri(JNIEnv *envp, marpaESLIFRecognizerContext_t *marpaESLIFRecognizerContextp, char *methods, char *signatures);
@@ -2279,6 +2282,7 @@ JNIEXPORT jboolean JNICALL Java_org_parser_marpa_ESLIFGrammar_jniParse(JNIEnv *e
   marpaESLIFRecognizerOption.buftriggerperci           = 50; /* Recommended value */
   marpaESLIFRecognizerOption.bufaddperci               = 50; /* Recommended value */
   marpaESLIFRecognizerOption.ifActionResolverp         = marpaESLIFRecognizerIfActionResolver;
+  marpaESLIFRecognizerOption.eventActionResolverp      = marpaESLIFRecognizerEventActionResolver;
 
   if (! marpaESLIFJava_valueContextInitb(envp, eslifValueInterfacep, eslifGrammarp, &marpaESLIFValueContext)) {
     goto err;
@@ -2840,6 +2844,7 @@ JNIEXPORT void JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniNew(JNIEnv *envp
   marpaESLIFRecognizerOption.buftriggerperci           = 50; /* Recommended value */
   marpaESLIFRecognizerOption.bufaddperci               = 50; /* Recommended value */
   marpaESLIFRecognizerOption.ifActionResolverp         = marpaESLIFRecognizerIfActionResolver;
+  marpaESLIFRecognizerOption.eventActionResolverp      = marpaESLIFRecognizerEventActionResolver;
 
   marpaESLIFRecognizerp = marpaESLIFRecognizer_newp(marpaESLIFGrammarp, &marpaESLIFRecognizerOption);
   if (marpaESLIFRecognizerp == NULL) {
@@ -3825,6 +3830,7 @@ JNIEXPORT jobjectArray JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniEvent(JN
   }
 
   for (i = 0; i < eventArrayl; i++) {
+    object    = NULL;
     eventType = NULL;
     symbol    = NULL;
     event     = NULL;
@@ -3841,6 +3847,10 @@ JNIEXPORT jobjectArray JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniEvent(JN
     if (object == NULL) {
       RAISEEXCEPTION(envp, "NewObject failure");
     }
+    /* They are all in "object" now */
+    eventType = NULL;
+    symbol    = NULL;
+    event     = NULL;
 
     (*envp)->SetObjectArrayElement(envp, objectArray, (jsize) i, object);
     if (HAVEEXCEPTION(envp)) {
@@ -4458,6 +4468,34 @@ static marpaESLIFRecognizerIfCallback_t marpaESLIFRecognizerIfActionResolver(voi
 }
 
 /*****************************************************************************/
+static marpaESLIFRecognizerEventCallback_t marpaESLIFRecognizerEventActionResolver(void *userDatavp, marpaESLIFRecognizer_t *marpaESLIFRecognizerp, char *actions)
+/*****************************************************************************/
+{
+  JNIEnv                        *envp;
+  marpaESLIFRecognizerContext_t *marpaESLIFRecognizerContextp = (marpaESLIFRecognizerContext_t *) userDatavp;
+  jmethodID                      methodp;
+
+  /* Resolver callback is never running in another thread - no need to attach */
+  if (((*marpaESLIF_vmp)->GetEnv(marpaESLIF_vmp, (void **) &envp, MARPAESLIF_JNI_VERSION) != JNI_OK) || (envp == NULL)) {
+    goto err;
+  }
+
+  /* Make sure event action method is resolved */
+  methodp = marpaESLIFJava_recognizerActionResolveri(envp, marpaESLIFRecognizerContextp, actions, MARPAESLIF_ESLIFRECOGNIZERINTERFACE_EVENTACTION_SIGNATURE);
+  if (methodp == NULL) {
+    goto err;
+  }
+
+  marpaESLIFRecognizerContextp->actions = actions;
+  marpaESLIFRecognizerContextp->methodp = methodp;
+
+  return marpaESLIFJava_recognizerEventCallbackb;
+
+ err:
+  return NULL;
+}
+
+/*****************************************************************************/
 static short marpaESLIFValueContextInject(JNIEnv *envp, marpaESLIFValue_t *marpaESLIFValuep, jobject eslifValueInterfacep, marpaESLIFValueContext_t *marpaESLIFValueContextp)
 /*****************************************************************************/
 {
@@ -4684,6 +4722,99 @@ static short marpaESLIFJava_recognizerIfCallbackb(void *userDatavp, marpaESLIFRe
   rcb = 0;
 
  done:
+  return rcb;
+}
+
+/*****************************************************************************/
+static short marpaESLIFJava_recognizerEventCallbackb(void *userDatavp, marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFEvent_t *eventArrayp, size_t eventArrayl, marpaESLIFValueResultBool_t *marpaESLIFValueResultBoolp)
+/*****************************************************************************/
+{
+  /* Almost exactly like marpaESLIFJava_recognizerIfCallbackb */
+  static const char             *funcs                        = "marpaESLIFJava_recognizerEventCallbackb";
+  marpaESLIFRecognizerContext_t *marpaESLIFRecognizerContextp = (marpaESLIFRecognizerContext_t *) userDatavp;
+  jobjectArray                   objectArray                  = NULL;
+  jobject                        object                       = NULL;
+  jobject                        eventType                    = NULL;
+  jstring                        symbol                       = NULL;
+  jstring                        event                        = NULL;
+  size_t                         i;
+  JNIEnv                        *envp;
+  jboolean                       boolean;
+  short                          rcb;
+
+  /* Event callback is never running in another thread - no need to attach */
+  if (((*marpaESLIF_vmp)->GetEnv(marpaESLIF_vmp, (void **) &envp, MARPAESLIF_JNI_VERSION) != JNI_OK) || (envp == NULL)) {
+    goto err;
+  }
+
+  objectArray = (*envp)->NewObjectArray(envp, (jsize) eventArrayl, MARPAESLIF_ESLIFEVENT_CLASSP, NULL /* initialElement */);
+  if (objectArray == NULL) {
+    RAISEEXCEPTION(envp, "NewObjectArray failure");
+  }
+
+  for (i = 0; i < eventArrayl; i++) {
+    object    = NULL;
+    eventType = NULL;
+    symbol    = NULL;
+    event     = NULL;
+
+    eventType = (*envp)->CallStaticObjectMethod(envp, MARPAESLIF_ESLIFEVENTTYPE_CLASSP, MARPAESLIF_ESLIFEVENTTYPE_CLASS_get_METHODP, eventArrayp[i].type);
+    if (eventType == NULL) {
+      RAISEEXCEPTION(envp, "CallStaticObjectMethod failure");
+    }
+
+    symbol = marpaESLIFJava_marpaESLIFASCIIToJavap(envp, eventArrayp[i].symbols);
+    event = marpaESLIFJava_marpaESLIFASCIIToJavap(envp, eventArrayp[i].events);
+
+    object = (*envp)->NewObject(envp, MARPAESLIF_ESLIFEVENT_CLASSP, MARPAESLIF_ESLIFEVENT_CLASS_init_METHODP, eventType, symbol, event);
+    if (object == NULL) {
+      RAISEEXCEPTION(envp, "NewObject failure");
+    }
+    /* They are all in "object" now */
+    eventType = NULL;
+    symbol    = NULL;
+    event     = NULL;
+
+    (*envp)->SetObjectArrayElement(envp, objectArray, (jsize) i, object);
+    if (HAVEEXCEPTION(envp)) {
+      goto err;
+    }
+  }
+
+  /* Call the event action */
+  boolean = (*envp)->CallBooleanMethod(envp, marpaESLIFRecognizerContextp->eslifRecognizerInterfacep, marpaESLIFRecognizerContextp->methodp, objectArray);
+  if (HAVEEXCEPTION(envp)) {
+    goto err;
+  }
+
+  *marpaESLIFValueResultBoolp = (boolean == JNI_FALSE) ? MARPAESLIFVALUERESULTBOOL_FALSE : MARPAESLIFVALUERESULTBOOL_TRUE;
+
+  rcb = 1;
+  goto done;
+
+ err:
+  rcb = 0;
+
+ done:
+  if (envp != NULL) {
+    if (objectArray != NULL) {
+      (*envp)->DeleteLocalRef(envp, objectArray);
+    }
+    if (object != NULL) {
+      (*envp)->DeleteLocalRef(envp, object);
+    }
+    if (eventType != NULL) {
+      (*envp)->DeleteLocalRef(envp, eventType);
+    }
+    if (symbol != NULL) {
+      (*envp)->DeleteLocalRef(envp, symbol);
+    }
+    if (event != NULL) {
+      (*envp)->DeleteLocalRef(envp, event);
+    }
+  }
+  objectArray = NULL;
+
   return rcb;
 }
 

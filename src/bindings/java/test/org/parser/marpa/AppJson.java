@@ -40,7 +40,7 @@ public class AppJson implements Runnable {
 						"# \n" +
 						"# Default action is to propagate the first RHS value \n" +
 						"# \n" +
-						":default ::= action => ::shift \n" +
+						":default ::= action => ::shift event-action => event_action\n" +
 						" \n" +
 						"                   ####################################################### \n" +
 						"                   # >>>>>>>>>>>>>>>> Strict JSON Grammar <<<<<<<<<<<<<<<< \n" +
