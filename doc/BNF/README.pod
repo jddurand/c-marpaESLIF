@@ -377,6 +377,35 @@ For example:
   event b=off = nulled     symbolname
   event c=on  = predicted ^symbolname
 
+=item Generic event callback
+
+The grammar, in C<:default> meta rule, can have an I<event action> callback that will end into user-land's recognizer interface or in the embedded lua interpreter, e.g.
+
+  :default event-action => Custom_action1
+
+or
+
+  :default event-action => lua::->Custom_action2
+
+  <luascript>
+
+    -- In the embedded lua, globals are automatically
+    -- created. During parsing phase, they are:
+    -- marpaESLIF
+    -- marpaESLIFGrammar
+    -- marpaESLIFRecognizer
+
+    function Custom_action2(events)
+      -- "events" is a table, exactly like the output
+      -- of marpaESLIFRecognizer.events()
+      -- This function must return a boolean
+      return true
+    end
+
+  </luascript>
+
+The event callback must return a boolean, a false value indicates that the parsing failed.
+
 =back
 
 =item Autoranking
@@ -687,6 +716,7 @@ marpaESLIF BNF can be expressed in itself:
                                    | <event specification>
                                    | <hide separator specification>
                                    | <if action>
+                                   | <event action>
   <action>                       ::= 'action' '=>' <action name>
                                    | 'action' '=>' <string literal>
   <left association>             ::= 'assoc' '=>' 'left'
@@ -718,6 +748,7 @@ marpaESLIF BNF can be expressed in itself:
   <symbol action>                ::= 'symbol-action' '=>' <symbol action name>
                                    | 'symbol-action' '=>' <string literal>
   <if action>                    ::= 'if-action' '=>' <if action name>
+  <event action>                 ::= 'event-action' '=>' <event action name>
   <alternative name>             ::= <standard name>
                                    | <quoted name>
   <event name>                   ::= <restricted ascii graph name>
@@ -770,6 +801,8 @@ marpaESLIF BNF can be expressed in itself:
                                    | '::true'
                                    | '::false'
   <if action name>               ::= <restricted ascii graph name>
+                                   | <lua action name>
+  <event action name>            ::= <restricted ascii graph name>
                                    | <lua action name>
   <quantifier>                   ::= '*'
                                    | '+'
