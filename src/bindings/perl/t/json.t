@@ -18,6 +18,8 @@ sub isWithNewline          { 1 }
 sub isWithTrack            { 1 }
 sub if_number              { 1 }
 sub if_char                { 1 }
+sub event_action           { my ($self) = shift; $log->infof('Events: %s', \@_); 1 }
+
 
 package MyValueInterface;
 use strict;
@@ -194,7 +196,7 @@ __DATA__
 #
 # Default action is to propagate the first RHS value
 #
-:default ::= action => ::shift
+:default ::= action => ::shift event-action => event_action
 
                    #######################################################
                    # >>>>>>>>>>>>>>>> Strict JSON Grammar <<<<<<<<<<<<<<<<
@@ -293,7 +295,8 @@ char    ::= /[^"\\\x00-\x1F]+/                                                  
 # -------------------------
 # Unsignificant whitespaces
 # -------------------------
-:discard ::= /[\x{9}\x{A}\x{D}\x{20}]+/
+whitespace ::= /[\x{9}\x{A}\x{D}\x{20}]+/
+:discard ::= whitespace event => whitespace$
 
                    #######################################################
                    # >>>>>>>>>>>>>>>>>> JSON Extensions <<<<<<<<<<<<<<<<<<
