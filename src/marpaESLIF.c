@@ -8368,7 +8368,8 @@ static inline short _marpaESLIFRecognizer_push_grammar_eventsb(marpaESLIFRecogni
       goto err;
     }
     if (isExhaustedb) {
-      if (! _marpaESLIFRecognizer_push_eventb(marpaESLIFRecognizerp, MARPAESLIF_EVENTTYPE_EXHAUSTED, NULL /* symbolp */, MARPAESLIF_EVENTTYPE_EXHAUSTED_NAME, NULL /* discardArrayp */)) {
+      /* Push exhaustion event if recognizer interface has set the option */
+      if (marpaESLIFRecognizerp->marpaESLIFRecognizerOption.exhaustedb && (! _marpaESLIFRecognizer_push_eventb(marpaESLIFRecognizerp, MARPAESLIF_EVENTTYPE_EXHAUSTED, NULL /* symbolp */, MARPAESLIF_EVENTTYPE_EXHAUSTED_NAME, NULL /* discardArrayp */))) {
         goto err;
       }
       /* Force discard of remaining data */
