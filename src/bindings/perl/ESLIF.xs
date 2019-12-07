@@ -3815,7 +3815,7 @@ events(Perl_MarpaX_ESLIF_Recognizer)
 PREINIT:
   static const char *funcs = "MarpaX::ESLIF::Recognizer::events";
 CODE:
-  AV                *list  = (AV *)sv_2mortal((SV *)newAV());
+  AV                *list;
   HV                *hv;
   size_t             i;
   size_t             eventArrayl;
@@ -3825,6 +3825,8 @@ CODE:
   if (! marpaESLIFRecognizer_eventb(Perl_MarpaX_ESLIF_Recognizer->marpaESLIFRecognizerp, &eventArrayl, &eventArrayp)) {
     MARPAESLIFPERL_CROAKF("marpaESLIFRecognizer_eventb failure, %s", strerror(errno));
   }
+
+  list = newAV();
   for (i = 0; i < eventArrayl; i++) {
     hv = (HV *)sv_2mortal((SV *)newHV());
 
@@ -3859,7 +3861,7 @@ CODE:
     av_push(list, newRV((SV *)hv));
   }
 
-  RETVAL = newRV((SV *)list);
+  RETVAL = newRV_noinc((SV *)list);
 OUTPUT:
   RETVAL
 
@@ -4072,7 +4074,7 @@ lexemeExpected(Perl_MarpaX_ESLIF_Recognizer)
 PREINIT:
   static const char *funcs = "MarpaX::ESLIF::Recognizer::lexemeExpected";
 CODE:
-  AV                *list  = (AV *)sv_2mortal((SV *)newAV());
+  AV                *list;
   size_t             nLexeme;
   size_t             i;
   char             **lexemesArrayp;
@@ -4081,8 +4083,9 @@ CODE:
   if (! marpaESLIFRecognizer_lexeme_expectedb(Perl_MarpaX_ESLIF_Recognizer->marpaESLIFRecognizerp, &nLexeme, &lexemesArrayp)) {
     MARPAESLIFPERL_CROAKF("marpaESLIFRecognizer_lexeme_expectedb failure, %s", strerror(errno));
   }
+
+  list  = newAV();
   if (nLexeme > 0) {
-    EXTEND(sp, (int) nLexeme);
     for (i = 0; i < nLexeme; i++) {
       if (lexemesArrayp[i] != NULL) {
         svp = newSVpv(lexemesArrayp[i], 0);
@@ -4095,7 +4098,7 @@ CODE:
       av_push(list, (svp == &PL_sv_undef) ? newSV(0) : svp);
     }
   }
-  RETVAL = newRV((SV *)list);
+  RETVAL = newRV_noinc((SV *)list);
 OUTPUT:
   RETVAL
 
