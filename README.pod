@@ -14,19 +14,19 @@ The L<marpaESLIF BNF|https://github.com/jddurand/c-marpaESLIF/tree/master/doc/BN
 
 =over
 
-=item native regular expression support
+=item Native regular expression support
 
-=item syntactic exception
+=item Syntactic exception
 
-=item unlimited number of sub-grammars
+=item Unlimited number of sub-grammars
 
-=item streaming compatible architecture
+=item Streaming compatible architecture
 
-=item zero-length symbols
+=item Zero-length symbols
 
-=item embedded lua language
+=item Embedded lua language
 
-=item java, lua and perl bindings
+=item Bindings to java, lua and perl
 
 =back
 
