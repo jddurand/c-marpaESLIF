@@ -9298,7 +9298,10 @@ static inline short _marpaESLIF_appendOpaqueDataToStringGenerator(marpaESLIF_str
       MARPAESLIF_ERRORF(marpaESLIF_stringGeneratorp->marpaESLIFp, "malloc failure, %s", strerror(errno));
       goto err;
     }
-    memcpy(marpaESLIF_stringGeneratorp->s, p, sizel);
+    if (sizel > 0) {
+      /* In theory, every memcpy() implementation should be protected if sizel == 0, though this is since C99 */
+      memcpy(marpaESLIF_stringGeneratorp->s, p, sizel);
+    }
     marpaESLIF_stringGeneratorp->l      = sizel + 1;  /* NUL byte is set at exit of the routine */
     marpaESLIF_stringGeneratorp->allocl = allocl;
     marpaESLIF_stringGeneratorp->okb    = 1;
@@ -9319,7 +9322,9 @@ static inline short _marpaESLIF_appendOpaqueDataToStringGenerator(marpaESLIF_str
       marpaESLIF_stringGeneratorp->s      = tmpp;
       marpaESLIF_stringGeneratorp->allocl = allocl;
     }
-    memcpy(marpaESLIF_stringGeneratorp->s + marpaESLIF_stringGeneratorp->l - 1, p, sizel);
+    if (sizel > 0) {
+      memcpy(marpaESLIF_stringGeneratorp->s + marpaESLIF_stringGeneratorp->l - 1, p, sizel);
+    }
     marpaESLIF_stringGeneratorp->l = wantedl; /* Already contains the +1 fir the NUL byte */
   } else {
     MARPAESLIF_ERRORF(marpaESLIF_stringGeneratorp->marpaESLIFp, "Invalid internal call to %s", funcs);
@@ -13798,6 +13803,7 @@ static short _marpaESLIFRecognizer_concat_valueResultCallbackb(void *userDatavp,
           GENERICLOGGER_TRACE(genericLoggerp, "");
         }
       } else {
+        /* No-op */
         continueb = 1;
       }
       break;
@@ -13894,6 +13900,9 @@ static short _marpaESLIFRecognizer_concat_valueResultCallbackb(void *userDatavp,
       /* Array default representation: bytes as-is */
       if ((marpaESLIFValueResult.u.a.p != NULL) && (marpaESLIFValueResult.u.a.sizel > 0)) {
         _marpaESLIF_appendOpaqueDataToStringGenerator(marpaESLIF_stringGeneratorp, marpaESLIFValueResult.u.a.p, marpaESLIFValueResult.u.a.sizel);
+      } else {
+        /* No-op */
+        continueb = 1;
       }
       break;
     case MARPAESLIF_VALUE_TYPE_BOOL:
