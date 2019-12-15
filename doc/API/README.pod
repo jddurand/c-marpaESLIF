@@ -2131,17 +2131,47 @@ Please note that the transcoded result I<may> contain a BOM, it is up to the cal
 
 Returns a pointer to the transcoded string on success, C<NULL> on failure.
 
-=head3 C<marpaESLIF_isinf>
+=head3 C<marpaESLIF_havenan>
 
-  short marpaESLIF_isinf(float f);
+  short marpaESLIF_havenan();
 
-Returns true if C<f> is an infinite number. Relies on the existence of C<isinf> of C<INFINITY> of the underlying C library.
+Returns a true value if marpaESLIF support the I<Not-a-Number> special value.
 
 =head3 C<marpaESLIF_isnan>
 
   short marpaESLIF_isnan(float f);
 
-Returns true if C<f> is an Not-A-Number.
+Returns a true value if argument C<f> is the I<Not-a-Number> special value.
+
+=head3 C<marpaESLIF_nan>
+
+  short marpaESLIF_nan(float *fp);
+
+Returns a true value if the I<Not-a-Number> special value is supported, and fills C<fp> with it if the later is not C<NULL>.
+
+=head3 C<marpaESLIF_haveinf>
+
+  short marpaESLIF_haveinf();
+
+Returns a true value if marpaESLIF support the I<Infinity> special value.
+
+=head3 C<marpaESLIF_isinf>
+
+  short marpaESLIF_isinf(float f);
+
+Returns a true value if argument C<f> is the positive or negative I<Infinity> special value.
+
+=head3 C<marpaESLIF_positive_inf>
+
+  short marpaESLIF_positive_inf(float *fp);
+
+Returns a true value if the I<Infinity> special value is supported, and fills C<fp> with positive infinity if C<fp> is not C<NULL>.
+
+=head3 C<marpaESLIF_negative_inf>
+
+  short marpaESLIF_negative_inf(float *fp);
+
+Returns a true value if the I<Infinity> special value is supported, and fills C<fp> with negative infinity if C<fp> is not C<NULL>.
 
 =head1 NOTES
 

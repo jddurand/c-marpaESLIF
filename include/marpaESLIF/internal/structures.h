@@ -66,12 +66,25 @@
 #endif
 
 #ifdef C_ISINF
-#  define MARPAESLIF_ISINF C_ISINF
+#  define MARPAESLIF_ISINF(f) C_ISINF(f)
+#else
+#  if defined(MARPAESLIF_INFINITY)
+#    define MARPAESLIF_ISINF(f) ((f == -MARPAESLIF_INFINITY) || (f == MARPAESLIF_INFINITY))
+#  endif
 #endif
 
 #ifdef C_ISNAN
-#  define MARPAESLIF_ISNAN C_ISNAN
+#  define MARPAESLIF_ISNAN(f) C_ISNAN(f)
 #endif
+
+#if defined(MARPAESLIF_NAN) && defined(MARPAESLIF_ISNAN)
+#  define MARPAESLIF_HAVENAN 1
+#endif
+
+#if defined(MARPAESLIF_INFINITY) && defined(MARPAESLIF_ISINF)
+#  define MARPAESLIF_HAVEINF 1
+#endif
+
 
 #include "marpaESLIF/internal/lua.h" /* For lua_State* */
 

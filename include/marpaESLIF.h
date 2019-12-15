@@ -530,8 +530,14 @@ extern "C" {
   /* ---------------------- */
   /* Special values helpers */
   /* ---------------------- */
-  marpaESLIF_EXPORT short                         marpaESLIF_isnan(float f);
-  marpaESLIF_EXPORT short                         marpaESLIF_isinf(float f);
+  marpaESLIF_EXPORT short marpaESLIF_havenan();
+  marpaESLIF_EXPORT short marpaESLIF_isnan(float f);
+  marpaESLIF_EXPORT short marpaESLIF_nan(float *fp);
+
+  marpaESLIF_EXPORT short marpaESLIF_haveinf();
+  marpaESLIF_EXPORT short marpaESLIF_isinf(float f);
+  marpaESLIF_EXPORT short marpaESLIF_positive_inf(float *fp);
+  marpaESLIF_EXPORT short marpaESLIF_negative_inf(float *fp);
 #ifdef __cplusplus
 }
 #endif

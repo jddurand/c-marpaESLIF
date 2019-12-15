@@ -17273,17 +17273,13 @@ done:
 }
 
 /*****************************************************************************/
-short marpaESLIF_isinf(float f)
+short marpaESLIF_havenan()
 /*****************************************************************************/
 {
-#if defined(MARPAESLIF_ISINF)
-  return MARPAESLIF_ISINF(f) ? 1 : 0;
+#ifdef MARPAESLIF_HAVENAN
+  return 1;
 #else
-#  if defined(MARPAESLIF_INFINITY)
-  return ((f == MARPAESLIF_INFINITY) || (f == -MARPAESLIF_INFINITY)) ? 1 : 0;
-#  else
   return 0;
-#  endif
 #endif
 }
 
@@ -17291,10 +17287,89 @@ short marpaESLIF_isinf(float f)
 short marpaESLIF_isnan(float f)
 /*****************************************************************************/
 {
-#if defined(MARPAESLIF_ISNAN)
+#ifdef MARPAESLIF_HAVENAN
   return MARPAESLIF_ISNAN(f) ? 1 : 0;
 #else
-  return (f != f) ? 1 : 0;
+  return 0;
+#endif
+}
+
+/*****************************************************************************/
+short marpaESLIF_nan(float *fp)
+/*****************************************************************************/
+{
+#ifdef MARPAESLIF_HAVENAN
+  if (fp != NULL) {
+    *fp = MARPAESLIF_NAN;
+  }
+  return 1;
+#else
+#  ifdef ENOTSUP
+  errno = ENOTSUP;
+#  else
+  errno = EINVAL;
+#  endif
+  return 0;
+#endif
+}
+
+/*****************************************************************************/
+short marpaESLIF_haveinf(marpaESLIFValueResultBool_t *marpaESLIFValueResultBoolp)
+/*****************************************************************************/
+{
+#ifdef MARPAESLIF_HAVEINF
+  return 1;
+#else
+  return 0;
+#endif
+}
+
+/*****************************************************************************/
+short marpaESLIF_isinf(float f)
+/*****************************************************************************/
+{
+#ifdef MARPAESLIF_HAVENAN
+  return MARPAESLIF_ISINF(f) ? 1 : 0;
+#else
+  return 0;
+#endif
+}
+
+/*****************************************************************************/
+short marpaESLIF_positive_inf(float *fp)
+/*****************************************************************************/
+{
+#ifdef MARPAESLIF_HAVEINF
+  if (fp != NULL) {
+    *fp = MARPAESLIF_INFINITY;
+  }
+  return 1;
+#else
+#  ifdef ENOTSUP
+  errno = ENOTSUP;
+#  else
+  errno = EINVAL;
+#  endif
+  return 0;
+#endif
+}
+
+/*****************************************************************************/
+short marpaESLIF_negative_inf(float *fp)
+/*****************************************************************************/
+{
+#ifdef MARPAESLIF_HAVEINF
+  if (fp != NULL) {
+    *fp = -MARPAESLIF_INFINITY;
+  }
+  return 1;
+#else
+#  ifdef ENOTSUP
+  errno = ENOTSUP;
+#  else
+  errno = EINVAL;
+#  endif
+  return 0;
 #endif
 }
 
