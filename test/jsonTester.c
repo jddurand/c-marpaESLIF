@@ -147,8 +147,8 @@ int main() {
     marpaESLIFJSONDecodeOption.bytep                   = (char *) inputs[i];
     marpaESLIFJSONDecodeOption.bytel                   = strlen(inputs[i]);
     marpaESLIFJSONDecodeOption.encodings               = NULL;
-    marpaESLIFJSONDecodeOption.disallowDupkeysb        = 1;
-    marpaESLIFJSONDecodeOption.maxDepthl               = 1;
+    marpaESLIFJSONDecodeOption.disallowDupkeysb        = 0;
+    marpaESLIFJSONDecodeOption.maxDepthl               = 0;
     marpaESLIFJSONDecodeOption.numberActionp           = NULL;
     marpaESLIFJSONDecodeOption.positiveInfinityActionp = NULL;
     marpaESLIFJSONDecodeOption.negativeInfinityActionp = NULL;
