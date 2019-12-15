@@ -3720,8 +3720,6 @@ static inline marpaESLIF_t *_marpaESLIF_newp(marpaESLIFOption_t *marpaESLIFOptio
   marpaESLIFp->versionMajori             = (int) MARPAESLIF_VERSION_MAJOR_STATIC;
   marpaESLIFp->versionMinori             = (int) MARPAESLIF_VERSION_MINOR_STATIC;
   marpaESLIFp->versionPatchi             = (int) MARPAESLIF_VERSION_PATCH_STATIC;
-  marpaESLIFp->marpaESLIFJsonStrictp     = NULL;
-  marpaESLIFp->marpaESLIFJsonNotStrictp  = NULL;
 
   marpaESLIFp->marpaESLIFValueResultTrue.contextp         = NULL;
   marpaESLIFp->marpaESLIFValueResultTrue.representationp  = NULL;
@@ -3928,18 +3926,6 @@ static inline marpaESLIF_t *_marpaESLIF_newp(marpaESLIFOption_t *marpaESLIFOptio
 #endif
   marpaESLIFp->marpaESLIFGrammarp->grammarp = (marpaESLIF_grammar_t *) GENERICSTACK_GET_PTR(marpaESLIFp->marpaESLIFGrammarp->grammarStackp, 0);
 
-  /* Create strict json grammar */
-  marpaESLIFp->marpaESLIFJsonStrictp = _marpaESLIFJSON_newp(marpaESLIFp, 1 /* strictb */);
-  if (marpaESLIFp->marpaESLIFJsonStrictp == NULL) {
-    goto err;
-  }
-  
-  /* Create not strict json grammar */
-  marpaESLIFp->marpaESLIFJsonNotStrictp = _marpaESLIFJSON_newp(marpaESLIFp, 0 /* strictb */);
-  if (marpaESLIFp->marpaESLIFJsonNotStrictp == NULL) {
-    goto err;
-  }
-  
   goto done;
   
  err:
@@ -3973,38 +3959,6 @@ static inline marpaESLIF_t *_marpaESLIF_newp(marpaESLIFOption_t *marpaESLIFOptio
           for (l = 0; l < rulel; l++) {
             char *ruleshows;
             if (marpaESLIFGrammar_ruleshowform_by_levelb(marpaESLIFp->marpaESLIFGrammarp, l, &ruleshows, leveli, NULL /* descp */)) {
-              GENERICLOGGER_TRACEF(genericLoggerp, "[%s] %s", funcs, ruleshows);
-            }
-          }
-        }
-      }
-    }
-
-    if (marpaESLIFGrammar_ngrammarib(marpaESLIFp->marpaESLIFJsonStrictp, &ngrammari)) {
-      for (leveli = 0; leveli < ngrammari; leveli++) {
-        if (marpaESLIFGrammar_rulearray_by_levelb(marpaESLIFp->marpaESLIFJsonStrictp, &ruleip, &rulel, leveli, NULL /* descp */)) {
-          GENERICLOGGER_TRACEF(genericLoggerp, "[%s] -------------------------", funcs);
-          GENERICLOGGER_TRACEF(genericLoggerp, "[%s] Strict JSON grammar at level %d:", funcs, leveli);
-          GENERICLOGGER_TRACEF(genericLoggerp, "[%s] -------------------------", funcs);
-          for (l = 0; l < rulel; l++) {
-            char *ruleshows;
-            if (marpaESLIFGrammar_ruleshowform_by_levelb(marpaESLIFp->marpaESLIFJsonStrictp, l, &ruleshows, leveli, NULL /* descp */)) {
-              GENERICLOGGER_TRACEF(genericLoggerp, "[%s] %s", funcs, ruleshows);
-            }
-          }
-        }
-      }
-    }
-
-    if (marpaESLIFGrammar_ngrammarib(marpaESLIFp->marpaESLIFJsonNotStrictp, &ngrammari)) {
-      for (leveli = 0; leveli < ngrammari; leveli++) {
-        if (marpaESLIFGrammar_rulearray_by_levelb(marpaESLIFp->marpaESLIFJsonNotStrictp, &ruleip, &rulel, leveli, NULL /* descp */)) {
-          GENERICLOGGER_TRACEF(genericLoggerp, "[%s] -------------------------", funcs);
-          GENERICLOGGER_TRACEF(genericLoggerp, "[%s] Not Strict JSON grammar at level %d:", funcs, leveli);
-          GENERICLOGGER_TRACEF(genericLoggerp, "[%s] -------------------------", funcs);
-          for (l = 0; l < rulel; l++) {
-            char *ruleshows;
-            if (marpaESLIFGrammar_ruleshowform_by_levelb(marpaESLIFp->marpaESLIFJsonNotStrictp, l, &ruleshows, leveli, NULL /* descp */)) {
               GENERICLOGGER_TRACEF(genericLoggerp, "[%s] %s", funcs, ruleshows);
             }
           }
@@ -4144,8 +4098,6 @@ void marpaESLIF_freev(marpaESLIF_t *marpaESLIFp)
     if (marpaESLIFp->traceLoggerp != NULL) {
       genericLogger_freev(&(marpaESLIFp->traceLoggerp));
     }
-    marpaESLIFGrammar_freev(marpaESLIFp->marpaESLIFJsonStrictp);
-    marpaESLIFGrammar_freev(marpaESLIFp->marpaESLIFJsonNotStrictp);
     free(marpaESLIFp);
   }
 }
@@ -17384,7 +17336,7 @@ marpaESLIFGrammar_t *marpaESLIFJSON_newp(marpaESLIF_t *marpaESLIFp, short strict
     goto err;
   }
 
-  marpaESLIFGrammarp = strictb ? marpaESLIFp->marpaESLIFJsonStrictp : marpaESLIFp->marpaESLIFJsonNotStrictp;
+  marpaESLIFGrammarp = _marpaESLIFJSON_newp(marpaESLIFp, strictb);
   goto done;
 
  err:

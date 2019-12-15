@@ -323,8 +323,6 @@ struct marpaESLIF {
   char                    float_fmts[128];             /* Pre-filled format string for floats */
   char                    double_fmts[128];            /* Pre-filled format string for double */
   char                    long_double_fmts[128];       /* Pre-filled format string for double */
-  marpaESLIFGrammar_t    *marpaESLIFJsonStrictp;       /* Pre-computed strict grammar json */
-  marpaESLIFGrammar_t    *marpaESLIFJsonNotStrictp;    /* Pre-computed not strict grammar json */
 };
 
 struct marpaESLIFGrammar {
