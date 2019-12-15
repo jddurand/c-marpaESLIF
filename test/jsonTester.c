@@ -251,7 +251,7 @@ short importb(marpaESLIFValue_t *marpaESLIFValuep, void *userDatavp, marpaESLIFV
     fprintf(stdout, "%f [DOUBLE]\n", (double) marpaESLIFValueResultp->u.d);
     break;
   case MARPAESLIF_VALUE_TYPE_PTR:
-    fprintf(stdout, "%p [PTR]\n", marpaESLIFValueResultp->u.p);
+    fprintf(stdout, "%p [PTR]\n", marpaESLIFValueResultp->u.p.p);
     break;
   case MARPAESLIF_VALUE_TYPE_ARRAY:
     fprintf(stdout, "?? [ARRAY]\n");
@@ -268,7 +268,7 @@ short importb(marpaESLIFValue_t *marpaESLIFValuep, void *userDatavp, marpaESLIFV
   case MARPAESLIF_VALUE_TYPE_TABLE:
     break;
   case MARPAESLIF_VALUE_TYPE_LONG_DOUBLE:
-    fprintf(stdout, "%Ld [LONG_DOUBLE]\n", marpaESLIFValueResultp->u.ld);
+    fprintf(stdout, "%Lf [LONG_DOUBLE]\n", marpaESLIFValueResultp->u.ld);
     break;
 #ifdef MARPAESLIF_HAVE_LONG_LONG
   case MARPAESLIF_VALUE_TYPE_LONG_LONG:
