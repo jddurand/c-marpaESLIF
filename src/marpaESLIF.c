@@ -2001,6 +2001,9 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
     ruleStackp = grammarp->ruleStackp;
 
     if (grammarp->defaultSymbolActionp == NULL) {
+      if (grammarp->defaultSymbolActionp != NULL) {
+        free(grammarp->defaultSymbolActionp);
+      }
       grammarp->defaultSymbolActionp = (marpaESLIF_action_t *) malloc(sizeof(marpaESLIF_action_t));
       if (grammarp->defaultSymbolActionp == NULL) {
         MARPAESLIF_ERRORF(marpaESLIFp, "malloc failure, %s", strerror(errno));
@@ -2015,6 +2018,9 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
     }
 
     if (grammarp->defaultRuleActionp == NULL) {
+      if (grammarp->defaultRuleActionp != NULL) {
+        free(grammarp->defaultRuleActionp);
+      }
       grammarp->defaultRuleActionp = (marpaESLIF_action_t *) malloc(sizeof(marpaESLIF_action_t));
       if (grammarp->defaultRuleActionp == NULL) {
         MARPAESLIF_ERRORF(marpaESLIFp, "malloc failure, %s", strerror(errno));
@@ -2127,6 +2133,9 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
     }
     if ((nSymboll > 0) && (symbolArrayp != NULL)) {
       tmpl = nSymboll * sizeof(int);
+      if (grammarp->symbolArrayStartp != NULL) {
+        free(grammarp->symbolArrayStartp);
+      }
       grammarp->symbolArrayStartp = (int *) malloc(tmpl);
       if (grammarp->symbolArrayStartp == NULL) {
 	MARPAESLIF_ERRORF(marpaESLIFp, "malloc failure, %s", strerror(errno));
@@ -2230,6 +2239,9 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
       }
       if ((nSymboll > 0) && (symbolArrayp != NULL)) {
 	tmpl = nSymboll * sizeof(int);
+        if (grammarp->symbolArrayDiscardp != NULL) {
+          free(grammarp->symbolArrayDiscardp);
+        }
 	grammarp->symbolArrayDiscardp = (int *) malloc(tmpl);
 	if (grammarp->symbolArrayDiscardp == NULL) {
 	  MARPAESLIF_ERRORF(marpaESLIFp, "malloc failure, %s", strerror(errno));
@@ -2376,6 +2388,9 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
       }
       if ((nSymboll > 0) && (symbolArrayp != NULL)) {
 	tmpl = nSymboll * sizeof(int);
+        if (metap->symbolArrayStartp != NULL) {
+          free(metap->symbolArrayStartp);
+        }
 	metap->symbolArrayStartp = (int *) malloc(tmpl);
 	if (metap->symbolArrayStartp == NULL) {
 	  MARPAESLIF_ERRORF(marpaESLIFp, "malloc failure, %s", strerror(errno));
