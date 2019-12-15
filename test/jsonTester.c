@@ -122,13 +122,11 @@ int main() {
   marpaESLIFOption.genericLoggerp = genericLoggerp;
   marpaESLIFp = marpaESLIF_newp(&marpaESLIFOption);
   if (marpaESLIFp == NULL) {
-    perror("marpaESLIF_newp");
     goto err;
   }
 
   marpaESLIFGrammarJsonp = marpaESLIFJSON_newp(marpaESLIFp, 0 /* strictb */);
   if (marpaESLIFGrammarJsonp == NULL) {
-    perror("marpaESLIFJSON_newp");
     goto err;
   }
 
@@ -197,6 +195,7 @@ int main() {
   exiti = 1;
 
  done:
+  marpaESLIFGrammar_freev(marpaESLIFGrammarJsonp);
   marpaESLIF_freev(marpaESLIFp);
   GENERICLOGGER_FREE(genericLoggerp);
   exit(exiti);
