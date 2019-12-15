@@ -781,7 +781,7 @@ static short _marpaESLIFJSON_numberb(void *userDatavp, marpaESLIFValue_t *marpaE
       if (decimalPoints != NULL) {
         *decimalPoints = '.';
       }
-#  idef MARPAESLIF_HUGE_VAL
+#  ifdef MARPAESLIF_HUGE_VAL
       if ((errno == ERANGE) && ((marpaESLIFValueResult.u.d == MARPAESLIF_HUGE_VAL) || (marpaESLIFValueResult.u.d == -MARPAESLIF_HUGE_VAL))) {
         MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "%s: Value would cause overflow", marpaESLIFValueResultInputp->u.a.p);
         goto err;
