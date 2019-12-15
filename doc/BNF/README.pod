@@ -261,7 +261,13 @@ Meaningful for both rule and symbol actions.
 
 =item C<::json>
 
-Creates a value of type STRING in the UTF-8 encoding, containing a JSON string as per original JSON specification, i.e. it is using UTF-16 surrogates to describe characters above 0xFFFF.
+Creates a value of type STRING in the UTF-8 encoding, containing a strict JSON string as per original JSON specification, i.e. it is using UTF-16 surrogates to describe characters above 0xFFFF.
+
+Meaningful for both rule and symbol actions.
+
+=item C<::jsonf>
+
+Creates a value of type STRING in the UTF-8 encoding, containing a JSON string as per original JSON specification plus infinity and nan extensions. Without these extensions, infinity and nan are writen as "null".
 
 Meaningful for both rule and symbol actions.
 

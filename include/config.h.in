@@ -17,6 +17,7 @@
 #cmakedefine HAVE_SYS_TYPES_H  @HAVE_SYS_TYPES_H@
 #cmakedefine HAVE_STDINT_H     @HAVE_STDINT_H@
 #cmakedefine HAVE_STDDEF_H     @HAVE_STDDEF_H@
+#cmakedefine HAVE_MATH_H       @HAVE_MATH_H@
 
 #ifdef HAVE_SYS_TYPES_H
 #include <sys/types.h>
@@ -29,5 +30,19 @@
 #endif
 
 typedef @MARPAESLIF_UINT32_T@ marpaESLIF_uint32_t;
+
+#cmakedefine C_STRTOLD @C_STRTOLD@
+#cmakedefine C_HUGE_VAL_REPLACEMENT @C_HUGE_VAL_REPLACEMENT@
+#cmakedefine C_HUGE_VAL @C_HUGE_VAL@
+#cmakedefine C_HUGE_VALF_REPLACEMENT @C_HUGE_VALF_REPLACEMENT@
+#cmakedefine C_HUGE_VALF @C_HUGE_VALF@
+#cmakedefine C_HUGE_VALL_REPLACEMENT @C_HUGE_VALL_REPLACEMENT@
+#cmakedefine C_HUGE_VALL @C_HUGE_VALL@
+#cmakedefine C_INFINITY_REPLACEMENT @C_INFINITY_REPLACEMENT@
+#cmakedefine C_INFINITY @C_INFINITY@
+#cmakedefine C_NAN_REPLACEMENT @C_NAN_REPLACEMENT@
+#cmakedefine C_NAN @C_NAN@
+#cmakedefine C_ISINF @C_ISINF@
+#cmakedefine C_ISNAN @C_ISNAN@
 
 #endif /* MARPAESLIF_CONFIG_H */
