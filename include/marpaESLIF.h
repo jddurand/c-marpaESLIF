@@ -117,7 +117,6 @@ struct marpaESLIFEvent {
   char                 *events;  /* Event name, always NULL if exhaustion eent */
 };
 
-/* Value types */
 typedef enum marpaESLIFValueType {
   MARPAESLIF_VALUE_TYPE_UNDEF = 0,
   MARPAESLIF_VALUE_TYPE_CHAR,
@@ -382,6 +381,18 @@ typedef struct marpaESLIFSymbolProperty {
   marpaESLIFAction_t          *ifActionp;              /* Symbol if action */
 } marpaESLIFSymbolProperty_t;
 
+typedef struct marpaESLIFJSONDecodeOption {
+  char    *bytep;                                      /* Input */
+  size_t   bytel;                                      /* Input size in byte */
+  char    *encodings;                                  /* Eventual encoding if known */
+  short    disallowDupkeysb;                           /* Do not allow duplicate key in an object. */
+  size_t   maxDepthl;                                  /* Maximum depth - 0 if no maximum */
+  short  (*numberActionp)(char *utf8s, size_t utf8l, marpaESLIFValueResult_t *marpaESLIFValueResultp); /* Eventual specialized number action */
+  short  (*positiveInfinityActionp)(marpaESLIFValueResult_t *marpaESLIFValueResultp); /* Eventual specialized +Infinity action */
+  short  (*negativeInfinityActionp)(marpaESLIFValueResult_t *marpaESLIFValueResultp); /* Eventual specialized -Infinity action */
+  short  (*nanActionp)(marpaESLIFValueResult_t *marpaESLIFValueResultp); /* Eventual specialized Nan action */
+} marpaESLIFJSONDecodeOption_t;
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -509,6 +520,18 @@ extern "C" {
 
   marpaESLIF_EXPORT void                          marpaESLIF_freev(marpaESLIF_t *marpaESLIFp);
 
+  /* --------------------- */
+  /* Embedded JSON support */
+  /* --------------------- */
+  marpaESLIF_EXPORT marpaESLIFGrammar_t          *marpaESLIFJSON_newp(marpaESLIF_t *marpaESLIFp, short strictb);
+  marpaESLIF_EXPORT short                         marpaESLIFJSON_encode(marpaESLIFGrammar_t *marpaESLIFGrammarJSONp, marpaESLIFValueResult_t *marpaESLIFValueResultp, marpaESLIFValueOption_t *marpaESLIFValueOptionp);
+  marpaESLIF_EXPORT short                         marpaESLIFJSON_decode(marpaESLIFGrammar_t *marpaESLIFGrammarJSONp, marpaESLIFJSONDecodeOption_t *marpaESLIFJSONDecodeOptionp, marpaESLIFRecognizerOption_t *marpaESLIFRecognizerOptionp, marpaESLIFValueOption_t *marpaESLIFValueOptionp);
+
+  /* ---------------------- */
+  /* Special values helpers */
+  /* ---------------------- */
+  marpaESLIF_EXPORT short                         marpaESLIF_isnan(float f);
+  marpaESLIF_EXPORT short                         marpaESLIF_isinf(float f);
 #ifdef __cplusplus
 }
 #endif

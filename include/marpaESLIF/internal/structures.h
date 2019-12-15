@@ -14,6 +14,65 @@
 #include <genericLogger.h>
 #include <pcre2.h>
 #include <tconv.h>
+#ifdef HAVE_MATH_H
+#  include <math.h>
+#endif
+
+/* ----------------------------- */
+/* Common math portability hacks */
+/* ----------------------------- */
+
+/* HUGE_VALF is a 'float' Infinity.  */
+#ifdef C_HUGE_VALF_REPLACEMENT
+#  define MARPAESLIF_HUGE_VALF (__builtin_huge_valf())
+#else
+#  ifdef HUGE_VALF
+#    define MARPESLIF_HUGE_VALF HUGE_VALF
+#  endif
+#endif
+
+/* HUGE_VAL is a 'double' Infinity.  */
+#ifdef C_HUGE_VAL_REPLACEMENT
+#  define MARPAESLIF_HUGE_VAL (__builtin_huge_val())
+#else
+#  ifdef HUGE_VAL
+#    define MARPAESLIF_HUGE_VAL HUGE_VAL
+#  endif
+#endif
+
+/* HUGE_VALL is a 'long double' Infinity. */
+#ifdef C_HUGE_VALL_REPLACEMENT
+#  define MARPAESLIF_HUGE_VALL (__builtin_huge_vall())
+#else
+#  ifdef HUGE_VALL
+#    define MARPAESLIF_HUGE_VALL HUGE_VALL
+#  endif
+#endif
+
+#ifdef C_INFINITY_REPLACEMENT
+#  define MARPAESLIF_INFINITY (__builtin_inff())
+#else
+#  ifdef INFINITY
+#    define MARPAESLIF_INFINITY INFINITY
+#  endif
+#endif
+
+#ifdef C_NAN_REPLACEMENT
+#  define MARPAESLIF_NAN (__builtin_nanf(""))
+#else
+#  ifdef NAN
+#    define MARPAESLIF_NAN NAN
+#  endif
+#endif
+
+#ifdef C_ISINF
+#  define MARPAESLIF_ISINF C_ISINF
+#endif
+
+#ifdef C_ISNAN
+#  define MARPAESLIF_ISNAN C_ISNAN
+#endif
+
 #include "marpaESLIF/internal/lua.h" /* For lua_State* */
 
 #define INTERNAL_ANYCHAR_PATTERN "."                    /* This ASCII string is UTF-8 compatible */
@@ -247,9 +306,11 @@ struct marpaESLIF {
   int                     versionPatchi;               /* Patch version */
   marpaESLIFValueResult_t marpaESLIFValueResultTrue;   /* Pre-filled ::true value result */
   marpaESLIFValueResult_t marpaESLIFValueResultFalse;  /* Pre-filled ::false value result */
-  char                    float_fmts[128];            /* Pre-filled format string for floats */
-  char                    double_fmts[128];           /* Pre-filled format string for double */
-  char                    long_double_fmts[128];      /* Pre-filled format string for double */
+  char                    float_fmts[128];             /* Pre-filled format string for floats */
+  char                    double_fmts[128];            /* Pre-filled format string for double */
+  char                    long_double_fmts[128];       /* Pre-filled format string for double */
+  marpaESLIFGrammar_t    *marpaESLIFJsonStrictp;       /* Pre-computed strict grammar json */
+  marpaESLIFGrammar_t    *marpaESLIFJsonNotStrictp;    /* Pre-computed not strict grammar json */
 };
 
 struct marpaESLIFGrammar {

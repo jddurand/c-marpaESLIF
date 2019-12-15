@@ -866,7 +866,13 @@ Supported value types are in the enumeration C<marpaESLIFValueType_t>:
     MARPAESLIF_VALUE_TYPE_PTR,
     MARPAESLIF_VALUE_TYPE_ARRAY,
     MARPAESLIF_VALUE_TYPE_BOOL,
-    MARPAESLIF_VALUE_TYPE_STRING
+    MARPAESLIF_VALUE_TYPE_STRING,
+    MARPAESLIF_VALUE_TYPE_ROW,
+    MARPAESLIF_VALUE_TYPE_TABLE,
+    MARPAESLIF_VALUE_TYPE_LONG_DOUBLE
+  #ifdef MARPAESLIF_HAVE_LONG_LONG
+    ,MARPAESLIF_VALUE_TYPE_LONG_LONG
+  #endif
   } marpaESLIFValueType_t;
 
 The names are quite explicit:
@@ -2115,14 +2121,6 @@ Copies the value result at indice C<indicei> into the C<marpaESLIFValueResultp> 
 
 Returns a true value on success, a false value otherwise.
 
-=head3 C<marpaESLIFValue_transformb>
-
-  short marpaESLIFValue_stack_get_transformb(marpaESLIFValue_t *marpaESLIFValuep, int indicei);
-
-During valuation, the caller can call for transformation of value at stack C<indicei>.
-
-Returns a true value on success, a false value otherwise.
-
 =head3 C<marpaESLIFValue_charconvb>
 
   char *marpaESLIF_charconvb(marpaESLIF_t *marpaESLIFp, char *toEncodings, char *fromEncodings, char *srcs, size_t srcl, size_t *dstlp);
@@ -2132,6 +2130,18 @@ Helper function that is doing character translation of a buffer starting at C<sr
 Please note that the transcoded result I<may> contain a BOM, it is up to the caller to check that.
 
 Returns a pointer to the transcoded string on success, C<NULL> on failure.
+
+=head3 C<marpaESLIF_isinf>
+
+  short marpaESLIF_isinf(float f);
+
+Returns true if C<f> is an infinite number. Relies on the existence of C<isinf> of C<INFINITY> of the underlying C library.
+
+=head3 C<marpaESLIF_isnan>
+
+  short marpaESLIF_isnan(float f);
+
+Returns true if C<f> is an Not-A-Number.
 
 =head1 NOTES
 
