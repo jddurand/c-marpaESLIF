@@ -28,7 +28,7 @@ The L<marpaESLIF BNF|https://github.com/jddurand/c-marpaESLIF/tree/master/doc/BN
 
 =item Bindings to java, lua and perl
 
-=item Native JSON decoder (strict and extended grammars) and encoder
+=item JSON (strict and extended) grammars for decoding/encoding
 
 =back
 
