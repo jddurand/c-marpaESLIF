@@ -762,7 +762,7 @@ static short _marpaESLIFJSON_numberb(void *userDatavp, marpaESLIFValue_t *marpaE
       if (decimalPoints != NULL) {
         *decimalPoints = '.';
       }
-      if ((errno == ERANGE) && ((marpaESLIFValueResult.u.ld == HUGE_VALL) || (marpaESLIFValueResult.u.ld == -HUGE_VALL))) {
+      if ((errno == ERANGE) && ((marpaESLIFValueResult.u.ld == MARPAESLIF_HUGE_VALL) || (marpaESLIFValueResult.u.ld == -MARPAESLIF_HUGE_VALL))) {
         MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "%s: Value would cause overflow", marpaESLIFValueResultInputp->u.a.p);
         goto err;
       }
@@ -779,7 +779,7 @@ static short _marpaESLIFJSON_numberb(void *userDatavp, marpaESLIFValue_t *marpaE
       if (decimalPoints != NULL) {
         *decimalPoints = '.';
       }
-      if ((errno == ERANGE) && ((marpaESLIFValueResult.u.d == HUGE_VAL) || (marpaESLIFValueResult.u.d == -HUGE_VAL))) {
+      if ((errno == ERANGE) && ((marpaESLIFValueResult.u.d == MARPAESLIF_HUGE_VAL) || (marpaESLIFValueResult.u.d == -MARPAESLIF_HUGE_VAL))) {
         MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "%s: Value would cause overflow", marpaESLIFValueResultInputp->u.a.p);
         goto err;
       }
@@ -925,8 +925,13 @@ static short _marpaESLIFJSON_unicodeb(void *userDatavp, marpaESLIFValue_t *marpa
     }
 
     if ((c >= 0xD800) && (c <= 0xDFFFF)) {
-      MARPAESLIF_WARNF(marpaESLIFValuep->marpaESLIFp, "Invalid UTF-16 character \\%c%c%c%c%c", marpaESLIFValueResultp->u.a.p[(i * 6) + 1], marpaESLIFValueResultp->u.a.p[(i * 6) + 2], marpaESLIFValueResultp->u.a.p[(i * 6) + 3], marpaESLIFValueResultp->u.a.p[(i * 6) + 4], marpaESLIFValueResultp->u.a.p[(i * 6) + 5]);
-      c = 0xFFFD; /* Replacement character */
+      if (marpaESLIFJSONContextp->marpaESLIFJSONDecodeOptionp->noReplacementCharacterb) {
+        MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "Invalid UTF-16 character \\%c%c%c%c%c", marpaESLIFValueResultp->u.a.p[(i * 6) + 1], marpaESLIFValueResultp->u.a.p[(i * 6) + 2], marpaESLIFValueResultp->u.a.p[(i * 6) + 3], marpaESLIFValueResultp->u.a.p[(i * 6) + 4], marpaESLIFValueResultp->u.a.p[(i * 6) + 5]);
+        goto err;
+      } else {
+        MARPAESLIF_WARNF(marpaESLIFValuep->marpaESLIFp, "Invalid UTF-16 character \\%c%c%c%c%c", marpaESLIFValueResultp->u.a.p[(i * 6) + 1], marpaESLIFValueResultp->u.a.p[(i * 6) + 2], marpaESLIFValueResultp->u.a.p[(i * 6) + 3], marpaESLIFValueResultp->u.a.p[(i * 6) + 4], marpaESLIFValueResultp->u.a.p[(i * 6) + 5]);
+        c = 0xFFFD; /* Replacement character */
+      }
     }
 
     if (c < 0x80) {

@@ -387,6 +387,7 @@ typedef struct marpaESLIFJSONDecodeOption {
   char    *encodings;                                  /* Eventual encoding if known */
   short    disallowDupkeysb;                           /* Do not allow duplicate key in an object. */
   size_t   maxDepthl;                                  /* Maximum depth - 0 if no maximum */
+  short    noReplacementCharacterb;                    /* Do not use replacement character for invalid UTF-16 surrogates, instead let the parse valuation fail */
   short  (*numberActionp)(char *utf8s, size_t utf8l, marpaESLIFValueResult_t *marpaESLIFValueResultp); /* Eventual specialized number action */
   short  (*positiveInfinityActionp)(marpaESLIFValueResult_t *marpaESLIFValueResultp); /* Eventual specialized +Infinity action */
   short  (*negativeInfinityActionp)(marpaESLIFValueResult_t *marpaESLIFValueResultp); /* Eventual specialized -Infinity action */
