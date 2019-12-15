@@ -26,8 +26,8 @@
 #ifdef C_HUGE_VALF_REPLACEMENT
 #  define MARPAESLIF_HUGE_VALF (__builtin_huge_valf())
 #else
-#  ifdef HUGE_VALF
-#    define MARPESLIF_HUGE_VALF HUGE_VALF
+#  ifdef C_HUGE_VALF
+#    define MARPESLIF_HUGE_VALF C_HUGE_VALF
 #  endif
 #endif
 
@@ -35,8 +35,8 @@
 #ifdef C_HUGE_VAL_REPLACEMENT
 #  define MARPAESLIF_HUGE_VAL (__builtin_huge_val())
 #else
-#  ifdef HUGE_VAL
-#    define MARPAESLIF_HUGE_VAL HUGE_VAL
+#  ifdef C_HUGE_VAL
+#    define MARPAESLIF_HUGE_VAL C_HUGE_VAL
 #  endif
 #endif
 
@@ -44,24 +44,24 @@
 #ifdef C_HUGE_VALL_REPLACEMENT
 #  define MARPAESLIF_HUGE_VALL (__builtin_huge_vall())
 #else
-#  ifdef HUGE_VALL
-#    define MARPAESLIF_HUGE_VALL HUGE_VALL
+#  ifdef C_HUGE_VALL
+#    define MARPAESLIF_HUGE_VALL C_HUGE_VALL
 #  endif
 #endif
 
 #ifdef C_INFINITY_REPLACEMENT
 #  define MARPAESLIF_INFINITY (__builtin_inff())
 #else
-#  ifdef INFINITY
-#    define MARPAESLIF_INFINITY INFINITY
+#  ifdef C_INFINITY
+#    define MARPAESLIF_INFINITY C_INFINITY
 #  endif
 #endif
 
 #ifdef C_NAN_REPLACEMENT
 #  define MARPAESLIF_NAN (__builtin_nanf(""))
 #else
-#  ifdef NAN
-#    define MARPAESLIF_NAN NAN
+#  ifdef C_NAN
+#    define MARPAESLIF_NAN C_NAN
 #  endif
 #endif
 
@@ -73,6 +73,7 @@
 #  endif
 #endif
 
+/* NaN cannot be used, because NaN != NaN -; */
 #ifdef C_ISNAN
 #  define MARPAESLIF_ISNAN(f) C_ISNAN(f)
 #endif

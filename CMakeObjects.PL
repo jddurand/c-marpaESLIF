@@ -12,6 +12,7 @@ use File::Find qw/find/;
 use File::Path qw/make_path/;
 use File::Copy qw/copy/;
 use File::Copy::Recursive qw/dircopy/;
+use File::Temp qw/tempfile/;
 use IPC::Run qw/run/;
 use Perl::OSType qw/is_os_type/;
 use POSIX qw/EXIT_SUCCESS strftime/;
@@ -72,8 +73,75 @@ my $config_h_in = File::Spec->catfile('include', 'config.h.in');
 my $config_h    = File::Spec->catfile('include', 'marpaESLIF', 'internal', 'config.h');
 make_path(dirname($config_h));
 
-Config::AutoConf::INI->new(logfile => 'config.log')->check;
-write_config($MARPAESLIF_VERSION, $MARPAESLIF_VERSION_MAJOR, $MARPAESLIF_VERSION_MINOR, $MARPAESLIF_VERSION_PATCH, $config_h_in, $config_h);
+{
+    my $ac = Config::AutoConf::INI->new(logfile => 'config.log');
+    foreach (['double', ''], ['long double', 'L'], ['float', 'F']) {
+        my ($variable_type, $extension) = @{$_};
+        $ac->msg_checking("for working HUGE_VAL${extension}");
+        if (get_math_constant($variable_type, "HUGE_VAL${extension}")) {
+            $ac->msg_result('yes');
+            $ac->define_var("C_HAVE_HUGE_VAL${extension}", 1);
+        } else {
+            $ac->msg_result('no');
+            $ac->msg_checking("for HUGE_VAL${extension} replacement");
+            if (get_math_constant($variable_type, "HUGE_VAL${extension}", '__builtin_huge_val' . lc($extension) . '()')) {
+                $ac->msg_result('yes');
+                $ac->define_var("C_HAVE_HUGE_VAL${extension}_REPLACEMENT", 1);
+            } else {
+                $ac->msg_result('no');
+            }
+        }
+    }
+
+    $ac->msg_checking("for working INFINITY");
+    if (get_math_constant('float', "INFINITY")) {
+        $ac->msg_result('yes');
+        $ac->define_var("C_HAVE_INFINITY", 1);
+    } else {
+        $ac->msg_result('no');
+        $ac->msg_checking("for INFINITY replacement");
+        if (get_math_constant('float', "INFINITY", '__builtin_inff()')) {
+            $ac->msg_result('yes');
+            $ac->define_var("C_HAVE_INFINITY_REPLACEMENT", 1);
+        } else {
+            $ac->msg_result('no');
+        }
+    }
+
+    $ac->msg_checking("for isinf()");
+    if (get_math_function('short', 'isinf', '(0.0)')) {
+        $ac->msg_result('yes');
+        $ac->define_var("C_HAVE_ISINF", 1);
+    } else {
+        $ac->msg_result('no');
+    }
+
+    $ac->msg_checking("for working NAN");
+    if (get_math_constant('float', "NAN")) {
+        $ac->msg_result('yes');
+        $ac->define_var("C_HAVE_NAN", 1);
+    } else {
+        $ac->msg_result('no');
+        $ac->msg_checking("for NAN replacement");
+        if (get_math_constant('float', "NAN", '__builtin_nanf("")')) {
+            $ac->msg_result('yes');
+            $ac->define_var("C_HAVE_NAN_REPLACEMENT", 1);
+        } else {
+            $ac->msg_result('no');
+        }
+    }
+
+    $ac->msg_checking("for isnan()");
+    if (get_math_function('short', 'isnan', '(0.0)')) {
+        $ac->msg_result('yes');
+        $ac->define_var("C_HAVE_ISNAN", 1);
+    } else {
+        $ac->msg_result('no');
+    }
+
+    $ac->check;
+    write_config($MARPAESLIF_VERSION, $MARPAESLIF_VERSION_MAJOR, $MARPAESLIF_VERSION_MINOR, $MARPAESLIF_VERSION_PATCH, $config_h_in, $config_h);
+}
 # -------------
 # Fake export.h
 # -------------
@@ -360,7 +428,7 @@ sub try_compile {
     my $rc = 0;
 
     try {
-        my $cbuilder = ExtUtils::CBuilder->new();
+        my $cbuilder = ExtUtils::CBuilder->new(quiet => 1);
         my $obj = basename($cbuilder->object_file($source));
         $cbuilder->compile(
             source               => $source,
@@ -370,6 +438,102 @@ sub try_compile {
         $rc = 1;
     };
     unlink $fh->filename;
+
+    return $rc;
+}
+
+sub get_math_constant {
+    my ($variable_type, $constant, $constant_replacement_value) = @_;
+
+    my $CONSTANT = uc($constant);
+    $constant = lc($constant);
+    my $extra_compiler_flags = " -DC_${CONSTANT}=${CONSTANT}";
+    if (defined($constant_replacement_value)) {
+        $extra_compiler_flags   .= " -DHAVE_${CONSTANT}_REPLACEMENT";
+    } else {
+        $constant_replacement_value = 'UNDEFINED';
+    }
+
+    my $source .= "
+#include <math.h>
+#ifdef HAVE_${CONSTANT}_REPLACEMENT
+#  undef ${CONSTANT}
+#  define ${CONSTANT} ($constant_replacement_value)
+#endif
+int main() {
+  ${variable_type} x = C_${CONSTANT};
+  return 0;
+}
+";
+    my $rc =  eval {
+        my $cbuilder = ExtUtils::CBuilder->new(quiet => 1);
+        my ($fh, $filename) = tempfile(SUFFIX => '.c', UNLINK => 0);
+        print $fh $source;
+        close($fh) || warn "Cannot close $filename, $!";
+
+        my $obj = $cbuilder->object_file($filename);
+        $cbuilder->compile(
+            source        => $filename,
+            extra_compiler_flags => $extra_compiler_flags,
+            object_file   => $obj,
+            'C++'         => 0
+            );
+        $cbuilder->link_executable(
+            module_name => 'ICONV::TEST',
+            objects => $obj
+            );
+        system($cbuilder->exe_file($obj), 'unused', 'parameter');
+        my $exitcode =  $? >> 8;
+        unlink $cbuilder->exe_file($obj);
+        unlink $obj;
+        unlink $filename;
+        $exitcode ? 0 : 1;
+    } // 0;
+
+    print $@ if $@;
+
+    return $rc;
+}
+
+sub get_math_function {
+    my ($variable_type, $function, $function_parameters) = @_;
+
+    my $FUNCTION = uc($function);
+    my $extra_compiler_flags = " -DC_${FUNCTION}=${function}";
+
+    my $source .= "
+#include <math.h>
+int main() {
+  ${variable_type} x = C_${FUNCTION}${function_parameters};
+  return 0;
+}
+";
+    my $rc =  eval {
+        my $cbuilder = ExtUtils::CBuilder->new(quiet => 1);
+        my ($fh, $filename) = tempfile(SUFFIX => '.c', UNLINK => 0);
+        print $fh $source;
+        close($fh) || warn "Cannot close $filename, $!";
+
+        my $obj = $cbuilder->object_file($filename);
+        $cbuilder->compile(
+            source        => $filename,
+            extra_compiler_flags => $extra_compiler_flags,
+            object_file   => $obj,
+            'C++'         => 0
+            );
+        $cbuilder->link_executable(
+            module_name => 'ICONV::TEST',
+            objects => $obj
+            );
+        system($cbuilder->exe_file($obj), 'unused', 'parameter');
+        my $exitcode =  $? >> 8;
+        unlink $cbuilder->exe_file($obj);
+        unlink $obj;
+        unlink $filename;
+        $exitcode ? 0 : 1;
+    } // 0;
+
+    print $@ if $@;
 
     return $rc;
 }
