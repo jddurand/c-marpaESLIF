@@ -762,10 +762,12 @@ static short _marpaESLIFJSON_numberb(void *userDatavp, marpaESLIFValue_t *marpaE
       if (decimalPoints != NULL) {
         *decimalPoints = '.';
       }
+#  ifdef MARPAESLIF_HUGE_VALL
       if ((errno == ERANGE) && ((marpaESLIFValueResult.u.ld == MARPAESLIF_HUGE_VALL) || (marpaESLIFValueResult.u.ld == -MARPAESLIF_HUGE_VALL))) {
         MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "%s: Value would cause overflow", marpaESLIFValueResultInputp->u.a.p);
         goto err;
       }
+#  endif
       if ((marpaESLIFValueResult.u.ld == 0) && (errno != 0)) {
         MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "%s: Value would cause underflow", marpaESLIFValueResultInputp->u.a.p);
         goto err;
@@ -779,10 +781,12 @@ static short _marpaESLIFJSON_numberb(void *userDatavp, marpaESLIFValue_t *marpaE
       if (decimalPoints != NULL) {
         *decimalPoints = '.';
       }
+#  idef MARPAESLIF_HUGE_VAL
       if ((errno == ERANGE) && ((marpaESLIFValueResult.u.d == MARPAESLIF_HUGE_VAL) || (marpaESLIFValueResult.u.d == -MARPAESLIF_HUGE_VAL))) {
         MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "%s: Value would cause overflow", marpaESLIFValueResultInputp->u.a.p);
         goto err;
       }
+#  endif
       if ((marpaESLIFValueResult.u.d == 0) && (errno != 0)) {
         MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "%s: Value would cause underflow", marpaESLIFValueResultInputp->u.a.p);
         goto err;
