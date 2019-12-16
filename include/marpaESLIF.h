@@ -382,9 +382,6 @@ typedef struct marpaESLIFSymbolProperty {
 } marpaESLIFSymbolProperty_t;
 
 typedef struct marpaESLIFJSONDecodeOption {
-  char    *bytep;                                      /* Input */
-  size_t   bytel;                                      /* Input size in byte */
-  char    *encodings;                                  /* Eventual encoding if known */
   short    disallowDupkeysb;                           /* Do not allow duplicate key in an object. */
   size_t   maxDepthl;                                  /* Maximum depth - 0 if no maximum */
   short    noReplacementCharacterb;                    /* Do not use replacement character for invalid UTF-16 surrogates, instead let the parse valuation fail */

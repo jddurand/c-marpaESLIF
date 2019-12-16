@@ -438,9 +438,19 @@ static short _marpaESLIFJSONReaderb(void *userDatavp, char **inputcpp, size_t *i
 {
   marpaESLIFJSONContext_t      *marpaESLIFJSONContextp      = (marpaESLIFJSONContext_t *) userDatavp;
   marpaESLIFRecognizerOption_t *marpaESLIFRecognizerOptionp = marpaESLIFJSONContextp->marpaESLIFRecognizerOptionp;
+  short                         rcb;
 
   /* Proxy to caller's recognizer */
-  return marpaESLIFRecognizerOptionp->readerCallbackp(marpaESLIFRecognizerOptionp->userDatavp, inputcpp, inputlp, eofbp, characterStreambp, encodingsp, encodinglp);
+  rcb = marpaESLIFRecognizerOptionp->readerCallbackp(marpaESLIFRecognizerOptionp->userDatavp, inputcpp, inputlp, eofbp, characterStreambp, encodingsp, encodinglp);
+  /* marpaESLIF guarantees that encodingsp is always set */
+  if (rcb && (*encodingsp == NULL)) {
+    /* Default encoding is UTF-8 */
+    /*
+    *encodingsp = "UTF-8";
+    *encodinglp = 5; */ /* strlen("UTF-8") */
+  }
+
+  return rcb;
 }
 
 /*****************************************************************************/
@@ -841,9 +851,6 @@ static short _marpaESLIFJSON_numberb(void *userDatavp, marpaESLIFValue_t *marpaE
   goto done;
 
  err:
-  if (marpaESLIFValueResult.u.t.p != NULL) {
-    free(marpaESLIFValueResult.u.t.p);
-  }
   rcb = 0;
 
  done:
