@@ -512,7 +512,7 @@ static        short                  _marpaESLIFGrammar_symbolOptionSetterIntern
 static        short                  _marpaESLIFGrammar_grammarOptionSetterNoLoggerb(void *userDatavp, marpaWrapperGrammarOption_t *marpaWrapperGrammarOptionp);
 static inline void                   _marpaESLIF_rule_createshowv(marpaESLIF_t *marpaESLIFp, marpaESLIF_grammar_t *grammarp, marpaESLIF_rule_t *rulep, char *asciishows, size_t *asciishowlp);
 static inline void                   _marpaESLIF_grammar_createshowv(marpaESLIFGrammar_t *marpaESLIFGrammarp, marpaESLIF_grammar_t *grammarp, char *asciishows, size_t *asciishowlp);
-static inline int                    _marpaESLIF_utf82ordi(PCRE2_SPTR8 utf8bytes, marpaESLIF_uint32_t *uint32p);
+static inline int                    _marpaESLIF_utf82ordi(PCRE2_SPTR8 utf8bytes, marpaESLIF_uint32_t *uint32p, PCRE2_SPTR8 utf8maxexcludedp);
 static inline short                  _marpaESLIFRecognizer_matchPostProcessingb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, size_t matchl);
 static inline short                  _marpaESLIFRecognizer_appendDatab(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, char *datas, size_t datal, short eofb);
 static inline short                  _marpaESLIFRecognizer_createDiscardStateb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp);
@@ -1027,7 +1027,7 @@ static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *mar
         goto err;
       }
       /* Get the code point from the UTF-8 representation */
-      utf82ordi = _marpaESLIF_utf82ordi((PCRE2_SPTR8) matchedp, &codepointi);
+      utf82ordi = _marpaESLIF_utf82ordi((PCRE2_SPTR8) matchedp, &codepointi, (PCRE2_SPTR8) (matchedp + matchedl));
       if (utf82ordi <= 0) {
         MARPAESLIF_ERRORF(marpaESLIFp, "Malformed UTF-8 character at offset %d", -utf82ordi);
         goto err;
@@ -1279,7 +1279,7 @@ static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *mar
           goto err;
         }
         /* Get the code point from the UTF-8 representation */
-        utf82ordi = _marpaESLIF_utf82ordi((PCRE2_SPTR8) matchedp, &codepointi);
+        utf82ordi = _marpaESLIF_utf82ordi((PCRE2_SPTR8) matchedp, &codepointi, (PCRE2_SPTR8) (matchedp + matchedl));
         if (utf82ordi <= 0) {
           MARPAESLIF_ERRORF(marpaESLIFp, "Malformed UTF-8 character at offset %d", -utf82ordi);
           goto err;
@@ -11278,7 +11278,10 @@ static inline void _marpaESLIF_grammar_createshowv(marpaESLIFGrammar_t *marpaESL
 }
 
 /*****************************************************************************/
-static inline int _marpaESLIF_utf82ordi(PCRE2_SPTR8 utf8bytes, marpaESLIF_uint32_t *uint32p)
+static inline int _marpaESLIF_utf82ordi(PCRE2_SPTR8 utf8bytes, marpaESLIF_uint32_t *uint32p, PCRE2_SPTR8 utf8maxexcludedp)
+/*****************************************************************************/
+/* If utf8maxexcludedp is set, then _marpaESLIF_utf82ordi is not allowed to read from this value */
+/* We do not check if utf8maxexcludedp >= utf8bytes */
 /*****************************************************************************/
 /* This is a copy of utf2ord from pcre2test.c
 -----------------------------------------------------------------------------
@@ -11353,6 +11356,9 @@ Returns:      >  0 => the number of bytes consumed
   d = (c & utf8_table3[i]) << s;
 
   for (j = 0; j < i; j++) {
+    if ((utf8maxexcludedp != NULL) && (utf8bytes >= utf8maxexcludedp)) {
+      return -(j+1);
+    }
     c = *utf8bytes++;
     if ((c & 0xc0) != 0x80) {
       return -(j+1);
@@ -13997,7 +14003,7 @@ static short _marpaESLIFRecognizer_concat_valueResultCallbackb(void *userDatavp,
           p = utf8p->bytep;
           maxp = p + utf8p->bytel;
           while (p < maxp) {
-            lengthi = _marpaESLIF_utf82ordi((PCRE2_SPTR8) p, &codepointi);
+            lengthi = _marpaESLIF_utf82ordi((PCRE2_SPTR8) p, &codepointi, (PCRE2_SPTR8) maxp);
             if (lengthi < 0) {
               /* Well, this is a paranoid test: this should never happen since utf8p did not fail, so we do not bother to give any detail */
               MARPAESLIF_ERROR(marpaESLIFp, "Malformed UTF-8 byte");
@@ -16836,7 +16842,7 @@ static inline marpaESLIF_string_t *_marpaESLIF_string2utf8p(marpaESLIF_t *marpaE
         maxp = p + stringp->bytel;
         utf8b = 1;
         while (p < maxp) {
-          utf82ordi = _marpaESLIF_utf82ordi((PCRE2_SPTR8) p, &codepointi);
+          utf82ordi = _marpaESLIF_utf82ordi((PCRE2_SPTR8) p, &codepointi, (PCRE2_SPTR8) maxp);
           if (utf82ordi <= 0) {
             utf8b = 0;
             break;
