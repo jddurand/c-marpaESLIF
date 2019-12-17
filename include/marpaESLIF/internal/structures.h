@@ -299,6 +299,8 @@ struct marpaESLIF_grammar {
   unsigned int           nbupdatei;                          /* Number of updates - used in grammar ESLIF actions */
   char                  *asciishows;                         /* Grammar show (ASCII) */
   int                    discardi;                           /* Discard symbol ID - filled during grammar validation */
+  char                  *defaultEncodings;                   /* Default encoding is reader returns NULL */
+  char                  *fallbackEncodings;                  /* Fallback encoding is reader returns NULL and tconv fails to detect encoding */
 };
 
 /* ----------------------------------- */

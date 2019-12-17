@@ -279,6 +279,8 @@ typedef struct marpaESLIFGrammarDefaults {
   marpaESLIFAction_t *defaultRuleActionp;   /* Default action for rules */
   marpaESLIFAction_t *defaultSymbolActionp; /* Default action for symbols */
   marpaESLIFAction_t *defaultEventActionp;  /* Default action for events */
+  char               *defaultEncodings;     /* Default encoding */
+  char               *fallbackEncodings;    /* Fallback encoding */
 } marpaESLIFGrammarDefaults_t;
 
 /* Rule property */
@@ -321,6 +323,8 @@ typedef struct marpaESLIFGrammarProperty {
   int                   *symbolip;                     /* Array of symbols Ids - never NULL */
   size_t                 nrulel;                       /* Number of rules - always > 0*/
   int                   *ruleip;                       /* Array of rule Ids - never NULL */
+  char                  *defaultEncodings;             /* Default encoding */
+  char                  *fallbackEncodings;            /* Fallback encoding */
 } marpaESLIFGrammarProperty_t;
 
 typedef struct marpaESLIFRuleProperty {

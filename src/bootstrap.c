@@ -744,7 +744,9 @@ static inline marpaESLIF_grammar_t *_marpaESLIF_bootstrap_check_grammarp(marpaES
                                         0, /* descl */
                                         NULL, /* defaultSymbolActionp */
                                         NULL, /* defaultRuleActionp */
-                                        NULL /* defaultEventActionp */);
+                                        NULL, /* defaultEventActionp */
+                                        NULL, /* defaultEncodings */
+                                        NULL /* fallbackEncodings */);
     if (grammarp == NULL) {
       goto err;
     }

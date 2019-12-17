@@ -395,7 +395,7 @@ static inline void                   _marpaESLIF_terminal_freev(marpaESLIF_termi
 static inline marpaESLIF_meta_t     *_marpaESLIF_meta_newp(marpaESLIF_t *marpaESLIFp, marpaESLIF_grammar_t *grammarp, int eventSeti, char *asciinames, char *descEncodings, char *descs, size_t descl);
 static inline void                   _marpaESLIF_meta_freev(marpaESLIF_meta_t *metap);
 
-static inline marpaESLIF_grammar_t  *_marpaESLIF_grammar_newp(marpaESLIFGrammar_t *marpaESLIFGrammarp, marpaWrapperGrammarOption_t *marpaWrapperGrammarOptionp, int leveli, char *descEncodings, char *descs, size_t descl, marpaESLIF_action_t *defaultSymbolActionp, marpaESLIF_action_t *defaultRuleActionp, marpaESLIF_action_t *defaultEventActionp);
+static inline marpaESLIF_grammar_t  *_marpaESLIF_grammar_newp(marpaESLIFGrammar_t *marpaESLIFGrammarp, marpaWrapperGrammarOption_t *marpaWrapperGrammarOptionp, int leveli, char *descEncodings, char *descs, size_t descl, marpaESLIF_action_t *defaultSymbolActionp, marpaESLIF_action_t *defaultRuleActionp, marpaESLIF_action_t *defaultEventActionp, char *defaultEncodings, char *fallbackEncodings);
 static inline void                   _marpaESLIF_grammar_freev(marpaESLIF_grammar_t *grammarp);
 
 static inline void                   _marpaESLIF_ruleStack_freev(genericStack_t *ruleStackp);
@@ -431,7 +431,9 @@ static inline marpaESLIF_grammar_t  *_marpaESLIF_bootstrap_grammarp(marpaESLIFGr
                                                                     int bootstrap_grammar_rulei, bootstrap_grammar_rule_t *bootstrap_grammar_rulep,
                                                                     marpaESLIF_action_t *defaultSymbolActionp,
                                                                     marpaESLIF_action_t *defaultRuleActionp,
-                                                                    marpaESLIF_action_t *defaultEventActionp);
+                                                                    marpaESLIF_action_t *defaultEventActionp,
+                                                                    char *defaultEncodings,
+                                                                    char *fallbackEncodings);
 static inline short                  _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIFGrammarp);
 static inline short                  _marpaESLIFGrammar_haveLexemeb(marpaESLIFGrammar_t *marpaESLIFGrammarp, int grammari, marpaWrapperGrammar_t *marpaWrapperGrammarp, short *haveLexemebp);
 static inline marpaESLIFGrammar_t   *_marpaESLIFGrammar_newp(marpaESLIF_t *marpaESLIFp, marpaESLIFGrammarOption_t *marpaESLIFGrammarOptionp, marpaESLIFGrammar_t *marpaESLIfGrammarPreviousp, short unsafeb);
@@ -1616,7 +1618,9 @@ static inline marpaESLIF_grammar_t *_marpaESLIF_bootstrap_grammar_L0p(marpaESLIF
 					bootstrap_grammar_L0_rules,
                                         NULL, /* defaultSymbolActionp */
                                         NULL, /* defaultRuleActionp */
-                                        NULL /* defaultEventActionp */);
+                                        NULL, /* defaultEventActionp */
+                                        "ASCII", /* defaultEncodings" */
+                                        NULL /* fallbackEncodings */ );
 }
 
 /*****************************************************************************/
@@ -1639,7 +1643,9 @@ static inline marpaESLIF_grammar_t *_marpaESLIF_bootstrap_grammar_G1p(marpaESLIF
 					bootstrap_grammar_G1_rules,
                                         NULL, /* defaultSymbolActionp */
                                         NULL, /* defaultRuleActionp */
-                                        NULL /* defaultEventActionp */);
+                                        NULL, /* defaultEventActionp */
+                                        "ASCII", /* defaultEncodings" */
+                                        NULL /* fallbackEncodings */ );
 }
 
 /*****************************************************************************/
@@ -1656,7 +1662,9 @@ static inline marpaESLIF_grammar_t *_marpaESLIF_bootstrap_grammarp(marpaESLIFGra
 								   int bootstrap_grammar_rulei, bootstrap_grammar_rule_t *bootstrap_grammar_rulep,
                                                                    marpaESLIF_action_t *defaultSymbolActionp,
                                                                    marpaESLIF_action_t *defaultRuleActionp,
-                                                                   marpaESLIF_action_t *defaultEventActionp)
+                                                                   marpaESLIF_action_t *defaultEventActionp,
+                                                                   char *defaultEncodings,
+                                                                   char *fallbackEncodings)
 /*****************************************************************************/
 {
   static const char          *funcs        = "_marpaESLIF_bootstrap_grammarp";
@@ -1680,7 +1688,7 @@ static inline marpaESLIF_grammar_t *_marpaESLIF_bootstrap_grammarp(marpaESLIFGra
   /* Default type of rule action, value itself is filled in the loop */
   ruleAction.type = MARPAESLIF_ACTION_TYPE_NAME;
   
-  grammarp = _marpaESLIF_grammar_newp(marpaESLIFGrammarp, &marpaWrapperGrammarOption, leveli, descEncodings, descs, descl, defaultSymbolActionp, defaultRuleActionp, defaultEventActionp);
+  grammarp = _marpaESLIF_grammar_newp(marpaESLIFGrammarp, &marpaWrapperGrammarOption, leveli, descEncodings, descs, descl, defaultSymbolActionp, defaultRuleActionp, defaultEventActionp, defaultEncodings, fallbackEncodings);
   if (grammarp == NULL) {
     goto err;
   }
@@ -2035,6 +2043,8 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
     }
 
     /* Nothing on defaultEventActionp - it can be NULL */
+    /* Nothing on defaultEncodings - it can be NULL */
+    /* Nothing on fallbackEncodings - it can be NULL */
 
     /* :start meta symbol check */
     startp = NULL;
@@ -2905,7 +2915,7 @@ static inline short _marpaESLIFGrammar_haveLexemeb(marpaESLIFGrammar_t *marpaESL
 }
 
 /*****************************************************************************/
-static inline marpaESLIF_grammar_t *_marpaESLIF_grammar_newp(marpaESLIFGrammar_t *marpaESLIFGrammarp, marpaWrapperGrammarOption_t *marpaWrapperGrammarOptionp, int leveli, char *descEncodings, char *descs, size_t descl, marpaESLIF_action_t *defaultSymbolActionp, marpaESLIF_action_t *defaultRuleActionp, marpaESLIF_action_t *defaultEventActionp)
+static inline marpaESLIF_grammar_t *_marpaESLIF_grammar_newp(marpaESLIFGrammar_t *marpaESLIFGrammarp, marpaWrapperGrammarOption_t *marpaWrapperGrammarOptionp, int leveli, char *descEncodings, char *descs, size_t descl, marpaESLIF_action_t *defaultSymbolActionp, marpaESLIF_action_t *defaultRuleActionp, marpaESLIF_action_t *defaultEventActionp, char *defaultEncodings, char *fallbackEncodings)
 /*****************************************************************************/
 {
   static const char             *funcs          = "_marpaESLIF_grammar_newp";
@@ -2955,6 +2965,8 @@ static inline marpaESLIF_grammar_t *_marpaESLIF_grammar_newp(marpaESLIFGrammar_t
   grammarp->nbupdatei                          = 0;    /* Used by ESLIF grammar bootstrap */
   grammarp->asciishows                         = NULL;
   grammarp->discardi                           = -1;   /* Eventually filled to a value >= 0 during grammar validation */
+  grammarp->defaultEncodings                   = NULL;
+  grammarp->fallbackEncodings                  = NULL;
 
   grammarp->marpaWrapperGrammarStartp = marpaWrapperGrammar_newp(marpaWrapperGrammarOptionp);
   if (grammarp->marpaWrapperGrammarStartp == NULL) {
@@ -3035,6 +3047,22 @@ static inline marpaESLIF_grammar_t *_marpaESLIF_grammar_newp(marpaESLIFGrammar_t
     }
   }
 
+  if (defaultEncodings != NULL) {
+    grammarp->defaultEncodings = strdup(defaultEncodings);
+    if (grammarp->defaultEncodings == NULL) {
+      MARPAESLIF_ERRORF(marpaESLIFp, "strdup failure, %s", strerror(errno));
+      goto err;
+    }
+  }
+
+  if (fallbackEncodings != NULL) {
+    grammarp->fallbackEncodings = strdup(fallbackEncodings);
+    if (grammarp->fallbackEncodings == NULL) {
+      MARPAESLIF_ERRORF(marpaESLIFp, "strdup failure, %s", strerror(errno));
+      goto err;
+    }
+  }
+
   goto done;
 
  err:
@@ -3082,6 +3110,12 @@ static inline void _marpaESLIF_grammar_freev(marpaESLIF_grammar_t *grammarp)
     _marpaESLIF_action_freev(grammarp->defaultSymbolActionp);
     _marpaESLIF_action_freev(grammarp->defaultRuleActionp);
     _marpaESLIF_action_freev(grammarp->defaultEventActionp);
+    if (grammarp->defaultEncodings != NULL) {
+      free(grammarp->defaultEncodings);
+    }
+    if (grammarp->fallbackEncodings != NULL) {
+      free(grammarp->fallbackEncodings);
+    }
     if (grammarp->asciishows != NULL) {
       free(grammarp->asciishows);
     }
@@ -5438,6 +5472,8 @@ short marpaESLIFGrammar_grammarproperty_by_levelb(marpaESLIFGrammar_t *marpaESLI
     grammarPropertyp->ruleip               = grammarp->ruleip;
     grammarPropertyp->nsymboll             = grammarp->nsymboll;
     grammarPropertyp->symbolip             = grammarp->symbolip;
+    grammarPropertyp->defaultEncodings     = grammarp->defaultEncodings;
+    grammarPropertyp->fallbackEncodings    = grammarp->fallbackEncodings;
   }
   rcb = 1;
   goto done;
@@ -10689,6 +10725,10 @@ static inline void _marpaESLIF_grammar_createshowv(marpaESLIFGrammar_t *marpaESL
       (grammarp->defaultSymbolActionp != NULL)
       ||
       (grammarp->latmb)
+      ||
+      (grammarp->defaultEncodings != NULL)
+      ||
+      (grammarp->fallbackEncodings != NULL)
       ) {
     MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, ":default");
     MARPAESLIF_LEVEL_CREATESHOW(grammarp, asciishowl, asciishows);
@@ -10751,6 +10791,14 @@ static inline void _marpaESLIF_grammar_createshowv(marpaESLIFGrammar_t *marpaESL
     }
     if (grammarp->latmb) {
       MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, " latm => 1");
+    }
+    if (grammarp->defaultEncodings != NULL) {
+      MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, " default-encoding => ");
+      MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, grammarp->defaultEncodings);
+    }
+    if (grammarp->fallbackEncodings != NULL) {
+      MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, " fallback-encoding => ");
+      MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, grammarp->fallbackEncodings);
     }
     MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "\n");
   }
@@ -12313,6 +12361,8 @@ short marpaESLIFGrammar_defaults_by_levelb(marpaESLIFGrammar_t *marpaESLIFGramma
   marpaESLIFGrammarDefaults.defaultRuleActionp   = grammarp->defaultRuleActionp;
   marpaESLIFGrammarDefaults.defaultEventActionp  = grammarp->defaultEventActionp;
   marpaESLIFGrammarDefaults.defaultSymbolActionp = grammarp->defaultSymbolActionp;
+  marpaESLIFGrammarDefaults.defaultEncodings     = grammarp->defaultEncodings;
+  marpaESLIFGrammarDefaults.fallbackEncodings    = grammarp->fallbackEncodings;
 
   if (marpaESLIFGrammarDefaultsp != NULL) {
     *marpaESLIFGrammarDefaultsp = marpaESLIFGrammarDefaults;
@@ -12356,6 +12406,8 @@ short marpaESLIFGrammar_defaults_by_level_setb(marpaESLIFGrammar_t *marpaESLIFGr
   marpaESLIF_t         *marpaESLIFp;
   marpaESLIF_grammar_t *grammarp;
   marpaESLIF_action_t  *previousActionp;
+  char                 *previousDefaultEncodings;
+  char                 *previousFallbackEncodings;
   short                 rcb;
 
   if (marpaESLIFGrammarp == NULL) {
@@ -12418,6 +12470,42 @@ short marpaESLIFGrammar_defaults_by_level_setb(marpaESLIFGrammar_t *marpaESLIFGr
     } else {
       _marpaESLIF_action_freev(grammarp->defaultSymbolActionp);
       grammarp->defaultSymbolActionp = NULL;
+    }
+
+    if (marpaESLIFGrammarDefaultsp->defaultEncodings != NULL) {
+      previousDefaultEncodings = grammarp->defaultEncodings;
+      grammarp->defaultEncodings = strdup(marpaESLIFGrammarDefaultsp->defaultEncodings);
+      if (grammarp->defaultEncodings == NULL) {
+        MARPAESLIF_ERRORF(marpaESLIFp, "strdup failure, %s", strerror(errno));
+        grammarp->defaultEncodings = previousDefaultEncodings;
+        goto err;
+      }
+      if (previousDefaultEncodings != NULL) {
+        free(previousDefaultEncodings);
+      }
+    } else {
+      if (grammarp->defaultEncodings != NULL) {
+        free(grammarp->defaultEncodings);
+        grammarp->defaultEncodings = NULL;
+      }
+    }
+
+    if (marpaESLIFGrammarDefaultsp->fallbackEncodings != NULL) {
+      previousFallbackEncodings = grammarp->fallbackEncodings;
+      grammarp->fallbackEncodings = strdup(marpaESLIFGrammarDefaultsp->fallbackEncodings);
+      if (grammarp->fallbackEncodings == NULL) {
+        MARPAESLIF_ERRORF(marpaESLIFp, "strdup failure, %s", strerror(errno));
+        grammarp->fallbackEncodings = previousFallbackEncodings;
+        goto err;
+      }
+      if (previousFallbackEncodings != NULL) {
+        free(previousFallbackEncodings);
+      }
+    } else {
+      if (grammarp->fallbackEncodings != NULL) {
+        free(grammarp->fallbackEncodings);
+        grammarp->fallbackEncodings = NULL;
+      }
     }
   }
 
