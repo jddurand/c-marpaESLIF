@@ -201,7 +201,8 @@ typedef enum bootstrap_grammar_G1_enum {
   G1_META_LUA_ACTION_NAME,
   G1_META_WHITESPACE,
   G1_META_PERL_COMMENT,
-  G1_META_CPLUSPLUS_COMMENT
+  G1_META_CPLUSPLUS_COMMENT,
+  G1_META_GRAPH_ASCII_NAME
 } bootstrap_grammar_G1_enum_t;
 
 /* All non-terminals are listed here */
@@ -306,7 +307,8 @@ bootstrap_grammar_meta_t bootstrap_grammar_G1_metas[] = {
   { G1_META_LUA_ACTION_NAME,                  L0_JOIN_G1_META_LUA_ACTION_NAME,             0,       0,           0,            0 },
   { G1_META_WHITESPACE,                       L0_JOIN_G1_META_WHITESPACE,                  0,       0,           0,            0 },
   { G1_META_PERL_COMMENT,                     L0_JOIN_G1_META_PERL_COMMENT,                0,       0,           0,            0 },
-  { G1_META_CPLUSPLUS_COMMENT,                L0_JOIN_G1_META_CPLUSPLUS_COMMENT,           0,       0,           0,            0 }
+  { G1_META_CPLUSPLUS_COMMENT,                L0_JOIN_G1_META_CPLUSPLUS_COMMENT,           0,       0,           0,            0 },
+  { G1_META_GRAPH_ASCII_NAME,                 L0_JOIN_G1_META_GRAPH_ASCII_NAME,            0,       0,           0,            0 }
 };
 
 /* Here it is very important that all the string constants are UTF-8 compatible - this is the case */
@@ -1467,11 +1469,11 @@ bootstrap_grammar_rule_t bootstrap_grammar_G1_rules[] = {
   { G1_META_DEFAULT_ENCODING,                 G1_RULE_DEFAULT_ENCODING,                       MARPAESLIF_RULE_TYPE_ALTERNATIVE, 3, { G1_TERMINAL_DEFAULT_ENCODING,
                                                                                                                                      G1_TERMINAL_THEN,
                                                                                                                                      G1_META_DEFAULTENCODING_NAME                  }, -1,                        -1,      -1,              0, G1_ACTION_DEFAULTENCODING },
-  { G1_META_DEFAULTENCODING_NAME,             G1_RULE_DEFAULTENCODING_NAME,                   MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_RESTRICTED_ASCII_GRAPH_NAME           }, -1,                        -1,      -1,              0, G1_ACTION_DEFAULTENCODING_NAME },
+  { G1_META_DEFAULTENCODING_NAME,             G1_RULE_DEFAULTENCODING_NAME,                   MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_GRAPH_ASCII_NAME                      }, -1,                        -1,      -1,              0, G1_ACTION_DEFAULTENCODING_NAME },
   { G1_META_FALLBACK_ENCODING,                G1_RULE_FALLBACK_ENCODING,                      MARPAESLIF_RULE_TYPE_ALTERNATIVE, 3, { G1_TERMINAL_FALLBACK_ENCODING,
                                                                                                                                      G1_TERMINAL_THEN,
                                                                                                                                      G1_META_FALLBACKENCODING_NAME                 }, -1,                        -1,      -1,              0, G1_ACTION_FALLBACKENCODING },
-  { G1_META_FALLBACKENCODING_NAME,             G1_RULE_FALLBACKENCODING_NAME,                 MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_RESTRICTED_ASCII_GRAPH_NAME         }, -1,                        -1,      -1,              0, G1_ACTION_FALLBACKENCODING_NAME }
+  { G1_META_FALLBACKENCODING_NAME,             G1_RULE_FALLBACKENCODING_NAME,                 MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_GRAPH_ASCII_NAME                      }, -1,                        -1,      -1,              0, G1_ACTION_FALLBACKENCODING_NAME }
 };
 
 #endif /* MARPAESLIF_INTERNAL_ESLIF_G1_H */

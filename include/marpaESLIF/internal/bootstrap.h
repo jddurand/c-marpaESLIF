@@ -188,6 +188,8 @@ struct marpaESLIF_bootstrap_adverb_list_item {
     marpaESLIF_bootstrap_event_initialization_t *eventInitializationp;
     marpaESLIF_action_t                         *ifactionp;
     marpaESLIF_action_t                         *eventactionp;
+    char                                        *defaultEncodings;
+    char                                        *fallbackEncodings;
   } u;
 };
 
