@@ -1,7 +1,7 @@
 #if HAVE_MATH_H
 #include <math.h>
 #endif
-#ifdef HAVE_INFINITY_REPLACEMENT_
+#ifdef HAVE_INFINITY_REPLACEMENT
 #  undef INFINITY
 #  define INFINITY (__builtin_inff())
 #endif

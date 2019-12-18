@@ -1,7 +1,7 @@
 #if HAVE_MATH_H
 #include <math.h>
 #endif
-#ifdef HAVE_NAN_REPLACEMENT_
+#ifdef HAVE_NAN_REPLACEMENT
 #  undef NAN
 #  define NAN (__builtin_nanf(""))
 #endif
