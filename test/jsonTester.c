@@ -12,9 +12,8 @@ static short inputReaderb(void *userDatavp, char **inputsp, size_t *inputlp, sho
 static short dumpb(size_t indentl, short commab, marpaESLIFValueResult_t *marpaESLIFValueResultp);
 
 typedef struct marpaESLIFTester_context {
-  char   *inputs;
-  size_t  inputl;
-  char   *encodings;
+  test_element_t *test_elementp;
+  size_t          chunkl;
 } marpaESLIFTester_context_t;
 
 int main() {
@@ -62,9 +61,8 @@ int main() {
     marpaESLIFJSONDecodeOption.negativeInfinityActionp = NULL;
     marpaESLIFJSONDecodeOption.nanActionp              = NULL;
 
-    marpaESLIFTester_context.inputs    = test_elementp->contents;
-    marpaESLIFTester_context.inputl    = test_elementp->contentl;
-    marpaESLIFTester_context.encodings = NULL;
+    marpaESLIFTester_context.test_elementp = test_elementp;
+    marpaESLIFTester_context.chunkl        = 0;
 
     marpaESLIFRecognizerOption.userDatavp        = &marpaESLIFTester_context;
     marpaESLIFRecognizerOption.readerCallbackp   = inputReaderb;
@@ -100,11 +98,6 @@ int main() {
     } else if (test_elementp->names[0] == 'n') {
       if (jsonb) {
         GENERICLOGGER_ERRORF(genericLoggerp, "%s => KO (success when it should have failed)", test_elementp->names);
-        if (test_elementp->contents != NULL) {
-          GENERICLOGGER_ERRORF(genericLoggerp, "%s input:%s", test_elementp->names, test_elementp->contents);
-        } else {
-          GENERICLOGGER_ERRORF(genericLoggerp, "%s input: <none>", test_elementp->names);
-        }
         exiti = 1;
       } else {
         GENERICLOGGER_INFOF(genericLoggerp, "%s => OK", test_elementp->names);
@@ -114,11 +107,6 @@ int main() {
         GENERICLOGGER_INFOF(genericLoggerp, "%s => OK", test_elementp->names);
       } else {
         GENERICLOGGER_INFOF(genericLoggerp, "%s => KO (failure when it should have succeeded)", test_elementp->names);
-        if (test_elementp->contents != NULL) {
-          GENERICLOGGER_ERRORF(genericLoggerp, "%s input:%s", test_elementp->names, test_elementp->contents);
-        } else {
-          GENERICLOGGER_ERRORF(genericLoggerp, "%s input: <none>", test_elementp->names);
-        }
         exiti = 1;
       }
     }
@@ -143,12 +131,14 @@ static short inputReaderb(void *userDatavp, char **inputsp, size_t *inputlp, sho
 {
   marpaESLIFTester_context_t *marpaESLIFTester_contextp = (marpaESLIFTester_context_t *) userDatavp;
 
-  *inputsp              = marpaESLIFTester_contextp->inputs;
-  *inputlp              = marpaESLIFTester_contextp->inputl;
-  *eofbp                = 1;
+  *inputsp              = marpaESLIFTester_contextp->test_elementp->chunks[marpaESLIFTester_contextp->chunkl].contents;
+  *inputlp              = marpaESLIFTester_contextp->test_elementp->chunks[marpaESLIFTester_contextp->chunkl].contentl;
+  *eofbp                = ((*inputsp == NULL) || (*inputlp <= 0)) ? 1 : 0;
   *characterStreambp    = 1; /* We say this is a stream of characters */
-  *encodingsp           = marpaESLIFTester_contextp->encodings;
+  *encodingsp           = NULL;
   *encodinglp           = 0;
+
+  marpaESLIFTester_contextp->chunkl++;
 
   return 1;
 }
