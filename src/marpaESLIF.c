@@ -4851,7 +4851,17 @@ static inline char *_marpaESLIF_charconvb(marpaESLIF_t *marpaESLIFp, char *toEnc
         if (eofb) {
           errno = EILSEQ;
 	  if (! tconvsilentb) {
-	    MARPAESLIF_ERRORF(marpaESLIFp, "tconv failure, %s", tconv_error(tconvp));
+            char *traceFroms = tconv_fromcode(tconvp);
+            char *traceTos = tconv_tocode(tconvp);
+            if ((traceFroms != NULL) && (traceTos != NULL)) {
+              MARPAESLIF_ERRORF(marpaESLIFp, "tconv %s -> %s failure, %s", traceFroms, traceTos, tconv_error(tconvp));
+            } else if (traceFroms != NULL) {
+              MARPAESLIF_ERRORF(marpaESLIFp, "tconv %s -> ? failure, %s", traceFroms, tconv_error(tconvp));
+            } else if (traceTos != NULL) {
+              MARPAESLIF_ERRORF(marpaESLIFp, "tconv ? -> %s failure, %s", traceTos, tconv_error(tconvp));
+            } else {
+              MARPAESLIF_ERRORF(marpaESLIFp, "tconv failure, %s", tconv_error(tconvp));
+            }
 	  }
           goto err;
         } else {
@@ -4887,7 +4897,17 @@ static inline char *_marpaESLIF_charconvb(marpaESLIF_t *marpaESLIFp, char *toEnc
       default:
         /* Unsupported error code - this is fatal (includes EILSEQ of course) */
 	if (! tconvsilentb) {
-	  MARPAESLIF_ERRORF(marpaESLIFp, "tconv failure, %s", tconv_error(tconvp));
+          char *traceFroms = tconv_fromcode(tconvp);
+          char *traceTos = tconv_tocode(tconvp);
+          if ((traceFroms != NULL) && (traceTos != NULL)) {
+            MARPAESLIF_ERRORF(marpaESLIFp, "tconv %s -> %s failure, %s", traceFroms, traceTos, tconv_error(tconvp));
+          } else if (traceFroms != NULL) {
+            MARPAESLIF_ERRORF(marpaESLIFp, "tconv %s -> ? failure, %s", traceFroms, tconv_error(tconvp));
+          } else if (traceTos != NULL) {
+            MARPAESLIF_ERRORF(marpaESLIFp, "tconv ? -> %s failure, %s", traceTos, tconv_error(tconvp));
+          } else {
+            MARPAESLIF_ERRORF(marpaESLIFp, "tconv failure, %s", tconv_error(tconvp));
+          }
 	}
 	goto err;
       }
