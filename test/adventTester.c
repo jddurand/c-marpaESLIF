@@ -13,6 +13,7 @@ typedef struct marpaESLIFTester_context {
 } marpaESLIFTester_context_t;
 
 const static char *base_dsl = "\n"
+  ":default ::= default-encoding => UTF-8\n"
   ":start ::= deal\n"
   "deal ::= hands\n"
   "hands ::= hand | hands ';' hand\n"
@@ -146,11 +147,12 @@ int main() {
 
       marpaESLIFGrammarOption.bytep               = (void *) dsls;
       marpaESLIFGrammarOption.bytel               = dsll;
-      marpaESLIFGrammarOption.encodings           = NULL;
-      marpaESLIFGrammarOption.encodingl           = 0;
+      marpaESLIFGrammarOption.encodings           = "UTF-8";
+      marpaESLIFGrammarOption.encodingl           = 5; /* strlen("UTF-8") */
 
       marpaESLIFGrammarp = marpaESLIFGrammar_newp(marpaESLIFp, &marpaESLIFGrammarOption);
       if (marpaESLIFGrammarp == NULL) {
+        GENERICLOGGER_ERRORF(genericLoggerp, "Grammar generation failure: %s", dsls);
         goto err;
       }
 
