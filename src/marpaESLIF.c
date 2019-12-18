@@ -4738,7 +4738,7 @@ static inline char *_marpaESLIF_charconvb(marpaESLIF_t *marpaESLIFp, char *toEnc
   static const char *funcs       = "_marpaESLIF_charconvb";
   char              *outbuforigp = NULL;
   size_t             outbuforigl = 0;
-  tconv_option_t     tconvOption = { NULL /* charsetp */, NULL /* convertp */, NULL /* traceCallbackp */, NULL /* traceUserDatavp */ };
+  tconv_option_t     tconvOption = { NULL /* charsetp */, NULL /* convertp */, NULL /* traceCallbackp */, NULL /* traceUserDatavp */, fallbackEncodings /* fallbacks */ };
   tconv_t            tconvp      = NULL;
   char              *tmps;
   char              *inbuforigp;
