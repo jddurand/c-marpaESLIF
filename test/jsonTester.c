@@ -53,6 +53,11 @@ int main() {
   test_elementp = &(tests[0]);
   
   while (test_elementp->names != NULL) {
+
+    if (strcmp(test_elementp->names, "n_structure_100000_opening_arrays.json") != 0) {
+      test_elementp++;
+      continue;
+    }
     marpaESLIFJSONDecodeOption.disallowDupkeysb        = 0;
     marpaESLIFJSONDecodeOption.maxDepthl               = 0;
     marpaESLIFJSONDecodeOption.noReplacementCharacterb = 0;

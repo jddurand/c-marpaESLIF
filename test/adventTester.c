@@ -484,6 +484,9 @@ static short manage_eventsb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, gener
   rcb = 0;
 
  done:
+  if (cards != NULL) {
+    free(cards);
+  }
   return rcb;
 }
 
