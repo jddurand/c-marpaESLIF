@@ -49,31 +49,24 @@
 #  endif
 #endif
 
-/* HUGE_VALx promotions */
+/* HUGE_VALx replacements - we do not use promotions but the  */
+/* contrary so that we sure that the the HUGE value, if it can */
+/* be defined, is really what we expect for the appropriate type */
+/* Note that by definition HUGE_VALL >= HUGE_VAL => HUGE_VALF */
 #ifndef MARPAESLIF_HUGE_VAL
-#  ifdef MARPAESLIF_HUGE_VALF
-#    define MARPAESLIF_HUGE_VAL (double)(MARPAESLIF_HUGE_VALF)
-#  endif
+/* Only a downgrade of MARPAESLIF_HUGE_VALL is supported */
 #  ifdef MARPAESLIF_HUGE_VALL
 #    define MARPAESLIF_HUGE_VAL (double)(MARPAESLIF_HUGE_VALL)
 #  endif
 #endif
-
 #ifndef MARPAESLIF_HUGE_VALF
-#  ifdef MARPAESLIF_HUGE_VAL
-#    define MARPAESLIF_HUGE_VALF (float)(MARPAESLIF_HUGE_VAL)
-#  endif
+/* Downgrades of MARPAESLIF_HUGE_VALL and MARPAESLIF_HUGE_VAL are supported */
 #  ifdef MARPAESLIF_HUGE_VALL
 #    define MARPAESLIF_HUGE_VALF (float)(MARPAESLIF_HUGE_VALL)
-#  endif
-#endif
-
-#ifndef MARPAESLIF_HUGE_VALL
-#  ifdef MARPAESLIF_HUGE_VALF
-#    define MARPAESLIF_HUGE_VALL (long double)(MARPAESLIF_HUGE_VALF)
-#  endif
-#  ifdef MARPAESLIF_HUGE_VAL
-#    define MARPAESLIF_HUGE_VALL (long double)(MARPAESLIF_HUGE_VAL)
+#  else
+#    ifdef MARPAESLIF_HUGE_VAL
+#      define MARPAESLIF_HUGE_VALF (float)(MARPAESLIF_HUGE_VAL)
+#    endif
 #  endif
 #endif
 
