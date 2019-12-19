@@ -12,8 +12,8 @@ static short inputReaderb(void *userDatavp, char **inputsp, size_t *inputlp, sho
 static short dumpb(size_t indentl, short commab, marpaESLIFValueResult_t *marpaESLIFValueResultp);
 
 typedef struct marpaESLIFTester_context {
-  test_element_t *test_elementp;
-  size_t          chunkl;
+  char    *inputs;
+  size_t   inputl;
 } marpaESLIFTester_context_t;
 
 int main() {
@@ -24,7 +24,7 @@ int main() {
   marpaESLIFRecognizerOption_t marpaESLIFRecognizerOption;
   marpaESLIFJSONDecodeOption_t marpaESLIFJSONDecodeOption;
   marpaESLIFValueOption_t      marpaESLIFValueOption;
-  marpaESLIFTester_context_t   marpaESLIFTester_context;
+  marpaESLIFTester_context_t   marpaESLIFTester_context = { NULL, 0 };
   int                          ngrammari;
   int                          leveli;
   char                        *grammarshows;
@@ -32,6 +32,9 @@ int main() {
   int                          exiti = 0;
   test_element_t              *test_elementp;
   short                        jsonb;
+  int                          nberrori = 0;
+  test_element_chunk_t        *chunkp;
+  char                        *p;
 
   genericLoggerp = GENERICLOGGER_NEW(GENERICLOGGER_LOGLEVEL_TRACE);
   if (genericLoggerp == NULL) {
@@ -54,10 +57,6 @@ int main() {
   
   while (test_elementp->names != NULL) {
 
-    if (strcmp(test_elementp->names, "n_structure_100000_opening_arrays.json") != 0) {
-      test_elementp++;
-      continue;
-    }
     marpaESLIFJSONDecodeOption.disallowDupkeysb        = 0;
     marpaESLIFJSONDecodeOption.maxDepthl               = 0;
     marpaESLIFJSONDecodeOption.noReplacementCharacterb = 0;
@@ -66,8 +65,27 @@ int main() {
     marpaESLIFJSONDecodeOption.negativeInfinityActionp = NULL;
     marpaESLIFJSONDecodeOption.nanActionp              = NULL;
 
-    marpaESLIFTester_context.test_elementp = test_elementp;
-    marpaESLIFTester_context.chunkl        = 0;
+    marpaESLIFTester_context.inputl = 0;
+
+    chunkp = &(test_elementp->chunks[0]);
+    while (chunkp->contentl > 0) {
+      marpaESLIFTester_context.inputl += chunkp->contentl;
+      chunkp++;
+    }
+
+    marpaESLIFTester_context.inputs = (char *) malloc(marpaESLIFTester_context.inputl);
+    if (marpaESLIFTester_context.inputs == NULL) {
+      GENERICLOGGER_ERRORF(genericLoggerp, "malloc failure, %s", strerror(errno));
+      goto err;
+    }
+
+    chunkp = &(test_elementp->chunks[0]);
+    p = marpaESLIFTester_context.inputs;
+    while (chunkp->contentl > 0) {
+      memcpy(p, chunkp->contents, chunkp->contentl);
+      p += chunkp->contentl;
+      chunkp++;
+    }
 
     marpaESLIFRecognizerOption.userDatavp        = &marpaESLIFTester_context;
     marpaESLIFRecognizerOption.readerCallbackp   = inputReaderb;
@@ -103,6 +121,7 @@ int main() {
     } else if (test_elementp->names[0] == 'n') {
       if (jsonb) {
         GENERICLOGGER_ERRORF(genericLoggerp, "%s => KO (success when it should have failed)", test_elementp->names);
+        ++nberrori;
         exiti = 1;
       } else {
         GENERICLOGGER_INFOF(genericLoggerp, "%s => OK", test_elementp->names);
@@ -111,10 +130,14 @@ int main() {
       if (jsonb) {
         GENERICLOGGER_INFOF(genericLoggerp, "%s => OK", test_elementp->names);
       } else {
-        GENERICLOGGER_INFOF(genericLoggerp, "%s => KO (failure when it should have succeeded)", test_elementp->names);
+        GENERICLOGGER_ERRORF(genericLoggerp, "%s => KO (failure when it should have succeeded)", test_elementp->names);
+        ++nberrori;
         exiti = 1;
       }
     }
+
+    free(marpaESLIFTester_context.inputs);
+    marpaESLIFTester_context.inputs = NULL;
     test_elementp++;
   }
 
@@ -124,6 +147,10 @@ int main() {
   exiti = 1;
 
  done:
+  if (marpaESLIFTester_context.inputs != NULL) {
+    free(marpaESLIFTester_context.inputs);
+  }
+  GENERICLOGGER_INFOF(genericLoggerp, "Number of of tests in error: %d", nberrori);
   marpaESLIFGrammar_freev(marpaESLIFGrammarJsonp);
   marpaESLIF_freev(marpaESLIFp);
   GENERICLOGGER_FREE(genericLoggerp);
@@ -136,14 +163,12 @@ static short inputReaderb(void *userDatavp, char **inputsp, size_t *inputlp, sho
 {
   marpaESLIFTester_context_t *marpaESLIFTester_contextp = (marpaESLIFTester_context_t *) userDatavp;
 
-  *inputsp              = marpaESLIFTester_contextp->test_elementp->chunks[marpaESLIFTester_contextp->chunkl].contents;
-  *inputlp              = marpaESLIFTester_contextp->test_elementp->chunks[marpaESLIFTester_contextp->chunkl].contentl;
-  *eofbp                = ((*inputsp == NULL) || (*inputlp <= 0)) ? 1 : 0;
+  *inputsp              = marpaESLIFTester_contextp->inputs;
+  *inputlp              = marpaESLIFTester_contextp->inputl;
+  *eofbp                = 1;
   *characterStreambp    = 1; /* We say this is a stream of characters */
   *encodingsp           = NULL;
   *encodinglp           = 0;
-
-  marpaESLIFTester_contextp->chunkl++;
 
   return 1;
 }

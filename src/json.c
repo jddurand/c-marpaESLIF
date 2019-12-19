@@ -728,14 +728,15 @@ static short _marpaESLIFJSON_membersb(void *userDatavp, marpaESLIFValue_t *marpa
 static short _marpaESLIFJSON_numberb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb)
 /*****************************************************************************/
 {
-  marpaESLIFJSONContext_t   *marpaESLIFJSONContextp                                                                      = (marpaESLIFJSONContext_t *) userDatavp;
-  short                     (*numberActionp)(char *utf8s, size_t utf8l, marpaESLIFValueResult_t *marpaESLIFValueResultp) = marpaESLIFJSONContextp->marpaESLIFJSONDecodeOptionp->numberActionp;
-  marpaESLIFValueResult_t    marpaESLIFValueResult;
-  marpaESLIFValueResult_t   *marpaESLIFValueResultInputp;
-  marpaESLIFValueResult_t   *marpaESLIFValueResultp;
-  char                      *decimalPoints;
-  char                      *endptrp;
-  short                      rcb;
+  marpaESLIFJSONContext_t            *marpaESLIFJSONContextp = (marpaESLIFJSONContext_t *) userDatavp;
+  marpaESLIFJSONDecodeNumberAction_t  numberActionp          = marpaESLIFJSONContextp->marpaESLIFJSONDecodeOptionp->numberActionp;
+  short                               needfallbackb          = 0;
+  marpaESLIFValueResult_t             marpaESLIFValueResult;
+  marpaESLIFValueResult_t            *marpaESLIFValueResultInputp;
+  marpaESLIFValueResult_t            *marpaESLIFValueResultp;
+  char                               *decimalPoints;
+  char                               *endptrp;
+  short                               rcb;
 
   /* Input is of type array by definition, UTF-8 encoded */
   marpaESLIFValueResultInputp = _marpaESLIFValue_stack_getp(marpaESLIFValuep, arg0i);

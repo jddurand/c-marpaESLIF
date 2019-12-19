@@ -385,14 +385,19 @@ typedef struct marpaESLIFSymbolProperty {
   marpaESLIFAction_t          *ifActionp;              /* Symbol if action */
 } marpaESLIFSymbolProperty_t;
 
+typedef short (*marpaESLIFJSONDecodeNumberAction_t)(char *utf8s, size_t utf8l, marpaESLIFValueResult_t *marpaESLIFValueResultp); /* Eventual specialized number action */
+typedef short (*marpaESLIFJSONDecodePositiveInfinityAction_t)(marpaESLIFValueResult_t *marpaESLIFValueResultp); /* Eventual specialized +Infinity action */
+typedef short (*marpaESLIFJSONDecodeNegativeInfinityAction_t)(marpaESLIFValueResult_t *marpaESLIFValueResultp); /* Eventual specialized -Infinity action */
+typedef short (*marpaESLIFJSONDecodeNanAction_t)(marpaESLIFValueResult_t *marpaESLIFValueResultp); /* Eventual specialized Nan action */
+
 typedef struct marpaESLIFJSONDecodeOption {
-  short    disallowDupkeysb;                           /* Do not allow duplicate key in an object. */
-  size_t   maxDepthl;                                  /* Maximum depth - 0 if no maximum */
-  short    noReplacementCharacterb;                    /* Do not use replacement character for invalid UTF-16 surrogates, instead let the parse valuation fail */
-  short  (*numberActionp)(char *utf8s, size_t utf8l, marpaESLIFValueResult_t *marpaESLIFValueResultp); /* Eventual specialized number action */
-  short  (*positiveInfinityActionp)(marpaESLIFValueResult_t *marpaESLIFValueResultp); /* Eventual specialized +Infinity action */
-  short  (*negativeInfinityActionp)(marpaESLIFValueResult_t *marpaESLIFValueResultp); /* Eventual specialized -Infinity action */
-  short  (*nanActionp)(marpaESLIFValueResult_t *marpaESLIFValueResultp); /* Eventual specialized Nan action */
+  short                                        disallowDupkeysb;        /* Do not allow duplicate key in an object. */
+  size_t                                       maxDepthl;               /* Maximum depth - 0 if no maximum */
+  short                                        noReplacementCharacterb; /* No replacement character for invalid UTF-16 surrogates */
+  marpaESLIFJSONDecodeNumberAction_t           numberActionp;           /* Number action fallback */
+  marpaESLIFJSONDecodePositiveInfinityAction_t positiveInfinityActionp; /* Positive infinity action fallback */
+  marpaESLIFJSONDecodeNegativeInfinityAction_t negativeInfinityActionp; /* Negative infinity action fallback */
+  marpaESLIFJSONDecodeNanAction_t              nanActionp;              /* NaN action fallback */
 } marpaESLIFJSONDecodeOption_t;
 
 #ifdef __cplusplus
