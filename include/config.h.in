@@ -44,5 +44,6 @@ typedef @MARPAESLIF_UINT32_T@ marpaESLIF_uint32_t;
 #cmakedefine C_NAN @C_NAN@
 #cmakedefine C_ISINF @C_ISINF@
 #cmakedefine C_ISNAN @C_ISNAN@
+#cmakedefine C_STRTOLL @C_STRTOLL@
 
 #endif /* MARPAESLIF_CONFIG_H */

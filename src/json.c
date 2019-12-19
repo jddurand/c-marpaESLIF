@@ -767,7 +767,7 @@ static short _marpaESLIFJSON_numberb(void *userDatavp, marpaESLIFValue_t *marpaE
       marpaESLIFValueResult.contextp        = NULL;
       marpaESLIFValueResult.representationp = NULL;
       marpaESLIFValueResult.type            = MARPAESLIF_VALUE_TYPE_LONG_DOUBLE;
-      marpaESLIFValueResult.u.ld            = strtold(marpaESLIFValueResultInputp->u.a.p, &endptrp);
+      marpaESLIFValueResult.u.ld            = C_STRTOLD(marpaESLIFValueResultInputp->u.a.p, &endptrp);
       /* Restore decimal point in any case */
       if (decimalPoints != NULL) {
         *decimalPoints = '.';
@@ -803,11 +803,11 @@ static short _marpaESLIFJSON_numberb(void *userDatavp, marpaESLIFValue_t *marpaE
       }
 #endif
     } else {
-#ifdef MARPAESLIF_HAVE_LONG_LONG
+#if defined(MARPAESLIF_HAVE_LONG_LONG) && defined(C_STRTOLL)
       marpaESLIFValueResult.contextp        = NULL;
       marpaESLIFValueResult.representationp = NULL;
       marpaESLIFValueResult.type            = MARPAESLIF_VALUE_TYPE_LONG_LONG;
-      marpaESLIFValueResult.u.ll            = strtoll(marpaESLIFValueResultInputp->u.a.p, &endptrp, 10);
+      marpaESLIFValueResult.u.ll            = C_STRTOLL(marpaESLIFValueResultInputp->u.a.p, &endptrp, 10);
       if ((errno == ERANGE) && (marpaESLIFValueResult.u.ll == MARPAESLIF_LLONG_MIN)) {
         MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "%s: Value would cause underflow", marpaESLIFValueResultInputp->u.a.p);
         goto err;
