@@ -22,15 +22,6 @@
 /* Common math portability hacks */
 /* ----------------------------- */
 
-/* HUGE_VALF is a 'float' Infinity.  */
-#ifdef C_HUGE_VALF_REPLACEMENT
-#  define MARPAESLIF_HUGE_VALF (__builtin_huge_valf())
-#else
-#  ifdef C_HUGE_VALF
-#    define MARPESLIF_HUGE_VALF C_HUGE_VALF
-#  endif
-#endif
-
 /* HUGE_VAL is a 'double' Infinity.  */
 #ifdef C_HUGE_VAL_REPLACEMENT
 #  define MARPAESLIF_HUGE_VAL (__builtin_huge_val())
@@ -40,12 +31,49 @@
 #  endif
 #endif
 
+/* HUGE_VALF is a 'float' Infinity.  */
+#ifdef C_HUGE_VALF_REPLACEMENT
+#  define MARPAESLIF_HUGE_VALF (__builtin_huge_valf())
+#else
+#  ifdef C_HUGE_VALF
+#    define MARPAESLIF_HUGE_VALF C_HUGE_VALF
+#  endif
+#endif
+
 /* HUGE_VALL is a 'long double' Infinity. */
 #ifdef C_HUGE_VALL_REPLACEMENT
 #  define MARPAESLIF_HUGE_VALL (__builtin_huge_vall())
 #else
 #  ifdef C_HUGE_VALL
 #    define MARPAESLIF_HUGE_VALL C_HUGE_VALL
+#  endif
+#endif
+
+/* HUGE_VALx promotions */
+#ifndef MARPAESLIF_HUGE_VAL
+#  ifdef MARPAESLIF_HUGE_VALF
+#    define MARPAESLIF_HUGE_VAL (double)(MARPAESLIF_HUGE_VALF)
+#  endif
+#  ifdef MARPAESLIF_HUGE_VALL
+#    define MARPAESLIF_HUGE_VAL (double)(MARPAESLIF_HUGE_VALL)
+#  endif
+#endif
+
+#ifndef MARPAESLIF_HUGE_VALF
+#  ifdef MARPAESLIF_HUGE_VAL
+#    define MARPAESLIF_HUGE_VALF (float)(MARPAESLIF_HUGE_VAL)
+#  endif
+#  ifdef MARPAESLIF_HUGE_VALL
+#    define MARPAESLIF_HUGE_VALF (float)(MARPAESLIF_HUGE_VALL)
+#  endif
+#endif
+
+#ifndef MARPAESLIF_HUGE_VALL
+#  ifdef MARPAESLIF_HUGE_VALF
+#    define MARPAESLIF_HUGE_VALL (long double)(MARPAESLIF_HUGE_VALF)
+#  endif
+#  ifdef MARPAESLIF_HUGE_VAL
+#    define MARPAESLIF_HUGE_VALL (long double)(MARPAESLIF_HUGE_VAL)
 #  endif
 #endif
 
