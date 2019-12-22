@@ -105,15 +105,29 @@ make_path(dirname($config_h));
             $ac->define_var("C_HAVE_INFINITY_REPLACEMENT", 1);
         } else {
             $ac->msg_result('no');
+            $ac->msg_checking("for INFINITY replacement using division");
+            if (get_math_constant('float', "INFINITY", '1.0 / 0.0')) {
+                $ac->msg_result('yes');
+                $ac->define_var("C_HAVE_INFINITY_REPLACEMENT_USING_DIVISION", 1);
+            } else {
+                $ac->msg_result('no');
+            }
         }
     }
 
-    $ac->msg_checking("for isinf()");
+    $ac->msg_checking("for working isinf()");
     if (get_math_function('short', 'isinf', '(0.0)')) {
         $ac->msg_result('yes');
         $ac->define_var("C_HAVE_ISINF", 1);
     } else {
         $ac->msg_result('no');
+        $ac->msg_checking("for isinf replacement");
+        if (get_math_function('short', 'isinf', '(0.0)', '__builtin_isinf')) {
+            $ac->msg_result('yes');
+            $ac->define_var("C_HAVE_ISINF_REPLACEMENT", 1);
+        } else {
+            $ac->msg_result('no');
+        }
     }
 
     $ac->msg_checking("for working NAN");
@@ -128,6 +142,13 @@ make_path(dirname($config_h));
             $ac->define_var("C_HAVE_NAN_REPLACEMENT", 1);
         } else {
             $ac->msg_result('no');
+            $ac->msg_checking("for NAN replacement using division");
+            if (get_math_constant('float', "NAN", '0.0 / 0.0')) {
+                $ac->msg_result('yes');
+                $ac->define_var("C_HAVE_NAN_REPLACEMENT_USING_DIVISION", 1);
+            } else {
+                $ac->msg_result('no');
+            }
         }
     }
 
@@ -137,6 +158,13 @@ make_path(dirname($config_h));
         $ac->define_var("C_HAVE_ISNAN", 1);
     } else {
         $ac->msg_result('no');
+        $ac->msg_checking("for isnan replacement");
+        if (get_math_function('short', 'isnan', '(0.0)', '__builtin_isnan')) {
+            $ac->msg_result('yes');
+            $ac->define_var("C_HAVE_ISNAN_REPLACEMENT", 1);
+        } else {
+            $ac->msg_result('no');
+        }
     }
 
     $ac->check;
@@ -496,13 +524,18 @@ int main() {
 }
 
 sub get_math_function {
-    my ($variable_type, $function, $function_parameters) = @_;
+    my ($variable_type, $function, $function_parameters, $replacement) = @_;
 
+    $replacement //= '';
     my $FUNCTION = uc($function);
-    my $extra_compiler_flags = " -DC_${FUNCTION}=${function}";
+    my $extra_compiler_flags = $replacement ? " -DHAVE_${FUNCTION}_REPLACEMENT=1" : " -DC_${FUNCTION}=${function}";
 
     my $source .= "
 #include <math.h>
+#ifdef HAVE_${FUNCTION}_REPLACEMENT
+#  undef C_${FUNCTION}
+#  define C_${FUNCTION}(x) (${replacement}(x))
+#endif
 int main() {
   ${variable_type} x = C_${FUNCTION}${function_parameters};
   return 0;

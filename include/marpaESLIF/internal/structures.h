@@ -17,6 +17,9 @@
 #ifdef HAVE_MATH_H
 #  include <math.h>
 #endif
+#ifdef HAVE_FLOAT_H
+#  include <float.h>
+#endif
 
 /* ----------------------------- */
 /* Common math portability hacks */
@@ -49,7 +52,50 @@
 #  endif
 #endif
 
-/* HUGE_VALx replacements - we do not use promotions but the  */
+#ifdef C_INFINITY_REPLACEMENT_USING_DIVISION
+#  define MARPAESLIF_INFINITY (1.0 / 0.0)
+#else
+#  ifdef C_INFINITY_REPLACEMENT
+#    define MARPAESLIF_INFINITY (__builtin_inff())
+#  else
+#    ifdef C_INFINITY
+#      define MARPAESLIF_INFINITY C_INFINITY
+#    endif
+#  endif
+#endif
+
+#ifdef C_NAN_REPLACEMENT_USING_DIVISION
+#  define MARPAESLIF_NAN (0.0 / 0.0)
+#else
+#  ifdef C_NAN_REPLACEMENT
+#    define MARPAESLIF_NAN (__builtin_nanf(""))
+#  else
+#    ifdef C_NAN
+#      define MARPAESLIF_NAN C_NAN
+#    endif
+#  endif
+#endif
+
+#ifdef C_ISINF_REPLACEMENT
+#  define MARPAESLIF_ISINF(f) (__builtin_isinf(f))
+#else
+#  ifdef C_ISINF
+#    define MARPAESLIF_ISINF(f) C_ISINF(f)
+#  endif
+#endif
+
+#ifdef C_ISNAN_REPLACEMENT
+#  define MARPAESLIF_ISNAN(f) (__builtin_isnan(f))
+#else
+#  ifdef C_ISNAN
+#    define MARPAESLIF_ISNAN(f) C_ISNAN(f)
+#  endif
+#endif
+
+/* ====================================================================== */
+/*                         Math and float fallbacks                       */
+/* ====================================================================== */
+/* HUGE_VALx fallbacks - we do not use promotions but the  */
 /* contrary so that we sure that the the HUGE value, if it can */
 /* be defined, is really what we expect for the appropriate type */
 /* Note that by definition HUGE_VALL >= HUGE_VAL => HUGE_VALF */
@@ -70,34 +116,35 @@
 #  endif
 #endif
 
-#ifdef C_INFINITY_REPLACEMENT
-#  define MARPAESLIF_INFINITY (__builtin_inff())
-#else
-#  ifdef C_INFINITY
-#    define MARPAESLIF_INFINITY C_INFINITY
+/* isinf fallback - we use fpclassify. In case it is internall _fpclass, */
+/* that is MSVC specific, we explicitly cast to a double */
+#ifndef MARPAESLIF_ISINF
+#  ifdef C_FPCLASSIFY
+#    ifdef C_FP_INFINITE
+#      define MARPAESLIF_ISINF(x) (C_FPCLASSIFY(x) == C_FP_INFINITE)
+#    else
+#      if defined(C__FPCLASS_NINF) && defined(C__FPCLASS_PINF)
+#        define MARPAESLIF_ISINF(x) ((C_FPCLASSIFY((double) (x)) == C__FPCLASS_NINF) || (C_FPCLASSIFY((double) (x)) == C__FPCLASS_PINF))
+#      endif
+#    endif
 #  endif
 #endif
 
-#ifdef C_NAN_REPLACEMENT
-#  define MARPAESLIF_NAN (__builtin_nanf(""))
-#else
-#  ifdef C_NAN
-#    define MARPAESLIF_NAN C_NAN
+/* isnan fallback - we use fpclassify. In case it is internall _fpclass, */
+/* that is MSVC specific, we explicitly cast to a double */
+#ifndef MARPAESLIF_ISNAN
+#  ifdef C_FPCLASSIFY
+#    ifdef C_FP_NAN
+#      define MARPAESLIF_ISNAN(x) (C_FPCLASSIFY(x) == C_FP_NAN)
+#    else
+#      if defined(C__FPCLASS_SNAN) && defined(C__FPCLASS_QNAN)
+#        define MARPAESLIF_ISNAN(x) ((C_FPCLASSIFY((double) (x)) == C__FPCLASS_SNAN) || (C_FPCLASSIFY((double) (x)) == C__FPCLASS_QNAN))
+#      endif
+#    endif
 #  endif
 #endif
 
-#ifdef C_ISINF
-#  define MARPAESLIF_ISINF(f) C_ISINF(f)
-#else
-#  if defined(MARPAESLIF_INFINITY)
-#    define MARPAESLIF_ISINF(f) ((f == -MARPAESLIF_INFINITY) || (f == MARPAESLIF_INFINITY))
-#  endif
-#endif
 
-/* NaN cannot be used, because NaN != NaN -; */
-#ifdef C_ISNAN
-#  define MARPAESLIF_ISNAN(f) C_ISNAN(f)
-#endif
 
 #if defined(MARPAESLIF_NAN) && defined(MARPAESLIF_ISNAN)
 #  define MARPAESLIF_HAVENAN 1
