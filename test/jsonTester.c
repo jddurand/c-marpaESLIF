@@ -25,10 +25,6 @@ int main() {
   marpaESLIFJSONDecodeOption_t marpaESLIFJSONDecodeOption;
   marpaESLIFValueOption_t      marpaESLIFValueOption;
   marpaESLIFTester_context_t   marpaESLIFTester_context = { NULL, 0 };
-  int                          ngrammari;
-  int                          leveli;
-  char                        *grammarshows;
-  int                          i;
   int                          exiti = 0;
   test_element_t              *test_elementp;
   short                        jsonb;
