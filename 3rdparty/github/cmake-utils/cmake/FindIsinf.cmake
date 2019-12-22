@@ -19,19 +19,36 @@ MACRO (FINDISINF)
       #
       # Test
       #
-      MESSAGE(STATUS "Looking for working isinf")
-      TRY_COMPILE (C_HAS_ISINF ${CMAKE_CURRENT_BINARY_DIR}
-        ${source_dir}/isinf.c
-        COMPILE_DEFINITIONS -DC_ISINF=isinf -DHAVE_MATH_H=${_HAVE_MATH_H})
-      IF (C_HAS_ISINF)
-        MESSAGE(STATUS "Looking for working isinf - found")
-        SET (_C_ISINF isinf)
-        SET (_C_ISINF_FOUND TRUE)
+      FOREACH (KEYWORD "isinf" "_isinf" "__isinf")
+        MESSAGE(STATUS "Looking for working ${KEYWORD}")
+        TRY_COMPILE (C_HAS_${KEYWORD} ${CMAKE_CURRENT_BINARY_DIR}
+          ${source_dir}/isinf.c
+          COMPILE_DEFINITIONS -DC_ISINF=${KEYWORD} -DHAVE_MATH_H=${_HAVE_MATH_H})
+        IF (C_HAS_${KEYWORD})
+          MESSAGE(STATUS "Looking for working ${KEYWORD} - found")
+          SET (_C_ISINF ${KEYWORD})
+          SET (_C_ISINF_FOUND TRUE)
+          BREAK ()
+        ENDIF ()
+      ENDFOREACH ()
+      IF (NOT _C_ISINF_FOUND)
+        MESSAGE(STATUS "Looking for isinf replacement")
+        TRY_COMPILE (C_HAS_ISINF_REPLACEMENT ${CMAKE_CURRENT_BINARY_DIR}
+          ${source_dir}/isinf.c
+          COMPILE_DEFINITIONS -DHAVE_ISINF_REPLACEMENT=1 -DHAVE_MATH_H=${_HAVE_MATH_H})
+        IF (C_HAS_ISINF_REPLACEMENT)
+          MESSAGE(STATUS "Looking for isinf replacement - found")
+          SET (_C_ISINF_REPLACEMENT TRUE)
+        ENDIF ()
       ENDIF ()
     ENDIF ()
     IF (_C_ISINF_FOUND)
       SET (C_ISINF "${_C_ISINF}" CACHE STRING "C isinf implementation")
       MARK_AS_ADVANCED (C_ISINF)
+    ENDIF ()
+    IF (_C_ISINF_REPLACEMENT)
+      SET (C_ISINF_REPLACEMENT "(__builtin_isinf(__VA_ARGS__))" CACHE STRING "C ISINF_REPLACEMENT implementation")
+      MARK_AS_ADVANCED (C_ISINF_REPLACEMENT)
     ENDIF ()
     SET (C_ISINF_SINGLETON TRUE CACHE BOOL "C isinf check singleton")
     MARK_AS_ADVANCED (C_ISINF_SINGLETON)
