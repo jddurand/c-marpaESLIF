@@ -103,16 +103,47 @@
 /* Only a downgrade of MARPAESLIF_HUGE_VALL is supported */
 #  ifdef MARPAESLIF_HUGE_VALL
 #    define MARPAESLIF_HUGE_VAL (double)(MARPAESLIF_HUGE_VALL)
+#    warning MARPAESLIF_HUGE_VAL fallback using MARPAESLIF_HUGE_VALL
 #  endif
 #endif
 #ifndef MARPAESLIF_HUGE_VALF
 /* Downgrades of MARPAESLIF_HUGE_VALL and MARPAESLIF_HUGE_VAL are supported */
 #  ifdef MARPAESLIF_HUGE_VALL
 #    define MARPAESLIF_HUGE_VALF (float)(MARPAESLIF_HUGE_VALL)
+#    warning MARPAESLIF_HUGE_VALF fallback using MARPAESLIF_HUGE_VALL
 #  else
 #    ifdef MARPAESLIF_HUGE_VAL
 #      define MARPAESLIF_HUGE_VALF (float)(MARPAESLIF_HUGE_VAL)
+#    warning MARPAESLIF_HUGE_VALF fallback using MARPAESLIF_HUGE_VAL
 #    endif
+#  endif
+#endif
+
+/* INFINITY fallback - only on MSVC */
+#ifndef MARPAESLIF_INFINITY
+#  ifdef _MSC_VER
+/* We do like ReactOS  - c.f. https://doxygen.reactos.org/d3/d22/sdk_2include_2reactos_2wine_2port_8h_source.html */
+static inline float __port_infinity(void)
+{
+  static const unsigned __inf_bytes = 0x7f800000;
+  return *(const float *)&__inf_bytes;
+}
+#    define MARPAESLIF_INFINITY __port_infinity()
+#    warning MARPAESLIF_INFINITY fallback using 0x7f800000
+#  endif
+#endif
+
+/* INFINITY fallback - only on MSVC */
+#ifndef MARPAESLIF_NAN
+#  ifdef _MSC_VER
+/* We do like ReactOS  - c.f. https://doxygen.reactos.org/d3/d22/sdk_2include_2reactos_2wine_2port_8h_source.html */
+static inline float __port_nan(void)
+{
+  static const unsigned __nan_bytes = 0x7fc00000;
+  return *(const float *)&__nan_bytes;
+}
+#    define MARPAESLIF_NAN __port_nan()
+#    warning MARPAESLIF_NAN fallback using 0x7fc00000
 #  endif
 #endif
 
@@ -122,9 +153,11 @@
 #  ifdef C_FPCLASSIFY
 #    ifdef C_FP_INFINITE
 #      define MARPAESLIF_ISINF(x) (C_FPCLASSIFY(x) == C_FP_INFINITE)
+#      warning MARPAESLIF_ISINF fallback using FP_INFINITE
 #    else
 #      if defined(C__FPCLASS_NINF) && defined(C__FPCLASS_PINF)
 #        define MARPAESLIF_ISINF(x) ((C_FPCLASSIFY((double) (x)) == C__FPCLASS_NINF) || (C_FPCLASSIFY((double) (x)) == C__FPCLASS_PINF))
+#        warning MARPAESLIF_ISINF fallback using _FPCLASS_NINF and _FPCLASS_PNINF
 #      endif
 #    endif
 #  endif
@@ -136,9 +169,11 @@
 #  ifdef C_FPCLASSIFY
 #    ifdef C_FP_NAN
 #      define MARPAESLIF_ISNAN(x) (C_FPCLASSIFY(x) == C_FP_NAN)
+#      warning MARPAESLIF_ISNAN fallback using FP_NAN
 #    else
 #      if defined(C__FPCLASS_SNAN) && defined(C__FPCLASS_QNAN)
 #        define MARPAESLIF_ISNAN(x) ((C_FPCLASSIFY((double) (x)) == C__FPCLASS_SNAN) || (C_FPCLASSIFY((double) (x)) == C__FPCLASS_QNAN))
+#        warning MARPAESLIF_ISNAN fallback using _FPCLASS_SNAN and _FPCLASS_QNAN
 #      endif
 #    endif
 #  endif

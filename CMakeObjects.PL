@@ -441,6 +441,111 @@ typedef unsigned int marpaESLIF_uint32_t;
 #  endif
 #endif
 
+#ifdef C_HAVE_HUGE_VAL_REPLACEMENT
+# define C_HUGE_VAL_REPLACEMENT
+#endif
+#ifdef C_HAVE_HUGE_VAL
+# define C_HUGE_VAL HUGE_VAL
+#endif
+
+#ifdef C_HAVE_HUGE_VALF_REPLACEMENT
+# define C_HUGE_VALF_REPLACEMENT
+#endif
+#ifdef C_HAVE_HUGE_VALF
+# define C_HUGE_VALF HUGE_VALF
+#endif
+
+#ifdef C_HAVE_HUGE_VALL_REPLACEMENT
+# define C_HUGE_VALL_REPLACEMENT
+#endif
+#ifdef C_HAVE_HUGE_VALL
+# define C_HUGE_VALL HUGE_VALL
+#endif
+
+#ifdef C_HAVE_INFINITY_REPLACEMENT_USING_DIVISION
+#define C_INFINITY_REPLACEMENT_USING_DIVISION
+#endif
+#ifdef C_HAVE_INFINITY_REPLACEMENT
+# define C_INFINITY_REPLACEMENT
+#endif
+#ifdef C_HAVE_INFINITY
+# define C_INFINITY INFINITY
+#endif
+
+#ifdef C_HAVE_NAN_REPLACEMENT_USING_DIVISION
+#define C_NAN_REPLACEMENT_USING_DIVISION
+#endif
+#ifdef C_HAVE_NAN_REPLACEMENT
+# define C_NAN_REPLACEMENT
+#endif
+#ifdef C_HAVE_NAN
+# define C_NAN NAN
+#endif
+
+#ifdef C_HAVE_NAN_REPLACEMENT
+# define C_NAN_REPLACEMENT
+#endif
+#ifdef C_HAVE_NAN
+# define C_NAN NAN
+#endif
+
+#ifdef C_HAVE_ISINF_REPLACEMENT
+#  define C_ISINF_REPLACEMENT
+#endif
+#ifdef C_HAVE_ISINF
+#  define C_ISINF isinf
+#endif
+
+#ifdef C_HAVE_ISNAN_REPLACEMENT
+#  define C_ISNAN_REPLACEMENT
+#endif
+#ifdef C_HAVE_ISNAN
+#  define C_ISNAN isnan
+#endif
+
+#ifdef HAVE_FPCLASSIFY
+#  define C_FPCLASSIFY fpclassify
+#else
+#  ifdef HAVE__FPCLASSIFY
+#    define C_FPCLASSIFY _fpclassify
+#  else
+#    ifdef HAVE___FPCLASSIFY
+#      define C_FPCLASSIFY __fpclassify
+#    else
+#      ifdef HAVE_FPCLASS
+#        define C_FPCLASSIFY fpclass
+#      else
+#        ifdef HAVE__FPCLASS
+#          define C_FPCLASSIFY _fpclass
+#        else
+#          ifdef HAVE___FPCLASS
+#            define C_FPCLASSIFY __fpclass
+#          else
+#          endif
+#        endif
+#      endif
+#    endif
+#  endif
+#endif
+#ifdef HAVE_FP_NAN
+#  define C_FP_NAN FP_NAN
+#endif
+#ifdef HAVE__FPCLASS_SNAN
+#  define C__FPCLASS_SNAN _FPCLASS_SNAN
+#endif
+#ifdef HAVE__FPCLASS_QNAN
+#  define C__FPCLASS_QNAN _FPCLASS_QNAN
+#endif
+#ifdef HAVE_FP_INFINITE
+#  define C_FP_INFINITE FP_INFINITE
+#endif
+#ifdef HAVE__FPCLASS_NINF
+#  define C__FPCLASS_NINF _FPCLASS_NINF
+#endif
+#ifdef HAVE__FPCLASS_PINF
+#  define C__FPCLASS_PINF _FPCLASS_PINF
+#endif
+
 #endif /* MARPAESLIF_CONFIG_WRAPPER_H */
 CONFIG
     close($fh) || warn "Cannot close $output, $!";
