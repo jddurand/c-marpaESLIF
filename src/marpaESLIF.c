@@ -17420,7 +17420,7 @@ short marpaESLIF_haveinf(marpaESLIFValueResultBool_t *marpaESLIFValueResultBoolp
 short marpaESLIF_isinf(float f)
 /*****************************************************************************/
 {
-#ifdef MARPAESLIF_HAVENAN
+#ifdef MARPAESLIF_HAVEINF
   return MARPAESLIF_ISINF(f) ? 1 : 0;
 #else
   return 0;
