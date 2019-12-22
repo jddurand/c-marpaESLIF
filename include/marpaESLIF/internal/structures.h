@@ -103,18 +103,36 @@
 /* Only a downgrade of MARPAESLIF_HUGE_VALL is supported */
 #  ifdef MARPAESLIF_HUGE_VALL
 #    define MARPAESLIF_HUGE_VAL (double)(MARPAESLIF_HUGE_VALL)
-#    warning MARPAESLIF_HUGE_VAL fallback using MARPAESLIF_HUGE_VALL
+#    ifdef __GNUC__
+#      warning MARPAESLIF_HUGE_VAL fallback using MARPAESLIF_HUGE_VALL
+#    else
+#      ifdef _MSC_VER
+#        pragma message("MARPAESLIF_HUGE_VAL fallback using MARPAESLIF_HUGE_VALL")
+#      endif
+#    endif
 #  endif
 #endif
 #ifndef MARPAESLIF_HUGE_VALF
 /* Downgrades of MARPAESLIF_HUGE_VALL and MARPAESLIF_HUGE_VAL are supported */
 #  ifdef MARPAESLIF_HUGE_VALL
 #    define MARPAESLIF_HUGE_VALF (float)(MARPAESLIF_HUGE_VALL)
-#    warning MARPAESLIF_HUGE_VALF fallback using MARPAESLIF_HUGE_VALL
+#    ifdef __GNUC__
+#      warning MARPAESLIF_HUGE_VALF fallback using MARPAESLIF_HUGE_VALL
+#    else
+#      ifdef _MSC_VER
+#        pragma message("MARPAESLIF_HUGE_VALF fallback using MARPAESLIF_HUGE_VALL")
+#      endif
+#    endif
 #  else
 #    ifdef MARPAESLIF_HUGE_VAL
 #      define MARPAESLIF_HUGE_VALF (float)(MARPAESLIF_HUGE_VAL)
-#    warning MARPAESLIF_HUGE_VALF fallback using MARPAESLIF_HUGE_VAL
+#      ifdef __GNUC__
+#        warning MARPAESLIF_HUGE_VALF fallback using MARPAESLIF_HUGE_VAL
+#      else
+#        ifdef _MSC_VER
+#          pragma message("MARPAESLIF_HUGE_VALF fallback using MARPAESLIF_HUGE_VAL")
+#        endif
+#      endif
 #    endif
 #  endif
 #endif
@@ -129,7 +147,13 @@ static inline float __port_infinity(void)
   return *(const float *)&__inf_bytes;
 }
 #    define MARPAESLIF_INFINITY __port_infinity()
-#    warning MARPAESLIF_INFINITY fallback using 0x7f800000
+#    ifdef __GNUC__
+#      warning MARPAESLIF_INFINITY fallback using 0x7f800000
+#    else
+#      ifdef _MSC_VER
+#        pragma message("MARPAESLIF_INFINITY fallback using 0x7f800000")
+#      endif
+#    endif
 #  endif
 #endif
 
@@ -143,7 +167,13 @@ static inline float __port_nan(void)
   return *(const float *)&__nan_bytes;
 }
 #    define MARPAESLIF_NAN __port_nan()
-#    warning MARPAESLIF_NAN fallback using 0x7fc00000
+#    ifdef __GNUC__
+#      warning MARPAESLIF_NAN fallback using 0x7fc00000
+#    else
+#      ifdef _MSC_VER
+#        pragma message("MARPAESLIF_NAN fallback using 0x7fc00000")
+#      endif
+#    endif
 #  endif
 #endif
 
@@ -153,11 +183,23 @@ static inline float __port_nan(void)
 #  ifdef C_FPCLASSIFY
 #    ifdef C_FP_INFINITE
 #      define MARPAESLIF_ISINF(x) (C_FPCLASSIFY(x) == C_FP_INFINITE)
-#      warning MARPAESLIF_ISINF fallback using FP_INFINITE
+#      ifdef __GNUC__
+#        warning MARPAESLIF_ISINF fallback using FP_INFINITE
+#      else
+#        ifdef _MSC_VER
+#          pragma message("MARPAESLIF_ISINF fallback using FP_INFINITE")
+#        endif
+#      endif
 #    else
 #      if defined(C__FPCLASS_NINF) && defined(C__FPCLASS_PINF)
 #        define MARPAESLIF_ISINF(x) ((C_FPCLASSIFY((double) (x)) == C__FPCLASS_NINF) || (C_FPCLASSIFY((double) (x)) == C__FPCLASS_PINF))
-#        warning MARPAESLIF_ISINF fallback using _FPCLASS_NINF and _FPCLASS_PNINF
+#        ifdef __GNUC__
+#          warning MARPAESLIF_ISINF fallback using _FPCLASS_NINF and _FPCLASS_PNINF
+#        else
+#          ifdef _MSC_VER
+#            pragma message("MARPAESLIF_ISINF fallback using _FPCLASS_NINF and _FPCLASS_PNINF")
+#          endif
+#        endif
 #      endif
 #    endif
 #  endif
@@ -169,11 +211,23 @@ static inline float __port_nan(void)
 #  ifdef C_FPCLASSIFY
 #    ifdef C_FP_NAN
 #      define MARPAESLIF_ISNAN(x) (C_FPCLASSIFY(x) == C_FP_NAN)
-#      warning MARPAESLIF_ISNAN fallback using FP_NAN
+#      ifdef __GNUC__
+#        warning MARPAESLIF_ISNAN fallback using FP_NAN
+#      else
+#        ifdef _MSC_VER
+#          pragma message("MARPAESLIF_ISNAN fallback using FP_NAN")
+#        endif
+#      endif
 #    else
 #      if defined(C__FPCLASS_SNAN) && defined(C__FPCLASS_QNAN)
 #        define MARPAESLIF_ISNAN(x) ((C_FPCLASSIFY((double) (x)) == C__FPCLASS_SNAN) || (C_FPCLASSIFY((double) (x)) == C__FPCLASS_QNAN))
-#        warning MARPAESLIF_ISNAN fallback using _FPCLASS_SNAN and _FPCLASS_QNAN
+#        ifdef __GNUC__
+#          warning MARPAESLIF_ISNAN fallback using _FPCLASS_SNAN and _FPCLASS_QNAN
+#        else
+#          ifdef _MSC_VER
+#            pragma message("MARPAESLIF_ISNAN fallback using _FPCLASS_SNAN and _FPCLASS_QNAN")
+#          endif
+#        endif
 #      endif
 #    endif
 #  endif
@@ -183,10 +237,26 @@ static inline float __port_nan(void)
 
 #if defined(MARPAESLIF_NAN) && defined(MARPAESLIF_ISNAN)
 #  define MARPAESLIF_HAVENAN 1
+#else
+#  ifdef __GNUC__
+#    warning NaN is not fully supported
+#  else
+#    ifdef _MSC_VER
+#      pragma message("NaN is not fully supported")
+#   endif
+#  endif
 #endif
 
 #if defined(MARPAESLIF_INFINITY) && defined(MARPAESLIF_ISINF)
 #  define MARPAESLIF_HAVEINF 1
+#else
+#  ifdef __GNUC__
+#    warning Infinity is not fully supported
+#  else
+#    ifdef _MSC_VER
+#      pragma message("Infinity is not fully supported")
+#   endif
+#  endif
 #endif
 
 
