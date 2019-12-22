@@ -733,7 +733,6 @@ static short _marpaESLIFJSON_numberb(void *userDatavp, marpaESLIFValue_t *marpaE
   short                               needfallbackb          = 0;
   marpaESLIFValueResult_t             marpaESLIFValueResult;
   marpaESLIFValueResult_t            *marpaESLIFValueResultInputp;
-  marpaESLIFValueResult_t            *marpaESLIFValueResultp;
   char                               *decimalPoints;
   char                               *endptrp;
   short                               rcb;
