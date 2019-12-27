@@ -849,7 +849,7 @@ static short _marpaESLIFJSON_numberb(void *userDatavp, marpaESLIFValue_t *marpaE
 /*****************************************************************************/
 {
   marpaESLIFJSONContext_t            *marpaESLIFJSONContextp = (marpaESLIFJSONContext_t *) userDatavp;
-  marpaESLIFJSONDecodeNumberAction_t  numberActionp          = marpaESLIFJSONContextp->marpaESLIFJSONDecodeOptionp->numberActionp;
+  marpaESLIFJSONDecodeNumberAction_t  numberActionFallbackp  = marpaESLIFJSONContextp->marpaESLIFJSONDecodeOptionp->numberActionFallbackp;
   short                               needfallbackb          = 0;
   marpaESLIFValueResult_t             marpaESLIFValueResult;
   marpaESLIFValueResult_t            *marpaESLIFValueResultInputp;
@@ -864,8 +864,8 @@ static short _marpaESLIFJSON_numberb(void *userDatavp, marpaESLIFValue_t *marpaE
   }
 
   /* We use user's number action if any */
-  if (numberActionp != NULL) {
-    if (! numberActionp(marpaESLIFValueResultInputp->u.a.p, marpaESLIFValueResultInputp->u.a.sizel, &marpaESLIFValueResult)) {
+  if (numberActionFallbackp != NULL) {
+    if (! numberActionFallbackp(marpaESLIFValueResultInputp->u.a.p, marpaESLIFValueResultInputp->u.a.sizel, &marpaESLIFValueResult)) {
       goto err;
     }
   } else {
@@ -1125,14 +1125,14 @@ static short _marpaESLIFJSON_unicodeb(void *userDatavp, marpaESLIFValue_t *marpa
 static short _marpaESLIFJSON_positive_infinityb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb)
 /*****************************************************************************/
 {
-  marpaESLIFJSONContext_t   *marpaESLIFJSONContextp                                                     = (marpaESLIFJSONContext_t *) userDatavp;
-  short                     (*positiveInfinityActionp)(marpaESLIFValueResult_t *marpaESLIFValueResultp) = marpaESLIFJSONContextp->marpaESLIFJSONDecodeOptionp->positiveInfinityActionp;
-  marpaESLIFValueResult_t    marpaESLIFValueResult;
-  short                      rcb;
+  marpaESLIFJSONContext_t                      *marpaESLIFJSONContextp          = (marpaESLIFJSONContext_t *) userDatavp;
+  marpaESLIFJSONDecodePositiveInfinityAction_t  positiveInfinityActionFallbackp = marpaESLIFJSONContextp->marpaESLIFJSONDecodeOptionp->positiveInfinityActionFallbackp;
+  marpaESLIFValueResult_t                       marpaESLIFValueResult;
+  short                                         rcb;
 
   /* We use user's positive_infinity action if any */
-  if (positiveInfinityActionp != NULL) {
-    if (! positiveInfinityActionp(&marpaESLIFValueResult)) {
+  if (positiveInfinityActionFallbackp != NULL) {
+    if (! positiveInfinityActionFallbackp(&marpaESLIFValueResult)) {
       goto err;
     }
   } else {
@@ -1165,14 +1165,14 @@ static short _marpaESLIFJSON_positive_infinityb(void *userDatavp, marpaESLIFValu
 static short _marpaESLIFJSON_negative_infinityb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb)
 /*****************************************************************************/
 {
-  marpaESLIFJSONContext_t   *marpaESLIFJSONContextp                                                     = (marpaESLIFJSONContext_t *) userDatavp;
-  short                     (*negativeInfinityActionp)(marpaESLIFValueResult_t *marpaESLIFValueResultp) = marpaESLIFJSONContextp->marpaESLIFJSONDecodeOptionp->negativeInfinityActionp;
-  marpaESLIFValueResult_t    marpaESLIFValueResult;
-  short                      rcb;
+  marpaESLIFJSONContext_t                      *marpaESLIFJSONContextp          = (marpaESLIFJSONContext_t *) userDatavp;
+  marpaESLIFJSONDecodeNegativeInfinityAction_t  negativeInfinityActionFallbackp = marpaESLIFJSONContextp->marpaESLIFJSONDecodeOptionp->negativeInfinityActionFallbackp;
+  marpaESLIFValueResult_t                       marpaESLIFValueResult;
+  short                                         rcb;
 
   /* We use user's negative_infinity action if any */
-  if (negativeInfinityActionp != NULL) {
-    if (! negativeInfinityActionp(&marpaESLIFValueResult)) {
+  if (negativeInfinityActionFallbackp != NULL) {
+    if (! negativeInfinityActionFallbackp(&marpaESLIFValueResult)) {
       goto err;
     }
   } else {
@@ -1205,14 +1205,14 @@ static short _marpaESLIFJSON_negative_infinityb(void *userDatavp, marpaESLIFValu
 static short _marpaESLIFJSON_nanb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb)
 /*****************************************************************************/
 {
-  marpaESLIFJSONContext_t   *marpaESLIFJSONContextp                                        = (marpaESLIFJSONContext_t *) userDatavp;
-  short                     (*nanActionp)(marpaESLIFValueResult_t *marpaESLIFValueResultp) = marpaESLIFJSONContextp->marpaESLIFJSONDecodeOptionp->nanActionp;
-  marpaESLIFValueResult_t    marpaESLIFValueResult;
-  short                      rcb;
+  marpaESLIFJSONContext_t         *marpaESLIFJSONContextp = (marpaESLIFJSONContext_t *) userDatavp;
+  marpaESLIFJSONDecodeNanAction_t  nanActionFallbackp     = marpaESLIFJSONContextp->marpaESLIFJSONDecodeOptionp->nanActionFallbackp;
+  marpaESLIFValueResult_t          marpaESLIFValueResult;
+  short                            rcb;
 
   /* We use user's nan action if any */
-  if (nanActionp != NULL) {
-    if (! nanActionp(&marpaESLIFValueResult)) {
+  if (nanActionFallbackp != NULL) {
+    if (! nanActionFallbackp(&marpaESLIFValueResult)) {
       goto err;
     }
   } else {

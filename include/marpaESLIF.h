@@ -391,13 +391,13 @@ typedef short (*marpaESLIFJSONDecodeNegativeInfinityAction_t)(marpaESLIFValueRes
 typedef short (*marpaESLIFJSONDecodeNanAction_t)(marpaESLIFValueResult_t *marpaESLIFValueResultp); /* Eventual specialized Nan action */
 
 typedef struct marpaESLIFJSONDecodeOption {
-  short                                        disallowDupkeysb;        /* Do not allow duplicate key in an object. */
-  size_t                                       maxDepthl;               /* Maximum depth - 0 if no maximum */
-  short                                        noReplacementCharacterb; /* No replacement character for invalid UTF-16 surrogates */
-  marpaESLIFJSONDecodeNumberAction_t           numberActionp;           /* Number action fallback */
-  marpaESLIFJSONDecodePositiveInfinityAction_t positiveInfinityActionp; /* Positive infinity action fallback */
-  marpaESLIFJSONDecodeNegativeInfinityAction_t negativeInfinityActionp; /* Negative infinity action fallback */
-  marpaESLIFJSONDecodeNanAction_t              nanActionp;              /* NaN action fallback */
+  short                                        disallowDupkeysb;                /* Do not allow duplicate key in an object */
+  size_t                                       maxDepthl;                       /* Maximum depth - 0 if no maximum */
+  short                                        noReplacementCharacterb;         /* No replacement character for invalid UTF-16 surrogates */
+  marpaESLIFJSONDecodeNumberAction_t           numberActionFallbackp;           /* Number action fallback if conversion under/overflows, or if marpaESLIF cannot handle under/overflow */
+  marpaESLIFJSONDecodePositiveInfinityAction_t positiveInfinityActionFallbackp; /* Positive infinity action fallback if marpaESLIF cannot handle +Infinity */
+  marpaESLIFJSONDecodeNegativeInfinityAction_t negativeInfinityActionFallbackp; /* Negative infinity action fallback if marpaESLIF cannot handle -Infinity */
+  marpaESLIFJSONDecodeNanAction_t              nanActionFallbackp;              /* NaN action fallback if marpaESLIF cannot handle NaN */
 } marpaESLIFJSONDecodeOption_t;
 
 #ifdef __cplusplus

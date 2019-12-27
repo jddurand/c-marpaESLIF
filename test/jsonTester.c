@@ -53,13 +53,13 @@ int main() {
   
   while (test_elementp->names != NULL) {
 
-    marpaESLIFJSONDecodeOption.disallowDupkeysb        = 0;
-    marpaESLIFJSONDecodeOption.maxDepthl               = 0;
-    marpaESLIFJSONDecodeOption.noReplacementCharacterb = 0;
-    marpaESLIFJSONDecodeOption.numberActionp           = NULL;
-    marpaESLIFJSONDecodeOption.positiveInfinityActionp = NULL;
-    marpaESLIFJSONDecodeOption.negativeInfinityActionp = NULL;
-    marpaESLIFJSONDecodeOption.nanActionp              = NULL;
+    marpaESLIFJSONDecodeOption.disallowDupkeysb                = 0;
+    marpaESLIFJSONDecodeOption.maxDepthl                       = 0;
+    marpaESLIFJSONDecodeOption.noReplacementCharacterb         = 0;
+    marpaESLIFJSONDecodeOption.numberActionFallbackp           = NULL;
+    marpaESLIFJSONDecodeOption.positiveInfinityActionFallbackp = NULL;
+    marpaESLIFJSONDecodeOption.negativeInfinityActionFallbackp = NULL;
+    marpaESLIFJSONDecodeOption.nanActionFallbackp              = NULL;
 
     marpaESLIFTester_context.inputl = 0;
 
