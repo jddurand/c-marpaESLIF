@@ -3783,6 +3783,9 @@ static inline marpaESLIF_t *_marpaESLIF_newp(marpaESLIFOption_t *marpaESLIFOptio
   sprintf(marpaESLIFp->float_fmts, "%%%d.%de", FLT_DIG + 8, FLT_DIG);
   sprintf(marpaESLIFp->double_fmts, "%%%d.%de", DBL_DIG + 8, DBL_DIG);
   sprintf(marpaESLIFp->long_double_fmts, "%%%d.%dLe", LDBL_DIG + 8, LDBL_DIG);
+#ifdef HAVE_LOCALE_H
+  marpaESLIFp->lconvp = localeconv();
+#endif
 
   /* Check if zero bytes (.i.e calloc'ed memory) is the same thing as NULL */
   p = calloc(1, sizeof(void *));
@@ -4147,6 +4150,7 @@ void marpaESLIF_freev(marpaESLIF_t *marpaESLIFp)
     if (marpaESLIFp->traceLoggerp != NULL) {
       genericLogger_freev(&(marpaESLIFp->traceLoggerp));
     }
+    /* free(marpaESLIFp->lconvp); */ /* output of localeconv() should never be freed */
     free(marpaESLIFp);
   }
 }

@@ -352,11 +352,13 @@ short marpaESLIFJSON_decode(marpaESLIFGrammar_t *marpaESLIFGrammarJSONp, marpaES
 {
   marpaESLIFRecognizer_t       *marpaESLIFRecognizerp = NULL;
   marpaESLIFValue_t            *marpaESLIFValuep      = NULL;
+#ifdef HAVE_LOCALE_H
+  struct lconv                 *lconvp;
+#endif
   short                         rcb;
   marpaESLIFRecognizerOption_t  marpaESLIFRecognizerOption;
   marpaESLIFValueOption_t       marpaESLIFValueOption;
   marpaESLIFJSONContext_t       marpaESLIFJSONContext;
-  struct lconv                  *lconvp;
   short                         continueb;
 
   if ((marpaESLIFGrammarJSONp == NULL) || (marpaESLIFJSONDecodeOptionp == NULL) || (marpaESLIFRecognizerOptionp == NULL) || (marpaESLIFRecognizerOptionp->readerCallbackp == NULL) || (marpaESLIFValueOptionp == NULL)) {
@@ -369,9 +371,13 @@ short marpaESLIFJSON_decode(marpaESLIFGrammar_t *marpaESLIFGrammarJSONp, marpaES
   marpaESLIFJSONContext.marpaESLIFJSONDecodeOptionp = marpaESLIFJSONDecodeOptionp;
   marpaESLIFJSONContext.marpaESLIFRecognizerOptionp = marpaESLIFRecognizerOptionp;
   marpaESLIFJSONContext.marpaESLIFValueOptionp      = marpaESLIFValueOptionp;
-  lconvp = localeconv();
+#ifdef HAVE_LOCALE_H
+  lconvp                                            = marpaESLIFGrammarJSONp->marpaESLIFp->lconvp;
   marpaESLIFJSONContext.decimalPointc               = ((lconvp != NULL) && (lconvp->decimal_point != NULL) && (*(lconvp->decimal_point) != '\0')) ? *(lconvp->decimal_point) : '.';
-
+#else
+  /* Assume JSON default */
+  marpaESLIFJSONContext.decimalPointc               = '.';
+#endif
   marpaESLIFRecognizerOption                      = *marpaESLIFRecognizerOptionp;
   marpaESLIFRecognizerOption.userDatavp           = &marpaESLIFJSONContext;
   marpaESLIFRecognizerOption.readerCallbackp      = _marpaESLIFJSONReaderb;
@@ -758,8 +764,8 @@ static short _marpaESLIFJSON_numberb(void *userDatavp, marpaESLIFValue_t *marpaE
         (strchr(marpaESLIFValueResultInputp->u.a.p, 'E') != NULL)
         ) {
 
-      /* If locale's decimal point is not '.', change it it is exists - per def this can happen only once */
-      if ((decimalPoints != NULL) && (*decimalPoints != '.')) {
+      /* If locale's decimal point is not '.', change it if is exists */
+      if ((decimalPoints != NULL) && (*decimalPoints != '.') && (marpaESLIFJSONContextp->decimalPointc != '.')) {
         *decimalPoints = marpaESLIFJSONContextp->decimalPointc;
       }
       errno = 0;    /* To distinguish success/failure after call */

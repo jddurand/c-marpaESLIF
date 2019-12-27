@@ -18,6 +18,7 @@
 #cmakedefine HAVE_STDINT_H     @HAVE_STDINT_H@
 #cmakedefine HAVE_STDDEF_H     @HAVE_STDDEF_H@
 #cmakedefine HAVE_MATH_H       @HAVE_MATH_H@
+#cmakedefine HAVE_LOCALE_H     @HAVE_LOCALE_H@
 
 #ifdef HAVE_SYS_TYPES_H
 #include <sys/types.h>
@@ -27,6 +28,9 @@
 #endif
 #ifdef HAVE_STDDEF_H
 #include <stddef.h>
+#endif
+#ifdef HAVE_LOCALE_H
+#include <locale.h>
 #endif
 
 typedef @MARPAESLIF_UINT32_T@ marpaESLIF_uint32_t;
