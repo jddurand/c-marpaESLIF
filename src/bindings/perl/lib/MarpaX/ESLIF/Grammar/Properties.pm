@@ -100,6 +100,10 @@ Grammar default symbol action
 
 Grammar default rule action
 
+=item defaultEventAction
+
+Grammar default event action
+
 =item startId
 
 Start symbol Id
@@ -116,6 +120,14 @@ Symbol Ids (array reference)
 
 Rule Ids (array reference)
 
+=item defaultEncoding
+
+Grammar default encoding
+
+=item fallbackEncoding
+
+Grammar fallback encoding
+
 =back
 
 =cut
@@ -131,10 +143,13 @@ sub new {
                    latm                => $args{latm},
                    defaultSymbolAction => $args{defaultSymbolAction},
                    defaultRuleAction   => $args{defaultRuleAction},
+                   defaultEventAction  => $args{defaultEventAction},
                    startId             => $args{startId},
                    discardId           => $args{discardId},
                    symbolIds           => $args{symbolIds},
-                   ruleIds             => $args{ruleIds}
+                   ruleIds             => $args{ruleIds},
+                   defaultEncoding     => $args{defaultEncoding},
+                   fallbackEncoding    => $args{fallbackEncoding}
                    }, $pkg
 }
 
@@ -224,6 +239,18 @@ sub getDefaultRuleAction {
   return $self->{defaultRuleAction}
 }
 
+=head2 $self->getDefaultEventAction
+
+Returns grammar's default event action, can be null
+
+=cut
+
+sub getDefaultEventAction {
+  my ($self) = @_;
+
+  return $self->{defaultEventAction}
+}
+
 =head2 $self->getStartId
 
 Returns grammar's start symbol id, always >= 0
@@ -270,6 +297,30 @@ sub getRuleIds {
   my ($self) = @_;
 
   return $self->{ruleIds}
+}
+
+=head2 $self->getDefaultEncoding
+
+Returns grammar's default encoding, can be null
+
+=cut
+
+sub getDefaultEncoding {
+  my ($self) = @_;
+
+  return $self->{defaultEncoding}
+}
+
+=head2 $self->getFallbackEncoding
+
+Returns grammar's fallback encoding, can be null
+
+=cut
+
+sub getFallbackEncoding {
+  my ($self) = @_;
+
+  return $self->{fallbackEncoding}
 }
 
 1;
