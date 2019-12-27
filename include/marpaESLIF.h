@@ -530,9 +530,10 @@ extern "C" {
   /* --------------------- */
   /* Embedded JSON support */
   /* --------------------- */
-  marpaESLIF_EXPORT marpaESLIFGrammar_t          *marpaESLIFJSON_newp(marpaESLIF_t *marpaESLIFp, short strictb);
-  marpaESLIF_EXPORT short                         marpaESLIFJSON_encode(marpaESLIFGrammar_t *marpaESLIFGrammarJSONp, marpaESLIFValueResult_t *marpaESLIFValueResultp, marpaESLIFValueOption_t *marpaESLIFValueOptionp);
-  marpaESLIF_EXPORT short                         marpaESLIFJSON_decode(marpaESLIFGrammar_t *marpaESLIFGrammarJSONp, marpaESLIFJSONDecodeOption_t *marpaESLIFJSONDecodeOptionp, marpaESLIFRecognizerOption_t *marpaESLIFRecognizerOptionp, marpaESLIFValueOption_t *marpaESLIFValueOptionp);
+  marpaESLIF_EXPORT marpaESLIFGrammar_t          *marpaESLIFJSON_encode_newp(marpaESLIF_t *marpaESLIFp, short strictb);
+  marpaESLIF_EXPORT short                         marpaESLIFJSON_encodeb(marpaESLIFGrammar_t *marpaESLIFGrammarJSONp, marpaESLIFValueResult_t *marpaESLIFValueResultp, marpaESLIFValueOption_t *marpaESLIFValueOptionp);
+  marpaESLIF_EXPORT marpaESLIFGrammar_t          *marpaESLIFJSON_decode_newp(marpaESLIF_t *marpaESLIFp, short strictb);
+  marpaESLIF_EXPORT short                         marpaESLIFJSON_decodeb(marpaESLIFGrammar_t *marpaESLIFGrammarJSONp, marpaESLIFJSONDecodeOption_t *marpaESLIFJSONDecodeOptionp, marpaESLIFRecognizerOption_t *marpaESLIFRecognizerOptionp, marpaESLIFValueOption_t *marpaESLIFValueOptionp);
 
   /* ---------------------- */
   /* Special values helpers */

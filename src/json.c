@@ -29,9 +29,17 @@ typedef struct marpaESLIFJSONContext {
    - elements's proper.    Must be "0" if trailingSeparatorb is true, else "1"
    - "" if perlCommentb is true,                                      else "#"
    - "" if cplusplusCommentb is true,                                 else "#"
+
+   We push the encode grammar in level 10 for convenience
 */
 
-static const char *marpaESLIFJSON_extended_grammars =
+static const char *marpaESLIFJSON_encode_extended_grammars =
+  "input ::= INPUT action => ::jsonf\n"
+  "INPUT   ~ [\\s\\S]\n"
+  "\n"
+  ;
+
+static const char *marpaESLIFJSON_decode_extended_grammars =
   "#\n"
   "# Default action is to propagate the first RHS value\n"
   "#\n"
@@ -157,9 +165,15 @@ static const char *marpaESLIFJSON_extended_grammars =
   "# Control character\n"
   "# -----------------\n"
   "char      ::= /[\\x00-\\x1F]/                                                          # Because [:cntrl:] includes DEL (x7F)\n"
+  "\n"
   ;
 
-static const char *marpaESLIFJSON_strict_grammars =
+static const char *marpaESLIFJSON_encode_strict_grammars =
+  "input ::= INPUT action => ::json\n"
+  "INPUT   ~ [\\s\\S]\n"
+  "\n"
+  ;
+static const char *marpaESLIFJSON_decode_strict_grammars =
   "#\n"
   "# Default action is to propagate the first RHS value\n"
   "#\n"
@@ -248,6 +262,7 @@ static const char *marpaESLIFJSON_strict_grammars =
   ":terminal ::= ']' pause => after event => dec[]\n"
   ":terminal ::= '{' pause => after event => inc[]\n"
   ":terminal ::= '}' pause => after event => dec[]\n"
+  "\n"
   ;
 
 #define MARPAESLIFJSON_DST_OR_VALCHAR(dst, valchar) do {                \
@@ -314,7 +329,7 @@ static const char *marpaESLIFJSON_strict_grammars =
   } while (0)
 
 /*****************************************************************************/
-static inline marpaESLIFGrammar_t *_marpaESLIFJSON_newp(marpaESLIF_t *marpaESLIFp, short strictb)
+static inline marpaESLIFGrammar_t *_marpaESLIFJSON_decode_newp(marpaESLIF_t *marpaESLIFp, short strictb)
 /*****************************************************************************/
 {
   marpaESLIFGrammar_t       *marpaESLIFJSONp             = NULL;
@@ -325,7 +340,7 @@ static inline marpaESLIFGrammar_t *_marpaESLIFJSON_newp(marpaESLIF_t *marpaESLIF
     goto err;
   }
 
-  marpaESLIFGrammarOption.bytep     = strictb ? (char *) marpaESLIFJSON_strict_grammars : (char *) marpaESLIFJSON_extended_grammars;
+  marpaESLIFGrammarOption.bytep     = strictb ? (char *) marpaESLIFJSON_decode_strict_grammars : (char *) marpaESLIFJSON_decode_extended_grammars;
   marpaESLIFGrammarOption.bytel     = strlen(marpaESLIFGrammarOption.bytep);
   marpaESLIFGrammarOption.encodings = "ASCII";
   marpaESLIFGrammarOption.encodingl = 5; /* strlen("ASCII") */
@@ -347,7 +362,40 @@ static inline marpaESLIFGrammar_t *_marpaESLIFJSON_newp(marpaESLIF_t *marpaESLIF
 }
 
 /*****************************************************************************/
-short marpaESLIFJSON_decode(marpaESLIFGrammar_t *marpaESLIFGrammarJSONp, marpaESLIFJSONDecodeOption_t *marpaESLIFJSONDecodeOptionp, marpaESLIFRecognizerOption_t *marpaESLIFRecognizerOptionp, marpaESLIFValueOption_t *marpaESLIFValueOptionp)
+static inline marpaESLIFGrammar_t *_marpaESLIFJSON_encode_newp(marpaESLIF_t *marpaESLIFp, short strictb)
+/*****************************************************************************/
+{
+  marpaESLIFGrammar_t       *marpaESLIFJSONp             = NULL;
+  marpaESLIFGrammarOption_t  marpaESLIFGrammarOption;
+
+  if (marpaESLIFp == NULL) {
+    errno = EINVAL;
+    goto err;
+  }
+
+  marpaESLIFGrammarOption.bytep     = strictb ? (char *) marpaESLIFJSON_encode_strict_grammars : (char *) marpaESLIFJSON_encode_extended_grammars;
+  marpaESLIFGrammarOption.bytel     = strlen(marpaESLIFGrammarOption.bytep);
+  marpaESLIFGrammarOption.encodings = "ASCII";
+  marpaESLIFGrammarOption.encodingl = 5; /* strlen("ASCII") */
+
+  /* This is bootstrapped at marpaESLIF creation */
+  marpaESLIFJSONp = _marpaESLIFGrammar_newp(marpaESLIFp, &marpaESLIFGrammarOption, NULL /* marpaESLIfGrammarPreviousp */, 1 /* unsafeb */);
+  if (marpaESLIFJSONp == NULL) {
+    goto err;
+  }
+
+  goto done;
+
+ err:
+  marpaESLIFGrammar_freev(marpaESLIFJSONp);
+  marpaESLIFJSONp = NULL;
+
+ done:
+  return marpaESLIFJSONp;
+}
+
+/*****************************************************************************/
+short marpaESLIFJSON_decodeb(marpaESLIFGrammar_t *marpaESLIFGrammarJSONp, marpaESLIFJSONDecodeOption_t *marpaESLIFJSONDecodeOptionp, marpaESLIFRecognizerOption_t *marpaESLIFRecognizerOptionp, marpaESLIFValueOption_t *marpaESLIFValueOptionp)
 /*****************************************************************************/
 {
   marpaESLIFRecognizer_t       *marpaESLIFRecognizerp = NULL;
@@ -413,6 +461,72 @@ short marpaESLIFJSON_decode(marpaESLIFGrammar_t *marpaESLIFGrammarJSONp, marpaES
     if (! marpaESLIFRecognizer_resumeb(marpaESLIFRecognizerp, 0 /* deltaLengthl */, &continueb, NULL /* exhaustedbp */)) {
       goto err;
     }
+  }
+  marpaESLIFValuep = marpaESLIFValue_newp(marpaESLIFRecognizerp, &marpaESLIFValueOption);
+  if (marpaESLIFValuep == NULL) {
+    goto err;
+  }
+  if (! marpaESLIFValue_valueb(marpaESLIFValuep)) {
+    goto err;
+  }
+
+  rcb = 1;
+  goto done;
+
+ err:
+  rcb = 0;
+
+ done:
+  if (marpaESLIFValuep != NULL) {
+    marpaESLIFValue_freev(marpaESLIFValuep);
+  }
+  if (marpaESLIFRecognizerp != NULL) {
+    marpaESLIFRecognizer_freev(marpaESLIFRecognizerp);
+  }
+  return rcb;
+}
+
+/*****************************************************************************/
+short marpaESLIFJSON_encodeb(marpaESLIFGrammar_t *marpaESLIFGrammarJSONp, marpaESLIFValueResult_t *marpaESLIFValueResultp, marpaESLIFValueOption_t *marpaESLIFValueOptionp)
+/*****************************************************************************/
+/* Strict or not, encode grammar is always at level 10                       */
+/*****************************************************************************/
+{
+  marpaESLIFRecognizer_t       *marpaESLIFRecognizerp = NULL;
+  marpaESLIFValue_t            *marpaESLIFValuep      = NULL;
+  short                         rcb;
+  marpaESLIFAlternative_t       marpaESLIFAlternative;
+  marpaESLIFRecognizerOption_t  marpaESLIFRecognizerOption;
+  marpaESLIFValueOption_t       marpaESLIFValueOption;
+  short                         continueb;
+
+  if ((marpaESLIFGrammarJSONp == NULL) || (marpaESLIFValueResultp == NULL) || (marpaESLIFValueOptionp == NULL)) {
+    errno = EINVAL;
+    goto err;
+  }
+
+  marpaESLIFValueOption                           = *marpaESLIFValueOptionp;
+  marpaESLIFValueOption.userDatavp                = NULL;
+  marpaESLIFValueOption.ruleActionResolverp       = NULL;
+  marpaESLIFValueOption.symbolActionResolverp     = NULL;
+  marpaESLIFValueOption.importerp                 = ((marpaESLIFValueOptionp != NULL) && (marpaESLIFValueOptionp->importerp != NULL)) ? _marpaESLIFJSONValueResultImportb : NULL;
+  marpaESLIFValueOption.highRankOnlyb             = 1; /* Fixed */
+  marpaESLIFValueOption.orderByRankb              = 1; /* Fixed */
+  marpaESLIFValueOption.ambiguousb                = 0; /* Fixed */
+  marpaESLIFValueOption.nullb                     = 0; /* Fixed */
+  marpaESLIFValueOption.maxParsesi                = 0; /* Fixed */
+
+  marpaESLIFRecognizerp = marpaESLIFRecognizer_newp(marpaESLIFGrammarJSONp, NULL);
+  if (marpaESLIFRecognizerp == NULL) {
+    goto err;
+  }
+
+  /* Read the input */
+  marpaESLIFAlternative.lexemes        = "INPUT";
+  marpaESLIFAlternative.value          = *marpaESLIFValueResultp;
+  marpaESLIFAlternative.grammarLengthl = 1;
+  if (! marpaESLIFRecognizer_lexeme_readb(marpaESLIFRecognizerp, &marpaESLIFAlternative, 1 /* lengthl */)) {
+    goto err;
   }
   marpaESLIFValuep = marpaESLIFValue_newp(marpaESLIFRecognizerp, &marpaESLIFValueOption);
   if (marpaESLIFValuep == NULL) {

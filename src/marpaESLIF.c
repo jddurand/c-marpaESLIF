@@ -600,7 +600,8 @@ static inline void                    _marpaESLIF_action_freev(marpaESLIF_action
 static inline short                   _marpaESLIF_string_removebomb(marpaESLIF_t *marpaESLIFp, char *bytep, size_t *bytelp, char *encodingasciis, size_t *bomsizelp);
 static inline void                    _marpaESLIF_codepoint_to_json(marpaESLIF_uint32_t codepoint, genericLogger_t *genericLoggerp);
 static inline short                   _marpaESLIF_flatten_pointers(marpaESLIF_t *marpaESLIFp, genericStack_t *flattenPtrStackp, genericHash_t *flattenPtrHashp, marpaESLIFValueResult_t *marpaESLIFValueResultp, short noShallowb);
-static inline marpaESLIFGrammar_t    *_marpaESLIFJSON_newp(marpaESLIF_t *marpaESLIFp, short strictb);
+static inline marpaESLIFGrammar_t    *_marpaESLIFJSON_decode_newp(marpaESLIF_t *marpaESLIFp, short strictb);
+static inline marpaESLIFGrammar_t    *_marpaESLIFJSON_encode_newp(marpaESLIF_t *marpaESLIFp, short strictb);
 
 /*****************************************************************************/
 static inline marpaESLIF_string_t *_marpaESLIF_string_newp(marpaESLIF_t *marpaESLIFp, char *encodingasciis, char *bytep, size_t bytel)
@@ -17470,7 +17471,7 @@ short marpaESLIF_negative_inf(float *fp)
 }
 
 /*****************************************************************************/
-marpaESLIFGrammar_t *marpaESLIFJSON_newp(marpaESLIF_t *marpaESLIFp, short strictb)
+marpaESLIFGrammar_t *marpaESLIFJSON_decode_newp(marpaESLIF_t *marpaESLIFp, short strictb)
 /*****************************************************************************/
 {
   marpaESLIFGrammar_t *marpaESLIFGrammarp;
@@ -17480,7 +17481,28 @@ marpaESLIFGrammar_t *marpaESLIFJSON_newp(marpaESLIF_t *marpaESLIFp, short strict
     goto err;
   }
 
-  marpaESLIFGrammarp = _marpaESLIFJSON_newp(marpaESLIFp, strictb);
+  marpaESLIFGrammarp = _marpaESLIFJSON_decode_newp(marpaESLIFp, strictb);
+  goto done;
+
+ err:
+  marpaESLIFGrammarp = NULL;
+
+ done:
+  return marpaESLIFGrammarp;
+}
+
+/*****************************************************************************/
+marpaESLIFGrammar_t *marpaESLIFJSON_encode_newp(marpaESLIF_t *marpaESLIFp, short strictb)
+/*****************************************************************************/
+{
+  marpaESLIFGrammar_t *marpaESLIFGrammarp;
+
+  if (marpaESLIFp == NULL) {
+    errno = EINVAL;
+    goto err;
+  }
+
+  marpaESLIFGrammarp = _marpaESLIFJSON_encode_newp(marpaESLIFp, strictb);
   goto done;
 
  err:

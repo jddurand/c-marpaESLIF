@@ -44,7 +44,7 @@ int main() {
     goto err;
   }
 
-  marpaESLIFGrammarJsonp = marpaESLIFJSON_newp(marpaESLIFp, 1 /* strictb */);
+  marpaESLIFGrammarJsonp = marpaESLIFJSON_decode_newp(marpaESLIFp, 1 /* strictb */);
   if (marpaESLIFGrammarJsonp == NULL) {
     goto err;
   }
@@ -106,7 +106,7 @@ int main() {
 
     GENERICLOGGER_INFOF(genericLoggerp, "Scanning JSON %s", test_elementp->names);
 
-    jsonb = marpaESLIFJSON_decode(marpaESLIFGrammarJsonp, &marpaESLIFJSONDecodeOption, &marpaESLIFRecognizerOption, &marpaESLIFValueOption);
+    jsonb = marpaESLIFJSON_decodeb(marpaESLIFGrammarJsonp, &marpaESLIFJSONDecodeOption, &marpaESLIFRecognizerOption, &marpaESLIFValueOption);
     if (test_elementp->names[0] == 'i') {
       /* Implementation defined */
       if (jsonb) {
