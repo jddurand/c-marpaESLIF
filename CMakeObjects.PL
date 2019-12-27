@@ -546,6 +546,42 @@ typedef unsigned int marpaESLIF_uint32_t;
 #  define C__FPCLASS_PINF _FPCLASS_PINF
 #endif
 
+#ifdef HAVE_STRTOLD
+#  define C_STRTOLD strtold
+#else
+#  ifdef HAVE__STRTOLD
+#    define C_STRTOLD _strtold
+#  else
+#    ifdef HAVE___STRTOLD
+#      define C_STRTOLD __strtold
+#    endif
+#  endif
+#endif
+
+#ifdef HAVE_STRTOD
+#  define C_STRTOD strtod
+#else
+#  ifdef HAVE__STRTOD
+#    define C_STRTOD _strtod
+#  else
+#    ifdef HAVE___STRTOD
+#      define C_STRTOD __strtod
+#    endif
+#  endif
+#endif
+
+#ifdef HAVE_STRTOF
+#  define C_STRTOF strtof
+#else
+#  ifdef HAVE__STRTOF
+#    define C_STRTOF _strtof
+#  else
+#    ifdef HAVE___STRTOF
+#      define C_STRTOF __strtof
+#    endif
+#  endif
+#endif
+
 #endif /* MARPAESLIF_CONFIG_WRAPPER_H */
 CONFIG
     close($fh) || warn "Cannot close $output, $!";

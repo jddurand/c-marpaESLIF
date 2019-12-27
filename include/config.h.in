@@ -19,6 +19,7 @@
 #cmakedefine HAVE_STDDEF_H     @HAVE_STDDEF_H@
 #cmakedefine HAVE_MATH_H       @HAVE_MATH_H@
 #cmakedefine HAVE_LOCALE_H     @HAVE_LOCALE_H@
+#cmakedefine HAVE_FLOAT_H      @HAVE_FLOAT_H@
 
 #ifdef HAVE_SYS_TYPES_H
 #include <sys/types.h>
