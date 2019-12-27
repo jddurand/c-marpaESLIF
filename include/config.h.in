@@ -36,6 +36,8 @@
 typedef @MARPAESLIF_UINT32_T@ marpaESLIF_uint32_t;
 
 #cmakedefine C_STRTOLD @C_STRTOLD@
+#cmakedefine C_STRTOD @C_STRTOD@
+#cmakedefine C_STRTOF @C_STRTOF@
 
 #cmakedefine C_HUGE_VAL_REPLACEMENT @C_HUGE_VAL_REPLACEMENT@
 #cmakedefine C_HUGE_VAL @C_HUGE_VAL@

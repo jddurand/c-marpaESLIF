@@ -850,11 +850,12 @@ static short _marpaESLIFJSON_numberb(void *userDatavp, marpaESLIFValue_t *marpaE
 {
   marpaESLIFJSONContext_t            *marpaESLIFJSONContextp = (marpaESLIFJSONContext_t *) userDatavp;
   marpaESLIFJSONDecodeNumberAction_t  numberActionFallbackp  = marpaESLIFJSONContextp->marpaESLIFJSONDecodeOptionp->numberActionFallbackp;
-  short                               needfallbackb          = 0;
   marpaESLIFValueResult_t             marpaESLIFValueResult;
   marpaESLIFValueResult_t            *marpaESLIFValueResultInputp;
-  char                               *decimalPoints;
   char                               *endptrp;
+  char                               *decimalPoints;
+  short                               overflowb;
+  short                               underflowb;
   short                               rcb;
 
   /* Input is of type array by definition, UTF-8 encoded */
@@ -863,104 +864,122 @@ static short _marpaESLIFJSON_numberb(void *userDatavp, marpaESLIFValue_t *marpaE
     goto err;
   }
 
-  /* We use user's number action if any */
-  if (numberActionFallbackp != NULL) {
-    if (! numberActionFallbackp(marpaESLIFValueResultInputp->u.a.p, marpaESLIFValueResultInputp->u.a.sizel, &marpaESLIFValueResult)) {
-      goto err;
+  endptrp = marpaESLIFValueResultInputp->u.a.p;
+  /* Do our best - By definition this contains only ASCII things, and we always make sure that a lexeme is NUL terminated. */
+  if (((decimalPoints = strchr(marpaESLIFValueResultInputp->u.a.p, '.')) != NULL)
+      ||
+      (strchr(marpaESLIFValueResultInputp->u.a.p, 'e') != NULL)
+      ||
+      (strchr(marpaESLIFValueResultInputp->u.a.p, 'E') != NULL)
+      ) {
+
+#if (defined(C_STRTOLD) && defined(MARPAESLIF_HUGE_VALL)) || (defined(C_STRTOD) && defined(MARPAESLIF_HUGE_VAL)) || (defined(C_STRTOF) && defined(MARPAESLIF_HUGE_VALF))
+    /* If locale's decimal point is not '.', change it if is exists */
+    if ((decimalPoints != NULL) && (*decimalPoints != '.') && (marpaESLIFJSONContextp->decimalPointc != '.')) {
+      *decimalPoints = marpaESLIFJSONContextp->decimalPointc;
     }
+    errno = 0;    /* To distinguish success/failure after call */
+#  if defined(C_STRTOLD) && defined(MARPAESLIF_HUGE_VALL)
+    /* We prefer the long double, if possible */
+    marpaESLIFValueResult.contextp        = NULL;
+    marpaESLIFValueResult.representationp = NULL;
+    marpaESLIFValueResult.type            = MARPAESLIF_VALUE_TYPE_LONG_DOUBLE;
+    marpaESLIFValueResult.u.ld            = C_STRTOLD(marpaESLIFValueResultInputp->u.a.p, &endptrp);
+    /* Restore decimal point in any case */
+    if (decimalPoints != NULL) {
+      *decimalPoints = '.';
+    }
+    if ((errno == ERANGE) && ((marpaESLIFValueResult.u.ld == MARPAESLIF_HUGE_VALL) || (marpaESLIFValueResult.u.ld == -MARPAESLIF_HUGE_VALL))) {
+      overflowb = 1;
+      goto fallback;
+    }
+    if ((marpaESLIFValueResult.u.ld == 0) && (errno != 0)) {
+      underflowb = 1;
+      goto fallback;
+    }
+#  else /* C_STRTOLD && MARPAESLIF_HUGE_VALL */
+#    if defined(C_STRTOD) && defined(MARPAESLIF_HUGE_VAL)
+    marpaESLIFValueResult.contextp        = NULL;
+    marpaESLIFValueResult.representationp = NULL;
+    marpaESLIFValueResult.type            = MARPAESLIF_VALUE_TYPE_DOUBLE;
+    marpaESLIFValueResult.u.d             = C_STRTOD(marpaESLIFValueResultInputp->u.a.p, &endptrp);
+    /* Restore decimal point in any case */
+    if (decimalPoints != NULL) {
+      *decimalPoints = '.';
+    }
+    if ((errno == ERANGE) && ((marpaESLIFValueResult.u.d == MARPAESLIF_HUGE_VAL) || (marpaESLIFValueResult.u.d == -MARPAESLIF_HUGE_VAL))) {
+      overflowb = 1;
+      goto fallback;
+    }
+    if ((marpaESLIFValueResult.u.d == 0) && (errno != 0)) {
+      underflowb = 1;
+      goto fallback;
+    }
+#    else /* C_STRTOD && MARPAESLIF_HUGE_VAL */
+#      if defined(C_STRTOF) && defined(MARPAESLIF_HUGE_VALF)
+    marpaESLIFValueResult.contextp        = NULL;
+    marpaESLIFValueResult.representationp = NULL;
+    marpaESLIFValueResult.type            = MARPAESLIF_VALUE_TYPE_FLOAT;
+    marpaESLIFValueResult.u.f             = C_STRTOF(marpaESLIFValueResultInputp->u.a.p, &endptrp);
+    /* Restore decimal point in any case */
+    if (decimalPoints != NULL) {
+      *decimalPoints = '.';
+    }
+    if ((errno == ERANGE) && ((marpaESLIFValueResult.u.f == MARPAESLIF_HUGE_VALF) || (marpaESLIFValueResult.u.f == -MARPAESLIF_HUGE_VALF))) {
+      overflowb = 1;
+      goto fallback;
+    }
+    if ((marpaESLIFValueResult.u.f == 0) && (errno != 0)) {
+      underflowb = 1;
+      goto fallback;
+    }
+#      else /* C_STRTOF && MARPAESLIF_HUGE_VALF */
+    /* We should never have this code enabled */
+    goto fallback;
+#      endif /* C_STRTOF && MARPAESLIF_HUGE_VALF */
+#    endif /* C_STRTOD && MARPAESLIF_HUGE_VAL */
+#  endif /* C_STRTOLD && MARPAESLIF_HUGE_VALL */
+#else /* (C_STRTOLD && MARPAESLIF_HUGE_VALL) || (C_STRTOD && MARPAESLIF_HUGE_VAL) || (C_STRTOF && MARPAESLIF_HUGE_VALF) */
+    goto fallback;
+#endif /* (C_STRTOLD && MARPAESLIF_HUGE_VALL) || (C_STRTOD && MARPAESLIF_HUGE_VAL) || (C_STRTOF && MARPAESLIF_HUGE_VALF) */
   } else {
-    /* Do our best - By definition this contains only ASCII things, and we always make sure that a lexeme is NUL terminated. */
-    endptrp = marpaESLIFValueResultInputp->u.a.p;
-    if (((decimalPoints = strchr(marpaESLIFValueResultInputp->u.a.p, '.')) != NULL)
-        ||
-        (strchr(marpaESLIFValueResultInputp->u.a.p, 'e') != NULL)
-        ||
-        (strchr(marpaESLIFValueResultInputp->u.a.p, 'E') != NULL)
-        ) {
-
-      /* If locale's decimal point is not '.', change it if is exists */
-      if ((decimalPoints != NULL) && (*decimalPoints != '.') && (marpaESLIFJSONContextp->decimalPointc != '.')) {
-        *decimalPoints = marpaESLIFJSONContextp->decimalPointc;
-      }
-      errno = 0;    /* To distinguish success/failure after call */
-#ifdef C_STRTOLD
-      marpaESLIFValueResult.contextp        = NULL;
-      marpaESLIFValueResult.representationp = NULL;
-      marpaESLIFValueResult.type            = MARPAESLIF_VALUE_TYPE_LONG_DOUBLE;
-      marpaESLIFValueResult.u.ld            = C_STRTOLD(marpaESLIFValueResultInputp->u.a.p, &endptrp);
-      /* Restore decimal point in any case */
-      if (decimalPoints != NULL) {
-        *decimalPoints = '.';
-      }
-#  ifdef MARPAESLIF_HUGE_VALL
-      if ((errno == ERANGE) && ((marpaESLIFValueResult.u.ld == MARPAESLIF_HUGE_VALL) || (marpaESLIFValueResult.u.ld == -MARPAESLIF_HUGE_VALL))) {
-        MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "%s: Value would cause overflow", marpaESLIFValueResultInputp->u.a.p);
-        goto err;
-      }
-#  endif
-      if ((marpaESLIFValueResult.u.ld == 0) && (errno != 0)) {
-        MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "%s: Value would cause underflow", marpaESLIFValueResultInputp->u.a.p);
-        goto err;
-      }
-#else
-      marpaESLIFValueResult.contextp        = NULL;
-      marpaESLIFValueResult.representationp = NULL;
-      marpaESLIFValueResult.type            = MARPAESLIF_VALUE_TYPE_DOUBLE;
-      marpaESLIFValueResult.u.d             = strtod(marpaESLIFValueResultInputp->u.a.p, &endptrp);
-      /* Restore decimal point in any case */
-      if (decimalPoints != NULL) {
-        *decimalPoints = '.';
-      }
-#  ifdef MARPAESLIF_HUGE_VAL
-      if ((errno == ERANGE) && ((marpaESLIFValueResult.u.d == MARPAESLIF_HUGE_VAL) || (marpaESLIFValueResult.u.d == -MARPAESLIF_HUGE_VAL))) {
-        MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "%s: Value would cause overflow", marpaESLIFValueResultInputp->u.a.p);
-        goto err;
-      }
-#  endif
-      if ((marpaESLIFValueResult.u.d == 0) && (errno != 0)) {
-        MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "%s: Value would cause underflow", marpaESLIFValueResultInputp->u.a.p);
-        goto err;
-      }
-#endif
-    } else {
 #if defined(MARPAESLIF_HAVE_LONG_LONG) && defined(C_STRTOLL)
-      marpaESLIFValueResult.contextp        = NULL;
-      marpaESLIFValueResult.representationp = NULL;
-      marpaESLIFValueResult.type            = MARPAESLIF_VALUE_TYPE_LONG_LONG;
-      marpaESLIFValueResult.u.ll            = C_STRTOLL(marpaESLIFValueResultInputp->u.a.p, &endptrp, 10);
-      if ((errno == ERANGE) && (marpaESLIFValueResult.u.ll == MARPAESLIF_LLONG_MIN)) {
-        MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "%s: Value would cause underflow", marpaESLIFValueResultInputp->u.a.p);
-        goto err;
-      }
-      if ((errno == ERANGE) && (marpaESLIFValueResult.u.ll == MARPAESLIF_LLONG_MAX)) {
-        MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "%s: Value would cause overflow", marpaESLIFValueResultInputp->u.a.p);
-        goto err;
-      }
+    marpaESLIFValueResult.contextp        = NULL;
+    marpaESLIFValueResult.representationp = NULL;
+    marpaESLIFValueResult.type            = MARPAESLIF_VALUE_TYPE_LONG_LONG;
+    marpaESLIFValueResult.u.ll            = C_STRTOLL(marpaESLIFValueResultInputp->u.a.p, &endptrp, 10);
+    if ((errno == ERANGE) && (marpaESLIFValueResult.u.ll == MARPAESLIF_LLONG_MAX)) {
+      overflowb = 1;
+      goto fallback;
+    }
+    if ((errno == ERANGE) && (marpaESLIFValueResult.u.ll == MARPAESLIF_LLONG_MIN)) {
+      underflowb = 1;
+      goto fallback;
+    }
 #else
-      marpaESLIFValueResult.contextp        = NULL;
-      marpaESLIFValueResult.representationp = NULL;
-      marpaESLIFValueResult.type            = MARPAESLIF_VALUE_TYPE_LONG;
-      marpaESLIFValueResult.u.l             = strtol(marpaESLIFValueResultInputp->u.a.p, &endptrp, 10);
-      if ((errno == ERANGE) && (marpaESLIFValueResult.u.l == LONG_MIN)) {
-        MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "%s: Value would cause underflow", marpaESLIFValueResultInputp->u.a.p);
-        goto err;
-      }
-      if ((errno == ERANGE) && (marpaESLIFValueResult.u.l == LONG_MAX)) {
-        MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "%s: Value would cause overflow", marpaESLIFValueResultInputp->u.a.p);
-        goto err;
-      }
+    marpaESLIFValueResult.contextp        = NULL;
+    marpaESLIFValueResult.representationp = NULL;
+    marpaESLIFValueResult.type            = MARPAESLIF_VALUE_TYPE_LONG;
+    marpaESLIFValueResult.u.l             = strtol(marpaESLIFValueResultInputp->u.a.p, &endptrp, 10);
+    if ((errno == ERANGE) && (marpaESLIFValueResult.u.l == LONG_MIN)) {
+      overflowb = 1;
+      goto fallback;
+    }
+    if ((errno == ERANGE) && (marpaESLIFValueResult.u.l == LONG_MAX)) {
+      underflowb = 1;
+      goto fallback;
+    }
 #endif
-    }
+  }
 
-    /* Common to all cases: we always used strtoXXX() functions */
-    if (endptrp == marpaESLIFValueResultInputp->u.a.p) {
-      MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "%s: Nothing consumed when converting to a number", marpaESLIFValueResultInputp->u.a.p);
-      goto err;
-    }
-    if (endptrp != (marpaESLIFValueResultInputp->u.a.p + marpaESLIFValueResultInputp->u.a.sizel)) {
-      MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "%s: Not all input was consumed when converting to a number", marpaESLIFValueResultInputp->u.a.p);
-      goto err;
-    }
+  /* Common to all cases: we always used strtoXXX() functions */
+  if (endptrp == marpaESLIFValueResultInputp->u.a.p) {
+    MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "%s: Nothing consumed when converting to a number", marpaESLIFValueResultInputp->u.a.p);
+    goto err;
+  }
+  if (endptrp != (marpaESLIFValueResultInputp->u.a.p + marpaESLIFValueResultInputp->u.a.sizel)) {
+    MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "%s: Not all input was consumed when converting to a number", marpaESLIFValueResultInputp->u.a.p);
+    goto err;
   }
 
   if (! _marpaESLIFValue_stack_setb(marpaESLIFValuep, resulti, &marpaESLIFValueResult)) {
@@ -969,6 +988,25 @@ static short _marpaESLIFJSON_numberb(void *userDatavp, marpaESLIFValue_t *marpaE
 
   rcb = 1;
   goto done;
+
+ fallback:
+  /* marpaESLIF cannot handle any decimal number overflow not underflow */
+  if (numberActionFallbackp != NULL) {
+    if (! numberActionFallbackp(marpaESLIFValueResultInputp->u.a.p, marpaESLIFValueResultInputp->u.a.sizel, &marpaESLIFValueResult)) {
+      MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "%s: Number action fallback failure", marpaESLIFValueResultInputp->u.a.p);
+      goto err;
+    }
+  } else {
+    if (overflowb) {
+      MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "%s: Parsing caused overflow and no number action fallback is set", marpaESLIFValueResultInputp->u.a.p);
+    } else if (underflowb) {
+      MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "%s: Parsing caused underflow and no number action fallback is set", marpaESLIFValueResultInputp->u.a.p);
+    } else {
+      /* This should never happen */
+      MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "%s: Parsing error and number action fallback is set", marpaESLIFValueResultInputp->u.a.p);
+    }
+    rcb = 0;
+  }
 
  err:
   rcb = 0;
