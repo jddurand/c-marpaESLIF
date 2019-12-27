@@ -3067,8 +3067,8 @@ CODE:
   MARPAESLIFPERL_XV_STORE_IV         (avp, "discardId",           grammarProperty.discardi);
   MARPAESLIFPERL_XV_STORE_IVARRAY    (avp, "symbolIds",           grammarProperty.nsymboll, grammarProperty.symbolip);
   MARPAESLIFPERL_XV_STORE_IVARRAY    (avp, "ruleIds",             grammarProperty.nrulel, grammarProperty.ruleip);
-  MARPAESLIFPERL_XV_STORE_ASCIISTRING(avp, "defaultEncodings",    grammarProperty.defaultEncodings);
-  MARPAESLIFPERL_XV_STORE_ASCIISTRING(avp, "fallbackEncodings",   grammarProperty.fallbackEncodings);
+  MARPAESLIFPERL_XV_STORE_ASCIISTRING(avp, "defaultEncoding",     grammarProperty.defaultEncodings);
+  MARPAESLIFPERL_XV_STORE_ASCIISTRING(avp, "fallbackEncoding",    grammarProperty.fallbackEncodings);
 
   RETVAL = marpaESLIFPerl_call_actionp(aTHX_ boot_MarpaX__ESLIF__Grammar__Properties_svp, "new", avp, NULL /* Perl_MarpaX_ESLIF_Valuep */, 0 /* evalb */, 0 /* evalSilentb */);
   av_undef(avp);
@@ -3107,8 +3107,8 @@ CODE:
   MARPAESLIFPERL_XV_STORE_IV         (avp, "discardId",           grammarProperty.discardi);
   MARPAESLIFPERL_XV_STORE_IVARRAY    (avp, "symbolIds",           grammarProperty.nsymboll, grammarProperty.symbolip);
   MARPAESLIFPERL_XV_STORE_IVARRAY    (avp, "ruleIds",             grammarProperty.nrulel, grammarProperty.ruleip);
-  MARPAESLIFPERL_XV_STORE_ASCIISTRING(avp, "defaultEncodings",    grammarProperty.defaultEncodings);
-  MARPAESLIFPERL_XV_STORE_ASCIISTRING(avp, "fallbackEncodings",   grammarProperty.fallbackEncodings);
+  MARPAESLIFPERL_XV_STORE_ASCIISTRING(avp, "defaultEncoding",     grammarProperty.defaultEncodings);
+  MARPAESLIFPERL_XV_STORE_ASCIISTRING(avp, "fallbackEncoding",    grammarProperty.fallbackEncodings);
 
   RETVAL = marpaESLIFPerl_call_actionp(aTHX_ boot_MarpaX__ESLIF__Grammar__Properties_svp, "new", avp, NULL /* Perl_MarpaX_ESLIF_Valuep */, 0 /* evalb */, 0 /* evalSilentb */);
   av_undef(avp);

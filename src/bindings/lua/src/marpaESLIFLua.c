@@ -2649,8 +2649,8 @@ static int  marpaESLIFLua_marpaESLIFGrammar_currentPropertiesi(lua_State *L)
   MARPAESLIFLUA_STORE_INTEGER      (L, "discardId",           grammarProperty.discardi);
   MARPAESLIFLUA_STORE_INTEGER_ARRAY(L, "symbolIds",           grammarProperty.nsymboll, grammarProperty.symbolip);
   MARPAESLIFLUA_STORE_INTEGER_ARRAY(L, "ruleIds",             grammarProperty.nrulel, grammarProperty.ruleip);
-  MARPAESLIFLUA_STORE_ASCIISTRING  (L, "defaultEncodings",    grammarProperty.defaultEncodings);
-  MARPAESLIFLUA_STORE_ASCIISTRING  (L, "fallbackEncodings",   grammarProperty.fallbackEncodings);
+  MARPAESLIFLUA_STORE_ASCIISTRING  (L, "defaultEncoding",     grammarProperty.defaultEncodings);
+  MARPAESLIFLUA_STORE_ASCIISTRING  (L, "fallbackEncoding",    grammarProperty.fallbackEncodings);
 
   rci = 1;
   goto done;
@@ -2708,8 +2708,8 @@ static int  marpaESLIFLua_marpaESLIFGrammar_propertiesByLeveli(lua_State *L)
   MARPAESLIFLUA_STORE_INTEGER      (L, "discardId",           grammarProperty.discardi);
   MARPAESLIFLUA_STORE_INTEGER_ARRAY(L, "symbolIds",           grammarProperty.nsymboll, grammarProperty.symbolip);
   MARPAESLIFLUA_STORE_INTEGER_ARRAY(L, "ruleIds",             grammarProperty.nrulel, grammarProperty.ruleip);
-  MARPAESLIFLUA_STORE_ASCIISTRING  (L, "defaultEncodings",    grammarProperty.defaultEncodings);
-  MARPAESLIFLUA_STORE_ASCIISTRING  (L, "fallbackEncodings",   grammarProperty.fallbackEncodings);
+  MARPAESLIFLUA_STORE_ASCIISTRING  (L, "defaultEncoding",     grammarProperty.defaultEncodings);
+  MARPAESLIFLUA_STORE_ASCIISTRING  (L, "fallbackEncoding",    grammarProperty.fallbackEncodings);
 
   rci = 1;
   goto done;
