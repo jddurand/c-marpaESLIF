@@ -850,12 +850,12 @@ static short _marpaESLIFJSON_numberb(void *userDatavp, marpaESLIFValue_t *marpaE
 {
   marpaESLIFJSONContext_t            *marpaESLIFJSONContextp = (marpaESLIFJSONContext_t *) userDatavp;
   marpaESLIFJSONDecodeNumberAction_t  numberActionFallbackp  = marpaESLIFJSONContextp->marpaESLIFJSONDecodeOptionp->numberActionFallbackp;
+  short                               overflowb              = 0;
+  short                               underflowb             = 0;
   marpaESLIFValueResult_t             marpaESLIFValueResult;
   marpaESLIFValueResult_t            *marpaESLIFValueResultInputp;
   char                               *endptrp;
   char                               *decimalPoints;
-  short                               overflowb;
-  short                               underflowb;
   short                               rcb;
 
   /* Input is of type array by definition, UTF-8 encoded */
@@ -993,7 +993,7 @@ static short _marpaESLIFJSON_numberb(void *userDatavp, marpaESLIFValue_t *marpaE
   /* marpaESLIF cannot handle any decimal number overflow not underflow */
   if (numberActionFallbackp != NULL) {
     if (! numberActionFallbackp(marpaESLIFValueResultInputp->u.a.p, marpaESLIFValueResultInputp->u.a.sizel, &marpaESLIFValueResult)) {
-      MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "%s: Number action fallback failure", marpaESLIFValueResultInputp->u.a.p);
+      MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "%s: Number action fallback action failure", marpaESLIFValueResultInputp->u.a.p);
       goto err;
     }
   } else {
@@ -1003,7 +1003,7 @@ static short _marpaESLIFJSON_numberb(void *userDatavp, marpaESLIFValue_t *marpaE
       MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "%s: Parsing caused underflow and no number action fallback is set", marpaESLIFValueResultInputp->u.a.p);
     } else {
       /* This should never happen */
-      MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "%s: Parsing error and number action fallback is set", marpaESLIFValueResultInputp->u.a.p);
+      MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "%s: Parsing error and no number action fallback is set", marpaESLIFValueResultInputp->u.a.p);
     }
     rcb = 0;
   }
@@ -1168,22 +1168,22 @@ static short _marpaESLIFJSON_positive_infinityb(void *userDatavp, marpaESLIFValu
   marpaESLIFValueResult_t                       marpaESLIFValueResult;
   short                                         rcb;
 
-  /* We use user's positive_infinity action if any */
+#ifdef MARPAESLIF_INFINITY
+  marpaESLIFValueResult.contextp        = NULL;
+  marpaESLIFValueResult.representationp = NULL;
+  marpaESLIFValueResult.type            = MARPAESLIF_VALUE_TYPE_FLOAT;
+  marpaESLIFValueResult.u.f             = MARPAESLIF_INFINITY;
+#else
   if (positiveInfinityActionFallbackp != NULL) {
     if (! positiveInfinityActionFallbackp(&marpaESLIFValueResult)) {
+      MARPAESLIF_ERROR(marpaESLIFValuep->marpaESLIFp, "Positive infinity fallback action failure");
       goto err;
     }
   } else {
-#if defined(MARPAESLIF_INFINITY)
-    marpaESLIFValueResult.contextp        = NULL;
-    marpaESLIFValueResult.representationp = NULL;
-    marpaESLIFValueResult.type            = MARPAESLIF_VALUE_TYPE_FLOAT;
-    marpaESLIFValueResult.u.f             = MARPAESLIF_INFINITY;
-#else
-    MARPAESLIF_ERROR(marpaESLIFValuep->marpaESLIFp, "No +Infinity support");
+    MARPAESLIF_ERROR(marpaESLIFValuep->marpaESLIFp, "No positive infinity support");
     goto err;
-#endif
   }
+#endif
 
   if (! _marpaESLIFValue_stack_setb(marpaESLIFValuep, resulti, &marpaESLIFValueResult)) {
     goto err;
@@ -1208,22 +1208,22 @@ static short _marpaESLIFJSON_negative_infinityb(void *userDatavp, marpaESLIFValu
   marpaESLIFValueResult_t                       marpaESLIFValueResult;
   short                                         rcb;
 
-  /* We use user's negative_infinity action if any */
+#ifdef MARPAESLIF_INFINITY
+  marpaESLIFValueResult.contextp        = NULL;
+  marpaESLIFValueResult.representationp = NULL;
+  marpaESLIFValueResult.type            = MARPAESLIF_VALUE_TYPE_FLOAT;
+  marpaESLIFValueResult.u.f             = -MARPAESLIF_INFINITY;
+#else
   if (negativeInfinityActionFallbackp != NULL) {
     if (! negativeInfinityActionFallbackp(&marpaESLIFValueResult)) {
+      MARPAESLIF_ERROR(marpaESLIFValuep->marpaESLIFp, "Negative infinity fallback action failure");
       goto err;
     }
   } else {
-#if defined(MARPAESLIF_INFINITY)
-    marpaESLIFValueResult.contextp        = NULL;
-    marpaESLIFValueResult.representationp = NULL;
-    marpaESLIFValueResult.type            = MARPAESLIF_VALUE_TYPE_FLOAT;
-    marpaESLIFValueResult.u.f             = -MARPAESLIF_INFINITY;
-#else
-    MARPAESLIF_ERROR(marpaESLIFValuep->marpaESLIFp, "No -Infinity support");
+    MARPAESLIF_ERROR(marpaESLIFValuep->marpaESLIFp, "No negative infinity support");
     goto err;
-#endif
   }
+#endif
 
   if (! _marpaESLIFValue_stack_setb(marpaESLIFValuep, resulti, &marpaESLIFValueResult)) {
     goto err;
@@ -1248,22 +1248,23 @@ static short _marpaESLIFJSON_nanb(void *userDatavp, marpaESLIFValue_t *marpaESLI
   marpaESLIFValueResult_t          marpaESLIFValueResult;
   short                            rcb;
 
+#ifdef MARPAESLIF_NAN
+  marpaESLIFValueResult.contextp        = NULL;
+  marpaESLIFValueResult.representationp = NULL;
+  marpaESLIFValueResult.type            = MARPAESLIF_VALUE_TYPE_FLOAT;
+  marpaESLIFValueResult.u.f             = MARPAESLIF_NAN;
+#else
   /* We use user's nan action if any */
   if (nanActionFallbackp != NULL) {
     if (! nanActionFallbackp(&marpaESLIFValueResult)) {
+      MARPAESLIF_ERROR(marpaESLIFValuep->marpaESLIFp, "NaN fallback action failure");
       goto err;
     }
   } else {
-#if defined(MARPAESLIF_NAN)
-    marpaESLIFValueResult.contextp        = NULL;
-    marpaESLIFValueResult.representationp = NULL;
-    marpaESLIFValueResult.type            = MARPAESLIF_VALUE_TYPE_FLOAT;
-    marpaESLIFValueResult.u.f             = MARPAESLIF_NAN;
-#else
     MARPAESLIF_ERROR(marpaESLIFValuep->marpaESLIFp, "No NaN support");
     goto err;
-#endif
   }
+#endif
 
   if (! _marpaESLIFValue_stack_setb(marpaESLIFValuep, resulti, &marpaESLIFValueResult)) {
     goto err;

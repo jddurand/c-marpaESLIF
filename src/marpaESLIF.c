@@ -2,8 +2,8 @@
 #include <errno.h>
 #include <string.h>
 #include <ctype.h>
-#include <float.h>
 #include "marpaESLIF/internal/config.h"
+#include "marpaESLIF/internal/math.h"
 #include "marpaESLIF/internal/structures.h"
 #include "marpaESLIF/internal/logging.h"
 #include "marpaESLIF/internal/bootstrap.h"
