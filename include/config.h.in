@@ -41,6 +41,15 @@ typedef @MARPAESLIF_UINT32_T@ marpaESLIF_uint32_t;
 #cmakedefine C_STRTOD @C_STRTOD@
 #cmakedefine C_STRTOF @C_STRTOF@
 
+/* With MSCV, long double is double */
+#ifdef _MSC_VER
+#  ifndef C_STRTOLD
+#    ifdef C_STRTOD
+#      define C_STRTOLD C_STRTOD
+#    endif
+#  endif
+#endif
+
 #ifndef C_STRTOF
 /* Use down-promotion */
 #  ifdef C_STRTOD
