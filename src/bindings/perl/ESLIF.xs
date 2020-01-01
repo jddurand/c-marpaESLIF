@@ -20,16 +20,6 @@
 #include <float.h>
 #include <limits.h>
 
-/* Try to play with LDBL_DIG */
-#ifndef DBL_DIG
-# define DBL_DIG 15
-#endif
-#ifndef LDBL_DIG
-  /* Compiler will optimize that */
-#define LDBL_DIG ((sizeof(long double) == 10) ? 18 : (sizeof(long double) == 12) ? 18 : (sizeof(long double) == 16) ? 33 : DBL_DIG)
-#endif
-static char long_double_fmts[128];      /* Pre-filled format string for double */
-
 #define MARPAESLIFPERL_CHUNKED_SIZE_UPPER(size, chunk) ((size) < (chunk)) ? (chunk) : ((1 + ((size) / (chunk))) * (chunk))
 
 /* For perl interpret retrieval */
@@ -1745,6 +1735,7 @@ static short marpaESLIFPerl_importb(marpaESLIFValue_t *marpaESLIFValuep, void *u
   marpaESLIFPerl_stringGenerator_t  marpaESLIFPerl_stringGenerator;
   genericLogger_t                  *genericLoggerp;
   IV                                ivdummy;
+  char                             *s;
 
   dTHXa(Perl_MarpaX_ESLIF_Valuep->PerlInterpreterp);
 
@@ -2057,24 +2048,13 @@ static short marpaESLIFPerl_importb(marpaESLIFValue_t *marpaESLIFValuep, void *u
 #ifdef PERL_IMPLICIT_CONTEXT
       marpaESLIFPerl_stringGenerator.PerlInterpreterp = Perl_MarpaX_ESLIF_Valuep->PerlInterpreterp;
 #endif
-      marpaESLIFPerl_stringGenerator.s      = NULL;
-      marpaESLIFPerl_stringGenerator.l      = 0;
-      marpaESLIFPerl_stringGenerator.okb    = 0;
-      marpaESLIFPerl_stringGenerator.allocl = 0;
-      genericLoggerp = GENERICLOGGER_CUSTOM(marpaESLIFPerl_generateStringWithLoggerCallback, (void *) &marpaESLIFPerl_stringGenerator, GENERICLOGGER_LOGLEVEL_TRACE);
-      if (genericLoggerp == NULL) {
-        MARPAESLIFPERL_CROAKF("GENERICLOGGER_CUSTOM failure, %s", strerror(errno));
+      s = marpaESLIF_ldtos(Perl_MarpaX_ESLIF_Valuep->marpaESLIFp, marpaESLIFValueResultp->u.ld);
+      if (s == NULL) {
+        MARPAESLIFPERL_CROAKF("Failed to get string representation of long double %Lf", marpaESLIFValueResultp->u.ld);
       }
-      GENERICLOGGER_TRACEF(genericLoggerp, long_double_fmts, marpaESLIFValueResultp->u.ld); /* This will croak by itself if needed */
-      if ((marpaESLIFPerl_stringGenerator.s == NULL) || (marpaESLIFPerl_stringGenerator.l <= 1)) {
-        /* This should never happen */
-        GENERICLOGGER_FREE(genericLoggerp);
-        MARPAESLIFPERL_CROAKF("Internal error when doing string representation of long double %Lf", marpaESLIFValueResultp->u.ld);
-      }
-      stringp = newSVpvn((const char *) marpaESLIFPerl_stringGenerator.s, (STRLEN) (marpaESLIFPerl_stringGenerator.l - 1));
-      free(marpaESLIFPerl_stringGenerator.s);
-      marpaESLIFPerl_stringGenerator.s = NULL;
-      GENERICLOGGER_FREE(genericLoggerp);
+      stringp = newSVpv((const char *) s, 0);
+      free(s);
+      s = NULL;
 
       /* Representation is in stringp. Call Math::BigFloat->new(stringp). */
       listp = newAV();
@@ -2603,7 +2583,6 @@ BOOT:
   boot_MarpaX__ESLIF__String_svp  = newSVpvn("MarpaX::ESLIF::String", strlen("MarpaX::ESLIF::String"));
   boot_MarpaX__ESLIF_svp  = newSVpvn("MarpaX::ESLIF", strlen("MarpaX::ESLIF"));
   boot_MarpaX__ESLIF__UTF_8_svp  = newSVpvn("UTF-8", strlen("UTF-8"));
-  sprintf(long_double_fmts, "%%%d.%dLe", LDBL_DIG + 8, LDBL_DIG);
   boot_MarpaX__ESLIF__Math__BigFloat_svp = newSVpvn("Math::BigFloat", strlen("Math::BigFloat"));
   boot_MarpaX__ESLIF__Math__BigInt_svp = newSVpvn("Math::BigInt", strlen("Math::BigInt"));
   boot_nvtype_is_long_doubleb = marpaESLIFPerl_call_methodb(aTHX_ boot_MarpaX__ESLIF_svp, "_nvtype_is_long_double");

@@ -316,6 +316,7 @@ static short marpaESLIFLua_luaL_loadstring(int *rcp, lua_State *L, const char *s
 static short marpaESLIFLua_lua_pushglobaltable(lua_State *L);
 static short marpaESLIFLua_lua_settable(lua_State *L, int idx);
 static short marpaESLIFLua_lua_gettable(int *rcp, lua_State *L, int idx);
+static short marpaESLIFLua_lua_isinteger(int *rcp, lua_State *L, int idx);
 
 /* Grrr lua defines that with a macro */
 #ifndef marpaESLIFLua_luaL_newlib
@@ -1413,7 +1414,7 @@ static void marpaESLIFLua_stackdumpv(lua_State* L, int forcelookupi)
       printf("  [%d] nil\n", i);
       break;
     case LUA_TNUMBER:
-      printf("  [%d] number: %f\n", i, (double) lua_tonumber(L, i));
+      printf("  [%d] number: %g\n", i, (double) lua_tonumber(L, i));
       break;
     case LUA_TBOOLEAN:
       printf("  [%d] boolean %s\n", i, lua_toboolean(L, i) ? "true" : "false");
@@ -6781,6 +6782,18 @@ static short marpaESLIFLua_lua_gettable(int *rcip, lua_State *L, int idx)
   return 1;
 }
 
+/****************************************************************************/
+static short marpaESLIFLua_lua_isinteger(int *rcip, lua_State *L, int idx)
+/****************************************************************************/
+{
+  int rci;
+
+  rci = lua_isinteger(L, idx);
+  if (rcip != NULL) *rcip = rci;
+
+  return 1;
+}
+
 #endif /* MARPAESLIFLUA_EMBEDDED */
 
 /****************************************************************************/
@@ -6804,6 +6817,7 @@ static short marpaESLIFLua_stack_setb(lua_State *L, marpaESLIF_t *marpaESLIFp, m
   lua_Number                    tmpd;
   int                           tmpb;
   int                           isNumi;
+  int                           isIntegeri;
   const char                   *tmps;
   size_t                        tmpl;
   size_t                        tablel;
@@ -6878,8 +6892,17 @@ static short marpaESLIFLua_stack_setb(lua_State *L, marpaESLIF_t *marpaESLIFp, m
       break;
     case LUA_TNUMBER:
       /* Is is a lua integer ? */
-      if (! marpaESLIFLua_lua_tointegerx(&tmpi, L, currenti, &isNumi)) goto err;
-      if (isNumi) {
+      if (! marpaESLIFLua_lua_isinteger(&isIntegeri, L, currenti)) goto err;
+      /* fprintf(stderr, "LUA_TNUMBER: isIntegeri=%d\n", isIntegeri); fflush(stdout); fflush(stderr);* /
+      /* We assume that lua_Number is able to host exactly any lua_Integer which is the default */
+      /* for any sane lua interpreter */
+      if (isIntegeri) {
+        if (! marpaESLIFLua_lua_tointegerx(&tmpi, L, currenti, &isNumi)) goto err;
+        if (! isNumi) {
+          /* Should never happen */
+          marpaESLIFLua_luaL_error(L, "lua_tointegerx() said value is not a number but type is LUA_TNUMBER");
+          goto err;
+        }
         if ((tmpi >= SHRT_MIN) && (tmpi <= SHRT_MAX)) {
           /* Does it fit in a native C short ? */
           /* fprintf(stderr, "SHORT %d\n", (int) tmpi); */
@@ -6915,73 +6938,79 @@ static short marpaESLIFLua_stack_setb(lua_State *L, marpaESLIF_t *marpaESLIFp, m
           eslifb = 1;
 #endif
         }
-      }
+      } else {
+        if (! marpaESLIFLua_lua_tonumberx(&tmpd, L, currenti, &isNumi)) goto err;
+        if (! isNumi) {
+          /* Should never happen */
+          marpaESLIFLua_luaL_error(L, "lua_tonumberx() said value is not a number but type is LUA_TNUMBER");
+          goto err;
+        }
 #if defined(LUA_FLOAT_TYPE)
         /* Knowing which float type is used by lua is not that easy if we want to be */
         /* portable. From code introspection, IF the following defines exists: */
         /* LUA_FLOAT_FLOAT, LUA_FLOAT_DOUBLE, then, IF the following defines exists: */
         /* LUA_FLOAT_TYPE, then this give an internal representation that we can map to marpaESLIF. */
-      else {
-        if (! marpaESLIFLua_lua_tonumberx(&tmpd, L, currenti, &isNumi)) goto err;
-        if (isNumi) {
 #  if defined(LUA_FLOAT_FLOAT) && (LUA_FLOAT_FLOAT == LUA_FLOAT_TYPE)
-          /* Lua uses native C float */
-          /* fprintf(stderr, "FLOAT %f\n", (double) tmpd); */
-          marpaESLIFValueResultp->contextp        = MARPAESLIFLUA_CONTEXT;
-          marpaESLIFValueResultp->representationp = NULL;
-          marpaESLIFValueResultp->type            = MARPAESLIF_VALUE_TYPE_FLOAT;
-          marpaESLIFValueResultp->u.f             = tmpd; /* We volontarily do not typecast, there should be no warning */
-          eslifb = 1;
+        /* Lua uses native C float */
+        /* fprintf(stderr, "FLOAT %g\n", (double) tmpd); fflush(stdout); fflush(stderr); */
+        marpaESLIFValueResultp->contextp        = MARPAESLIFLUA_CONTEXT;
+        marpaESLIFValueResultp->representationp = NULL;
+        marpaESLIFValueResultp->type            = MARPAESLIF_VALUE_TYPE_FLOAT;
+        marpaESLIFValueResultp->u.f             = tmpd; /* We volontarily do not typecast, there should be no warning */
+        eslifb = 1;
 #  else
 #    if defined(LUA_FLOAT_DOUBLE) && (LUA_FLOAT_DOUBLE == LUA_FLOAT_TYPE)
-          /* fprintf(stderr, "DOUBLE %f\n", (double) tmpd); */
-          marpaESLIFValueResultp->contextp        = MARPAESLIFLUA_CONTEXT;
-          marpaESLIFValueResultp->representationp = NULL;
-          marpaESLIFValueResultp->type            = MARPAESLIF_VALUE_TYPE_DOUBLE;
-          marpaESLIFValueResultp->u.d             = tmpd; /* We volontarily do not typecast, there should be no warning */
-          eslifb = 1;
+        /* Lua uses native C double */
+        /* fprintf(stderr, "DOUBLE %g\n", (double) tmpd); fflush(stdout); fflush(stderr); */
+        marpaESLIFValueResultp->contextp        = MARPAESLIFLUA_CONTEXT;
+        marpaESLIFValueResultp->representationp = NULL;
+        marpaESLIFValueResultp->type            = MARPAESLIF_VALUE_TYPE_DOUBLE;
+        marpaESLIFValueResultp->u.d             = tmpd; /* We volontarily do not typecast, there should be no warning */
+        eslifb = 1;
 #    else
 #      if defined(LUA_FLOAT_LONGDOUBLE) && (LUA_FLOAT_LONGDOUBLE == LUA_FLOAT_TYPE)
-          /* fprintf(stderr, "LONG_DOUBLE\n"); */
-          marpaESLIFValueResultp->contextp        = MARPAESLIFLUA_CONTEXT;
-          marpaESLIFValueResultp->representationp = NULL;
-          marpaESLIFValueResultp->type            = MARPAESLIF_VALUE_TYPE_LONG_DOUBLE;
-          marpaESLIFValueResultp->u.ld            = tmpd; /* We volontarily do not typecast, there should be no warning */
-          eslifb = 1;
+        /* Lua uses native C long double */
+        /* fprintf(stderr, "LONG_DOUBLE %Lg\n", (long double) tmpd); fflush(stdout); fflush(stderr); */
+        marpaESLIFValueResultp->contextp        = MARPAESLIFLUA_CONTEXT;
+        marpaESLIFValueResultp->representationp = NULL;
+        marpaESLIFValueResultp->type            = MARPAESLIF_VALUE_TYPE_LONG_DOUBLE;
+        marpaESLIFValueResultp->u.ld            = tmpd; /* We volontarily do not typecast, there should be no warning */
+        eslifb = 1;
 #      endif
 #    endif
 #  endif /* defined(LUA_FLOAT_FLOAT) && (LUA_FLOAT_FLOAT == LUA_FLOAT_TYPE) */
-        }
-      }
 #else
   #if defined(LUA_NUMBER_FLOAT)
-      /* Lua uses native C float */
-      /* fprintf(stderr, "FLOAT %f\n", (double) tmpd); */
-      marpaESLIFValueResultp->contextp        = MARPAESLIFLUA_CONTEXT;
-      marpaESLIFValueResultp->representationp = NULL;
-      marpaESLIFValueResultp->type            = MARPAESLIF_VALUE_TYPE_FLOAT;
-      marpaESLIFValueResultp->u.f             = tmpd; /* We volontarily do not typecast, there should be no warning */
-      eslifb = 1;
+        /* Lua uses native C float */
+        /* fprintf(stderr, "FLOAT %g\n", (double) tmpd); fflush(stdout); fflush(stderr); */
+        marpaESLIFValueResultp->contextp        = MARPAESLIFLUA_CONTEXT;
+        marpaESLIFValueResultp->representationp = NULL;
+        marpaESLIFValueResultp->type            = MARPAESLIF_VALUE_TYPE_FLOAT;
+        marpaESLIFValueResultp->u.f             = tmpd; /* We volontarily do not typecast, there should be no warning */
+        eslifb = 1;
   #else
     #if defined(LUA_NUMBER_DOUBLE)
-      /* fprintf(stderr, "DOUBLE %f\n", (double) tmpd); */
-      marpaESLIFValueResultp->contextp        = MARPAESLIFLUA_CONTEXT;
-      marpaESLIFValueResultp->representationp = NULL;
-      marpaESLIFValueResultp->type            = MARPAESLIF_VALUE_TYPE_DOUBLE;
-      marpaESLIFValueResultp->u.d             = tmpd; /* We volontarily do not typecast, there should be no warning */
-      eslifb = 1;
+        /* Lua uses native C double */
+        /* fprintf(stderr, "DOUBLE %g\n", (double) tmpd); fflush(stdout); fflush(stderr); */
+        marpaESLIFValueResultp->contextp        = MARPAESLIFLUA_CONTEXT;
+        marpaESLIFValueResultp->representationp = NULL;
+        marpaESLIFValueResultp->type            = MARPAESLIF_VALUE_TYPE_DOUBLE;
+        marpaESLIFValueResultp->u.d             = tmpd; /* We volontarily do not typecast, there should be no warning */
+        eslifb = 1;
     #else
       #if defined(LUA_NUMBER_LONGDOUBLE) || defined(LUA_NUMBER_LONG_DOUBLE)
-      /* fprintf(stderr, "LONG_DOUBLE\n"); */
-      marpaESLIFValueResultp->contextp        = MARPAESLIFLUA_CONTEXT;
-      marpaESLIFValueResultp->representationp = NULL;
-      marpaESLIFValueResultp->type            = MARPAESLIF_VALUE_TYPE_LONG_DOUBLE;
-      marpaESLIFValueResultp->u.ld            = tmpd; /* We volontarily do not typecast, there should be no warning */
-      eslifb = 1;
+        /* Lua uses native C long double */
+        /* fprintf(stderr, "LONG_DOUBLE %Lg\n", (long double) tmpd); fflush(stdout); fflush(stderr); */
+        marpaESLIFValueResultp->contextp        = MARPAESLIFLUA_CONTEXT;
+        marpaESLIFValueResultp->representationp = NULL;
+        marpaESLIFValueResultp->type            = MARPAESLIF_VALUE_TYPE_LONG_DOUBLE;
+        marpaESLIFValueResultp->u.ld            = tmpd; /* We volontarily do not typecast, there should be no warning */
+        eslifb = 1;
       #endif
     #endif
   #endif
 #endif /* defined(LUA_FLOAT_TYPE) */
+      }
       break;
     case LUA_TBOOLEAN:
       /* fprintf(stderr, "BOOL %s\n", (tmpb != 0) ? "true" : "false"); */

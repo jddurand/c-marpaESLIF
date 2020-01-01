@@ -17,25 +17,6 @@
 #include <float.h>
 #include <genericLogger.h>
 
-/* The number of decimal digits of precision in a float.  */
-#ifndef FLT_DIG
-# define FLT_DIG 7
-#endif
-
-/* The number of decimal digits of precision in a double.  */
-#ifndef DBL_DIG
-# define DBL_DIG 15
-#endif
-
-#ifndef LDBL_DIG
-  /* Compiler will optimize that */
-#define LDBL_DIG ((sizeof(long double) == 10) ? 18 : (sizeof(long double) == 12) ? 18 : (sizeof(long double) == 16) ? 33 : DBL_DIG)
-#endif
-
-static char float_fmts[128];
-static char double_fmts[128];
-static char long_double_fmts[128];
-
 /* ---------------- */
 /* Exported methods */
 /* ---------------- */
@@ -736,6 +717,15 @@ static marpaESLIFFieldCache_t marpaESLIFFieldCacheArrayp[] = {
   #define JAVA_LANG_DOUBLE_CLASS_TYPE_FIELDP                                       marpaESLIFFieldCacheArrayp[7].fieldp
   {      &JAVA_LANG_DOUBLE_CLASSCACHE, "TYPE",                                     "Ljava/lang/Class;", 1 /* staticb */, NULL, 1 /* requiredb */ },
 
+  #define JAVA_LANG_FLOAT_CLASS_TYPE_POSITIVE_INFINITY                             marpaESLIFFieldCacheArrayp[8].fieldp
+  {      &JAVA_LANG_FLOAT_CLASSCACHE, "POSITIVE_INFINITY",                         "F", 1 /* staticb */, NULL, 1 /* requiredb */ },
+
+  #define JAVA_LANG_FLOAT_CLASS_TYPE_NEGATIVE_INFINITY                             marpaESLIFFieldCacheArrayp[9].fieldp
+  {      &JAVA_LANG_FLOAT_CLASSCACHE, "NEGATIVE_INFINITY",                         "F", 1 /* staticb */, NULL, 1 /* requiredb */ },
+
+  #define JAVA_LANG_FLOAT_CLASS_TYPE_NAN                                           marpaESLIFFieldCacheArrayp[10].fieldp
+  {      &JAVA_LANG_FLOAT_CLASSCACHE, "NaN",                                       "F", 1 /* staticb */, NULL, 1 /* requiredb */ },
+
   { NULL }
 };
 
@@ -747,6 +737,12 @@ static jclass integerTypeClassp = NULL;
 static jclass longTypeClassp = NULL;
 static jclass floatTypeClassp = NULL;
 static jclass doubleTypeClassp = NULL;
+
+static jfloat floatMaxValue;
+static jfloat floatMinValue;
+static jfloat floatPositiveInfinity;
+static jfloat floatNegativeInfinity;
+static jfloat floatNaN;
 
 typedef struct fieldsValuesStorage {
   jclass    classp;
@@ -852,21 +848,22 @@ fieldsValuesStorage_t fieldsValues[] = {
   } while (0)
 
 
-#define MARPAESLIFJAVA_IMPORT_NUMBER_NOT_DECIMAL(envp, object, c_bits, c_format, c_format_cast, c_value) do { \
+#define MARPAESLIFJAVA_IMPORT_NUMBER_NOT_DECIMAL(envp, object, c_format, c_format_cast, c_value) do { \
     genericLogger_t              *_genericLoggerp          = NULL;      \
     jstring                       _numberp;                             \
     marpaESLIF_stringGenerator_t  _stringGenerator = { NULL /* char *s */, 0 /* size_t l */, 0 /* short okb */}; \
+    char                         *_p; /* To skip eventual spaces at the beginning of the string */ \
                                                                         \
-    if (c_bits <= 8) { /* Fits in a jbyte */                            \
-      /* fprintf(stderr, "==> %s: import Byte '%c'\n", funcs, (char) c_value); fflush(stdout); fflush(stderr); */  \
+    if (sizeof(c_format_cast) <= sizeof(jbyte)) {                       \
+      /* fprintf(stderr, "==> %s: import Byte 0x%lx\n", funcs, (unsigned long) c_value); fflush(stdout); fflush(stderr); */ \
       MARPAESLIFJAVA_NEW_BYTE(envp, objectp, c_value);                  \
-    } else if (c_bits <= 16) { /* Fits in a jshort */                   \
-      /* fprintf(stderr, "==> %s: import Short '%d'\n", funcs, (int) c_value); fflush(stdout); fflush(stderr); */  \
+    } else if (sizeof(c_format_cast) <= sizeof(jshort)) {               \
+      /* fprintf(stderr, "==> %s: import Short '%d'\n", funcs, (int) c_value); fflush(stdout); fflush(stderr); */ \
       MARPAESLIFJAVA_NEW_SHORT(envp, objectp, c_value);                 \
-    } else if (c_bits <= 32) { /* Fits in a jint */                     \
+    } else if (sizeof(c_format_cast) <= sizeof(jint)) {                 \
       /* fprintf(stderr, "==> %s: import Integer '%d'\n", funcs, (int) c_value); fflush(stdout); fflush(stderr); */  \
       MARPAESLIFJAVA_NEW_INTEGER(envp, objectp, c_value);               \
-    } else if (c_bits <= 64) { /* Fits in a jlong */                    \
+    } else if (sizeof(c_format_cast) <= sizeof(jlong)) {                \
       /* fprintf(stderr, "==> %s: import Long '%ld'\n", funcs, (long) c_value); fflush(stdout); fflush(stderr); */  \
       MARPAESLIFJAVA_NEW_LONG(envp, objectp, c_value);                  \
     } else { /* Try with java.math.BigInteger */                        \
@@ -879,19 +876,23 @@ fieldsValuesStorage_t fieldsValues[] = {
       _stringGenerator.l   = 0;                                         \
       _stringGenerator.okb = 0;                                         \
       GENERICLOGGER_TRACEF(_genericLoggerp, c_format, (c_format_cast) c_value); \
-      if (! marpaESLIF_stringGenerator.okb) {                           \
+      if (! _stringGenerator.okb) {                                     \
         GENERICLOGGER_FREE(_genericLoggerp);                            \
         RAISEEXCEPTIONF(envp, "GENERICLOGGER_TRACEF with format string %s failed, %s", c_format, strerror(errno)); \
       }                                                                 \
       /* ASCII formatting, compatible with Java's modified UTF-8 */     \
-      _numberp = (*envp)->NewStringUTF(envp, (const char *) _stringGenerator.s); \
+      _p = _stringGenerator.s;                                          \
+      while (*_p == ' ') {                                              \
+        _p++;                                                           \
+      }                                                                 \
+      _numberp = (*envp)->NewStringUTF(envp, (const char *) _p); \
       if (_numberp == NULL) {                                           \
         /* We want OUR exception to be raised */                        \
         GENERICLOGGER_FREE(_genericLoggerp);                            \
         free(_stringGenerator.s);                                       \
         RAISEEXCEPTIONF(envp, "NewStringUTF(\"%s\") failure", _stringGenerator.s); \
       }                                                                 \
-      /* fprintf(stderr, "==> %s: import BitgInteger '%s'\n", funcs, (char *) _stringGenerator.s); fflush(stdout); fflush(stderr); */  \
+      /* fprintf(stderr, "==> %s: import BigInteger '%s'\n", funcs, (char *) _p); fflush(stdout); fflush(stderr); */  \
       objectp = (*envp)->NewObject(envp, JAVA_MATH_BIGINTEGER_CLASSP, JAVA_MATH_BIGINTEGER_CLASS_String_init_METHODP, _numberp); \
       if (objectp == NULL) {                                            \
         GENERICLOGGER_FREE(_genericLoggerp);                            \
@@ -905,49 +906,38 @@ fieldsValuesStorage_t fieldsValues[] = {
     }                                                                   \
   } while (0)
 
-#define MARPAESLIFJAVA_IMPORT_NUMBER_DECIMAL(envp, object, c_bits, c_format, c_format_cast, c_value) do { \
-    genericLogger_t              *_genericLoggerp          = NULL;      \
-    jstring                       _numberp;                             \
-    marpaESLIF_stringGenerator_t  _stringGenerator = { NULL /* char *s */, 0 /* size_t l */, 0 /* short okb */}; \
+/* Note that special values +/-Infinity and NaN are handled in the caller */
+#define MARPAESLIFJAVA_IMPORT_NUMBER_DECIMAL(marpaESLIFp, envp, object, c_format_cast, c_value, floattos) do { \
+    jstring _numberp;                                                   \
+    char *_s;                                                           \
                                                                         \
-    if (c_bits <= 32) { /* Fits in a jfloat */                          \
-      /* fprintf(stderr, "==> %s: import float '%f'\n", funcs, (double) c_value); fflush(stdout); fflush(stderr); */  \
+    if (sizeof(c_format_cast) <= sizeof(jfloat)) {                      \
+      /* fprintf(stderr, "==> %s: import float '%f'\n", funcs, (double) c_value); fflush(stdout); fflush(stderr); */ \
       MARPAESLIFJAVA_NEW_FLOAT(envp, objectp, c_value);                 \
-    } else if (c_bits <= 64) { /* Fits in a jdouble */                  \
+    } else if (sizeof(c_format_cast) <= sizeof(jdouble)) {              \
       /* fprintf(stderr, "==> %s: import double '%Lf'\n", funcs, (long double) c_value); fflush(stdout); fflush(stderr); */ \
       MARPAESLIFJAVA_NEW_DOUBLE(envp, objectp, c_value);                \
     } else { /* Try with java.math.BigDecimal */                        \
       /* We go through the string representation, hopefully containing all digits... */ \
-      _genericLoggerp = GENERICLOGGER_CUSTOM(generateStringWithLoggerCallbackv, (void *) &_stringGenerator, GENERICLOGGER_LOGLEVEL_TRACE); \
-      if (_genericLoggerp == NULL) {                                    \
-        RAISEEXCEPTIONF(envp, "GENERICLOGGER_CUSTOM() returned NULL, %s", strerror(errno)); \
-      }                                                                 \
-      _stringGenerator.s   = NULL;                                      \
-      _stringGenerator.l   = 0;                                         \
-      _stringGenerator.okb = 0;                                         \
-      GENERICLOGGER_TRACEF(_genericLoggerp, c_format, (c_format_cast) c_value); \
-      if (! marpaESLIF_stringGenerator.okb) {                           \
-        GENERICLOGGER_FREE(_genericLoggerp);                            \
-        RAISEEXCEPTIONF(envp, "GENERICLOGGER_TRACEF with format string %s failed, %s", c_format, strerror(errno)); \
+      _s = floattos(marpaESLIFp, c_value);                              \
+      if (_s == NULL) {                                                 \
+        RAISEEXCEPTIONF(envp, "%s returned NULL", #floattos);           \
       }                                                                 \
       /* ASCII formatting, compatible with Java's modified UTF-8 */     \
-      _numberp = (*envp)->NewStringUTF(envp, (const char *) _stringGenerator.s); \
+      _numberp = (*envp)->NewStringUTF(envp, (const char *) _s);        \
       if (_numberp == NULL) {                                           \
         /* We want OUR exception to be raised */                        \
-        GENERICLOGGER_FREE(_genericLoggerp);                            \
-        free(_stringGenerator.s);                                       \
+        free(_s);                                                       \
         RAISEEXCEPTIONF(envp, "NewStringUTF(\"%s\") failure", _stringGenerator.s); \
       }                                                                 \
-      /* fprintf(stderr, "==> %s: import BitgFloat '%s'\n", funcs, (char *) _stringGenerator.s); fflush(stdout); fflush(stderr); */ \
+      /* fprintf(stderr, "==> %s: import BigFloat '%s'\n", funcs, (char *) _s); fflush(stdout); fflush(stderr); */  \
       objectp = (*envp)->NewObject(envp, JAVA_MATH_BIGDECIMAL_CLASSP, JAVA_MATH_BIGDECIMAL_CLASS_String_init_METHODP, _numberp); \
       if (objectp == NULL) {                                            \
-        GENERICLOGGER_FREE(_genericLoggerp);                            \
-        free(_stringGenerator.s);                                       \
+        free(_s);                                                       \
         (*envp)->DeleteLocalRef(envp, _numberp);                        \
         RAISEEXCEPTION(envp, "NewObject failure");                      \
       }                                                                 \
-      GENERICLOGGER_FREE(_genericLoggerp);                              \
-      free(_stringGenerator.s);                                         \
+      free(_s);                                                         \
       (*envp)->DeleteLocalRef(envp, _numberp);                          \
     }                                                                   \
   } while (0)
@@ -1126,18 +1116,18 @@ short is_bigendian;
     if (! HAVEEXCEPTION(envp)) {                                        \
       if (MARPAESLIF_ESLIFEXCEPTION_CLASSP != NULL) {                   \
         genericLogger_t              *genericLoggerp = NULL;            \
-        marpaESLIF_stringGenerator_t  marpaESLIF_stringGenerator;       \
+        marpaESLIF_stringGenerator_t  _stringGenerator;                 \
                                                                         \
-        marpaESLIF_stringGenerator.s   = NULL;                          \
-        marpaESLIF_stringGenerator.l   = 0;                             \
-        marpaESLIF_stringGenerator.okb = 0;                             \
+        _stringGenerator.s   = NULL;                                    \
+        _stringGenerator.l   = 0;                                       \
+        _stringGenerator.okb = 0;                                       \
                                                                         \
-        genericLoggerp = GENERICLOGGER_CUSTOM(generateStringWithLoggerCallbackv, (void *) &marpaESLIF_stringGenerator, GENERICLOGGER_LOGLEVEL_TRACE); \
+        genericLoggerp = GENERICLOGGER_CUSTOM(generateStringWithLoggerCallbackv, (void *) &_stringGenerator, GENERICLOGGER_LOGLEVEL_TRACE); \
         if (genericLoggerp != NULL) {                                   \
           GENERICLOGGER_TRACEF(genericLoggerp, "[In %s at %s:%d] %s", funcs, MARPAESLIF_FILENAMES, __LINE__, msgs); \
-          if (marpaESLIF_stringGenerator.okb) {                         \
-            (*envp)->ThrowNew(envp, MARPAESLIF_ESLIFEXCEPTION_CLASSP, marpaESLIF_stringGenerator.s); \
-            free(marpaESLIF_stringGenerator.s);                         \
+          if (_stringGenerator.okb) {                                   \
+            (*envp)->ThrowNew(envp, MARPAESLIF_ESLIFEXCEPTION_CLASSP, _stringGenerator.s); \
+            free(_stringGenerator.s);                                   \
           }                                                             \
           GENERICLOGGER_FREE(genericLoggerp);                           \
         }                                                               \
@@ -1150,18 +1140,18 @@ short is_bigendian;
     if (! HAVEEXCEPTION(envp)) {                                        \
       if (MARPAESLIF_ESLIFEXCEPTION_CLASSP != NULL) {                   \
         genericLogger_t              *genericLoggerp = NULL;            \
-        marpaESLIF_stringGenerator_t  marpaESLIF_stringGenerator;       \
+        marpaESLIF_stringGenerator_t  _stringGenerator;                 \
                                                                         \
-        marpaESLIF_stringGenerator.s   = NULL;                          \
-        marpaESLIF_stringGenerator.l   = 0;                             \
-        marpaESLIF_stringGenerator.okb = 0;                             \
+        _stringGenerator.s   = NULL;                                    \
+        _stringGenerator.l   = 0;                                       \
+        _stringGenerator.okb = 0;                                       \
                                                                         \
-        genericLoggerp = GENERICLOGGER_CUSTOM(generateStringWithLoggerCallbackv, (void *) &marpaESLIF_stringGenerator, GENERICLOGGER_LOGLEVEL_TRACE); \
+        genericLoggerp = GENERICLOGGER_CUSTOM(generateStringWithLoggerCallbackv, (void *) &_stringGenerator, GENERICLOGGER_LOGLEVEL_TRACE); \
         if (genericLoggerp != NULL) {                                   \
           GENERICLOGGER_TRACEF(genericLoggerp, "[In %s at %s:%d] " fmts, funcs, MARPAESLIF_FILENAMES, __LINE__, __VA_ARGS__); \
-          if (marpaESLIF_stringGenerator.okb) {                         \
-            (*envp)->ThrowNew(envp, MARPAESLIF_ESLIFEXCEPTION_CLASSP, marpaESLIF_stringGenerator.s); \
-            free(marpaESLIF_stringGenerator.s);                         \
+          if (_stringGenerator.okb) {                                   \
+            (*envp)->ThrowNew(envp, MARPAESLIF_ESLIFEXCEPTION_CLASSP, _stringGenerator.s); \
+            free(_stringGenerator.s);                                   \
           }                                                             \
           GENERICLOGGER_FREE(genericLoggerp);                           \
         }                                                               \
@@ -1340,6 +1330,19 @@ JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM *JavaVMp, void* reservedp)
   fieldsValues[6].classp = JAVA_LANG_FLOAT_CLASSP;     fieldsValues[6].fieldp = JAVA_LANG_FLOAT_CLASS_TYPE_FIELDP;
   fieldsValues[7].classp = JAVA_LANG_DOUBLE_CLASSP;    fieldsValues[7].fieldp = JAVA_LANG_DOUBLE_CLASS_TYPE_FIELDP;
 
+  floatPositiveInfinity = (*envp)->GetStaticFloatField(envp, JAVA_LANG_FLOAT_CLASSP, JAVA_LANG_FLOAT_CLASS_TYPE_POSITIVE_INFINITY);
+  if (HAVEEXCEPTION(envp)) {
+    goto err;
+  }
+  floatNegativeInfinity = (*envp)->GetStaticFloatField(envp, JAVA_LANG_FLOAT_CLASSP, JAVA_LANG_FLOAT_CLASS_TYPE_NEGATIVE_INFINITY);
+  if (HAVEEXCEPTION(envp)) {
+    goto err;
+  }
+  floatNaN = (*envp)->GetStaticFloatField(envp, JAVA_LANG_FLOAT_CLASSP, JAVA_LANG_FLOAT_CLASS_TYPE_NAN);
+  if (HAVEEXCEPTION(envp)) {
+    goto err;
+  }
+
   for (i = 0; i < sizeof(fieldsValues)/sizeof(fieldsValues[0]); i++) {
     classp = (*envp)->GetStaticObjectField(envp, fieldsValues[i].classp, fieldsValues[i].fieldp);
     if (classp == NULL) {
@@ -1354,11 +1357,6 @@ JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM *JavaVMp, void* reservedp)
 
   /* Get endianness */
   is_bigendian = MARPAESLIF_IS_BIGENDIAN();
-
-  /* Get format strings */
-  sprintf(float_fmts, "%%%d.%de", FLT_DIG + 8, FLT_DIG);
-  sprintf(double_fmts, "%%%d.%de", DBL_DIG + 8, DBL_DIG);
-  sprintf(long_double_fmts, "%%%d.%dLe", LDBL_DIG + 8, LDBL_DIG);
 
   rci = MARPAESLIF_JNI_VERSION;
   goto done;
@@ -5827,6 +5825,7 @@ static short marpaESLIFJava_importb(marpaESLIFValue_t *marpaESLIFValuep, void *u
   static const char            *funcs                   = "marpaESLIFJava_importb";
   marpaESLIFValueContext_t     *marpaESLIFValueContextp = (marpaESLIFValueContext_t *) userDatavp;
   JNIEnv                       *envp                    = marpaESLIFValueContextp->envp;
+  marpaESLIF_t                 *marpaESLIFp             = marpaESLIFGrammar_eslifp(marpaESLIFRecognizer_grammarp(marpaESLIFValue_recognizerp(marpaESLIFValuep)));
   jbyteArray                    byteArrayp              = NULL;
   jstring                       encodingp               = NULL;
   short                         rcb;
@@ -5837,8 +5836,8 @@ static short marpaESLIFJava_importb(marpaESLIFValue_t *marpaESLIFValuep, void *u
   jobject                       objectHashMapp;
   jobject                       keyp;
   jobject                       valuep;
-  marpaESLIF_stringGenerator_t  marpaESLIF_stringGenerator = { NULL /* char *s */, 0 /* size_t l */, 0 /* short okb */};
-  size_t                        c_bits;
+  short                         isinfb;
+  short                         isnanb;
 
   /*
     marpaESLIF Type                    C type    C nb_bits      Java Type
@@ -5848,7 +5847,7 @@ static short marpaESLIFJava_importb(marpaESLIFValue_t *marpaESLIFValuep, void *u
     MARPAESLIF_VALUE_TYPE_SHORT        short     >= 16          java.lang.Byte or java.lang.Short or java.lang.Integer or java.lang.Long or java.math.BigInteger
     MARPAESLIF_VALUE_TYPE_INT          int       >= 16          java.lang.Byte or java.lang.Short or java.lang.Integer or java.lang.Long or java.math.BigInteger
     MARPAESLIF_VALUE_TYPE_LONG         long      >= 32          java.lang.Byte or java.lang.Short or java.lang.Integer or java.lang.Long or java.math.BigInteger
-    MARPAESLIF_VALUE_TYPE_FLOAT        float     depends        java.lang.Float or java.lang.Double or java.math.BigDecimal
+    MARPAESLIF_VALUE_TYPE_FLOAT        float     depends        java.lang.Float (includes +/-Inf and Nan) or java.lang.Double or java.math.BigDecimal
     MARPAESLIF_VALUE_TYPE_DOUBLE       double    depends        java.lang.Float or java.lang.Double or java.math.BigDecimal
     MARPAESLIF_VALUE_TYPE_PTR          char*                    java.lang.Object or java.lang.Long
     MARPAESLIF_VALUE_TYPE_ARRAY                                 byte[]
@@ -5871,39 +5870,35 @@ static short marpaESLIFJava_importb(marpaESLIFValue_t *marpaESLIFValuep, void *u
     }
     break;
   case MARPAESLIF_VALUE_TYPE_CHAR:
-    /* fprintf(stderr, "==> %s: import CHAR\n", funcs); fflush(stdout); fflush(stderr); */
-    c_bits = CHAR_BIT;
-    MARPAESLIFJAVA_IMPORT_NUMBER_NOT_DECIMAL(envp, objectp, c_bits, "%c", char, marpaESLIFValueResultp->u.c);
+    /* fprintf(stderr, "==> %s: import CHAR 0x%lx\n", funcs, (unsigned long) marpaESLIFValueResultp->u.c); fflush(stdout); fflush(stderr); */
+    MARPAESLIFJAVA_IMPORT_NUMBER_NOT_DECIMAL(envp, objectp, "%c", char, marpaESLIFValueResultp->u.c);
     MARPAESLIFJAVA_PUSH_PTR(marpaESLIFValueContextp->objectStackp, objectp);
     break;
   case MARPAESLIF_VALUE_TYPE_SHORT:
     /* fprintf(stderr, "==> %s: import SHORT\n", funcs); fflush(stdout); fflush(stderr); */
-    c_bits = CHAR_BIT * sizeof(short);
-    MARPAESLIFJAVA_IMPORT_NUMBER_NOT_DECIMAL(envp, objectp, c_bits, "%d", int, marpaESLIFValueResultp->u.b);
+    MARPAESLIFJAVA_IMPORT_NUMBER_NOT_DECIMAL(envp, objectp, "%d", int, marpaESLIFValueResultp->u.b);
     MARPAESLIFJAVA_PUSH_PTR(marpaESLIFValueContextp->objectStackp, objectp);
     break;
   case MARPAESLIF_VALUE_TYPE_INT:
     /* fprintf(stderr, "==> %s: import INT\n", funcs); fflush(stdout); fflush(stderr); */
-    c_bits = CHAR_BIT * sizeof(int);
-    MARPAESLIFJAVA_IMPORT_NUMBER_NOT_DECIMAL(envp, objectp, c_bits, "%d", int, marpaESLIFValueResultp->u.i);
+    MARPAESLIFJAVA_IMPORT_NUMBER_NOT_DECIMAL(envp, objectp, "%d", int, marpaESLIFValueResultp->u.i);
     MARPAESLIFJAVA_PUSH_PTR(marpaESLIFValueContextp->objectStackp, objectp);
     break;
   case MARPAESLIF_VALUE_TYPE_LONG:
     /* fprintf(stderr, "==> %s: import LONG\n", funcs); fflush(stdout); fflush(stderr); */
-    c_bits = CHAR_BIT * sizeof(long);
-    MARPAESLIFJAVA_IMPORT_NUMBER_NOT_DECIMAL(envp, objectp, c_bits, "%ld", long, marpaESLIFValueResultp->u.l);
+    MARPAESLIFJAVA_IMPORT_NUMBER_NOT_DECIMAL(envp, objectp, "%ld", long, marpaESLIFValueResultp->u.l);
     MARPAESLIFJAVA_PUSH_PTR(marpaESLIFValueContextp->objectStackp, objectp);
     break;
   case MARPAESLIF_VALUE_TYPE_FLOAT:
-    /* fprintf(stderr, "==> %s: import FLOAT\n", funcs); fflush(stdout); fflush(stderr); */
-    c_bits = CHAR_BIT * sizeof(float);
-    MARPAESLIFJAVA_IMPORT_NUMBER_DECIMAL(envp, objectp, c_bits, float_fmts, double, marpaESLIFValueResultp->u.f);
+    /* If value is +/-Infinity or NaN this will be handle natively via jfloat */
+    /* fprintf(stderr, "==> %s: MARPAESLIF_VALUE_TYPE_FLOAT: %f\n", funcs, (double) marpaESLIFValueResultp->u.f); fflush(stdout); fflush(stderr); */
+    MARPAESLIFJAVA_IMPORT_NUMBER_DECIMAL(marpaESLIFp, envp, objectp, double, marpaESLIFValueResultp->u.f, marpaESLIF_ftos);
     MARPAESLIFJAVA_PUSH_PTR(marpaESLIFValueContextp->objectStackp, objectp);
     break;
   case MARPAESLIF_VALUE_TYPE_DOUBLE:
-    /* fprintf(stderr, "==> %s: import DOUBLE\n", funcs); fflush(stdout); fflush(stderr); */
-    c_bits = CHAR_BIT * sizeof(double);
-    MARPAESLIFJAVA_IMPORT_NUMBER_DECIMAL(envp, objectp, c_bits, double_fmts, double, marpaESLIFValueResultp->u.d);
+    /* If value is +/-Infinity or NaN this will be handle natively via jdouble */
+    /* fprintf(stderr, "==> %s: MARPAESLIF_VALUE_TYPE_DOUBLE: %f\n", funcs, (double) marpaESLIFValueResultp->u.d); fflush(stdout); fflush(stderr); */
+    MARPAESLIFJAVA_IMPORT_NUMBER_DECIMAL(marpaESLIFp, envp, objectp, double, marpaESLIFValueResultp->u.d, marpaESLIF_dtos);
     MARPAESLIFJAVA_PUSH_PTR(marpaESLIFValueContextp->objectStackp, objectp);
     break;
   case MARPAESLIF_VALUE_TYPE_PTR:
@@ -6015,16 +6010,29 @@ static short marpaESLIFJava_importb(marpaESLIFValue_t *marpaESLIFValuep, void *u
     MARPAESLIFJAVA_PUSH_PTR(marpaESLIFValueContextp->objectStackp, objectHashMapp);
     break;
   case MARPAESLIF_VALUE_TYPE_LONG_DOUBLE:
-    /* fprintf(stderr, "==> %s: import LONG_DOUBLE\n", funcs); fflush(stdout); fflush(stderr); */
-    c_bits = CHAR_BIT * sizeof(long double);
-    MARPAESLIFJAVA_IMPORT_NUMBER_DECIMAL(envp, objectp, c_bits, long_double_fmts, long double, marpaESLIFValueResultp->u.d);
+    /* No "jlongdouble": we handle +/-Infinity or NaN ourself by downgrading to a jdouble if possible */
+      /* fprintf(stderr, "==> %s: MARPAESLIF_VALUE_TYPE_FLOAT: %f\n", funcs, (double) marpaESLIFValueResultp->u.ld); fflush(stdout); fflush(stderr); */
+    if (! marpaESLIF_isinfb(marpaESLIFValueResultp, &isinfb)) {
+      goto err;
+    }
+    if (isinfb) {
+      MARPAESLIFJAVA_NEW_FLOAT(envp, objectp, marpaESLIFValueResultp->u.ld > 0 ? floatPositiveInfinity : floatNegativeInfinity);
+    } else {
+      if (! marpaESLIF_isnanb(marpaESLIFValueResultp, &isnanb)) {
+        goto err;
+      }
+      if (isnanb) {
+        MARPAESLIFJAVA_NEW_FLOAT(envp, objectp, floatNaN);
+      } else {
+        MARPAESLIFJAVA_IMPORT_NUMBER_DECIMAL(marpaESLIFp, envp, objectp, long double, marpaESLIFValueResultp->u.ld, marpaESLIF_ldtos);
+      }
+    }
     MARPAESLIFJAVA_PUSH_PTR(marpaESLIFValueContextp->objectStackp, objectp);
     break;
 #ifdef MARPAESLIF_HAVE_LONG_LONG
   case MARPAESLIF_VALUE_TYPE_LONG_LONG:
     /* fprintf(stderr, "==> %s: import LONG_LONG\n", funcs); fflush(stdout); fflush(stderr); */
-    c_bits = CHAR_BIT * sizeof(MARPAESLIF_LONG_LONG);
-    MARPAESLIFJAVA_IMPORT_NUMBER_NOT_DECIMAL(envp, objectp, c_bits, MARPAESLIF_LONG_LONG_FMT, MARPAESLIF_LONG_LONG, marpaESLIFValueResultp->u.ll);
+    MARPAESLIFJAVA_IMPORT_NUMBER_NOT_DECIMAL(envp, objectp, MARPAESLIF_LONG_LONG_FMT, MARPAESLIF_LONG_LONG, marpaESLIFValueResultp->u.ll);
     MARPAESLIFJAVA_PUSH_PTR(marpaESLIFValueContextp->objectStackp, objectp);
     break;
 #endif
@@ -6039,9 +6047,6 @@ static short marpaESLIFJava_importb(marpaESLIFValue_t *marpaESLIFValuep, void *u
   rcb = 0;
 
  done:
-  if (marpaESLIF_stringGenerator.s != NULL) {
-    free(marpaESLIF_stringGenerator.s);
-  }
   if (envp != NULL) {
     if (byteArrayp != NULL) {
       (*envp)->DeleteLocalRef(envp, byteArrayp);

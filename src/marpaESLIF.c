@@ -9,20 +9,16 @@
 #include "marpaESLIF/internal/bootstrap.h"
 #include "marpaESLIF/internal/lua.h"
 
-/* Taken from od.c */
-/* The number of decimal digits of precision in a float.  */
-#ifndef FLT_DIG
-# define FLT_DIG 7
+/* Sane values are derived from http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2006/n2005.pdf */
+/* We do not mind if we ask a bit more than the real precision - sprintf will handle that. */
+#ifndef FLT_DECIMAL_DIG
+#define FLT_DECIMAL_DIG 9
 #endif
-
-/* The number of decimal digits of precision in a double.  */
-#ifndef DBL_DIG
-# define DBL_DIG 15
+#ifndef DBL_DECIMAL_DIG
+#define DBL_DECIMAL_DIG 17
 #endif
-
-#ifndef LDBL_DIG
-  /* Compiler will optimize that */
-#define LDBL_DIG ((sizeof(long double) == 10) ? 18 : (sizeof(long double) == 12) ? 18 : (sizeof(long double) == 16) ? 33 : DBL_DIG)
+#ifndef LDBL_DECIMAL_DIG
+#define LDBL_DECIMAL_DIG 40
 #endif
 
 static const char *MARPAESLIF_VERSION_STATIC       = MARPAESLIF_VERSION;
@@ -3781,9 +3777,9 @@ static inline marpaESLIF_t *_marpaESLIF_newp(marpaESLIFOption_t *marpaESLIFOptio
   marpaESLIFp->marpaESLIFValueResultFalse.type            = MARPAESLIF_VALUE_TYPE_BOOL;
   marpaESLIFp->marpaESLIFValueResultFalse.u.y             = MARPAESLIFVALUERESULTBOOL_FALSE;
 
-  sprintf(marpaESLIFp->float_fmts, "%%%d.%de", FLT_DIG + 8, FLT_DIG);
-  sprintf(marpaESLIFp->double_fmts, "%%%d.%de", DBL_DIG + 8, DBL_DIG);
-  sprintf(marpaESLIFp->long_double_fmts, "%%%d.%dLe", LDBL_DIG + 8, LDBL_DIG);
+  sprintf(marpaESLIFp->float_fmts, "%%.%dg", FLT_DECIMAL_DIG);
+  sprintf(marpaESLIFp->double_fmts, "%%.%dg", DBL_DECIMAL_DIG);
+  sprintf(marpaESLIFp->long_double_fmts, "%%.%dLg", LDBL_DECIMAL_DIG);
 #ifdef HAVE_LOCALE_H
   marpaESLIFp->lconvp = localeconv();
 #endif
@@ -14016,17 +14012,17 @@ static short _marpaESLIFRecognizer_concat_valueResultCallbackb(void *userDatavp,
       */
       if (contextp->stringb) {
         if (contextp->jsonb) {
-          if (marpaESLIF_isinf(marpaESLIFValueResult.u.f)) {
+          if (MARPAESLIF_ISINF(marpaESLIFValueResult.u.f)) {
             GENERICLOGGER_TRACE(genericLoggerp, "null");
-          } else if (marpaESLIF_isnan(marpaESLIFValueResult.u.f)) {
+          } else if (MARPAESLIF_ISNAN(marpaESLIFValueResult.u.f)) {
             GENERICLOGGER_TRACE(genericLoggerp, "null");
           } else {
             GENERICLOGGER_TRACEF(genericLoggerp, marpaESLIFp->float_fmts, (double) marpaESLIFValueResult.u.f);
           }
         } else if (contextp->jsonfb) {
-          if (marpaESLIF_isinf(marpaESLIFValueResult.u.f)) {
+          if (MARPAESLIF_ISINF(marpaESLIFValueResult.u.f)) {
             GENERICLOGGER_TRACEF(genericLoggerp, "%sInfinity", (marpaESLIFValueResult.u.f < 0) ? "-" : "+");
-          } else if (marpaESLIF_isnan(marpaESLIFValueResult.u.f)) {
+          } else if (MARPAESLIF_ISNAN(marpaESLIFValueResult.u.f)) {
             GENERICLOGGER_TRACE(genericLoggerp, "NaN");
           } else {
             GENERICLOGGER_TRACEF(genericLoggerp, marpaESLIFp->float_fmts, (double) marpaESLIFValueResult.u.f);
@@ -14046,17 +14042,17 @@ static short _marpaESLIFRecognizer_concat_valueResultCallbackb(void *userDatavp,
       */
       if (contextp->stringb) {
         if (contextp->jsonb) {
-          if (marpaESLIF_isinf((float) marpaESLIFValueResult.u.d)) {
+          if (MARPAESLIF_ISINF(marpaESLIFValueResult.u.d)) {
             GENERICLOGGER_TRACE(genericLoggerp, "null");
-          } else if (marpaESLIF_isnan((float) marpaESLIFValueResult.u.d)) {
+          } else if (MARPAESLIF_ISNAN(marpaESLIFValueResult.u.d)) {
             GENERICLOGGER_TRACE(genericLoggerp, "null");
           } else {
             GENERICLOGGER_TRACEF(genericLoggerp, marpaESLIFp->double_fmts, marpaESLIFValueResult.u.d);
           }
         } else if (contextp->jsonfb) {
-          if (marpaESLIF_isinf((float) marpaESLIFValueResult.u.d)) {
+          if (MARPAESLIF_ISINF(marpaESLIFValueResult.u.d)) {
             GENERICLOGGER_TRACEF(genericLoggerp, "%sInfinity", (marpaESLIFValueResult.u.d < 0) ? "-" : "+");
-          } else if (marpaESLIF_isnan((float) marpaESLIFValueResult.u.d)) {
+          } else if (MARPAESLIF_ISNAN(marpaESLIFValueResult.u.d)) {
             GENERICLOGGER_TRACE(genericLoggerp, "NaN");
           } else {
             GENERICLOGGER_TRACEF(genericLoggerp, marpaESLIFp->double_fmts, marpaESLIFValueResult.u.d);
@@ -14231,17 +14227,17 @@ static short _marpaESLIFRecognizer_concat_valueResultCallbackb(void *userDatavp,
       */
       if (contextp->stringb) {
         if (contextp->jsonb) {
-          if (marpaESLIF_isinf((float) marpaESLIFValueResult.u.ld)) {
+          if (MARPAESLIF_ISINF(marpaESLIFValueResult.u.ld)) {
             GENERICLOGGER_TRACE(genericLoggerp, "null");
-          } else if (marpaESLIF_isnan((float) marpaESLIFValueResult.u.ld)) {
+          } else if (MARPAESLIF_ISNAN(marpaESLIFValueResult.u.ld)) {
             GENERICLOGGER_TRACE(genericLoggerp, "null");
           } else {
             GENERICLOGGER_TRACEF(genericLoggerp, marpaESLIFp->long_double_fmts, marpaESLIFValueResult.u.ld);
           }
         } else if (contextp->jsonfb) {
-          if (marpaESLIF_isinf((float) marpaESLIFValueResult.u.ld)) {
+          if (MARPAESLIF_ISINF(marpaESLIFValueResult.u.ld)) {
             GENERICLOGGER_TRACEF(genericLoggerp, "%sInfinity", (marpaESLIFValueResult.u.ld < 0) ? "-" : "+");
-          } else if (marpaESLIF_isnan((float) marpaESLIFValueResult.u.ld)) {
+          } else if (MARPAESLIF_ISNAN(marpaESLIFValueResult.u.ld)) {
             GENERICLOGGER_TRACE(genericLoggerp, "NaN");
           } else {
             GENERICLOGGER_TRACEF(genericLoggerp, marpaESLIFp->long_double_fmts, marpaESLIFValueResult.u.ld);
@@ -15765,6 +15761,9 @@ static short _marpaESLIFRecognizer_value_validb(marpaESLIFRecognizer_t *marpaESL
   short                    rcb;
   size_t                   i;
   marpaESLIFValueResult_t *marpaESLIFValueResultWorkp;
+  float                    f;
+  double                   d;
+  long double              ld;
 
   MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_INC;
   MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "start");
@@ -15800,8 +15799,64 @@ static short _marpaESLIFRecognizer_value_validb(marpaESLIFRecognizer_t *marpaESL
     case MARPAESLIF_VALUE_TYPE_INT:
     case MARPAESLIF_VALUE_TYPE_LONG:
     case MARPAESLIF_VALUE_TYPE_FLOAT:
+      break;
     case MARPAESLIF_VALUE_TYPE_DOUBLE:
+      /* Downgrade if possible to float */
+#ifdef MARPAESLIF_HAVEINF
+      if (MARPAESLIF_ISINF(marpaESLIFValueResultp->u.d)) {
+        marpaESLIFValueResultp->type = MARPAESLIF_VALUE_TYPE_FLOAT;
+        marpaESLIFValueResultp->u.f  = marpaESLIFValueResultp->u.d < 0 ? -MARPAESLIF_INFINITY : MARPAESLIF_INFINITY;
+        break;
+      }
+#endif
+#ifdef MARPAESLIF_HAVENAN
+      if (MARPAESLIF_ISNAN(marpaESLIFValueResultp->u.d)) {
+        marpaESLIFValueResultp->type = MARPAESLIF_VALUE_TYPE_FLOAT;
+        marpaESLIFValueResultp->u.f  = MARPAESLIF_NAN;
+        break;
+      }
+#endif
+      f = (float) marpaESLIFValueResultp->u.d;
+      d = (double) f;
+      if (d == marpaESLIFValueResultp->u.d) {
+        /* No loss of information if we downgrade to a float */
+        marpaESLIFValueResultp->type = MARPAESLIF_VALUE_TYPE_FLOAT;
+        marpaESLIFValueResultp->u.f  = f;
+      }
+      break;
     case MARPAESLIF_VALUE_TYPE_LONG_DOUBLE:
+      /* Downgrade if possible to float or double */
+#ifdef MARPAESLIF_HAVEINF
+      if (MARPAESLIF_ISINF(marpaESLIFValueResultp->u.ld)) {
+        marpaESLIFValueResultp->type = MARPAESLIF_VALUE_TYPE_FLOAT;
+        marpaESLIFValueResultp->u.f  = marpaESLIFValueResultp->u.ld < 0 ? -MARPAESLIF_INFINITY : MARPAESLIF_INFINITY;
+        break;
+      }
+#endif
+#ifdef MARPAESLIF_HAVENAN
+      if (MARPAESLIF_ISNAN(marpaESLIFValueResultp->u.ld)) {
+        marpaESLIFValueResultp->type = MARPAESLIF_VALUE_TYPE_FLOAT;
+        marpaESLIFValueResultp->u.f  = MARPAESLIF_NAN;
+        break;
+      }
+#endif
+      d = (double) marpaESLIFValueResultp->u.ld;
+      ld = (long double) d;
+      if (ld == marpaESLIFValueResultp->u.ld) {
+        /* Try to downgrade again to float */
+        f = (float) marpaESLIFValueResultp->u.ld;
+        ld = (long double) f;
+        if (ld == marpaESLIFValueResultp->u.ld) {
+          /* No loss of information if we downgrade to a float */
+          marpaESLIFValueResultp->type = MARPAESLIF_VALUE_TYPE_FLOAT;
+          marpaESLIFValueResultp->u.f  = f;
+        } else {
+          /* No loss of information if we downgrade to a double */
+          marpaESLIFValueResultp->type = MARPAESLIF_VALUE_TYPE_DOUBLE;
+          marpaESLIFValueResultp->u.d  = d;
+        }
+      }
+      break;
 #ifdef MARPAESLIF_HAVE_LONG_LONG
     case MARPAESLIF_VALUE_TYPE_LONG_LONG:
 #endif
@@ -17370,107 +17425,6 @@ done:
 }
 
 /*****************************************************************************/
-short marpaESLIF_havenan()
-/*****************************************************************************/
-{
-#ifdef MARPAESLIF_HAVENAN
-  return 1;
-#else
-  return 0;
-#endif
-}
-
-/*****************************************************************************/
-short marpaESLIF_isnan(float f)
-/*****************************************************************************/
-{
-#ifdef MARPAESLIF_HAVENAN
-  return MARPAESLIF_ISNAN(f) ? 1 : 0;
-#else
-  return 0;
-#endif
-}
-
-/*****************************************************************************/
-short marpaESLIF_nan(float *fp)
-/*****************************************************************************/
-{
-#ifdef MARPAESLIF_HAVENAN
-  if (fp != NULL) {
-    *fp = MARPAESLIF_NAN;
-  }
-  return 1;
-#else
-#  ifdef ENOTSUP
-  errno = ENOTSUP;
-#  else
-  errno = EINVAL;
-#  endif
-  return 0;
-#endif
-}
-
-/*****************************************************************************/
-short marpaESLIF_haveinf(marpaESLIFValueResultBool_t *marpaESLIFValueResultBoolp)
-/*****************************************************************************/
-{
-#ifdef MARPAESLIF_HAVEINF
-  return 1;
-#else
-  return 0;
-#endif
-}
-
-/*****************************************************************************/
-short marpaESLIF_isinf(float f)
-/*****************************************************************************/
-{
-#ifdef MARPAESLIF_HAVEINF
-  return MARPAESLIF_ISINF(f) ? 1 : 0;
-#else
-  return 0;
-#endif
-}
-
-/*****************************************************************************/
-short marpaESLIF_positive_inf(float *fp)
-/*****************************************************************************/
-{
-#ifdef MARPAESLIF_HAVEINF
-  if (fp != NULL) {
-    *fp = MARPAESLIF_INFINITY;
-  }
-  return 1;
-#else
-#  ifdef ENOTSUP
-  errno = ENOTSUP;
-#  else
-  errno = EINVAL;
-#  endif
-  return 0;
-#endif
-}
-
-/*****************************************************************************/
-short marpaESLIF_negative_inf(float *fp)
-/*****************************************************************************/
-{
-#ifdef MARPAESLIF_HAVEINF
-  if (fp != NULL) {
-    *fp = -MARPAESLIF_INFINITY;
-  }
-  return 1;
-#else
-#  ifdef ENOTSUP
-  errno = ENOTSUP;
-#  else
-  errno = EINVAL;
-#  endif
-  return 0;
-#endif
-}
-
-/*****************************************************************************/
 marpaESLIFGrammar_t *marpaESLIFJSON_decode_newp(marpaESLIF_t *marpaESLIFp, short strictb)
 /*****************************************************************************/
 {
@@ -17512,6 +17466,87 @@ marpaESLIFGrammar_t *marpaESLIFJSON_encode_newp(marpaESLIF_t *marpaESLIFp, short
   return marpaESLIFGrammarp;
 }
 
+/*****************************************************************************/
+short marpaESLIF_isinfb(marpaESLIFValueResult_t *marpaESLIFValueResultp, short *isinfbp)
+/*****************************************************************************/
+{
+  short rcb;
+  short isinfb;
+
+  if (marpaESLIFValueResultp == NULL) {
+    errno = EINVAL;
+    goto err;
+  }
+
+  switch (marpaESLIFValueResultp->type) {
+  case MARPAESLIF_VALUE_TYPE_FLOAT:
+    isinfb = MARPAESLIF_ISINF(marpaESLIFValueResultp->u.f);
+    break;
+  case MARPAESLIF_VALUE_TYPE_DOUBLE:
+    isinfb = MARPAESLIF_ISINF(marpaESLIFValueResultp->u.d);
+    break;
+  case MARPAESLIF_VALUE_TYPE_LONG_DOUBLE:
+    isinfb = MARPAESLIF_ISINF(marpaESLIFValueResultp->u.ld);
+    break;
+  default:
+    isinfb = 0;
+    break;
+  }
+
+  rcb = 1;
+  if (isinfbp != NULL) {
+    *isinfbp = isinfb;
+  }
+  goto done;
+
+ err:
+  rcb = 0;
+
+ done:
+  return rcb;
+}
+
+/*****************************************************************************/
+short marpaESLIF_isnanb(marpaESLIFValueResult_t *marpaESLIFValueResultp, short *isnanbp)
+/*****************************************************************************/
+{
+  short rcb;
+  short isnanb;
+
+  if (marpaESLIFValueResultp == NULL) {
+    errno = EINVAL;
+    goto err;
+  }
+
+  switch (marpaESLIFValueResultp->type) {
+  case MARPAESLIF_VALUE_TYPE_FLOAT:
+    isnanb = MARPAESLIF_ISNAN(marpaESLIFValueResultp->u.f);
+    break;
+  case MARPAESLIF_VALUE_TYPE_DOUBLE:
+    isnanb = MARPAESLIF_ISNAN(marpaESLIFValueResultp->u.d);
+    break;
+  case MARPAESLIF_VALUE_TYPE_LONG_DOUBLE:
+    isnanb = MARPAESLIF_ISNAN(marpaESLIFValueResultp->u.ld);
+    break;
+  default:
+    isnanb = 0;
+    break;
+  }
+
+  rcb = 1;
+  if (isnanbp != NULL) {
+    *isnanbp = isnanb;
+  }
+  goto done;
+
+ err:
+  rcb = 0;
+
+ done:
+  return rcb;
+}
+
 #include "bootstrap.c"
 #include "lua.c"
 #include "json.c"
+#include "floattos.c"

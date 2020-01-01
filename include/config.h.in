@@ -20,6 +20,7 @@
 #cmakedefine HAVE_MATH_H       @HAVE_MATH_H@
 #cmakedefine HAVE_LOCALE_H     @HAVE_LOCALE_H@
 #cmakedefine HAVE_FLOAT_H      @HAVE_FLOAT_H@
+#cmakedefine HAVE_LIMITS_H     @HAVE_LIMITS_H@
 
 #ifdef HAVE_SYS_TYPES_H
 #include <sys/types.h>
@@ -39,6 +40,24 @@ typedef @MARPAESLIF_UINT32_T@ marpaESLIF_uint32_t;
 #cmakedefine C_STRTOLD @C_STRTOLD@
 #cmakedefine C_STRTOD @C_STRTOD@
 #cmakedefine C_STRTOF @C_STRTOF@
+
+#ifndef C_STRTOF
+/* Use down-promotion */
+#  ifdef C_STRTOD
+#    define C_STRTOF(p,e) (float) (C_STRTOD(p,e))
+#  else
+#    ifdef C_STRTOLD
+#      define C_STRTOF(p,e) (float) (C_STRTOLD(p,e))
+#    endif
+#  endif
+#endif
+
+#ifndef C_STRTOD
+/* Use down-promotion */
+#  ifdef C_STRTOLD
+#    define C_STRTOD(p,e) (double) (C_STRTOLD(p,e))
+#  endif
+#endif
 
 #cmakedefine C_HUGE_VAL_REPLACEMENT @C_HUGE_VAL_REPLACEMENT@
 #cmakedefine C_HUGE_VAL @C_HUGE_VAL@

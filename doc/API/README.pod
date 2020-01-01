@@ -2131,51 +2131,45 @@ Please note that the transcoded result I<may> contain a BOM, it is up to the cal
 
 Returns a pointer to the transcoded string on success, C<NULL> on failure.
 
-=head3 C<marpaESLIF_havenan>
+=head3 C<marpaESLIF_isinfb>
 
-  short marpaESLIF_havenan();
+  short marpaESLIF_isinfb(marpaESLIFValueResult_t *marpaESLIFValueResultp, short *isinfbp);
 
-Returns a true value if marpaESLIF support the I<Not-a-Number> special value.
+Returns a true value if floating point number inside C<marpaESLIFValueResultp> is the positive or negative I<Infinity> special value.
 
-=head3 C<marpaESLIF_isnan>
+=head3 C<marpaESLIF_isnanb>
 
-  short marpaESLIF_isnan(float f);
+  short marpaESLIF_isinfb(marpaESLIFValueResult_t *marpaESLIFValueResultp, short *isinfbp);
 
-Returns a true value if argument C<f> is the I<Not-a-Number> special value.
+Returns a true value if floating point number inside C<marpaESLIFValueResultp> is the NaN (I<Not-A-Number>) special value.
 
-=head3 C<marpaESLIF_nan>
+=head3 C<marpaESLIF_ftos>
 
-  short marpaESLIF_nan(float *fp);
+  char *marpaESLIF_ftos(marpaESLIF_t *marpaESLIFp, float f);
 
-Returns a true value if the I<Not-a-Number> special value is supported, and fills C<fp> with it if the later is not C<NULL>.
+Tries to convert accurately C<f> to a string. Result a C<NUL> terminated ASCII string that the user will have to free if success, C<NULL> if failure. This should not be called everytime because it is very slow.
 
-=head3 C<marpaESLIF_haveinf>
+=head3 C<marpaESLIF_dtos>
 
-  short marpaESLIF_haveinf();
+  char *marpaESLIF_dtos(marpaESLIF_t *marpaESLIFp, double d);
 
-Returns a true value if marpaESLIF support the I<Infinity> special value.
+Tries to convert accurately C<d> to a string. Result a C<NUL> terminated ASCII string that the user will have to free if success, C<NULL> if failure. This should not be called everytime because it is very slow.
 
-=head3 C<marpaESLIF_isinf>
+=head3 C<marpaESLIF_ldtos>
 
-  short marpaESLIF_isinf(float f);
+  char *marpaESLIF_ldtos(marpaESLIF_t *marpaESLIFp, long double ld);
 
-Returns a true value if argument C<f> is the positive or negative I<Infinity> special value.
-
-=head3 C<marpaESLIF_positive_inf>
-
-  short marpaESLIF_positive_inf(float *fp);
-
-Returns a true value if the I<Infinity> special value is supported, and fills C<fp> with positive infinity if C<fp> is not C<NULL>.
-
-=head3 C<marpaESLIF_negative_inf>
-
-  short marpaESLIF_negative_inf(float *fp);
-
-Returns a true value if the I<Infinity> special value is supported, and fills C<fp> with negative infinity if C<fp> is not C<NULL>.
+Tries to convert accurately C<ld> to a string. Result a C<NUL> terminated ASCII string that the user will have to free if success, C<NULL> if failure. This should not be called everytime because it is very slow.
 
 =head1 NOTES
 
 =over
+
+=item Float values
+
+when a C<MARPAESLIF_VALUE_TYPE_DOUBLE> or C<MARPAESLIF_VALUE_TYPE_LONG_DOUBLE> type is pushed to the stack, marpaESLIF will always tries to downgrade to C<float>, or C<double> or C<float>, respectively, if there is no loss of information. This is in particular sensible to the C<MARPAESLIF_VALUE_TYPE_LONG_DOUBLE> type, because the latter is not always well supported by all external languages, e.g. Java.
+
+Special values like infinity or NaN, if supported, are trapped will always be overwriten to a C<MARPAESLIF_VALUE_TYPE_FLOAT> type with their corresponding signed or NaN C<float> native representation.
 
 =item Type of internal rules
 

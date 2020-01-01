@@ -181,7 +181,7 @@ static inline float __port_nan(void)
 #      endif
 #    else
 #      if defined(C__FPCLASS_NINF) && defined(C__FPCLASS_PINF)
-#        define MARPAESLIF_ISINF(x) ((C_FPCLASSIFY((double) (x)) == C__FPCLASS_NINF) || (C_FPCLASSIFY((double) (x)) == C__FPCLASS_PINF))
+#        define MARPAESLIF_ISINF(x) ((C_FPCLASSIFY(x) == C__FPCLASS_NINF) || (C_FPCLASSIFY(x) == C__FPCLASS_PINF))
 #        ifdef __GNUC__
 #          warning MARPAESLIF_ISINF fallback using _FPCLASS_NINF and _FPCLASS_PNINF
 #        else
@@ -195,7 +195,7 @@ static inline float __port_nan(void)
 #endif
 
 /* isnan fallback - we use fpclassify. In case it is internall _fpclass, */
-/* that is MSVC specific, we explicitly cast to a double */
+/* that is MSVC specific, cast to double is implicit, and on MSVC long double is a double */
 #ifndef MARPAESLIF_ISNAN
 #  ifdef C_FPCLASSIFY
 #    ifdef C_FP_NAN
@@ -209,7 +209,7 @@ static inline float __port_nan(void)
 #      endif
 #    else
 #      if defined(C__FPCLASS_SNAN) && defined(C__FPCLASS_QNAN)
-#        define MARPAESLIF_ISNAN(x) ((C_FPCLASSIFY((double) (x)) == C__FPCLASS_SNAN) || (C_FPCLASSIFY((double) (x)) == C__FPCLASS_QNAN))
+#        define MARPAESLIF_ISNAN(x) ((C_FPCLASSIFY(x) == C__FPCLASS_SNAN) || (C_FPCLASSIFY(x) == C__FPCLASS_QNAN))
 #        ifdef __GNUC__
 #          warning MARPAESLIF_ISNAN fallback using _FPCLASS_SNAN and _FPCLASS_QNAN
 #        else
@@ -232,6 +232,12 @@ static inline float __port_nan(void)
 #      pragma message("NaN is not fully supported")
 #   endif
 #  endif
+#  ifndef MARPAESLIF_NAN
+#    define MARPAESLIF_NAN 0
+#  endif
+#  ifndef MARPAESLIF_ISNAN
+#    define MARPAESLIF_ISNAN(x) 0
+#  endif
 #endif
 
 #if defined(MARPAESLIF_INFINITY) && defined(MARPAESLIF_ISINF)
@@ -243,6 +249,12 @@ static inline float __port_nan(void)
 #    ifdef _MSC_VER
 #      pragma message("Infinity is not fully supported")
 #   endif
+#  endif
+#  ifndef MARPAESLIF_INFINITY
+#    define MARPAESLIF_INFINITY 0
+#  endif
+#  ifndef MARPAESLIF_ISINF
+#    define MARPAESLIF_ISINF(x) 0
 #  endif
 #endif
 

@@ -29,7 +29,7 @@ public class AppParse  {
 			}
 		}
 
-		if (true) {
+		if (false) {
 			eslifLogger.info("Running over " + nbthread + " threads, using two loggers");
 			
 			for (ithread = 0; ithread < nbthread; ithread++) {

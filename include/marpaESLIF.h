@@ -538,14 +538,16 @@ extern "C" {
   /* ---------------------- */
   /* Special values helpers */
   /* ---------------------- */
-  marpaESLIF_EXPORT short marpaESLIF_havenan();
-  marpaESLIF_EXPORT short marpaESLIF_isnan(float f);
-  marpaESLIF_EXPORT short marpaESLIF_nan(float *fp);
+  marpaESLIF_EXPORT short                         marpaESLIF_isinfb(marpaESLIFValueResult_t *marpaESLIFValueResultp, short *isinfbp);
+  marpaESLIF_EXPORT short                         marpaESLIF_isnanb(marpaESLIFValueResult_t *marpaESLIFValueResultp, short *isnanbp);
 
-  marpaESLIF_EXPORT short marpaESLIF_haveinf();
-  marpaESLIF_EXPORT short marpaESLIF_isinf(float f);
-  marpaESLIF_EXPORT short marpaESLIF_positive_inf(float *fp);
-  marpaESLIF_EXPORT short marpaESLIF_negative_inf(float *fp);
+  /* ------------------------------------- */
+  /* Accurate SLOW stringification helpers */
+  /* ------------------------------------- */
+  /* Returns NULL in case of failure, else an ASCII NUL terminated string that the caller will have to free(). */
+  marpaESLIF_EXPORT char                         *marpaESLIF_ftos(marpaESLIF_t *marpaESLIFp, float f);
+  marpaESLIF_EXPORT char                         *marpaESLIF_dtos(marpaESLIF_t *marpaESLIFp, double d);
+  marpaESLIF_EXPORT char                         *marpaESLIF_ldtos(marpaESLIF_t *marpaESLIFp, long double ld);
 #ifdef __cplusplus
 }
 #endif

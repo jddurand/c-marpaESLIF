@@ -1,5 +1,7 @@
 package org.parser.marpa;
 
+import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.util.HashMap;
 import java.util.concurrent.TimeUnit;
 
@@ -103,54 +105,85 @@ public class AppImportExport implements Runnable {
 
 		hmap.put("inner", hmapinner);
 	      
-		AppLexeme[] inputArray = {
-				new AppCharacter(Character.MIN_VALUE),
-				new AppCharacter(Character.MAX_VALUE),
-				new AppShort(Short.MIN_VALUE),
-				new AppShort(Short.MAX_VALUE),
-				new AppInteger(Integer.MIN_VALUE),
-				new AppInteger(Integer.MAX_VALUE),
-				new AppLong(Long.MIN_VALUE),
-				new AppLong(Long.MAX_VALUE),
-				new AppBoolean(true),
-				new AppBoolean(false),
-				new AppNull(),
-				new AppByteArray(new byte[] { }),
-				new AppByteArray(new byte[] { '\0', '\1'}),
-				new AppString(""),
-				new AppString("test"),
-				new AppArray(
-						new String[] {
-								new String("String No 1"),
-								new String("String No 2")
-						}
-						),
-				new AppHashMap(hmap)
+		Object[] inputArray = {
+				Character.MIN_VALUE,
+				Character.MAX_VALUE,
+				Short.MIN_VALUE,
+				Short.MAX_VALUE,
+				Integer.MIN_VALUE,
+				Integer.MAX_VALUE,
+				Long.MIN_VALUE,
+				Long.MAX_VALUE,
+				true,
+				false,
+				null,
+				new byte[] { },
+				new byte[] { '\0', '\1'},
+				"",
+				"test",
+				new String[] {
+						new String("String No 1"),
+						new String("String No 2")
+				},
+				hmap,
+				0.0f,
+				Float.MAX_VALUE,
+				Float.MIN_VALUE,
+				Float.POSITIVE_INFINITY,
+				Float.NEGATIVE_INFINITY,
+				Float.NaN,
+				Double.MAX_VALUE,
+				Double.MIN_VALUE,
+				Double.POSITIVE_INFINITY,
+				Double.NEGATIVE_INFINITY,
+				Double.NaN
 		};  
 
 		ESLIFGrammar eslifGrammar = null;
 	    ESLIFValue eslifValue = null;
 		try {
 			eslifGrammar = new ESLIFGrammar(eslif, grammar);
-			for (AppLexeme input : inputArray) {
+			for (Object input : inputArray) {
 				ESLIFRecognizerInterface eslifRecognizerInterface = new AppEmptyRecognizer(this.eslifLogger);
 			    ESLIFRecognizer eslifRecognizer = new ESLIFRecognizer(eslifGrammar, eslifRecognizerInterface);
 			    eslifRecognizer.scan(true); // Initial events
-			    eslifRecognizer.lexemeRead("JAVA_INPUT", input.Value(), 1, 1);
+			    eslifRecognizer.lexemeRead("JAVA_INPUT", input, 1, 1);
 			    ESLIFValueInterface eslifValueInterface = new AppValue();
 			    eslifValue = new ESLIFValue(eslifRecognizer, eslifValueInterface);
 			    eslifValue.value();
-			    Object value = eslifValueInterface.getResult();
-			    Object fromValue = input.FromValue(value);
-			    
-			    if (!input.equals(fromValue)) {
-			    	this.eslifLogger.error("KO for " + input + " (value: " + fromValue + ")");
-			    	throw new Exception(input + " != " + value);
-			    } else {
-			    	this.eslifLogger.info("OK for " + input + " (value: " + fromValue + ")");
-			    }
+			    Object result = eslifValueInterface.getResult();
 			    eslifValue.free();
 			    eslifValue = null;
+
+			    if (input == null) {
+			    	if (result == null) {
+				    	eslifLogger.info("OK: null");
+			    	} else {
+					    Describe d = new Describe();
+					    String resultDescribe = d.describe(result);
+				    	Class resultClass = result.getClass();
+						throw new Exception("KO: input=null, result=" + resultDescribe + " (class: " + resultClass + ")");
+			    	}
+			    } else {
+				    Describe d = new Describe();
+				    String inputDescribe = d.describe(input);
+				    String resultDescribe = d.describe(result);
+	
+				    if (inputDescribe.equals(resultDescribe)) {
+				    	eslifLogger.info("OK: " + inputDescribe);
+				    } else {
+				    	/* The only case when we accept discripancy is when result is of class */
+				    	/* BigDecimal or BigInteger and input is not */
+				    	if (  ((result instanceof BigDecimal) || (result instanceof BigInteger)) &&
+				    		! ((input  instanceof BigDecimal) || (input  instanceof BigInteger))) {
+					    	Class resultClass = result.getClass();
+							eslifLogger.warning("OK: input=" + inputDescribe + ", result=" + resultDescribe + " (class: " + resultClass + ")");
+				    	} else {
+					    	Class resultClass = result.getClass();
+							throw new Exception("KO: input=" + inputDescribe + ", result=" + resultDescribe + " (class: " + resultClass + ")");
+				    	}
+			    	}
+			    }
 			}
 		} catch (Exception e) {
 			e.printStackTrace();

@@ -3,7 +3,9 @@
 #include <string.h>
 #include <stdlib.h>
 #include <errno.h>
-#include <limits.h>
+#ifdef HAVE_LIMITS_H
+#  include <limits.h>
+#endif
 
 /* Revisit lua context that refers to values inside the lua interpreter */
 #undef MARPAESLIFLUA_CONTEXT
@@ -1155,6 +1157,13 @@ static short marpaESLIFLua_lua_gettable(int *rcp, lua_State *L, int idx)
 /****************************************************************************/
 {
   return ! luaunpanic_gettable(rcp, L, idx);
+}
+
+/****************************************************************************/
+static short marpaESLIFLua_lua_isinteger(int *rcp, lua_State *L, int idx)
+/****************************************************************************/
+{
+  return ! luaunpanic_isinteger(rcp, L, idx);
 }
 
 /****************************************************************************/
