@@ -15803,57 +15803,57 @@ static short _marpaESLIFRecognizer_value_validb(marpaESLIFRecognizer_t *marpaESL
     case MARPAESLIF_VALUE_TYPE_DOUBLE:
       /* Downgrade if possible to float */
 #ifdef MARPAESLIF_HAVEINF
-      if (MARPAESLIF_ISINF(marpaESLIFValueResultp->u.d)) {
-        marpaESLIFValueResultp->type = MARPAESLIF_VALUE_TYPE_FLOAT;
-        marpaESLIFValueResultp->u.f  = marpaESLIFValueResultp->u.d < 0 ? -MARPAESLIF_INFINITY : MARPAESLIF_INFINITY;
+      if (MARPAESLIF_ISINF(marpaESLIFValueResultWorkp->u.d)) {
+        marpaESLIFValueResultWorkp->type = MARPAESLIF_VALUE_TYPE_FLOAT;
+        marpaESLIFValueResultWorkp->u.f  = marpaESLIFValueResultWorkp->u.d < 0 ? -MARPAESLIF_INFINITY : MARPAESLIF_INFINITY;
         break;
       }
 #endif
 #ifdef MARPAESLIF_HAVENAN
-      if (MARPAESLIF_ISNAN(marpaESLIFValueResultp->u.d)) {
-        marpaESLIFValueResultp->type = MARPAESLIF_VALUE_TYPE_FLOAT;
-        marpaESLIFValueResultp->u.f  = MARPAESLIF_NAN;
+      if (MARPAESLIF_ISNAN(marpaESLIFValueResultWorkp->u.d)) {
+        marpaESLIFValueResultWorkp->type = MARPAESLIF_VALUE_TYPE_FLOAT;
+        marpaESLIFValueResultWorkp->u.f  = MARPAESLIF_NAN;
         break;
       }
 #endif
-      f = (float) marpaESLIFValueResultp->u.d;
+      f = (float) marpaESLIFValueResultWorkp->u.d;
       d = (double) f;
-      if (d == marpaESLIFValueResultp->u.d) {
+      if (d == marpaESLIFValueResultWorkp->u.d) {
         /* No loss of information if we downgrade to a float */
-        marpaESLIFValueResultp->type = MARPAESLIF_VALUE_TYPE_FLOAT;
-        marpaESLIFValueResultp->u.f  = f;
+        marpaESLIFValueResultWorkp->type = MARPAESLIF_VALUE_TYPE_FLOAT;
+        marpaESLIFValueResultWorkp->u.f  = f;
       }
       break;
     case MARPAESLIF_VALUE_TYPE_LONG_DOUBLE:
       /* Downgrade if possible to float or double */
 #ifdef MARPAESLIF_HAVEINF
-      if (MARPAESLIF_ISINF(marpaESLIFValueResultp->u.ld)) {
-        marpaESLIFValueResultp->type = MARPAESLIF_VALUE_TYPE_FLOAT;
-        marpaESLIFValueResultp->u.f  = marpaESLIFValueResultp->u.ld < 0 ? -MARPAESLIF_INFINITY : MARPAESLIF_INFINITY;
+      if (MARPAESLIF_ISINF(marpaESLIFValueResultWorkp->u.ld)) {
+        marpaESLIFValueResultWorkp->type = MARPAESLIF_VALUE_TYPE_FLOAT;
+        marpaESLIFValueResultWorkp->u.f  = marpaESLIFValueResultWorkp->u.ld < 0 ? -MARPAESLIF_INFINITY : MARPAESLIF_INFINITY;
         break;
       }
 #endif
 #ifdef MARPAESLIF_HAVENAN
-      if (MARPAESLIF_ISNAN(marpaESLIFValueResultp->u.ld)) {
-        marpaESLIFValueResultp->type = MARPAESLIF_VALUE_TYPE_FLOAT;
-        marpaESLIFValueResultp->u.f  = MARPAESLIF_NAN;
+      if (MARPAESLIF_ISNAN(marpaESLIFValueResultWorkp->u.ld)) {
+        marpaESLIFValueResultWorkp->type = MARPAESLIF_VALUE_TYPE_FLOAT;
+        marpaESLIFValueResultWorkp->u.f  = MARPAESLIF_NAN;
         break;
       }
 #endif
-      d = (double) marpaESLIFValueResultp->u.ld;
+      d = (double) marpaESLIFValueResultWorkp->u.ld;
       ld = (long double) d;
-      if (ld == marpaESLIFValueResultp->u.ld) {
+      if (ld == marpaESLIFValueResultWorkp->u.ld) {
         /* Try to downgrade again to float */
-        f = (float) marpaESLIFValueResultp->u.ld;
+        f = (float) marpaESLIFValueResultWorkp->u.ld;
         ld = (long double) f;
-        if (ld == marpaESLIFValueResultp->u.ld) {
+        if (ld == marpaESLIFValueResultWorkp->u.ld) {
           /* No loss of information if we downgrade to a float */
-          marpaESLIFValueResultp->type = MARPAESLIF_VALUE_TYPE_FLOAT;
-          marpaESLIFValueResultp->u.f  = f;
+          marpaESLIFValueResultWorkp->type = MARPAESLIF_VALUE_TYPE_FLOAT;
+          marpaESLIFValueResultWorkp->u.f  = f;
         } else {
           /* No loss of information if we downgrade to a double */
-          marpaESLIFValueResultp->type = MARPAESLIF_VALUE_TYPE_DOUBLE;
-          marpaESLIFValueResultp->u.d  = d;
+          marpaESLIFValueResultWorkp->type = MARPAESLIF_VALUE_TYPE_DOUBLE;
+          marpaESLIFValueResultWorkp->u.d  = d;
         }
       }
       break;

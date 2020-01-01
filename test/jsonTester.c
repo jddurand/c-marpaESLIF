@@ -16,7 +16,7 @@ typedef struct marpaESLIFTester_context {
   size_t   inputl;
 } marpaESLIFTester_context_t;
 
-int main() {
+int main(int argc, char **argv) {
   marpaESLIF_t                *marpaESLIFp            = NULL;
   genericLogger_t             *genericLoggerp         = NULL;
   marpaESLIFGrammar_t         *marpaESLIFGrammarJsonp = NULL;
@@ -52,6 +52,10 @@ int main() {
   test_elementp = &(tests[0]);
   
   while (test_elementp->names != NULL) {
+
+    if ((argc == 2) && (strcmp(argv[1], test_elementp->names) != 0)) {
+      goto next;
+    }
 
     marpaESLIFJSONDecodeOption.disallowDupkeysb                = 0;
     marpaESLIFJSONDecodeOption.maxDepthl                       = 0;
@@ -134,6 +138,8 @@ int main() {
 
     free(marpaESLIFTester_context.inputs);
     marpaESLIFTester_context.inputs = NULL;
+
+  next:
     test_elementp++;
   }
 
