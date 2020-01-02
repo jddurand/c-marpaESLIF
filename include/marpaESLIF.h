@@ -535,12 +535,6 @@ extern "C" {
   marpaESLIF_EXPORT marpaESLIFGrammar_t          *marpaESLIFJSON_decode_newp(marpaESLIF_t *marpaESLIFp, short strictb);
   marpaESLIF_EXPORT short                         marpaESLIFJSON_decodeb(marpaESLIFGrammar_t *marpaESLIFGrammarJSONp, marpaESLIFJSONDecodeOption_t *marpaESLIFJSONDecodeOptionp, marpaESLIFRecognizerOption_t *marpaESLIFRecognizerOptionp, marpaESLIFValueOption_t *marpaESLIFValueOptionp);
 
-  /* ---------------------- */
-  /* Special values helpers */
-  /* ---------------------- */
-  marpaESLIF_EXPORT short                         marpaESLIF_isinfb(marpaESLIFValueResult_t *marpaESLIFValueResultp, short *isinfbp);
-  marpaESLIF_EXPORT short                         marpaESLIF_isnanb(marpaESLIFValueResult_t *marpaESLIFValueResultp, short *isnanbp);
-
   /* ------------------------------------- */
   /* Accurate SLOW stringification helpers */
   /* ------------------------------------- */

@@ -5836,8 +5836,6 @@ static short marpaESLIFJava_importb(marpaESLIFValue_t *marpaESLIFValuep, void *u
   jobject                       objectHashMapp;
   jobject                       keyp;
   jobject                       valuep;
-  short                         isinfb;
-  short                         isnanb;
 
   /*
     marpaESLIF Type                    C type    C nb_bits      Java Type
@@ -6010,23 +6008,7 @@ static short marpaESLIFJava_importb(marpaESLIFValue_t *marpaESLIFValuep, void *u
     MARPAESLIFJAVA_PUSH_PTR(marpaESLIFValueContextp->objectStackp, objectHashMapp);
     break;
   case MARPAESLIF_VALUE_TYPE_LONG_DOUBLE:
-    /* No "jlongdouble": we handle +/-Infinity or NaN ourself by downgrading to a jdouble if possible */
-      /* fprintf(stderr, "==> %s: MARPAESLIF_VALUE_TYPE_FLOAT: %f\n", funcs, (double) marpaESLIFValueResultp->u.ld); fflush(stdout); fflush(stderr); */
-    if (! marpaESLIF_isinfb(marpaESLIFValueResultp, &isinfb)) {
-      goto err;
-    }
-    if (isinfb) {
-      MARPAESLIFJAVA_NEW_FLOAT(envp, objectp, marpaESLIFValueResultp->u.ld > 0 ? floatPositiveInfinity : floatNegativeInfinity);
-    } else {
-      if (! marpaESLIF_isnanb(marpaESLIFValueResultp, &isnanb)) {
-        goto err;
-      }
-      if (isnanb) {
-        MARPAESLIFJAVA_NEW_FLOAT(envp, objectp, floatNaN);
-      } else {
-        MARPAESLIFJAVA_IMPORT_NUMBER_DECIMAL(marpaESLIFp, envp, objectp, long double, marpaESLIFValueResultp->u.ld, marpaESLIF_ldtos);
-      }
-    }
+    MARPAESLIFJAVA_IMPORT_NUMBER_DECIMAL(marpaESLIFp, envp, objectp, long double, marpaESLIFValueResultp->u.ld, marpaESLIF_ldtos);
     MARPAESLIFJAVA_PUSH_PTR(marpaESLIFValueContextp->objectStackp, objectp);
     break;
 #ifdef MARPAESLIF_HAVE_LONG_LONG

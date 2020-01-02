@@ -2121,28 +2121,6 @@ Copies the value result at indice C<indicei> into the C<marpaESLIFValueResultp> 
 
 Returns a true value on success, a false value otherwise.
 
-=head3 C<marpaESLIFValue_charconvb>
-
-  char *marpaESLIF_charconvb(marpaESLIF_t *marpaESLIFp, char *toEncodings, char *fromEncodings, char *srcs, size_t srcl, size_t *dstlp);
-
-Helper function that is doing character translation of a buffer starting at C<srcs> and of size C<srcl> bytes. Initial encoding is C<toEncodings>, if C<NULL> it will be guessed. Final encoding is C<toEncodings> and must be set. Final number of bytes is stored if C<dstlp> if it is not NULL.
-
-Please note that the transcoded result I<may> contain a BOM, it is up to the caller to check that.
-
-Returns a pointer to the transcoded string on success, C<NULL> on failure.
-
-=head3 C<marpaESLIF_isinfb>
-
-  short marpaESLIF_isinfb(marpaESLIFValueResult_t *marpaESLIFValueResultp, short *isinfbp);
-
-Returns a true value if floating point number inside C<marpaESLIFValueResultp> is the positive or negative I<Infinity> special value.
-
-=head3 C<marpaESLIF_isnanb>
-
-  short marpaESLIF_isinfb(marpaESLIFValueResult_t *marpaESLIFValueResultp, short *isinfbp);
-
-Returns a true value if floating point number inside C<marpaESLIFValueResultp> is the NaN (I<Not-A-Number>) special value.
-
 =head3 C<marpaESLIF_ftos>
 
   char *marpaESLIF_ftos(marpaESLIF_t *marpaESLIFp, float f);
