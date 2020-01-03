@@ -24,19 +24,9 @@ typedef struct marpaESLIFJSONContext {
   char                          decimalPointc;
 } marpaESLIFJSONContext_t;
 
-/* This grammar MUST be duplicated and transformed through sprintf, with the following arguments:
-   - members's  proper.    Must be "0" if trailingSeparatorb is true, else "1"
-   - elements's proper.    Must be "0" if trailingSeparatorb is true, else "1"
-   - "" if perlCommentb is true,                                      else "#"
-   - "" if cplusplusCommentb is true,                                 else "#"
-
-   We push the encode grammar in level 10 for convenience
-*/
-
 static const char *marpaESLIFJSON_encode_extended_grammars =
   "input ::= INPUT action => ::jsonf\n"
   "INPUT   ~ [\\s\\S]\n"
-  "\n"
   ;
 
 static const char *marpaESLIFJSON_decode_extended_grammars =
@@ -171,7 +161,6 @@ static const char *marpaESLIFJSON_decode_extended_grammars =
 static const char *marpaESLIFJSON_encode_strict_grammars =
   "input ::= INPUT action => ::json\n"
   "INPUT   ~ [\\s\\S]\n"
-  "\n"
   ;
 static const char *marpaESLIFJSON_decode_strict_grammars =
   "#\n"
@@ -379,7 +368,7 @@ static inline marpaESLIFGrammar_t *_marpaESLIFJSON_encode_newp(marpaESLIF_t *mar
   marpaESLIFGrammarOption.encodingl = 5; /* strlen("ASCII") */
 
   /* This is bootstrapped at marpaESLIF creation */
-  marpaESLIFJSONp = _marpaESLIFGrammar_newp(marpaESLIFp, &marpaESLIFGrammarOption, NULL /* marpaESLIfGrammarPreviousp */, 1 /* unsafeb */);
+  marpaESLIFJSONp = _marpaESLIFGrammar_newp(marpaESLIFp, &marpaESLIFGrammarOption, NULL /* marpaESLIFGrammarPreviousp */, 1 /* unsafeb */);
   if (marpaESLIFJSONp == NULL) {
     goto err;
   }
@@ -498,6 +487,7 @@ short marpaESLIFJSON_encodeb(marpaESLIFGrammar_t *marpaESLIFGrammarJSONp, marpaE
   marpaESLIFAlternative_t       marpaESLIFAlternative;
   marpaESLIFRecognizerOption_t  marpaESLIFRecognizerOption;
   marpaESLIFValueOption_t       marpaESLIFValueOption;
+  marpaESLIFJSONContext_t       marpaESLIFJSONContext;
   short                         continueb;
 
   if ((marpaESLIFGrammarJSONp == NULL) || (marpaESLIFValueResultp == NULL) || (marpaESLIFValueOptionp == NULL)) {
@@ -505,10 +495,16 @@ short marpaESLIFJSON_encodeb(marpaESLIFGrammar_t *marpaESLIFGrammarJSONp, marpaE
     goto err;
   }
 
+  marpaESLIFJSONContext.currentDepthl               = 0; /* Not used */
+  marpaESLIFJSONContext.marpaESLIFJSONDecodeOptionp = NULL; /* Not used */
+  marpaESLIFJSONContext.marpaESLIFRecognizerOptionp = NULL; /* Not used */
+  marpaESLIFJSONContext.marpaESLIFValueOptionp      = marpaESLIFValueOptionp;
+  marpaESLIFJSONContext.decimalPointc               = '.'; /* Not used */
+
   marpaESLIFValueOption                           = *marpaESLIFValueOptionp;
-  marpaESLIFValueOption.userDatavp                = NULL;
-  marpaESLIFValueOption.ruleActionResolverp       = NULL;
-  marpaESLIFValueOption.symbolActionResolverp     = NULL;
+  marpaESLIFValueOption.userDatavp                = &marpaESLIFJSONContext;
+  marpaESLIFValueOption.ruleActionResolverp       = NULL; /* Not used */
+  marpaESLIFValueOption.symbolActionResolverp     = NULL; /* We use the native ::transfer action */
   marpaESLIFValueOption.importerp                 = ((marpaESLIFValueOptionp != NULL) && (marpaESLIFValueOptionp->importerp != NULL)) ? _marpaESLIFJSONValueResultImportb : NULL;
   marpaESLIFValueOption.highRankOnlyb             = 1; /* Fixed */
   marpaESLIFValueOption.orderByRankb              = 1; /* Fixed */
@@ -521,11 +517,11 @@ short marpaESLIFJSON_encodeb(marpaESLIFGrammar_t *marpaESLIFGrammarJSONp, marpaE
     goto err;
   }
 
-  /* Read the input */
+  /* Insert a lexeme with length 0 in the input, though length 1 in the grammar */
   marpaESLIFAlternative.lexemes        = "INPUT";
   marpaESLIFAlternative.value          = *marpaESLIFValueResultp;
   marpaESLIFAlternative.grammarLengthl = 1;
-  if (! marpaESLIFRecognizer_lexeme_readb(marpaESLIFRecognizerp, &marpaESLIFAlternative, 1 /* lengthl */)) {
+  if (! marpaESLIFRecognizer_lexeme_readb(marpaESLIFRecognizerp, &marpaESLIFAlternative, 0 /* lengthl */)) {
     goto err;
   }
   marpaESLIFValuep = marpaESLIFValue_newp(marpaESLIFRecognizerp, &marpaESLIFValueOption);
