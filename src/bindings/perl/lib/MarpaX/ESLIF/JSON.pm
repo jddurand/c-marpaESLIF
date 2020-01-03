@@ -2,14 +2,13 @@ use strict;
 use warnings FATAL => 'all';
 
 package MarpaX::ESLIF::JSON;
-use parent qw/MarpaX::ESLIF:Grammar/;
-use MarpaX::ESLIF::JSON::ValueInterface;
+use parent qw/MarpaX::ESLIF::Grammar/;
 
 # ABSTRACT: ESLIF's JSON interface
 
 # AUTHORITY
 
-use vars qw/$VERSION/;
+# VERSION
 
 =head1 DESCRIPTION
 
@@ -114,11 +113,7 @@ Otherwise the output remains conform to the strict JSON grammar: an UTF-8 string
 sub encode {
     my ($self, $value) = @_;
 
-    my $valueInterface = MarpaX::ESLIF::JSON::ValueInterface->new();
-
-    $self->_encode($value, $valueInterface);
-
-    return $valueInterface->getResult()
+    return MarpaX::ESLIF::JSON::_encode($self, $value)
 }
 
 =head1 NOTES

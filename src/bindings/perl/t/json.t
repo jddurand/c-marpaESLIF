@@ -37,6 +37,7 @@ sub setResult          { $_[0]->{result} = $_[1] }
 package main;
 use strict;
 use warnings FATAL => 'all';
+use Data::Scan::Printer;
 use Test::More;
 use Test::More::UTF8;
 use Log::Log4perl qw/:easy/;
@@ -69,6 +70,8 @@ my @inputs = (
     "{\"test\":null, \"test2\":\"hello world\"}",
     "{\"test\":\"1.25\"}",
     "{\"test\":\"1.25e4\"}",
+    "{\"test\":1.25}",
+    "{\"test\":1.25e4}",
     "[]",
     "[
        { 
@@ -148,6 +151,9 @@ isa_ok($eslif, 'MarpaX::ESLIF');
 $log->info('Creating JSON grammar');
 my $GRAMMAR = MarpaX::ESLIF::Grammar->new($eslif, $DATA);
 
+$log->info('Creating JSON native grammar');
+my $eslifJson = MarpaX::ESLIF::JSON->new($eslif);
+
 foreach (0..$#inputs) {
     if (! doparse($GRAMMAR, $inputs[$_], 0)) {
         BAIL_OUT("Failure when parsing:\n$inputs[$_]\n");
@@ -155,6 +161,7 @@ foreach (0..$#inputs) {
 }
 
 my $newFromOrshared = 0;
+
 sub doparse {
     my ($grammar, $inputs, $recursionLevel) = @_;
     my $rc;
@@ -178,6 +185,12 @@ sub doparse {
         BAIL_OUT("Failure with valuation:\n$inputs\n");
     }
     $log->infof('Result: %s', $value);
+    dspp($value);
+    #
+    # Re-encode
+    #
+    my $string = $eslifJson->encode($value);
+    $log->infof('Re-encoded: %s', $string);
 
     $rc = 1;
     goto done;
@@ -205,8 +218,7 @@ __DATA__
 # -----------------------------------------
 # Start is a value that we want stringified
 # -----------------------------------------
-:start ::= value2string
-value2string ::= value action => ::json
+:start ::= value
 
 # -------------------
 # Composite separator

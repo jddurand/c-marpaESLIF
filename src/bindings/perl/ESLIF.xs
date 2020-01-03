@@ -253,7 +253,7 @@ typedef struct MarpaX_ESLIF_Grammar {
   SV                  *Perl_MarpaX_ESLIF_Enginep;    /* inc()/dec()'ed to ensure proper DESTROY order */
   marpaESLIFGrammar_t *marpaESLIFGrammarp;
   marpaESLIF_t        *marpaESLIFp;
-} MarpaX_ESLIF_Grammar_t;
+} MarpaX_ESLIF_Grammar_t, MarpaX_ESLIF_JSON_t;
 
 /* Recognizer context */
 typedef struct MarpaX_ESLIF_Recognizer {
@@ -298,6 +298,7 @@ typedef struct MarpaX_ESLIF_Value {
 /* For typemap */
 typedef MarpaX_ESLIF_Engine_t     *MarpaX_ESLIF_Engine;
 typedef MarpaX_ESLIF_Grammar_t    *MarpaX_ESLIF_Grammar;
+typedef MarpaX_ESLIF_JSON_t       *MarpaX_ESLIF_JSON;
 typedef MarpaX_ESLIF_Recognizer_t *MarpaX_ESLIF_Recognizer;
 typedef MarpaX_ESLIF_Value_t      *MarpaX_ESLIF_Value;
 
@@ -353,7 +354,7 @@ static short                           marpaESLIFPerl_is_Types__Standard(pTHX_ S
 static short                           marpaESLIFPerl_is_bool(pTHX_ SV *svp, int typei);
 static SV                             *marpaESLIFPerl_true(pTHX_ void *notusedp);
 static SV                             *marpaESLIFPerl_false(pTHX_ void *notusedp);
-static void                            marpaESLIFPerl_stack_setv(pTHX_ marpaESLIF_t *marpaESLIFp, marpaESLIFValue_t *marpaESLIFValuep, short resulti, SV *svp, marpaESLIFValueResult_t *marpaESLIFValueResultOutputp);
+static void                            marpaESLIFPerl_stack_setv(pTHX_ marpaESLIF_t *marpaESLIFp, marpaESLIFValue_t *marpaESLIFValuep, int resulti, SV *svp, marpaESLIFValueResult_t *marpaESLIFValueResultOutputp, short incb);
 
 /* Static constants */
 static const char   *UTF8s = "UTF-8";
@@ -1038,7 +1039,7 @@ static short marpaESLIFPerl_valueRuleCallbackb(void *userDatavp, marpaESLIFValue
     av_undef(list);
   }
 
-  marpaESLIFPerl_stack_setv(aTHX_ Perl_MarpaX_ESLIF_Valuep->marpaESLIFp, marpaESLIFValuep, resulti, actionResult, NULL /* marpaESLIFValueResultOutputp */);
+  marpaESLIFPerl_stack_setv(aTHX_ Perl_MarpaX_ESLIF_Valuep->marpaESLIFp, marpaESLIFValuep, resulti, actionResult, NULL /* marpaESLIFValueResultOutputp */, 0 /* incb */);
 
   return 1;
 }
@@ -1068,7 +1069,7 @@ static short marpaESLIFPerl_valueSymbolCallbackb(void *userDatavp, marpaESLIFVal
   /* This will decrement by one the inner element reference count */
   av_undef(list);
 
-  marpaESLIFPerl_stack_setv(aTHX_ Perl_MarpaX_ESLIF_Valuep->marpaESLIFp, marpaESLIFValuep, resulti, actionResult, NULL /* marpaESLIFValueResultOutputp */);
+  marpaESLIFPerl_stack_setv(aTHX_ Perl_MarpaX_ESLIF_Valuep->marpaESLIFp, marpaESLIFValuep, resulti, actionResult, NULL /* marpaESLIFValueResultOutputp */, 0 /* incb */);
 
   return 1;
 }
@@ -1276,7 +1277,7 @@ static void marpaESLIFPerl_valueContextFreev(pTHX_ MarpaX_ESLIF_Value_t *Perl_Ma
     }
 
     /* Decrement dependencies */
-    MARPAESLIFPERL_REFCNT_DEC(Perl_valueInterfacep);
+    MARPAESLIFPERL_REFCNT_DEC(Perl_valueInterfacep);          /* NULL in case of JSON decode */
     MARPAESLIFPERL_REFCNT_DEC(Perl_MarpaX_ESLIF_Recognizerp); /* Note that Perl_MarpaX_ESLIF_Recognizerp is NULL in case of parse() */
     MARPAESLIFPERL_REFCNT_DEC(Perl_MarpaX_ESLIF_Grammarp);
 
@@ -1391,15 +1392,15 @@ static void marpaESLIFPerl_valueContextInitv(pTHX_ marpaESLIF_t *marpaESLIFp, SV
   /* Perl_MarpaX_ESLIF_Recognizerp is NULL in the context of parseb() */
   Perl_MarpaX_ESLIF_Valuep->Perl_MarpaX_ESLIF_Recognizerp = (Perl_MarpaX_ESLIF_Recognizerp != NULL) ? newRV(SvRV(Perl_MarpaX_ESLIF_Recognizerp)) : NULL;
   Perl_MarpaX_ESLIF_Valuep->Perl_MarpaX_ESLIF_Grammarp    = newRV(SvRV(Perl_MarpaX_ESLIF_Grammarp));
-  Perl_MarpaX_ESLIF_Valuep->Perl_valueInterfacep          = newRV(SvRV(Perl_valueInterfacep));
+  Perl_MarpaX_ESLIF_Valuep->Perl_valueInterfacep          = (Perl_valueInterfacep != NULL) ? newRV(SvRV(Perl_valueInterfacep)) : NULL;
   Perl_MarpaX_ESLIF_Valuep->actions                       = NULL;
   Perl_MarpaX_ESLIF_Valuep->previous_strings              = NULL;
   Perl_MarpaX_ESLIF_Valuep->marpaESLIFValuep              = NULL;
-  Perl_MarpaX_ESLIF_Valuep->canSetSymbolNameb             = marpaESLIFPerl_canb(aTHX_ Perl_valueInterfacep, "setSymbolName");
-  Perl_MarpaX_ESLIF_Valuep->canSetSymbolNumberb           = marpaESLIFPerl_canb(aTHX_ Perl_valueInterfacep, "setSymbolNumber");
-  Perl_MarpaX_ESLIF_Valuep->canSetRuleNameb               = marpaESLIFPerl_canb(aTHX_ Perl_valueInterfacep, "setRuleName");
-  Perl_MarpaX_ESLIF_Valuep->canSetRuleNumberb             = marpaESLIFPerl_canb(aTHX_ Perl_valueInterfacep, "setRuleNumber");
-  Perl_MarpaX_ESLIF_Valuep->canSetGrammarb                = marpaESLIFPerl_canb(aTHX_ Perl_valueInterfacep, "setGrammar");
+  Perl_MarpaX_ESLIF_Valuep->canSetSymbolNameb             = (Perl_valueInterfacep != NULL) ? marpaESLIFPerl_canb(aTHX_ Perl_valueInterfacep, "setSymbolName") : 0;
+  Perl_MarpaX_ESLIF_Valuep->canSetSymbolNumberb           = (Perl_valueInterfacep != NULL) ? marpaESLIFPerl_canb(aTHX_ Perl_valueInterfacep, "setSymbolNumber") : 0;
+  Perl_MarpaX_ESLIF_Valuep->canSetRuleNameb               = (Perl_valueInterfacep != NULL) ? marpaESLIFPerl_canb(aTHX_ Perl_valueInterfacep, "setRuleName") : 0;
+  Perl_MarpaX_ESLIF_Valuep->canSetRuleNumberb             = (Perl_valueInterfacep != NULL) ? marpaESLIFPerl_canb(aTHX_ Perl_valueInterfacep, "setRuleNumber") : 0;
+  Perl_MarpaX_ESLIF_Valuep->canSetGrammarb                = (Perl_valueInterfacep != NULL) ? marpaESLIFPerl_canb(aTHX_ Perl_valueInterfacep, "setGrammar") : 0;
   Perl_MarpaX_ESLIF_Valuep->symbols                       = NULL;
   Perl_MarpaX_ESLIF_Valuep->symboli                       = -1;
   Perl_MarpaX_ESLIF_Valuep->rules                         = NULL;
@@ -2321,7 +2322,7 @@ static SV *marpaESLIFPerl_false(pTHX_ void *notusedp)
 }
 
 /*****************************************************************************/
-static void marpaESLIFPerl_stack_setv(pTHX_ marpaESLIF_t *marpaESLIFp, marpaESLIFValue_t *marpaESLIFValuep, short resulti, SV *svp, marpaESLIFValueResult_t *marpaESLIFValueResultOutputp)
+static void marpaESLIFPerl_stack_setv(pTHX_ marpaESLIF_t *marpaESLIFp, marpaESLIFValue_t *marpaESLIFValuep, int resulti, SV *svp, marpaESLIFValueResult_t *marpaESLIFValueResultOutputp, short incb)
 /*****************************************************************************/
 /* Take care: IF resulti is >= 0, then marpaESLIFValuep must be != NULL      */
 /*****************************************************************************/
@@ -2368,6 +2369,9 @@ static void marpaESLIFPerl_stack_setv(pTHX_ marpaESLIF_t *marpaESLIFp, marpaESLI
   while (marpaESLIFPerl_GENERICSTACK_USED(marpaESLIFValueResultStackp) > 0) {
     marpaESLIFValueResultp = (marpaESLIFValueResult_t *) marpaESLIFPerl_GENERICSTACK_POP_PTR(marpaESLIFValueResultStackp);
     svp = (SV *) marpaESLIFPerl_GENERICSTACK_POP_PTR(svStackp);
+    if (incb) {
+      MARPAESLIFPERL_REFCNT_INC(svp);
+    }
     typei = marpaESLIFPerl_getTypei(aTHX_ svp);
 
     eslifb = 0;
@@ -2689,6 +2693,90 @@ OUTPUT:
 
 =for comment
   /* ======================================================================= */
+  /* MarpaX::ESLIF::JSON                                                     */
+  /* ======================================================================= */
+=cut
+
+MODULE = MarpaX::ESLIF            PACKAGE = MarpaX::ESLIF::JSON
+
+PROTOTYPES: ENABLE
+
+=for comment
+  /* ----------------------------------------------------------------------- */
+  /* MarpaX::ESLIF::JSON::_new                                            */
+  /* ----------------------------------------------------------------------- */
+=cut
+
+MarpaX_ESLIF_JSON
+_new(Perl_packagep, Perl_MarpaX_ESLIF_Enginep, Perl_strictp)
+  SV   *Perl_packagep;
+  void *Perl_MarpaX_ESLIF_Enginep;
+  SV   *Perl_strictp;
+PREINIT:
+  static const char           *funcs          = "MarpaX::ESLIF::JSON::_new";
+CODE:
+  marpaESLIF_t                *marpaESLIFp    = ((MarpaX_ESLIF_Engine_t *)Perl_MarpaX_ESLIF_Enginep)->marpaESLIFp;
+  MarpaX_ESLIF_JSON_t         *Perl_MarpaX_ESLIF_JSONp;
+  marpaESLIFGrammar_t         *marpaESLIFGrammarp;
+
+  Newx(Perl_MarpaX_ESLIF_JSONp, 1, MarpaX_ESLIF_JSON_t);
+  marpaESLIFPerl_grammarContextInitv(aTHX_ marpaESLIFp, ST(1) /* SV of eslif */, Perl_MarpaX_ESLIF_JSONp);
+
+  marpaESLIFGrammarp = marpaESLIFJSON_encode_newp(marpaESLIFp, SvTRUE(Perl_strictp) ? 1 : 0);
+  if (marpaESLIFGrammarp == NULL) {
+    int save_errno = errno;
+    MARPAESLIFPERL_CROAKF("marpaESLIFJSON_encode_newp failure, %s", strerror(save_errno));
+  }
+  Perl_MarpaX_ESLIF_JSONp->marpaESLIFGrammarp = marpaESLIFGrammarp;
+
+  RETVAL = Perl_MarpaX_ESLIF_JSONp;
+OUTPUT:
+  RETVAL
+
+=for comment
+  /* ----------------------------------------------------------------------- */
+  /* MarpaX::ESLIF::JSON::_encode                                            */
+  /* ----------------------------------------------------------------------- */
+=cut
+
+SV *
+_encode(Perl_MarpaX_ESLIF_JSONp, Perl_inputp)
+  MarpaX_ESLIF_JSON  Perl_MarpaX_ESLIF_JSONp;
+  SV                *Perl_inputp;
+PREINIT:
+  static const char *funcs = "MarpaX::ESLIF::JSON::_encode";
+CODE:
+  marpaESLIFValueOption_t       marpaESLIFValueOption;
+  MarpaX_ESLIF_Value_t          marpaESLIFValueContext;
+  marpaESLIFValueResult_t       marpaESLIFValueResult;
+  SV                           *svp;
+
+  marpaESLIFPerl_valueContextInitv(aTHX_ Perl_MarpaX_ESLIF_JSONp->marpaESLIFp, NULL /* No recognizer */, ST(0) /* SV of grammar */, NULL /* SV of value interface */, &marpaESLIFValueContext);
+
+  marpaESLIFValueOption.userDatavp             = &marpaESLIFValueContext;
+  marpaESLIFValueOption.importerp              = marpaESLIFPerl_importb;
+
+  /* Create a marpaESLIFValueResult from Perl_inputp */
+  marpaESLIFPerl_stack_setv(aTHX_ Perl_MarpaX_ESLIF_JSONp->marpaESLIFp, NULL /* marpaESLIFValuep */, -1 /* resulti */, Perl_inputp, &marpaESLIFValueResult, 1 /* incb */);
+  if (! marpaESLIFJSON_encodeb(Perl_MarpaX_ESLIF_JSONp->marpaESLIFGrammarp, &marpaESLIFValueResult, &marpaESLIFValueOption)) {
+    marpaESLIFPerl_valueContextFreev(aTHX_ &marpaESLIFValueContext, 1 /* onStackb */);
+    MARPAESLIFPERL_CROAK("marpaESLIFJSON_encodeb failure");
+  }
+
+  /* Propagate the result to Perl */
+  if (marpaESLIFPerl_GENERICSTACK_USED(&(marpaESLIFValueContext.valueStack)) != 1) {
+    MARPAESLIFPERL_CROAKF("Internal value stack is %d instead of 1", marpaESLIFPerl_GENERICSTACK_USED(&(marpaESLIFValueContext.valueStack)));
+  }
+  svp = (SV *) marpaESLIFPerl_GENERICSTACK_POP_PTR(&(marpaESLIFValueContext.valueStack));
+
+  marpaESLIFPerl_valueContextFreev(aTHX_ &marpaESLIFValueContext, 1 /* onStackb */);
+
+  RETVAL = svp;
+OUTPUT:
+  RETVAL
+
+=for comment
+  /* ======================================================================= */
   /* MarpaX::ESLIF::Grammar                                                  */
   /* ======================================================================= */
 =cut
@@ -2767,7 +2855,7 @@ CODE:
   marpaESLIFPerl_grammarContextInitv(aTHX_ marpaESLIFp, ST(1) /* SV of eslif */, Perl_MarpaX_ESLIF_Grammarp);
 
   /* We use the "unsafe" version because we made sure in ESLIF.pm that marpaESLIFp was reallocated at every new interpreter (== perl thread) */
-  marpaESLIFGrammarp = marpaESLIFGrammar_unsafe_newp(((MarpaX_ESLIF_Engine) Perl_MarpaX_ESLIF_Enginep)->marpaESLIFp, &marpaESLIFGrammarOption);
+  marpaESLIFGrammarp = marpaESLIFGrammar_unsafe_newp(marpaESLIFp, &marpaESLIFGrammarOption);
   if (marpaESLIFGrammarp == NULL) {
     int save_errno = errno;
     marpaESLIFPerl_grammarContextFreev(aTHX_ Perl_MarpaX_ESLIF_Grammarp);
@@ -3930,12 +4018,10 @@ CODE:
   if (grammarLength <= 0) {
     MARPAESLIFPERL_CROAK("grammarLength cannot be <= 0");
   }
-  /* We maintain lifetime of this object - this may be REFCNT_DEC by marpaESLIFPerl_stack_setv() */
-  MARPAESLIFPERL_REFCNT_INC(svp);
 
   marpaESLIFAlternative.lexemes        = (char *) names;
   marpaESLIFAlternative.grammarLengthl = (size_t) grammarLength;
-  marpaESLIFPerl_stack_setv(aTHX_ Perl_MarpaX_ESLIF_Recognizerp->marpaESLIFp, NULL /* marpaESLIFValuep */, -1 /* resulti */, svp, &(marpaESLIFAlternative.value));
+  marpaESLIFPerl_stack_setv(aTHX_ Perl_MarpaX_ESLIF_Recognizerp->marpaESLIFp, NULL /* marpaESLIFValuep */, -1 /* resulti */, svp, &(marpaESLIFAlternative.value), 1 /* incb */);
 
   RETVAL = (bool) marpaESLIFRecognizer_lexeme_alternativeb(Perl_MarpaX_ESLIF_Recognizerp->marpaESLIFRecognizerp, &marpaESLIFAlternative);
 OUTPUT:
@@ -3992,12 +4078,10 @@ CODE:
   if (grammarLength <= 0) {
     MARPAESLIFPERL_CROAK("grammarLength cannot be <= 0");
   }
-  /* We maintain lifetime of this object - this may be REFCNT_DEC by marpaESLIFPerl_stack_setv() */
-  MARPAESLIFPERL_REFCNT_INC(svp);
 
   marpaESLIFAlternative.lexemes        = (char *) names;
   marpaESLIFAlternative.grammarLengthl = (size_t) grammarLength;
-  marpaESLIFPerl_stack_setv(aTHX_ Perl_MarpaX_ESLIF_Recognizerp->marpaESLIFp, NULL /* marpaESLIFValuep */, -1 /* resulti */, svp, &(marpaESLIFAlternative.value));
+  marpaESLIFPerl_stack_setv(aTHX_ Perl_MarpaX_ESLIF_Recognizerp->marpaESLIFp, NULL /* marpaESLIFValuep */, -1 /* resulti */, svp, &(marpaESLIFAlternative.value), 1 /* incb */);
 
   RETVAL = (bool) marpaESLIFRecognizer_lexeme_readb(Perl_MarpaX_ESLIF_Recognizerp->marpaESLIFRecognizerp, &marpaESLIFAlternative, (size_t) length);
 OUTPUT:
