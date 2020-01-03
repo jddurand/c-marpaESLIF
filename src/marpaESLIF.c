@@ -8941,7 +8941,7 @@ static inline marpaESLIFRecognizer_t *_marpaESLIFRecognizer_newp(marpaESLIFGramm
   }
 
   if (marpaESLIFRecognizerp->marpaESLIF_streamp == NULL) {
-    if (! _marpaESLIF_stream_initb(marpaESLIFRecognizerp, marpaESLIFRecognizerOptionp->bufsizl, marpaESLIFRecognizerOptionp->buftriggerperci, fakeb /* eofb */, utfb)) {
+    if (! _marpaESLIF_stream_initb(marpaESLIFRecognizerp, marpaESLIFRecognizerOptionp->bufsizl, marpaESLIFRecognizerOptionp->buftriggerperci, (marpaESLIFRecognizerOptionp->readerCallbackp != NULL) ? fakeb : 1 /* eofb */, utfb)) {
       goto err;
     }
     marpaESLIFRecognizerp->marpaESLIF_streamp = &(marpaESLIFRecognizerp->_marpaESLIF_stream);
@@ -13104,7 +13104,7 @@ static inline short _marpaESLIFValueResult_stack_i_setb(marpaESLIF_t *marpaESLIF
 
   if (marpaESLIFValueResultOrigp == NULL) {
     /* Look at original value */
-  /* ---------------------- */
+    /* ---------------------- */
     if (indicei >= GENERICSTACK_USED(valueResultStackp)) {
       /* Replacement on something that does not yet exist - this is not illegal, we set UNDEF */
       GENERICSTACK_SET_CUSTOM(valueResultStackp, marpaESLIFValueResultUndef, indicei);
@@ -17464,6 +17464,92 @@ marpaESLIFGrammar_t *marpaESLIFJSON_encode_newp(marpaESLIF_t *marpaESLIFp, short
 
  done:
   return marpaESLIFGrammarp;
+}
+
+/*****************************************************************************/
+short marpaESLIFValueResult_resetb(marpaESLIF_t *marpaESLIFp, marpaESLIFValueResult_t *marpaESLIFValueResultp)
+/*****************************************************************************/
+{
+  genericStack_t  *beforePtrStackp = NULL;
+  genericHash_t   *beforePtrHashp  = NULL;
+  genericHash_t   *afterPtrHashp   = NULL;
+  short            rcb;
+  genericStack_t  _beforePtrStack;
+  genericHash_t   _beforePtrHash;
+  genericHash_t   _afterPtrHash;
+
+  if ((marpaESLIFp == NULL) || (marpaESLIFValueResultp == NULL)) {
+    errno = EINVAL;
+    goto err;
+  }
+
+  beforePtrStackp = &(_beforePtrStack);
+  GENERICSTACK_INIT(beforePtrStackp);
+  if (GENERICSTACK_ERROR(beforePtrStackp)) {
+    MARPAESLIF_ERRORF(marpaESLIFp, "beforePtrStackp initialization failure, %s", strerror(errno));
+    beforePtrStackp = NULL;
+    goto err;
+  }
+
+  beforePtrHashp = &(_beforePtrHash);
+  GENERICHASH_INIT_ALL(beforePtrHashp,
+                       _marpaESLIF_ptrhashi,
+                       NULL, /* keyCmpFunctionp */
+                       NULL, /* keyCopyFunctionp */
+                       NULL, /* keyFreeFunctionp */
+                       NULL, /* valCopyFunctionp */
+                       NULL, /* valFreeFunctionp */
+                       MARPAESLIF_HASH_SIZE,
+                       0 /* wantedSubSize */);
+  if (GENERICHASH_ERROR(beforePtrHashp)) {
+    MARPAESLIF_ERRORF(marpaESLIFp, "beforePtrHashp init failure, %s", strerror(errno));
+    beforePtrHashp = NULL;
+    goto err;
+  }
+
+  afterPtrHashp = &(_afterPtrHash);
+  GENERICHASH_INIT_ALL(afterPtrHashp,
+                       _marpaESLIF_ptrhashi,
+                       NULL, /* keyCmpFunctionp */
+                       NULL, /* keyCopyFunctionp */
+                       NULL, /* keyFreeFunctionp */
+                       NULL, /* valCopyFunctionp */
+                       NULL, /* valFreeFunctionp */
+                       MARPAESLIF_HASH_SIZE,
+                       0 /* wantedSubSize */);
+  if (GENERICHASH_ERROR(afterPtrHashp)) {
+    MARPAESLIF_ERRORF(marpaESLIFp, "afterPtrHashp init failure, %s", strerror(errno));
+    afterPtrHashp = NULL;
+    goto err;
+  }
+
+  rcb = _marpaESLIFValueResult_stack_i_setb(marpaESLIFp,
+                                            NULL, /* valueResultStackp */
+                                            -1, /* indicei */
+                                            NULL, /* marpaESLIFValueResultp */
+                                            0, /* forgetb */
+                                            beforePtrStackp,
+                                            beforePtrHashp,
+                                            afterPtrHashp,
+                                            marpaESLIFValueResultp);
+
+  goto done;
+
+ err:
+  rcb = 0;
+
+ done:
+  if (afterPtrHashp != NULL) {
+    GENERICHASH_RESET(afterPtrHashp, NULL);
+  }
+  if (beforePtrHashp != NULL) {
+    GENERICHASH_RESET(beforePtrHashp, NULL);
+  }
+  if (beforePtrStackp != NULL) {
+    GENERICSTACK_RESET(beforePtrStackp);
+  }
+
+  return rcb;
 }
 
 #include "bootstrap.c"
