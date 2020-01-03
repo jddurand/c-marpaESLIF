@@ -1200,7 +1200,7 @@ User context, propagated as-is to reader callback.
 
 =item C<readerCallbackp>
 
-Pointer to the reader callback. Must not be C<NULL>.
+Pointer to the reader callback. If C<NULL>, the stream will be considered complete (i.e. it reached end-of-file) at the very beginning.
 
 =item C<disableThresholdb>
 
