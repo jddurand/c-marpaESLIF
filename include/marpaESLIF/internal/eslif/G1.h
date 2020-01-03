@@ -94,6 +94,7 @@ typedef enum bootstrap_grammar_G1_enum {
   G1_TERMINAL___TRUE,
   G1_TERMINAL___FALSE,
   G1_TERMINAL___JSON,
+  G1_TERMINAL___JSONF,
   G1_TERMINAL___ROW,
   G1_TERMINAL___TABLE,
   G1_TERMINAL_IF_ACTION,
@@ -985,6 +986,14 @@ bootstrap_grammar_terminal_t bootstrap_grammar_G1_terminals[] = {
     NULL, NULL
 #endif
   },
+  { G1_TERMINAL___JSONF, MARPAESLIF_TERMINAL_TYPE_STRING, NULL,
+    "'::jsonf'",
+#ifndef MARPAESLIF_NTRACE
+    "::jsonf", "::json"
+#else
+    NULL, NULL
+#endif
+  },
   { G1_TERMINAL___ROW, MARPAESLIF_TERMINAL_TYPE_STRING, NULL,
     "'::row'",
 #ifndef MARPAESLIF_NTRACE
@@ -1392,6 +1401,7 @@ bootstrap_grammar_rule_t bootstrap_grammar_G1_rules[] = {
   { G1_META_ACTION_NAME,                      G1_RULE_ACTION_NAME_9,                          MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_TERMINAL___TRUE                           }, -1,                        -1,      -1,              0, G1_ACTION_ACTION_NAME_9 },
   { G1_META_ACTION_NAME,                      G1_RULE_ACTION_NAME_10,                         MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_TERMINAL___FALSE                          }, -1,                        -1,      -1,              0, G1_ACTION_ACTION_NAME_10 },
   { G1_META_ACTION_NAME,                      G1_RULE_ACTION_NAME_11,                         MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_TERMINAL___JSON                           }, -1,                        -1,      -1,              0, G1_ACTION_ACTION_NAME_11 },
+  { G1_META_ACTION_NAME,                      G1_RULE_ACTION_NAME_11,                         MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_TERMINAL___JSONF                          }, -1,                        -1,      -1,              0, G1_ACTION_ACTION_NAME_11 },
   { G1_META_ACTION_NAME,                      G1_RULE_ACTION_NAME_12,                         MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_TERMINAL___ROW                            }, -1,                        -1,      -1,              0, G1_ACTION_ACTION_NAME_12 },
   { G1_META_ACTION_NAME,                      G1_RULE_ACTION_NAME_13,                         MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_TERMINAL___TABLE                          }, -1,                        -1,      -1,              0, G1_ACTION_ACTION_NAME_13 },
   { G1_META_ACTION_NAME,                      G1_RULE_ACTION_NAME_14,                         MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_TERMINAL___AST                            }, -1,                        -1,      -1,              0, G1_ACTION_ACTION_NAME_14 },
@@ -1405,6 +1415,7 @@ bootstrap_grammar_rule_t bootstrap_grammar_G1_rules[] = {
   { G1_META_SYMBOLACTION_NAME,                G1_RULE_SYMBOLACTION_NAME_8,                    MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_TERMINAL___TRUE                           }, -1,                        -1,      -1,              0, G1_ACTION_SYMBOLACTION_NAME_8 },
   { G1_META_SYMBOLACTION_NAME,                G1_RULE_SYMBOLACTION_NAME_9,                    MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_TERMINAL___FALSE                          }, -1,                        -1,      -1,              0, G1_ACTION_SYMBOLACTION_NAME_9 },
   { G1_META_SYMBOLACTION_NAME,                G1_RULE_SYMBOLACTION_NAME_10,                   MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_TERMINAL___JSON                           }, -1,                        -1,      -1,              0, G1_ACTION_SYMBOLACTION_NAME_10 },
+  { G1_META_SYMBOLACTION_NAME,                G1_RULE_SYMBOLACTION_NAME_10,                   MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_TERMINAL___JSONF                          }, -1,                        -1,      -1,              0, G1_ACTION_SYMBOLACTION_NAME_10 },
   { G1_META_IFACTION_NAME,                    G1_RULE_IFACTION_NAME_1,                        MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_RESTRICTED_ASCII_GRAPH_NAME          }, -1,                        -1,      -1,              0, G1_ACTION_IFACTION_NAME_1 },
   { G1_META_IFACTION_NAME,                    G1_RULE_IFACTION_NAME_2,                        MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_LUA_ACTION_NAME                      }, -1,                        -1,      -1,              0, G1_ACTION_IFACTION_NAME_2 },
   /*
