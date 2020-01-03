@@ -527,12 +527,25 @@ extern "C" {
 
   marpaESLIF_EXPORT void                          marpaESLIF_freev(marpaESLIF_t *marpaESLIFp);
 
+  /* Helper routine that resets correctly a marpaESLIFValueResult - rarelly needed */
+  marpaESLIF_EXPORT short                         marpaESLIFValueResult_resetb(marpaESLIF_t *marpaESLIFp, marpaESLIFValueResult_t *marpaESLIFValueResultp);
+
   /* --------------------- */
   /* Embedded JSON support */
   /* --------------------- */
   marpaESLIF_EXPORT marpaESLIFGrammar_t          *marpaESLIFJSON_encode_newp(marpaESLIF_t *marpaESLIFp, short strictb);
+  /* When encoding, marpaESLIFValueResultp is injected as a Lexeme, so, unless the caller sets the shallow flag to a true value */
+  /* ESLIF will automatically frees marpaESLIFValueResultp content. */
   marpaESLIF_EXPORT short                         marpaESLIFJSON_encodeb(marpaESLIFGrammar_t *marpaESLIFGrammarJSONp, marpaESLIFValueResult_t *marpaESLIFValueResultp, marpaESLIFValueOption_t *marpaESLIFValueOptionp);
   marpaESLIF_EXPORT marpaESLIFGrammar_t          *marpaESLIFJSON_decode_newp(marpaESLIF_t *marpaESLIFp, short strictb);
+  /* For decoding, a marpaESLIFValueOption_t* argument is required. In it the following settings will be ignored, */
+  /* being overwriten by marpaESLIFJSON_decodeb: */
+  /* symbolActionResolverp - We use the default "::transfer" */
+  /* highRankOnlyb         - Fixed to 1 */
+  /* orderByRankb          - Fixed to 1 */
+  /* ambiguousb            - Fixed to 0 */
+  /* nullb                 - Fixed to 0 */
+  /* maxParsesi            - Fixed to 0 */
   marpaESLIF_EXPORT short                         marpaESLIFJSON_decodeb(marpaESLIFGrammar_t *marpaESLIFGrammarJSONp, marpaESLIFJSONDecodeOption_t *marpaESLIFJSONDecodeOptionp, marpaESLIFRecognizerOption_t *marpaESLIFRecognizerOptionp, marpaESLIFValueOption_t *marpaESLIFValueOptionp);
 
   /* ------------------------------------- */
