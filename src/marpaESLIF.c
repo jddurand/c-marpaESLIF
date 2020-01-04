@@ -247,6 +247,35 @@ static marpaESLIFValueResult_t marpaESLIFValueResultLazy = {
     }                                                                   \
   } while (0)
 
+#ifdef HAVE_LOCALE_H
+#  define MARPAESLIF_DECIMAL_POINT(marpaESLIFp) ((marpaESLIFp->lconvp != NULL) && (marpaESLIFp->lconvp->decimal_point != NULL) && (*(marpaESLIFp->lconvp->decimal_point) != '\0')) ? *(marpaESLIFp->lconvp->decimal_point) : '.'
+#else
+#  define MARPAESLIF_DECIMAL_POINT(marpaESLIFp) '.'
+#endif
+
+/* Floating-point value concatenation helper */
+/* Note that currentDecimalPointc and wantedDecimalPointc are constants: compiler will optimize the tests -; */
+#define MARPAESLIF_CONCAT_FLOATINGPOINT(marpaESLIFp, genericLoggerp, floattos, type, value, currentDecimalPointc, wantedDecimalPointc) do { \
+    char *_decimalPointp;                                               \
+    floattos = marpaESLIF_##type##tos(marpaESLIFp, value);              \
+    if (floattos == NULL) {                                             \
+      goto err;                                                         \
+    }                                                                   \
+    if (currentDecimalPointc != '\0') {                                 \
+      if (wantedDecimalPointc != '\0') {                                \
+        if (currentDecimalPointc != wantedDecimalPointc) {              \
+          _decimalPointp = strchr(floattos, currentDecimalPointc);      \
+          if (_decimalPointp != NULL) {                                 \
+            *_decimalPointp = wantedDecimalPointc;                      \
+          }                                                             \
+        }                                                               \
+      }                                                                 \
+    }                                                                   \
+    GENERICLOGGER_TRACEF(genericLoggerp, "%s", floattos);               \
+    free(floattos);                                                     \
+    floattos = NULL;                                                    \
+  } while (0)
+
 /* -------------------------------------------------------------------------------------------- */
 /* For logging                                                                                  */
 /* -------------------------------------------------------------------------------------------- */
@@ -598,6 +627,10 @@ static inline void                    _marpaESLIF_codepoint_to_json(marpaESLIF_u
 static inline short                   _marpaESLIF_flatten_pointers(marpaESLIF_t *marpaESLIFp, genericStack_t *flattenPtrStackp, genericHash_t *flattenPtrHashp, marpaESLIFValueResult_t *marpaESLIFValueResultp, short noShallowb);
 static inline marpaESLIFGrammar_t    *_marpaESLIFJSON_decode_newp(marpaESLIF_t *marpaESLIFp, short strictb);
 static inline marpaESLIFGrammar_t    *_marpaESLIFJSON_encode_newp(marpaESLIF_t *marpaESLIFp, short strictb);
+
+static inline char                   *_marpaESLIF_ftos(marpaESLIF_t *marpaESLIFp, float f);
+static inline char                   *_marpaESLIF_dtos(marpaESLIF_t *marpaESLIFp, double d);
+static inline char                   *_marpaESLIF_ldtos(marpaESLIF_t *marpaESLIFp, long double ld);
 
 /*****************************************************************************/
 static inline marpaESLIF_string_t *_marpaESLIF_string_newp(marpaESLIF_t *marpaESLIFp, char *encodingasciis, char *bytep, size_t bytel)
@@ -3777,9 +3810,6 @@ static inline marpaESLIF_t *_marpaESLIF_newp(marpaESLIFOption_t *marpaESLIFOptio
   marpaESLIFp->marpaESLIFValueResultFalse.type            = MARPAESLIF_VALUE_TYPE_BOOL;
   marpaESLIFp->marpaESLIFValueResultFalse.u.y             = MARPAESLIFVALUERESULTBOOL_FALSE;
 
-  sprintf(marpaESLIFp->float_fmts, "%%.%dg", FLT_DECIMAL_DIG);
-  sprintf(marpaESLIFp->double_fmts, "%%.%dg", DBL_DECIMAL_DIG);
-  sprintf(marpaESLIFp->long_double_fmts, "%%.%dLg", LDBL_DECIMAL_DIG);
 #ifdef HAVE_LOCALE_H
   marpaESLIFp->lconvp = localeconv();
 #endif
@@ -13836,8 +13866,10 @@ static short _marpaESLIFRecognizer_concat_valueResultCallbackb(void *userDatavp,
   marpaESLIF_t                           *marpaESLIFp                 = marpaESLIFValuep->marpaESLIFp;
   marpaESLIF_stringGenerator_t           *marpaESLIF_stringGeneratorp = contextp->marpaESLIF_stringGeneratorp;
   marpaESLIFRecognizer_t                 *marpaESLIFRecognizerp       = marpaESLIFValuep->marpaESLIFRecognizerp;
+  char                                    decimalPointc               = MARPAESLIF_DECIMAL_POINT(marpaESLIFp);
   marpaESLIF_string_t                    *utf8p                       = NULL;
   genericLogger_t                        *genericLoggerp              = NULL;
+  char                                   *floattos                    = NULL;
   char                                   *srcs;
   size_t                                  srcl;
   genericStack_t                          todoStack;
@@ -14007,7 +14039,8 @@ static short _marpaESLIFRecognizer_concat_valueResultCallbackb(void *userDatavp,
     case MARPAESLIF_VALUE_TYPE_FLOAT:
       /* fprintf(stdout, "FLOAT %f\n", (double) marpaESLIFValueResult.u.f); fflush(stdout); */
       /* Float default representation:
-         - string mode: marpaESLIFp->float_fmts, json: marpaESLIFp->float_fmts or null if inf/nan, , jsonf: marpaESLIFp->float_fmts or inf/nan, 
+         - string mode: marpaESLIF_ftos(), json: marpaESLIF_ftos() or null if inf/nan, , jsonf: marpaESLIF_ftos() or inf/nan, 
+           Note that output of marpaESLIF_ftos() is explicitly looked at to replace decimal digit with '.' if it is NOT already the '.' character
          - binary mode: content
       */
       if (contextp->stringb) {
@@ -14017,7 +14050,7 @@ static short _marpaESLIFRecognizer_concat_valueResultCallbackb(void *userDatavp,
           } else if (MARPAESLIF_ISNAN(marpaESLIFValueResult.u.f)) {
             GENERICLOGGER_TRACE(genericLoggerp, "null");
           } else {
-            GENERICLOGGER_TRACEF(genericLoggerp, marpaESLIFp->float_fmts, (double) marpaESLIFValueResult.u.f);
+            MARPAESLIF_CONCAT_FLOATINGPOINT(marpaESLIFp, genericLoggerp, floattos, f, marpaESLIFValueResult.u.f, decimalPointc, '.');
           }
         } else if (contextp->jsonfb) {
           if (MARPAESLIF_ISINF(marpaESLIFValueResult.u.f)) {
@@ -14025,10 +14058,10 @@ static short _marpaESLIFRecognizer_concat_valueResultCallbackb(void *userDatavp,
           } else if (MARPAESLIF_ISNAN(marpaESLIFValueResult.u.f)) {
             GENERICLOGGER_TRACE(genericLoggerp, "NaN");
           } else {
-            GENERICLOGGER_TRACEF(genericLoggerp, marpaESLIFp->float_fmts, (double) marpaESLIFValueResult.u.f);
+            MARPAESLIF_CONCAT_FLOATINGPOINT(marpaESLIFp, genericLoggerp, floattos, f, marpaESLIFValueResult.u.f, decimalPointc, '.');
           }
         } else {
-          GENERICLOGGER_TRACEF(genericLoggerp, marpaESLIFp->float_fmts, (double) marpaESLIFValueResult.u.f);
+          MARPAESLIF_CONCAT_FLOATINGPOINT(marpaESLIFp, genericLoggerp, floattos, f, marpaESLIFValueResult.u.f, '\0', '\0');
         }
       } else {
         _marpaESLIF_appendOpaqueDataToStringGenerator(marpaESLIF_stringGeneratorp, (char *) &(marpaESLIFValueResult.u.f), sizeof(marpaESLIFValueResultFloat_t));
@@ -14037,7 +14070,8 @@ static short _marpaESLIFRecognizer_concat_valueResultCallbackb(void *userDatavp,
     case MARPAESLIF_VALUE_TYPE_DOUBLE:
       /* fprintf(stdout, "DOUBLE %f\n", marpaESLIFValueResult.u.d); fflush(stdout); */
       /* Double default representation:
-         - string mode: marpaESLIFp->double_fmts, json: marpaESLIFp->double_fmts or null if inf/nan, , jsonf: marpaESLIFp->double_fmts or inf/nan, 
+         - string mode: marpaESLIFp_dtos(), json: marpaESLIF_dtos() or null if inf/nan, , jsonf: marpaESLIF_dtos() or inf/nan, 
+           Note that output of marpaESLIF_dtos() is explicitly looked at to replace decimal digit with '.' if it is NOT already the '.' character
          - binary mode: content
       */
       if (contextp->stringb) {
@@ -14047,7 +14081,7 @@ static short _marpaESLIFRecognizer_concat_valueResultCallbackb(void *userDatavp,
           } else if (MARPAESLIF_ISNAN(marpaESLIFValueResult.u.d)) {
             GENERICLOGGER_TRACE(genericLoggerp, "null");
           } else {
-            GENERICLOGGER_TRACEF(genericLoggerp, marpaESLIFp->double_fmts, marpaESLIFValueResult.u.d);
+            MARPAESLIF_CONCAT_FLOATINGPOINT(marpaESLIFp, genericLoggerp, floattos, d, marpaESLIFValueResult.u.d, decimalPointc, '.');
           }
         } else if (contextp->jsonfb) {
           if (MARPAESLIF_ISINF(marpaESLIFValueResult.u.d)) {
@@ -14055,10 +14089,10 @@ static short _marpaESLIFRecognizer_concat_valueResultCallbackb(void *userDatavp,
           } else if (MARPAESLIF_ISNAN(marpaESLIFValueResult.u.d)) {
             GENERICLOGGER_TRACE(genericLoggerp, "NaN");
           } else {
-            GENERICLOGGER_TRACEF(genericLoggerp, marpaESLIFp->double_fmts, marpaESLIFValueResult.u.d);
+            MARPAESLIF_CONCAT_FLOATINGPOINT(marpaESLIFp, genericLoggerp, floattos, d, marpaESLIFValueResult.u.d, decimalPointc, '.');
           }
         } else {
-          GENERICLOGGER_TRACEF(genericLoggerp, marpaESLIFp->double_fmts, marpaESLIFValueResult.u.d);
+          MARPAESLIF_CONCAT_FLOATINGPOINT(marpaESLIFp, genericLoggerp, floattos, d, marpaESLIFValueResult.u.d, '\0', '\0');
         }
       } else {
         _marpaESLIF_appendOpaqueDataToStringGenerator(marpaESLIF_stringGeneratorp, (char *) &(marpaESLIFValueResult.u.d), sizeof(marpaESLIFValueResultDouble_t));
@@ -14222,7 +14256,8 @@ static short _marpaESLIFRecognizer_concat_valueResultCallbackb(void *userDatavp,
     case MARPAESLIF_VALUE_TYPE_LONG_DOUBLE:
       /* fprintf(stdout, "LONG_DOUBLE %Lf\n", marpaESLIFValueResult.u.ld); fflush(stdout); */
       /* Long double default representation:
-         - string mode: marpaESLIFp->long_double_fmts, json: marpaESLIFp->long_double_fmts or null if inf/nan, , jsonf: marpaESLIFp->long_double_fmts or inf/nan, 
+         - string mode: marpaESLIF_ldtos(), json: marpaESLIF_ldtos() or null if inf/nan, , jsonf: marpaESLIF_ldtos() or inf/nan, 
+           Note that output of marpaESLIF_ldtos() is explicitly looked at to replace decimal digit with '.' if it is NOT already the '.' character
          - binary mode: content
       */
       if (contextp->stringb) {
@@ -14232,7 +14267,7 @@ static short _marpaESLIFRecognizer_concat_valueResultCallbackb(void *userDatavp,
           } else if (MARPAESLIF_ISNAN(marpaESLIFValueResult.u.ld)) {
             GENERICLOGGER_TRACE(genericLoggerp, "null");
           } else {
-            GENERICLOGGER_TRACEF(genericLoggerp, marpaESLIFp->long_double_fmts, marpaESLIFValueResult.u.ld);
+            MARPAESLIF_CONCAT_FLOATINGPOINT(marpaESLIFp, genericLoggerp, floattos, ld, marpaESLIFValueResult.u.ld, decimalPointc, '.');
           }
         } else if (contextp->jsonfb) {
           if (MARPAESLIF_ISINF(marpaESLIFValueResult.u.ld)) {
@@ -14240,10 +14275,10 @@ static short _marpaESLIFRecognizer_concat_valueResultCallbackb(void *userDatavp,
           } else if (MARPAESLIF_ISNAN(marpaESLIFValueResult.u.ld)) {
             GENERICLOGGER_TRACE(genericLoggerp, "NaN");
           } else {
-            GENERICLOGGER_TRACEF(genericLoggerp, marpaESLIFp->long_double_fmts, marpaESLIFValueResult.u.ld);
+            MARPAESLIF_CONCAT_FLOATINGPOINT(marpaESLIFp, genericLoggerp, floattos, ld, marpaESLIFValueResult.u.ld, decimalPointc, '.');
           }
         } else {
-          GENERICLOGGER_TRACEF(genericLoggerp, marpaESLIFp->long_double_fmts, marpaESLIFValueResult.u.ld);
+          MARPAESLIF_CONCAT_FLOATINGPOINT(marpaESLIFp, genericLoggerp, floattos, ld, marpaESLIFValueResult.u.ld, '\0', '\0');
         }
       } else {
         _marpaESLIF_appendOpaqueDataToStringGenerator(marpaESLIF_stringGeneratorp, (char *) &(marpaESLIFValueResult.u.ld), sizeof(marpaESLIFValueResultLongDouble_t));
@@ -14282,6 +14317,9 @@ static short _marpaESLIFRecognizer_concat_valueResultCallbackb(void *userDatavp,
   rcb = 0;
 
  done:
+  if (floattos != NULL) {
+    free(floattos);
+  }
   GENERICSTACK_RESET(todoStackp);
   if (utf8p != &string) {
     _marpaESLIF_string_freev(utf8p, 0 /* onStackb */);

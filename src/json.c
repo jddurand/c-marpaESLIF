@@ -389,9 +389,6 @@ short marpaESLIFJSON_decodeb(marpaESLIFGrammar_t *marpaESLIFGrammarJSONp, marpaE
 {
   marpaESLIFRecognizer_t       *marpaESLIFRecognizerp = NULL;
   marpaESLIFValue_t            *marpaESLIFValuep      = NULL;
-#ifdef HAVE_LOCALE_H
-  struct lconv                 *lconvp;
-#endif
   short                         rcb;
   marpaESLIFRecognizerOption_t  marpaESLIFRecognizerOption;
   marpaESLIFValueOption_t       marpaESLIFValueOption;
@@ -408,13 +405,8 @@ short marpaESLIFJSON_decodeb(marpaESLIFGrammar_t *marpaESLIFGrammarJSONp, marpaE
   marpaESLIFJSONContext.marpaESLIFJSONDecodeOptionp = marpaESLIFJSONDecodeOptionp;
   marpaESLIFJSONContext.marpaESLIFRecognizerOptionp = marpaESLIFRecognizerOptionp;
   marpaESLIFJSONContext.marpaESLIFValueOptionp      = marpaESLIFValueOptionp;
-#ifdef HAVE_LOCALE_H
-  lconvp                                            = marpaESLIFGrammarJSONp->marpaESLIFp->lconvp;
-  marpaESLIFJSONContext.decimalPointc               = ((lconvp != NULL) && (lconvp->decimal_point != NULL) && (*(lconvp->decimal_point) != '\0')) ? *(lconvp->decimal_point) : '.';
-#else
-  /* Assume JSON default */
-  marpaESLIFJSONContext.decimalPointc               = '.';
-#endif
+  marpaESLIFJSONContext.decimalPointc               = MARPAESLIF_DECIMAL_POINT(marpaESLIFGrammarJSONp->marpaESLIFp);
+
   marpaESLIFRecognizerOption                      = *marpaESLIFRecognizerOptionp;
   marpaESLIFRecognizerOption.userDatavp           = &marpaESLIFJSONContext;
   marpaESLIFRecognizerOption.readerCallbackp      = _marpaESLIFJSONReaderb;

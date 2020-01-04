@@ -63,6 +63,16 @@
 #define MARPAESLIF_FLOATTOS(name, type, fmts, fmts_type, strtox, maxDigitsi) \
   char *name(marpaESLIF_t *marpaESLIFp, type x)                         \
   {                                                                     \
+    if (marpaESLIFp == NULL) {                                          \
+      errno = EINVAL;                                                   \
+      return NULL;                                                      \
+    }                                                                   \
+                                                                        \
+    return _##name(marpaESLIFp, x);                                     \
+  }                                                                     \
+                                                                        \
+  static inline char *_##name(marpaESLIF_t *marpaESLIFp, type x)        \
+  {                                                                     \
     type                          origx          = x;                   \
     genericLogger_t              *genericLoggerp = NULL;                \
     char                         *endptrp;                              \
@@ -108,7 +118,6 @@
                                                                         \
     /* Here either f == origf, either we reached 999 decimals, that is considered */ \
     /* subjectively far beyond what is expected. */                     \
-                                                                        \
     goto done;                                                          \
                                                                         \
   err:                                                                  \
