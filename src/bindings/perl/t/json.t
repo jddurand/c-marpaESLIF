@@ -43,7 +43,6 @@ use Test::More::UTF8;
 use Log::Log4perl qw/:easy/;
 use Log::Any::Adapter;
 use Log::Any qw/$log/;
-
 #
 # Init log
 #
@@ -160,7 +159,7 @@ foreach (0..$#inputs) {
     }
 }
 
-my $newFromOrshared = 0;
+done_testing();
 
 sub doparse {
     my ($grammar, $inputs, $recursionLevel) = @_;
@@ -176,13 +175,9 @@ sub doparse {
     } else {
         $log->infof("[%d] Scanning JSON's object", $recursionLevel);
     }
-    if (! $grammar->parse($recognizerInterface, $valueInterface)) {
-        BAIL_OUT("Failure when parsing:\n$inputs\n");
-    }
-
-    my $value = $valueInterface->getResult();
+    my $value = $eslifJson->decode($inputs);
     if (! defined($value)) {
-        BAIL_OUT("Failure with valuation:\n$inputs\n");
+        BAIL_OUT("Failure with decode:\n$inputs\n");
     }
     $log->infof('Result: %s', $value);
     dspp($value);
@@ -201,8 +196,6 @@ sub doparse {
   done:
     return $rc;
 }
-
-done_testing();
 
 __DATA__
 

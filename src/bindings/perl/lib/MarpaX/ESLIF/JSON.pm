@@ -2,7 +2,8 @@ use strict;
 use warnings FATAL => 'all';
 
 package MarpaX::ESLIF::JSON;
-use parent qw/MarpaX::ESLIF::Grammar/;
+use MarpaX::ESLIF::JSON::Encoder;
+use MarpaX::ESLIF::JSON::Decoder;
 
 # ABSTRACT: ESLIF's JSON interface
 
@@ -54,7 +55,7 @@ This is strict grammar extended with:
 
    my $eslifJSON = MarpaX::ESLIF::JSON->new($eslif);
 
-Returns a JSON grammar instance, noted C<$eslifJSON> later. Parameters are:
+Just a convenient wrapper over L<MarpaX::ESLIF::JSON::Encoder> and L<MarpaX::ESLIF::JSON::Decoder>. Parameters are:
 
 =over
 
@@ -70,56 +71,39 @@ A true value means strict JSON, else relax JSON. Default is a false value.
 
 =cut
 
-#
-# Tiny wrapper on MarpaX::ESLIF::JSON->new, that is using the instance as void *.
-# Could have been writen in the XS itself, but I feel it is more comprehensible like
-# this.
-#
 sub new {
     my $class = shift;
     my $eslif = shift;
     my $strict = shift // 0;
 
-    my $self = $class->_new($eslif->_getInstance, $strict);
-    return $self
+    return bless { encoder => MarpaX::ESLIF::JSON::Encoder->new($eslif, $strict), decoder => MarpaX::ESLIF::JSON::Decoder->new($eslif, $strict) }, $class
 }
 
 =head2 $eslifJSON->encode($value)
 
    my $string = $eslifJSON->encode($value);
 
-Returns a string containing encoded JSON data. In relax mode, special floating point values can appear:
-
-=over
-
-=item C<+Infinity>
-
-Positive infinity.
-
-=item C<-Infinity>
-
-Negative infinity.
-
-=item C<NaN>
-
-Not-a-Number.
-
-=back
-
-Otherwise the output remains conform to the strict JSON grammar: an UTF-8 string that is using the UTF-16 surrogate's C<\u> notation for characters outside of the BMP.
 
 =cut
 
 sub encode {
     my ($self, $value) = @_;
 
-    return MarpaX::ESLIF::JSON::_encode($self, $value)
+    return $self->{encoder}->encode($value)
 }
 
-=head1 NOTES
+=head2 $eslifJSON->decode($string, %options)
 
-Formally, the JSON implementation is only a grammar coded directly in the ESLIF library, therefore this module inherits from L<MarpaX::ESLIF::Grammar>.
+   my $value = $eslifJSON->decode($string);
+
+Please refer to L<MarpaX::ESLIF::JSON::Decoder> for the options.
 
 =cut
+
+sub decode {
+    my ($self, $string, %options) = @_;
+
+    return $self->{decoder}->decode($string)
+}
 
 1;

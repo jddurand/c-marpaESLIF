@@ -1,7 +1,8 @@
 use strict;
 use warnings FATAL => 'all';
 
-package MarpaX::ESLIF::JSON::RecognizerInterface;
+package MarpaX::ESLIF::JSON::Decoder::RecognizerInterface;
+use Carp qw/croak/;
 
 # ABSTRACT: MarpaX::ESLIF::JSON Recognizer Interface
 
@@ -11,13 +12,13 @@ package MarpaX::ESLIF::JSON::RecognizerInterface;
 
 =head1 DESCRIPTION
 
-MarpaX::ESLIF::JSON's Recognizer Interface
+MarpaX::ESLIF::JSON's Decoder Recognizer Interface
 
 =head1 SYNOPSIS
 
-    use MarpaX::ESLIF::JSON::RecognizerInterface;
+    use MarpaX::ESLIF::JSON::Decoder::RecognizerInterface;
 
-    my $recognizerInterface = MarpaX::ESLIF::JSON::RecognizerInterface->new();
+    my $recognizerInterface = MarpaX::ESLIF::JSON::Decoder::RecognizerInterface->new();
 
 =cut
 
