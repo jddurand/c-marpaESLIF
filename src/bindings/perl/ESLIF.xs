@@ -29,9 +29,9 @@
 #  define marpaESLIFPerlTHX tTHX
 #endif
 #ifdef PERL_IMPLICIT_CONTEXT
-#define marpaESLIFPerlaTHX aTHX
+#  define marpaESLIFPerlaTHX aTHX
 #else
-#define marpaESLIFPerlaTHX NULL
+#  define marpaESLIFPerlaTHX NULL
 #endif
 
 typedef struct marpaESLIFPerl_stringGenerator {
@@ -822,7 +822,7 @@ static void marpaESLIFPerl_genericLoggerCallbackv(void *userDatavp, genericLogge
   MarpaX_ESLIF_Engine_t *Perl_MarpaX_ESLIF_Enginep = (MarpaX_ESLIF_Engine_t *) userDatavp;
   SV                    *Perl_loggerInterfacep = Perl_MarpaX_ESLIF_Enginep->Perl_loggerInterfacep;
   char *method;
-  dTHXa(Perl_MarpaX_ESLIF_Enginep->PerlInterpreterp);
+  dTHXa(Perl_MarpaX_ESLIF_Enginep->PerlInterpreterp); /* dNOOP if no PERL_IMPLICIT_CONTEXT */
 
   switch (logLeveli) {
   case GENERICLOGGER_LOGLEVEL_TRACE:     method = "trace";     break;

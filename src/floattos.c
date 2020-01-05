@@ -10,6 +10,9 @@
 #  include <float.h>
 #endif
 
+#undef  FILENAMES
+#define FILENAMES "floattos.c" /* For logging */
+
 #if defined(MARPAESLIF_ISINF) && defined(MARPAESLIF_INFINITY)
 #  define MARPAESLIF_FLOATTOS_INFINITY(x)
 #else
@@ -68,10 +71,10 @@
       return NULL;                                                      \
     }                                                                   \
                                                                         \
-    return _##name(marpaESLIFp, x);                                     \
+    return _##name##_minDigits(marpaESLIFp, 0, x);                      \
   }                                                                     \
                                                                         \
-  static inline char *_##name(marpaESLIF_t *marpaESLIFp, type x)        \
+  static inline char *_##name##_minDigits(marpaESLIF_t *marpaESLIFp, int minDigitsi, type x) \
   {                                                                     \
     type                          origx          = x;                   \
     genericLogger_t              *genericLoggerp = NULL;                \
@@ -99,7 +102,7 @@
     }                                                                   \
                                                                         \
     /* We subjectively estimate that nothing reasonable can have more than maxDigitsi */ \
-    for (i = 0; i < maxDigitsi; i++) {                                  \
+    for (i = minDigitsi; i < maxDigitsi; i++) {                         \
       GENERICLOGGER_TRACEF(genericLoggerp, fmts, i, (fmts_type) origx); \
       if (! marpaESLIF_stringGenerator.okb) {                           \
         goto err;                                                       \
@@ -131,7 +134,7 @@
     return marpaESLIF_stringGenerator.s;                                \
   }
 
-MARPAESLIF_FLOATTOS(marpaESLIF_ftos, float, "%.*f", double, C_STRTOF, 100)
-MARPAESLIF_FLOATTOS(marpaESLIF_dtos, double, "%.*f", double, C_STRTOD, 100)
-MARPAESLIF_FLOATTOS(marpaESLIF_ldtos, long double, "%.*Lf", long double, C_STRTOLD, 1000)
+MARPAESLIF_FLOATTOS(marpaESLIF_ftos, float, "%.*f", double, C_STRTOF, 100 /* maxDigitsi */)
+MARPAESLIF_FLOATTOS(marpaESLIF_dtos, double, "%.*f", double, C_STRTOD, 100 /* maxDigitsi */)
+MARPAESLIF_FLOATTOS(marpaESLIF_ldtos, long double, "%.*Lf", long double, C_STRTOLD, 1000 /* maxDigitsi */)
 

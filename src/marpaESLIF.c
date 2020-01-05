@@ -628,9 +628,9 @@ static inline short                   _marpaESLIF_flatten_pointers(marpaESLIF_t 
 static inline marpaESLIFGrammar_t    *_marpaESLIFJSON_decode_newp(marpaESLIF_t *marpaESLIFp, short strictb);
 static inline marpaESLIFGrammar_t    *_marpaESLIFJSON_encode_newp(marpaESLIF_t *marpaESLIFp, short strictb);
 
-static inline char                   *_marpaESLIF_ftos(marpaESLIF_t *marpaESLIFp, float f);
-static inline char                   *_marpaESLIF_dtos(marpaESLIF_t *marpaESLIFp, double d);
-static inline char                   *_marpaESLIF_ldtos(marpaESLIF_t *marpaESLIFp, long double ld);
+static inline char                   *_marpaESLIF_ftos_minDigits(marpaESLIF_t *marpaESLIFp, int minDigitsi, float f);
+static inline char                   *_marpaESLIF_dtos_minDigits(marpaESLIF_t *marpaESLIFp, int minDigitsi, double d);
+static inline char                   *_marpaESLIF_ldtos_minDigits(marpaESLIF_t *marpaESLIFp, int minDigitsi, long double ld);
 
 /*****************************************************************************/
 static inline marpaESLIF_string_t *_marpaESLIF_string_newp(marpaESLIF_t *marpaESLIFp, char *encodingasciis, char *bytep, size_t bytel)
@@ -13642,6 +13642,7 @@ static inline marpaESLIFValue_t *_marpaESLIFValue_newp(marpaESLIFRecognizer_t *m
   marpaESLIFValuep->beforePtrStackp             = NULL;
   marpaESLIFValuep->beforePtrHashp              = NULL;
   marpaESLIFValuep->afterPtrHashp               = NULL;
+  marpaESLIFValuep->proxyRepresentationp        = NULL;
 
   if (! fakeb) {
     marpaWrapperValueOption.genericLoggerp = silentb ? marpaESLIFp->traceLoggerp : marpaESLIFp->marpaESLIFOption.genericLoggerp;
@@ -13930,6 +13931,10 @@ static short _marpaESLIFRecognizer_concat_valueResultCallbackb(void *userDatavp,
       /* Origin representation, userDatavp is the one from original context */
       representationp = marpaESLIFValueResult.representationp;
       representationUserDatavp = contextp->userDatavp;
+      /* Representation may be proxied - c.f. json.c */
+      if ((representationp != NULL) && (marpaESLIFValuep->proxyRepresentationp != NULL)) {
+        representationp = marpaESLIFValuep->proxyRepresentationp;
+      }
     }
 
     if (representationp != NULL) {
@@ -15856,6 +15861,7 @@ static short _marpaESLIFRecognizer_value_validb(marpaESLIFRecognizer_t *marpaESL
 #endif
       f = (float) marpaESLIFValueResultWorkp->u.d;
       d = (double) f;
+      fprintf(stderr, "%s:%d: MARPAESLIF_VALUE_TYPE_DOUBLE=%.10f => (float) MARPAESLIF_VALUE_TYPE_DOUBLE=%.10f => (double) ((float) MARPAESLIF_VALUE_TYPE_DOUBLE)=%.10f => %s\n", FILENAMES, __LINE__, marpaESLIFValueResultWorkp->u.d, (double) f, d, (d == marpaESLIFValueResultWorkp->u.d) ? "OK" : "KO");
       if (d == marpaESLIFValueResultWorkp->u.d) {
         /* No loss of information if we downgrade to a float */
         marpaESLIFValueResultWorkp->type = MARPAESLIF_VALUE_TYPE_FLOAT;
@@ -15880,10 +15886,12 @@ static short _marpaESLIFRecognizer_value_validb(marpaESLIFRecognizer_t *marpaESL
 #endif
       d = (double) marpaESLIFValueResultWorkp->u.ld;
       ld = (long double) d;
+      fprintf(stderr, "%s:%d: MARPAESLIF_VALUE_TYPE_LONG_DOUBLE=%.10Lf => (double) MARPAESLIF_VALUE_TYPE_LONG_DOUBLE=%.10f => (long double) ((double) MARPAESLIF_VALUE_TYPE_LONG_DOUBLE)=%.10Lf => %s\n", FILENAMES, __LINE__, marpaESLIFValueResultWorkp->u.ld, d, ld, (ld == marpaESLIFValueResultWorkp->u.ld) ? "OK" : "KO");
       if (ld == marpaESLIFValueResultWorkp->u.ld) {
         /* Try to downgrade again to float */
         f = (float) marpaESLIFValueResultWorkp->u.ld;
         ld = (long double) f;
+        fprintf(stderr, "%s:%d: MARPAESLIF_VALUE_TYPE_LONG_DOUBLE=%.10Lf => (float) MARPAESLIF_VALUE_TYPE_DOUBLE=%.10f => (long double) ((float) MARPAESLIF_VALUE_TYPE_LONG_DOUBLE)=%.10Lf => %s\n", FILENAMES, __LINE__, marpaESLIFValueResultWorkp->u.ld, (double) f, ld, (ld == marpaESLIFValueResultWorkp->u.ld) ? "OK" : "KO");
         if (ld == marpaESLIFValueResultWorkp->u.ld) {
           /* No loss of information if we downgrade to a float */
           marpaESLIFValueResultWorkp->type = MARPAESLIF_VALUE_TYPE_FLOAT;

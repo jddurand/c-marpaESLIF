@@ -307,6 +307,7 @@ struct marpaESLIFValue {
   genericHash_t               *beforePtrHashp;
   genericHash_t                _afterPtrHash;
   genericHash_t               *afterPtrHashp;
+  marpaESLIFRepresentation_t   proxyRepresentationp; /* Proxy representation callback, c.f. json.c for an example */
 };
 
 struct marpaESLIF_stream {
