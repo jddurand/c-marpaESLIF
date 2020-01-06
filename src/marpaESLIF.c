@@ -15804,9 +15804,6 @@ static short _marpaESLIFRecognizer_value_validb(marpaESLIFRecognizer_t *marpaESL
   short                    rcb;
   size_t                   i;
   marpaESLIFValueResult_t *marpaESLIFValueResultWorkp;
-  float                    f;
-  double                   d;
-  long double              ld;
 
   MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_INC;
   MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "start");
@@ -15842,67 +15839,8 @@ static short _marpaESLIFRecognizer_value_validb(marpaESLIFRecognizer_t *marpaESL
     case MARPAESLIF_VALUE_TYPE_INT:
     case MARPAESLIF_VALUE_TYPE_LONG:
     case MARPAESLIF_VALUE_TYPE_FLOAT:
-      break;
     case MARPAESLIF_VALUE_TYPE_DOUBLE:
-      /* Downgrade if possible to float */
-#ifdef MARPAESLIF_HAVEINF
-      if (MARPAESLIF_ISINF(marpaESLIFValueResultWorkp->u.d)) {
-        marpaESLIFValueResultWorkp->type = MARPAESLIF_VALUE_TYPE_FLOAT;
-        marpaESLIFValueResultWorkp->u.f  = marpaESLIFValueResultWorkp->u.d < 0 ? -MARPAESLIF_INFINITY : MARPAESLIF_INFINITY;
-        break;
-      }
-#endif
-#ifdef MARPAESLIF_HAVENAN
-      if (MARPAESLIF_ISNAN(marpaESLIFValueResultWorkp->u.d)) {
-        marpaESLIFValueResultWorkp->type = MARPAESLIF_VALUE_TYPE_FLOAT;
-        marpaESLIFValueResultWorkp->u.f  = MARPAESLIF_NAN;
-        break;
-      }
-#endif
-      f = (float) marpaESLIFValueResultWorkp->u.d;
-      d = (double) f;
-      fprintf(stderr, "%s:%d: MARPAESLIF_VALUE_TYPE_DOUBLE=%.10f => (float) MARPAESLIF_VALUE_TYPE_DOUBLE=%.10f => (double) ((float) MARPAESLIF_VALUE_TYPE_DOUBLE)=%.10f => %s\n", FILENAMES, __LINE__, marpaESLIFValueResultWorkp->u.d, (double) f, d, (d == marpaESLIFValueResultWorkp->u.d) ? "OK" : "KO");
-      if (d == marpaESLIFValueResultWorkp->u.d) {
-        /* No loss of information if we downgrade to a float */
-        marpaESLIFValueResultWorkp->type = MARPAESLIF_VALUE_TYPE_FLOAT;
-        marpaESLIFValueResultWorkp->u.f  = f;
-      }
-      break;
     case MARPAESLIF_VALUE_TYPE_LONG_DOUBLE:
-      /* Downgrade if possible to float or double */
-#ifdef MARPAESLIF_HAVEINF
-      if (MARPAESLIF_ISINF(marpaESLIFValueResultWorkp->u.ld)) {
-        marpaESLIFValueResultWorkp->type = MARPAESLIF_VALUE_TYPE_FLOAT;
-        marpaESLIFValueResultWorkp->u.f  = marpaESLIFValueResultWorkp->u.ld < 0 ? -MARPAESLIF_INFINITY : MARPAESLIF_INFINITY;
-        break;
-      }
-#endif
-#ifdef MARPAESLIF_HAVENAN
-      if (MARPAESLIF_ISNAN(marpaESLIFValueResultWorkp->u.ld)) {
-        marpaESLIFValueResultWorkp->type = MARPAESLIF_VALUE_TYPE_FLOAT;
-        marpaESLIFValueResultWorkp->u.f  = MARPAESLIF_NAN;
-        break;
-      }
-#endif
-      d = (double) marpaESLIFValueResultWorkp->u.ld;
-      ld = (long double) d;
-      fprintf(stderr, "%s:%d: MARPAESLIF_VALUE_TYPE_LONG_DOUBLE=%.10Lf => (double) MARPAESLIF_VALUE_TYPE_LONG_DOUBLE=%.10f => (long double) ((double) MARPAESLIF_VALUE_TYPE_LONG_DOUBLE)=%.10Lf => %s\n", FILENAMES, __LINE__, marpaESLIFValueResultWorkp->u.ld, d, ld, (ld == marpaESLIFValueResultWorkp->u.ld) ? "OK" : "KO");
-      if (ld == marpaESLIFValueResultWorkp->u.ld) {
-        /* Try to downgrade again to float */
-        f = (float) marpaESLIFValueResultWorkp->u.ld;
-        ld = (long double) f;
-        fprintf(stderr, "%s:%d: MARPAESLIF_VALUE_TYPE_LONG_DOUBLE=%.10Lf => (float) MARPAESLIF_VALUE_TYPE_DOUBLE=%.10f => (long double) ((float) MARPAESLIF_VALUE_TYPE_LONG_DOUBLE)=%.10Lf => %s\n", FILENAMES, __LINE__, marpaESLIFValueResultWorkp->u.ld, (double) f, ld, (ld == marpaESLIFValueResultWorkp->u.ld) ? "OK" : "KO");
-        if (ld == marpaESLIFValueResultWorkp->u.ld) {
-          /* No loss of information if we downgrade to a float */
-          marpaESLIFValueResultWorkp->type = MARPAESLIF_VALUE_TYPE_FLOAT;
-          marpaESLIFValueResultWorkp->u.f  = f;
-        } else {
-          /* No loss of information if we downgrade to a double */
-          marpaESLIFValueResultWorkp->type = MARPAESLIF_VALUE_TYPE_DOUBLE;
-          marpaESLIFValueResultWorkp->u.d  = d;
-        }
-      }
-      break;
 #ifdef MARPAESLIF_HAVE_LONG_LONG
     case MARPAESLIF_VALUE_TYPE_LONG_LONG:
 #endif
