@@ -385,10 +385,31 @@ typedef struct marpaESLIFSymbolProperty {
   marpaESLIFAction_t          *ifActionp;              /* Symbol if action */
 } marpaESLIFSymbolProperty_t;
 
-typedef short (*marpaESLIFJSONDecodeNumberAction_t)(char *utf8s, size_t utf8l, marpaESLIFValueResult_t *marpaESLIFValueResultp); /* Eventual specialized number action */
-typedef short (*marpaESLIFJSONDecodePositiveInfinityAction_t)(marpaESLIFValueResult_t *marpaESLIFValueResultp); /* Eventual specialized +Infinity action */
-typedef short (*marpaESLIFJSONDecodeNegativeInfinityAction_t)(marpaESLIFValueResult_t *marpaESLIFValueResultp); /* Eventual specialized -Infinity action */
-typedef short (*marpaESLIFJSONDecodeNanAction_t)(marpaESLIFValueResult_t *marpaESLIFValueResultp); /* Eventual specialized Nan action */
+/* The number action is called if:
+   - marpaESLIF failed to parse the input (overflow or underflow)
+     + Then the callback MUST be set. It is called with marpaESLIFValueResultProposalp == NULL, callback must provide a value in marpaESLIFValueResultp
+   - marpaESLIF succeed to parse the input
+     + The the callback is called IF it is set
+
+     If the callback returns a false value, this is an error.
+     If the callback returns a positive value, marpaESLIFValueResultp must be set.
+     If the callback returns a negative value, marpaESLIFValueResultProposalp is used.
+     - It is an error the return a negative value in marpaESLIF failed to parse the input
+*/
+typedef short (*marpaESLIFJSONDecodeNumberAction_t)(char *utf8s, size_t utf8l, marpaESLIFValueResult_t *marpaESLIFValueResultProposalp, marpaESLIFValueResult_t *marpaESLIFValueResultp);
+
+/* The positiveInfinity, negativeInfinty and NaN actions are called if:
+   - marpaESLIF has no support of this special floating point value
+   - marpaESLIF has support of this special floating point value and the callback is set
+
+     If the callback returns a false value, this is an error.
+     If the callback returns a positive value, marpaESLIFValueResultp must be set.
+     If the callback returns a negative value, marpaESLIFValueResultProposalp is used.
+     - It is an error the return a negative value in marpaESLIF has no support of this special floating point value
+*/
+typedef short (*marpaESLIFJSONDecodePositiveInfinityAction_t)(marpaESLIFValueResult_t *marpaESLIFValueResultProposalp, marpaESLIFValueResult_t *marpaESLIFValueResultp); /* Eventual specialized +Infinity action */
+typedef short (*marpaESLIFJSONDecodeNegativeInfinityAction_t)(marpaESLIFValueResult_t *marpaESLIFValueResultProposalp, marpaESLIFValueResult_t *marpaESLIFValueResultp); /* Eventual specialized -Infinity action */
+typedef short (*marpaESLIFJSONDecodeNanAction_t)(marpaESLIFValueResult_t *marpaESLIFValueResultProposalp, marpaESLIFValueResult_t *marpaESLIFValueResultp); /* Eventual specialized Nan action */
 
 typedef struct marpaESLIFJSONDecodeOption {
   short                                        disallowDupkeysb;                /* Do not allow duplicate key in an object */
