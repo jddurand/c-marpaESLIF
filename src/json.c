@@ -984,7 +984,7 @@ static short _marpaESLIFJSON_numberb(void *userDatavp, marpaESLIFValue_t *marpaE
       }
       goto err;
     } else {
-      fallbackb = numberActionFallbackp(marpaESLIFValueResultInputp->u.a.p, marpaESLIFValueResultInputp->u.a.sizel, NULL /* marpaESLIFValueResultProposalp */, marpaESLIFValueResultp);
+      fallbackb = numberActionFallbackp(marpaESLIFJSONContextp->marpaESLIFValueOptionp->userDatavp, marpaESLIFValueResultInputp->u.a.p, marpaESLIFValueResultInputp->u.a.sizel, NULL /* marpaESLIFValueResultProposalp */, marpaESLIFValueResultp);
       if (fallbackb <= 0) { /* Must be positive, indicating that *marpaESLIFValueResultp is set */
         MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "%s: Parsing error and callback return value is <= 0", marpaESLIFValueResultInputp->u.a.p);
         goto err;
@@ -993,7 +993,7 @@ static short _marpaESLIFJSON_numberb(void *userDatavp, marpaESLIFValue_t *marpaE
   } else {
     /* Parsing success: send proposal if fallback is set */
     if (numberActionFallbackp != NULL) {
-      fallbackb = numberActionFallbackp(marpaESLIFValueResultInputp->u.a.p, marpaESLIFValueResultInputp->u.a.sizel, marpaESLIFValueResultProposalp, marpaESLIFValueResultp);
+      fallbackb = numberActionFallbackp(marpaESLIFJSONContextp->marpaESLIFValueOptionp->userDatavp, marpaESLIFValueResultInputp->u.a.p, marpaESLIFValueResultInputp->u.a.sizel, marpaESLIFValueResultProposalp, marpaESLIFValueResultp);
       if (! fallbackb) {
         MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "%s: Number action success but fallback failure", marpaESLIFValueResultInputp->u.a.p);
         goto err;
@@ -1188,7 +1188,7 @@ static short _marpaESLIFJSON_positive_infinityb(void *userDatavp, marpaESLIFValu
       MARPAESLIF_ERROR(marpaESLIFValuep->marpaESLIFp, "No positive infinity support and callback is not set");
       goto err;
     } else {
-      fallbackb = positiveInfinityActionFallbackp(NULL /* marpaESLIFValueResultProposalp */, marpaESLIFValueResultp);
+      fallbackb = positiveInfinityActionFallbackp(marpaESLIFJSONContextp->marpaESLIFValueOptionp->userDatavp, NULL /* marpaESLIFValueResultProposalp */, marpaESLIFValueResultp);
       if (fallbackb <= 0) {
         MARPAESLIF_ERROR(marpaESLIFValuep->marpaESLIFp, "No positive infinity support and callback return value is <= 0");
         goto err;
@@ -1196,13 +1196,16 @@ static short _marpaESLIFJSON_positive_infinityb(void *userDatavp, marpaESLIFValu
     }
   } else {
     if (positiveInfinityActionFallbackp != NULL) {
-      fallbackb = positiveInfinityActionFallbackp(marpaESLIFValueResultProposalp, marpaESLIFValueResultp);
+      fallbackb = positiveInfinityActionFallbackp(marpaESLIFJSONContextp->marpaESLIFValueOptionp->userDatavp, marpaESLIFValueResultProposalp, marpaESLIFValueResultp);
       if (! fallbackb) {
         MARPAESLIF_ERROR(marpaESLIFValuep->marpaESLIFp, "Positive infinity support but callback returned failure");
       } else if (fallbackb < 0) {
-        /* use marpaESLIFValueResultProposalp */
+        /* Use marpaESLIFValueResultProposalp */
         marpaESLIFValueResultp = marpaESLIFValueResultProposalp;
       }
+    } else {
+      /* Use marpaESLIFValueResultProposalp */
+      marpaESLIFValueResultp = marpaESLIFValueResultProposalp;
     }
   }
 
@@ -1243,7 +1246,7 @@ static short _marpaESLIFJSON_negative_infinityb(void *userDatavp, marpaESLIFValu
       MARPAESLIF_ERROR(marpaESLIFValuep->marpaESLIFp, "No negative infinity support and callback is not set");
       goto err;
     } else {
-      fallbackb = negativeInfinityActionFallbackp(NULL /* marpaESLIFValueResultProposalp */, marpaESLIFValueResultp);
+      fallbackb = negativeInfinityActionFallbackp(marpaESLIFJSONContextp->marpaESLIFValueOptionp->userDatavp, NULL /* marpaESLIFValueResultProposalp */, marpaESLIFValueResultp);
       if (fallbackb <= 0) {
         MARPAESLIF_ERROR(marpaESLIFValuep->marpaESLIFp, "No negative infinity support and callback return value is <= 0");
         goto err;
@@ -1251,13 +1254,16 @@ static short _marpaESLIFJSON_negative_infinityb(void *userDatavp, marpaESLIFValu
     }
   } else {
     if (negativeInfinityActionFallbackp != NULL) {
-      fallbackb = negativeInfinityActionFallbackp(marpaESLIFValueResultProposalp, marpaESLIFValueResultp);
+      fallbackb = negativeInfinityActionFallbackp(marpaESLIFJSONContextp->marpaESLIFValueOptionp->userDatavp, marpaESLIFValueResultProposalp, marpaESLIFValueResultp);
       if (! fallbackb) {
         MARPAESLIF_ERROR(marpaESLIFValuep->marpaESLIFp, "Negative infinity support but callback returned failure");
       } else if (fallbackb < 0) {
-        /* use marpaESLIFValueResultProposalp */
+        /* Use marpaESLIFValueResultProposalp */
         marpaESLIFValueResultp = marpaESLIFValueResultProposalp;
       }
+    } else {
+      /* Use marpaESLIFValueResultProposalp */
+      marpaESLIFValueResultp = marpaESLIFValueResultProposalp;
     }
   }
 
@@ -1298,7 +1304,7 @@ static short _marpaESLIFJSON_nanb(void *userDatavp, marpaESLIFValue_t *marpaESLI
       MARPAESLIF_ERROR(marpaESLIFValuep->marpaESLIFp, "No nan support and callback is not set");
       goto err;
     } else {
-      fallbackb = nanActionFallbackp(NULL /* marpaESLIFValueResultProposalp */, marpaESLIFValueResultp);
+      fallbackb = nanActionFallbackp(marpaESLIFJSONContextp->marpaESLIFValueOptionp->userDatavp, NULL /* marpaESLIFValueResultProposalp */, marpaESLIFValueResultp);
       if (fallbackb <= 0) {
         MARPAESLIF_ERROR(marpaESLIFValuep->marpaESLIFp, "No nan support and callback return value is <= 0");
         goto err;
@@ -1306,13 +1312,16 @@ static short _marpaESLIFJSON_nanb(void *userDatavp, marpaESLIFValue_t *marpaESLI
     }
   } else {
     if (nanActionFallbackp != NULL) {
-      fallbackb = nanActionFallbackp(marpaESLIFValueResultProposalp, marpaESLIFValueResultp);
+      fallbackb = nanActionFallbackp(marpaESLIFJSONContextp->marpaESLIFValueOptionp->userDatavp, marpaESLIFValueResultProposalp, marpaESLIFValueResultp);
       if (! fallbackb) {
         MARPAESLIF_ERROR(marpaESLIFValuep->marpaESLIFp, "Nan support but callback returned failure");
       } else if (fallbackb < 0) {
         /* use marpaESLIFValueResultProposalp */
         marpaESLIFValueResultp = marpaESLIFValueResultProposalp;
       }
+    } else {
+      /* Use marpaESLIFValueResultProposalp */
+      marpaESLIFValueResultp = marpaESLIFValueResultProposalp;
     }
   }
 

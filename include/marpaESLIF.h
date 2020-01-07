@@ -396,7 +396,7 @@ typedef struct marpaESLIFSymbolProperty {
      If the callback returns a negative value, marpaESLIFValueResultProposalp is used.
      - It is an error the return a negative value in marpaESLIF failed to parse the input
 */
-typedef short (*marpaESLIFJSONDecodeNumberAction_t)(char *utf8s, size_t utf8l, marpaESLIFValueResult_t *marpaESLIFValueResultProposalp, marpaESLIFValueResult_t *marpaESLIFValueResultp);
+typedef short (*marpaESLIFJSONDecodeNumberAction_t)(void *userDatavp, char *utf8s, size_t utf8l, marpaESLIFValueResult_t *marpaESLIFValueResultProposalp, marpaESLIFValueResult_t *marpaESLIFValueResultp);
 
 /* The positiveInfinity, negativeInfinty and NaN actions are called if:
    - marpaESLIF has no support of this special floating point value
@@ -407,9 +407,9 @@ typedef short (*marpaESLIFJSONDecodeNumberAction_t)(char *utf8s, size_t utf8l, m
      If the callback returns a negative value, marpaESLIFValueResultProposalp is used.
      - It is an error the return a negative value in marpaESLIF has no support of this special floating point value
 */
-typedef short (*marpaESLIFJSONDecodePositiveInfinityAction_t)(marpaESLIFValueResult_t *marpaESLIFValueResultProposalp, marpaESLIFValueResult_t *marpaESLIFValueResultp); /* Eventual specialized +Infinity action */
-typedef short (*marpaESLIFJSONDecodeNegativeInfinityAction_t)(marpaESLIFValueResult_t *marpaESLIFValueResultProposalp, marpaESLIFValueResult_t *marpaESLIFValueResultp); /* Eventual specialized -Infinity action */
-typedef short (*marpaESLIFJSONDecodeNanAction_t)(marpaESLIFValueResult_t *marpaESLIFValueResultProposalp, marpaESLIFValueResult_t *marpaESLIFValueResultp); /* Eventual specialized Nan action */
+typedef short (*marpaESLIFJSONDecodePositiveInfinityAction_t)(void *userDatavp, marpaESLIFValueResult_t *marpaESLIFValueResultProposalp, marpaESLIFValueResult_t *marpaESLIFValueResultp); /* Eventual specialized +Infinity action */
+typedef short (*marpaESLIFJSONDecodeNegativeInfinityAction_t)(void *userDatavp, marpaESLIFValueResult_t *marpaESLIFValueResultProposalp, marpaESLIFValueResult_t *marpaESLIFValueResultp); /* Eventual specialized -Infinity action */
+typedef short (*marpaESLIFJSONDecodeNanAction_t)(void *userDatavp, marpaESLIFValueResult_t *marpaESLIFValueResultProposalp, marpaESLIFValueResult_t *marpaESLIFValueResultp); /* Eventual specialized Nan action */
 
 typedef struct marpaESLIFJSONDecodeOption {
   short                                        disallowDupkeysb;                /* Do not allow duplicate key in an object */
