@@ -1,7 +1,7 @@
 MACRO (FINDSTRTOF)
   GET_PROPERTY(source_dir_set GLOBAL PROPERTY MYPACKAGE_SOURCE_DIR SET)
   IF (NOT ${source_dir_set})
-    MESSAGE (WARNING "Cannot check inline, property MYPACKAGE_SOURCE_DIR is not set")
+    MESSAGE (WARNING "Cannot check strtof, property MYPACKAGE_SOURCE_DIR is not set")
   ELSE ()
     IF (NOT C_STRTOF_SINGLETON)
       GET_PROPERTY(source_dir GLOBAL PROPERTY MYPACKAGE_SOURCE_DIR)
