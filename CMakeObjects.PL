@@ -227,11 +227,9 @@ AUTOCONF
     # SUPPORT_UNICODE and EBCDIC are not compatible
     #
     if ($Config{ebcdic}) {
-        $ac->define_var('SUPPORT_UNICODE', 0);
         $ac->define_var('EBCDIC', 1);
     } else {
         $ac->define_var('SUPPORT_UNICODE', 1);
-        $ac->define_var('EBCDIC', 0);
     }
     $ac->define_var('LINK_SIZE', 2);
     $ac->define_var('MATCH_LIMIT', 10000000);
