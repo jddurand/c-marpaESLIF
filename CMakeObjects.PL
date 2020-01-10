@@ -223,8 +223,16 @@ AUTOCONF
     close($fh) || warn "Cannot close config_autoconf.ini, $!";
     my $ac = Config::AutoConf::INI->new(logfile => 'config.log');
     $ac->define_var('SUPPORT_PCRE2_8', 1);
-    $ac->define_var('SUPPORT_UNICODE', 1);
-    $ac->define_var('EBCDIC', 1) if $Config{ebcdic};
+    #
+    # SUPPORT_UNICODE and EBCDIC are not compatible
+    #
+    if ($Config{ebcdic}) {
+        $ac->define_var('SUPPORT_UNICODE', 0);
+        $ac->define_var('EBCDIC', 1);
+    } else {
+        $ac->define_var('SUPPORT_UNICODE', 1);
+        $ac->define_var('EBCDIC', 0);
+    }
     $ac->define_var('LINK_SIZE', 2);
     $ac->define_var('MATCH_LIMIT', 10000000);
     $ac->define_var('MATCH_LIMIT_RECURSION', 10000000);
