@@ -1,6 +1,5 @@
 use strict;
 use warnings FATAL => 'all';
-use Data::Scan::Printer;
 use Test::More;
 use Test::More::UTF8;
 use Log::Log4perl qw/:easy/;
@@ -154,7 +153,6 @@ sub doparse {
         BAIL_OUT("Failure with decode:\n$inputs\n");
     }
     $log->infof('Decoded: %s', $value);
-    dspp($value);
     #
     # Re-encode
     #
