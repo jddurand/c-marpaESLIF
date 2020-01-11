@@ -1,7 +1,6 @@
 #!env perl
 use strict;
 use diagnostics;
-use Archive::Tar;
 use Config;
 use Config::AutoConf;
 use Config::AutoConf::INI;
@@ -183,21 +182,11 @@ close($fh) || warn "Cannot close $export_h, $!";
 my @additional_includes = ();
 my @additional_srcdir = ();
 
-# ----------------------------------------------------------------------
-# We provide ourself PCRE2 that is a special beast, compiled stand-alone
-# ----------------------------------------------------------------------
-make_path(File::Spec->catdir('output', '3rdparty'));
+# ------------------------
+# We provide ourself PCRE2
+# ------------------------
 {
-    local $CWD = File::Spec->catdir('output', '3rdparty');
-    my $pcre2_tar = File::Spec->catfile(File::Spec->updir, File::Spec->updir, '3rdparty', 'tar', 'pcre2-10.23-patched.tar.gz');
-    print "... Extracting pcre2\n";
-    my $tar=Archive::Tar->new();
-    $tar->read($pcre2_tar);
-    $tar->extract();
-    undef $tar;
-}
-{
-    local $CWD = File::Spec->catdir('output', '3rdparty', 'pcre2-10.23');
+    local $CWD = File::Spec->catdir('3rdparty', 'untar', 'pcre2-10.23');
     print "... Compiling pcre2\n";
     my $fh;
     open($fh, '>', 'config_autoconf.ini') || die "Cannot open config_autoconf.ini, $!";
@@ -293,7 +282,7 @@ AUTOCONF
 	);
   }
 }
-push(@additional_includes, File::Spec->catdir('output', '3rdparty', 'pcre2-10.23'));
+push(@additional_includes, File::Spec->catdir('3rdparty', 'untar', 'pcre2-10.23'));
 
 # -------------------------------------------
 # marpaESLIF embeds my unpanic version of lua
