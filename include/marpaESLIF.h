@@ -385,40 +385,27 @@ typedef struct marpaESLIFSymbolProperty {
   marpaESLIFAction_t          *ifActionp;              /* Symbol if action */
 } marpaESLIFSymbolProperty_t;
 
-/* The number action is called if:
-   - marpaESLIF failed to parse the input (overflow or underflow)
-     + Then the callback MUST be set. It is called with marpaESLIFValueResultProposalp == NULL, callback must provide a value in marpaESLIFValueResultp
-   - marpaESLIF succeed to parse the input
-     + The the callback is called IF it is set
+/* For any JSON number (including +/-Infinity, +/-Nan):
+   - If marpaESLIF fails to support this floating point value, it will default to the UNDEF type
+   - If a corresponding callback is set, this will be called with:
+   * the input string (pointer and size)
+   * the proposal (can be the UNDEF type) that the user can overwrite
 
-     If the callback returns a false value, this is an error.
-     If the callback returns a positive value, marpaESLIFValueResultp must be set.
-     If the callback returns a negative value, marpaESLIFValueResultProposalp is used.
-     - It is an error the return a negative value in marpaESLIF failed to parse the input
+   For a finite number, marpaESLIF will try ONLY with the DOUBLE type if it can handle correctly overflow or underflow.
+   For +/-Infinity, if marpaESLIF has support for them, it will use it in a FLOAT type.
+   For +/-NaN, if marpaESLIF has NaN support, it will use it in a FLOAT type. Signed NaN is not explicitely supported.
 */
-typedef short (*marpaESLIFJSONDecodeNumberAction_t)(void *userDatavp, char *utf8s, size_t utf8l, marpaESLIFValueResult_t *marpaESLIFValueResultProposalp, marpaESLIFValueResult_t *marpaESLIFValueResultp);
-
-/* The positiveInfinity, negativeInfinty and NaN actions are called if:
-   - marpaESLIF has no support of this special floating point value
-   - marpaESLIF has support of this special floating point value and the callback is set
-
-     If the callback returns a false value, this is an error.
-     If the callback returns a positive value, marpaESLIFValueResultp must be set.
-     If the callback returns a negative value, marpaESLIFValueResultProposalp is used.
-     - It is an error the return a negative value in marpaESLIF has no support of this special floating point value
-*/
-typedef short (*marpaESLIFJSONDecodePositiveInfinityAction_t)(void *userDatavp, marpaESLIFValueResult_t *marpaESLIFValueResultProposalp, marpaESLIFValueResult_t *marpaESLIFValueResultp); /* Eventual specialized +Infinity action */
-typedef short (*marpaESLIFJSONDecodeNegativeInfinityAction_t)(void *userDatavp, marpaESLIFValueResult_t *marpaESLIFValueResultProposalp, marpaESLIFValueResult_t *marpaESLIFValueResultp); /* Eventual specialized -Infinity action */
-typedef short (*marpaESLIFJSONDecodeNanAction_t)(void *userDatavp, marpaESLIFValueResult_t *marpaESLIFValueResultProposalp, marpaESLIFValueResult_t *marpaESLIFValueResultp); /* Eventual specialized Nan action */
+typedef short (*marpaESLIFJSONProposalAction_t)(void *userDatavp, char *strings, size_t stringl, marpaESLIFValueResult_t *marpaESLIFValueResultp);
 
 typedef struct marpaESLIFJSONDecodeOption {
   short                                        disallowDupkeysb;                /* Do not allow duplicate key in an object */
   size_t                                       maxDepthl;                       /* Maximum depth - 0 if no maximum */
   short                                        noReplacementCharacterb;         /* No replacement character for invalid UTF-16 surrogates */
-  marpaESLIFJSONDecodeNumberAction_t           numberActionFallbackp;           /* Number action fallback if conversion under/overflows, or if marpaESLIF cannot handle under/overflow */
-  marpaESLIFJSONDecodePositiveInfinityAction_t positiveInfinityActionFallbackp; /* Positive infinity action fallback if marpaESLIF cannot handle +Infinity */
-  marpaESLIFJSONDecodeNegativeInfinityAction_t negativeInfinityActionFallbackp; /* Negative infinity action fallback if marpaESLIF cannot handle -Infinity */
-  marpaESLIFJSONDecodeNanAction_t              nanActionFallbackp;              /* NaN action fallback if marpaESLIF cannot handle NaN */
+  marpaESLIFJSONProposalAction_t               positiveInfinityActionp;         /* +Infinity action */
+  marpaESLIFJSONProposalAction_t               negativeInfinityActionp;         /* -Infinity action */
+  marpaESLIFJSONProposalAction_t               positiveNanActionp;              /* +Nan action */
+  marpaESLIFJSONProposalAction_t               negativeNanActionp;              /* -Nan action */
+  marpaESLIFJSONProposalAction_t               numberActionp;                   /* Number action */
 } marpaESLIFJSONDecodeOption_t;
 
 #ifdef __cplusplus

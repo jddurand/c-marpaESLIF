@@ -16,7 +16,9 @@ static short                                _marpaESLIFJSON_numberb(void *userDa
 static short                                _marpaESLIFJSON_unicodeb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
 static short                                _marpaESLIFJSON_positive_infinityb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
 static short                                _marpaESLIFJSON_negative_infinityb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
-static short                                _marpaESLIFJSON_nanb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
+static short                                _marpaESLIFJSON_positive_nanb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
+static short                                _marpaESLIFJSON_negative_nanb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
+static short                                _marpaESLIFJSON_proposalb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, marpaESLIFJSONProposalAction_t proposalp, char *strings, size_t stringl, marpaESLIFValueResult_t *marpaESLIFValueResultp);
 static short                                _marpaESLIFJSONRepresentationb(void *userDatavp, marpaESLIFValueResult_t *marpaESLIFValueResultp, char **inputcpp, size_t *inputlp, char **encodingasciisp);
 
 typedef struct marpaESLIFJSONContext {
@@ -151,9 +153,9 @@ static const char *marpaESLIFJSON_decode_extended_grammars =
   "# ----------------\n"
   "# Nan extension\n"
   "# ----------------\n"
-  "number   ::= '-NaN':i                                          action => nan\n"
-  "           | 'NaN':i                                           action => nan\n"
-  "           | '+NaN':i                                          action => nan\n"
+  "number   ::= '-NaN':i                                          action => negative_nan\n"
+  "           | 'NaN':i                                           action => positive_nan\n"
+  "           | '+NaN':i                                          action => positive_nan\n"
   "\n"
   "# -----------------\n"
   "# Control character\n"
@@ -674,8 +676,10 @@ static marpaESLIFValueRuleCallback_t _marpaESLIFJSONValueRuleActionResolverp(voi
     rcp = _marpaESLIFJSON_positive_infinityb;
   } else if (strcmp(actions, "negative_infinity") == 0) {
     rcp = _marpaESLIFJSON_negative_infinityb;
-  } else if (strcmp(actions, "nan") == 0) {
-    rcp = _marpaESLIFJSON_nanb;
+  } else if (strcmp(actions, "positive_nan") == 0) {
+    rcp = _marpaESLIFJSON_positive_nanb;
+  } else if (strcmp(actions, "negative_nan") == 0) {
+    rcp = _marpaESLIFJSON_negative_nanb;
   } else {
     MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "Unrecognized action \"%s\"", actions);
     goto err;
@@ -835,17 +839,15 @@ static short _marpaESLIFJSON_numberb(void *userDatavp, marpaESLIFValue_t *marpaE
 /*****************************************************************************/
 {
   marpaESLIFJSONContext_t            *marpaESLIFJSONContextp = (marpaESLIFJSONContext_t *) userDatavp;
-  marpaESLIFJSONDecodeNumberAction_t  numberActionFallbackp  = marpaESLIFJSONContextp->marpaESLIFJSONDecodeOptionp->numberActionFallbackp;
-  short                               overflowb              = 0;
-  short                               underflowb             = 0;
-  marpaESLIFValueResult_t             marpaESLIFValueResultProposal;
-  marpaESLIFValueResult_t            *marpaESLIFValueResultProposalp = NULL;
-  marpaESLIFValueResult_t             marpaESLIFValueResult;
-  marpaESLIFValueResult_t            *marpaESLIFValueResultp = &marpaESLIFValueResult;
-  marpaESLIFValueResult_t            *marpaESLIFValueResultInputp;
-  char                               *endptrp;
+#if defined(C_STRTOD) && defined(MARPAESLIF_HUGE_VAL)
+  short                               decimalPointb;
   char                               *decimalPoints;
-  short                               fallbackb;
+  char                               *endptrp;
+  char                               *endptrendp;
+  double                              d;
+#endif
+  marpaESLIFValueResult_t             marpaESLIFValueResult;
+  marpaESLIFValueResult_t            *marpaESLIFValueResultInputp;
   short                               rcb;
 
   /* Input is of type array by definition, UTF-8 encoded */
@@ -854,161 +856,54 @@ static short _marpaESLIFJSON_numberb(void *userDatavp, marpaESLIFValue_t *marpaE
     goto err;
   }
 
-  endptrp = marpaESLIFValueResultInputp->u.a.p;
-  /* Do our best - By definition this contains only ASCII things, and we always make sure that a lexeme is NUL terminated. */
-  if (((decimalPoints = strchr(marpaESLIFValueResultInputp->u.a.p, '.')) != NULL)
-      ||
-      (strchr(marpaESLIFValueResultInputp->u.a.p, 'e') != NULL)
-      ||
-      (strchr(marpaESLIFValueResultInputp->u.a.p, 'E') != NULL)
-      ) {
+  endptrendp = marpaESLIFValueResultInputp->u.a.p + marpaESLIFValueResultInputp->u.a.sizel;
 
-#if (defined(C_STRTOLD) && defined(MARPAESLIF_HUGE_VALL)) || (defined(C_STRTOD) && defined(MARPAESLIF_HUGE_VAL)) || (defined(C_STRTOF) && defined(MARPAESLIF_HUGE_VALF))
-    /* If locale's decimal point is not '.', change it if is exists */
-    if ((decimalPoints != NULL) && (*decimalPoints != '.') && (marpaESLIFJSONContextp->decimalPointc != '.')) {
-      *decimalPoints = marpaESLIFJSONContextp->decimalPointc;
-    }
-    errno = 0;    /* To distinguish success/failure after call */
-#  if defined(C_STRTOLD) && defined(MARPAESLIF_HUGE_VALL)
-    /* We prefer the long double, if possible */
-    marpaESLIFValueResultProposal.contextp        = NULL;
-    marpaESLIFValueResultProposal.representationp = NULL;
-    marpaESLIFValueResultProposal.type            = MARPAESLIF_VALUE_TYPE_LONG_DOUBLE;
-    marpaESLIFValueResultProposal.u.ld            = C_STRTOLD(marpaESLIFValueResultInputp->u.a.p, &endptrp);
-    /* Restore decimal point in any case */
-    if (decimalPoints != NULL) {
-      *decimalPoints = '.';
-    }
-    if ((errno == ERANGE) && ((marpaESLIFValueResultProposal.u.ld == MARPAESLIF_HUGE_VALL) || (marpaESLIFValueResultProposal.u.ld == -MARPAESLIF_HUGE_VALL))) {
-      overflowb = 1;
-    }
-    else if ((marpaESLIFValueResultProposal.u.ld == 0) && (errno != 0)) {
-      underflowb = 1;
-    } else {
-      marpaESLIFValueResultProposalp = &marpaESLIFValueResultProposal;
-    }
-#  else /* C_STRTOLD && MARPAESLIF_HUGE_VALL */
-#    if defined(C_STRTOD) && defined(MARPAESLIF_HUGE_VAL)
-    marpaESLIFValueResultProposal.contextp        = NULL;
-    marpaESLIFValueResultProposal.representationp = NULL;
-    marpaESLIFValueResultProposal.type            = MARPAESLIF_VALUE_TYPE_DOUBLE;
-    marpaESLIFValueResultProposal.u.d             = C_STRTOD(marpaESLIFValueResultInputp->u.a.p, &endptrp);
-    /* Restore decimal point in any case */
-    if (decimalPoints != NULL) {
-      *decimalPoints = '.';
-    }
-    if ((errno == ERANGE) && ((marpaESLIFValueResultProposal.u.d == MARPAESLIF_HUGE_VAL) || (marpaESLIFValueResultProposal.u.d == -MARPAESLIF_HUGE_VAL))) {
-      overflowb = 1;
-    }
-    else if ((marpaESLIFValueResultProposal.u.d == 0) && (errno != 0)) {
-      underflowb = 1;
-    }
-    else {
-      marpaESLIFValueResultProposalp = &marpaESLIFValueResultProposal;
-    }
-#    else /* C_STRTOD && MARPAESLIF_HUGE_VAL */
-#      if defined(C_STRTOF) && defined(MARPAESLIF_HUGE_VALF)
-    marpaESLIFValueResultProposal.contextp        = NULL;
-    marpaESLIFValueResultProposal.representationp = NULL;
-    marpaESLIFValueResultProposal.type            = MARPAESLIF_VALUE_TYPE_FLOAT;
-    marpaESLIFValueResultProposal.u.f             = C_STRTOF(marpaESLIFValueResultInputp->u.a.p, &endptrp);
-    /* Restore decimal point in any case */
-    if (decimalPoints != NULL) {
-      *decimalPoints = '.';
-    }
-    if ((errno == ERANGE) && ((marpaESLIFValueResultProposal.u.f == MARPAESLIF_HUGE_VALF) || (marpaESLIFValueResultProposal.u.f == -MARPAESLIF_HUGE_VALF))) {
-      overflowb = 1;
-    }
-    else if ((marpaESLIFValueResultProposal.u.f == 0) && (errno != 0)) {
-      underflowb = 1;
-    }
-    else {
-      marpaESLIFValueResultProposalp = &marpaESLIFValueResultProposal;
-    }
-#      endif /* C_STRTOF && MARPAESLIF_HUGE_VALF */
-#    endif /* C_STRTOD && MARPAESLIF_HUGE_VAL */
-#  endif /* C_STRTOLD && MARPAESLIF_HUGE_VALL */
-#endif /* (C_STRTOLD && MARPAESLIF_HUGE_VALL) || (C_STRTOD && MARPAESLIF_HUGE_VAL) || (C_STRTOF && MARPAESLIF_HUGE_VALF) */
+#if defined(C_STRTOD) && defined(MARPAESLIF_HUGE_VAL)
+  /* Do we have to change the decimal point representation ? */
+  decimalPoints = strchr(marpaESLIFValueResultInputp->u.a.p, '.');
+  decimalPointb = ((decimalPoints != NULL) && (*decimalPoints != marpaESLIFJSONContextp->decimalPointc)) ? 1 : 0;
+  if (decimalPointb) {
+    *decimalPoints = marpaESLIFJSONContextp->decimalPointc;
+  }
+
+  endptrp = NULL;
+  errno = 0;    /* To distinguish success/failure after call */
+  d = C_STRTOD(marpaESLIFValueResultInputp->u.a.p, &endptrp);
+  if (! ((endptrp != endptrendp) /* Parsing error */
+         ||
+         ((errno == ERANGE) && ((d == MARPAESLIF_HUGE_VAL) || (d == -MARPAESLIF_HUGE_VAL))) /* Overflow */
+         ||
+         ((d == 0.) && (errno != 0)) /* Underflow */
+         )) {
+    marpaESLIFValueResult.contextp        = NULL;
+    marpaESLIFValueResult.representationp = NULL;
+    marpaESLIFValueResult.type            = MARPAESLIF_VALUE_TYPE_DOUBLE;
+    marpaESLIFValueResult.u.d             = d;
   } else {
-#if defined(MARPAESLIF_HAVE_LONG_LONG) && defined(C_STRTOLL)
-    marpaESLIFValueResultProposal.contextp        = NULL;
-    marpaESLIFValueResultProposal.representationp = NULL;
-    marpaESLIFValueResultProposal.type            = MARPAESLIF_VALUE_TYPE_LONG_LONG;
-    marpaESLIFValueResultProposal.u.ll            = C_STRTOLL(marpaESLIFValueResultInputp->u.a.p, &endptrp, 10);
-    if ((errno == ERANGE) && (marpaESLIFValueResultProposal.u.ll == MARPAESLIF_LLONG_MAX)) {
-      overflowb = 1;
-    }
-    else if ((errno == ERANGE) && (marpaESLIFValueResultProposal.u.ll == MARPAESLIF_LLONG_MIN)) {
-      underflowb = 1;
-    }
-    else {
-      marpaESLIFValueResultProposalp = &marpaESLIFValueResultProposal;
-    }
-#else
-    marpaESLIFValueResultProposal.contextp        = NULL;
-    marpaESLIFValueResultProposal.representationp = NULL;
-    marpaESLIFValueResultProposal.type            = MARPAESLIF_VALUE_TYPE_LONG;
-    marpaESLIFValueResultProposal.u.l             = strtol(marpaESLIFValueResultInputp->u.a.p, &endptrp, 10);
-    if ((errno == ERANGE) && (marpaESLIFValueResultProposal.u.l == LONG_MIN)) {
-      overflowb = 1;
-    }
-    else if ((errno == ERANGE) && (marpaESLIFValueResultProposal.u.l == LONG_MAX)) {
-      underflowb = 1;
-    }
-    else {
-      marpaESLIFValueResultProposalp = &marpaESLIFValueResultProposal;
-    }
-#endif
+    marpaESLIFValueResult.contextp        = NULL;
+    marpaESLIFValueResult.representationp = NULL;
+    marpaESLIFValueResult.type            = MARPAESLIF_VALUE_TYPE_UNDEF;
   }
+  if (decimalPointb) {
+    *decimalPoints = '.';
+  }
+#else /* C_STRTOD && MARPAESLIF_HUGE_VAL */
+  marpaESLIFValueResult.contextp        = NULL;
+  marpaESLIFValueResult.representationp = NULL;
+  marpaESLIFValueResult.type            = MARPAESLIF_VALUE_TYPE_UNDEF;
+#endif /* C_STRTOD && MARPAESLIF_HUGE_VAL */
 
-  /* Common to all cases: we always used strtoXXX() functions */
-  if (endptrp == marpaESLIFValueResultInputp->u.a.p) {
-    MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "%s: Nothing consumed when converting to a number", marpaESLIFValueResultInputp->u.a.p);
-    goto err;
-  }
-  if (endptrp != (marpaESLIFValueResultInputp->u.a.p + marpaESLIFValueResultInputp->u.a.sizel)) {
-    MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "%s: Not all input was consumed when converting to a number", marpaESLIFValueResultInputp->u.a.p);
+
+  if (! _marpaESLIFJSON_proposalb(userDatavp,
+                                  marpaESLIFValuep,
+                                  marpaESLIFJSONContextp->marpaESLIFJSONDecodeOptionp->numberActionp,
+                                  marpaESLIFValueResultInputp->u.a.p,
+                                  marpaESLIFValueResultInputp->u.a.sizel,
+                                  &marpaESLIFValueResult)) {
     goto err;
   }
 
-  if (marpaESLIFValueResultProposalp == NULL) {
-    /* Parsing failure: the fallback MUST be set */
-    if (numberActionFallbackp == NULL) {
-      if (overflowb) {
-        MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "%s: Parsing caused overflow and no number action fallback is set", marpaESLIFValueResultInputp->u.a.p);
-      } else if (underflowb) {
-        MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "%s: Parsing caused underflow and no number action fallback is set", marpaESLIFValueResultInputp->u.a.p);
-      } else {
-        /* This should never happen */
-        MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "%s: Parsing error and no number action fallback is set", marpaESLIFValueResultInputp->u.a.p);
-      }
-      goto err;
-    } else {
-      fallbackb = numberActionFallbackp(marpaESLIFJSONContextp->marpaESLIFValueOptionp->userDatavp, marpaESLIFValueResultInputp->u.a.p, marpaESLIFValueResultInputp->u.a.sizel, NULL /* marpaESLIFValueResultProposalp */, marpaESLIFValueResultp);
-      if (fallbackb <= 0) { /* Must be positive, indicating that *marpaESLIFValueResultp is set */
-        MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "%s: Parsing error and callback return value is <= 0", marpaESLIFValueResultInputp->u.a.p);
-        goto err;
-      }
-    }
-  } else {
-    /* Parsing success: send proposal if fallback is set */
-    if (numberActionFallbackp != NULL) {
-      fallbackb = numberActionFallbackp(marpaESLIFJSONContextp->marpaESLIFValueOptionp->userDatavp, marpaESLIFValueResultInputp->u.a.p, marpaESLIFValueResultInputp->u.a.sizel, marpaESLIFValueResultProposalp, marpaESLIFValueResultp);
-      if (! fallbackb) {
-        MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "%s: Number action success but fallback failure", marpaESLIFValueResultInputp->u.a.p);
-        goto err;
-      }
-      else if (fallbackb < 0) {
-        /* Use marpaESLIFValueResultProposal */
-        marpaESLIFValueResultp = marpaESLIFValueResultProposalp;
-      }
-    } else {
-      /* Use marpaESLIFValueResultProposal */
-      marpaESLIFValueResultp = marpaESLIFValueResultProposalp;
-    }
-  }
-
-  rcb = _marpaESLIFValue_stack_setb(marpaESLIFValuep, resulti, marpaESLIFValueResultp);
+  rcb = _marpaESLIFValue_stack_setb(marpaESLIFValuep, resulti, &marpaESLIFValueResult);
   goto done;
 
  err:
@@ -1165,51 +1060,39 @@ static short _marpaESLIFJSON_unicodeb(void *userDatavp, marpaESLIFValue_t *marpa
 static short _marpaESLIFJSON_positive_infinityb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb)
 /*****************************************************************************/
 {
-  marpaESLIFJSONContext_t                      *marpaESLIFJSONContextp          = (marpaESLIFJSONContext_t *) userDatavp;
-  marpaESLIFJSONDecodePositiveInfinityAction_t  positiveInfinityActionFallbackp = marpaESLIFJSONContextp->marpaESLIFJSONDecodeOptionp->positiveInfinityActionFallbackp;
-  marpaESLIFValueResult_t                       marpaESLIFValueResultProposal;
-  marpaESLIFValueResult_t                      *marpaESLIFValueResultProposalp  = NULL;
-  marpaESLIFValueResult_t                       marpaESLIFValueResult;
-  marpaESLIFValueResult_t                      *marpaESLIFValueResultp          = &marpaESLIFValueResult;
-  short                                         fallbackb;
-  short                                         rcb;
+  marpaESLIFJSONContext_t *marpaESLIFJSONContextp = (marpaESLIFJSONContext_t *) userDatavp;
+  marpaESLIFValueOption_t *marpaESLIFValueOptionp = marpaESLIFJSONContextp->marpaESLIFValueOptionp;
+  marpaESLIFValueResult_t  marpaESLIFValueResult;
+  marpaESLIFValueResult_t *marpaESLIFValueResultInputp;
+  short                    rcb;
 
-#ifdef MARPAESLIF_INFINITY
-  marpaESLIFValueResultProposal.contextp        = NULL;
-  marpaESLIFValueResultProposal.representationp = NULL;
-  marpaESLIFValueResultProposal.type            = MARPAESLIF_VALUE_TYPE_FLOAT;
-  marpaESLIFValueResultProposal.u.f             = MARPAESLIF_INFINITY;
-
-  marpaESLIFValueResultProposalp = &marpaESLIFValueResultProposal;
-#endif
-
-  if (marpaESLIFValueResultProposalp == NULL) {
-    if (positiveInfinityActionFallbackp == NULL) {
-      MARPAESLIF_ERROR(marpaESLIFValuep->marpaESLIFp, "No positive infinity support and callback is not set");
-      goto err;
-    } else {
-      fallbackb = positiveInfinityActionFallbackp(marpaESLIFJSONContextp->marpaESLIFValueOptionp->userDatavp, NULL /* marpaESLIFValueResultProposalp */, marpaESLIFValueResultp);
-      if (fallbackb <= 0) {
-        MARPAESLIF_ERROR(marpaESLIFValuep->marpaESLIFp, "No positive infinity support and callback return value is <= 0");
-        goto err;
-      }
-    }
-  } else {
-    if (positiveInfinityActionFallbackp != NULL) {
-      fallbackb = positiveInfinityActionFallbackp(marpaESLIFJSONContextp->marpaESLIFValueOptionp->userDatavp, marpaESLIFValueResultProposalp, marpaESLIFValueResultp);
-      if (! fallbackb) {
-        MARPAESLIF_ERROR(marpaESLIFValuep->marpaESLIFp, "Positive infinity support but callback returned failure");
-      } else if (fallbackb < 0) {
-        /* Use marpaESLIFValueResultProposalp */
-        marpaESLIFValueResultp = marpaESLIFValueResultProposalp;
-      }
-    } else {
-      /* Use marpaESLIFValueResultProposalp */
-      marpaESLIFValueResultp = marpaESLIFValueResultProposalp;
-    }
+  /* Input is of type array by definition, UTF-8 encoded */
+  marpaESLIFValueResultInputp = _marpaESLIFValue_stack_getp(marpaESLIFValuep, arg0i);
+  if (marpaESLIFValueResultInputp == NULL) {
+    goto err;
   }
 
-  rcb = _marpaESLIFValue_stack_setb(marpaESLIFValuep, resulti, marpaESLIFValueResultp);
+#ifdef MARPAESLIF_INFINITY
+  marpaESLIFValueResult.contextp        = NULL;
+  marpaESLIFValueResult.representationp = NULL;
+  marpaESLIFValueResult.type            = MARPAESLIF_VALUE_TYPE_FLOAT;
+  marpaESLIFValueResult.u.f             = MARPAESLIF_INFINITY;
+#else
+  marpaESLIFValueResult.contextp        = NULL;
+  marpaESLIFValueResult.representationp = NULL;
+  marpaESLIFValueResult.type            = MARPAESLIF_VALUE_TYPE_UNDEF;
+#endif
+
+  if (! _marpaESLIFJSON_proposalb(userDatavp,
+                                  marpaESLIFValuep,
+                                  marpaESLIFJSONContextp->marpaESLIFJSONDecodeOptionp->positiveInfinityActionp,
+                                  marpaESLIFValueResultInputp->u.a.p,
+                                  marpaESLIFValueResultInputp->u.a.sizel,
+                                  &marpaESLIFValueResult)) {
+    goto err;
+  }
+
+  rcb = _marpaESLIFValue_stack_setb(marpaESLIFValuep, resulti, &marpaESLIFValueResult);
   goto done;
 
  err:
@@ -1223,51 +1106,39 @@ static short _marpaESLIFJSON_positive_infinityb(void *userDatavp, marpaESLIFValu
 static short _marpaESLIFJSON_negative_infinityb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb)
 /*****************************************************************************/
 {
-  marpaESLIFJSONContext_t                      *marpaESLIFJSONContextp          = (marpaESLIFJSONContext_t *) userDatavp;
-  marpaESLIFJSONDecodeNegativeInfinityAction_t  negativeInfinityActionFallbackp = marpaESLIFJSONContextp->marpaESLIFJSONDecodeOptionp->negativeInfinityActionFallbackp;
-  marpaESLIFValueResult_t                       marpaESLIFValueResultProposal;
-  marpaESLIFValueResult_t                      *marpaESLIFValueResultProposalp  = NULL;
-  marpaESLIFValueResult_t                       marpaESLIFValueResult;
-  marpaESLIFValueResult_t                      *marpaESLIFValueResultp          = &marpaESLIFValueResult;
-  short                                         fallbackb;
-  short                                         rcb;
+  marpaESLIFJSONContext_t *marpaESLIFJSONContextp = (marpaESLIFJSONContext_t *) userDatavp;
+  marpaESLIFValueOption_t *marpaESLIFValueOptionp = marpaESLIFJSONContextp->marpaESLIFValueOptionp;
+  marpaESLIFValueResult_t  marpaESLIFValueResult;
+  marpaESLIFValueResult_t *marpaESLIFValueResultInputp;
+  short                    rcb;
 
-#ifdef MARPAESLIF_INFINITY
-  marpaESLIFValueResultProposal.contextp        = NULL;
-  marpaESLIFValueResultProposal.representationp = NULL;
-  marpaESLIFValueResultProposal.type            = MARPAESLIF_VALUE_TYPE_FLOAT;
-  marpaESLIFValueResultProposal.u.f             = -MARPAESLIF_INFINITY;
-
-  marpaESLIFValueResultProposalp = &marpaESLIFValueResultProposal;
-#endif
-
-  if (marpaESLIFValueResultProposalp == NULL) {
-    if (negativeInfinityActionFallbackp == NULL) {
-      MARPAESLIF_ERROR(marpaESLIFValuep->marpaESLIFp, "No negative infinity support and callback is not set");
-      goto err;
-    } else {
-      fallbackb = negativeInfinityActionFallbackp(marpaESLIFJSONContextp->marpaESLIFValueOptionp->userDatavp, NULL /* marpaESLIFValueResultProposalp */, marpaESLIFValueResultp);
-      if (fallbackb <= 0) {
-        MARPAESLIF_ERROR(marpaESLIFValuep->marpaESLIFp, "No negative infinity support and callback return value is <= 0");
-        goto err;
-      }
-    }
-  } else {
-    if (negativeInfinityActionFallbackp != NULL) {
-      fallbackb = negativeInfinityActionFallbackp(marpaESLIFJSONContextp->marpaESLIFValueOptionp->userDatavp, marpaESLIFValueResultProposalp, marpaESLIFValueResultp);
-      if (! fallbackb) {
-        MARPAESLIF_ERROR(marpaESLIFValuep->marpaESLIFp, "Negative infinity support but callback returned failure");
-      } else if (fallbackb < 0) {
-        /* Use marpaESLIFValueResultProposalp */
-        marpaESLIFValueResultp = marpaESLIFValueResultProposalp;
-      }
-    } else {
-      /* Use marpaESLIFValueResultProposalp */
-      marpaESLIFValueResultp = marpaESLIFValueResultProposalp;
-    }
+  /* Input is of type array by definition, UTF-8 encoded */
+  marpaESLIFValueResultInputp = _marpaESLIFValue_stack_getp(marpaESLIFValuep, arg0i);
+  if (marpaESLIFValueResultInputp == NULL) {
+    goto err;
   }
 
-  rcb = _marpaESLIFValue_stack_setb(marpaESLIFValuep, resulti, marpaESLIFValueResultp);
+#ifdef MARPAESLIF_INFINITY
+  marpaESLIFValueResult.contextp        = NULL;
+  marpaESLIFValueResult.representationp = NULL;
+  marpaESLIFValueResult.type            = MARPAESLIF_VALUE_TYPE_FLOAT;
+  marpaESLIFValueResult.u.f             = -MARPAESLIF_INFINITY;
+#else
+  marpaESLIFValueResult.contextp        = NULL;
+  marpaESLIFValueResult.representationp = NULL;
+  marpaESLIFValueResult.type            = MARPAESLIF_VALUE_TYPE_UNDEF;
+#endif
+
+  if (! _marpaESLIFJSON_proposalb(userDatavp,
+                                  marpaESLIFValuep,
+                                  marpaESLIFJSONContextp->marpaESLIFJSONDecodeOptionp->negativeInfinityActionp,
+                                  marpaESLIFValueResultInputp->u.a.p,
+                                  marpaESLIFValueResultInputp->u.a.sizel,
+                                  &marpaESLIFValueResult)) {
+    goto err;
+  }
+
+  rcb = _marpaESLIFValue_stack_setb(marpaESLIFValuep, resulti, &marpaESLIFValueResult);
   goto done;
 
  err:
@@ -1278,54 +1149,88 @@ static short _marpaESLIFJSON_negative_infinityb(void *userDatavp, marpaESLIFValu
 }
 
 /*****************************************************************************/
-static short _marpaESLIFJSON_nanb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb)
+static short _marpaESLIFJSON_positive_nanb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb)
 /*****************************************************************************/
 {
-  marpaESLIFJSONContext_t         *marpaESLIFJSONContextp         = (marpaESLIFJSONContext_t *) userDatavp;
-  marpaESLIFJSONDecodeNanAction_t  nanActionFallbackp             = marpaESLIFJSONContextp->marpaESLIFJSONDecodeOptionp->nanActionFallbackp;
-  marpaESLIFValueResult_t          marpaESLIFValueResultProposal;
-  marpaESLIFValueResult_t         *marpaESLIFValueResultProposalp = NULL;
-  marpaESLIFValueResult_t          marpaESLIFValueResult;
-  marpaESLIFValueResult_t         *marpaESLIFValueResultp         = &marpaESLIFValueResult;
-  short                            fallbackb;
-  short                            rcb;
+  marpaESLIFJSONContext_t *marpaESLIFJSONContextp = (marpaESLIFJSONContext_t *) userDatavp;
+  marpaESLIFValueOption_t *marpaESLIFValueOptionp = marpaESLIFJSONContextp->marpaESLIFValueOptionp;
+  marpaESLIFValueResult_t  marpaESLIFValueResult;
+  marpaESLIFValueResult_t *marpaESLIFValueResultInputp;
+  short                    rcb;
 
-#ifdef MARPAESLIF_NAN
-  marpaESLIFValueResultProposal.contextp        = NULL;
-  marpaESLIFValueResultProposal.representationp = NULL;
-  marpaESLIFValueResultProposal.type            = MARPAESLIF_VALUE_TYPE_FLOAT;
-  marpaESLIFValueResultProposal.u.f             = MARPAESLIF_NAN;
-
-  marpaESLIFValueResultProposalp = &marpaESLIFValueResultProposal;
-#endif
-
-  if (marpaESLIFValueResultProposalp == NULL) {
-    if (nanActionFallbackp == NULL) {
-      MARPAESLIF_ERROR(marpaESLIFValuep->marpaESLIFp, "No nan support and callback is not set");
-      goto err;
-    } else {
-      fallbackb = nanActionFallbackp(marpaESLIFJSONContextp->marpaESLIFValueOptionp->userDatavp, NULL /* marpaESLIFValueResultProposalp */, marpaESLIFValueResultp);
-      if (fallbackb <= 0) {
-        MARPAESLIF_ERROR(marpaESLIFValuep->marpaESLIFp, "No nan support and callback return value is <= 0");
-        goto err;
-      }
-    }
-  } else {
-    if (nanActionFallbackp != NULL) {
-      fallbackb = nanActionFallbackp(marpaESLIFJSONContextp->marpaESLIFValueOptionp->userDatavp, marpaESLIFValueResultProposalp, marpaESLIFValueResultp);
-      if (! fallbackb) {
-        MARPAESLIF_ERROR(marpaESLIFValuep->marpaESLIFp, "Nan support but callback returned failure");
-      } else if (fallbackb < 0) {
-        /* use marpaESLIFValueResultProposalp */
-        marpaESLIFValueResultp = marpaESLIFValueResultProposalp;
-      }
-    } else {
-      /* Use marpaESLIFValueResultProposalp */
-      marpaESLIFValueResultp = marpaESLIFValueResultProposalp;
-    }
+  /* Input is of type array by definition, UTF-8 encoded */
+  marpaESLIFValueResultInputp = _marpaESLIFValue_stack_getp(marpaESLIFValuep, arg0i);
+  if (marpaESLIFValueResultInputp == NULL) {
+    goto err;
   }
 
-  rcb = _marpaESLIFValue_stack_setb(marpaESLIFValuep, resulti, marpaESLIFValueResultp);
+#ifdef MARPAESLIF_NAN
+  marpaESLIFValueResult.contextp        = NULL;
+  marpaESLIFValueResult.representationp = NULL;
+  marpaESLIFValueResult.type            = MARPAESLIF_VALUE_TYPE_FLOAT;
+  marpaESLIFValueResult.u.f             = MARPAESLIF_NAN;
+#else
+  marpaESLIFValueResult.contextp        = NULL;
+  marpaESLIFValueResult.representationp = NULL;
+  marpaESLIFValueResult.type            = MARPAESLIF_VALUE_TYPE_UNDEF;
+#endif
+
+  if (! _marpaESLIFJSON_proposalb(userDatavp,
+                                  marpaESLIFValuep,
+                                  marpaESLIFJSONContextp->marpaESLIFJSONDecodeOptionp->positiveNanActionp,
+                                  marpaESLIFValueResultInputp->u.a.p,
+                                  marpaESLIFValueResultInputp->u.a.sizel,
+                                  &marpaESLIFValueResult)) {
+    goto err;
+  }
+
+  rcb = _marpaESLIFValue_stack_setb(marpaESLIFValuep, resulti, &marpaESLIFValueResult);
+  goto done;
+
+ err:
+  rcb = 0;
+
+ done:
+  return rcb;
+}
+
+/*****************************************************************************/
+static short _marpaESLIFJSON_negative_nanb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb)
+/*****************************************************************************/
+{
+  marpaESLIFJSONContext_t *marpaESLIFJSONContextp = (marpaESLIFJSONContext_t *) userDatavp;
+  marpaESLIFValueOption_t *marpaESLIFValueOptionp = marpaESLIFJSONContextp->marpaESLIFValueOptionp;
+  marpaESLIFValueResult_t  marpaESLIFValueResult;
+  marpaESLIFValueResult_t *marpaESLIFValueResultInputp;
+  short                    rcb;
+
+  /* Input is of type array by definition, UTF-8 encoded */
+  marpaESLIFValueResultInputp = _marpaESLIFValue_stack_getp(marpaESLIFValuep, arg0i);
+  if (marpaESLIFValueResultInputp == NULL) {
+    goto err;
+  }
+
+#ifdef MARPAESLIF_NAN
+  marpaESLIFValueResult.contextp        = NULL;
+  marpaESLIFValueResult.representationp = NULL;
+  marpaESLIFValueResult.type            = MARPAESLIF_VALUE_TYPE_FLOAT;
+  marpaESLIFValueResult.u.f             = MARPAESLIF_NAN;
+#else
+  marpaESLIFValueResult.contextp        = NULL;
+  marpaESLIFValueResult.representationp = NULL;
+  marpaESLIFValueResult.type            = MARPAESLIF_VALUE_TYPE_UNDEF;
+#endif
+
+  if (! _marpaESLIFJSON_proposalb(userDatavp,
+                                  marpaESLIFValuep,
+                                  marpaESLIFJSONContextp->marpaESLIFJSONDecodeOptionp->negativeNanActionp,
+                                  marpaESLIFValueResultInputp->u.a.p,
+                                  marpaESLIFValueResultInputp->u.a.sizel,
+                                  &marpaESLIFValueResult)) {
+    goto err;
+  }
+
+  rcb = _marpaESLIFValue_stack_setb(marpaESLIFValuep, resulti, &marpaESLIFValueResult);
   goto done;
 
  err:
@@ -1344,4 +1249,34 @@ static short _marpaESLIFJSONRepresentationb(void *userDatavp, marpaESLIFValueRes
 
   /* Proxy to caller's representation */
   return marpaESLIFValueResultp->representationp(marpaESLIFValueOptionp->userDatavp, marpaESLIFValueResultp, inputcpp, inputlp, encodingasciisp);
+}
+
+/*****************************************************************************/
+static short _marpaESLIFJSON_proposalb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, marpaESLIFJSONProposalAction_t proposalp, char *strings, size_t stringl, marpaESLIFValueResult_t *marpaESLIFValueResultp)
+/*****************************************************************************/
+{
+  marpaESLIFJSONContext_t *marpaESLIFJSONContextp;
+  marpaESLIFValueOption_t *marpaESLIFValueOptionp;
+  short                    rcb;
+
+  if (proposalp != NULL) {
+    marpaESLIFJSONContextp = (marpaESLIFJSONContext_t *) userDatavp;
+    marpaESLIFValueOptionp = marpaESLIFJSONContextp->marpaESLIFValueOptionp;
+
+    if (! proposalp(marpaESLIFValueOptionp->userDatavp, strings, stringl, marpaESLIFValueResultp)) {
+      MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "%s: Callback failure", strings);
+      goto err;
+    }
+  } else if (marpaESLIFValueResultp->type == MARPAESLIF_VALUE_TYPE_UNDEF) {
+    MARPAESLIF_WARNF(marpaESLIFValuep->marpaESLIFp, "%s: Parsing failure, using undefined value", strings);
+  }
+
+  rcb = 1;
+  goto done;
+
+ err:
+  rcb = 0;
+
+ done:
+  return rcb;
 }

@@ -60,10 +60,11 @@ int main(int argc, char **argv) {
     marpaESLIFJSONDecodeOption.disallowDupkeysb                = 0;
     marpaESLIFJSONDecodeOption.maxDepthl                       = 0;
     marpaESLIFJSONDecodeOption.noReplacementCharacterb         = 0;
-    marpaESLIFJSONDecodeOption.numberActionFallbackp           = NULL;
-    marpaESLIFJSONDecodeOption.positiveInfinityActionFallbackp = NULL;
-    marpaESLIFJSONDecodeOption.negativeInfinityActionFallbackp = NULL;
-    marpaESLIFJSONDecodeOption.nanActionFallbackp              = NULL;
+    marpaESLIFJSONDecodeOption.positiveInfinityActionp         = NULL; /* +Infinity action */
+    marpaESLIFJSONDecodeOption.negativeInfinityActionp         = NULL; /* -Infinity action */
+    marpaESLIFJSONDecodeOption.positiveNanActionp              = NULL; /* +Nan action */
+    marpaESLIFJSONDecodeOption.negativeNanActionp              = NULL; /* -Nan action */
+    marpaESLIFJSONDecodeOption.numberActionp                   = NULL; /* Number action */
 
     marpaESLIFTester_context.inputl = 0;
 
