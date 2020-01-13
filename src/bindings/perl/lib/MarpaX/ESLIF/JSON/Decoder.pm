@@ -89,7 +89,7 @@ sub new {
 
    my $value = $eslifJSONDecoder->decode($string);
 
-Returns a value containing decoded JSON string. In relax mode, special floating point are supported:
+Returns a value containing decoded C<$string>. In relax mode, special floating point are supported:
 
 =over
 
@@ -111,6 +111,10 @@ Supported options are:
 
 =over
 
+=item encoding
+
+Input encoding. Can be C<undef>.
+
 =item disallowDupkeys
 
 A true value will disallow duplicate keys. Default is a false value.
@@ -130,7 +134,7 @@ A true value will disallow UTF-8 replacement character for invalid UTF-16 surrog
 sub decode {
     my ($self, $string, %options) = @_;
 
-    my $recognizerInterface = MarpaX::ESLIF::JSON::Decoder::RecognizerInterface->new(input => $string);
+    my $recognizerInterface = MarpaX::ESLIF::JSON::Decoder::RecognizerInterface->new($string, $options{encoding});
     return MarpaX::ESLIF::JSON::Decoder::_decode($self, $recognizerInterface, $options{disallowDupkeys}, $options{maxDepth}, $options{noReplacementCharacter})
 }
 

@@ -103,7 +103,23 @@ Please refer to L<MarpaX::ESLIF::JSON::Decoder> for the options.
 sub decode {
     my ($self, $string, %options) = @_;
 
-    return $self->{decoder}->decode($string)
+    return $self->{decoder}->decode($string, %options)
 }
+
+=head1 NOTES
+
+=over
+
+=item Floating point special values
+
+C<+/-Infinity> and C<+/-NaN> are always mapped to L<Math::BigInt>'s C<binf()>, C<binf('-')>, C<bnan()>, C<bnan('-')>, respectively.
+
+=item other numbers
+
+They are always mapped to L<Math::BigFloat>.
+
+=back
+
+=cut
 
 1;

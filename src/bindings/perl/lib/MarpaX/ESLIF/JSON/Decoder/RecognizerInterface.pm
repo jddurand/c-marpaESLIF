@@ -30,50 +30,28 @@ MarpaX::ESLIF::JSON's Decoder Recognizer Interface
 # new
 # ============================================================================
 
-=head2 new($class, %options)
+=head2 new($class, $string, $encoding)
 
-Instantiate a new recognizer interface object. C<%options> should contain at least:
-
-=over
-
-=item input
-
-The input to parse
-
-=back
-
-C<%options> may contain:
+Instantiate a new recognizer interface object. Parameters are:
 
 =over
 
 =item input
 
-The input
+The input to parse. Default to the empty string.
 
 =item encoding
 
-The encoding of the data
-
-=item definitions
-
-A reference to a hash containing known definitions, where values must be a MarpaX::ESLIF boolean.
+The input's encoding. Can be C<undef>.
 
 =back
 
 =cut
 
 sub new {
-    my ($pkg, %options) = @_;
+    my ($pkg, $string, $encoding) = @_;
 
-    my $input = delete($options{input}) // '';
-
-    return bless
-        (
-         {
-             input => $input,
-             %options
-         },
-         $pkg)
+    return bless { input => $string // '', encoding => $encoding }, $pkg
 }
 
 =head2 Required methods
