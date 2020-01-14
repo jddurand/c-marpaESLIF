@@ -1313,8 +1313,6 @@ static void marpaESLIFPerl_valueContextCleanupv(pTHX_ MarpaX_ESLIF_Value_t *Perl
 static void marpaESLIFPerl_recognizerContextFreev(pTHX_ MarpaX_ESLIF_Recognizer_t *Perl_MarpaX_ESLIF_Recognizerp, short onStackb)
 /*****************************************************************************/
 {
-  int             i;
-  SV             *svp;
   SV             *Perl_MarpaX_ESLIF_Grammarp;
   SV             *Perl_recognizerInterfacep;
   SV             *Perl_MarpaX_ESLIF_Recognizer_origp;
@@ -1739,7 +1737,9 @@ static short marpaESLIFPerl_importb(marpaESLIFValue_t *marpaESLIFValuep, void *u
   SV                               *stringp;
   SV                               *encodingp;
   AV                               *listp;
+#if defined(MARPAESLIFPERL_UTF8_CROSSCHECK) && !defined(is_strict_utf8_string)
   SV                               *checkp;
+#endif
   size_t                            i;
   size_t                            j;
   short                             utf8b;
@@ -2358,8 +2358,6 @@ static void marpaESLIFPerl_stack_setv(pTHX_ marpaESLIF_t *marpaESLIFp, marpaESLI
   SV                      *iterp;
   AV                      *avp;
   SSize_t                  aviteratorl;
-  SV                      *encodingp;
-  SV                      *valuep;
   short                    marpaESLIFStringb;
 
   /* We maintain in parallel a marpaESLIFValueResult and an SV stacks */
@@ -2622,31 +2620,35 @@ static short marpaESLIFPerl_JSONDecodeNumberAction(void *userDatavp, char *strin
       /* Negative integer number */
       listp = newAV();
       av_push(listp, newSVsv(boot_Math__BigFloat__IV_MIN_svp));
-      svgep = marpaESLIFPerl_call_actionp(aTHX_ svp, "bge", listp, NULL /* Perl_MarpaX_ESLIF_Valuep */, 0 /* evalb */, 0 /* evalSilentb */);
+      svgep = marpaESLIFPerl_call_actionp(aTHX_ svp, "bcmp", listp, NULL /* Perl_MarpaX_ESLIF_Valuep */, 0 /* evalb */, 0 /* evalSilentb */);
       av_undef(listp);
-      isgeb = SvTRUE(svgep) ? 1 : 0;
+      isgeb = (SvIV(svgep) >= 0) ? 1 : 0;
+      MARPAESLIFPERL_REFCNT_DEC(svgep);
       if (isgeb) {
         /* IV_MIN <= x */
         listp = newAV();
         av_push(listp, newSVsv(boot_Math__BigFloat__IV_MAX_svp));
-        svlep = marpaESLIFPerl_call_actionp(aTHX_ svp, "ble", listp, NULL /* Perl_MarpaX_ESLIF_Valuep */, 0 /* evalb */, 0 /* evalSilentb */);
+        svlep = marpaESLIFPerl_call_actionp(aTHX_ svp, "bcmp", listp, NULL /* Perl_MarpaX_ESLIF_Valuep */, 0 /* evalb */, 0 /* evalSilentb */);
         av_undef(listp);
-        isleb = SvTRUE(svlep) ? 1 : 0;
+	isleb = (SvIV(svlep) <= 0) ? 1 : 0;
+	MARPAESLIFPERL_REFCNT_DEC(svlep);
       }
     } else {
       /* Positive integer number */
       listp = newAV();
       av_push(listp, newSVsv(boot_Math__BigFloat__UV_MIN_svp));
-      svgep = marpaESLIFPerl_call_actionp(aTHX_ svp, "bge", listp, NULL /* Perl_MarpaX_ESLIF_Valuep */, 0 /* evalb */, 0 /* evalSilentb */);
+      svgep = marpaESLIFPerl_call_actionp(aTHX_ svp, "bcmp", listp, NULL /* Perl_MarpaX_ESLIF_Valuep */, 0 /* evalb */, 0 /* evalSilentb */);
       av_undef(listp);
-      isgeb = SvTRUE(svgep) ? 1 : 0;
+      isgeb = (SvIV(svgep) >= 0) ? 1 : 0;
+      MARPAESLIFPERL_REFCNT_DEC(svgep);
       if (isgeb) {
         /* UV_MIN <= x */
         listp = newAV();
         av_push(listp, newSVsv(boot_Math__BigFloat__UV_MAX_svp));
-        svlep = marpaESLIFPerl_call_actionp(aTHX_ svp, "ble", listp, NULL /* Perl_MarpaX_ESLIF_Valuep */, 0 /* evalb */, 0 /* evalSilentb */);
+        svlep = marpaESLIFPerl_call_actionp(aTHX_ svp, "bcmp", listp, NULL /* Perl_MarpaX_ESLIF_Valuep */, 0 /* evalb */, 0 /* evalSilentb */);
         av_undef(listp);
-        isleb = SvTRUE(svlep) ? 1 : 0;
+	isleb = (SvIV(svlep) <= 0) ? 1 : 0;
+	MARPAESLIFPERL_REFCNT_DEC(svlep);
       }
     }
   }
@@ -3142,8 +3144,6 @@ CODE:
   MarpaX_ESLIF_Grammar_t      *Perl_MarpaX_ESLIF_Grammarp;
   marpaESLIFGrammar_t         *marpaESLIFGrammarp;
   marpaESLIFGrammarOption_t    marpaESLIFGrammarOption;
-  int                          ngrammari;
-  int                          i;
 
   marpaESLIFPerl_paramIsGrammarv(aTHX_ Perl_grammarp);
   if (items > 3) {
