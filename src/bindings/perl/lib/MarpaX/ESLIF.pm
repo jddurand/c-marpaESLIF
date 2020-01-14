@@ -42,6 +42,9 @@ BEGIN {
     # VERSION
 
     require XSLoader;
+    # Modules that we depent on bootstrap
+    use Math::BigFloat qw//;
+    use Math::BigInt qw//;
     XSLoader::load(__PACKAGE__, $VERSION);
 }
 
@@ -58,10 +61,6 @@ use MarpaX::ESLIF::Symbol::EventBitSet;
 use MarpaX::ESLIF::Symbol::Type;
 use MarpaX::ESLIF::Value::Type;
 use MarpaX::ESLIF::Rule::PropertyBitSet;
-
-# Other modules
-use Math::BigFloat qw//;
-use Math::BigInt qw//;
 
 =head1 DESCRIPTION
 

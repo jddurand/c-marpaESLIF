@@ -381,6 +381,10 @@ short boot_nvtype_is_long_doubleb;
 short boot_nvtype_is___float128;
 SV *boot_MarpaX__ESLIF__true_svp;
 SV *boot_MarpaX__ESLIF__false_svp;
+SV *boot_Math__BigFloat__UV_MIN_svp;
+SV *boot_Math__BigFloat__UV_MAX_svp;
+SV *boot_Math__BigFloat__IV_MIN_svp;
+SV *boot_Math__BigFloat__IV_MAX_svp;
 
 /*****************************************************************************/
 /* Macros                                                                    */
@@ -2590,12 +2594,75 @@ static short marpaESLIFPerl_JSONDecodeNumberAction(void *userDatavp, char *strin
   MarpaX_ESLIF_Value_t   *Perl_MarpaX_ESLIF_Valuep = (MarpaX_ESLIF_Value_t *) userDatavp;
   AV                      *listp;
   SV                      *svp;
+  SV                      *svisintp;
+  short                    isintb;
+  SV                      *svnegp;
+  short                    isnegb;
+  SV                      *svgep;
+  short                    isgeb = 0;
+  SV                      *svlep;
+  short                    isleb = 0;
+  SV                      *svnumifyp;
   dTHXa(Perl_MarpaX_ESLIF_Valuep->PerlInterpreterp);
 
   listp = newAV();
   av_push(listp, newSVpvn((const char *) strings, (STRLEN) stringl)); /* Ref count of string is transfered to listp */
   svp = marpaESLIFPerl_call_actionp(aTHX_ boot_MarpaX__ESLIF__Math__BigFloat_svp, "new", listp, NULL /* Perl_MarpaX_ESLIF_Valuep */, 0 /* evalb */, 0 /* evalSilentb */);
   av_undef(listp);
+
+  svisintp = marpaESLIFPerl_call_actionp(aTHX_ svp, "is_int", NULL /* listp */, NULL /* Perl_MarpaX_ESLIF_Valuep */, 0 /* evalb */, 0 /* evalSilentb */);
+  isintb = SvTRUE(svisintp) ? 1 : 0;
+  MARPAESLIFPERL_REFCNT_DEC(svisintp);
+  if (isintb) {
+    /* It is an integer - is it signed ? */
+    svnegp = marpaESLIFPerl_call_actionp(aTHX_ svp, "is_neg", NULL /* listp */, NULL /* Perl_MarpaX_ESLIF_Valuep */, 0 /* evalb */, 0 /* evalSilentb */);
+    isnegb = SvTRUE(svnegp) ? 1 : 0;
+    MARPAESLIFPERL_REFCNT_DEC(svnegp);
+    if (isnegb) {
+      /* Negative integer number */
+      listp = newAV();
+      av_push(listp, newSVsv(boot_Math__BigFloat__IV_MIN_svp));
+      svgep = marpaESLIFPerl_call_actionp(aTHX_ svp, "bge", listp, NULL /* Perl_MarpaX_ESLIF_Valuep */, 0 /* evalb */, 0 /* evalSilentb */);
+      av_undef(listp);
+      isgeb = SvTRUE(svgep) ? 1 : 0;
+      if (isgeb) {
+        /* IV_MIN <= x */
+        listp = newAV();
+        av_push(listp, newSVsv(boot_Math__BigFloat__IV_MAX_svp));
+        svlep = marpaESLIFPerl_call_actionp(aTHX_ svp, "ble", listp, NULL /* Perl_MarpaX_ESLIF_Valuep */, 0 /* evalb */, 0 /* evalSilentb */);
+        av_undef(listp);
+        isleb = SvTRUE(svlep) ? 1 : 0;
+      }
+    } else {
+      /* Positive integer number */
+      listp = newAV();
+      av_push(listp, newSVsv(boot_Math__BigFloat__UV_MIN_svp));
+      svgep = marpaESLIFPerl_call_actionp(aTHX_ svp, "bge", listp, NULL /* Perl_MarpaX_ESLIF_Valuep */, 0 /* evalb */, 0 /* evalSilentb */);
+      av_undef(listp);
+      isgeb = SvTRUE(svgep) ? 1 : 0;
+      if (isgeb) {
+        /* UV_MIN <= x */
+        listp = newAV();
+        av_push(listp, newSVsv(boot_Math__BigFloat__UV_MAX_svp));
+        svlep = marpaESLIFPerl_call_actionp(aTHX_ svp, "ble", listp, NULL /* Perl_MarpaX_ESLIF_Valuep */, 0 /* evalb */, 0 /* evalSilentb */);
+        av_undef(listp);
+        isleb = SvTRUE(svlep) ? 1 : 0;
+      }
+    }
+  }
+
+  if (isgeb && isleb) {
+    /* We can safely numify */
+    listp = newAV();
+    av_push(listp, newSVsv(svp));
+    svnumifyp = marpaESLIFPerl_call_actionp(aTHX_ boot_MarpaX__ESLIF__Math__BigFloat_svp, "numify", listp, NULL /* Perl_MarpaX_ESLIF_Valuep */, 0 /* evalb */, 0 /* evalSilentb */);
+    av_undef(listp);
+
+    MARPAESLIFPERL_REFCNT_DEC(svp);
+    svp = svnumifyp;
+  }
+
+  /* If number is an int we try to fit in in an IV or an UV */
   marpaESLIFValueResultp->type               = MARPAESLIF_VALUE_TYPE_PTR;
   marpaESLIFValueResultp->contextp           = MARPAESLIFPERL_CONTEXT;
   marpaESLIFValueResultp->representationp    = marpaESLIFPerl_representationb;
@@ -2725,6 +2792,27 @@ BOOT:
   boot_nvtype_is___float128 = marpaESLIFPerl_call_methodb(aTHX_ boot_MarpaX__ESLIF_svp, "_nvtype_is___float128");
   boot_MarpaX__ESLIF__true_svp = get_sv("MarpaX::ESLIF::true", 0);
   boot_MarpaX__ESLIF__false_svp = get_sv("MarpaX::ESLIF::false", 0);
+  {
+    AV *boot_avp = newAV();
+    av_push(boot_avp, newSVuv(UV_MIN));
+    boot_Math__BigFloat__UV_MIN_svp = marpaESLIFPerl_call_actionp(aTHX_ boot_MarpaX__ESLIF__Math__BigFloat_svp, "new", boot_avp, NULL /* Perl_MarpaX_ESLIF_Valuep */, 0 /* evalb */, 0 /* evalSilentb */);
+    av_undef(boot_avp);
+
+    boot_avp = newAV();
+    av_push(boot_avp, newSVuv(UV_MAX));
+    boot_Math__BigFloat__UV_MAX_svp = marpaESLIFPerl_call_actionp(aTHX_ boot_MarpaX__ESLIF__Math__BigFloat_svp, "new", boot_avp, NULL /* Perl_MarpaX_ESLIF_Valuep */, 0 /* evalb */, 0 /* evalSilentb */);
+    av_undef(boot_avp);
+
+    boot_avp = newAV();
+    av_push(boot_avp, newSVuv(IV_MIN));
+    boot_Math__BigFloat__IV_MIN_svp = marpaESLIFPerl_call_actionp(aTHX_ boot_MarpaX__ESLIF__Math__BigFloat_svp, "new", boot_avp, NULL /* Perl_MarpaX_ESLIF_Valuep */, 0 /* evalb */, 0 /* evalSilentb */);
+    av_undef(boot_avp);
+
+    boot_avp = newAV();
+    av_push(boot_avp, newSVuv(IV_MAX));
+    boot_Math__BigFloat__IV_MAX_svp = marpaESLIFPerl_call_actionp(aTHX_ boot_MarpaX__ESLIF__Math__BigFloat_svp, "new", boot_avp, NULL /* Perl_MarpaX_ESLIF_Valuep */, 0 /* evalb */, 0 /* evalSilentb */);
+    av_undef(boot_avp);
+  }
 
 PROTOTYPES: ENABLE
 
