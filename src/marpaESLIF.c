@@ -14466,6 +14466,47 @@ static inline short _marpaESLIF_generic_action___concatb(void *userDatavp, marpa
         /* marpaESLIF_stringGenerator.s is now in the stack */
         marpaESLIF_stringGenerator.s = NULL;
       }
+    } else if (marpaESLIF_stringGenerator.l == 1) { /* Empty string */
+      if (toEncodings != NULL) {
+        /* Duplicate toEncodings */
+        toEncodingDups = strdup(toEncodings);
+        if (toEncodingDups == NULL) {
+          MARPAESLIF_ERRORF(marpaESLIFp, "strdup failure, %s", strerror(errno));
+          goto err;
+        }
+        marpaESLIFValueResult.type               = MARPAESLIF_VALUE_TYPE_STRING;
+        marpaESLIFValueResult.contextp           = NULL;
+        marpaESLIFValueResult.representationp    = NULL;
+        marpaESLIFValueResult.u.s.p              = (unsigned char *) MARPAESLIF_EMPTY_STRING;
+        marpaESLIFValueResult.u.s.sizel          = 0;
+        marpaESLIFValueResult.u.s.encodingasciis = toEncodingDups;
+        marpaESLIFValueResult.u.s.shallowb       = 1;
+        /* Nothing to free */
+        marpaESLIFValueResult.u.s.freeUserDatavp = NULL;
+        marpaESLIFValueResult.u.s.freeCallbackp  = NULL;
+
+        if (! _marpaESLIFValue_stack_setb(marpaESLIFValuep, resulti, &marpaESLIFValueResult)) {
+          goto err;
+        }
+        /* toEncodingDups is now in the stack */
+        toEncodingDups = NULL;
+      } else {
+        marpaESLIFValueResult.type            = MARPAESLIF_VALUE_TYPE_ARRAY;
+        marpaESLIFValueResult.contextp        = NULL;
+        marpaESLIFValueResult.representationp = NULL;
+        marpaESLIFValueResult.u.a.sizel       = 0;
+        marpaESLIFValueResult.u.a.shallowb    = 1;
+        marpaESLIFValueResult.u.a.p           = (char *) MARPAESLIF_EMPTY_STRING;
+        /* Nothing to free */
+        marpaESLIFValueResult.u.s.freeUserDatavp = NULL;
+        marpaESLIFValueResult.u.s.freeCallbackp  = NULL;
+
+        if (! _marpaESLIFValue_stack_setb(marpaESLIFValuep, resulti, &marpaESLIFValueResult)) {
+          goto err;
+        }
+        /* marpaESLIF_stringGenerator.s is now in the stack */
+        marpaESLIF_stringGenerator.s = NULL;
+      }
     } else {
       if (! _marpaESLIFValue_stack_setb(marpaESLIFValuep, resulti, (marpaESLIFValueResult_t *) &marpaESLIFValueResultUndef)) {
         goto err;
@@ -15876,7 +15917,7 @@ static short _marpaESLIFRecognizer_value_validb(marpaESLIFRecognizer_t *marpaESL
       break;
     case MARPAESLIF_VALUE_TYPE_STRING:
       /* A string MUST have p and encodingasciis != NULL, even when this is an empty string */
-      /* (in which case the caller can allocate a dummy one byte, or return a fixed adress) */
+      /* (in which case the caller can allocate a dummy one byte, or return a fixed address) */
       if (marpaESLIFValueResultWorkp->u.s.p == NULL) {
         MARPAESLIF_ERROR(marpaESLIFRecognizerp->marpaESLIFp, "MARPAESLIF_VALUE_TYPE_STRING: pointer is not set");
         errno = EINVAL;
