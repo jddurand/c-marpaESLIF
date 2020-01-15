@@ -35,6 +35,14 @@ The grammar can contain multiple levels, the level syntax being:
 
 The level 0 must exist. We will use only C<::=> and/or C<~> in the rest of this document for conveniene, though we are adressing any possible level.
 
+=item Rules
+
+A rule consist of a left symbol, followed by C{=>} or the Rightwards Double Arrow UTF-8 character C{⇒}, followed by one or more symbols, or a single quantified symbol:
+
+  leftsymbol1 ::=  # Nothing
+  leftsymbol2 ::= rightSymbol
+  leftsymbol3 ::= quantifiedSymbol*
+
 =item Terminals
 
 There are three types of explicit terminals.
@@ -187,17 +195,30 @@ By default, a grammar of level C<n> has the description C<Grammar level n>. This
 
   :desc ::= 'A single-quoted string'
 
+=item Settings sub grammar
+
+Any setting consist of a reserved keyword, followed by C{=>} or the Rightwards Double Arrow UTF-8 character C{⇒}, followed by a setting-specific value:
+
+  action => myAction
+  action ⇒ myAction
+
 =item Defaults
 
 By default, symbol action is C<::transfer> and rule action is C<::concat>, i.e. the parse tree value of a grammar is a binary concatenation of every input representation (see the I<representation> section below), without the eventual discard. Stack manipulation may require the trigger of a I<free> function, and this has no default. Only expected terminals or lexemes are looked up, this is the Longest Acceptable Token Match (LATM) setting, defaulting to a true value. You should not change that. Defaults can be set once, for example like this:
 
-  :default ::= action        => defaultRuleAction
-               latm          => 1
-               symbol-action => defaultSymbolAction
+  :default ::= action            => defaultRuleAction
+               latm              => 1
+               symbol-action     => defaultSymbolAction
+               default-encoding  => UTF-8
+               fallback-encoding => UTF-16
 
 Predefined actions are available for rules and symbols. Please refer the API documentation to know more about value types.
 
 The C<symbol-action> adverb is how a match within a sub-grammar is transfered.
+
+The C<default-encoding> adverb gives default encoding when the recognizer runs in character mode and the end-user gave no encoding.
+
+The C<fallback-encoding> adverb gives fallback encoding when the recognizer runs in character mode and the end-user gave no encoding nor C<default-encoding>. Then marpaESLIF will try to I<guess> the encoding, and if this fail, will fallback to this setting. This is the desired setting when you grammar accept input in different encoding, and defaults to a given encoding if the guess fail. Please note that, when guessing an encoding, marpaESLIF takes into account an eventual BOM, retreiving the later from input characters if it exists.
 
 =item Meta actions
 
@@ -723,6 +744,8 @@ marpaESLIF BNF can be expressed in itself:
                                    | <hide separator specification>
                                    | <if action>
                                    | <event action>
+                                   | <default encoding>
+                                   | <fallback encoding>
   <action>                       ::= 'action' '=>' <action name>
                                    | 'action' '=>' <string literal>
   <left association>             ::= 'assoc' '=>' 'left'
@@ -755,6 +778,8 @@ marpaESLIF BNF can be expressed in itself:
                                    | 'symbol-action' '=>' <string literal>
   <if action>                    ::= 'if-action' '=>' <if action name>
   <event action>                 ::= 'event-action' '=>' <event action name>
+  <default encoding>             ::= 'default-encoding' '=>' <default encoding name>
+  <fallback encoding>            ::= 'fallback-encoding' '=>' <fallback encoding name>
   <alternative name>             ::= <standard name>
                                    | <quoted name>
   <event name>                   ::= <restricted ascii graph name>
@@ -793,6 +818,7 @@ marpaESLIF BNF can be expressed in itself:
                                    | '::true'
                                    | '::false'
                                    | '::json'
+                                   | '::jsonf'
                                    | '::row'
                                    | '::table'
                                    | '::ast'
@@ -810,6 +836,8 @@ marpaESLIF BNF can be expressed in itself:
                                    | <lua action name>
   <event action name>            ::= <restricted ascii graph name>
                                    | <lua action name>
+  <default encoding name>        ::= <graph ascii name>
+  <fallback encoding name>       ::= <graph ascii name>
   <quantifier>                   ::= '*'
                                    | '+'
   <signed integer>               ::= /[+-]?\d+/
@@ -844,6 +872,7 @@ marpaESLIF BNF can be expressed in itself:
   <one or more word characters>    ~ <word character>+ proper => 1
   <zero or more word characters>   ~ <word character>* proper => 1
   <restricted ascii graph name>    ~ /[!#$%&*+.\/;?\[\\\]^_`~A-Za-z0-9]+/
+  <graph ascii name>               ~ /[[:graph:]]+/
   <lua action name>                ~ /::lua->[a-zA-Z_][a-zA-Z0-9_]*/
   <bare name>                      ~ <word character>+ proper => 1
   <standard name>                  ~ /[a-zA-Z]/ <zero or more word characters>
