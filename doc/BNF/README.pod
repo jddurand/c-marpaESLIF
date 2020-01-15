@@ -202,6 +202,8 @@ Any setting consist of a reserved keyword, followed by C<< => >> or the Rightwar
   action => myAction
   action ⇒ myAction
 
+When you use the C<⇒>, it is recommended to say that the grammar itself is encoded in UTF-8 (c.f. C<marpaESLIFGrammarOption> structure).
+
 =item Defaults
 
 By default, symbol action is C<::transfer> and rule action is C<::concat>, i.e. the parse tree value of a grammar is a binary concatenation of every input representation (see the I<representation> section below), without the eventual discard. Stack manipulation may require the trigger of a I<free> function, and this has no default. Only expected terminals or lexemes are looked up, this is the Longest Acceptable Token Match (LATM) setting, defaulting to a true value. You should not change that. Defaults can be set once, for example like this:
