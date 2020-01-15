@@ -13,11 +13,21 @@
 #undef  FILENAMES
 #define FILENAMES "floattos.c" /* For logging */
 
+/* Sane values are derived from http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2006/n2005.pdf */
+/* We do not mind if we ask a bit more than the real precision - sprintf will handle that. */
+#ifndef FLT_DECIMAL_DIG
+#define FLT_DECIMAL_DIG 9
+#endif
+#ifndef DBL_DECIMAL_DIG
+#define DBL_DECIMAL_DIG 17
+#endif
+#ifndef LDBL_DECIMAL_DIG
+#define LDBL_DECIMAL_DIG 40
+#endif
+
 #if defined(MARPAESLIF_ISINF) && defined(MARPAESLIF_INFINITY)
-#  define MARPAESLIF_FLOATTOS_INFINITY(x)
-#else
 #  define MARPAESLIF_FLOATTOS_INFINITY(x) do {                  \
-    if (MARPAESLIF_ISINF(f)) {                                  \
+    if (MARPAESLIF_ISINF(x)) {                                  \
       /* Get native inf representation - this must not fail */  \
       marpaESLIF_stringGenerator.marpaESLIFp = marpaESLIFp;     \
       marpaESLIF_stringGenerator.s           = NULL;            \
@@ -36,13 +46,13 @@
       goto done;                                                        \
     }                                                                   \
 } while (0)
+#else
+#  define MARPAESLIF_FLOATTOS_INFINITY(x)
 #endif
 
 #if defined(MARPAESLIF_ISNAN) && defined(MARPAESLIF_NAN)
-#  define MARPAESLIF_FLOATTOS_NAN(x)
-#else
 #  define MARPAESLIF_FLOATTOS_NAN(x) do {                       \
-    if (MARPAESLIF_ISNAN(f)) {                                  \
+    if (MARPAESLIF_ISNAN(x)) {                                  \
       /* Get native inf representation - this must not fail */  \
       marpaESLIF_stringGenerator.marpaESLIFp = marpaESLIFp;     \
       marpaESLIF_stringGenerator.s           = NULL;            \
@@ -61,9 +71,12 @@
       goto done;                                                        \
     }                                                                   \
 } while (0)
+#else
+#  define MARPAESLIF_FLOATTOS_NAN(x)
 #endif
 
-#define MARPAESLIF_FLOATTOS(name, type, fmts, fmts_type, strtox, maxDigitsi) \
+#define MARPAESLIF_FLOATTOS(name, type, fmts, fmts_type, strtox, decimal_dig) \
+  static inline char *_##name##_minDigits(marpaESLIF_t *marpaESLIFp, type x); \
   char *name(marpaESLIF_t *marpaESLIFp, type x)                         \
   {                                                                     \
     if (marpaESLIFp == NULL) {                                          \
@@ -71,16 +84,13 @@
       return NULL;                                                      \
     }                                                                   \
                                                                         \
-    return _##name##_minDigits(marpaESLIFp, 0, x);                      \
+    return _##name##_minDigits(marpaESLIFp, x);                         \
   }                                                                     \
                                                                         \
-  static inline char *_##name##_minDigits(marpaESLIF_t *marpaESLIFp, int minDigitsi, type x) \
+  static inline char *_##name##_minDigits(marpaESLIF_t *marpaESLIFp, type x) \
   {                                                                     \
-    type                          origx          = x;                   \
     genericLogger_t              *genericLoggerp = NULL;                \
-    char                         *endptrp;                              \
     marpaESLIF_stringGenerator_t  marpaESLIF_stringGenerator;           \
-    int                           i;                                    \
                                                                         \
     if (marpaESLIFp == NULL) {                                          \
       errno = EINVAL;                                                   \
@@ -101,26 +111,11 @@
       goto err;                                                         \
     }                                                                   \
                                                                         \
-    /* We subjectively estimate that nothing reasonable can have more than maxDigitsi */ \
-    for (i = minDigitsi; i < maxDigitsi; i++) {                         \
-      GENERICLOGGER_TRACEF(genericLoggerp, fmts, i, (fmts_type) origx); \
-      if (! marpaESLIF_stringGenerator.okb) {                           \
-        goto err;                                                       \
-      }                                                                 \
-      x = strtox(marpaESLIF_stringGenerator.s, &endptrp);               \
-      if (x == origx) {                                                 \
-        break;                                                          \
-      }                                                                 \
-      /* Reset */                                                       \
-      free(marpaESLIF_stringGenerator.s);                               \
-      marpaESLIF_stringGenerator.s      = NULL;                         \
-      marpaESLIF_stringGenerator.l      = 0;                            \
-      marpaESLIF_stringGenerator.okb    = 0;                            \
-      marpaESLIF_stringGenerator.allocl = 0;                            \
+    GENERICLOGGER_TRACEF(genericLoggerp, fmts, (int) decimal_dig, (fmts_type) x); \
+    if (! marpaESLIF_stringGenerator.okb) {                             \
+      goto err;                                                         \
     }                                                                   \
                                                                         \
-    /* Here either f == origf, either we reached 999 decimals, that is considered */ \
-    /* subjectively far beyond what is expected. */                     \
     goto done;                                                          \
                                                                         \
   err:                                                                  \
@@ -134,7 +129,7 @@
     return marpaESLIF_stringGenerator.s;                                \
   }
 
-MARPAESLIF_FLOATTOS(marpaESLIF_ftos, float, "%.*f", double, C_STRTOF, 100 /* maxDigitsi */)
-MARPAESLIF_FLOATTOS(marpaESLIF_dtos, double, "%.*f", double, C_STRTOD, 100 /* maxDigitsi */)
-MARPAESLIF_FLOATTOS(marpaESLIF_ldtos, long double, "%.*Lf", long double, C_STRTOLD, 1000 /* maxDigitsi */)
+MARPAESLIF_FLOATTOS(marpaESLIF_ftos, float, "%.*g", double, C_STRTOF, FLT_DECIMAL_DIG)
+MARPAESLIF_FLOATTOS(marpaESLIF_dtos, double, "%.*g", double, C_STRTOD, DBL_DECIMAL_DIG)
+MARPAESLIF_FLOATTOS(marpaESLIF_ldtos, long double, "%.*Lg", long double, C_STRTOLD, LDBL_DECIMAL_DIG)
 

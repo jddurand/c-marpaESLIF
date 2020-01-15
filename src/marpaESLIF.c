@@ -9,18 +9,6 @@
 #include "marpaESLIF/internal/bootstrap.h"
 #include "marpaESLIF/internal/lua.h"
 
-/* Sane values are derived from http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2006/n2005.pdf */
-/* We do not mind if we ask a bit more than the real precision - sprintf will handle that. */
-#ifndef FLT_DECIMAL_DIG
-#define FLT_DECIMAL_DIG 9
-#endif
-#ifndef DBL_DECIMAL_DIG
-#define DBL_DECIMAL_DIG 17
-#endif
-#ifndef LDBL_DECIMAL_DIG
-#define LDBL_DECIMAL_DIG 40
-#endif
-
 static const char *MARPAESLIF_VERSION_STATIC       = MARPAESLIF_VERSION;
 static const int   MARPAESLIF_VERSION_MAJOR_STATIC = MARPAESLIF_VERSION_MAJOR;
 static const int   MARPAESLIF_VERSION_MINOR_STATIC = MARPAESLIF_VERSION_MINOR;
@@ -627,10 +615,6 @@ static inline void                    _marpaESLIF_codepoint_to_json(marpaESLIF_u
 static inline short                   _marpaESLIF_flatten_pointers(marpaESLIF_t *marpaESLIFp, genericStack_t *flattenPtrStackp, genericHash_t *flattenPtrHashp, marpaESLIFValueResult_t *marpaESLIFValueResultp, short noShallowb);
 static inline marpaESLIFGrammar_t    *_marpaESLIFJSON_decode_newp(marpaESLIF_t *marpaESLIFp, short strictb);
 static inline marpaESLIFGrammar_t    *_marpaESLIFJSON_encode_newp(marpaESLIF_t *marpaESLIFp, short strictb);
-
-static inline char                   *_marpaESLIF_ftos_minDigits(marpaESLIF_t *marpaESLIFp, int minDigitsi, float f);
-static inline char                   *_marpaESLIF_dtos_minDigits(marpaESLIF_t *marpaESLIFp, int minDigitsi, double d);
-static inline char                   *_marpaESLIF_ldtos_minDigits(marpaESLIF_t *marpaESLIFp, int minDigitsi, long double ld);
 
 /*****************************************************************************/
 static inline marpaESLIF_string_t *_marpaESLIF_string_newp(marpaESLIF_t *marpaESLIFp, char *encodingasciis, char *bytep, size_t bytel)

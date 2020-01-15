@@ -554,8 +554,9 @@ extern "C" {
   marpaESLIF_EXPORT short                         marpaESLIFJSON_decodeb(marpaESLIFGrammar_t *marpaESLIFGrammarJSONp, marpaESLIFJSONDecodeOption_t *marpaESLIFJSONDecodeOptionp, marpaESLIFRecognizerOption_t *marpaESLIFRecognizerOptionp, marpaESLIFValueOption_t *marpaESLIFValueOptionp);
 
   /* ------------------------------------- */
-  /* Accurate SLOW stringification helpers */
+  /* Floating point method helpers         */
   /* ------------------------------------- */
+  /* Note that they are NOT meant to be accurate, they just try to follow the "floating -> string -> floating" safe round-trip */
   /* Returns NULL in case of failure, else an ASCII NUL terminated string that the caller will have to free(). */
   marpaESLIF_EXPORT char                         *marpaESLIF_ftos(marpaESLIF_t *marpaESLIFp, float f);
   marpaESLIF_EXPORT char                         *marpaESLIF_dtos(marpaESLIF_t *marpaESLIFp, double d);
