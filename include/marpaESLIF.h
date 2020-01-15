@@ -535,9 +535,6 @@ extern "C" {
 
   marpaESLIF_EXPORT void                          marpaESLIF_freev(marpaESLIF_t *marpaESLIFp);
 
-  /* Helper routine that resets correctly a marpaESLIFValueResult - rarelly needed */
-  marpaESLIF_EXPORT short                         marpaESLIFValueResult_resetb(marpaESLIF_t *marpaESLIFp, marpaESLIFValueResult_t *marpaESLIFValueResultp);
-
   /* --------------------- */
   /* Embedded JSON support */
   /* --------------------- */
