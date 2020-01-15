@@ -37,7 +37,7 @@ The level 0 must exist. We will use only C<::=> and/or C<~> in the rest of this 
 
 =item Rules
 
-A rule consist of a left symbol, followed by C<< => >> or the Rightwards Double Arrow UTF-8 character C<⇒>, followed by one or more symbols, or a single quantified symbol:
+A rule consist of a left symbol, followed by the level, followed by one or more symbols, or a single quantified symbol:
 
   leftsymbol1 ::=  # Nothing
   leftsymbol2 ::= rightSymbol
@@ -197,7 +197,7 @@ By default, a grammar of level C<n> has the description C<Grammar level n>. This
 
 =item Settings sub grammar
 
-Any setting consist of a reserved keyword, followed by C{=>} or the Rightwards Double Arrow UTF-8 character C{⇒}, followed by a setting-specific value:
+Any setting consist of a reserved keyword, followed by C<< => >> or the Rightwards Double Arrow UTF-8 character C<⇒>, followed by a setting-specific value:
 
   action => myAction
   action ⇒ myAction
