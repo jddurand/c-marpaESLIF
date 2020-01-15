@@ -16,13 +16,13 @@
 /* Sane values are derived from http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2006/n2005.pdf */
 /* We do not mind if we ask a bit more than the real precision - sprintf will handle that. */
 #ifndef FLT_DECIMAL_DIG
-#define FLT_DECIMAL_DIG 9
+#define FLT_DECIMAL_DIG (9)
 #endif
 #ifndef DBL_DECIMAL_DIG
-#define DBL_DECIMAL_DIG 17
+#define DBL_DECIMAL_DIG (17)
 #endif
 #ifndef LDBL_DECIMAL_DIG
-#define LDBL_DECIMAL_DIG 40
+#define LDBL_DECIMAL_DIG ((sizeof(long double) == sizeof(double)) ? DBL_DECIMAL_DIG : 36) /* Compiler will optimize that */
 #endif
 
 #if defined(MARPAESLIF_ISINF) && defined(MARPAESLIF_INFINITY)
