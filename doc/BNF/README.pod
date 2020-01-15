@@ -202,7 +202,7 @@ Any setting consist of a reserved keyword, followed by C<< => >> or the Rightwar
   action => myAction
   action ⇒ myAction
 
-When you use the C<⇒>, it is recommended to say that the grammar itself is encoded in UTF-8 (c.f. C<marpaESLIFGrammarOption> structure).
+When you use the C<⇒> UTF-8 character, it is recommended to say that the grammar itself is encoded in UTF-8 (c.f. C<marpaESLIFGrammarOption> structure).
 
 =item Defaults
 
