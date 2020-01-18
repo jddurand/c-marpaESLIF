@@ -622,6 +622,7 @@ typedef struct genericStack {
     if ((stackName) != NULL) {						\
       if ((stackName)->heapItems != NULL) {				\
         free((stackName)->heapItems);					\
+        (stackName)->heapItems = NULL;                                  \
         (stackName)->heapLength = 0;					\
       }									\
       (stackName)->used = 0;						\
