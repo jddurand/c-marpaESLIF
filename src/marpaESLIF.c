@@ -13108,6 +13108,7 @@ static inline short _marpaESLIFValueResult_stack_i_setb(marpaESLIF_t *marpaESLIF
   static const char        *funcs    = "_marpaESLIFValueResult_stack_i_setb";
   marpaESLIFValueResult_t  *marpaESLIFValueResultWorkp;
   marpaESLIFValueResult_t  *marpaESLIFValueResultNewp;
+  marpaESLIFValueResult_t  *marpaESLIFValueResultTmpp;
   short                     rcb;
   short                     findResultb;
   void                     *p;
@@ -13115,6 +13116,8 @@ static inline short _marpaESLIFValueResult_stack_i_setb(marpaESLIF_t *marpaESLIF
   void                     *freeUserDatavp;
   int                       hashindexi;
   short                    *shallowbp;
+  int                       usedi;
+  int                       i;
 
   if (marpaESLIFValueResultOrigp == NULL) {
     /* Look at original value */
@@ -13165,7 +13168,8 @@ static inline short _marpaESLIFValueResult_stack_i_setb(marpaESLIF_t *marpaESLIF
     /* ------------------ */
     /* Prepare work areas */
     /* ------------------ */
-    GENERICSTACK_RESET(beforePtrStackp);
+    /* Take care: this is very dangerous, inner eventual elements are set AS THIS WERE in the previous stage */
+    GENERICSTACK_RELAX(beforePtrStackp);
     if (GENERICSTACK_ERROR(beforePtrStackp)) {
       MARPAESLIF_ERRORF(marpaESLIFp, "beforePtrStackp reset failure, %s", strerror(errno));
       goto err;
@@ -13194,83 +13198,76 @@ static inline short _marpaESLIFValueResult_stack_i_setb(marpaESLIF_t *marpaESLIF
     }
 
     /* Loop on all original pointers and free them if they are not shallowed and if they do not exist in replacement pointers */
-    while (GENERICSTACK_USED(beforePtrStackp) > 0) {
-      p = GENERICSTACK_POP_PTR(beforePtrStackp);
-      findResultb = 0;
-      hashindexi = _marpaESLIF_ptrhashi(NULL /* userDatavp */, GENERICSTACKITEMTYPE_PTR, (void **) &p);
-      GENERICHASH_FIND_BY_IND(beforePtrHashp,
-                              NULL, /* userDatavp */
-                              PTR,
-                              p,
-                              PTR,
-                              &marpaESLIFValueResultWorkp,
-                              findResultb,
-                              hashindexi);
-      if (GENERICHASH_ERROR(beforePtrHashp)) {
-        MARPAESLIF_ERRORF(marpaESLIFp, "beforePtrHashp find failure, %s", strerror(errno));
-        goto err;
-      }
-      if (! findResultb) {
-        /* This should never happen */
-        MARPAESLIF_WARNF(marpaESLIFp, "%p not found in beforePtrHashp", p);
-        continue;
-      }
+    /* It is VERY important to take this stack in reverse order */
+    usedi = GENERICSTACK_USED(beforePtrStackp);
+    if (usedi > 0) {
+      for (i = usedi - 1; i >=0; i--) {
+        marpaESLIFValueResultTmpp = GENERICSTACK_GET_CUSTOMP(beforePtrStackp, i);
+        /* We abused marpaESLIFValueResult:
+           - marpaESLIFValueResultTmp is in contextp
+           - p is in representationp
+           - hashindexi is in u.i */
+        p = marpaESLIFValueResultTmpp->representationp;
+        hashindexi = marpaESLIFValueResultTmpp->u.i;
 
-      findResultb = 0;
-      GENERICHASH_FIND_BY_IND(afterPtrHashp,
-                              NULL, /* userDatavp */
-                              PTR,
-                              p,
-                              PTR,
-                              &marpaESLIFValueResultNewp,
-                              findResultb,
-                              hashindexi);
-      if (GENERICHASH_ERROR(afterPtrHashp)) {
-        MARPAESLIF_ERRORF(marpaESLIFp, "afterPtrHashp find failure, %s", strerror(errno));
-        goto err;
-      }
-      if (findResultb) {
-        /* Pointer in original also exist in replacement */
-        continue;
-      }
+        findResultb = 0;
+        GENERICHASH_FIND_BY_IND(afterPtrHashp,
+                                NULL, /* userDatavp */
+                                PTR,
+                                p,
+                                PTR,
+                                &marpaESLIFValueResultNewp,
+                                findResultb,
+                                hashindexi);
+        if (GENERICHASH_ERROR(afterPtrHashp)) {
+          MARPAESLIF_ERRORF(marpaESLIFp, "afterPtrHashp find failure, %s", strerror(errno));
+          goto err;
+        }
+        if (findResultb) {
+          /* Pointer in original also exist in replacement */
+          continue;
+        }
 
-      /* We can free the original pointer */
-      switch (marpaESLIFValueResultWorkp->type) {
-      case MARPAESLIF_VALUE_TYPE_PTR:
-        freeCallbackp  = marpaESLIFValueResultWorkp->u.p.freeCallbackp;
-        freeUserDatavp = marpaESLIFValueResultWorkp->u.p.freeUserDatavp;
-        shallowbp      = &(marpaESLIFValueResultWorkp->u.p.shallowb);
-        break;
-      case MARPAESLIF_VALUE_TYPE_ARRAY:
-        freeCallbackp  = marpaESLIFValueResultWorkp->u.a.freeCallbackp;
-        freeUserDatavp = marpaESLIFValueResultWorkp->u.a.freeUserDatavp;
-        shallowbp      = &(marpaESLIFValueResultWorkp->u.a.shallowb);
-        break;
-      case MARPAESLIF_VALUE_TYPE_STRING:
-        freeCallbackp  = marpaESLIFValueResultWorkp->u.s.freeCallbackp;
-        freeUserDatavp = marpaESLIFValueResultWorkp->u.s.freeUserDatavp;
-        shallowbp      = &(marpaESLIFValueResultWorkp->u.s.shallowb);
-        break;
-      case MARPAESLIF_VALUE_TYPE_ROW:
-        freeCallbackp  = marpaESLIFValueResultWorkp->u.r.freeCallbackp;
-        freeUserDatavp = marpaESLIFValueResultWorkp->u.r.freeUserDatavp;
-        shallowbp      = &(marpaESLIFValueResultWorkp->u.r.shallowb);
-        break;
-      case MARPAESLIF_VALUE_TYPE_TABLE:
-        freeCallbackp  = marpaESLIFValueResultWorkp->u.t.freeCallbackp;
-        freeUserDatavp = marpaESLIFValueResultWorkp->u.t.freeUserDatavp;
-        shallowbp      = &(marpaESLIFValueResultWorkp->u.t.shallowb);
-        break;
-      default:
-        MARPAESLIF_ERRORF(marpaESLIFp, "Invalid case %d", marpaESLIFValueResultOrigp->type);
-        goto err;
+        marpaESLIFValueResultWorkp = (marpaESLIFValueResult_t *) marpaESLIFValueResultTmpp->contextp;
+        /* We can free the original pointer */
+        switch (marpaESLIFValueResultWorkp->type) {
+        case MARPAESLIF_VALUE_TYPE_PTR:
+          freeCallbackp  = marpaESLIFValueResultWorkp->u.p.freeCallbackp;
+          freeUserDatavp = marpaESLIFValueResultWorkp->u.p.freeUserDatavp;
+          shallowbp      = &(marpaESLIFValueResultWorkp->u.p.shallowb);
+          break;
+        case MARPAESLIF_VALUE_TYPE_ARRAY:
+          freeCallbackp  = marpaESLIFValueResultWorkp->u.a.freeCallbackp;
+          freeUserDatavp = marpaESLIFValueResultWorkp->u.a.freeUserDatavp;
+          shallowbp      = &(marpaESLIFValueResultWorkp->u.a.shallowb);
+          break;
+        case MARPAESLIF_VALUE_TYPE_STRING:
+          freeCallbackp  = marpaESLIFValueResultWorkp->u.s.freeCallbackp;
+          freeUserDatavp = marpaESLIFValueResultWorkp->u.s.freeUserDatavp;
+          shallowbp      = &(marpaESLIFValueResultWorkp->u.s.shallowb);
+          break;
+        case MARPAESLIF_VALUE_TYPE_ROW:
+          freeCallbackp  = marpaESLIFValueResultWorkp->u.r.freeCallbackp;
+          freeUserDatavp = marpaESLIFValueResultWorkp->u.r.freeUserDatavp;
+          shallowbp      = &(marpaESLIFValueResultWorkp->u.r.shallowb);
+          break;
+        case MARPAESLIF_VALUE_TYPE_TABLE:
+          freeCallbackp  = marpaESLIFValueResultWorkp->u.t.freeCallbackp;
+          freeUserDatavp = marpaESLIFValueResultWorkp->u.t.freeUserDatavp;
+          shallowbp      = &(marpaESLIFValueResultWorkp->u.t.shallowb);
+          break;
+        default:
+          MARPAESLIF_ERRORF(marpaESLIFp, "Invalid case %d", marpaESLIFValueResultOrigp->type);
+          goto err;
+        }
+
+        MARPAESLIF_TRACEF(marpaESLIFp, "%s: Freeing stack value at indice %d, type %d (%s), p=%p", funcs, indicei, marpaESLIFValueResultWorkp->type, _marpaESLIF_value_types(marpaESLIFValueResultWorkp->type), p);
+        /* marpaESLIF made sure that freeCallbackp is always set, no need to check */
+        freeCallbackp(freeUserDatavp, marpaESLIFValueResultWorkp);
+
+        /* Mark it as shallow in any case or error recovery in upper layers */
+        *shallowbp = 1;
       }
-
-      /* marpaESLIF made sure that freeCallbackp is always set, no need to check */
-      freeCallbackp(freeUserDatavp, marpaESLIFValueResultWorkp);
-
-      /* Mark it as shallow in any case or error recovery in upper layers */
-      *shallowbp = 1;
     }
   }
 
@@ -13716,13 +13713,14 @@ static inline short _marpaESLIFValue_stack_newb(marpaESLIFValue_t *marpaESLIFVal
 static inline short _marpaESLIFValue_stack_freeb(marpaESLIFValue_t *marpaESLIFValuep)
 /*****************************************************************************/
 {
-  short           rcb;
-  int             valueResultStacki;
-  marpaESLIF_t   *marpaESLIFp;
-  genericStack_t *valueResultStackp;
-  genericStack_t *beforePtrStackp;
-  genericHash_t  *beforePtrHashp;
-  genericHash_t  *afterPtrHashp;
+  static const char *funcs  = "_marpaESLIFValue_stack_freeb";
+  short              rcb;
+  int                valueResultStacki;
+  marpaESLIF_t      *marpaESLIFp;
+  genericStack_t    *valueResultStackp;
+  genericStack_t    *beforePtrStackp;
+  genericHash_t     *beforePtrHashp;
+  genericHash_t     *afterPtrHashp;
 
   if (marpaESLIFValuep != NULL) {
     /* Free the stacks */
@@ -17226,6 +17224,7 @@ static inline short _marpaESLIF_flatten_pointers(marpaESLIF_t *marpaESLIFp, gene
   genericStack_t           marpaESLIFValueResultStack;
   genericStack_t          *marpaESLIFValueResultStackp = NULL;
   marpaESLIFValueResult_t *marpaESLIFValueResultTmpp;
+  marpaESLIFValueResult_t  marpaESLIFValueResultTmp = { NULL, NULL, MARPAESLIF_VALUE_TYPE_INT };
   short                    flattenPtrStackb = (flattenPtrStackp != NULL);
   size_t                   i;
   short                    shallowb;
@@ -17344,7 +17343,14 @@ static inline short _marpaESLIF_flatten_pointers(marpaESLIF_t *marpaESLIFp, gene
         }
       }
       if (flattenPtrStackb) {
-        GENERICSTACK_PUSH_PTR(flattenPtrStackp, p);
+        /* We abuse marpaESLIFValueResult:
+           - we put marpaESLIFValueResultTmpp in contextp
+           - we put p in representationp (so that caller does not have to call again _marpaESLIF_ptrhashi)
+           - we put hashindexi in u.i */
+        marpaESLIFValueResultTmp.contextp = marpaESLIFValueResultTmpp;
+        marpaESLIFValueResultTmp.representationp = (marpaESLIFRepresentation_t) p;
+        marpaESLIFValueResultTmp.u.i = hashindexi;
+        GENERICSTACK_PUSH_CUSTOM(flattenPtrStackp, marpaESLIFValueResultTmp);
         if (GENERICSTACK_ERROR(flattenPtrStackp)) {
           MARPAESLIF_ERRORF(marpaESLIFp, "flattenPtrStackp push failure, %s", strerror(errno));
           goto err;
