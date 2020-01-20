@@ -13171,7 +13171,7 @@ static inline short _marpaESLIFValueResult_stack_i_setb(marpaESLIF_t *marpaESLIF
     /* Take care: this is very dangerous, inner eventual elements are set AS THIS WERE in the previous stage */
     GENERICSTACK_RELAX(beforePtrStackp);
     if (GENERICSTACK_ERROR(beforePtrStackp)) {
-      MARPAESLIF_ERRORF(marpaESLIFp, "beforePtrStackp reset failure, %s", strerror(errno));
+      MARPAESLIF_ERRORF(marpaESLIFp, "beforePtrStackp relax failure, %s", strerror(errno));
       goto err;
     }
 
