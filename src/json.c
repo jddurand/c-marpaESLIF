@@ -928,6 +928,7 @@ static short _marpaESLIFJSON_unicodeb(void *userDatavp, marpaESLIFValue_t *marpa
 /*****************************************************************************/
 {
   /* char ::= /(?:\\u[[:xdigit:]]{4})+/ action => unicode\n" */
+  static const char       *funcs                  = "_marpaESLIFJSON_unicodeb";
   marpaESLIFJSONContext_t *marpaESLIFJSONContextp = (marpaESLIFJSONContext_t *) userDatavp;
   unsigned char           *dstp                   = NULL;
   size_t                   dstl;
@@ -995,7 +996,7 @@ static short _marpaESLIFJSON_unicodeb(void *userDatavp, marpaESLIFValue_t *marpa
         MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "Invalid UTF-16 character \\%c%c%c%c%c", marpaESLIFValueResultp->u.a.p[(i * 6) + 1], marpaESLIFValueResultp->u.a.p[(i * 6) + 2], marpaESLIFValueResultp->u.a.p[(i * 6) + 3], marpaESLIFValueResultp->u.a.p[(i * 6) + 4], marpaESLIFValueResultp->u.a.p[(i * 6) + 5]);
         goto err;
       } else {
-        MARPAESLIF_TRACEF(marpaESLIFValuep->marpaESLIFp, "Invalid UTF-16 character \\%c%c%c%c%c replaced by 0xFFFD", marpaESLIFValueResultp->u.a.p[(i * 6) + 1], marpaESLIFValueResultp->u.a.p[(i * 6) + 2], marpaESLIFValueResultp->u.a.p[(i * 6) + 3], marpaESLIFValueResultp->u.a.p[(i * 6) + 4], marpaESLIFValueResultp->u.a.p[(i * 6) + 5]);
+        MARPAESLIF_TRACEF(marpaESLIFValuep->marpaESLIFp, funcs, "Invalid UTF-16 character \\%c%c%c%c%c replaced by 0xFFFD", marpaESLIFValueResultp->u.a.p[(i * 6) + 1], marpaESLIFValueResultp->u.a.p[(i * 6) + 2], marpaESLIFValueResultp->u.a.p[(i * 6) + 3], marpaESLIFValueResultp->u.a.p[(i * 6) + 4], marpaESLIFValueResultp->u.a.p[(i * 6) + 5]);
         c = 0xFFFD; /* Replacement character */
       }
     }
