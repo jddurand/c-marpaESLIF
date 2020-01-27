@@ -13205,16 +13205,16 @@ static inline short _marpaESLIFRecognizer_valueStack_i_setb(marpaESLIFRecognizer
       /* Loop on all original pointers and free them if they are not shallowed and if they do not exist in replacement pointers */
       /* It is VERY important to take this stack in reverse order */
       usedi = GENERICSTACK_USED(beforePtrStackp);
-      for (i = usedi - 1; i >=0; i--) {
-        marpaESLIFValueResultTmpp = GENERICSTACK_GET_CUSTOMP(beforePtrStackp, i);
-        /* We abused marpaESLIFValueResult:
-           - marpaESLIFValueResultTmp is in contextp
-           - p is in representationp
-           - hashindexi is in u.i */
-        MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Got fake marpaESLIFValueResultTmp.{type,contextp <== marpaESLIFValueResultp,representationp <== p, u.i <== hashindexi}={%s,%p,%p,%d}", _marpaESLIF_value_types(marpaESLIFValueResultTmpp->type), marpaESLIFValueResultTmpp->contextp, marpaESLIFValueResultTmpp->representationp, marpaESLIFValueResultTmpp->u.i);
+      if (rcAfterb > 0) {
+        /* Need to cross-check with replacement pointers */
+        for (i = usedi - 1; i >=0; i--) {
+          marpaESLIFValueResultTmpp = GENERICSTACK_GET_CUSTOMP(beforePtrStackp, i);
+          /* We abused marpaESLIFValueResult:
+             - marpaESLIFValueResultTmp is in contextp
+             - p is in representationp
+             - hashindexi is in u.i */
+          MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Got fake marpaESLIFValueResultTmp.{type,contextp <== marpaESLIFValueResultp,representationp <== p, u.i <== hashindexi}={%s,%p,%p,%d}", _marpaESLIF_value_types(marpaESLIFValueResultTmpp->type), marpaESLIFValueResultTmpp->contextp, marpaESLIFValueResultTmpp->representationp, marpaESLIFValueResultTmpp->u.i);
 
-        /* Need to lookup in afterPtrHashp if it is empty */
-        if (rcAfterb > 0) {
           p = marpaESLIFValueResultTmpp->representationp;
           hashindexi = marpaESLIFValueResultTmpp->u.i;
 
@@ -13235,39 +13235,82 @@ static inline short _marpaESLIFRecognizer_valueStack_i_setb(marpaESLIFRecognizer
             /* Pointer in original also exist in replacement */
             continue;
           }
-        }
 
-        marpaESLIFValueResultWorkp = (marpaESLIFValueResult_t *) marpaESLIFValueResultTmpp->contextp;
-        /* We can free the original pointer */
-        switch (marpaESLIFValueResultWorkp->type) {
-        case MARPAESLIF_VALUE_TYPE_PTR:
-          MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Freeing stack value at indice %d, type PTR", indicei);
-          marpaESLIFValueResultWorkp->u.p.freeCallbackp(marpaESLIFValueResultWorkp->u.p.freeUserDatavp, marpaESLIFValueResultWorkp);
-          marpaESLIFValueResultWorkp->u.p.shallowb = 1;
-          break;
-        case MARPAESLIF_VALUE_TYPE_ARRAY:
-          MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Freeing stack value at indice %d, type ARRAY", indicei);
-          marpaESLIFValueResultWorkp->u.a.freeCallbackp(marpaESLIFValueResultWorkp->u.a.freeUserDatavp, marpaESLIFValueResultWorkp);
-          marpaESLIFValueResultWorkp->u.a.shallowb = 1;
-          break;
-        case MARPAESLIF_VALUE_TYPE_STRING:
-          MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Freeing stack value at indice %d, type STRING", indicei);
-          marpaESLIFValueResultWorkp->u.s.freeCallbackp(marpaESLIFValueResultWorkp->u.s.freeUserDatavp, marpaESLIFValueResultWorkp);
-          marpaESLIFValueResultWorkp->u.s.shallowb = 1;
-          break;
-        case MARPAESLIF_VALUE_TYPE_ROW:
-          MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Freeing stack value at indice %d, type ROW", indicei);
-          marpaESLIFValueResultWorkp->u.r.freeCallbackp(marpaESLIFValueResultWorkp->u.r.freeUserDatavp, marpaESLIFValueResultWorkp);
-          marpaESLIFValueResultWorkp->u.r.shallowb = 1;
-          break;
-        case MARPAESLIF_VALUE_TYPE_TABLE:
-          MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Freeing stack value at indice %d, type TABLE", indicei);
-          marpaESLIFValueResultWorkp->u.t.freeCallbackp(marpaESLIFValueResultWorkp->u.t.freeUserDatavp, marpaESLIFValueResultWorkp);
-          marpaESLIFValueResultWorkp->u.t.shallowb = 1;
-          break;
-        default:
-          MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, funcs, "Invalid case at indice %d, type %d (%s)", indicei, marpaESLIFValueResultWorkp->type, _marpaESLIF_value_types(marpaESLIFValueResultWorkp->type));
-          goto err;
+          marpaESLIFValueResultWorkp = (marpaESLIFValueResult_t *) marpaESLIFValueResultTmpp->contextp;
+          /* We can free the original pointer */
+          switch (marpaESLIFValueResultWorkp->type) {
+          case MARPAESLIF_VALUE_TYPE_PTR:
+            MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Freeing stack value at indice %d, type PTR", indicei);
+            marpaESLIFValueResultWorkp->u.p.freeCallbackp(marpaESLIFValueResultWorkp->u.p.freeUserDatavp, marpaESLIFValueResultWorkp);
+            marpaESLIFValueResultWorkp->u.p.shallowb = 1;
+            break;
+          case MARPAESLIF_VALUE_TYPE_ARRAY:
+            MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Freeing stack value at indice %d, type ARRAY", indicei);
+            marpaESLIFValueResultWorkp->u.a.freeCallbackp(marpaESLIFValueResultWorkp->u.a.freeUserDatavp, marpaESLIFValueResultWorkp);
+            marpaESLIFValueResultWorkp->u.a.shallowb = 1;
+            break;
+          case MARPAESLIF_VALUE_TYPE_STRING:
+            MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Freeing stack value at indice %d, type STRING", indicei);
+            marpaESLIFValueResultWorkp->u.s.freeCallbackp(marpaESLIFValueResultWorkp->u.s.freeUserDatavp, marpaESLIFValueResultWorkp);
+            marpaESLIFValueResultWorkp->u.s.shallowb = 1;
+            break;
+          case MARPAESLIF_VALUE_TYPE_ROW:
+            MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Freeing stack value at indice %d, type ROW", indicei);
+            marpaESLIFValueResultWorkp->u.r.freeCallbackp(marpaESLIFValueResultWorkp->u.r.freeUserDatavp, marpaESLIFValueResultWorkp);
+            marpaESLIFValueResultWorkp->u.r.shallowb = 1;
+            break;
+          case MARPAESLIF_VALUE_TYPE_TABLE:
+            MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Freeing stack value at indice %d, type TABLE", indicei);
+            marpaESLIFValueResultWorkp->u.t.freeCallbackp(marpaESLIFValueResultWorkp->u.t.freeUserDatavp, marpaESLIFValueResultWorkp);
+            marpaESLIFValueResultWorkp->u.t.shallowb = 1;
+            break;
+          default:
+            MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, funcs, "Invalid case at indice %d, type %d (%s)", indicei, marpaESLIFValueResultWorkp->type, _marpaESLIF_value_types(marpaESLIFValueResultWorkp->type));
+            goto err;
+          }
+        }
+      } else {
+        /* No need to cross-check with replacement pointers */
+        for (i = usedi - 1; i >=0; i--) {
+          marpaESLIFValueResultTmpp = GENERICSTACK_GET_CUSTOMP(beforePtrStackp, i);
+          /* We abused marpaESLIFValueResult:
+             - marpaESLIFValueResultTmp is in contextp
+             - p is in representationp
+             - hashindexi is in u.i */
+          MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Got fake marpaESLIFValueResultTmp.{type,contextp <== marpaESLIFValueResultp,representationp <== p, u.i <== hashindexi}={%s,%p,%p,%d}", _marpaESLIF_value_types(marpaESLIFValueResultTmpp->type), marpaESLIFValueResultTmpp->contextp, marpaESLIFValueResultTmpp->representationp, marpaESLIFValueResultTmpp->u.i);
+
+          marpaESLIFValueResultWorkp = (marpaESLIFValueResult_t *) marpaESLIFValueResultTmpp->contextp;
+          /* We can free the original pointer */
+          switch (marpaESLIFValueResultWorkp->type) {
+          case MARPAESLIF_VALUE_TYPE_PTR:
+            MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Freeing stack value at indice %d, type PTR", indicei);
+            marpaESLIFValueResultWorkp->u.p.freeCallbackp(marpaESLIFValueResultWorkp->u.p.freeUserDatavp, marpaESLIFValueResultWorkp);
+            marpaESLIFValueResultWorkp->u.p.shallowb = 1;
+            break;
+          case MARPAESLIF_VALUE_TYPE_ARRAY:
+            MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Freeing stack value at indice %d, type ARRAY", indicei);
+            marpaESLIFValueResultWorkp->u.a.freeCallbackp(marpaESLIFValueResultWorkp->u.a.freeUserDatavp, marpaESLIFValueResultWorkp);
+            marpaESLIFValueResultWorkp->u.a.shallowb = 1;
+            break;
+          case MARPAESLIF_VALUE_TYPE_STRING:
+            MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Freeing stack value at indice %d, type STRING", indicei);
+            marpaESLIFValueResultWorkp->u.s.freeCallbackp(marpaESLIFValueResultWorkp->u.s.freeUserDatavp, marpaESLIFValueResultWorkp);
+            marpaESLIFValueResultWorkp->u.s.shallowb = 1;
+            break;
+          case MARPAESLIF_VALUE_TYPE_ROW:
+            MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Freeing stack value at indice %d, type ROW", indicei);
+            marpaESLIFValueResultWorkp->u.r.freeCallbackp(marpaESLIFValueResultWorkp->u.r.freeUserDatavp, marpaESLIFValueResultWorkp);
+            marpaESLIFValueResultWorkp->u.r.shallowb = 1;
+            break;
+          case MARPAESLIF_VALUE_TYPE_TABLE:
+            MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Freeing stack value at indice %d, type TABLE", indicei);
+            marpaESLIFValueResultWorkp->u.t.freeCallbackp(marpaESLIFValueResultWorkp->u.t.freeUserDatavp, marpaESLIFValueResultWorkp);
+            marpaESLIFValueResultWorkp->u.t.shallowb = 1;
+            break;
+          default:
+            MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, funcs, "Invalid case at indice %d, type %d (%s)", indicei, marpaESLIFValueResultWorkp->type, _marpaESLIF_value_types(marpaESLIFValueResultWorkp->type));
+            goto err;
+          }
         }
       }
     }
