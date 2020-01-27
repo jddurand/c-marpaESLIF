@@ -13134,20 +13134,26 @@ static inline short _marpaESLIFRecognizer_valueStack_i_setb(marpaESLIFRecognizer
     /* Look at original value */
     /* ---------------------- */
     if (indicei >= GENERICSTACK_USED(valueResultStackp)) {
-      /* Replacement on something that does not yet exist - this is not illegal, we set UNDEF */
-      GENERICSTACK_SET_CUSTOM(valueResultStackp, marpaESLIFValueResultUndef, indicei);
+      /* Replacement on something that does not yet exist - this is not illegal, we do the replacement immediately */
+      GENERICSTACK_SET_CUSTOMP(valueResultStackp, marpaESLIFValueResultp, indicei);
       if (GENERICSTACK_ERROR(valueResultStackp)) {
         MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "valueResultStackp set failure at indice %d, %s", indicei, strerror(errno));
         goto err;
+      } else {
+        rcb = 1;
+        goto done;
       }
     } else if (! GENERICSTACK_IS_CUSTOM(valueResultStackp, indicei)) {
       /* Then it is must be NA */
       if (GENERICSTACK_IS_NA(valueResultStackp, indicei)) {
-        /* Replacement on something that is NA - this is not illegal, we set UNDEF */
-        GENERICSTACK_SET_CUSTOM(valueResultStackp, marpaESLIFValueResultUndef, indicei);
+        /* Replacement on something that is NA - this is also not illegal, we do the replacement immediately */
+        GENERICSTACK_SET_CUSTOMP(valueResultStackp, marpaESLIFValueResultp, indicei);
         if (GENERICSTACK_ERROR(valueResultStackp)) {
           MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "valueResultStackp set failure at indice %d, %s", indicei, strerror(errno));
           goto err;
+        } else {
+          rcb = 1;
+          goto done;
         }
       } else {
         /* At indicei, this is must be a CUSTOM or a NA value */
@@ -13178,27 +13184,30 @@ static inline short _marpaESLIFRecognizer_valueStack_i_setb(marpaESLIFRecognizer
     /* ------------------ */
     /* Prepare work areas */
     /* ------------------ */
-    /* Take care: this is very dangerous, inner eventual elements are set AS THIS WERE in the previous stage */
+    /* Take care: RELAX methods are very dangerous, inner eventual elements are leaked if they contain the only references to allocated memory */
     GENERICSTACK_RELAX(beforePtrStackp);
     GENERICHASH_RELAX(beforePtrHashp, NULL /* userDatavp */);
-    GENERICHASH_RELAX(afterPtrHashp, NULL /* userDatavp */);
 
     /* Flatten view of all original pointers - no need to check for recursivity: it is already in the stack so this was already approved */
     MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "Getting non-shallowed original pointers");
     if (! _marpaESLIF_flatten_pointers(marpaESLIFRecognizerp, beforePtrStackp, beforePtrHashp, marpaESLIFValueResultOrigp, 1 /* noShallowb */, 0 /* checkRecursivityb */)) {
       goto err;
     }
-
-    /* Flatten view of all replacement pointers */
-    MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "Getting all replacement pointers");
-    if (! _marpaESLIF_flatten_pointers(marpaESLIFRecognizerp, NULL /* afterPtrStackp */, afterPtrHashp, marpaESLIFValueResultp, 0 /* noShallowb */, 1 /* checkRecursivityb */)) {
-      goto err;
-    }
-
-    /* Loop on all original pointers and free them if they are not shallowed and if they do not exist in replacement pointers */
-    /* It is VERY important to take this stack in reverse order */
     usedi = GENERICSTACK_USED(beforePtrStackp);
+
+    /* Something to free in the stack before the replacement ? */
     if (usedi > 0) {
+      /* Take care: RELAX methods are very dangerous, inner eventual elements are leaked if they contain the only references to allocated memory */
+      GENERICHASH_RELAX(afterPtrHashp, NULL /* userDatavp */);
+
+      /* Flatten view of all replacement pointers */
+      MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "Getting all replacement pointers");
+      if (! _marpaESLIF_flatten_pointers(marpaESLIFRecognizerp, NULL /* afterPtrStackp */, afterPtrHashp, marpaESLIFValueResultp, 0 /* noShallowb */, 1 /* checkRecursivityb */)) {
+        goto err;
+      }
+
+      /* Loop on all original pointers and free them if they are not shallowed and if they do not exist in replacement pointers */
+      /* It is VERY important to take this stack in reverse order */
       for (i = usedi - 1; i >=0; i--) {
         marpaESLIFValueResultTmpp = GENERICSTACK_GET_CUSTOMP(beforePtrStackp, i);
         /* We abused marpaESLIFValueResult:
