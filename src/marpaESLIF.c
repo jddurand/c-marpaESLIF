@@ -8401,7 +8401,6 @@ static inline short _marpaESLIFRecognizer_push_grammar_eventsb(marpaESLIFRecogni
   marpaESLIFGrammar_t           marpaESLIFGrammarDiscard;
   marpaESLIF_grammar_t          grammarDiscard;
   marpaESLIFRecognizerOption_t  marpaESLIFRecognizerOptionDiscard;
-  marpaESLIFValueOption_t       marpaESLIFValueOptionDiscard      = marpaESLIFValueOption_default_template;
   marpaESLIFValueResult_t       marpaESLIFValueResult;
   short                         continue_last_discard_loopb;
 
@@ -8522,15 +8521,13 @@ static inline short _marpaESLIFRecognizer_push_grammar_eventsb(marpaESLIFRecogni
       marpaESLIFRecognizerOptionDiscard.newlineb          = 0; /* ... do not count line/column numbers */
       marpaESLIFRecognizerOptionDiscard.trackb            = 0; /* ... do not count track absolute position */
 
-      marpaESLIFValueOptionDiscard                        = marpaESLIFValueOption_default_template;
-
       do {
         /* Always reset this shallow pointer */
         marpaESLIFRecognizerp->discardEvents  = NULL;
         marpaESLIFRecognizerp->discardSymbolp = NULL;
         if (_marpaESLIFGrammar_parseb(&marpaESLIFGrammarDiscard,
                                       &marpaESLIFRecognizerOptionDiscard,
-                                      &marpaESLIFValueOptionDiscard,
+                                      (marpaESLIFValueOption_t *) &marpaESLIFValueOption_default_template, /* &marpaESLIFValueOptionDiscard */
                                       1, /* discardb */
                                       marpaESLIFRecognizerp->noEventb, /* This will select marpaWrapperGrammarDiscardNoEventp or marpaWrapperGrammarDiscardp */
                                       1, /* silentb */
