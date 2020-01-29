@@ -6187,7 +6187,9 @@ static inline short _marpaESLIF_bootstrap_G1_action_event_declarationb(void *use
   marpaESLIF_symbol_t                         *symbolp;
   char                                       **eventsp = NULL;
   short                                       *eventbp = NULL;
+#ifndef MARPAESLIF_NTRACE
   char                                        *types = NULL;
+#endif
   short                                        intb = 0;
   int                                          leveli = 0;
   short                                        rcb;
@@ -6234,17 +6236,23 @@ static inline short _marpaESLIF_bootstrap_G1_action_event_declarationb(void *use
   case MARPAESLIF_BOOTSTRAP_EVENT_DECLARATION_TYPE_PREDICTED:
     eventsp = &(symbolp->eventPredicteds);
     eventbp = &(symbolp->eventPredictedb);
+#ifndef MARPAESLIF_NTRACE
     types   = "predicted";
+#endif
     break;
   case MARPAESLIF_BOOTSTRAP_EVENT_DECLARATION_TYPE_NULLED:
     eventsp = &(symbolp->eventNulleds);
     eventbp = &(symbolp->eventNulledb);
+#ifndef MARPAESLIF_NTRACE
     types   = "nulled";
+#endif
     break;
   case MARPAESLIF_BOOTSTRAP_EVENT_DECLARATION_TYPE_COMPLETED:
     eventsp = &(symbolp->eventCompleteds);
     eventbp = &(symbolp->eventCompletedb);
+#ifndef MARPAESLIF_NTRACE
     types   = "completion";
+#endif
     break;
   default:
     MARPAESLIF_ERRORF(marpaESLIFp, "In event declaration for symbol <%s>, unsupported event type %d", symbolNames, type);
@@ -6275,7 +6283,9 @@ static inline short _marpaESLIF_bootstrap_G1_action_event_declarationb(void *use
 
   MARPAESLIF_BOOTSTRAP_SET_UNDEF(marpaESLIFValuep, resulti, MARPAESLIF_BOOTSTRAP_STACK_TYPE_NA /* context not used */);
 
+#ifndef MARPAESLIF_NTRACE
   MARPAESLIF_TRACEF(marpaESLIFp, funcs, "Setted %s event %s=%s for symbol <%s> at grammar level %d", types, *eventsp, *eventbp ? "on" : "off", symbolNames, leveli);
+#endif
 
   rcb = 1;
   goto done;
