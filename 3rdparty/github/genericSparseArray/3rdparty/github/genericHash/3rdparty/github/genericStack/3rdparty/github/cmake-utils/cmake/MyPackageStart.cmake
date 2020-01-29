@@ -215,4 +215,11 @@ MACRO (MYPACKAGESTART packageName versionMajor versionMinor versionPatch)
     MESSAGE (STATUS "[${PROJECT_NAME}-START-DEBUG] Checking for sizes")
   ENDIF ()
   MYPACKAGECHECKCOMMONSIZES()
+  #
+  # Execute repair tasks
+  #
+  IF (MYPACKAGE_DEBUG)
+    MESSAGE (STATUS "[${PROJECT_NAME}-START-DEBUG] Checking for repair tasks")
+  ENDIF ()
+  MYPACKAGEREPAIR()
 ENDMACRO()

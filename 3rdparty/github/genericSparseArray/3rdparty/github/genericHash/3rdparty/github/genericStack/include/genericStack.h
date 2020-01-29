@@ -622,6 +622,7 @@ typedef struct genericStack {
     if ((stackName) != NULL) {						\
       if ((stackName)->heapItems != NULL) {				\
         free((stackName)->heapItems);					\
+        (stackName)->heapItems = NULL;                                  \
         (stackName)->heapLength = 0;					\
       }									\
       (stackName)->used = 0;						\
@@ -695,11 +696,14 @@ typedef struct genericStack {
                                                                         \
     if ((_genericStackSwitch_index1 < 0) || ((_genericStackSwitch_index1) >= (stackName)->used) || \
         (_genericStackSwitch_index2 < 0) || ((_genericStackSwitch_index2) >= (stackName)->used)) { \
-      (stackName)->error = 1;                                             \
+      (stackName)->error = 1;                                           \
     } else if (_genericStackSwitch_index1 != _genericStackSwitch_index2) { \
       genericStackItem_t _item = _GENERICSTACK_ITEM((stackName), _genericStackSwitch_index1); \
-      memcpy(_GENERICSTACK_ITEM_ADDR((stackName), _genericStackSwitch_index1), _GENERICSTACK_ITEM_ADDR((stackName), _genericStackSwitch_index2),  sizeof(genericStackItem_t)); \
-      memcpy(_GENERICSTACK_ITEM_ADDR((stackName), _genericStackSwitch_index2), &_item,  sizeof(genericStackItem_t)); \
+      void *_addr1 = (void *) _GENERICSTACK_ITEM_ADDR((stackName), _genericStackSwitch_index1); \
+      void *_addr2 = (void *) _GENERICSTACK_ITEM_ADDR((stackName), _genericStackSwitch_index2); \
+                                                                        \
+      memcpy(_addr1, _addr2,  sizeof(genericStackItem_t));              \
+      memcpy(_addr2, &_item,  sizeof(genericStackItem_t));              \
     }                                                                   \
   } while (0)
 
