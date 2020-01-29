@@ -19,6 +19,7 @@
 #include <string.h>
 #include <float.h>
 #include <limits.h>
+/* #include <valgrind/callgrind.h> */
 
 #define MARPAESLIFPERL_CHUNKED_SIZE_UPPER(size, chunk) ((size) < (chunk)) ? (chunk) : ((1 + ((size) / (chunk))) * (chunk))
 
@@ -2603,6 +2604,11 @@ static short marpaESLIFPerl_JSONDecodeNumberAction(void *userDatavp, char *strin
   SV                      *svnumifyp;
   dTHXa(Perl_MarpaX_ESLIF_Valuep->PerlInterpreterp);
 
+  if (marpaESLIFValueResultp->type != MARPAESLIF_VALUE_TYPE_UNDEF) {
+    /* Default is to accept marpaESLIF proposal */
+    return 1;
+  }
+
   listp = newAV();
   av_push(listp, newSVpvn((const char *) strings, (STRLEN) stringl)); /* Ref count of string is transfered to listp */
   svp = marpaESLIFPerl_call_actionp(aTHX_ boot_MarpaX__ESLIF__Math__BigFloat_svp, "new", listp, NULL /* Perl_MarpaX_ESLIF_Valuep */, 0 /* evalb */, 0 /* evalSilentb */);
@@ -3062,7 +3068,10 @@ CODE:
   marpaESLIFRecognizerOption_t  marpaESLIFRecognizerOption;
   SV                           *svp;
 
-  marpaESLIFPerl_paramIsRecognizerInterfacev(aTHX_ Perl_recognizerInterfacep);
+  /* CALLGRIND_START_INSTRUMENTATION; */
+  /* We VOLUNTARILY do not call marpaESLIFPerl_paramIsRecognizerInterfacev() because this is an interface that we own: */
+  /* we know what we are doing -; */
+  /* marpaESLIFPerl_paramIsRecognizerInterfacev(aTHX_ Perl_recognizerInterfacep); */
   marpaESLIFPerl_recognizerContextInitv(aTHX_ Perl_MarpaX_ESLIF_JSON_Decoderp->marpaESLIFp, ST(0) /* SV of grammar */, ST(1) /* SV of recognizer interface */, &marpaESLIFRecognizerContext, NULL /* Perl_MarpaX_ESLIF_Recognizer_origp */);
   marpaESLIFPerl_valueContextInitv(aTHX_ Perl_MarpaX_ESLIF_JSON_Decoderp->marpaESLIFp, NULL /* No recognizer */, ST(0) /* SV of grammar */, NULL /* SV of value interface */, &marpaESLIFValueContext);
 
@@ -3104,6 +3113,7 @@ CODE:
   marpaESLIFPerl_recognizerContextFreev(aTHX_ &marpaESLIFRecognizerContext, 1 /* onStackb */);
 
   RETVAL = svp;
+  /* CALLGRIND_STOP_INSTRUMENTATION; */
 OUTPUT:
   RETVAL
 
