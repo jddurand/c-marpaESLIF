@@ -343,19 +343,25 @@ static const marpaESLIFValueResult_t marpaESLIFValueResultLeftBracket = {
   NULL,                       /* contextp */
   NULL,                       /* representationp */
   MARPAESLIF_VALUE_TYPE_CHAR, /* type */
-  '{'                         /* u.c */
+  {
+   '{'                        /* u.c */
+  }
 };
 static const marpaESLIFValueResult_t marpaESLIFValueResultRightBracket = {
   NULL,                       /* contextp */
   NULL,                       /* representationp */
   MARPAESLIF_VALUE_TYPE_CHAR, /* type */
-  '}'                         /* u.c */
+  {
+   '}'                        /* u.c */
+  }
 };
 static const marpaESLIFValueResult_t marpaESLIFValueResultLeftSquare = {
   NULL,                       /* contextp */
   NULL,                       /* representationp */
   MARPAESLIF_VALUE_TYPE_CHAR, /* type */
-  '['                         /* u.c */
+  {
+   '['                        /* u.c */
+  }
 };
 
 /* In C89 only the first member of a union can be initialized, this is what we need */
@@ -363,21 +369,27 @@ static const marpaESLIFValueResult_t marpaESLIFValueResultRightSquare = {
   NULL,                       /* contextp */
   NULL,                       /* representationp */
   MARPAESLIF_VALUE_TYPE_CHAR, /* type */
-  ']'                         /* u.c */
+  {
+   ']'                        /* u.c */
+  }
 };
 /* In C89 only the first member of a union can be initialized, this is what we need */
 static const marpaESLIFValueResult_t marpaESLIFValueResultComma = {
   NULL,                       /* contextp */
   NULL,                       /* representationp */
   MARPAESLIF_VALUE_TYPE_CHAR, /* type */
-  ','                         /* u.c */
+  {
+   ','                        /* u.c */
+  }
 };
 /* In C89 only the first member of a union can be initialized, this is what we need */
 static const marpaESLIFValueResult_t marpaESLIFValueResultColon = {
   NULL,                       /* contextp */
   NULL,                       /* representationp */
   MARPAESLIF_VALUE_TYPE_CHAR, /* type */
-  ':'                         /* u.c */
+  {
+   ':'                        /* u.c */
+  }
 };
 
 /* Prefilled string generator, to gain also few instructions that are always the same */
