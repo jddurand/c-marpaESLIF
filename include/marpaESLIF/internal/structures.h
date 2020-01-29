@@ -456,14 +456,6 @@ struct marpaESLIF_alternative {
   short                   usedb;                 /* Is this structure in use ? */
 };
 
-marpaESLIF_alternative_t marpaESLIF_alternative_default = {
-  NULL, /* symbolp */
-  NULL, /* valuep */
-  0,    /* valuel */
-  0,    /* grammarLengthi */
-  0     /* usedb */
-};
-
 /* ------------------------------- */
 /* Definition of internal contexts */
 /* ------------------------------- */
