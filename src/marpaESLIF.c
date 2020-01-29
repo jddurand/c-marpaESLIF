@@ -624,7 +624,7 @@ static inline marpaESLIF_action_t    *_marpaESLIF_action_clonep(marpaESLIF_t *ma
 static inline void                    _marpaESLIF_action_freev(marpaESLIF_action_t *actionp);
 static inline short                   _marpaESLIF_string_removebomb(marpaESLIF_t *marpaESLIFp, char *bytep, size_t *bytelp, char *encodingasciis, size_t *bomsizelp);
 static inline void                    _marpaESLIF_codepoint_to_json(marpaESLIF_uint32_t codepoint, genericLogger_t *genericLoggerp);
-static inline short                   _marpaESLIF_flatten_pointers(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, genericStack_t *flattenPtrStackp, genericHash_t *flattenPtrHashp, marpaESLIFValueResult_t *marpaESLIFValueResultp, short noShallowb, short checkRecursivityb);
+static inline short                   _marpaESLIF_flatten_pointers(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, genericStack_t *flattenPtrStackp, genericHash_t *flattenPtrHashp, marpaESLIFValueResult_t *marpaESLIFValueResultp, short noShallowb);
 static inline marpaESLIFGrammar_t    *_marpaESLIFJSON_decode_newp(marpaESLIF_t *marpaESLIFp, short strictb);
 static inline marpaESLIFGrammar_t    *_marpaESLIFJSON_encode_newp(marpaESLIF_t *marpaESLIFp, short strictb);
 
@@ -9032,6 +9032,14 @@ static inline marpaESLIFRecognizer_t *_marpaESLIFRecognizer_newp(marpaESLIFGramm
     goto err;
   }
 
+  marpaESLIFRecognizerp->marpaESLIFValueResultFlattenStackp = &(marpaESLIFRecognizerp->_marpaESLIFValueResultFlattenStack);
+  GENERICSTACK_INIT(marpaESLIFRecognizerp->marpaESLIFValueResultFlattenStackp);
+  if (GENERICSTACK_ERROR(marpaESLIFRecognizerp->marpaESLIFValueResultFlattenStackp)) {
+    MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "marpaESLIFRecognizerp->marpaESLIFValueResultFlattenStackp initialization failure, %s", strerror(errno));
+    marpaESLIFRecognizerp->marpaESLIFValueResultFlattenStackp = NULL;
+    goto err;
+  }
+
 #ifndef MARPAESLIF_NTRACE
   if (marpaESLIFRecognizerParentp != NULL) {
     MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Recognizer %p remembers that parent's %p deltal is %ld", marpaESLIFRecognizerp, marpaESLIFRecognizerParentp, marpaESLIFRecognizerp->parentDeltal);
@@ -13197,7 +13205,7 @@ static inline short _marpaESLIFRecognizer_valueStack_i_setb(marpaESLIFRecognizer
     /* ------------------ */
     /* Flatten view of all original pointers - no need to check for recursivity: it is already in the stack so this was already approved */
     MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "Getting non-shallowed original pointers");
-    rcBeforeb = _marpaESLIF_flatten_pointers(marpaESLIFRecognizerp, beforePtrStackp, beforePtrHashp, marpaESLIFValueResultOrigp, 1 /* noShallowb */, 0 /* checkRecursivityb */);
+    rcBeforeb = _marpaESLIF_flatten_pointers(marpaESLIFRecognizerp, beforePtrStackp, NULL /* beforePtrHashp */, marpaESLIFValueResultOrigp, 1 /* noShallowb */);
     if (! rcBeforeb) {
       goto err;
     }
@@ -13206,7 +13214,7 @@ static inline short _marpaESLIFRecognizer_valueStack_i_setb(marpaESLIFRecognizer
     if (rcBeforeb > 0) {
       /* Flatten view of all replacement pointers */
       MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "Getting all replacement pointers");
-      rcAfterb = _marpaESLIF_flatten_pointers(marpaESLIFRecognizerp, NULL /* afterPtrStackp */, afterPtrHashp, marpaESLIFValueResultp, 0 /* noShallowb */, 1 /* checkRecursivityb */);
+      rcAfterb = _marpaESLIF_flatten_pointers(marpaESLIFRecognizerp, NULL /* afterPtrStackp */, afterPtrHashp, marpaESLIFValueResultp, 0 /* noShallowb */);
       if (! rcAfterb) {
         goto err;
       }
@@ -16217,6 +16225,9 @@ static inline void _marpaESLIFRecognizer_freev(marpaESLIFRecognizer_t *marpaESLI
   if (marpaESLIFRecognizerp->lastDiscards != NULL) {
     free(marpaESLIFRecognizerp->lastDiscards);
   }
+  if (marpaESLIFRecognizerp->marpaESLIFValueResultFlattenStackp != NULL) {
+    GENERICSTACK_RESET(marpaESLIFRecognizerp->marpaESLIFValueResultFlattenStackp);
+  }
 
   /* Dispose lua if needed */
   _marpaESLIFRecognizer_lua_freev(marpaESLIFRecognizerp);
@@ -17280,18 +17291,17 @@ char *marpaESLIF_encodings(marpaESLIF_t *marpaESLIFp, char *bytep, size_t bytel)
 }
 
 /*****************************************************************************/
-static inline short _marpaESLIF_flatten_pointers(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, genericStack_t *flattenPtrStackp, genericHash_t *flattenPtrHashp, marpaESLIFValueResult_t *marpaESLIFValueResultp, short noShallowb, short checkRecursivityb)
+static inline short _marpaESLIF_flatten_pointers(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, genericStack_t *flattenPtrStackp, genericHash_t *flattenPtrHashp, marpaESLIFValueResult_t *marpaESLIFValueResultp, short noShallowb)
 /*****************************************************************************/
-/* if marpaESLIFValueResultp != NULL, flattenPtrStackp may be NULL but flattenPtrHashp must never be NULL */
 /* Take care: this method return -1 if there is NOTHING to do */
 /*****************************************************************************/
 {
   static const char       *funcs = "_marpaESLIF_flatten_pointers";
-  genericStack_t           marpaESLIFValueResultStack;
   genericStack_t          *marpaESLIFValueResultStackp;
   marpaESLIFValueResult_t *marpaESLIFValueResultTmpp;
   marpaESLIFValueResult_t  marpaESLIFValueResultTmp;
   short                    flattenPtrStackb;
+  short                    flattenPtrHashb;
   size_t                   i;
   short                    shallowb;
   void                    *p;
@@ -17333,16 +17343,11 @@ static inline short _marpaESLIF_flatten_pointers(marpaESLIFRecognizer_t *marpaES
   }
   if ((shallowb && noShallowb) || (p == NULL)) {
     rcb = -1;
-    goto fast_done;
+    goto done;
   }
 
-  marpaESLIFValueResultStackp = &marpaESLIFValueResultStack;
-  GENERICSTACK_INIT(marpaESLIFValueResultStackp);
-  if (GENERICSTACK_ERROR(marpaESLIFValueResultStackp)) {
-    MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "marpaESLIFValueResultStackp initialization failure, %s", strerror(errno));
-    marpaESLIFValueResultStackp = NULL;
-    goto err;
-  }
+  marpaESLIFValueResultStackp = marpaESLIFRecognizerp->marpaESLIFValueResultFlattenStackp;
+  GENERICSTACK_RELAX(marpaESLIFValueResultStackp);
 
   GENERICSTACK_PUSH_PTR(marpaESLIFValueResultStackp, marpaESLIFValueResultp);
   if (GENERICSTACK_ERROR(marpaESLIFValueResultStackp)) {
@@ -17351,11 +17356,14 @@ static inline short _marpaESLIF_flatten_pointers(marpaESLIFRecognizer_t *marpaES
   }
 
   /* Take care: RELAX methods are very dangerous, inner eventual elements are leaked if they contain the only references to allocated memory */
-  flattenPtrStackb = (flattenPtrStackp != NULL);
+  flattenPtrStackb = (flattenPtrStackp != NULL) ? 1 : 0;
   if (flattenPtrStackb) {
     GENERICSTACK_RELAX(flattenPtrStackp);
   }
-  GENERICHASH_RELAX(flattenPtrHashp, NULL /* userDatavp */);
+  flattenPtrHashb = (flattenPtrHashp != NULL) ? 1 : 0;
+  if (flattenPtrHashb) {
+    GENERICHASH_RELAX(flattenPtrHashp, NULL /* userDatavp */);
+  }
 
   while (GENERICSTACK_USED(marpaESLIFValueResultStackp) > 0) {
     marpaESLIFValueResultTmpp = GENERICSTACK_POP_PTR(marpaESLIFValueResultStackp);
@@ -17395,7 +17403,7 @@ static inline short _marpaESLIF_flatten_pointers(marpaESLIFRecognizer_t *marpaES
 
       /* Remember this pointer, value is the corresponding marpaESLIFValueResult pointer */
       hashindexi = _marpaESLIF_ptrhashi(NULL /* userDatavp */, GENERICSTACKITEMTYPE_PTR, (void **) &p);
-      if (checkRecursivityb) {
+      if (flattenPtrHashb) {
         findResultb = 0;
         GENERICHASH_FIND_BY_IND(flattenPtrHashp,
                                 NULL, /* userDatavp */
@@ -17421,12 +17429,6 @@ static inline short _marpaESLIF_flatten_pointers(marpaESLIFRecognizer_t *marpaES
             MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "flattenPtrHashp failure, %s", strerror(errno));
             goto err;
           }
-        }
-      } else {
-        GENERICHASH_SET_BY_IND(flattenPtrHashp, NULL /* userDatavp */, PTR, p, PTR, marpaESLIFValueResultTmpp, hashindexi);
-        if (GENERICHASH_ERROR(flattenPtrHashp)) {
-          MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "flattenPtrHashp failure, %s", strerror(errno));
-          goto err;
         }
       }
       if (flattenPtrStackb) {
@@ -17486,9 +17488,6 @@ static inline short _marpaESLIF_flatten_pointers(marpaESLIFRecognizer_t *marpaES
   rcb = 0;
 
  done:
-  GENERICSTACK_RESET(marpaESLIFValueResultStackp); /* This is NULL protected */
-
- fast_done: /* This label exists because marpaESLIFValueResultStackp may not be initialized in case of "fast" version */
   MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "return %d", (int) rcb);
   MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_DEC;
   return rcb;

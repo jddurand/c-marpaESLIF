@@ -435,6 +435,10 @@ struct marpaESLIFRecognizer {
   lua_State                   *L;
   char                        *ifactions;
   char                        *eventactions;
+
+  /* For _marpaESLIF_flatten_pointers optimization */
+  genericStack_t               _marpaESLIFValueResultFlattenStack;
+  genericStack_t              *marpaESLIFValueResultFlattenStackp;
 };
 
 struct marpaESLIF_lexeme_data {
