@@ -14393,7 +14393,6 @@ static inline short _marpaESLIF_generic_action___concatb(void *userDatavp, marpa
   marpaESLIFRecognizer_t                 *marpaESLIFRecognizerp = marpaESLIFValuep->marpaESLIFRecognizerp;
   marpaESLIF_t                           *marpaESLIFp           = marpaESLIFValuep->marpaESLIFp;
   char                                   *toEncodingDups        = NULL;
-  size_t                                  toEncodingl;
   int                                     argi;
   marpaESLIF_stringGenerator_t            marpaESLIF_stringGenerator;
   marpaESLIF_concat_valueResultContext_t  context;
@@ -14449,7 +14448,6 @@ static inline short _marpaESLIF_generic_action___concatb(void *userDatavp, marpa
 
     if (marpaESLIF_stringGenerator.l >= 1) { /* Because of the implicit NULL byte */
       if (toEncodings != NULL) {
-        toEncodingl = strlen(toEncodings);
         if (marpaESLIF_stringGenerator.l > 1) {
           /* Call for conversion in any case, this is a way to validate UTF-8 correctness if the destination encoding is also UTF-8 */
           converteds = _marpaESLIF_charconvb(marpaESLIFp,
