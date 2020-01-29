@@ -6893,7 +6893,7 @@ static short marpaESLIFLua_stack_setb(lua_State *L, marpaESLIF_t *marpaESLIFp, m
     case LUA_TNUMBER:
       /* Is is a lua integer ? */
       if (! marpaESLIFLua_lua_isinteger(&isIntegeri, L, currenti)) goto err;
-      /* fprintf(stderr, "LUA_TNUMBER: isIntegeri=%d\n", isIntegeri); fflush(stdout); fflush(stderr);* /
+      /* fprintf(stderr, "LUA_TNUMBER: isIntegeri=%d\n", isIntegeri); fflush(stdout); fflush(stderr); */
       /* We assume that lua_Number is able to host exactly any lua_Integer which is the default */
       /* for any sane lua interpreter */
       if (isIntegeri) {
