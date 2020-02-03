@@ -14427,24 +14427,23 @@ static short _marpaESLIFRecognizer_concat_valueResultCallbackb(void *userDatavp,
          - jsonf       : "json string"
          - binary mode : content
          - json string : "json string"
+
+         In string mode, output is ALWAYS UTF-8 encoded. Up to the caller to do transformation to another encoding.
       */
       if (stringb) {
+        string.bytep          = (char *) marpaESLIFValueResultp->u.s.p;
+        string.bytel          = marpaESLIFValueResultp->u.s.sizel;
+        string.encodingasciis = marpaESLIFValueResultp->u.s.encodingasciis;
+        string.asciis         = NULL;
+        if (utf8p != &string) {
+          _marpaESLIF_string_freev(utf8p, 0 /* onStackb */);
+        }
+        utf8p = _marpaESLIF_string2utf8p(marpaESLIFp, &string, 0 /* tconvsilentb */);
+        if (utf8p == NULL) {
+          goto err;
+        }
         if (jsonb) {
-          string.bytep          = (char *) marpaESLIFValueResultp->u.s.p;
-          string.bytel          = marpaESLIFValueResultp->u.s.sizel;
-          string.encodingasciis = marpaESLIFValueResultp->u.s.encodingasciis;
-          string.asciis         = NULL;
-          if (utf8p != &string) {
-            _marpaESLIF_string_freev(utf8p, 0 /* onStackb */);
-          }
-          utf8p = _marpaESLIF_string2utf8p(marpaESLIFp, &string, 0 /* tconvsilentb */);
-          if (utf8p == NULL) {
-            goto err;
-          }
           VALUERESULTCALLBACK_TRACE(genericLoggerp, marpaESLIF_stringGeneratorp, "\"");
-          if (! marpaESLIF_stringGeneratorp->okb) {
-            goto err;
-          }
           p = utf8p->bytep;
           maxp = p + utf8p->bytel;
           while (p < maxp) {
