@@ -22,6 +22,13 @@
 #cmakedefine HAVE_FLOAT_H      @HAVE_FLOAT_H@
 #cmakedefine HAVE_LIMITS_H     @HAVE_LIMITS_H@
 
+#cmakedefine SIZEOF_VOID_STAR  @SIZEOF_VOID_STAR@
+#cmakedefine SIZEOF_CHAR       @SIZEOF_CHAR@
+#cmakedefine SIZEOF_SHORT      @SIZEOF_SHORT@
+#cmakedefine SIZEOF_INT        @SIZEOF_INT@
+#cmakedefine SIZEOF_LONG       @SIZEOF_LONG@
+#cmakedefine SIZEOF_LONG_LONG  @SIZEOF_LONG_LONG@
+
 #ifdef HAVE_SYS_TYPES_H
 #include <sys/types.h>
 #endif

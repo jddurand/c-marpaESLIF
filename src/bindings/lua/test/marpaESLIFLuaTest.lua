@@ -98,12 +98,17 @@ logger:noticef('marpaESLIFLua version minor: %s', tostring(marpaESLIFLua.version
 logger:noticef('marpaESLIFLua version patch: %s', tostring(marpaESLIFLua.versionPatch()))
 ------------------------------------------------------------------------------
 local marpaESLIFp = marpaESLIFLua.marpaESLIF_new(logger)
-logger:noticef('marpaESLIFp dump: %s', tableDump(marpaESLIFp))
-logger:noticef('marpaESLIFp meta dump: %s', tableDump(getmetatable(marpaESLIFp)))
 logger:noticef('marpaESLIF version: %s', tostring(marpaESLIFp:version()))
 logger:noticef('marpaESLIF version major: %s', tostring(marpaESLIFp:versionMajor()))
 logger:noticef('marpaESLIF version minor: %s', tostring(marpaESLIFp:versionMinor()))
 logger:noticef('marpaESLIF version patch: %s', tostring(marpaESLIFp:versionPatch()))
+
+local marpaESLIFJSONp = marpaESLIFp:marpaESLIFJSONEncoder_new()
+value = { keya=1, keyb=2, keyc='x', keyy='y', {7,8,9} }
+stringencoded = marpaESLIFJSONp:encode(value)
+logger:noticef('encoded: %s, encoding=%s', stringencoded, stringencoded:encoding())
+
+logger:noticef('marpaESLIFp dump: %s', tableDump(marpaESLIFp))
 logger:noticef('marpaESLIFp meta dump: %s', tableDump(getmetatable(marpaESLIFp)))
 ------------------------------------------------------------------------------
 local marpaESLIFGrammarp = marpaESLIFp:marpaESLIFGrammar_new(
@@ -140,6 +145,13 @@ WHITESPACES ~ [\s]+
 comment ::= /(?:(?:(?:\/\/)(?:[^\n]*)(?:\n|\z))|(?:(?:\/\*)(?:(?:[^\*]+|\*(?!\/))*)(?:\*\/)))/u
 ]]
 )
+-- marpaESLIFJSONp = nil
+-- collectgarbage()
+-- marpaESLIFGrammarp = nil
+-- collectgarbage()
+-- marpaESLIFp = nil
+-- collectgarbage()
+-- os.exit()
 
 logger:noticef('marpaESLIFGrammarp      dump: %s', tableDump(marpaESLIFGrammarp))
 logger:noticef('marpaESLIFGrammarp meta dump: %s', tableDump(getmetatable(marpaESLIFGrammarp)))

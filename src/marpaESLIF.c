@@ -241,27 +241,92 @@ static marpaESLIFValueResult_t marpaESLIFValueResultLazy = {
 #  define MARPAESLIF_DECIMAL_POINT(marpaESLIFp) '.'
 #endif
 
-/* Floating-point value concatenation helper */
-/* Note that currentDecimalPointc and wantedDecimalPointc are constants: compiler will optimize the tests -; */
-#define MARPAESLIF_CONCAT_FLOATINGPOINT(marpaESLIFp, genericLoggerp, floattos, type, value, currentDecimalPointc, wantedDecimalPointc) do { \
+/* -------------------------------------------------------------------- */
+/* _marpaESLIFRecognizer_concat_valueResultCallbackb helpers            */
+/* -------------------------------------------------------------------- */
+#define VALUERESULTCALLBACK_TRACE(genericLoggerp, marpaESLIF_stringGeneratorp, strings) do { \
+    GENERICLOGGER_TRACE(genericLoggerp, strings);                       \
+    if (! marpaESLIF_stringGeneratorp->okb) {                           \
+      goto err;                                                         \
+    }                                                                   \
+  } while (0)
+
+#define VALUERESULTCALLBACK_TRACEF(genericLoggerp, marpaESLIF_stringGeneratorp, fmts, ...) do { \
+    GENERICLOGGER_TRACEF(genericLoggerp, fmts, __VA_ARGS__);            \
+    if (! marpaESLIF_stringGeneratorp->okb) {                           \
+      goto err;                                                         \
+    }                                                                   \
+  } while (0)
+
+#define VALUERESULTCALLBACK_OPAQUE(marpaESLIF_stringGeneratorp, srcs, srcl) do { \
+    if (! _marpaESLIF_appendOpaqueDataToStringGenerator(marpaESLIF_stringGeneratorp, srcs, srcl)) { \
+      goto err;                                                         \
+    }                                                                   \
+  } while (0)
+
+
+#define VALUERESULTCALLBACK_FTOS(marpaESLIFp, genericLoggerp, marpaESLIF_stringGeneratorp, type, value, currentDecimalPointc, wantedDecimalPointc) do { \
     char *_decimalPointp;                                               \
-    floattos = marpaESLIF_##type##tos(marpaESLIFp, value);              \
-    if (floattos == NULL) {                                             \
+    char *_floattos = marpaESLIF_##type##tos(marpaESLIFp, value);       \
+    if (_floattos == NULL) {                                            \
       goto err;                                                         \
     }                                                                   \
     if (currentDecimalPointc != '\0') {                                 \
       if (wantedDecimalPointc != '\0') {                                \
         if (currentDecimalPointc != wantedDecimalPointc) {              \
-          _decimalPointp = strchr(floattos, currentDecimalPointc);      \
+          _decimalPointp = strchr(_floattos, currentDecimalPointc);     \
           if (_decimalPointp != NULL) {                                 \
             *_decimalPointp = wantedDecimalPointc;                      \
           }                                                             \
         }                                                               \
       }                                                                 \
     }                                                                   \
-    GENERICLOGGER_TRACEF(genericLoggerp, "%s", floattos);               \
-    free(floattos);                                                     \
-    floattos = NULL;                                                    \
+    GENERICLOGGER_TRACEF(genericLoggerp, "%s", _floattos);              \
+    free(_floattos);                                                    \
+    if (! marpaESLIF_stringGeneratorp->okb) {                           \
+      goto err;                                                         \
+    }                                                                   \
+  } while (0)
+
+#define VALUERESULTCALLBACK_CODEPOINT_TO_JSON(genericLoggerp, marpaESLIF_stringGeneratorp, codepoint) do { \
+    /* Adapted from https://github.com/nlohmann/json/blob/develop/include/nlohmann/detail/output/serializer.hpp */ \
+    marpaESLIF_uint32_t _codepoint = (marpaESLIF_uint32_t) codepoint;   \
+                                                                        \
+    switch (_codepoint) {                                               \
+    case 0x08: /* backspace */                                          \
+      VALUERESULTCALLBACK_TRACE(genericLoggerp, marpaESLIF_stringGeneratorp, "\\b"); \
+      break;                                                            \
+    case 0x09: /* horizontal tab */                                     \
+      VALUERESULTCALLBACK_TRACE(genericLoggerp, marpaESLIF_stringGeneratorp, "\\t"); \
+      break;                                                            \
+    case 0x0A: /* newline */                                            \
+      VALUERESULTCALLBACK_TRACE(genericLoggerp, marpaESLIF_stringGeneratorp, "\\n"); \
+      break;                                                            \
+    case 0x0C: /* formfeed */                                           \
+      VALUERESULTCALLBACK_TRACE(genericLoggerp, marpaESLIF_stringGeneratorp, "\\f"); \
+      break;                                                            \
+    case 0x0D: /* carriage return */                                    \
+      VALUERESULTCALLBACK_TRACE(genericLoggerp, marpaESLIF_stringGeneratorp, "\\r"); \
+      break;                                                            \
+    case 0x22: /* quotation mark */                                     \
+      VALUERESULTCALLBACK_TRACE(genericLoggerp, marpaESLIF_stringGeneratorp, "\\\""); \
+      break;                                                            \
+    case 0x5C: /* reverse solidus */                                    \
+      VALUERESULTCALLBACK_TRACE(genericLoggerp, marpaESLIF_stringGeneratorp, "\\\\"); \
+      break;                                                            \
+    default:                                                            \
+      /* escape control characters (0x00..0x1F) or non-ASCII characters */ \
+      if ((codepoint <= 0x1F) || (codepoint >= 0x7F)) {                 \
+        if (codepoint <= 0xFFFF) {                                      \
+          VALUERESULTCALLBACK_TRACEF(genericLoggerp, marpaESLIF_stringGeneratorp, "\\u%04x", (int) codepoint); \
+        } else {                                                        \
+          VALUERESULTCALLBACK_TRACEF(genericLoggerp, marpaESLIF_stringGeneratorp, "\\u%04x\\u%04x", (int) (0xD7C0 + (codepoint >> 10)), (int) (0xDC00 + (codepoint & 0x3FF))); \
+        }                                                               \
+      } else {                                                          \
+        VALUERESULTCALLBACK_TRACEF(genericLoggerp, marpaESLIF_stringGeneratorp, "%c", (char) codepoint); \
+      }                                                                 \
+      break;                                                            \
+    }                                                                   \
   } while (0)
 
 /* -------------------------------------------------------------------------------------------- */
@@ -390,6 +455,14 @@ static const marpaESLIFValueResult_t marpaESLIFValueResultColon = {
   {
    ':'                        /* u.c */
   }
+};
+
+/* Internal marker for _marpaESLIFRecognizer_concat_valueResultCallbackb */
+static char _marpaESLIFValueResultNextValueResultMustDisplayAsJsonString = '\0';
+static const marpaESLIFValueResult_t marpaESLIFValueResultNextValueResultMustDisplayAsJsonString = {
+   (void *) &_marpaESLIFValueResultNextValueResultMustDisplayAsJsonString,                        /* contextp */
+   NULL,                        /* representationp */
+   MARPAESLIF_VALUE_TYPE_UNDEF, /* type */
 };
 
 /* Prefilled string generator, to gain also few instructions that are always the same */
@@ -623,7 +696,6 @@ static inline short                   _marpaESLIF_action_eqb(marpaESLIF_action_t
 static inline marpaESLIF_action_t    *_marpaESLIF_action_clonep(marpaESLIF_t *marpaESLIFp, marpaESLIF_action_t *actionp);
 static inline void                    _marpaESLIF_action_freev(marpaESLIF_action_t *actionp);
 static inline short                   _marpaESLIF_string_removebomb(marpaESLIF_t *marpaESLIFp, char *bytep, size_t *bytelp, char *encodingasciis, size_t *bomsizelp);
-static inline void                    _marpaESLIF_codepoint_to_json(marpaESLIF_uint32_t codepoint, genericLogger_t *genericLoggerp);
 static inline short                   _marpaESLIF_flatten_pointers(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, genericStack_t *flattenPtrStackp, genericHash_t *flattenPtrHashp, marpaESLIFValueResult_t *marpaESLIFValueResultp, short noShallowb);
 static inline marpaESLIFGrammar_t    *_marpaESLIFJSON_decode_newp(marpaESLIF_t *marpaESLIFp, short strictb);
 static inline marpaESLIFGrammar_t    *_marpaESLIFJSON_encode_newp(marpaESLIF_t *marpaESLIFp, short strictb);
@@ -13923,7 +13995,10 @@ static short _marpaESLIFRecognizer_concat_valueResultCallbackb(void *userDatavp,
   char                                    decimalPointc               = MARPAESLIF_DECIMAL_POINT(marpaESLIFp);
   marpaESLIF_string_t                    *utf8p                       = NULL;
   genericLogger_t                        *genericLoggerp              = NULL;
-  char                                   *floattos                    = NULL;
+  short                                   displayNextAsJsonStringb    = 0;
+  char                                   *encodingasciitofrees        = NULL;
+  short                                   stringb                     = contextp->stringb;
+  short                                   jsonb                       = contextp->jsonb || contextp->jsonfb; /* Note that jsonb implies UTF-8's stringb by construction */
   char                                   *srcs;
   size_t                                  srcl;
   genericStack_t                          todoStack;
@@ -13934,8 +14009,7 @@ static short _marpaESLIFRecognizer_concat_valueResultCallbackb(void *userDatavp,
   short                                   rcb;
   size_t                                  i;
   size_t                                  j;
-  marpaESLIFValueResult_t                 marpaESLIFValueResult;
-  short                                   continueb;
+  marpaESLIFValueResult_t                 _marpaESLIFValueResultRepresentation;
   marpaESLIF_uint32_t                     codepointi;
   char                                   *p;
   char                                   *maxp;
@@ -13952,20 +14026,15 @@ static short _marpaESLIFRecognizer_concat_valueResultCallbackb(void *userDatavp,
     goto err;
   }
 
-  if (contextp->stringb) {
-    genericLoggerp = GENERICLOGGER_CUSTOM(_marpaESLIF_generateStringWithLoggerCallback, marpaESLIF_stringGeneratorp, GENERICLOGGER_LOGLEVEL_TRACE);
-    if (genericLoggerp == NULL) {
-      goto err;
-    }
-    /* Start with an empty string */
-    GENERICLOGGER_TRACE(genericLoggerp, "");
-    if (! marpaESLIF_stringGeneratorp->okb) {
-      goto err;
-    }
+  genericLoggerp = GENERICLOGGER_CUSTOM(_marpaESLIF_generateStringWithLoggerCallback, marpaESLIF_stringGeneratorp, GENERICLOGGER_LOGLEVEL_TRACE);
+  if (genericLoggerp == NULL) {
+    goto err;
   }
+  /* Start with an empty string */
+  VALUERESULTCALLBACK_TRACE(genericLoggerp, marpaESLIF_stringGeneratorp, "");
 
   /* Initialize the worklist */
-  GENERICSTACK_PUSH_CUSTOMP(todoStackp, marpaESLIFValueResultp);
+  GENERICSTACK_PUSH_PTR(todoStackp, marpaESLIFValueResultp);
   if (GENERICSTACK_ERROR(todoStackp)) {
     MARPAESLIF_ERRORF(marpaESLIFp, "todoStackp push failure, %s", strerror(errno));
     goto err;
@@ -13973,16 +14042,22 @@ static short _marpaESLIFRecognizer_concat_valueResultCallbackb(void *userDatavp,
 
   /* Iterate the worklist */
   while (GENERICSTACK_USED(todoStackp) > 0) {
-    marpaESLIFValueResult = GENERICSTACK_POP_CUSTOM(todoStackp);
-    continueb = 0; /* When we do not want to test stringification because we did not stringified */
+    marpaESLIFValueResultp = GENERICSTACK_POP_PTR(todoStackp);
 
-    if ((marpaESLIFValueResult.type == MARPAESLIF_VALUE_TYPE_PTR) && (marpaESLIFValueResult.contextp == (void *) MARPAESLIF_EMBEDDED_CONTEXT_LUA)) {
+    /* Internal marker ? */
+    if (marpaESLIFValueResultp->contextp == &_marpaESLIFValueResultNextValueResultMustDisplayAsJsonString) {
+      /* fprintf(stdout, "... setting displayNextAsJsonStringb=1\n"); fflush(stdout); */
+      displayNextAsJsonStringb = 1;
+      continue;
+    }
+
+    if ((marpaESLIFValueResultp->type == MARPAESLIF_VALUE_TYPE_PTR) && (marpaESLIFValueResultp->contextp == (void *) MARPAESLIF_EMBEDDED_CONTEXT_LUA)) {
       /* Specific to lua embedded: we use our proxy, then userDatavp is forced to be marpaESLIFValuep */
       representationp = _marpaESLIFValue_lua_representationb;
       representationUserDatavp = marpaESLIFValuep;
     } else {
       /* Origin representation, userDatavp is the one from original context */
-      representationp = marpaESLIFValueResult.representationp;
+      representationp = marpaESLIFValueResultp->representationp;
       representationUserDatavp = contextp->userDatavp;
       /* Representation may be proxied - c.f. json.c */
       if ((representationp != NULL) && (marpaESLIFValuep->proxyRepresentationp != NULL)) {
@@ -13990,226 +14065,386 @@ static short _marpaESLIFRecognizer_concat_valueResultCallbackb(void *userDatavp,
       }
     }
 
-    if (representationp != NULL) {
+    /* User representation is used if we are not in json mode (because in json representation is fixed) */
+    if ((! jsonb) && (representationp != NULL)) {
       srcs = NULL;
       srcl = 0;
       encodingasciis = NULL;
-      if (! representationp(representationUserDatavp, &marpaESLIFValueResult, &srcs, &srcl, &encodingasciis)) {
+      if (! representationp(representationUserDatavp, marpaESLIFValueResultp, &srcs, &srcl, &encodingasciis)) {
         goto err;
       }
       if ((srcs != NULL) && (srcl > 0)) {
         if (encodingasciis != NULL) {
-          marpaESLIFValueResult.type               = MARPAESLIF_VALUE_TYPE_STRING;
-          marpaESLIFValueResult.contextp           = NULL;
-          marpaESLIFValueResult.representationp    = NULL;
-          marpaESLIFValueResult.u.s.p              = (unsigned char *) srcs;
-          marpaESLIFValueResult.u.s.sizel          = srcl;
-          marpaESLIFValueResult.u.s.encodingasciis = encodingasciis;
-          marpaESLIFValueResult.u.s.shallowb       = 1;
-          marpaESLIFValueResult.u.s.freeUserDatavp = NULL;
-          marpaESLIFValueResult.u.s.freeCallbackp  = NULL;
+          /* fprintf(stdout, "... string representation=%s\n", srcs); fflush(stdout); */
+          _marpaESLIFValueResultRepresentation.type               = MARPAESLIF_VALUE_TYPE_STRING;
+          _marpaESLIFValueResultRepresentation.contextp           = NULL;
+          _marpaESLIFValueResultRepresentation.representationp    = NULL;
+          _marpaESLIFValueResultRepresentation.u.s.p              = (unsigned char *) srcs;
+          _marpaESLIFValueResultRepresentation.u.s.sizel          = srcl;
+          _marpaESLIFValueResultRepresentation.u.s.encodingasciis = encodingasciis;
+          _marpaESLIFValueResultRepresentation.u.s.shallowb       = 1;
+          _marpaESLIFValueResultRepresentation.u.s.freeUserDatavp = NULL;
+          _marpaESLIFValueResultRepresentation.u.s.freeCallbackp  = NULL;
         } else {
-          marpaESLIFValueResult.type               = MARPAESLIF_VALUE_TYPE_ARRAY;
-          marpaESLIFValueResult.contextp           = NULL;
-          marpaESLIFValueResult.representationp    = NULL;
-          marpaESLIFValueResult.u.a.p              = srcs;
-          marpaESLIFValueResult.u.a.sizel          = srcl;
-          marpaESLIFValueResult.u.a.shallowb       = 1;
-          marpaESLIFValueResult.u.a.freeUserDatavp = NULL;
-          marpaESLIFValueResult.u.a.freeCallbackp  = NULL;
+          /* fprintf(stdout, "... array representation=%s\n", srcs); fflush(stdout); */
+          _marpaESLIFValueResultRepresentation.type               = MARPAESLIF_VALUE_TYPE_ARRAY;
+          _marpaESLIFValueResultRepresentation.contextp           = NULL;
+          _marpaESLIFValueResultRepresentation.representationp    = NULL;
+          _marpaESLIFValueResultRepresentation.u.a.p              = srcs;
+          _marpaESLIFValueResultRepresentation.u.a.sizel          = srcl;
+          _marpaESLIFValueResultRepresentation.u.a.shallowb       = 1;
+          _marpaESLIFValueResultRepresentation.u.a.freeUserDatavp = NULL;
+          _marpaESLIFValueResultRepresentation.u.a.freeCallbackp  = NULL;
         }
-      } else {
-        /* No op */
-        continue;
+        marpaESLIFValueResultp = &_marpaESLIFValueResultRepresentation;
       }
     }
 
-    switch (marpaESLIFValueResult.type) {
+    /* fprintf(stdout, "... displayNextAsJsonStringb=%d\n", (int) displayNextAsJsonStringb); fflush(stdout); */
+    switch (marpaESLIFValueResultp->type) {
     case MARPAESLIF_VALUE_TYPE_UNDEF:
       /* fprintf(stdout, "UNDEF\n"); fflush(stdout); */
       /* Undef default representation:
-         - string mode: "", json: "null", jsonf: "null"
-         - binary mode: N/A
+         - string      :      (empty string)
+         - json        : null (json null)
+         - jsonf       : null (json null)
+         - binary mode : N/A  (not applicable)
+         - json string : "null"
       */
-      if (contextp->stringb) {
-        if (contextp->jsonb || contextp->jsonfb) {
-          GENERICLOGGER_TRACE(genericLoggerp, "null");
+      if (stringb) {
+        if (jsonb) {
+          if (displayNextAsJsonStringb) {
+            VALUERESULTCALLBACK_TRACE(genericLoggerp, marpaESLIF_stringGeneratorp, "\"null\"");
+          } else {
+            VALUERESULTCALLBACK_TRACE(genericLoggerp, marpaESLIF_stringGeneratorp, "null");
+          }
         } else {
-          GENERICLOGGER_TRACE(genericLoggerp, "");
+          VALUERESULTCALLBACK_TRACE(genericLoggerp, marpaESLIF_stringGeneratorp, "");
         }
       } else {
         /* No-op */
-        continueb = 1;
       }
       break;
     case MARPAESLIF_VALUE_TYPE_CHAR:
-      /* fprintf(stdout, "CHAR %c\n", marpaESLIFValueResult.u.c); fflush(stdout); */
+      /* fprintf(stdout, "CHAR %c\n", marpaESLIFValueResultp->u.c); fflush(stdout); */
       /* Char default representation:
-         - string mode: %c, json: "%c", jsonf: "%c"
-         - binary mode: content
+         - string      : %c
+         - json        : %c
+         - jsonf       : %c
+         - binary mode : content
+         - json string : "json string"
       */
-      if (contextp->stringb) {
-        if (contextp->jsonb || contextp->jsonfb) {
-          _marpaESLIF_codepoint_to_json((marpaESLIF_uint32_t) marpaESLIFValueResult.u.c, genericLoggerp);
+      if (stringb) {
+        if (displayNextAsJsonStringb) {
+          VALUERESULTCALLBACK_TRACE(genericLoggerp, marpaESLIF_stringGeneratorp, "\"");
+          VALUERESULTCALLBACK_CODEPOINT_TO_JSON(genericLoggerp, marpaESLIF_stringGeneratorp, marpaESLIFValueResultp->u.c);
+          VALUERESULTCALLBACK_TRACE(genericLoggerp, marpaESLIF_stringGeneratorp, "\"");
         } else {
-          GENERICLOGGER_TRACEF(genericLoggerp, "%c", marpaESLIFValueResult.u.c);
+          VALUERESULTCALLBACK_TRACEF(genericLoggerp, marpaESLIF_stringGeneratorp, "%c", marpaESLIFValueResultp->u.c);
         }
       } else {
-        _marpaESLIF_appendOpaqueDataToStringGenerator(marpaESLIF_stringGeneratorp, (char *) &(marpaESLIFValueResult.u.c), sizeof(marpaESLIFValueResultChar_t));
+        VALUERESULTCALLBACK_OPAQUE(marpaESLIF_stringGeneratorp, (char *) &(marpaESLIFValueResultp->u.c), sizeof(marpaESLIFValueResultChar_t));
       }
       break;
     case MARPAESLIF_VALUE_TYPE_SHORT:
-      /* fprintf(stdout, "SHORT %d\n", (int) marpaESLIFValueResult.u.b); fflush(stdout); */
+      /* fprintf(stdout, "SHORT %d\n", (int) marpaESLIFValueResultp->u.b); fflush(stdout); */
       /* Char default representation:
-         - string mode: %d, json: %d, jsonf: %d
-         - binary mode: content
+         - string      : %d
+         - json        : %d
+         - jsonf       : %d
+         - binary mode : content
+         - json string : "%d"
       */
-      if (contextp->stringb) {
-        GENERICLOGGER_TRACEF(genericLoggerp, "%d", (int) marpaESLIFValueResult.u.b);
+      /* MARPAESLIF_NOTICEF(marpaESLIFp, "... Generated string was: %s", marpaESLIF_stringGeneratorp->s); */
+      if (stringb) {
+        if (displayNextAsJsonStringb) {
+          VALUERESULTCALLBACK_TRACEF(genericLoggerp, marpaESLIF_stringGeneratorp, "\"%d\"", (int) marpaESLIFValueResultp->u.b);
+        } else {
+          VALUERESULTCALLBACK_TRACEF(genericLoggerp, marpaESLIF_stringGeneratorp, "%d", (int) marpaESLIFValueResultp->u.b);
+        }
       } else {
-        _marpaESLIF_appendOpaqueDataToStringGenerator(marpaESLIF_stringGeneratorp, (char *) &(marpaESLIFValueResult.u.b), sizeof(marpaESLIFValueResultShort_t));
+        VALUERESULTCALLBACK_OPAQUE(marpaESLIF_stringGeneratorp, (char *) &(marpaESLIFValueResultp->u.b), sizeof(marpaESLIFValueResultShort_t));
       }
+      /* MARPAESLIF_NOTICEF(marpaESLIFp, "... Generated string is now: %s", marpaESLIF_stringGeneratorp->s); */
       break;
     case MARPAESLIF_VALUE_TYPE_INT:
-      /* fprintf(stdout, "INT %d\n", marpaESLIFValueResult.u.i); fflush(stdout); */
+      /* fprintf(stdout, "INT %d\n", marpaESLIFValueResultp->u.i); fflush(stdout); */
       /* Char default representation:
-         - string mode: %d, json: %d, jsonf: %d
-         - binary mode: content
+         - string      : %d
+         - json        : %d
+         - jsonf       : %d
+         - binary mode : content
+         - json string : "%d"
       */
-      if (contextp->stringb) {
-        GENERICLOGGER_TRACEF(genericLoggerp, "%d", marpaESLIFValueResult.u.i);
+      if (stringb) {
+        if (displayNextAsJsonStringb) {
+          VALUERESULTCALLBACK_TRACEF(genericLoggerp, marpaESLIF_stringGeneratorp, "\"%d\"", marpaESLIFValueResultp->u.i);
+        } else {
+          VALUERESULTCALLBACK_TRACEF(genericLoggerp, marpaESLIF_stringGeneratorp, "%d", marpaESLIFValueResultp->u.i);
+        }
       } else {
-        _marpaESLIF_appendOpaqueDataToStringGenerator(marpaESLIF_stringGeneratorp, (char *) &(marpaESLIFValueResult.u.i), sizeof(marpaESLIFValueResultInt_t));
+        VALUERESULTCALLBACK_OPAQUE(marpaESLIF_stringGeneratorp, (char *) &(marpaESLIFValueResultp->u.i), sizeof(marpaESLIFValueResultInt_t));
       }
       break;
     case MARPAESLIF_VALUE_TYPE_LONG:
-      /* fprintf(stdout, "LONG %ld\n", marpaESLIFValueResult.u.l); fflush(stdout); */
+      /* fprintf(stdout, "LONG %ld\n", marpaESLIFValueResultp->u.l); fflush(stdout); */
       /* Long default representation:
-         string mode: %ld, json: %ld, jsonf: %ld
-         binary mode: content
+         - string      : %ld
+         - json        : %ld
+         - jsonf       : %ld
+         - binary mode : content
+         - json string : "%ld"
       */
-      if (contextp->stringb) {
-        GENERICLOGGER_TRACEF(genericLoggerp, "%ld", marpaESLIFValueResult.u.l);
+      if (stringb) {
+        if (displayNextAsJsonStringb) {
+          VALUERESULTCALLBACK_TRACEF(genericLoggerp, marpaESLIF_stringGeneratorp, "\"%ld\"", marpaESLIFValueResultp->u.l);
+        } else {
+          VALUERESULTCALLBACK_TRACEF(genericLoggerp, marpaESLIF_stringGeneratorp, "%ld", marpaESLIFValueResultp->u.l);
+        }
       } else {
-        _marpaESLIF_appendOpaqueDataToStringGenerator(marpaESLIF_stringGeneratorp, (char *) &(marpaESLIFValueResult.u.l), sizeof(marpaESLIFValueResultLong_t));
+        VALUERESULTCALLBACK_OPAQUE(marpaESLIF_stringGeneratorp, (char *) &(marpaESLIFValueResultp->u.l), sizeof(marpaESLIFValueResultLong_t));
       }
       break;
     case MARPAESLIF_VALUE_TYPE_FLOAT:
-      /* fprintf(stdout, "FLOAT %f\n", (double) marpaESLIFValueResult.u.f); fflush(stdout); */
+      /* fprintf(stdout, "FLOAT %f\n", (double) marpaESLIFValueResultp->u.f); fflush(stdout); */
       /* Float default representation:
-         - string mode: marpaESLIF_ftos(), json: marpaESLIF_ftos() or null if inf/nan, , jsonf: marpaESLIF_ftos() or inf/nan, 
+         - string      : marpaESLIF_ftos()
+         - json        : marpaESLIF_ftos() if it is not +/-Infinity or NaN, else null
+         - jsonf       : marpaESLIF_ftos()
+         - binary mode : content
+         - json string : "marpaESLIF_ftos()" or "+Infinity" or "-Infinity" or "NaN"
+
            Note that output of marpaESLIF_ftos() is explicitly looked at to replace decimal digit with '.' if it is NOT already the '.' character
-         - binary mode: content
       */
-      if (contextp->stringb) {
+      if (stringb) {
         if (contextp->jsonb) {
-          if (MARPAESLIF_ISINF(marpaESLIFValueResult.u.f)) {
-            GENERICLOGGER_TRACE(genericLoggerp, "null");
-          } else if (MARPAESLIF_ISNAN(marpaESLIFValueResult.u.f)) {
-            GENERICLOGGER_TRACE(genericLoggerp, "null");
+          if (MARPAESLIF_ISINF(marpaESLIFValueResultp->u.f)) {
+            if (displayNextAsJsonStringb) {
+              VALUERESULTCALLBACK_TRACEF(genericLoggerp, marpaESLIF_stringGeneratorp, "\"%sInfinity\"", (marpaESLIFValueResultp->u.f < 0) ? "-" : "+");
+            } else {
+              VALUERESULTCALLBACK_TRACE(genericLoggerp, marpaESLIF_stringGeneratorp, "null");
+            }
+          } else if (MARPAESLIF_ISNAN(marpaESLIFValueResultp->u.f)) {
+            if (displayNextAsJsonStringb) {
+              VALUERESULTCALLBACK_TRACE(genericLoggerp, marpaESLIF_stringGeneratorp, "\"NaN\"");
+            } else {
+              VALUERESULTCALLBACK_TRACE(genericLoggerp, marpaESLIF_stringGeneratorp, "null");
+            }
           } else {
-            MARPAESLIF_CONCAT_FLOATINGPOINT(marpaESLIFp, genericLoggerp, floattos, f, marpaESLIFValueResult.u.f, decimalPointc, '.');
+            VALUERESULTCALLBACK_FTOS(marpaESLIFp, genericLoggerp, marpaESLIF_stringGeneratorp, f, marpaESLIFValueResultp->u.f, decimalPointc, '.');
           }
         } else if (contextp->jsonfb) {
-          if (MARPAESLIF_ISINF(marpaESLIFValueResult.u.f)) {
-            GENERICLOGGER_TRACEF(genericLoggerp, "%sInfinity", (marpaESLIFValueResult.u.f < 0) ? "-" : "+");
-          } else if (MARPAESLIF_ISNAN(marpaESLIFValueResult.u.f)) {
-            GENERICLOGGER_TRACE(genericLoggerp, "NaN");
+          if (MARPAESLIF_ISINF(marpaESLIFValueResultp->u.f)) {
+            if (displayNextAsJsonStringb) {
+              VALUERESULTCALLBACK_TRACEF(genericLoggerp, marpaESLIF_stringGeneratorp, "\"%sInfinity\"", (marpaESLIFValueResultp->u.f < 0) ? "-" : "+");
+            } else {
+              VALUERESULTCALLBACK_TRACEF(genericLoggerp, marpaESLIF_stringGeneratorp, "%sInfinity", (marpaESLIFValueResultp->u.f < 0) ? "-" : "+");
+            }
+          } else if (MARPAESLIF_ISNAN(marpaESLIFValueResultp->u.f)) {
+            if (displayNextAsJsonStringb) {
+              VALUERESULTCALLBACK_TRACE(genericLoggerp, marpaESLIF_stringGeneratorp, "\"NaN\"");
+            } else {
+              VALUERESULTCALLBACK_TRACE(genericLoggerp, marpaESLIF_stringGeneratorp, "NaN");
+            }
           } else {
-            MARPAESLIF_CONCAT_FLOATINGPOINT(marpaESLIFp, genericLoggerp, floattos, f, marpaESLIFValueResult.u.f, decimalPointc, '.');
+            VALUERESULTCALLBACK_FTOS(marpaESLIFp, genericLoggerp, marpaESLIF_stringGeneratorp, f, marpaESLIFValueResultp->u.f, decimalPointc, '.');
           }
         } else {
-          MARPAESLIF_CONCAT_FLOATINGPOINT(marpaESLIFp, genericLoggerp, floattos, f, marpaESLIFValueResult.u.f, '\0', '\0');
+          VALUERESULTCALLBACK_FTOS(marpaESLIFp, genericLoggerp, marpaESLIF_stringGeneratorp, f, marpaESLIFValueResultp->u.f, '\0', '\0');
         }
       } else {
-        _marpaESLIF_appendOpaqueDataToStringGenerator(marpaESLIF_stringGeneratorp, (char *) &(marpaESLIFValueResult.u.f), sizeof(marpaESLIFValueResultFloat_t));
+        VALUERESULTCALLBACK_OPAQUE(marpaESLIF_stringGeneratorp, (char *) &(marpaESLIFValueResultp->u.f), sizeof(marpaESLIFValueResultFloat_t));
       }
       break;
     case MARPAESLIF_VALUE_TYPE_DOUBLE:
-      /* fprintf(stdout, "DOUBLE %f\n", marpaESLIFValueResult.u.d); fflush(stdout); */
+      /* fprintf(stdout, "DOUBLE %f\n", marpaESLIFValueResultp->u.d); fflush(stdout); */
       /* Double default representation:
-         - string mode: marpaESLIFp_dtos(), json: marpaESLIF_dtos() or null if inf/nan, , jsonf: marpaESLIF_dtos() or inf/nan, 
+         - string      : marpaESLIF_dtos()
+         - json        : marpaESLIF_dtos() if it is not +/-Infinity or NaN, else null
+         - jsonf       : marpaESLIF_dtos()
+         - binary mode : content
+         - json string : "marpaESLIF_dtos()" if it is not +/-Infinity or NaN, else this is an error
+
            Note that output of marpaESLIF_dtos() is explicitly looked at to replace decimal digit with '.' if it is NOT already the '.' character
-         - binary mode: content
       */
-      if (contextp->stringb) {
+      if (stringb) {
         if (contextp->jsonb) {
-          if (MARPAESLIF_ISINF(marpaESLIFValueResult.u.d)) {
-            GENERICLOGGER_TRACE(genericLoggerp, "null");
-          } else if (MARPAESLIF_ISNAN(marpaESLIFValueResult.u.d)) {
-            GENERICLOGGER_TRACE(genericLoggerp, "null");
+          if (MARPAESLIF_ISINF(marpaESLIFValueResultp->u.d)) {
+            if (displayNextAsJsonStringb) {
+              VALUERESULTCALLBACK_TRACEF(genericLoggerp, marpaESLIF_stringGeneratorp, "\"%sInfinity\"", (marpaESLIFValueResultp->u.f < 0) ? "-" : "+");
+            } else {
+              VALUERESULTCALLBACK_TRACE(genericLoggerp, marpaESLIF_stringGeneratorp, "null");
+            }
+          } else if (MARPAESLIF_ISNAN(marpaESLIFValueResultp->u.d)) {
+            if (displayNextAsJsonStringb) {
+              VALUERESULTCALLBACK_TRACE(genericLoggerp, marpaESLIF_stringGeneratorp, "\"NaN\"");
+            } else {
+              VALUERESULTCALLBACK_TRACE(genericLoggerp, marpaESLIF_stringGeneratorp, "null");
+            }
           } else {
-            MARPAESLIF_CONCAT_FLOATINGPOINT(marpaESLIFp, genericLoggerp, floattos, d, marpaESLIFValueResult.u.d, decimalPointc, '.');
+            VALUERESULTCALLBACK_FTOS(marpaESLIFp, genericLoggerp, marpaESLIF_stringGeneratorp, d, marpaESLIFValueResultp->u.d, decimalPointc, '.');
           }
         } else if (contextp->jsonfb) {
-          if (MARPAESLIF_ISINF(marpaESLIFValueResult.u.d)) {
-            GENERICLOGGER_TRACEF(genericLoggerp, "%sInfinity", (marpaESLIFValueResult.u.d < 0) ? "-" : "+");
-          } else if (MARPAESLIF_ISNAN(marpaESLIFValueResult.u.d)) {
-            GENERICLOGGER_TRACE(genericLoggerp, "NaN");
+          if (MARPAESLIF_ISINF(marpaESLIFValueResultp->u.d)) {
+            if (displayNextAsJsonStringb) {
+              VALUERESULTCALLBACK_TRACEF(genericLoggerp, marpaESLIF_stringGeneratorp, "\"%sInfinity\"", (marpaESLIFValueResultp->u.f < 0) ? "-" : "+");
+            } else {
+              VALUERESULTCALLBACK_TRACEF(genericLoggerp, marpaESLIF_stringGeneratorp, "%sInfinity", (marpaESLIFValueResultp->u.d < 0) ? "-" : "+");
+            }
+          } else if (MARPAESLIF_ISNAN(marpaESLIFValueResultp->u.d)) {
+            if (displayNextAsJsonStringb) {
+              VALUERESULTCALLBACK_TRACE(genericLoggerp, marpaESLIF_stringGeneratorp, "\"NaN\"");
+            } else {
+              VALUERESULTCALLBACK_TRACE(genericLoggerp, marpaESLIF_stringGeneratorp, "NaN");
+            }
           } else {
-            MARPAESLIF_CONCAT_FLOATINGPOINT(marpaESLIFp, genericLoggerp, floattos, d, marpaESLIFValueResult.u.d, decimalPointc, '.');
+            VALUERESULTCALLBACK_FTOS(marpaESLIFp, genericLoggerp, marpaESLIF_stringGeneratorp, d, marpaESLIFValueResultp->u.d, decimalPointc, '.');
           }
         } else {
-          MARPAESLIF_CONCAT_FLOATINGPOINT(marpaESLIFp, genericLoggerp, floattos, d, marpaESLIFValueResult.u.d, '\0', '\0');
+          VALUERESULTCALLBACK_FTOS(marpaESLIFp, genericLoggerp, marpaESLIF_stringGeneratorp, d, marpaESLIFValueResultp->u.d, '\0', '\0');
         }
       } else {
-        _marpaESLIF_appendOpaqueDataToStringGenerator(marpaESLIF_stringGeneratorp, (char *) &(marpaESLIFValueResult.u.d), sizeof(marpaESLIFValueResultDouble_t));
+        VALUERESULTCALLBACK_OPAQUE(marpaESLIF_stringGeneratorp, (char *) &(marpaESLIFValueResultp->u.d), sizeof(marpaESLIFValueResultDouble_t));
       }
       break;
     case MARPAESLIF_VALUE_TYPE_PTR:
-      /* fprintf(stdout, "PTR %p\n", marpaESLIFValueResult.u.p.p); fflush(stdout); */
+      /* fprintf(stdout, "PTR %p\n", marpaESLIFValueResultp->u.p.p); fflush(stdout); */
       /* Ptr default representation:
-         - string mode: %p, json: %p, jsonf: %p
-         - binary mode: content
+         - string      : %p
+         - json        : %?? (depend on sizeof(void *))
+         - jsonf       : %?? (depend on sizeof(void *))
+         - binary mode : content
+         - json string : "%??" (depend on sizeof(void *))
       */
-      if (contextp->stringb) {
-        GENERICLOGGER_TRACEF(genericLoggerp, "%p", marpaESLIFValueResult.u.p.p);
+      if (stringb) {
+        if (jsonb) {
+          if (displayNextAsJsonStringb) {
+#if SIZEOF_VOID_STAR == SIZEOF_CHAR
+            VALUERESULTCALLBACK_TRACEF(genericLoggerp, marpaESLIF_stringGeneratorp, "\"%c\"", (char) marpaESLIFValueResultp->u.p.p);
+#else
+#  if (SIZEOF_VOID_STAR == SIZEOF_SHORT) || (SIZEOF_VOID_STAR == SIZEOF_INT)
+            VALUERESULTCALLBACK_TRACEF(genericLoggerp, marpaESLIF_stringGeneratorp, "\"%d\"", (int) marpaESLIFValueResultp->u.p.p);
+#  else
+#    if SIZEOF_VOID_STAR == SIZEOF_LONG
+            VALUERESULTCALLBACK_TRACEF(genericLoggerp, marpaESLIF_stringGeneratorp, "\"%ld\"", (long) marpaESLIFValueResultp->u.p.p);
+#    else
+#      ifdef MARPAESLIF_HAVE_LONG_LONG
+            VALUERESULTCALLBACK_TRACEF(genericLoggerp, marpaESLIF_stringGeneratorp, "\"" MARPAESLIF_LONG_LONG_FMT "\"", (unsigned long long) marpaESLIFValueResultp->u.p.p);
+#      else
+            /* This may generate a warning */
+            VALUERESULTCALLBACK_TRACEF(genericLoggerp, marpaESLIF_stringGeneratorp, "\"%ld\"", (long) marpaESLIFValueResultp->u.p.p);
+#      endif
+#    endif
+#  endif
+#endif
+          } else {
+#if SIZEOF_VOID_STAR == SIZEOF_CHAR
+            VALUERESULTCALLBACK_TRACEF(genericLoggerp, marpaESLIF_stringGeneratorp, "%c", (char) marpaESLIFValueResultp->u.p.p);
+#else
+#  if (SIZEOF_VOID_STAR == SIZEOF_SHORT) || (SIZEOF_VOID_STAR == SIZEOF_INT)
+            VALUERESULTCALLBACK_TRACEF(genericLoggerp, marpaESLIF_stringGeneratorp, "%d", (int) marpaESLIFValueResultp->u.p.p);
+#  else
+#    if SIZEOF_VOID_STAR == SIZEOF_LONG
+            VALUERESULTCALLBACK_TRACEF(genericLoggerp, marpaESLIF_stringGeneratorp, "%ld", (long) marpaESLIFValueResultp->u.p.p);
+#    else
+#      ifdef MARPAESLIF_HAVE_LONG_LONG
+            VALUERESULTCALLBACK_TRACEF(genericLoggerp, marpaESLIF_stringGeneratorp, MARPAESLIF_LONG_LONG_FMT, (unsigned long long) marpaESLIFValueResultp->u.p.p);
+#      else
+            /* This may generate a warning */
+            VALUERESULTCALLBACK_TRACEF(genericLoggerp, marpaESLIF_stringGeneratorp, "%ld", (long) marpaESLIFValueResultp->u.p.p);
+#      endif
+#    endif
+#  endif
+#endif
+          }
+        } else {
+          VALUERESULTCALLBACK_TRACEF(genericLoggerp, marpaESLIF_stringGeneratorp, "%p", marpaESLIFValueResultp->u.p.p);
+        }
       } else {
-        _marpaESLIF_appendOpaqueDataToStringGenerator(marpaESLIF_stringGeneratorp, (char *) &(marpaESLIFValueResult.u.p.p), sizeof(void *));
+        VALUERESULTCALLBACK_OPAQUE(marpaESLIF_stringGeneratorp, (char *) &(marpaESLIFValueResultp->u.p.p), sizeof(void *));
       }
       break;
     case MARPAESLIF_VALUE_TYPE_ARRAY:
-      /* fprintf(stdout, "ARRAY {%p,%ld}\n", marpaESLIFValueResult.u.a.p, (unsigned long) marpaESLIFValueResult.u.a.sizel); fflush(stdout); */
-      /* Array default representation: bytes as-is */
-      if ((marpaESLIFValueResult.u.a.p != NULL) && (marpaESLIFValueResult.u.a.sizel > 0)) {
-        _marpaESLIF_appendOpaqueDataToStringGenerator(marpaESLIF_stringGeneratorp, marpaESLIFValueResult.u.a.p, marpaESLIFValueResult.u.a.sizel);
+      /* fprintf(stdout, "ARRAY {%p,%ld}=%s\n", marpaESLIFValueResultp->u.a.p, (unsigned long) marpaESLIFValueResultp->u.a.sizel, marpaESLIFValueResultp->u.a.p); fflush(stdout); */
+      /* Array default representation:
+         - string      : binary content
+         - json        : "binary content"
+         - jsonf       : "binary content"
+         - binary mode : binary content
+         - json string : "binary content"
+      */
+      if (stringb) {
+        if (jsonb) {
+          VALUERESULTCALLBACK_TRACE(genericLoggerp, marpaESLIF_stringGeneratorp, "\"");
+          if ((marpaESLIFValueResultp->u.a.p != NULL) && (marpaESLIFValueResultp->u.a.sizel > 0)) {
+            p = marpaESLIFValueResultp->u.a.p;
+            maxp = p + marpaESLIFValueResultp->u.a.sizel;
+            while (p < maxp) {
+              VALUERESULTCALLBACK_CODEPOINT_TO_JSON(genericLoggerp, marpaESLIF_stringGeneratorp, *p);
+              p++;
+            }
+          }
+          VALUERESULTCALLBACK_TRACE(genericLoggerp, marpaESLIF_stringGeneratorp, "\"");
+        } else {
+          if ((marpaESLIFValueResultp->u.a.p != NULL) && (marpaESLIFValueResultp->u.a.sizel > 0)) {
+            VALUERESULTCALLBACK_OPAQUE(marpaESLIF_stringGeneratorp, marpaESLIFValueResultp->u.a.p, marpaESLIFValueResultp->u.a.sizel);
+          }
+        }
       } else {
-        /* No-op */
-        continueb = 1;
+        if ((marpaESLIFValueResultp->u.a.p != NULL) && (marpaESLIFValueResultp->u.a.sizel > 0)) {
+          VALUERESULTCALLBACK_OPAQUE(marpaESLIF_stringGeneratorp, marpaESLIFValueResultp->u.a.p, marpaESLIFValueResultp->u.a.sizel);
+        }
       }
       break;
     case MARPAESLIF_VALUE_TYPE_BOOL:
-      /* fprintf(stdout, "BOOL %d\n", (int) marpaESLIFValueResult.u.y); fflush(stdout); */
+      /* fprintf(stdout, "BOOL %d\n", (int) marpaESLIFValueResultp->u.y); fflush(stdout); */
       /* Bool default representation:
-         - string mode: true or false, json: true or false, jsonf: true or false
-         - binary mode: content
+         - string      : content
+         - json        : true or false
+         - jsonf       : true or false
+         - binary mode : content
+         - json string : "true" or "false"
       */
-      if (contextp->stringb) {
-        GENERICLOGGER_TRACEF(genericLoggerp, "%s", (marpaESLIFValueResult.u.y == MARPAESLIFVALUERESULTBOOL_TRUE) ? "true" : "false");
+      if (stringb) {
+        if (jsonb) {
+          if (displayNextAsJsonStringb) {
+            VALUERESULTCALLBACK_TRACEF(genericLoggerp, marpaESLIF_stringGeneratorp, "\"%s\"", (marpaESLIFValueResultp->u.y == MARPAESLIFVALUERESULTBOOL_TRUE) ? "true" : "false");
+          } else {
+            VALUERESULTCALLBACK_TRACEF(genericLoggerp, marpaESLIF_stringGeneratorp, "%s", (marpaESLIFValueResultp->u.y == MARPAESLIFVALUERESULTBOOL_TRUE) ? "true" : "false");
+          }
+        } else {
+          VALUERESULTCALLBACK_OPAQUE(marpaESLIF_stringGeneratorp, (char *) &(marpaESLIFValueResultp->u.y), sizeof(marpaESLIFValueResultBool_t));
+        }
       } else {
-        _marpaESLIF_appendOpaqueDataToStringGenerator(marpaESLIF_stringGeneratorp, (char *) &(marpaESLIFValueResult.u.y), sizeof(marpaESLIFValueResultBool_t));
+        VALUERESULTCALLBACK_OPAQUE(marpaESLIF_stringGeneratorp, (char *) &(marpaESLIFValueResultp->u.y), sizeof(marpaESLIFValueResultBool_t));
       }
       break;
     case MARPAESLIF_VALUE_TYPE_STRING:
-      /* fprintf(stdout, "STRING {%p,%ld,%s}\n", marpaESLIFValueResult.u.s.p, (unsigned long) marpaESLIFValueResult.u.s.sizel, marpaESLIFValueResult.u.s.encodingasciis); fflush(stdout); */
+      /* fprintf(stdout, "STRING {%p,%ld,%s}\n", marpaESLIFValueResultp->u.s.p, (unsigned long) marpaESLIFValueResultp->u.s.sizel, marpaESLIFValueResultp->u.s.encodingasciis); fflush(stdout); */
       /* String default representation:
-         - string mode: UTF-8 bytes, json: escaped string, jsonf: escaped string
-         - binary mode: content
+         - string      : content
+         - json        : "json string"
+         - jsonf       : "json string"
+         - binary mode : content
+         - json string : "json string"
       */
-      if (contextp->stringb) {
-        string.bytep          = (char *) marpaESLIFValueResult.u.s.p;
-        string.bytel          = marpaESLIFValueResult.u.s.sizel;
-        string.encodingasciis = marpaESLIFValueResult.u.s.encodingasciis;
-        string.asciis         = NULL;
-        if (utf8p != &string) {
-          _marpaESLIF_string_freev(utf8p, 0 /* onStackb */);
-        }
-        utf8p = _marpaESLIF_string2utf8p(marpaESLIFp, &string, 0 /* tconvsilentb */);
-        if (utf8p == NULL) {
-          goto err;
-        }
-        if (contextp->jsonb || contextp->jsonfb) {
-          GENERICLOGGER_TRACE(genericLoggerp, "\""); if (! marpaESLIF_stringGeneratorp->okb) goto err;
+      if (stringb) {
+        if (jsonb) {
+          string.bytep          = (char *) marpaESLIFValueResultp->u.s.p;
+          string.bytel          = marpaESLIFValueResultp->u.s.sizel;
+          string.encodingasciis = marpaESLIFValueResultp->u.s.encodingasciis;
+          string.asciis         = NULL;
+          if (utf8p != &string) {
+            _marpaESLIF_string_freev(utf8p, 0 /* onStackb */);
+          }
+          utf8p = _marpaESLIF_string2utf8p(marpaESLIFp, &string, 0 /* tconvsilentb */);
+          if (utf8p == NULL) {
+            goto err;
+          }
+          VALUERESULTCALLBACK_TRACE(genericLoggerp, marpaESLIF_stringGeneratorp, "\"");
+          if (! marpaESLIF_stringGeneratorp->okb) {
+            goto err;
+          }
           p = utf8p->bytep;
           maxp = p + utf8p->bytel;
           while (p < maxp) {
@@ -14220,38 +14455,35 @@ static short _marpaESLIFRecognizer_concat_valueResultCallbackb(void *userDatavp,
               errno = EINVAL;
               goto err;
             }
-            _marpaESLIF_codepoint_to_json(codepointi, genericLoggerp);
-            if (! marpaESLIF_stringGeneratorp->okb) {
-              goto err;
-            }
+            VALUERESULTCALLBACK_CODEPOINT_TO_JSON(genericLoggerp, marpaESLIF_stringGeneratorp, codepointi);
             p += lengthi;
           }
-          GENERICLOGGER_TRACE(genericLoggerp, "\"");
+          VALUERESULTCALLBACK_TRACE(genericLoggerp, marpaESLIF_stringGeneratorp, "\"");
         } else {
-          _marpaESLIF_appendOpaqueDataToStringGenerator(marpaESLIF_stringGeneratorp, utf8p->bytep, utf8p->bytel);
+          VALUERESULTCALLBACK_OPAQUE(marpaESLIF_stringGeneratorp, utf8p->bytep, utf8p->bytel);
         }
       } else {
-        _marpaESLIF_appendOpaqueDataToStringGenerator(marpaESLIF_stringGeneratorp, (char *) marpaESLIFValueResult.u.s.p, marpaESLIFValueResult.u.s.sizel);
+        VALUERESULTCALLBACK_OPAQUE(marpaESLIF_stringGeneratorp, (char *) marpaESLIFValueResultp->u.s.p, marpaESLIFValueResultp->u.s.sizel);
       }
       break;
     case MARPAESLIF_VALUE_TYPE_ROW:
       /* String default representation: concatenation of sub-members representation, in reverse order for intuitive representation -; */
-      /* fprintf(stdout, "ROW {%p,%ld}\n", marpaESLIFValueResult.u.r.p, (unsigned long) marpaESLIFValueResult.u.r.sizel); fflush(stdout); */
-      GENERICSTACK_PUSH_CUSTOM(todoStackp, marpaESLIFValueResultRightSquare);
+      /* fprintf(stdout, "ROW {%p,%ld}\n", marpaESLIFValueResultp->u.r.p, (unsigned long) marpaESLIFValueResultp->u.r.sizel); fflush(stdout); */
+      GENERICSTACK_PUSH_PTR(todoStackp, &marpaESLIFValueResultRightSquare);
       if (GENERICSTACK_ERROR(todoStackp)) {
         MARPAESLIF_ERRORF(marpaESLIFp, "todoStackp push failure, %s", strerror(errno));
         goto err;
       }
-      if (marpaESLIFValueResult.u.r.sizel > 0) {
-        for (i = 0, j = marpaESLIFValueResult.u.r.sizel - 1; i < marpaESLIFValueResult.u.r.sizel; i++, j--) {
-          GENERICSTACK_PUSH_CUSTOM(todoStackp, marpaESLIFValueResult.u.r.p[j]);
+      if (marpaESLIFValueResultp->u.r.sizel > 0) {
+        for (i = 0, j = marpaESLIFValueResultp->u.r.sizel - 1; i < marpaESLIFValueResultp->u.r.sizel; i++, j--) {
+          GENERICSTACK_PUSH_PTR(todoStackp, &(marpaESLIFValueResultp->u.r.p[j]));
           if (GENERICSTACK_ERROR(todoStackp)) {
             MARPAESLIF_ERRORF(marpaESLIFp, "todoStackp push failure, %s", strerror(errno));
             goto err;
           }
           if (j > 0) {
             /* , */
-            GENERICSTACK_PUSH_CUSTOM(todoStackp, marpaESLIFValueResultComma);
+            GENERICSTACK_PUSH_PTR(todoStackp, &marpaESLIFValueResultComma);
             if (GENERICSTACK_ERROR(todoStackp)) {
               MARPAESLIF_ERRORF(marpaESLIFp, "todoStackp push failure, %s", strerror(errno));
               goto err;
@@ -14259,44 +14491,52 @@ static short _marpaESLIFRecognizer_concat_valueResultCallbackb(void *userDatavp,
           }
         }
       }
-      GENERICSTACK_PUSH_CUSTOM(todoStackp, marpaESLIFValueResultLeftSquare);
+      GENERICSTACK_PUSH_PTR(todoStackp, &marpaESLIFValueResultLeftSquare);
       if (GENERICSTACK_ERROR(todoStackp)) {
         MARPAESLIF_ERRORF(marpaESLIFp, "todoStackp push failure, %s", strerror(errno));
         goto err;
       }
-      continueb = 1;
       break;
     case MARPAESLIF_VALUE_TYPE_TABLE:
       /* Nothing else but a row with an even number of elements, in reverse order for intuitive representation -; */
-      /* fprintf(stdout, "TABLE {%p,%ld}\n", marpaESLIFValueResult.u.t.p, (unsigned long) marpaESLIFValueResult.u.t.sizel); fflush(stdout); */
-      GENERICSTACK_PUSH_CUSTOM(todoStackp, marpaESLIFValueResultRightBracket);
+      /* fprintf(stdout, "TABLE {%p,%ld}\n", marpaESLIFValueResultp->u.t.p, (unsigned long) marpaESLIFValueResultp->u.t.sizel); fflush(stdout); */
+      GENERICSTACK_PUSH_PTR(todoStackp, &marpaESLIFValueResultRightBracket);
       if (GENERICSTACK_ERROR(todoStackp)) {
         MARPAESLIF_ERRORF(marpaESLIFp, "todoStackp push failure, %s", strerror(errno));
         goto err;
       }
-      if (marpaESLIFValueResult.u.t.sizel > 0) {
-        for (i = 0, j = marpaESLIFValueResult.u.r.sizel - 1; i < marpaESLIFValueResult.u.r.sizel; i++, j--) {
+      if (marpaESLIFValueResultp->u.t.sizel > 0) {
+        for (i = 0, j = marpaESLIFValueResultp->u.r.sizel - 1; i < marpaESLIFValueResultp->u.r.sizel; i++, j--) {
           /* Value */
-          GENERICSTACK_PUSH_CUSTOM(todoStackp, marpaESLIFValueResult.u.t.p[j].value);
+          GENERICSTACK_PUSH_PTR(todoStackp, &(marpaESLIFValueResultp->u.t.p[j].value));
           if (GENERICSTACK_ERROR(todoStackp)) {
             MARPAESLIF_ERRORF(marpaESLIFp, "todoStackp push failure, %s", strerror(errno));
             goto err;
           }
           /* : */
-          GENERICSTACK_PUSH_CUSTOM(todoStackp, marpaESLIFValueResultColon);
+          GENERICSTACK_PUSH_PTR(todoStackp, &marpaESLIFValueResultColon);
           if (GENERICSTACK_ERROR(todoStackp)) {
             MARPAESLIF_ERRORF(marpaESLIFp, "todoStackp push failure, %s", strerror(errno));
             goto err;
           }
           /* Key */
-          GENERICSTACK_PUSH_CUSTOM(todoStackp, marpaESLIFValueResult.u.t.p[j].key);
+          GENERICSTACK_PUSH_PTR(todoStackp, &(marpaESLIFValueResultp->u.t.p[j].key));
           if (GENERICSTACK_ERROR(todoStackp)) {
             MARPAESLIF_ERRORF(marpaESLIFp, "todoStackp push failure, %s", strerror(errno));
             goto err;
           }
+          if (jsonb) {
+            /* In JSON mode, key is always a string. We preceede the test at the beginning of the loop */
+            /* by ensuring this is the case, by pushing an internal marker */
+            GENERICSTACK_PUSH_PTR(todoStackp, &marpaESLIFValueResultNextValueResultMustDisplayAsJsonString);
+            if (GENERICSTACK_ERROR(todoStackp)) {
+              MARPAESLIF_ERRORF(marpaESLIFp, "todoStackp push failure, %s", strerror(errno));
+              goto err;
+            }
+          }
           if (j > 0) {
             /* , */
-            GENERICSTACK_PUSH_CUSTOM(todoStackp, marpaESLIFValueResultComma);
+            GENERICSTACK_PUSH_PTR(todoStackp, &marpaESLIFValueResultComma);
             if (GENERICSTACK_ERROR(todoStackp)) {
               MARPAESLIF_ERRORF(marpaESLIFp, "todoStackp push failure, %s", strerror(errno));
               goto err;
@@ -14304,55 +14544,81 @@ static short _marpaESLIFRecognizer_concat_valueResultCallbackb(void *userDatavp,
           }
         }
       }
-      GENERICSTACK_PUSH_CUSTOM(todoStackp, marpaESLIFValueResultLeftBracket);
+      GENERICSTACK_PUSH_PTR(todoStackp, &marpaESLIFValueResultLeftBracket);
       if (GENERICSTACK_ERROR(todoStackp)) {
         MARPAESLIF_ERRORF(marpaESLIFp, "todoStackp push failure, %s", strerror(errno));
         goto err;
       }
-      continueb = 1;
       break;
     case MARPAESLIF_VALUE_TYPE_LONG_DOUBLE:
-      /* fprintf(stdout, "LONG_DOUBLE %Lf\n", marpaESLIFValueResult.u.ld); fflush(stdout); */
+      /* fprintf(stdout, "LONG_DOUBLE %Lf\n", marpaESLIFValueResultp->u.ld); fflush(stdout); */
       /* Long double default representation:
-         - string mode: marpaESLIF_ldtos(), json: marpaESLIF_ldtos() or null if inf/nan, , jsonf: marpaESLIF_ldtos() or inf/nan, 
+         - string      : marpaESLIF_ldtos()
+         - json        : marpaESLIF_ldtos() if it is not +/-Infinity or NaN, else null
+         - jsonf       : marpaESLIF_ldtos()
+         - binary mode : content
+         - json string : "marpaESLIF_ldtos()" if it is not +/-Infinity or NaN, else this is an error
+
            Note that output of marpaESLIF_ldtos() is explicitly looked at to replace decimal digit with '.' if it is NOT already the '.' character
-         - binary mode: content
       */
-      if (contextp->stringb) {
+      if (stringb) {
         if (contextp->jsonb) {
-          if (MARPAESLIF_ISINF(marpaESLIFValueResult.u.ld)) {
-            GENERICLOGGER_TRACE(genericLoggerp, "null");
-          } else if (MARPAESLIF_ISNAN(marpaESLIFValueResult.u.ld)) {
-            GENERICLOGGER_TRACE(genericLoggerp, "null");
+          if (MARPAESLIF_ISINF(marpaESLIFValueResultp->u.ld)) {
+            if (displayNextAsJsonStringb) {
+              VALUERESULTCALLBACK_TRACEF(genericLoggerp, marpaESLIF_stringGeneratorp, "\"%sInfinity\"", (marpaESLIFValueResultp->u.f < 0) ? "-" : "+");
+            } else {
+              VALUERESULTCALLBACK_TRACE(genericLoggerp, marpaESLIF_stringGeneratorp, "null");
+            }
+          } else if (MARPAESLIF_ISNAN(marpaESLIFValueResultp->u.ld)) {
+            if (displayNextAsJsonStringb) {
+              VALUERESULTCALLBACK_TRACE(genericLoggerp, marpaESLIF_stringGeneratorp, "\"NaN\"");
+            } else {
+              VALUERESULTCALLBACK_TRACE(genericLoggerp, marpaESLIF_stringGeneratorp, "null");
+            }
           } else {
-            MARPAESLIF_CONCAT_FLOATINGPOINT(marpaESLIFp, genericLoggerp, floattos, ld, marpaESLIFValueResult.u.ld, decimalPointc, '.');
+            VALUERESULTCALLBACK_FTOS(marpaESLIFp, genericLoggerp, marpaESLIF_stringGeneratorp, ld, marpaESLIFValueResultp->u.ld, decimalPointc, '.');
           }
         } else if (contextp->jsonfb) {
-          if (MARPAESLIF_ISINF(marpaESLIFValueResult.u.ld)) {
-            GENERICLOGGER_TRACEF(genericLoggerp, "%sInfinity", (marpaESLIFValueResult.u.ld < 0) ? "-" : "+");
-          } else if (MARPAESLIF_ISNAN(marpaESLIFValueResult.u.ld)) {
-            GENERICLOGGER_TRACE(genericLoggerp, "NaN");
+          if (MARPAESLIF_ISINF(marpaESLIFValueResultp->u.ld)) {
+            if (displayNextAsJsonStringb) {
+              VALUERESULTCALLBACK_TRACEF(genericLoggerp, marpaESLIF_stringGeneratorp, "\"%sInfinity\"", (marpaESLIFValueResultp->u.f < 0) ? "-" : "+");
+            } else {
+              VALUERESULTCALLBACK_TRACEF(genericLoggerp, marpaESLIF_stringGeneratorp, "%sInfinity", (marpaESLIFValueResultp->u.ld < 0) ? "-" : "+");
+            }
+          } else if (MARPAESLIF_ISNAN(marpaESLIFValueResultp->u.ld)) {
+            if (displayNextAsJsonStringb) {
+              VALUERESULTCALLBACK_TRACE(genericLoggerp, marpaESLIF_stringGeneratorp, "\"NaN\"");
+            } else {
+              VALUERESULTCALLBACK_TRACE(genericLoggerp, marpaESLIF_stringGeneratorp, "NaN");
+            }
           } else {
-            MARPAESLIF_CONCAT_FLOATINGPOINT(marpaESLIFp, genericLoggerp, floattos, ld, marpaESLIFValueResult.u.ld, decimalPointc, '.');
+            VALUERESULTCALLBACK_FTOS(marpaESLIFp, genericLoggerp, marpaESLIF_stringGeneratorp, ld, marpaESLIFValueResultp->u.ld, decimalPointc, '.');
           }
         } else {
-          MARPAESLIF_CONCAT_FLOATINGPOINT(marpaESLIFp, genericLoggerp, floattos, ld, marpaESLIFValueResult.u.ld, '\0', '\0');
+          VALUERESULTCALLBACK_FTOS(marpaESLIFp, genericLoggerp, marpaESLIF_stringGeneratorp, ld, marpaESLIFValueResultp->u.ld, '\0', '\0');
         }
       } else {
-        _marpaESLIF_appendOpaqueDataToStringGenerator(marpaESLIF_stringGeneratorp, (char *) &(marpaESLIFValueResult.u.ld), sizeof(marpaESLIFValueResultLongDouble_t));
+        VALUERESULTCALLBACK_OPAQUE(marpaESLIF_stringGeneratorp, (char *) &(marpaESLIFValueResultp->u.ld), sizeof(marpaESLIFValueResultLongDouble_t));
       }
       break;
 #ifdef MARPAESLIF_HAVE_LONG_LONG
     case MARPAESLIF_VALUE_TYPE_LONG_LONG:
-      /* fprintf(stdout, "LONG_LONG " MARPAESLIF_LONG_LONG_FMT "\n", marpaESLIFValueResult.u.ll); fflush(stdout); */
-      /* Long double default representation:
-         - string mode: MARPAESLIF_LONG_LONG_FMT, json: MARPAESLIF_LONG_LONG_FMT
-         - binary mode: content
+      /* fprintf(stdout, "LONG_LONG " MARPAESLIF_LONG_LONG_FMT "\n", marpaESLIFValueResultp->u.ll); fflush(stdout); */
+      /* Long long default representation:
+         - string      : %ld
+         - json        : %ld
+         - jsonf       : %ld
+         - binary mode : content
+         - json string : "%ld"
       */
-      if (contextp->stringb) {
-        GENERICLOGGER_TRACEF(genericLoggerp, MARPAESLIF_LONG_LONG_FMT, marpaESLIFValueResult.u.ll);
+      if (stringb) {
+        if (displayNextAsJsonStringb) {
+          VALUERESULTCALLBACK_TRACEF(genericLoggerp, marpaESLIF_stringGeneratorp, "\"" MARPAESLIF_LONG_LONG_FMT "\"", marpaESLIFValueResultp->u.ll);
+        } else {
+          VALUERESULTCALLBACK_TRACEF(genericLoggerp, marpaESLIF_stringGeneratorp, MARPAESLIF_LONG_LONG_FMT, marpaESLIFValueResultp->u.ll);
+        }
       } else {
-        _marpaESLIF_appendOpaqueDataToStringGenerator(marpaESLIF_stringGeneratorp, (char *) &(marpaESLIFValueResult.u.ll), sizeof(marpaESLIFValueResultLongLong_t));
+        VALUERESULTCALLBACK_OPAQUE(marpaESLIF_stringGeneratorp, (char *) &(marpaESLIFValueResultp->u.ll), sizeof(marpaESLIFValueResultLongLong_t));
       }
       break;
 #endif
@@ -14360,12 +14626,7 @@ static short _marpaESLIFRecognizer_concat_valueResultCallbackb(void *userDatavp,
       break;
     }
 
-    if (continueb) {
-      continue;
-    }
-    if (! marpaESLIF_stringGeneratorp->okb) {
-      goto err;
-    }
+    displayNextAsJsonStringb = 0;
   }
 
   rcb = 1;
@@ -14375,9 +14636,6 @@ static short _marpaESLIFRecognizer_concat_valueResultCallbackb(void *userDatavp,
   rcb = 0;
 
  done:
-  if (floattos != NULL) {
-    free(floattos);
-  }
   GENERICSTACK_RESET(todoStackp);
   if (utf8p != &string) {
     _marpaESLIF_string_freev(utf8p, 0 /* onStackb */);
@@ -17201,50 +17459,6 @@ static inline short _marpaESLIF_string_removebomb(marpaESLIF_t *marpaESLIFp, cha
     free(encodingasciitofrees);
   }
   return rcb;
-}
-
-/*****************************************************************************/
-static inline void _marpaESLIF_codepoint_to_json(marpaESLIF_uint32_t codepoint, genericLogger_t *genericLoggerp)
-/*****************************************************************************/
-  /* Adapted from https://github.com/nlohmann/json/blob/develop/include/nlohmann/detail/output/serializer.hpp */
-/*****************************************************************************/
-{
-  /* fprintf(stdout, "_marpaESLIF_codepoint_to_json(0x%ld, genericLoggerp)\n", (unsigned long) codepoint); fflush(stdout); */
-  switch (codepoint) {
-  case 0x08: /* backspace */
-    GENERICLOGGER_TRACE(genericLoggerp, "\\b");
-    break;
-  case 0x09: /* horizontal tab */
-    GENERICLOGGER_TRACE(genericLoggerp, "\\t");
-    break;
-  case 0x0A: /* newline */
-    GENERICLOGGER_TRACE(genericLoggerp, "\\n");
-    break;
-  case 0x0C: /* formfeed */
-    GENERICLOGGER_TRACE(genericLoggerp, "\\f");
-    break;
-  case 0x0D: /* carriage return */
-    GENERICLOGGER_TRACE(genericLoggerp, "\\r");
-    break;
-  case 0x22: /* quotation mark */
-    GENERICLOGGER_TRACE(genericLoggerp, "\\\"");
-    break;
-  case 0x5C: /* reverse solidus */
-    GENERICLOGGER_TRACE(genericLoggerp, "\\\\");
-    break;
-  default:
-    /* escape control characters (0x00..0x1F) or non-ASCII characters */
-    if ((codepoint <= 0x1F) || (codepoint >= 0x7F)) {
-      if (codepoint <= 0xFFFF) {
-        GENERICLOGGER_TRACEF(genericLoggerp, "\\u%04x", (int) codepoint);
-      } else {
-        GENERICLOGGER_TRACEF(genericLoggerp, "\\u%04x\\u%04x", (int) (0xD7C0 + (codepoint >> 10)), (int) (0xDC00 + (codepoint & 0x3FF)));
-      }
-    } else {
-      GENERICLOGGER_TRACEF(genericLoggerp, "%c", (char) codepoint);
-    }
-    break;
-  }
 }
 
 /*****************************************************************************/
