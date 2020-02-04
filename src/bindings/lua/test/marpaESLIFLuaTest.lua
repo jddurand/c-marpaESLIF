@@ -102,12 +102,6 @@ logger:noticef('marpaESLIF version: %s', tostring(marpaESLIFp:version()))
 logger:noticef('marpaESLIF version major: %s', tostring(marpaESLIFp:versionMajor()))
 logger:noticef('marpaESLIF version minor: %s', tostring(marpaESLIFp:versionMinor()))
 logger:noticef('marpaESLIF version patch: %s', tostring(marpaESLIFp:versionPatch()))
-
-local marpaESLIFJSONp = marpaESLIFp:marpaESLIFJSONEncoder_new()
-value = { keya=1, keyb=2, keyc='x', keyy='y', {7,8,9} }
-stringencoded = marpaESLIFJSONp:encode(value)
-logger:noticef('encoded: %s, encoding=%s', stringencoded, stringencoded:encoding())
-
 logger:noticef('marpaESLIFp dump: %s', tableDump(marpaESLIFp))
 logger:noticef('marpaESLIFp meta dump: %s', tableDump(getmetatable(marpaESLIFp)))
 ------------------------------------------------------------------------------
@@ -689,3 +683,24 @@ for _, localstring in pairs(strings) do
    end
    i = i + 1
 end
+
+------------------------------------------------------------------------------
+local marpaESLIFJSONp = marpaESLIFp:marpaESLIFJSONEncoder_new()
+
+stringencoded = marpaESLIFJSONp:encode(getmetatable(marpaESLIFp))
+logger:infof('marpaESLIFp meta table encoded: %s, encoding=%s', stringencoded, stringencoded:encoding())
+
+stringencoded = marpaESLIFJSONp:encode(getmetatable(marpaESLIFGrammarp))
+logger:infof('marpaESLIFGrammarp meta table encoded: %s, encoding=%s', stringencoded, stringencoded:encoding())
+
+value = { keya=1, keyb=2, keyc='x', keyy='y', {7,8,9} }
+stringencoded = marpaESLIFJSONp:encode(value)
+logger:infof('table encoded: %s, encoding=%s', stringencoded, stringencoded:encoding())
+
+local tniledtablekv = niledtablekv(1,nil, 2,nil)
+stringencoded = marpaESLIFJSONp:encode(tniledtablekv)
+logger:infof('niledtablekv encoded: %s, encoding=%s', stringencoded, stringencoded:encoding())
+
+local tniledarray = niledarray(1,nil,nil)
+stringencoded = marpaESLIFJSONp:encode(tniledarray)
+logger:infof('niledarray encoded: %s, encoding=%s', stringencoded, stringencoded:encoding())
