@@ -14046,7 +14046,7 @@ static short _marpaESLIFRecognizer_concat_valueResultCallbackb(void *userDatavp,
 
     /* Internal marker ? */
     if (marpaESLIFValueResultp->contextp == &_marpaESLIFValueResultNextValueResultMustDisplayAsJsonString) {
-      /* fprintf(stdout, "... setting displayNextAsJsonStringb=1\n"); fflush(stdout); */
+      MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "Setting displayNextAsJsonStringb=1");
       displayNextAsJsonStringb = 1;
       continue;
     }
@@ -14075,7 +14075,7 @@ static short _marpaESLIFRecognizer_concat_valueResultCallbackb(void *userDatavp,
       }
       if ((srcs != NULL) && (srcl > 0)) {
         if (encodingasciis != NULL) {
-          /* fprintf(stdout, "... string representation=%s\n", srcs); fflush(stdout); */
+          MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "Got user string representation");
           _marpaESLIFValueResultRepresentation.type               = MARPAESLIF_VALUE_TYPE_STRING;
           _marpaESLIFValueResultRepresentation.contextp           = NULL;
           _marpaESLIFValueResultRepresentation.representationp    = NULL;
@@ -14086,7 +14086,7 @@ static short _marpaESLIFRecognizer_concat_valueResultCallbackb(void *userDatavp,
           _marpaESLIFValueResultRepresentation.u.s.freeUserDatavp = NULL;
           _marpaESLIFValueResultRepresentation.u.s.freeCallbackp  = NULL;
         } else {
-          /* fprintf(stdout, "... array representation=%s\n", srcs); fflush(stdout); */
+          MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "Got user array representation");
           _marpaESLIFValueResultRepresentation.type               = MARPAESLIF_VALUE_TYPE_ARRAY;
           _marpaESLIFValueResultRepresentation.contextp           = NULL;
           _marpaESLIFValueResultRepresentation.representationp    = NULL;
@@ -14100,10 +14100,10 @@ static short _marpaESLIFRecognizer_concat_valueResultCallbackb(void *userDatavp,
       }
     }
 
-    /* fprintf(stdout, "... displayNextAsJsonStringb=%d\n", (int) displayNextAsJsonStringb); fflush(stdout); */
+    MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "displayNextAsJsonStringb=%d", (int) displayNextAsJsonStringb);
     switch (marpaESLIFValueResultp->type) {
     case MARPAESLIF_VALUE_TYPE_UNDEF:
-      /* fprintf(stdout, "UNDEF\n"); fflush(stdout); */
+      MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "UNDEF");
       /* Undef default representation:
          - string      :      (empty string)
          - json        : null (json null)
@@ -14126,7 +14126,7 @@ static short _marpaESLIFRecognizer_concat_valueResultCallbackb(void *userDatavp,
       }
       break;
     case MARPAESLIF_VALUE_TYPE_CHAR:
-      /* fprintf(stdout, "CHAR %c\n", marpaESLIFValueResultp->u.c); fflush(stdout); */
+      MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "CHAR %c 0x%x", isprint((unsigned char) marpaESLIFValueResultp->u.c) ? marpaESLIFValueResultp->u.c : ' ', (unsigned int) marpaESLIFValueResultp->u.c);
       /* Char default representation:
          - string      : %c
          - json        : %c
@@ -14147,7 +14147,7 @@ static short _marpaESLIFRecognizer_concat_valueResultCallbackb(void *userDatavp,
       }
       break;
     case MARPAESLIF_VALUE_TYPE_SHORT:
-      /* fprintf(stdout, "SHORT %d\n", (int) marpaESLIFValueResultp->u.b); fflush(stdout); */
+      MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "SHORT %d", (int) marpaESLIFValueResultp->u.b);
       /* Char default representation:
          - string      : %d
          - json        : %d
@@ -14168,7 +14168,7 @@ static short _marpaESLIFRecognizer_concat_valueResultCallbackb(void *userDatavp,
       /* MARPAESLIF_NOTICEF(marpaESLIFp, "... Generated string is now: %s", marpaESLIF_stringGeneratorp->s); */
       break;
     case MARPAESLIF_VALUE_TYPE_INT:
-      /* fprintf(stdout, "INT %d\n", marpaESLIFValueResultp->u.i); fflush(stdout); */
+      MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "INT %d", (int) marpaESLIFValueResultp->u.i);
       /* Char default representation:
          - string      : %d
          - json        : %d
@@ -14187,7 +14187,7 @@ static short _marpaESLIFRecognizer_concat_valueResultCallbackb(void *userDatavp,
       }
       break;
     case MARPAESLIF_VALUE_TYPE_LONG:
-      /* fprintf(stdout, "LONG %ld\n", marpaESLIFValueResultp->u.l); fflush(stdout); */
+      MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "LONG %ld", (int) marpaESLIFValueResultp->u.l);
       /* Long default representation:
          - string      : %ld
          - json        : %ld
@@ -14206,7 +14206,7 @@ static short _marpaESLIFRecognizer_concat_valueResultCallbackb(void *userDatavp,
       }
       break;
     case MARPAESLIF_VALUE_TYPE_FLOAT:
-      /* fprintf(stdout, "FLOAT %f\n", (double) marpaESLIFValueResultp->u.f); fflush(stdout); */
+      MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "FLOAT %f", (double) marpaESLIFValueResultp->u.f);
       /* Float default representation:
          - string      : marpaESLIF_ftos()
          - json        : marpaESLIF_ftos() if it is not +/-Infinity or NaN, else null
@@ -14257,7 +14257,7 @@ static short _marpaESLIFRecognizer_concat_valueResultCallbackb(void *userDatavp,
       }
       break;
     case MARPAESLIF_VALUE_TYPE_DOUBLE:
-      /* fprintf(stdout, "DOUBLE %f\n", marpaESLIFValueResultp->u.d); fflush(stdout); */
+      MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "DOUBLE %f", marpaESLIFValueResultp->u.d);
       /* Double default representation:
          - string      : marpaESLIF_dtos()
          - json        : marpaESLIF_dtos() if it is not +/-Infinity or NaN, else null
@@ -14308,7 +14308,7 @@ static short _marpaESLIFRecognizer_concat_valueResultCallbackb(void *userDatavp,
       }
       break;
     case MARPAESLIF_VALUE_TYPE_PTR:
-      /* fprintf(stdout, "PTR %p\n", marpaESLIFValueResultp->u.p.p); fflush(stdout); */
+      MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "PTR %p", marpaESLIFValueResultp->u.p.p);
       /* Ptr default representation:
          - string      : %p
          - json        : %?? (depend on sizeof(void *))
@@ -14365,7 +14365,7 @@ static short _marpaESLIFRecognizer_concat_valueResultCallbackb(void *userDatavp,
       }
       break;
     case MARPAESLIF_VALUE_TYPE_ARRAY:
-      /* fprintf(stdout, "ARRAY {%p,%ld}=%s\n", marpaESLIFValueResultp->u.a.p, (unsigned long) marpaESLIFValueResultp->u.a.sizel, marpaESLIFValueResultp->u.a.p); fflush(stdout); */
+      MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "ARRAY {%p,%ld}", marpaESLIFValueResultp->u.a.p, (unsigned long) marpaESLIFValueResultp->u.a.sizel);
       /* Array default representation:
          - string      : binary content
          - json        : "binary content"
@@ -14397,7 +14397,7 @@ static short _marpaESLIFRecognizer_concat_valueResultCallbackb(void *userDatavp,
       }
       break;
     case MARPAESLIF_VALUE_TYPE_BOOL:
-      /* fprintf(stdout, "BOOL %d\n", (int) marpaESLIFValueResultp->u.y); fflush(stdout); */
+      MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "BOOL %d", (int) marpaESLIFValueResultp->u.y);
       /* Bool default representation:
          - string      : content
          - json        : true or false
@@ -14420,7 +14420,7 @@ static short _marpaESLIFRecognizer_concat_valueResultCallbackb(void *userDatavp,
       }
       break;
     case MARPAESLIF_VALUE_TYPE_STRING:
-      /* fprintf(stdout, "STRING {%p,%ld,%s}\n", marpaESLIFValueResultp->u.s.p, (unsigned long) marpaESLIFValueResultp->u.s.sizel, marpaESLIFValueResultp->u.s.encodingasciis); fflush(stdout); */
+      MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "STRING {%p,%ld}, encoding %s", marpaESLIFValueResultp->u.s.p, (unsigned long) marpaESLIFValueResultp->u.s.sizel, marpaESLIFValueResultp->u.s.encodingasciis);
       /* String default representation:
          - string      : content
          - json        : "json string"
@@ -14467,7 +14467,7 @@ static short _marpaESLIFRecognizer_concat_valueResultCallbackb(void *userDatavp,
       break;
     case MARPAESLIF_VALUE_TYPE_ROW:
       /* String default representation: concatenation of sub-members representation, in reverse order for intuitive representation -; */
-      /* fprintf(stdout, "ROW {%p,%ld}\n", marpaESLIFValueResultp->u.r.p, (unsigned long) marpaESLIFValueResultp->u.r.sizel); fflush(stdout); */
+      MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "ROW {%p,%ld}", marpaESLIFValueResultp->u.r.p, (unsigned long) marpaESLIFValueResultp->u.r.sizel);
       GENERICSTACK_PUSH_PTR(todoStackp, &marpaESLIFValueResultRightSquare);
       if (GENERICSTACK_ERROR(todoStackp)) {
         MARPAESLIF_ERRORF(marpaESLIFp, "todoStackp push failure, %s", strerror(errno));
@@ -14498,7 +14498,7 @@ static short _marpaESLIFRecognizer_concat_valueResultCallbackb(void *userDatavp,
       break;
     case MARPAESLIF_VALUE_TYPE_TABLE:
       /* Nothing else but a row with an even number of elements, in reverse order for intuitive representation -; */
-      /* fprintf(stdout, "TABLE {%p,%ld}\n", marpaESLIFValueResultp->u.t.p, (unsigned long) marpaESLIFValueResultp->u.t.sizel); fflush(stdout); */
+      MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "TABLE {%p,%ld}", marpaESLIFValueResultp->u.t.p, (unsigned long) marpaESLIFValueResultp->u.t.sizel);
       GENERICSTACK_PUSH_PTR(todoStackp, &marpaESLIFValueResultRightBracket);
       if (GENERICSTACK_ERROR(todoStackp)) {
         MARPAESLIF_ERRORF(marpaESLIFp, "todoStackp push failure, %s", strerror(errno));
@@ -14550,7 +14550,7 @@ static short _marpaESLIFRecognizer_concat_valueResultCallbackb(void *userDatavp,
       }
       break;
     case MARPAESLIF_VALUE_TYPE_LONG_DOUBLE:
-      /* fprintf(stdout, "LONG_DOUBLE %Lf\n", marpaESLIFValueResultp->u.ld); fflush(stdout); */
+      MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "LONG_DOUBLE %Lf", marpaESLIFValueResultp->u.ld);
       /* Long double default representation:
          - string      : marpaESLIF_ldtos()
          - json        : marpaESLIF_ldtos() if it is not +/-Infinity or NaN, else null
@@ -14602,7 +14602,7 @@ static short _marpaESLIFRecognizer_concat_valueResultCallbackb(void *userDatavp,
       break;
 #ifdef MARPAESLIF_HAVE_LONG_LONG
     case MARPAESLIF_VALUE_TYPE_LONG_LONG:
-      /* fprintf(stdout, "LONG_LONG " MARPAESLIF_LONG_LONG_FMT "\n", marpaESLIFValueResultp->u.ll); fflush(stdout); */
+      MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "LONG_LONG " MARPAESLIF_LONG_LONG_FMT, marpaESLIFValueResultp->u.ll);
       /* Long long default representation:
          - string      : %ld
          - json        : %ld
