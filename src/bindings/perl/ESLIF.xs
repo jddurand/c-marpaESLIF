@@ -3067,6 +3067,9 @@ CODE:
   MarpaX_ESLIF_Recognizer_t     marpaESLIFRecognizerContext;
   marpaESLIFRecognizerOption_t  marpaESLIFRecognizerOption;
   SV                           *svp;
+  int                           typei;
+  IV                            iv;
+  size_t                        maxDepthl = 0;
 
   /* CALLGRIND_START_INSTRUMENTATION; */
   /* We VOLUNTARILY do not call marpaESLIFPerl_paramIsRecognizerInterfacev() because this is an interface that we own: */
@@ -3075,8 +3078,18 @@ CODE:
   marpaESLIFPerl_recognizerContextInitv(aTHX_ Perl_MarpaX_ESLIF_JSON_Decoderp->marpaESLIFp, ST(0) /* SV of grammar */, ST(1) /* SV of recognizer interface */, &marpaESLIFRecognizerContext, NULL /* Perl_MarpaX_ESLIF_Recognizer_origp */);
   marpaESLIFPerl_valueContextInitv(aTHX_ Perl_MarpaX_ESLIF_JSON_Decoderp->marpaESLIFp, NULL /* No recognizer */, ST(0) /* SV of grammar */, NULL /* SV of value interface */, &marpaESLIFValueContext);
 
+  /* maxDepth option verification */
+  typei = marpaESLIFPerl_getTypei(aTHX_ Perl_maxDepthp);
+  if (! marpaESLIFPerl_is_scalar_integer_only(aTHX_ Perl_maxDepthp, typei)) {
+    /* This is an error unless it is undef */
+    if (! marpaESLIFPerl_is_undef(aTHX_ Perl_maxDepthp, typei)) {
+      MARPAESLIFPERL_CROAK("maxDepth option must be an integer scalar or undef");
+    }
+  } else {
+    maxDepthl = (size_t) SvIVX(Perl_maxDepthp);
+  }
   marpaESLIFJSONDecodeOption.disallowDupkeysb                = SvTRUE(Perl_disallowDupkeysp) ? 1 : 0;
-  marpaESLIFJSONDecodeOption.maxDepthl                       = SvTRUE(Perl_maxDepthp) ? 1 : 0;
+  marpaESLIFJSONDecodeOption.maxDepthl                       = maxDepthl;
   marpaESLIFJSONDecodeOption.noReplacementCharacterb         = SvTRUE(Perl_noReplacementCharacterp) ? 1 : 0;
   marpaESLIFJSONDecodeOption.positiveInfinityActionp         = marpaESLIFPerl_JSONDecodePositiveInfinityAction;
   marpaESLIFJSONDecodeOption.negativeInfinityActionp         = marpaESLIFPerl_JSONDecodeNegativeInfinityAction;
