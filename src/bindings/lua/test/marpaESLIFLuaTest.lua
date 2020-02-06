@@ -91,6 +91,41 @@ local logger = {
    ["emergencyf"] = function(self, fmts, ...) print(string.format("%s %-9s "..fmts, logTimeStamp(), 'EMERGENCY', ...)) end
 }
 
+--
+-- C.f. https://stackoverflow.com/questions/19326368/iterate-over-lines-including-blank-lines
+--
+local function magiclines( str )
+   local pos = 1;
+    return function()
+        if not pos then return nil end
+        local  p1, p2 = string.find( str, "\r?\n", pos )
+        local line
+        if p1 then
+            line = str:sub( pos, p2 )
+            pos = p2 + 1
+        else
+            line = str:sub( pos )
+            pos = nil
+        end
+        return line
+    end
+end
+
+--
+-- C.f. https://gist.github.com/cwarden/1207556
+--
+function catch(what)
+   return what[1]
+end
+
+function try(what)
+   status, result = pcall(what[1])
+   if not status then
+      what[2](result)
+   end
+   return result
+end
+
 ------------------------------------------------------------------------------
 logger:noticef('marpaESLIFLua version: %s', tostring(marpaESLIFLua.version()))
 logger:noticef('marpaESLIFLua version major: %s', tostring(marpaESLIFLua.versionMajor()))
@@ -105,7 +140,7 @@ logger:noticef('marpaESLIF version patch: %s', tostring(marpaESLIFp:versionPatch
 logger:noticef('marpaESLIFp dump: %s', tableDump(marpaESLIFp))
 logger:noticef('marpaESLIFp meta dump: %s', tableDump(getmetatable(marpaESLIFp)))
 ------------------------------------------------------------------------------
-local marpaESLIFGrammarp = marpaESLIFp:marpaESLIFGrammar_new(
+marpaESLIFGrammarp = marpaESLIFp:marpaESLIFGrammar_new(
    [[
 :start   ::= Expression
 :default ::=             action        => do_op
@@ -150,13 +185,13 @@ comment ::= /(?:(?:(?:\/\/)(?:[^\n]*)(?:\n|\z))|(?:(?:\/\*)(?:(?:[^\*]+|\*(?!\/)
 logger:noticef('marpaESLIFGrammarp      dump: %s', tableDump(marpaESLIFGrammarp))
 logger:noticef('marpaESLIFGrammarp meta dump: %s', tableDump(getmetatable(marpaESLIFGrammarp)))
 ------------------------------------------------------------------------------
-local ngrammar = marpaESLIFGrammarp:ngrammar()
+ngrammar = marpaESLIFGrammarp:ngrammar()
 logger:noticef('... Number of grammars : %d', ngrammar)
 ------------------------------------------------------------------------------
-local currentLevel = marpaESLIFGrammarp:currentLevel()
+currentLevel = marpaESLIFGrammarp:currentLevel()
 logger:noticef('... Current level      : %d', currentLevel)
 ------------------------------------------------------------------------------
-local currentDescription = marpaESLIFGrammarp:currentDescription()
+currentDescription = marpaESLIFGrammarp:currentDescription()
 logger:noticef('... Current description: %s', currentDescription)
 ------------------------------------------------------------------------------
 for level = 0,ngrammar-1 do
@@ -164,21 +199,21 @@ for level = 0,ngrammar-1 do
    logger:noticef('... Description level %d: %s', level, descriptionByLevel)
 end
 ------------------------------------------------------------------------------
-local ruleIds = marpaESLIFGrammarp:currentRuleIds()
+ruleIds = marpaESLIFGrammarp:currentRuleIds()
 logger:noticef('... Current rule Ids   : %s', tableDump(ruleIds))
 for level = 0,ngrammar-1 do
    local ruleIdsByLevel = marpaESLIFGrammarp:ruleIdsByLevel(level)
    logger:noticef('... Rule Ids level %d: %s', level, tableDump(ruleIdsByLevel))
 end
 ------------------------------------------------------------------------------
-local symbolIds = marpaESLIFGrammarp:currentSymbolIds()
+symbolIds = marpaESLIFGrammarp:currentSymbolIds()
 logger:noticef('... Current symbol Ids : %s', tableDump(symbolIds))
 for level = 0,ngrammar-1 do
    local symbolIdsByLevel = marpaESLIFGrammarp:symbolIdsByLevel(level)
    logger:noticef('... Symbol Ids level %d: %s', level, tableDump(symbolIdsByLevel))
 end
 ------------------------------------------------------------------------------
-local currentProperties = marpaESLIFGrammarp:currentProperties()
+currentProperties = marpaESLIFGrammarp:currentProperties()
 logger:noticef('... Current properties: %s', tableDump(currentProperties))
 ------------------------------------------------------------------------------
 for level = 0,ngrammar-1 do
@@ -251,7 +286,7 @@ for level = 0,ngrammar-1 do
    end
 end
 ------------------------------------------------------------------------------
-local show = marpaESLIFGrammarp:show()
+show = marpaESLIFGrammarp:show()
 logger:noticef('... Grammar show: %s', show)
 ------------------------------------------------------------------------------
 for level = 0,ngrammar-1 do
@@ -259,7 +294,7 @@ for level = 0,ngrammar-1 do
    logger:noticef('... Level %d grammar show: %s', level, showByLevel)
 end
 ------------------------------------------------------------------------------
-local strings = {
+strings = {
    "(((3 * 4) + 2 * 7) / 2 - 1)/* This is a\n comment \n */** 3",
    "5 / (2 * 3)",
    "5 / 2 * 3",
@@ -272,28 +307,8 @@ local strings = {
    " 100"
 }
 
---
--- C.f. https://stackoverflow.com/questions/19326368/iterate-over-lines-including-blank-lines
---
-local function magiclines( str )
-   local pos = 1;
-    return function()
-        if not pos then return nil end
-        local  p1, p2 = string.find( str, "\r?\n", pos )
-        local line
-        if p1 then
-            line = str:sub( pos, p2 )
-            pos = p2 + 1
-        else
-            line = str:sub( pos )
-            pos = nil
-        end
-        return line
-    end
-end
-
 ------------------------------------------------------------------------------
-local valueInterface = {
+valueInterface = {
    ["isWithHighRankOnly"]     = function(self)
       local isWithHighRankOnly = true
       logger:tracef("isWithHighRankOnly => %s", tostring(isWithHighRankOnly))
@@ -370,7 +385,7 @@ local valueInterface = {
       return result
    end
 }
-local recognizerInterface = {
+recognizerInterface = {
    ["init"] = function(self, input)
       self._magiclinesFunction = magiclines(input)
    end,
@@ -453,20 +468,20 @@ end
 --
 -- Test the scan/resume interface
 --
-local showEvents = function(context, eslifRecognizer)
+showEvents = function(context, eslifRecognizer)
    logger:debugf("[%s] Events: %s", context, tableDump(eslifRecognizer:events()))
 end
 
-local showRecognizerInput = function(context, eslifRecognizer)
+showRecognizerInput = function(context, eslifRecognizer)
    local input = eslifRecognizer:input()
    logger:debugf("[%s] Recognizer buffer:\n%s", context, input)
 end
 
-local showLexemeExpected = function(context, eslifRecognizer)
+showLexemeExpected = function(context, eslifRecognizer)
    logger:debugf("[%s] Expected lexemes: %s", context, tableDump(eslifRecognizer:lexemeExpected()))
 end
 
-local showLocation = function(context, eslifRecognizer)
+showLocation = function(context, eslifRecognizer)
    local line = eslifRecognizer:line()
    local column = eslifRecognizer:column()
    local location = eslifRecognizer:location()
@@ -476,7 +491,7 @@ local showLocation = function(context, eslifRecognizer)
    logger:debugf("[%s] Location is %d:%d", context, line, column)
 end
 
-local doScan = function(eslifRecognizer, initialEvents)
+doScan = function(eslifRecognizer, initialEvents)
    logger:debugf(" =============> scan(initialEvents=%s)", tostring(initialEvents))
     if (not eslifRecognizer:scan(initialEvents)) then
        return false
@@ -489,7 +504,7 @@ local doScan = function(eslifRecognizer, initialEvents)
     return true
 end
 
-local doResume = function(eslifRecognizer, deltaLength)
+doResume = function(eslifRecognizer, deltaLength)
    local context
 		
    logger:debugf(" =============> resume(deltaLength=%d)", deltaLength)
@@ -505,7 +520,7 @@ local doResume = function(eslifRecognizer, deltaLength)
    return true
 end
 
-local doLexemeRead = function(eslifRecognizer, symbol, value, pause)
+doLexemeRead = function(eslifRecognizer, symbol, value, pause)
    --
    -- "pause" is a "lua string", i.e. nothing else but a sequence of bytes
    -- returned by marpaESLIF, guaranteed to be in UTF-8 encoding
@@ -539,7 +554,7 @@ function try(what)
    return result
 end
 
-local doDiscardTry = function(eslifRecognizer)
+doDiscardTry = function(eslifRecognizer)
 
    local test
    try {
@@ -559,7 +574,7 @@ local doDiscardTry = function(eslifRecognizer)
    }
 end
 
-local doLexemeTry = function(eslifRecognizer, symbol)
+doLexemeTry = function(eslifRecognizer, symbol)
 
    local test
    try {
@@ -579,7 +594,7 @@ local doLexemeTry = function(eslifRecognizer, symbol)
    }
 end
 
-local showLastCompletion = function(context, eslifRecognizer, symbol, origin)
+showLastCompletion = function(context, eslifRecognizer, symbol, origin)
    try {
       function()
          --
@@ -604,12 +619,12 @@ local showLastCompletion = function(context, eslifRecognizer, symbol, origin)
    }
 end
 
-local changeEventState = function(context, eslifRecognizer, eventType, symbol, eventTypes, state)
+changeEventState = function(context, eslifRecognizer, eventType, symbol, eventTypes, state)
    logger:debugf("[%s] Changing event state %d of symbol %s to %s", context, eventType, symbol, state)
    eslifRecognizer:eventOnOff(symbol, eventTypes, state)
 end
 
-local i = 0
+i = 0
 for _, localstring in pairs(strings) do
    local context = "main loop"
    logger:noticef('Testing scan/resume on %s', localstring)
@@ -685,22 +700,50 @@ for _, localstring in pairs(strings) do
 end
 
 ------------------------------------------------------------------------------
-local marpaESLIFJSONp = marpaESLIFp:marpaESLIFJSONEncoder_new()
+marpaESLIFJSONDecoderp = marpaESLIFp:marpaESLIFJSONDecoder_new()
+strings = {
+   "null",
+   "{\"key1\": [1, \"string inside array\", 3]}",
+   "{\"key1\": {\"one\": 1, \"two\": \"string inside array\", \"three\": 3}}",
+   "{\"@context\":\"https://raw.githubusercontent.com/codemeta/codemeta/master/codemeta.jsonld\",\"_not_in_schema\": \"This invalid JSON name should cause an error when using JSON-LD expand/compact\",\"_description\": \"This JSON file is used in the Travis CI tests to ensure invalid JSON names are detected during JSON-LD expand / compact operations\"}",
+   "[{\"description\": \"ECMA 262 regex non-compliance\",\"schema\": { \"format\": \"regex\" },\"tests\": [{\"description\": \"ECMA 262 has no support for \\\\Z anchor from .NET\",\"data\": \"^\\\\S(|(.|\\\\n)*\\\\S)\\\\Z\",\"valid\": false}]}]",
+   "{\"+inf\": +Infinity, \"-inf\": -Infinity, \"+nan\": +NaN, \"-nan\": -NaN, \"number\": 1.234e+5, \"string\": \"the string\", \"array\": [\"indice1\", \"indice2\"], \"object\": {\"key1\": null, \"key1\": null, \"key2\": [1,2,3]}}",
+}
+for _, localstring in pairs(strings) do
+   logger:infof('Testing decode on %s', localstring)
+   try {
+      function()
+         decoded = marpaESLIFJSONDecoderp:decode(localstring, nil)
+         logger:infof('%s', tableDump(decoded))
+      end,
 
-stringencoded = marpaESLIFJSONp:encode(getmetatable(marpaESLIFp))
+      catch {
+         function(error)
+            print('caught error: ' .. error)
+         end
+      }
+   }
+end
+
+------------------------------------------------------------------------------
+::json::
+marpaESLIFJSONEncoderp = marpaESLIFp:marpaESLIFJSONEncoder_new()
+
+stringencoded = marpaESLIFJSONEncoderp:encode(getmetatable(marpaESLIFp))
 logger:infof('marpaESLIFp meta table encoded: %s, encoding=%s', stringencoded, stringencoded:encoding())
+logger:infof('marpaESLIFp meta table origin: %s', tableDump(getmetatable(marpaESLIFp)))
 
-stringencoded = marpaESLIFJSONp:encode(getmetatable(marpaESLIFGrammarp))
+stringencoded = marpaESLIFJSONEncoderp:encode(getmetatable(marpaESLIFGrammarp))
 logger:infof('marpaESLIFGrammarp meta table encoded: %s, encoding=%s', stringencoded, stringencoded:encoding())
 
 value = { keya=1, keyb=2, keyc='x', keyy='y', {7,8,9} }
-stringencoded = marpaESLIFJSONp:encode(value)
+stringencoded = marpaESLIFJSONEncoderp:encode(value)
 logger:infof('table encoded: %s, encoding=%s', stringencoded, stringencoded:encoding())
 
-local tniledtablekv = niledtablekv(1,nil, 2,nil)
-stringencoded = marpaESLIFJSONp:encode(tniledtablekv)
+tniledtablekv = niledtablekv(1,nil, 2,nil)
+stringencoded = marpaESLIFJSONEncoderp:encode(tniledtablekv)
 logger:infof('niledtablekv encoded: %s, encoding=%s', stringencoded, stringencoded:encoding())
 
-local tniledarray = niledarray(1,nil,nil)
-stringencoded = marpaESLIFJSONp:encode(tniledarray)
+tniledarray = niledarray(1,nil,nil)
+stringencoded = marpaESLIFJSONEncoderp:encode(tniledarray)
 logger:infof('niledarray encoded: %s, encoding=%s', stringencoded, stringencoded:encoding())
