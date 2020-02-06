@@ -632,6 +632,7 @@ static short _marpaESLIFJSON_incb(void *userDatavp, marpaESLIFRecognizer_t *marp
     marpaESLIFJSONContextp->currentDepthl = currentDepthl;
     if (currentDepthl > marpaESLIFJSONContextp->marpaESLIFJSONDecodeOptionp->maxDepthl) {
       MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "Maximum depth %ld reached", (unsigned long) marpaESLIFJSONContextp->marpaESLIFJSONDecodeOptionp->maxDepthl);
+      errno = EINVAL;
       *marpaESLIFValueResultBoolp = MARPAESLIFVALUERESULTBOOL_FALSE;
     } else {
       *marpaESLIFValueResultBoolp = MARPAESLIFVALUERESULTBOOL_TRUE;
@@ -651,6 +652,7 @@ static short _marpaESLIFJSON_decb(void *userDatavp, marpaESLIFRecognizer_t *marp
   if (--currentDepthl > marpaESLIFJSONContextp->currentDepthl) {
     MARPAESLIF_ERROR(marpaESLIFRecognizerp->marpaESLIFp, "size_t turnaround when computing currentDepthl");
     *marpaESLIFValueResultBoolp = MARPAESLIFVALUERESULTBOOL_FALSE;
+    errno = EINVAL;
   } else {
     marpaESLIFJSONContextp->currentDepthl = currentDepthl;
     *marpaESLIFValueResultBoolp = MARPAESLIFVALUERESULTBOOL_TRUE;
