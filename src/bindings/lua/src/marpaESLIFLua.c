@@ -13,6 +13,7 @@
 #include <genericStack.h>
 #include "lua_newkeywords.c"
 #include "lua_niledtable.c"
+#include "lua_marpaESLIFJSON.c"
 
 /* Shall this module determine automatically string encoding ? */
 /* #define MARPAESLIFLUA_AUTO_ENCODING_DETECT */
@@ -848,6 +849,15 @@ static int marpaESLIFLua_installi(lua_State *L)
   if (! marpaESLIFLua_lua_setglobal(L, "niledtablekv")) goto err;          /* Stack: NiledTable, NiledTable.niledarray */
   if (! marpaESLIFLua_lua_setglobal(L, "niledarray")) goto err;            /* Stack: NiledTable */
   if (! marpaESLIFLua_lua_setglobal(L, "NiledTable")) goto err;            /* Stack: */
+
+  /* We load the marpaESLIFJSON implementation */
+  if (! marpaESLIFLua_luaL_dostring(&dostringi, L, MARPAESLIFLUA_MARPAESLIFJSON)) goto err;
+  if (dostringi != LUA_OK) {
+    marpaESLIFLua_luaL_errorf(L, "Loading marpaESLIFJSON source failed with status %d", dostringi);
+    goto err;
+  }
+  /* marpaESLIFJSON in on the stack */                                     /* Stack: marpaESLIFJSON */
+  if (! marpaESLIFLua_lua_setglobal(L, "marpaESLIFJSON")) goto err;        /* Stack: */
 
   /* Install marpaESLIF main entry points */
   if (! marpaESLIFLua_luaL_newlib(L, marpaESLIFLua_installTable)) goto err;
@@ -7872,12 +7882,14 @@ static int marpaESLIFLua_marpaESLIFJSONEncoder_newi(lua_State *L)
   switch (topi) {
   case 2:
     if (! marpaESLIFLua_lua_type(&typei, L, 2)) goto err;
-    if (typei != LUA_TBOOLEAN) {
-      marpaESLIFLua_luaL_error(L, "strict must be a boolean");
-      goto err;
+    if (typei != LUA_TNIL) {
+      if (typei != LUA_TBOOLEAN) {
+        marpaESLIFLua_luaL_error(L, "strict must be a boolean");
+        goto err;
+      }
+      if (! marpaESLIFLua_lua_toboolean(&stricti, L, 2)) goto err;
+      strictb = stricti ? 1 : 0;
     }
-    if (! marpaESLIFLua_lua_toboolean(&stricti, L, 2)) goto err;
-    strictb = stricti ? 1 : 0;
     /* Intentionally no break */
   case 1:
     if (! marpaESLIFLua_lua_type(&typei, L, 1)) goto err;
@@ -8025,12 +8037,14 @@ static int marpaESLIFLua_marpaESLIFJSONDecoder_newi(lua_State *L)
   switch (topi) {
   case 2:
     if (! marpaESLIFLua_lua_type(&typei, L, 2)) goto err;
-    if (typei != LUA_TBOOLEAN) {
-      marpaESLIFLua_luaL_error(L, "strict must be a boolean");
-      goto err;
+    if (typei != LUA_TNIL) {
+      if (typei != LUA_TBOOLEAN) {
+        marpaESLIFLua_luaL_error(L, "strict must be a boolean");
+        goto err;
+      }
+      if (! marpaESLIFLua_lua_toboolean(&stricti, L, 2)) goto err;
+      strictb = stricti ? 1 : 0;
     }
-    if (! marpaESLIFLua_lua_toboolean(&stricti, L, 2)) goto err;
-    strictb = stricti ? 1 : 0;
     /* Intentionally no break */
   case 1:
     if (! marpaESLIFLua_lua_type(&typei, L, 1)) goto err;

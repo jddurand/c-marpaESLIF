@@ -727,11 +727,17 @@ end
 
 ------------------------------------------------------------------------------
 ::json::
+logger:infof('---------------------------------------------------------------------------------------')
+logger:infof('Testing marpaESLIFp:marpaESLIFJSONEncoder_new and marpaESLIFp:marpaESLIFJSONDecoder_new')
+logger:infof('---------------------------------------------------------------------------------------')
 marpaESLIFJSONEncoderp = marpaESLIFp:marpaESLIFJSONEncoder_new()
+marpaESLIFJSONDecoderp = marpaESLIFp:marpaESLIFJSONDecoder_new()
 
+logger:infof('marpaESLIFp meta table')
 stringencoded = marpaESLIFJSONEncoderp:encode(getmetatable(marpaESLIFp))
-logger:infof('marpaESLIFp meta table encoded: %s, encoding=%s', stringencoded, stringencoded:encoding())
-logger:infof('marpaESLIFp meta table origin: %s', tableDump(getmetatable(marpaESLIFp)))
+logger:infof('... encoded: %s, encoding=%s', stringencoded, stringencoded:encoding())
+stringdecoded = marpaESLIFJSONDecoderp:decode(stringencoded)
+logger:infof('... decoded: %s', tableDump(stringdecoded))
 
 stringencoded = marpaESLIFJSONEncoderp:encode(getmetatable(marpaESLIFGrammarp))
 logger:infof('marpaESLIFGrammarp meta table encoded: %s, encoding=%s', stringencoded, stringencoded:encoding())
@@ -747,3 +753,26 @@ logger:infof('niledtablekv encoded: %s, encoding=%s', stringencoded, stringencod
 tniledarray = niledarray(1,nil,nil)
 stringencoded = marpaESLIFJSONEncoderp:encode(tniledarray)
 logger:infof('niledarray encoded: %s, encoding=%s', stringencoded, stringencoded:encoding())
+
+logger:infof('----------------------------------')
+logger:infof('Testing marpaESLIFJSON handy class')
+logger:infof('----------------------------------')
+marpaESLIFJSONp = marpaESLIFJSON:new(marpaESLIFp)
+stringencoded = marpaESLIFJSONp:encode(getmetatable(marpaESLIFp))
+logger:infof('marpaESLIFp meta table encoded: %s, encoding=%s', stringencoded, stringencoded:encoding())
+
+stringencoded = marpaESLIFJSONp:encode(getmetatable(marpaESLIFGrammarp))
+logger:infof('marpaESLIFGrammarp meta table encoded: %s, encoding=%s', stringencoded, stringencoded:encoding())
+
+value = { keya=1, keyb=2, keyc='x', keyy='y', {7,8,9} }
+stringencoded = marpaESLIFJSONp:encode(value)
+logger:infof('table encoded: %s, encoding=%s', stringencoded, stringencoded:encoding())
+
+tniledtablekv = niledtablekv(1,nil, 2,nil)
+stringencoded = marpaESLIFJSONp:encode(tniledtablekv)
+logger:infof('niledtablekv encoded: %s, encoding=%s', stringencoded, stringencoded:encoding())
+
+tniledarray = niledarray(1,nil,nil)
+stringencoded = marpaESLIFJSONp:encode(tniledarray)
+logger:infof('niledarray encoded: %s, encoding=%s', stringencoded, stringencoded:encoding())
+
