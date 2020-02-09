@@ -7442,9 +7442,9 @@ static short marpaESLIFLua_stack_setb(lua_State *L, marpaESLIF_t *marpaESLIFp, m
       break;
     case LUA_TLIGHTUSERDATA:
       /* fprintf(stderr, "LIGHT PTR\n"); */
-      /* fprintf(stdout, "export ptr\n"); fflush(stdout); fflush(stderr); */
+      /* fprintf(stdout, "export light ptr\n"); fflush(stdout); fflush(stderr); */
       if (! marpaESLIFLua_lua_topointer(&pointerp, L, currenti)) goto err;
-      /* Is is a light user data that we created to duplicate a marpaESLIFValueResult ? */
+      /* Is it a light user data that we created to duplicate a marpaESLIFValueResult ? */
       MARPAESLIFLUA_GETORCREATEGLOBAL(L, MARPAESLIFOPAQUETABLE, marpaESLIFLua_marpaESLIFOpaque_freei /* gcp */, "" /* mode */);  /* Stack: ..., MARPAESLIFOPAQUETABLE */
       if (! marpaESLIFLua_lua_rawgetp(&opaqueTypei, L, -1, pointerp)) goto err;                                                  /* Stack: ..., MARPAESLIFOPAQUETABLE, marpaESLIFValueResultDupp */
       if (! marpaESLIFLua_lua_topointer((const void **) &marpaESLIFValueResultDupp, L, -1)) goto err;
