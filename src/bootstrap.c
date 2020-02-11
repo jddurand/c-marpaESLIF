@@ -4197,8 +4197,8 @@ static short _marpaESLIF_bootstrap_G1_action_terminal_3b(void *userDatavp, marpa
 /*****************************************************************************/
 {
   /* <terminal> ::= <quoted string> */
-  marpaESLIF_bootstrap_single_symbol_t *singleSymbolp = NULL;
-  marpaESLIF_t                         *marpaESLIFp = marpaESLIFValuep->marpaESLIFp; /* marpaESLIFGrammar_eslifp(marpaESLIFRecognizer_grammarp(marpaESLIFValue_recognizerp(marpaESLIFValuep))); */
+  marpaESLIF_bootstrap_single_symbol_t *singleSymbolp         = NULL;
+  marpaESLIF_t                         *marpaESLIFp           = marpaESLIFValuep->marpaESLIFp; /* marpaESLIFGrammar_eslifp(marpaESLIFRecognizer_grammarp(marpaESLIFValue_recognizerp(marpaESLIFValuep))); */
   marpaESLIFRecognizer_t               *marpaESLIFRecognizerp = NULL; /* Fake recognizer to use the internal regex */
   char                                 *modifiers             = NULL;
   marpaESLIFGrammar_t                   marpaESLIFGrammar; /* Fake grammar for the same reason */
@@ -4238,7 +4238,15 @@ static short _marpaESLIF_bootstrap_G1_action_terminal_3b(void *userDatavp, marpa
   if (marpaESLIFRecognizerp == NULL) {
     goto err;
   }
-  if (! _marpaESLIFRecognizer_terminal_matcherb(marpaESLIFRecognizerp, marpaESLIFp->stringModifiersp, bytep, bytel, 1 /* eofb */, &rci, &marpaESLIFValueResult, NULL /* matchedLengthlp */)) {
+  if (! _marpaESLIFRecognizer_terminal_matcherb(marpaESLIFRecognizerp,
+                                                marpaESLIFRecognizerp->marpaESLIF_streamp,
+                                                marpaESLIFp->stringModifiersp,
+                                                bytep,
+                                                bytel,
+                                                1, /* eofb */
+                                                &rci,
+                                                &marpaESLIFValueResult,
+                                                NULL /* matchedLengthlp */)) {
     goto err;
   }
   if (rci == MARPAESLIF_MATCH_OK) {
@@ -6588,11 +6596,11 @@ static short _marpaESLIF_bootstrap_G1_action_exception_statementb(void *userData
 static inline marpaESLIF_bootstrap_utf_string_t *_marpaESLIF_bootstrap_regex_to_stringb(marpaESLIF_t *marpaESLIFp, void *bytep, size_t bytel)
 /*****************************************************************************/
 {
-  marpaESLIF_bootstrap_utf_string_t *stringp   = NULL;
-  char                              *modifiers = NULL;
-  void                              *newbytep  = NULL;
-  size_t                             newbytel;
+  marpaESLIF_bootstrap_utf_string_t *stringp               = NULL;
+  char                              *modifiers             = NULL;
+  void                              *newbytep              = NULL;
   marpaESLIFRecognizer_t            *marpaESLIFRecognizerp = NULL; /* Fake recognizer to use the internal regex */
+  size_t                             newbytel;
   marpaESLIFGrammar_t                marpaESLIFGrammar; /* Fake grammar for the same reason */
   marpaESLIFValueResult_t            marpaESLIFValueResult;
   size_t                             sizel;
@@ -6626,7 +6634,15 @@ static inline marpaESLIF_bootstrap_utf_string_t *_marpaESLIF_bootstrap_regex_to_
   if (marpaESLIFRecognizerp == NULL) {
     goto err;
   }
-  if (! _marpaESLIFRecognizer_terminal_matcherb(marpaESLIFRecognizerp, marpaESLIFp->regexModifiersp, bytep, bytel, 1 /* eofb */, &rci, &marpaESLIFValueResult, NULL /* matchedLengthlp */)) {
+  if (! _marpaESLIFRecognizer_terminal_matcherb(marpaESLIFRecognizerp,
+                                                marpaESLIFRecognizerp->marpaESLIF_streamp,
+                                                marpaESLIFp->regexModifiersp,
+                                                bytep,
+                                                bytel,
+                                                1, /* eofb */
+                                                &rci,
+                                                &marpaESLIFValueResult,
+                                                NULL /* matchedLengthlp */)) {
     goto err;
   }
   if (rci == MARPAESLIF_MATCH_OK) {
@@ -6741,7 +6757,15 @@ static inline marpaESLIF_bootstrap_utf_string_t *_marpaESLIF_bootstrap_character
   if (marpaESLIFRecognizerp == NULL) {
     goto err;
   }
-  if (! _marpaESLIFRecognizer_terminal_matcherb(marpaESLIFRecognizerp, marpaESLIFp->characterClassModifiersp, bytep, bytel, 1 /* eofb */, &rci, &marpaESLIFValueResult, NULL /* matchedLengthlp */)) {
+  if (! _marpaESLIFRecognizer_terminal_matcherb(marpaESLIFRecognizerp,
+                                                marpaESLIFRecognizerp->marpaESLIF_streamp,
+                                                marpaESLIFp->characterClassModifiersp,
+                                                bytep,
+                                                bytel,
+                                                1, /* eofb */
+                                                &rci,
+                                                &marpaESLIFValueResult,
+                                                NULL /* matchedLengthlp */)) {
     goto err;
   }
   if (rci == MARPAESLIF_MATCH_OK) {
