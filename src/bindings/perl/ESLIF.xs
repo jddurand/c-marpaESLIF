@@ -2055,7 +2055,8 @@ static short marpaESLIFPerl_importb(marpaESLIFValue_t *marpaESLIFValuep, void *u
     }
     break;
   case MARPAESLIF_VALUE_TYPE_LONG_DOUBLE:
-    if ((! boot_nvtype_is_long_doubleb) && (! boot_nvtype_is___float128)) {
+    /* Note that typecast ld to f is always ok because for +/-Infinity or NaN, because they remains +/-Infinity or NaN */
+    if ((! boot_nvtype_is_long_doubleb) && (! boot_nvtype_is___float128) && (! marpaESLIFValueResult_isinfb(marpaESLIFValueResultp)) && (! marpaESLIFValueResult_isnanb(marpaESLIFValueResultp))) {
       /* Switch to Math::BigFloat - we must first generate a string representation of this long double. */
 #ifdef PERL_IMPLICIT_CONTEXT
       marpaESLIFPerl_stringGenerator.PerlInterpreterp = Perl_MarpaX_ESLIF_Valuep->PerlInterpreterp;
