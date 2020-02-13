@@ -91,6 +91,10 @@ JNIEXPORT void         JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniFree    
 JNIEXPORT void         JNICALL Java_org_parser_marpa_ESLIFValue_jniNew                         (JNIEnv *envp, jobject eslifValuep, jobject eslifRecognizerp);
 JNIEXPORT jboolean     JNICALL Java_org_parser_marpa_ESLIFValue_jniValue                       (JNIEnv *envp, jobject eslifValuep);
 JNIEXPORT void         JNICALL Java_org_parser_marpa_ESLIFValue_jniFree                        (JNIEnv *envp, jobject eslifValuep);
+JNIEXPORT void         JNICALL Java_org_parser_marpa_ESLIFJSONEncoder_jniNew                   (JNIEnv *envp, jobject eslifJSONEncoderp, jboolean strict);
+JNIEXPORT void         JNICALL Java_org_parser_marpa_ESLIFJSONEncoder_jniFree                  (JNIEnv *envp, jobject eslifJSONEncoderp);
+JNIEXPORT void         JNICALL Java_org_parser_marpa_ESLIFJSONDecoder_jniNew                   (JNIEnv *envp, jobject eslifJSONDecoderp, jboolean strict);
+JNIEXPORT void         JNICALL Java_org_parser_marpa_ESLIFJSONDecoder_jniFree                  (JNIEnv *envp, jobject eslifJSONDecoderp);
 
 /* ---------- */
 /* Structures */
@@ -202,6 +206,8 @@ static char _MARPAESLIF_JNI_CONTEXT;
 #define JAVA_UTIL_SET_CLASS                           "java/util/Set"
 #define JAVA_UTIL_MAP_CLASS                           "java/util/Map"
 #define MARPAESLIF_ESLIFSYMBOLEVENTBITSET_CLASS       "org/parser/marpa/ESLIFSymbolEventBitSet"
+#define MARPAESLIF_ESLIFJSONENCODER_CLASS             "org/parser/marpa/ESLIFJSONEncoder"
+#define MARPAESLIF_ESLIFJSONDECODER_CLASS             "org/parser/marpa/ESLIFJSONDecoder"
 
 #define MARPAESLIF_ESLIFVALUEINTERFACE_SYMBOLACTION_SIGNATURE "(Ljava/lang/Object;)Ljava/lang/Object;"
 #define MARPAESLIF_ESLIFVALUEINTERFACE_RULEACTION_SIGNATURE   "([Ljava/lang/Object;)Ljava/lang/Object;"
@@ -366,6 +372,14 @@ static marpaESLIFClassCache_t marpaESLIFClassCacheArrayp[] = {
   #define MARPAESLIF_ESLIFSYMBOLEVENTBITSET_CLASSCACHE   marpaESLIFClassCacheArrayp[35]
   #define MARPAESLIF_ESLIFSYMBOLEVENTBITSET_CLASSP       marpaESLIFClassCacheArrayp[35].classp
   {       MARPAESLIF_ESLIFSYMBOLEVENTBITSET_CLASS,       NULL, 1 /* requiredb */ },
+
+  #define MARPAESLIF_ESLIFJSONENCODER_CLASSCACHE         marpaESLIFClassCacheArrayp[36]
+  #define MARPAESLIF_ESLIFJSONENCODER_CLASSP             marpaESLIFClassCacheArrayp[36].classp
+  {       MARPAESLIF_ESLIFJSONENCODER_CLASS,             NULL, 1 /* requiredb */ },
+
+  #define MARPAESLIF_ESLIFJSONDECODER_CLASSCACHE         marpaESLIFClassCacheArrayp[36]
+  #define MARPAESLIF_ESLIFJSONDECODER_CLASSP             marpaESLIFClassCacheArrayp[36].classp
+  {       MARPAESLIF_ESLIFJSONDECODER_CLASS,             NULL, 1 /* requiredb */ },
 
   { NULL }
 };
@@ -848,7 +862,7 @@ fieldsValuesStorage_t fieldsValues[] = {
   } while (0)
 
 
-#define MARPAESLIFJAVA_IMPORT_NUMBER_NOT_DECIMAL(envp, object, c_format, c_format_cast, c_value) do { \
+#define MARPAESLIFJAVA_IMPORT_NUMBER_NOT_DECIMAL(envp, objectp, c_format, c_format_cast, c_value) do { \
     genericLogger_t              *_genericLoggerp          = NULL;      \
     jstring                       _numberp;                             \
     marpaESLIF_stringGenerator_t  _stringGenerator = { NULL /* char *s */, 0 /* size_t l */, 0 /* short okb */}; \
@@ -906,8 +920,25 @@ fieldsValuesStorage_t fieldsValues[] = {
     }                                                                   \
   } while (0)
 
-/* Note that special values +/-Infinity and NaN are handled in the caller */
-#define MARPAESLIFJAVA_IMPORT_NUMBER_DECIMAL(marpaESLIFp, envp, object, c_format_cast, c_value, floattos) do { \
+/* We have special things for +/-Infinity and NaN because Math.BigDecimal does NOT support */
+/* these special values: only raw types do. We always project these special values to a jfloat */
+/* that have the same representation in java than a jdouble when it is +/-Infinity or NaN */
+#define MARPAESLIFJAVA_IMPORT_POSITIVE_INFINITY(marpaESLIFp, envp, objectp) do { \
+    /* fprintf(stderr, "==> %s: import float positive infinity\n", funcs); fflush(stdout); fflush(stderr); */ \
+    MARPAESLIFJAVA_NEW_FLOAT(envp, objectp, floatPositiveInfinity);     \
+  } while (0);
+
+#define MARPAESLIFJAVA_IMPORT_NEGATIVE_INFINITY(marpaESLIFp, envp, objectp) do { \
+    /* fprintf(stderr, "==> %s: import float negative infinity\n", funcs); fflush(stdout); fflush(stderr); */ \
+    MARPAESLIFJAVA_NEW_FLOAT(envp, objectp, floatNegativeInfinity);     \
+  } while (0);
+
+#define MARPAESLIFJAVA_IMPORT_NAN(marpaESLIFp, envp, objectp) do {      \
+    /* fprintf(stderr, "==> %s: import float nan\n", funcs); fflush(stdout); fflush(stderr); */ \
+    MARPAESLIFJAVA_NEW_FLOAT(envp, objectp, floatNaN);                  \
+  } while (0);
+
+#define MARPAESLIFJAVA_IMPORT_NUMBER_DECIMAL(marpaESLIFp, envp, objectp, c_format_cast, c_value, floattos) do { \
     jstring _numberp;                                                   \
     char *_s;                                                           \
                                                                         \
@@ -5890,13 +5921,33 @@ static short marpaESLIFJava_importb(marpaESLIFValue_t *marpaESLIFValuep, void *u
   case MARPAESLIF_VALUE_TYPE_FLOAT:
     /* If value is +/-Infinity or NaN this will be handle natively via jfloat */
     /* fprintf(stderr, "==> %s: MARPAESLIF_VALUE_TYPE_FLOAT: %f\n", funcs, (double) marpaESLIFValueResultp->u.f); fflush(stdout); fflush(stderr); */
-    MARPAESLIFJAVA_IMPORT_NUMBER_DECIMAL(marpaESLIFp, envp, objectp, double, marpaESLIFValueResultp->u.f, marpaESLIF_ftos);
+    if (marpaESLIFValueResult_isinfb(marpaESLIFValueResultp)) {
+      if (marpaESLIFValueResultp->u.f >= 0) {
+        MARPAESLIFJAVA_IMPORT_POSITIVE_INFINITY(marpaESLIFp, envp, objectp);
+      } else {
+        MARPAESLIFJAVA_IMPORT_NEGATIVE_INFINITY(marpaESLIFp, envp, objectp);
+      }
+    } else if (marpaESLIFValueResult_isnanb(marpaESLIFValueResultp)) {
+      MARPAESLIFJAVA_IMPORT_NAN(marpaESLIFp, envp, objectp);
+    } else {
+      MARPAESLIFJAVA_IMPORT_NUMBER_DECIMAL(marpaESLIFp, envp, objectp, double, marpaESLIFValueResultp->u.f, marpaESLIF_ftos);
+    }
     MARPAESLIFJAVA_PUSH_PTR(marpaESLIFValueContextp->objectStackp, objectp);
     break;
   case MARPAESLIF_VALUE_TYPE_DOUBLE:
     /* If value is +/-Infinity or NaN this will be handle natively via jdouble */
     /* fprintf(stderr, "==> %s: MARPAESLIF_VALUE_TYPE_DOUBLE: %f\n", funcs, (double) marpaESLIFValueResultp->u.d); fflush(stdout); fflush(stderr); */
-    MARPAESLIFJAVA_IMPORT_NUMBER_DECIMAL(marpaESLIFp, envp, objectp, double, marpaESLIFValueResultp->u.d, marpaESLIF_dtos);
+    if (marpaESLIFValueResult_isinfb(marpaESLIFValueResultp)) {
+      if (marpaESLIFValueResultp->u.d >= 0) {
+        MARPAESLIFJAVA_IMPORT_POSITIVE_INFINITY(marpaESLIFp, envp, objectp);
+      } else {
+        MARPAESLIFJAVA_IMPORT_NEGATIVE_INFINITY(marpaESLIFp, envp, objectp);
+      }
+    } else if (marpaESLIFValueResult_isnanb(marpaESLIFValueResultp)) {
+      MARPAESLIFJAVA_IMPORT_NAN(marpaESLIFp, envp, objectp);
+    } else {
+      MARPAESLIFJAVA_IMPORT_NUMBER_DECIMAL(marpaESLIFp, envp, objectp, double, marpaESLIFValueResultp->u.d, marpaESLIF_dtos);
+    }
     MARPAESLIFJAVA_PUSH_PTR(marpaESLIFValueContextp->objectStackp, objectp);
     break;
   case MARPAESLIF_VALUE_TYPE_PTR:
@@ -6008,7 +6059,17 @@ static short marpaESLIFJava_importb(marpaESLIFValue_t *marpaESLIFValuep, void *u
     MARPAESLIFJAVA_PUSH_PTR(marpaESLIFValueContextp->objectStackp, objectHashMapp);
     break;
   case MARPAESLIF_VALUE_TYPE_LONG_DOUBLE:
-    MARPAESLIFJAVA_IMPORT_NUMBER_DECIMAL(marpaESLIFp, envp, objectp, long double, marpaESLIFValueResultp->u.ld, marpaESLIF_ldtos);
+    if (marpaESLIFValueResult_isinfb(marpaESLIFValueResultp)) {
+      if (marpaESLIFValueResultp->u.ld >= 0) {
+        MARPAESLIFJAVA_IMPORT_POSITIVE_INFINITY(marpaESLIFp, envp, objectp);
+      } else {
+        MARPAESLIFJAVA_IMPORT_NEGATIVE_INFINITY(marpaESLIFp, envp, objectp);
+      }
+    } else if (marpaESLIFValueResult_isnanb(marpaESLIFValueResultp)) {
+      MARPAESLIFJAVA_IMPORT_NAN(marpaESLIFp, envp, objectp);
+    } else {
+      MARPAESLIFJAVA_IMPORT_NUMBER_DECIMAL(marpaESLIFp, envp, objectp, long double, marpaESLIFValueResultp->u.ld, marpaESLIF_ldtos);
+    }
     MARPAESLIFJAVA_PUSH_PTR(marpaESLIFValueContextp->objectStackp, objectp);
     break;
 #ifdef MARPAESLIF_HAVE_LONG_LONG
@@ -6592,4 +6653,108 @@ static short marpaESLIFJava_stack_setb(JNIEnv *envp, marpaESLIFValue_t *marpaESL
   GENERICSTACK_RESET(objectStackp);
   GENERICSTACK_RESET(marpaESLIFValueResultStackp);
   return rcb;
+}
+
+/*****************************************************************************/
+JNIEXPORT void JNICALL Java_org_parser_marpa_ESLIFJSON_Encoder_jniNew(JNIEnv *envp, jobject eslifJSONEncoderp, jboolean strict)
+/*****************************************************************************/
+{
+  static const char                *funcs = "Java_org_parser_marpa_ESLIFJSON_Encoder_jniNew";
+  marpaESLIFGrammar_t              *marpaESLIFJSONEncoderp;
+  marpaESLIF_t                     *marpaESLIFp;
+  jobject                           BYTEBUFFER(marpaESLIFJSONEncoder);
+
+  /* Always update genericLogger context */
+  if (! ESLIFGrammar_contextb(envp, eslifJSONEncoderp, eslifJSONEncoderp, MARPAESLIF_ESLIFGRAMMAR_CLASS_getLoggerInterfacep_METHODP,
+                              NULL /* genericLoggerpp */,
+                              &marpaESLIFp,
+                              NULL /* marpaESLIFGrammarpp */)) {
+    goto err;
+  }
+
+  /* Create C object */
+  marpaESLIFJSONEncoderp = marpaESLIFJSON_encode_newp(marpaESLIFp, (strict == JNI_TRUE) ? 1 : 0);
+  if (marpaESLIFJSONEncoderp == NULL) {
+    RAISEEXCEPTIONF(envp, "marpaESLIFJSON_encode_newp failure, %s", strerror(errno));
+  }
+
+  /* Store the object */
+  MARPAESLIF_PTR2BYTEBUFFER(marpaESLIFJSONEncoder, marpaESLIFJSONEncoderp);
+  (*envp)->CallVoidMethod(envp, eslifJSONEncoderp, MARPAESLIF_ESLIFGRAMMAR_CLASS_setMarpaESLIFGrammarp_METHODP, BYTEBUFFER(marpaESLIFJSONEncoder));
+  if (HAVEEXCEPTION(envp)) {
+    goto err;
+  }
+  goto done;
+
+ err:
+  Java_org_parser_marpa_ESLIFJSONEncoder_jniFree(envp, eslifJSONEncoderp);
+
+ done:
+  return;
+}
+
+/*****************************************************************************/
+JNIEXPORT void JNICALL Java_org_parser_marpa_ESLIFJSONEncoder_jniFree(JNIEnv *envp, jobject eslifJSONencoderp)
+/*****************************************************************************/
+{
+  marpaESLIFGrammar_t *marpaESLIFJSONEncoderp;
+
+  if (ESLIFGrammar_contextb(envp, eslifJSONencoderp, eslifJSONencoderp, MARPAESLIF_ESLIFGRAMMAR_CLASS_getLoggerInterfacep_METHODP,
+                              NULL /* genericLoggerpp */,
+                              NULL /* marpaESLIFpp */,
+                              &marpaESLIFJSONEncoderp)) {
+    marpaESLIFGrammar_freev(marpaESLIFJSONEncoderp); /* This is NULL protected */
+  }
+}
+
+/*****************************************************************************/
+JNIEXPORT void JNICALL Java_org_parser_marpa_ESLIFJSON_Decoder_jniNew(JNIEnv *envp, jobject eslifJSONDecoderp, jboolean strict)
+/*****************************************************************************/
+{
+  static const char                *funcs = "Java_org_parser_marpa_ESLIFJSON_Decoder_jniNew";
+  marpaESLIFGrammar_t              *marpaESLIFJSONDecoderp;
+  marpaESLIF_t                     *marpaESLIFp;
+  jobject                           BYTEBUFFER(marpaESLIFJSONDecoder);
+
+  /* Always update genericLogger context */
+  if (! ESLIFGrammar_contextb(envp, eslifJSONDecoderp, eslifJSONDecoderp, MARPAESLIF_ESLIFGRAMMAR_CLASS_getLoggerInterfacep_METHODP,
+                              NULL /* genericLoggerpp */,
+                              &marpaESLIFp,
+                              NULL /* marpaESLIFGrammarpp */)) {
+    goto err;
+  }
+
+  /* Create C object */
+  marpaESLIFJSONDecoderp = marpaESLIFJSON_decode_newp(marpaESLIFp, (strict == JNI_TRUE) ? 1 : 0);
+  if (marpaESLIFJSONDecoderp == NULL) {
+    RAISEEXCEPTIONF(envp, "marpaESLIFJSON_decode_newp failure, %s", strerror(errno));
+  }
+
+  /* Store the object */
+  MARPAESLIF_PTR2BYTEBUFFER(marpaESLIFJSONDecoder, marpaESLIFJSONDecoderp);
+  (*envp)->CallVoidMethod(envp, eslifJSONDecoderp, MARPAESLIF_ESLIFGRAMMAR_CLASS_setMarpaESLIFGrammarp_METHODP, BYTEBUFFER(marpaESLIFJSONDecoder));
+  if (HAVEEXCEPTION(envp)) {
+    goto err;
+  }
+  goto done;
+
+ err:
+  Java_org_parser_marpa_ESLIFJSONDecoder_jniFree(envp, eslifJSONDecoderp);
+
+ done:
+  return;
+}
+
+/*****************************************************************************/
+JNIEXPORT void JNICALL Java_org_parser_marpa_ESLIFJSONDecoder_jniFree(JNIEnv *envp, jobject eslifJSONdecoderp)
+/*****************************************************************************/
+{
+  marpaESLIFGrammar_t *marpaESLIFJSONDecoderp;
+
+  if (ESLIFGrammar_contextb(envp, eslifJSONdecoderp, eslifJSONdecoderp, MARPAESLIF_ESLIFGRAMMAR_CLASS_getLoggerInterfacep_METHODP,
+                              NULL /* genericLoggerpp */,
+                              NULL /* marpaESLIFpp */,
+                              &marpaESLIFJSONDecoderp)) {
+    marpaESLIFGrammar_freev(marpaESLIFJSONDecoderp); /* This is NULL protected */
+  }
 }
