@@ -67,6 +67,14 @@ public class ESLIFGrammar {
 		setEslif(eslif);
 		jniNew(grammar.getBytes("UTF-8"));
 	}
+
+	/* For subclasses that need only eslif parameter */
+	protected ESLIFGrammar(ESLIF eslif) throws ESLIFException {
+		if (eslif == null) {
+			throw new IllegalArgumentException("eslif must not be null");
+		}
+		setEslif(eslif);
+	}
 	/**
 	 * Dispose of an ESLIFGrammar resources.
 	 * 
@@ -311,16 +319,16 @@ public class ESLIFGrammar {
 	protected ESLIFLoggerInterface getLoggerInterface() {
 		return (eslif != null) ? eslif.getLoggerInterface() : null;
 	}
-	private ESLIF getEslif() {
+	protected ESLIF getEslif() {
 		return eslif;
 	}
-	private void setEslif(ESLIF eslif) {
+	protected void setEslif(ESLIF eslif) {
 		this.eslif = eslif;
 	}
-	private ByteBuffer getMarpaESLIFGrammarp() {
+	protected ByteBuffer getMarpaESLIFGrammarp() {
 		return marpaESLIFGrammarp;
 	}
-	private void setMarpaESLIFGrammarp(ByteBuffer marpaESLIFGrammarp) {
+	protected void setMarpaESLIFGrammarp(ByteBuffer marpaESLIFGrammarp) {
 		this.marpaESLIFGrammarp = marpaESLIFGrammarp;
 	}
 
