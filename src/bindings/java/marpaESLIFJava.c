@@ -92,6 +92,7 @@ JNIEXPORT void         JNICALL Java_org_parser_marpa_ESLIFValue_jniNew          
 JNIEXPORT jboolean     JNICALL Java_org_parser_marpa_ESLIFValue_jniValue                       (JNIEnv *envp, jobject eslifValuep);
 JNIEXPORT void         JNICALL Java_org_parser_marpa_ESLIFValue_jniFree                        (JNIEnv *envp, jobject eslifValuep);
 JNIEXPORT void         JNICALL Java_org_parser_marpa_ESLIFJSONEncoder_jniNew                   (JNIEnv *envp, jobject eslifJSONEncoderp, jboolean strict);
+JNIEXPORT jstring      JNICALL Java_org_parser_marpa_ESLIFJSONEncoder_jniEncode                (JNIEnv *envp, jobject eslifJSONEncoderp, jobject o);
 JNIEXPORT void         JNICALL Java_org_parser_marpa_ESLIFJSONEncoder_jniFree                  (JNIEnv *envp, jobject eslifJSONEncoderp);
 JNIEXPORT void         JNICALL Java_org_parser_marpa_ESLIFJSONDecoder_jniNew                   (JNIEnv *envp, jobject eslifJSONDecoderp, jboolean strict);
 JNIEXPORT void         JNICALL Java_org_parser_marpa_ESLIFJSONDecoder_jniFree                  (JNIEnv *envp, jobject eslifJSONDecoderp);
@@ -5212,33 +5213,35 @@ static short marpaESLIFJava_valueContextInitb(JNIEnv *envp, jobject eslifValueIn
     RAISEEXCEPTION(envp, "NewGlobalRef failure");
   }
 
-  /* For run-time resolving of actions we need current jclass */
-  classp = (*envp)->GetObjectClass(envp, eslifValueInterfacep);
-  if (classp == NULL) {
-    /* An exception was (must have been) raised */
-    RAISEEXCEPTION(envp, "GetObjectClass failure");
-  }
+  if (eslifValueInterfacep != NULL) {
+    /* For run-time resolving of actions we need current jclass */
+    classp = (*envp)->GetObjectClass(envp, eslifValueInterfacep);
+    if (classp == NULL) {
+      /* An exception was (must have been) raised */
+      RAISEEXCEPTION(envp, "GetObjectClass failure");
+    }
 
-  stringp = (*envp)->CallObjectMethod(envp, classp, JAVA_LANG_CLASS_CLASS_getName_METHODP);
-  if (stringp == NULL) {
-    /* An exception was (must have been) raised */
-    RAISEEXCEPTION(envp, "CallObjectMethod failure");
-  }
+    stringp = (*envp)->CallObjectMethod(envp, classp, JAVA_LANG_CLASS_CLASS_getName_METHODP);
+    if (stringp == NULL) {
+      /* An exception was (must have been) raised */
+      RAISEEXCEPTION(envp, "CallObjectMethod failure");
+    }
 
-  classs = (*envp)->GetStringUTFChars(envp, stringp, &isCopy);
-  if (classs == NULL) {
-    /* An exception was (must have been) raised */
-    RAISEEXCEPTION(envp, "GetStringUTFChars failure");
-  }
-  marpaESLIFValueContextp->classCache.classs = strdup(classs);
-  if (marpaESLIFValueContextp->classCache.classs == NULL) {
-    RAISEEXCEPTIONF(envp, "strdup failure, %s", strerror(errno));
-  }
+    classs = (*envp)->GetStringUTFChars(envp, stringp, &isCopy);
+    if (classs == NULL) {
+      /* An exception was (must have been) raised */
+      RAISEEXCEPTION(envp, "GetStringUTFChars failure");
+    }
+    marpaESLIFValueContextp->classCache.classs = strdup(classs);
+    if (marpaESLIFValueContextp->classCache.classs == NULL) {
+      RAISEEXCEPTIONF(envp, "strdup failure, %s", strerror(errno));
+    }
 
-  marpaESLIFValueContextp->classCache.classp = (*envp)->NewGlobalRef(envp, classp);
-  if (marpaESLIFValueContextp->classCache.classp == NULL) {
-    /* An exception was (must have been) raised */
-    RAISEEXCEPTION(envp, "NewGlobalRef failure");
+    marpaESLIFValueContextp->classCache.classp = (*envp)->NewGlobalRef(envp, classp);
+    if (marpaESLIFValueContextp->classCache.classp == NULL) {
+      /* An exception was (must have been) raised */
+      RAISEEXCEPTION(envp, "NewGlobalRef failure");
+    }
   }
 
   rcb = 1;
@@ -6656,10 +6659,10 @@ static short marpaESLIFJava_stack_setb(JNIEnv *envp, marpaESLIFValue_t *marpaESL
 }
 
 /*****************************************************************************/
-JNIEXPORT void JNICALL Java_org_parser_marpa_ESLIFJSON_Encoder_jniNew(JNIEnv *envp, jobject eslifJSONEncoderp, jboolean strict)
+JNIEXPORT void JNICALL Java_org_parser_marpa_ESLIFJSONEncoder_jniNew(JNIEnv *envp, jobject eslifJSONEncoderp, jboolean strict)
 /*****************************************************************************/
 {
-  static const char                *funcs = "Java_org_parser_marpa_ESLIFJSON_Encoder_jniNew";
+  static const char                *funcs = "Java_org_parser_marpa_ESLIFJSONEncoder_jniNew";
   marpaESLIFGrammar_t              *marpaESLIFJSONEncoderp;
   marpaESLIF_t                     *marpaESLIFp;
   jobject                           BYTEBUFFER(marpaESLIFJSONEncoder);
@@ -6691,6 +6694,55 @@ JNIEXPORT void JNICALL Java_org_parser_marpa_ESLIFJSON_Encoder_jniNew(JNIEnv *en
 
  done:
   return;
+}
+
+/*****************************************************************************/
+JNIEXPORT jstring JNICALL Java_org_parser_marpa_ESLIFJSONEncoder_jniEncode(JNIEnv *envp, jobject eslifJSONEncoderp, jobject objectp)
+/*****************************************************************************/
+{
+  static const char       *funcs = "Java_org_parser_marpa_ESLIFJSONEncoder_jniEncode";
+  jstring                  rcp;
+  marpaESLIFGrammar_t     *marpaESLIFJSONEncoderp;
+  marpaESLIFValueResult_t  marpaESLIFValueResult;
+  marpaESLIFValueOption_t  marpaESLIFValueOption;
+  marpaESLIFValueContext_t marpaESLIFValueContext;
+
+  if (! ESLIFGrammar_contextb(envp, eslifJSONEncoderp, eslifJSONEncoderp, MARPAESLIF_ESLIFGRAMMAR_CLASS_getLoggerInterfacep_METHODP,
+                              NULL /* genericLoggerpp */,
+                              NULL /* marpaESLIFpp */,
+                              &marpaESLIFJSONEncoderp)) {
+    goto err;
+  }
+
+  /* Value interface is unmanaged: ESLIF does all the job */
+  if (! marpaESLIFJava_valueContextInitb(envp, NULL /* eslifValueInterfacep */, eslifJSONEncoderp /* eslifGrammarp */, &marpaESLIFValueContext)) {
+    goto err;
+  }
+
+  marpaESLIFValueOption.userDatavp = &marpaESLIFValueContext;
+  marpaESLIFValueOption.importerp  = marpaESLIFJava_importb;
+
+  /* Create a marpaESLIFValueResult from objectp */
+  if (! marpaESLIFJava_stack_setb(envp, NULL /* marpaESLIFValuep */, -1 /* resulti */, objectp, &marpaESLIFValueResult)) {
+    goto err;
+  }
+
+  if (! marpaESLIFJSON_encodeb(marpaESLIFJSONEncoderp, &marpaESLIFValueResult, &marpaESLIFValueOption)) {
+    marpaESLIFJava_valueContextFreev(envp, &marpaESLIFValueContext, 1 /* onStackb */);
+    RAISEEXCEPTION(envp, "marpaESLIFJSON_encodeb failure");
+  }
+  if (GENERICSTACK_USED(marpaESLIFValueContext.objectStackp) != 1) {
+    RAISEEXCEPTIONF(envp, "Internal value stack is %d instead of 1", GENERICSTACK_USED(marpaESLIFValueContext.objectStackp));
+  }
+
+  rcp = (jstring) GENERICSTACK_POP_PTR(marpaESLIFValueContext.objectStackp); /* It is a string by definition */
+  goto done;
+
+ err:
+  rcp = NULL;
+
+ done:
+  return rcp;
 }
 
 /*****************************************************************************/

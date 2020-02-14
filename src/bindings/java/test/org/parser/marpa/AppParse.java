@@ -70,5 +70,7 @@ public class AppParse  {
 		new AppImportExport(eslifLogger).run();
 		// JSON test
 		new AppJson(eslifLogger).run();
+		// JSONEncoder test
+		new AppJSONEncoder(eslifLogger).run();
 	}
 }
