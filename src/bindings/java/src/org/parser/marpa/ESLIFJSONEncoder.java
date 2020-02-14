@@ -52,6 +52,7 @@ public class ESLIFJSONEncoder extends ESLIFGrammar {
 	/**
 	 * Encodes java data to a JSON UTF-8 string
 	 * 
+	 * @param o the object to encode
 	 * @throws ESLIFException if the interface failed
 	 */
 	public synchronized String encode(Object o) throws ESLIFException {
