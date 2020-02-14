@@ -209,6 +209,7 @@ static char _MARPAESLIF_JNI_CONTEXT;
 #define MARPAESLIF_ESLIFSYMBOLEVENTBITSET_CLASS       "org/parser/marpa/ESLIFSymbolEventBitSet"
 #define MARPAESLIF_ESLIFJSONENCODER_CLASS             "org/parser/marpa/ESLIFJSONEncoder"
 #define MARPAESLIF_ESLIFJSONDECODER_CLASS             "org/parser/marpa/ESLIFJSONDecoder"
+#define MARPAESLIF_ESLIFJSONDECODEROPTION_CLASS       "org/parser/marpa/ESLIFJSONDecoderOption"
 
 #define MARPAESLIF_ESLIFVALUEINTERFACE_SYMBOLACTION_SIGNATURE "(Ljava/lang/Object;)Ljava/lang/Object;"
 #define MARPAESLIF_ESLIFVALUEINTERFACE_RULEACTION_SIGNATURE   "([Ljava/lang/Object;)Ljava/lang/Object;"
@@ -378,9 +379,13 @@ static marpaESLIFClassCache_t marpaESLIFClassCacheArrayp[] = {
   #define MARPAESLIF_ESLIFJSONENCODER_CLASSP             marpaESLIFClassCacheArrayp[36].classp
   {       MARPAESLIF_ESLIFJSONENCODER_CLASS,             NULL, 1 /* requiredb */ },
 
-  #define MARPAESLIF_ESLIFJSONDECODER_CLASSCACHE         marpaESLIFClassCacheArrayp[36]
-  #define MARPAESLIF_ESLIFJSONDECODER_CLASSP             marpaESLIFClassCacheArrayp[36].classp
+  #define MARPAESLIF_ESLIFJSONDECODER_CLASSCACHE         marpaESLIFClassCacheArrayp[37]
+  #define MARPAESLIF_ESLIFJSONDECODER_CLASSP             marpaESLIFClassCacheArrayp[37].classp
   {       MARPAESLIF_ESLIFJSONDECODER_CLASS,             NULL, 1 /* requiredb */ },
+
+  #define MARPAESLIF_ESLIFJSONDECODEROPTION_CLASSCACHE   marpaESLIFClassCacheArrayp[38]
+  #define MARPAESLIF_ESLIFJSONDECODEROPTION_CLASSP       marpaESLIFClassCacheArrayp[38].classp
+  {       MARPAESLIF_ESLIFJSONDECODEROPTION_CLASS,       NULL, 1 /* requiredb */ },
 
   { NULL }
 };
@@ -703,6 +708,15 @@ static marpaESLIFMethodCache_t marpaESLIFMethodCacheArrayp[] = {
 
   #define JAVA_UTIL_ITERATOR_CLASS_next_METHODP                                     marpaESLIFMethodCacheArrayp[105].methodp
   {      &JAVA_UTIL_ITERATOR_CLASSCACHE, "next",                                    "()Ljava/lang/Object;", 0 /* staticb */, NULL, 1 /* requiredb */ },
+
+  #define MARPAESLIF_ESLIFJSONDECODEROPTION_CLASS_isDisallowDupkeys_METHODP         marpaESLIFMethodCacheArrayp[106].methodp
+  {      &MARPAESLIF_ESLIFJSONDECODEROPTION_CLASSCACHE, "isDisallowDupkeys",        "()Z", 0 /* staticb */, NULL, 1 /* requiredb */ },
+
+  #define MARPAESLIF_ESLIFJSONDECODEROPTION_CLASS_getMaxDepth_METHODP               marpaESLIFMethodCacheArrayp[107].methodp
+  {      &MARPAESLIF_ESLIFJSONDECODEROPTION_CLASSCACHE, "getMaxDepth",              "()J", 0 /* staticb */, NULL, 1 /* requiredb */ },
+
+  #define MARPAESLIF_ESLIFJSONDECODEROPTION_CLASS_isNoReplacementCharacter_METHODP  marpaESLIFMethodCacheArrayp[108].methodp
+  {      &MARPAESLIF_ESLIFJSONDECODEROPTION_CLASSCACHE, "isNoReplacementCharacter", "()Z", 0 /* staticb */, NULL, 1 /* requiredb */ },
 
   { NULL }
 };
