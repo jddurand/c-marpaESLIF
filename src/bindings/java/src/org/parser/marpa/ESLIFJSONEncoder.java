@@ -9,6 +9,8 @@ import java.nio.ByteBuffer;
  * ESLIF eslif = new ESLIF(...)
  * ESLIFJSONEncoder eslifJSONEncoder = new ESLIFJSONEncoder();
  * ...
+ * String stringInUTF8Encoding = eslifJSONEncoder.encode(anything);
+ * ...
  * eslifJSONEncoder.free();
  * eslif.free()
  * </pre>
