@@ -17,6 +17,7 @@ public class ESLIFJSONDecoder extends ESLIFGrammar {
 	private ByteBuffer     marpaESLIFJSONDecoderp = null;
 	private native void    jniNew(boolean strict) throws ESLIFException;
 	private native void    jniFree() throws ESLIFException;
+	private native Object  jniDecode(String s, ESLIFJSONDecoderOption eslifJSONDeoderOption) throws ESLIFException;
 	/*
 	 * ********************************************
 	 * Public methods
@@ -46,4 +47,26 @@ public class ESLIFJSONDecoder extends ESLIFGrammar {
 	public synchronized void free() throws ESLIFException {
 		jniFree();
 	}
+
+	/**
+	 * Decodes a string to a java object
+	 *
+	 * @param s the string to decode
+	 * @throws ESLIFException if the interface failed
+	 */
+	public synchronized Object decode(String s) throws ESLIFException {
+		return decode(s);
+	}
+
+	/**
+	 * Decodes a string to a java object
+	 *
+	 * @param s the string to decode
+	 * @param eslifJSONDeoderOption the options for decoding
+	 * @throws ESLIFException if the interface failed
+	 */
+	public synchronized Object decode(String s, ESLIFJSONDecoderOption eslifJSONDeoderOption) throws ESLIFException {
+		return jniDecode(s, eslifJSONDeoderOption);
+	}
+
 }
