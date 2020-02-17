@@ -72,5 +72,9 @@ public class AppParse  {
 		new AppJson(eslifLogger).run();
 		// JSONEncoder test
 		new AppJSONEncoder(eslifLogger).run();
+		// JSONDecoder test
+		new AppJSONDecoder(eslifLogger).run();
+		// JSON handy class
+		new AppJSON(eslifLogger).run();
 	}
 }

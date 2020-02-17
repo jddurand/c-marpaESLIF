@@ -95,6 +95,7 @@ JNIEXPORT void         JNICALL Java_org_parser_marpa_ESLIFJSONEncoder_jniNew    
 JNIEXPORT jstring      JNICALL Java_org_parser_marpa_ESLIFJSONEncoder_jniEncode                (JNIEnv *envp, jobject eslifJSONEncoderp, jobject o);
 JNIEXPORT void         JNICALL Java_org_parser_marpa_ESLIFJSONEncoder_jniFree                  (JNIEnv *envp, jobject eslifJSONEncoderp);
 JNIEXPORT void         JNICALL Java_org_parser_marpa_ESLIFJSONDecoder_jniNew                   (JNIEnv *envp, jobject eslifJSONDecoderp, jboolean strict);
+JNIEXPORT jobject      JNICALL Java_org_parser_marpa_ESLIFJSONDecoder_jniDecode                (JNIEnv *envp, jobject eslifJSONDecoderp, jobject eslifRecognizerInterfacep, jobject eslifDecodeOptionp);
 JNIEXPORT void         JNICALL Java_org_parser_marpa_ESLIFJSONDecoder_jniFree                  (JNIEnv *envp, jobject eslifJSONDecoderp);
 
 /* ---------- */
@@ -1144,6 +1145,8 @@ static jstring marpaESLIFJava_marpaESLIFStringToJavap(JNIEnv *envp, marpaESLIFSt
 static jstring marpaESLIFJava_marpaESLIFASCIIToJavap(JNIEnv *envp, char *asciis);
 static jstring marpaESLIFJava_marpaESLIFActionToJavap(JNIEnv *envp, marpaESLIFAction_t *actionp);
 static short marpaESLIFJava_stack_setb(JNIEnv *envp, marpaESLIFValue_t *marpaESLIFValuep, short resulti, jobject objectp, marpaESLIFValueResult_t *marpaESLIFValueResultOutputp);
+static short marpaESLIFJava_JSONDecodeNumberActionb(void *userDatavp, char *strings, size_t stringl, marpaESLIFValueResult_t *marpaESLIFValueResultp);
+static void  marpaESLIFJava_JSONDecodeFreeCallbackv(void *userDatavp, marpaESLIFValueResult_t *marpaESLIFValueResultp);
 
 /* --------------- */
 /* Internal macros */
@@ -6774,10 +6777,10 @@ JNIEXPORT void JNICALL Java_org_parser_marpa_ESLIFJSONEncoder_jniFree(JNIEnv *en
 }
 
 /*****************************************************************************/
-JNIEXPORT void JNICALL Java_org_parser_marpa_ESLIFJSON_Decoder_jniNew(JNIEnv *envp, jobject eslifJSONDecoderp, jboolean strict)
+JNIEXPORT void JNICALL Java_org_parser_marpa_ESLIFJSONDecoder_jniNew(JNIEnv *envp, jobject eslifJSONDecoderp, jboolean strict)
 /*****************************************************************************/
 {
-  static const char                *funcs = "Java_org_parser_marpa_ESLIFJSON_Decoder_jniNew";
+  static const char                *funcs = "Java_org_parser_marpa_ESLIFJSONDecoder_jniNew";
   marpaESLIFGrammar_t              *marpaESLIFJSONDecoderp;
   marpaESLIF_t                     *marpaESLIFp;
   jobject                           BYTEBUFFER(marpaESLIFJSONDecoder);
@@ -6812,6 +6815,95 @@ JNIEXPORT void JNICALL Java_org_parser_marpa_ESLIFJSON_Decoder_jniNew(JNIEnv *en
 }
 
 /*****************************************************************************/
+JNIEXPORT jobject JNICALL Java_org_parser_marpa_ESLIFJSONDecoder_jniDecode(JNIEnv *envp, jobject eslifJSONDecoderp, jobject eslifRecognizerInterfacep, jobject eslifDecodeOptionp)
+/*****************************************************************************/
+{
+  static const char            *funcs = "Java_org_parser_marpa_ESLIFJSONDecoder_jniDecode";
+  jobject                       rcp;
+  marpaESLIFGrammar_t          *marpaESLIFJSONDecoderp;
+  marpaESLIFValueOption_t       marpaESLIFValueOption;
+  marpaESLIFJSONDecodeOption_t  marpaESLIFJSONDecodeOption;
+  marpaESLIFRecognizerContext_t marpaESLIFRecognizerContext;
+  marpaESLIFRecognizerOption_t  marpaESLIFRecognizerOption;
+  marpaESLIFValueContext_t      marpaESLIFValueContext;
+
+  if (! marpaESLIFJava_recognizerContextInitb(envp, eslifRecognizerInterfacep, &marpaESLIFRecognizerContext, 0 /* haveLexemeStackb */)) {
+    goto err;
+  }
+
+  marpaESLIFJSONDecodeOption.disallowDupkeysb = ((*envp)->CallBooleanMethod(envp, eslifDecodeOptionp, MARPAESLIF_ESLIFJSONDECODEROPTION_CLASS_isDisallowDupkeys_METHODP) == JNI_TRUE);
+  if (HAVEEXCEPTION(envp)) {
+    goto err;
+  }
+  marpaESLIFJSONDecodeOption.maxDepthl = (size_t) (*envp)->CallLongMethod(envp, eslifDecodeOptionp, MARPAESLIF_ESLIFJSONDECODEROPTION_CLASS_getMaxDepth_METHODP);
+  if (HAVEEXCEPTION(envp)) {
+    goto err;
+  }
+  marpaESLIFJSONDecodeOption.noReplacementCharacterb = ((*envp)->CallBooleanMethod(envp, eslifDecodeOptionp, MARPAESLIF_ESLIFJSONDECODEROPTION_CLASS_isNoReplacementCharacter_METHODP) == JNI_TRUE);
+  marpaESLIFJSONDecodeOption.positiveInfinityActionp = NULL;         /* Because java always supports +Infinity in float */
+  marpaESLIFJSONDecodeOption.negativeInfinityActionp = NULL;         /* Because java always supports -Infinity in float */
+  marpaESLIFJSONDecodeOption.positiveNanActionp      = NULL;         /* Because java always supports NaN in float */
+  marpaESLIFJSONDecodeOption.negativeNanActionp      = NULL;         /* Because java always supports NaN in float */
+  marpaESLIFJSONDecodeOption.numberActionp           = marpaESLIFJava_JSONDecodeNumberActionb;
+
+  marpaESLIFRecognizerOption.userDatavp                = &marpaESLIFRecognizerContext;
+  marpaESLIFRecognizerOption.readerCallbackp           = readerCallbackb;
+  marpaESLIFRecognizerOption.disableThresholdb         = ((*envp)->CallBooleanMethod(envp, eslifRecognizerInterfacep, MARPAESLIF_ESLIFRECOGNIZERINTERFACE_CLASS_isWithDisableThreshold_METHODP) == JNI_TRUE);
+  if (HAVEEXCEPTION(envp)) {
+    goto err;
+  }
+  marpaESLIFRecognizerOption.exhaustedb                = ((*envp)->CallBooleanMethod(envp, eslifRecognizerInterfacep, MARPAESLIF_ESLIFRECOGNIZERINTERFACE_CLASS_isWithExhaustion_METHODP) == JNI_TRUE);
+  if (HAVEEXCEPTION(envp)) {
+    goto err;
+  }
+  marpaESLIFRecognizerOption.newlineb                  = ((*envp)->CallBooleanMethod(envp, eslifRecognizerInterfacep, MARPAESLIF_ESLIFRECOGNIZERINTERFACE_CLASS_isWithNewline_METHODP) == JNI_TRUE);
+  if (HAVEEXCEPTION(envp)) {
+    goto err;
+  }
+  marpaESLIFRecognizerOption.trackb                    = ((*envp)->CallBooleanMethod(envp, eslifRecognizerInterfacep, MARPAESLIF_ESLIFRECOGNIZERINTERFACE_CLASS_isWithTrack_METHODP) == JNI_TRUE);
+  if (HAVEEXCEPTION(envp)) {
+    goto err;
+  }
+  marpaESLIFRecognizerOption.bufsizl                   = 0; /* Recommended value */
+  marpaESLIFRecognizerOption.buftriggerperci           = 50; /* Recommended value */
+  marpaESLIFRecognizerOption.bufaddperci               = 50; /* Recommended value */
+  marpaESLIFRecognizerOption.ifActionResolverp         = marpaESLIFRecognizerIfActionResolver;
+  marpaESLIFRecognizerOption.eventActionResolverp      = marpaESLIFRecognizerEventActionResolver;
+
+  /* Value interface is unmanaged: ESLIF does all the job */
+  if (! marpaESLIFJava_valueContextInitb(envp, NULL /* eslifValueInterfacep */, eslifJSONDecoderp /* eslifGrammarp */, &marpaESLIFValueContext)) {
+    goto err;
+  }
+
+  marpaESLIFValueOption.userDatavp = &marpaESLIFValueContext;
+  marpaESLIFValueOption.importerp  = marpaESLIFJava_importb;
+
+  if (! ESLIFGrammar_contextb(envp, eslifJSONDecoderp, eslifJSONDecoderp, MARPAESLIF_ESLIFGRAMMAR_CLASS_getLoggerInterfacep_METHODP,
+                              NULL /* genericLoggerpp */,
+                              NULL /* marpaESLIFpp */,
+                              &marpaESLIFJSONDecoderp)) {
+    goto err;
+  }
+
+  if (! marpaESLIFJSON_decodeb(marpaESLIFJSONDecoderp, &marpaESLIFJSONDecodeOption, &marpaESLIFRecognizerOption, &marpaESLIFValueOption)) {
+    RAISEEXCEPTION(envp, "marpaESLIFJSON_decodeb failure");
+  }
+
+  if (GENERICSTACK_USED(marpaESLIFValueContext.objectStackp) != 1) {
+    RAISEEXCEPTIONF(envp, "Internal value stack is %d instead of 1", GENERICSTACK_USED(marpaESLIFValueContext.objectStackp));
+  }
+
+  rcp = (jstring) GENERICSTACK_POP_PTR(marpaESLIFValueContext.objectStackp); /* It is a string by definition */
+  goto done;
+
+ err:
+  rcp = NULL;
+
+ done:
+  return rcp;
+}
+
+/*****************************************************************************/
 JNIEXPORT void JNICALL Java_org_parser_marpa_ESLIFJSONDecoder_jniFree(JNIEnv *envp, jobject eslifJSONdecoderp)
 /*****************************************************************************/
 {
@@ -6824,3 +6916,74 @@ JNIEXPORT void JNICALL Java_org_parser_marpa_ESLIFJSONDecoder_jniFree(JNIEnv *en
     marpaESLIFGrammar_freev(marpaESLIFJSONDecoderp); /* This is NULL protected */
   }
 }
+
+/*****************************************************************************/
+static short marpaESLIFJava_JSONDecodeNumberActionb(void *userDatavp, char *strings, size_t stringl, marpaESLIFValueResult_t *marpaESLIFValueResultp)
+/*****************************************************************************/
+{
+  /* We always use Math::BigFloat->new(strings) */
+  static const char        *funcs = "marpaESLIFJava_JSONDecodeNumberAction";
+  marpaESLIFValueContext_t *marpaESLIFValueContextp = (marpaESLIFValueContext_t *) userDatavp;
+  JNIEnv                   *envp                    = marpaESLIFValueContextp->envp;
+  jstring                   numberp;
+  jobject                   objectp;
+  short                     rcb;
+
+  numberp = (*envp)->NewStringUTF(envp, (const char *) strings);
+  if (numberp == NULL) {
+    /* We want OUR exception to be raised */
+    RAISEEXCEPTIONF(envp, "NewStringUTF(\"%s\") failure", strings);
+  }
+
+  objectp = (*envp)->NewObject(envp, JAVA_MATH_BIGDECIMAL_CLASSP, JAVA_MATH_BIGDECIMAL_CLASS_String_init_METHODP, numberp);
+  if (objectp == NULL) {
+    (*envp)->DeleteLocalRef(envp, numberp);
+    RAISEEXCEPTION(envp, "NewObject failure");
+  }
+  (*envp)->DeleteLocalRef(envp, numberp);
+
+  /* Note that we do NOT need a global reference: this is a C callback within the same and single JNI call */
+
+  marpaESLIFValueResultp->type               = MARPAESLIF_VALUE_TYPE_PTR;
+  marpaESLIFValueResultp->contextp           = MARPAESLIF_JNI_CONTEXT;
+  marpaESLIFValueResultp->representationp    = marpaESLIFJava_representationCallbackb;
+  marpaESLIFValueResultp->u.p.p              = (void *) objectp;
+  marpaESLIFValueResultp->u.p.shallowb       = 0;
+  marpaESLIFValueResultp->u.p.freeUserDatavp = NULL;
+  marpaESLIFValueResultp->u.p.freeCallbackp  = marpaESLIFJava_JSONDecodeFreeCallbackv;
+
+  rcb = 1;
+  goto done;
+
+ err:
+  rcb = 0;
+
+ done:
+  return rcb;
+}
+
+/*****************************************************************************/
+static void marpaESLIFJava_JSONDecodeFreeCallbackv(void *userDatavp, marpaESLIFValueResult_t *marpaESLIFValueResultp)
+/*****************************************************************************/
+{
+  /* Same as marpaESLIFJava_genericFreeCallbackv but we KNOW that we work on a local reference */
+  /* because this is a C callback within one single JNI call. */
+  static const char *funcs = "marpaESLIFJava_JSONDecodeFreeCallbackv";
+  JNIEnv            *envp;
+
+  /* Free callback is never running in another thread - no need to attach */
+  if (((*marpaESLIF_vmp)->GetEnv(marpaESLIF_vmp, (void **) &envp, MARPAESLIF_JNI_VERSION) != JNI_OK) || (envp == NULL)) {
+    return;
+  }
+  switch (marpaESLIFValueResultp->type) {
+  case MARPAESLIF_VALUE_TYPE_PTR:
+    /* This is a local reference */
+    if (marpaESLIFValueResultp->u.p.p != NULL) {
+      (*envp)->DeleteLocalRef(envp, (jobject) marpaESLIFValueResultp->u.p.p);
+    }
+    break;
+  default:
+    break;
+  }
+}
+

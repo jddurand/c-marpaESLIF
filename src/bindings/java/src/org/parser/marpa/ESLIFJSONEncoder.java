@@ -1,9 +1,16 @@
 package org.parser.marpa;
 
-import java.nio.ByteBuffer;
-
 /**
  * ESLIFJSONEncoder is a built-in ESLIFGrammar, targetting the JSON syntax, with an optional strict mode.
+ *
+ * Non-strict mode supports:
+ * - Unlimited commas
+ * - Trailing separator
+ * - Perl style comment
+ * - C++ style comment
+ * - InfinityUnlimited commas
+ * - NaN
+ * - Unicode's control characters (range C<[\x00-\x1F]>).
  *
  * <pre>
  * ESLIF eslif = new ESLIF(...)

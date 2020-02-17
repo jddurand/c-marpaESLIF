@@ -1,10 +1,20 @@
 package org.parser.marpa;
 
 import java.nio.ByteBuffer;
+import java.nio.charset.Charset;
 
 /**
  * ESLIFJSONDecoder is a built-in ESLIFGrammar, targetting the JSON syntax, with an optional strict mode.
  *
+ * Non-strict mode supports:
+ * - Unlimited commas
+ * - Trailing separator
+ * - Perl style comment
+ * - C++ style comment
+ * - InfinityUnlimited commas
+ * - NaN
+ * - Unicode's control characters (range C<[\x00-\x1F]>).
+ * 
  * <pre>
  * ESLIF eslif = new ESLIF(...)
  * ESLIFJSONDecoder eslifJSONDecoder = new ESLIFJSONDecoder();
@@ -17,7 +27,73 @@ public class ESLIFJSONDecoder extends ESLIFGrammar {
 	private ByteBuffer     marpaESLIFJSONDecoderp = null;
 	private native void    jniNew(boolean strict) throws ESLIFException;
 	private native void    jniFree() throws ESLIFException;
-	private native Object  jniDecode(String s, ESLIFJSONDecoderOption eslifJSONDeoderOption) throws ESLIFException;
+	private native Object  jniDecode(ESLIFJSONDecoderRecognizer eslifJSONDecoderRecognizer, ESLIFJSONDecoderOption eslifJSONDeoderOption) throws ESLIFException;
+	private ESLIFRecognizerInterface eslifRecognizerInterface;
+
+	/*
+	 * ************************************************
+	 * Internal ESLIFRecognizerInterface implementation
+	 * ************************************************
+	 */
+	private class ESLIFJSONDecoderRecognizer implements ESLIFRecognizerInterface {
+		private String s;
+		
+		public ESLIFJSONDecoderRecognizer(String s) {
+			this.s = s;
+		}
+		
+		@Override
+		public boolean read() {
+			return true;
+		}
+
+		@Override
+		public boolean isEof() {
+			return true;
+		}
+
+		@Override
+		public boolean isCharacterStream() {
+			return true;
+		}
+
+		@Override
+		public String encoding() {
+			if (s != null) {
+				return Charset.defaultCharset().name();
+			}
+			return null;
+		}
+
+		@Override
+		public byte[] data() {
+			if (s != null) {
+				return s.getBytes();
+			}
+			return null;
+		}
+
+		@Override
+		public boolean isWithDisableThreshold() {
+			return true;
+		}
+
+		@Override
+		public boolean isWithExhaustion() {
+			return false;
+		}
+
+		@Override
+		public boolean isWithNewline() {
+			return true;
+		}
+
+		@Override
+		public boolean isWithTrack() {
+			return false;
+		}
+	}
+
 	/*
 	 * ********************************************
 	 * Public methods
@@ -55,7 +131,7 @@ public class ESLIFJSONDecoder extends ESLIFGrammar {
 	 * @throws ESLIFException if the interface failed
 	 */
 	public synchronized Object decode(String s) throws ESLIFException {
-		return decode(s);
+		return decode(s, new ESLIFJSONDecoderOption());
 	}
 
 	/**
@@ -65,8 +141,9 @@ public class ESLIFJSONDecoder extends ESLIFGrammar {
 	 * @param eslifJSONDeoderOption the options for decoding
 	 * @throws ESLIFException if the interface failed
 	 */
-	public synchronized Object decode(String s, ESLIFJSONDecoderOption eslifJSONDeoderOption) throws ESLIFException {
-		return jniDecode(s, eslifJSONDeoderOption);
+	public synchronized Object decode(String s, ESLIFJSONDecoderOption eslifJSONDecoderOption) throws ESLIFException {
+		ESLIFJSONDecoderRecognizer eslifJSONDecoderRecognizer = new ESLIFJSONDecoderRecognizer(s);
+		return jniDecode(eslifJSONDecoderRecognizer, eslifJSONDecoderOption);
 	}
 
 }
