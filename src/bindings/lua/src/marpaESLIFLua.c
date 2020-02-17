@@ -7875,7 +7875,7 @@ static int marpaESLIFLua_marpaESLIFJSONEncoder_newi(lua_State *L)
   int                                typei;
   int                                topi;
   int                                stricti;
-  short                              strictb = 0; /* Default value */
+  short                              strictb = 1; /* Default value */
   marpaESLIF_t                      *marpaESLIFp;
 
   if (! marpaESLIFLua_lua_gettop(&topi, L)) goto err;

@@ -65,7 +65,7 @@ MarpaX::ESLIF object instance. Required.
 
 =item C<$strict>
 
-A true value means strict JSON, else relax JSON. Default is a false value.
+A true value means strict JSON, else relax JSON. Default is a true value.
 
 =back
 
@@ -79,7 +79,7 @@ A true value means strict JSON, else relax JSON. Default is a false value.
 sub new {
     my $class = shift;
     my $eslif = shift;
-    my $strict = shift // 0;
+    my $strict = shift // 1;
 
     my $self = $class->_new($eslif->_getInstance, $strict);
     return $self

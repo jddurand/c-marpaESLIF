@@ -105,6 +105,8 @@ public class ESLIFJSONDecoder extends ESLIFGrammar {
 	 * @param eslif an instance of ESLIF
 	 * @param strict optional strict mode
 	 * @throws ESLIFException if creation failed
+	 * 
+	 * default strict mode is true.
 	 */
 	public ESLIFJSONDecoder(ESLIF eslif, boolean strict) throws ESLIFException {
 		super(eslif);
@@ -112,7 +114,7 @@ public class ESLIFJSONDecoder extends ESLIFGrammar {
 	}
 
 	public ESLIFJSONDecoder(ESLIF eslif) throws ESLIFException {
-		this(eslif, false);
+		this(eslif, true);
 	}
 
 	/**
