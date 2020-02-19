@@ -316,8 +316,8 @@ static marpaESLIFValueResult_t marpaESLIFValueResultLazy = {
       break;                                                            \
     default:                                                            \
       /* escape control characters (0x00..0x1F) or non-ASCII characters */ \
-      if ((codepoint <= 0x1F) || (codepoint >= 0x7F)) {                 \
-        if (codepoint <= 0xFFFF) {                                      \
+      if ((codepoint <= (marpaESLIF_uint32_t) 0x1F) || (codepoint >= (marpaESLIF_uint32_t) 0x7F)) { \
+        if (codepoint <= (marpaESLIF_uint32_t) 0xFFFF) {                 \
           VALUERESULTCALLBACK_TRACEF(genericLoggerp, marpaESLIF_stringGeneratorp, "\\u%04x", (int) codepoint); \
         } else {                                                        \
           VALUERESULTCALLBACK_TRACEF(genericLoggerp, marpaESLIF_stringGeneratorp, "\\u%04x\\u%04x", (int) (0xD7C0 + (codepoint >> 10)), (int) (0xDC00 + (codepoint & 0x3FF))); \
