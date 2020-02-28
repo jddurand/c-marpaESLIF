@@ -118,7 +118,7 @@ public class AppJSON implements Runnable {
 
 		ESLIFJSON eslifJSON = null;
 		try {
-			eslifJSON = new ESLIFJSON(eslif);
+			eslifJSON = new ESLIFJSON(eslif, false);
 			for (int i = 0; i < strings.length; i++) {
 				String string = new String(strings[i]);
 	

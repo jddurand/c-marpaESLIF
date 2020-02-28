@@ -66,7 +66,7 @@ public class AppJSONDecoder implements Runnable {
 
 		ESLIFJSONDecoder eslifJSONDecoder = null;
 		try {
-			eslifJSONDecoder = new ESLIFJSONDecoder(eslif);
+			eslifJSONDecoder = new ESLIFJSONDecoder(eslif, false);
 			for (int i = 0; i < strings.length; i++) {
 				String string = new String(strings[i]);
 	

@@ -11,6 +11,8 @@ install:
     else
       brew install cmake
     fi
+after_failure:
+  - find . -name "hs_err*log" 2>/dev/null -exec ls -l {} \; -exec cat {} \;
 env:
   - PATH=${HOME}/programs/cmake/bin:${PATH}
 before_script:

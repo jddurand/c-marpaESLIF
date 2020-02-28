@@ -88,7 +88,7 @@ public class AppJSONEncoder implements Runnable {
 
 		ESLIFJSONEncoder eslifJSONEncoder = null;
 		try {
-			eslifJSONEncoder = new ESLIFJSONEncoder(eslif);
+			eslifJSONEncoder = new ESLIFJSONEncoder(eslif, false);
 			for (int i = 0; i < inputArray.length; i++) {
 				String output = eslifJSONEncoder.encode(inputArray[i]);
 			    Describe d = new Describe();
