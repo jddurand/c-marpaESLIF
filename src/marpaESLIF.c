@@ -5132,44 +5132,51 @@ static inline char *_marpaESLIF_charconvb(marpaESLIF_t *marpaESLIFp, char *toEnc
     char                   *fromCodes = tconv_fromcode(tconvp);
     size_t                  consumedl = inleftorigl - inleftl;
     /* We have to fake a recognizer - this is how the MARPAESLIF_HEXDUMPV() macros works */
-    marpaESLIFRecognizer_t  marpaESLIFRecognizer;
-    marpaESLIFRecognizer_t *marpaESLIFRecognizerp = &marpaESLIFRecognizer;
+    /* Take care, I had stack overflow because of these variables that are on the stack... */
+    marpaESLIFRecognizer_t *marpaESLIFRecognizerp;
 
-    marpaESLIFRecognizerp->marpaESLIFp = marpaESLIFp;
+    /* Particularly dangerous: the MARPAESLIF_HEXDUMPV has to use NOTHING ELSE but marpaESLIFRecognizerp->marpaESLIFp (and this is the case -;) */
+    marpaESLIFRecognizerp = (marpaESLIFRecognizer_t *)malloc(sizeof(marpaESLIFRecognizer_t));
+    if (marpaESLIFRecognizerp != NULL) {
 
-    /* If there is some information before, show it */
-    if (consumedl > 0) {
-      char  *dumps;
-      size_t dumpl;
+	marpaESLIFRecognizerp->marpaESLIFp = marpaESLIFp;
 
-      if (consumedl > 128) {
-        dumps = inbufp - 128;
-        dumpl = 128;
-      } else {
-        dumps = inbuforigp;
-        dumpl = consumedl;
-      }
-      MARPAESLIF_HEXDUMPV(marpaESLIFRecognizerp,
-                          (fromCodes != NULL) ? fromCodes : "", /* In theory, it is impossible to have fromCodes == NULL here */
-                          " data before the failure",
-                          dumps,
-                          dumpl,
-                          0 /* traceb */);
-    }
-    MARPAESLIF_ERROR(marpaESLIFp, "<<<<<< CHARACTER FAILURE HERE: >>>>>>");
-    /* If there is some information after, show it */
-    if (inleftl > 0) {
-      char  *dumps;
-      size_t dumpl;
+	/* If there is some information before, show it */
+	if (consumedl > 0) {
+	  char  *dumps;
+	  size_t dumpl;
 
-      dumps = inbuforigp + consumedl;
-      dumpl = inleftl > 128 ? 128 : inleftl;
-      MARPAESLIF_HEXDUMPV(marpaESLIFRecognizerp,
-                          (fromCodes != NULL) ? fromCodes : "", /* In theory, it is impossible to have fromCodes == NULL here */
-                          " data after the failure",
-                          dumps,
-                          dumpl,
-                          0 /* traceb */);
+	  if (consumedl > 128) {
+	    dumps = inbufp - 128;
+	    dumpl = 128;
+	  } else {
+	    dumps = inbuforigp;
+	    dumpl = consumedl;
+	  }
+	  MARPAESLIF_HEXDUMPV(marpaESLIFRecognizerp,
+			      (fromCodes != NULL) ? fromCodes : "", /* In theory, it is impossible to have fromCodes == NULL here */
+			      " data before the failure",
+			      dumps,
+			      dumpl,
+			      0 /* traceb */);
+	}
+	MARPAESLIF_ERROR(marpaESLIFp, "<<<<<< CHARACTER FAILURE HERE: >>>>>>");
+	/* If there is some information after, show it */
+	if (inleftl > 0) {
+	  char  *dumps;
+	  size_t dumpl;
+
+	  dumps = inbuforigp + consumedl;
+	  dumpl = inleftl > 128 ? 128 : inleftl;
+	  MARPAESLIF_HEXDUMPV(marpaESLIFRecognizerp,
+			      (fromCodes != NULL) ? fromCodes : "", /* In theory, it is impossible to have fromCodes == NULL here */
+			      " data after the failure",
+			      dumps,
+			      dumpl,
+			      0 /* traceb */);
+	}
+
+	free(marpaESLIFRecognizerp);
     }
   }
   if (outbuforigp != NULL) {
