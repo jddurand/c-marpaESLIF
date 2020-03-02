@@ -510,7 +510,7 @@ static inline void                   _marpaESLIFrecognizer_lexemeStack_resetv(ma
 
 static inline short                  _marpaESLIFRecognizer_lexemeStack_i_p_and_sizeb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, genericStack_t *lexemeStackp, int i, char **pp, size_t *sizelp);
 static inline short                  _marpaESLIFRecognizer_lexemeStack_i_setb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, genericStack_t *lexemeStackp, int i, marpaESLIFValueResult_t *marpaESLIFValueResultp);
-static inline short                  _marpaESLIFRecognizer_valueStack_i_setb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, genericStack_t *valueResultStackp, int indicei, marpaESLIFValueResult_t *marpaESLIFValueResultp, short forgetb, genericStack_t *beforePtrStackp, genericHash_t *beforePtrHashp, genericHash_t *afterPtrHashp, marpaESLIFValueResult_t *marpaESLIFValueResultOrigp);
+static inline short                  _marpaESLIFRecognizer_valueStack_i_setb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, genericStack_t *valueResultStackp, int indicei, marpaESLIFValueResult_t *marpaESLIFValueResultp, short forgetb, genericStack_t *beforePtrStackp, genericHash_t *afterPtrHashp, marpaESLIFValueResult_t *marpaESLIFValueResultOrigp);
 static inline marpaESLIFValueResult_t *_marpaESLIFRecognizer_lexemeStack_i_getp(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, genericStack_t *lexemeStackp, int i);
 static inline const char            *_marpaESLIF_genericStack_i_types(genericStack_t *stackp, int i);
 static inline const char            *_marpaESLIF_value_types(int typei);
@@ -3276,7 +3276,6 @@ static inline void _marpaESLIFrecognizer_lexemeStack_resetv(marpaESLIFRecognizer
 {
   static const char *funcs = "_marpaESLIFrecognizer_lexemeStack_resetv";
   genericStack_t    *beforePtrStackp;
-  genericHash_t     *beforePtrHashp;
   genericHash_t     *afterPtrHashp;
   int                i;
   int                usedi;
@@ -3284,7 +3283,6 @@ static inline void _marpaESLIFrecognizer_lexemeStack_resetv(marpaESLIFRecognizer
   if (lexemeStackp != NULL) {
 
     beforePtrStackp = marpaESLIFRecognizerp->beforePtrStackp;
-    beforePtrHashp  = marpaESLIFRecognizerp->beforePtrHashp;
     afterPtrHashp   = marpaESLIFRecognizerp->afterPtrHashp;
     usedi           = GENERICSTACK_USED(lexemeStackp);
 
@@ -3296,7 +3294,6 @@ static inline void _marpaESLIFrecognizer_lexemeStack_resetv(marpaESLIFRecognizer
                                                 (marpaESLIFValueResult_t *) &marpaESLIFValueResultUndef,
                                                 0, /* forgetb */
                                                 beforePtrStackp,
-                                                beforePtrHashp,
                                                 afterPtrHashp,
                                                 NULL /* marpaESLIFValueResultOrigp */);
       }
@@ -3327,7 +3324,6 @@ static inline short _marpaESLIFRecognizer_lexemeStack_i_setb(marpaESLIFRecognize
                                                 marpaESLIFValueResultp,
                                                 0, /* forgetb */
                                                 marpaESLIFRecognizerp->beforePtrStackp,
-                                                marpaESLIFRecognizerp->beforePtrHashp,
                                                 marpaESLIFRecognizerp->afterPtrHashp,
                                                 NULL /* marpaESLIFValueResultOrigp */);
   
@@ -6288,7 +6284,6 @@ static inline void _marpaESLIFRecognizer_alternativeStackSymbol_freev(marpaESLIF
 {
   static const char        *funcs           = "_marpaESLIFRecognizer_alternativeStackSymbol_freev";
   genericStack_t           *beforePtrStackp;
-  genericHash_t            *beforePtrHashp;
   genericHash_t            *afterPtrHashp;
   int                       i;
   marpaESLIF_alternative_t *alternativep;
@@ -6296,7 +6291,6 @@ static inline void _marpaESLIFRecognizer_alternativeStackSymbol_freev(marpaESLIF
   if (alternativeStackSymbolp != NULL) {
 
     beforePtrStackp = marpaESLIFRecognizerp->beforePtrStackp;
-    beforePtrHashp  = marpaESLIFRecognizerp->beforePtrHashp;
     afterPtrHashp   = marpaESLIFRecognizerp->afterPtrHashp;
 
     for (i = 0; i < GENERICSTACK_USED(alternativeStackSymbolp); i++) {
@@ -6309,7 +6303,6 @@ static inline void _marpaESLIFRecognizer_alternativeStackSymbol_freev(marpaESLIF
                                                   (marpaESLIFValueResult_t *) &marpaESLIFValueResultUndef,
                                                   0, /* forgetb */
                                                   beforePtrStackp,
-                                                  beforePtrHashp,
                                                   afterPtrHashp,
                                                   &(alternativep->marpaESLIFValueResult));
           free(alternativep);
@@ -6330,7 +6323,6 @@ static inline short _marpaESLIFRecognizer_alternativeStackSymbol_setb(marpaESLIF
   static const char        *funcs           = "_marpaESLIFRecognizer_alternativeStackSymbol_setb";
   marpaESLIF_t             *marpaESLIFp     = marpaESLIFRecognizerp->marpaESLIFp;
   genericStack_t           *beforePtrStackp = marpaESLIFRecognizerp->beforePtrStackp;
-  genericHash_t            *beforePtrHashp  = marpaESLIFRecognizerp->beforePtrHashp;
   genericHash_t            *afterPtrHashp   = marpaESLIFRecognizerp->afterPtrHashp;
   marpaESLIF_alternative_t *p; /* It is guaranteed that p is set whatever happens - see below */
   short                     rcb;
@@ -8865,7 +8857,6 @@ static inline marpaESLIFRecognizer_t *_marpaESLIFRecognizer_newp(marpaESLIFGramm
   marpaESLIFRecognizerp->numberOfStartCompletionsi       = 0;
   marpaESLIFRecognizerp->lastSizeBeforeCompletionl       = 0;
   marpaESLIFRecognizerp->beforePtrStackp                 = NULL;
-  marpaESLIFRecognizerp->beforePtrHashp                  = NULL;
   marpaESLIFRecognizerp->afterPtrHashp                   = NULL;
   marpaESLIFRecognizerp->nSymbolPristinel                = 0;
   marpaESLIFRecognizerp->symbolArrayPristinep            = NULL;
@@ -9088,22 +9079,6 @@ static inline marpaESLIFRecognizer_t *_marpaESLIFRecognizer_newp(marpaESLIFGramm
   if (GENERICSTACK_ERROR(marpaESLIFRecognizerp->beforePtrStackp)) {
     MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "marpaESLIFRecognizerp->beforePtrStackp initialization failure, %s", strerror(errno));
     marpaESLIFRecognizerp->beforePtrStackp = NULL;
-    goto err;
-  }
-
-  marpaESLIFRecognizerp->beforePtrHashp = &(marpaESLIFRecognizerp->_beforePtrHash);
-  GENERICHASH_INIT_ALL(marpaESLIFRecognizerp->beforePtrHashp,
-                       _marpaESLIF_ptrhashi,
-                       NULL, /* keyCmpFunctionp */
-                       NULL, /* keyCopyFunctionp */
-                       NULL, /* keyFreeFunctionp */
-                       NULL, /* valCopyFunctionp */
-                       NULL, /* valFreeFunctionp */
-                       MARPAESLIF_HASH_SIZE,
-                       0 /* wantedSubSize */);
-  if (GENERICHASH_ERROR(marpaESLIFRecognizerp->beforePtrHashp)) {
-    MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "marpaESLIFRecognizerp->beforePtrHashp init failure, %s", strerror(errno));
-    marpaESLIFRecognizerp->beforePtrHashp = NULL;
     goto err;
   }
 
@@ -9685,9 +9660,6 @@ void marpaESLIFValue_freev(marpaESLIFValue_t *marpaESLIFValuep)
 
     if (marpaESLIFValuep->afterPtrHashp != NULL) {
       GENERICHASH_RESET(marpaESLIFValuep->afterPtrHashp, NULL);
-    }
-    if (marpaESLIFValuep->beforePtrHashp != NULL) {
-      GENERICHASH_RESET(marpaESLIFValuep->beforePtrHashp, NULL);
     }
     if (marpaESLIFValuep->beforePtrStackp != NULL) {
       GENERICSTACK_RESET(marpaESLIFValuep->beforePtrStackp);
@@ -12851,7 +12823,6 @@ static inline short _marpaESLIFValue_stack_setb(marpaESLIFValue_t *marpaESLIFVal
                                                 marpaESLIFValueResultp,
                                                 0, /* forgetb */
                                                 marpaESLIFValuep->beforePtrStackp,
-                                                marpaESLIFValuep->beforePtrHashp,
                                                 marpaESLIFValuep->afterPtrHashp,
                                                 NULL /* marpaESLIFValueResultOrigp */)) {
     goto err;
@@ -13221,7 +13192,6 @@ static inline short _marpaESLIFValue_stack_forgetb(marpaESLIFValue_t *marpaESLIF
                                                 (marpaESLIFValueResult_t *) &marpaESLIFValueResultUndef,
                                                 1, /* forgetb */
                                                 marpaESLIFValuep->beforePtrStackp,
-                                                marpaESLIFValuep->beforePtrHashp,
                                                 marpaESLIFValuep->afterPtrHashp,
                                                 NULL /* marpaESLIFValueResultOrigp */)) {
     goto err;
@@ -13239,7 +13209,7 @@ static inline short _marpaESLIFValue_stack_forgetb(marpaESLIFValue_t *marpaESLIF
 }
 
 /*****************************************************************************/
-static inline short _marpaESLIFRecognizer_valueStack_i_setb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, genericStack_t *valueResultStackp, int indicei, marpaESLIFValueResult_t *marpaESLIFValueResultp, short forgetb, genericStack_t *beforePtrStackp, genericHash_t *beforePtrHashp, genericHash_t *afterPtrHashp, marpaESLIFValueResult_t *marpaESLIFValueResultOrigp)
+static inline short _marpaESLIFRecognizer_valueStack_i_setb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, genericStack_t *valueResultStackp, int indicei, marpaESLIFValueResult_t *marpaESLIFValueResultp, short forgetb, genericStack_t *beforePtrStackp, genericHash_t *afterPtrHashp, marpaESLIFValueResult_t *marpaESLIFValueResultOrigp)
 /*****************************************************************************/
 /* If marpaESLIFValueResultOrigp is NULL, then valueResultStackp and indicei must be set */
 /* marpaESLIFValueResultp must always be set */
@@ -13316,7 +13286,7 @@ static inline short _marpaESLIFRecognizer_valueStack_i_setb(marpaESLIFRecognizer
     /* ------------------ */
     /* Flatten view of all original pointers - no need to check for recursivity: it is already in the stack so this was already approved */
     MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "Getting non-shallowed original pointers");
-    rcBeforeb = _marpaESLIF_flatten_pointers(marpaESLIFRecognizerp, beforePtrStackp, NULL /* beforePtrHashp */, marpaESLIFValueResultOrigp, 1 /* noShallowb */);
+    rcBeforeb = _marpaESLIF_flatten_pointers(marpaESLIFRecognizerp, beforePtrStackp, NULL /* afterPtrHashp */, marpaESLIFValueResultOrigp, 1 /* noShallowb */);
     if (! rcBeforeb) {
       goto err;
     }
@@ -13801,7 +13771,6 @@ static inline marpaESLIFValue_t *_marpaESLIFValue_newp(marpaESLIFRecognizer_t *m
   marpaESLIFValuep->L                           = NULL;
   marpaESLIFValuep->marpaESLIFLuaValueContextp  = NULL; /* Shallow pointer */
   marpaESLIFValuep->beforePtrStackp             = NULL;
-  marpaESLIFValuep->beforePtrHashp              = NULL;
   marpaESLIFValuep->afterPtrHashp               = NULL;
   marpaESLIFValuep->proxyRepresentationp        = NULL;
 
@@ -13824,22 +13793,6 @@ static inline marpaESLIFValue_t *_marpaESLIFValue_newp(marpaESLIFRecognizer_t *m
   if (GENERICSTACK_ERROR(marpaESLIFValuep->beforePtrStackp)) {
     MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "marpaESLIFValuep->beforePtrStackp initialization failure, %s", strerror(errno));
     marpaESLIFValuep->beforePtrStackp = NULL;
-    goto err;
-  }
-
-  marpaESLIFValuep->beforePtrHashp = &(marpaESLIFValuep->_beforePtrHash);
-  GENERICHASH_INIT_ALL(marpaESLIFValuep->beforePtrHashp,
-                       _marpaESLIF_ptrhashi,
-                       NULL, /* keyCmpFunctionp */
-                       NULL, /* keyCopyFunctionp */
-                       NULL, /* keyFreeFunctionp */
-                       NULL, /* valCopyFunctionp */
-                       NULL, /* valFreeFunctionp */
-                       MARPAESLIF_HASH_SIZE,
-                       0 /* wantedSubSize */);
-  if (GENERICHASH_ERROR(marpaESLIFValuep->beforePtrHashp)) {
-    MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "marpaESLIFValuep->beforePtrHashp init failure, %s", strerror(errno));
-    marpaESLIFValuep->beforePtrHashp = NULL;
     goto err;
   }
 
@@ -13903,7 +13856,6 @@ static inline short _marpaESLIFValue_stack_freeb(marpaESLIFValue_t *marpaESLIFVa
   marpaESLIFRecognizer_t *marpaESLIFRecognizerp;
   genericStack_t         *valueResultStackp;
   genericStack_t         *beforePtrStackp;
-  genericHash_t          *beforePtrHashp;
   genericHash_t          *afterPtrHashp;
   int                     usedi;
 
@@ -13914,7 +13866,6 @@ static inline short _marpaESLIFValue_stack_freeb(marpaESLIFValue_t *marpaESLIFVa
 
       marpaESLIFRecognizerp = marpaESLIFValuep->marpaESLIFRecognizerp;
       beforePtrStackp       = marpaESLIFValuep->beforePtrStackp;
-      beforePtrHashp        = marpaESLIFValuep->beforePtrHashp;
       afterPtrHashp         = marpaESLIFValuep->afterPtrHashp;
       usedi                 = GENERICSTACK_USED(valueResultStackp);
 
@@ -13925,7 +13876,6 @@ static inline short _marpaESLIFValue_stack_freeb(marpaESLIFValue_t *marpaESLIFVa
                                                       (marpaESLIFValueResult_t *) &marpaESLIFValueResultUndef,
                                                       0, /* forgetb */
                                                       beforePtrStackp,
-                                                      beforePtrHashp,
                                                       afterPtrHashp,
                                                       NULL /* marpaESLIFValueResultOrigp */)) {
           goto err;
@@ -16529,9 +16479,6 @@ static inline void _marpaESLIFRecognizer_freev(marpaESLIFRecognizer_t *marpaESLI
 
   if (marpaESLIFRecognizerp->afterPtrHashp != NULL) {
     GENERICHASH_RESET(marpaESLIFRecognizerp->afterPtrHashp, NULL);
-  }
-  if (marpaESLIFRecognizerp->beforePtrHashp != NULL) {
-    GENERICHASH_RESET(marpaESLIFRecognizerp->beforePtrHashp, NULL);
   }
   if (marpaESLIFRecognizerp->beforePtrStackp != NULL) {
     GENERICSTACK_RESET(marpaESLIFRecognizerp->beforePtrStackp);
