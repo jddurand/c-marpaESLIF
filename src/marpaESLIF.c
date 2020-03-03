@@ -1,11 +1,3 @@
-/* Default length of all genericStack thingies. marpaESLIF is extensively using */
-/* genericStack, and the default of 128 is not enough. This is a subjective number. */
-#ifndef MARPAESLIF_GENERICSTACK_DEFAULT_LENGTH
-#define MARPAESLIF_GENERICSTACK_DEFAULT_LENGTH 1024
-#endif
-#undef GENERICSTACK_DEFAULT_LENGTH
-#define GENERICSTACK_DEFAULT_LENGTH MARPAESLIF_GENERICSTACK_DEFAULT_LENGTH
-
 #include <stdlib.h>
 #include <errno.h>
 #include <string.h>
