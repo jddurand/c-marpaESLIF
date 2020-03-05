@@ -14087,7 +14087,7 @@ static short _marpaESLIFRecognizer_concat_valueResultCallbackb(void *userDatavp,
     MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "displayNextAsJsonStringb=%d", (int) displayNextAsJsonStringb);
     switch (marpaESLIFValueResultp->type) {
     case MARPAESLIF_VALUE_TYPE_UNDEF:
-      MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "UNDEF");
+      MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "UNDEF");
       /* Undef default representation:
          - string      :      (empty string)
          - json        : null (json null)
