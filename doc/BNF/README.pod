@@ -791,8 +791,7 @@ marpaESLIF BNF can be expressed in itself:
                                    | ':discard[switch]'
   <lhs>                          ::= <symbol name>
   <rhs>                          ::= <rhs alternative>+
-  <rhs alternative>              ::= <single symbol>
-                                   | <symbol name> '@' <grammar reference>
+  <rhs alternative>              ::= <rhs primary>
                                    | '(-' <priorities> '-)'
                                    | '(' <priorities> ')'
                                    | '(-' <rhs primary> '-' <rhs primary> <adverb list> '-)'
