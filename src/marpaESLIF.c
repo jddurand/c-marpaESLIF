@@ -4656,13 +4656,15 @@ static inline short _marpaESLIFRecognizer_symbol_matcherb(marpaESLIFRecognizer_t
 /* This function can call for more data. If the later fails, it returns -1 and this is fatal, 0 is a normal error, 1 is ok. */
 /*****************************************************************************/
 {
-  static const char          *funcs = "_marpaESLIFRecognizer_symbol_matcherb";
+  static const char                *funcs = "_marpaESLIFRecognizer_symbol_matcherb";
   /* offset flag is meaningful only if the symbol is a terminal */
-  short                       rcb;
-  marpaESLIF_matcher_value_t  rci;
-  marpaESLIFValueResult_t     marpaESLIFValueResult;
-  size_t                      lastSizeBeforeCompletionl;
-  int                         numberOfStartCompletionsi;
+  short                             rcb;
+  marpaESLIF_matcher_value_t        rci;
+  marpaESLIFValueResult_t           marpaESLIFValueResult;
+  size_t                            lastSizeBeforeCompletionl;
+  int                               numberOfStartCompletionsi;
+  marpaESLIFRecognizerIfCallback_t  ifCallbackp;
+  marpaESLIFValueResultBool_t       marpaESLIFValueResultBool;
 
   MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_INC;
   MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "start");
@@ -4735,6 +4737,33 @@ static inline short _marpaESLIFRecognizer_symbol_matcherb(marpaESLIFRecognizer_t
 
   /* If there is match, value type cannot be anything else but MARPAESLIF_VALUE_TYPE_ARRAY */
   MARPAESLIF_CHECK_MATCH_RESULT(funcs, marpaESLIFRecognizerp, marpaESLIF_streamp->inputs, symbolp, rci, marpaESLIFValueResult);
+
+  if (rci == MARPAESLIF_MATCH_OK) {
+    /* If symbol has a if-action, check it */
+    if (symbolp->ifActionp != NULL) {
+      if (! _marpaESLIFRecognizer_recognizerIfActionCallbackb(marpaESLIFRecognizerp, symbolp->descp->asciis, symbolp->ifActionp, &ifCallbackp)) {
+        if ((marpaESLIFRecognizerp->parentRecognizerp == NULL) && (symbolp->type == MARPAESLIF_SYMBOL_TYPE_TERMINAL)) {
+          /* We malloced the result */
+          free(marpaESLIFValueResult.u.a.p);
+        }
+        goto err;
+      }
+      if (! ifCallbackp(marpaESLIFRecognizerp->marpaESLIFRecognizerOption.userDatavp, marpaESLIFRecognizerp, &marpaESLIFValueResult, &marpaESLIFValueResultBool)) {
+        if ((marpaESLIFRecognizerp->parentRecognizerp == NULL) && (symbolp->type == MARPAESLIF_SYMBOL_TYPE_TERMINAL)) {
+          /* We malloced the result */
+          free(marpaESLIFValueResult.u.a.p);
+        }
+        goto err;
+      }
+      if (marpaESLIFValueResultBool == MARPAESLIFVALUERESULTBOOL_FALSE) {
+        /* This symbol is rejected -; */
+        MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Symbol %s is rejected by if-action", symbolp->descp->asciis);
+        rci = MARPAESLIF_MATCH_FAILURE;
+        rcb = 1;
+        goto done;
+      }
+    }
+  }
 
   if (rci == MARPAESLIF_MATCH_OK) {
     if (marpaESLIFValueResultp != NULL) {
@@ -6410,8 +6439,6 @@ static inline short _marpaESLIFRecognizer_resume_oneb(marpaESLIFRecognizer_t *ma
   short                            isExhaustedb;
   char                            *previnputs;
   size_t                           offsetl;
-  marpaESLIFRecognizerIfCallback_t ifCallbackp;
-  marpaESLIFValueResultBool_t      marpaESLIFValueResultBool;
 
   /* This macro is to avoid the memcpy() of *grammarp which have a true cost in this method */
   /* We fake a marpaESLIFGrammar using grammar sent in the stack */
@@ -6623,8 +6650,6 @@ static inline short _marpaESLIFRecognizer_resume_oneb(marpaESLIFRecognizer_t *ma
         alternative.marpaESLIFValueResult.u.a.freeUserDatavp = NULL;
         alternative.marpaESLIFValueResult.u.a.freeCallbackp  = NULL;
         alternative.marpaESLIFValueResult.u.a.shallowb       = 1;
-
-        marpaESLIFValueResultBool = MARPAESLIFVALUERESULTBOOL_TRUE;
       } else {
         switch (symbolp->type) {
         case MARPAESLIF_SYMBOL_TYPE_META:
@@ -6649,54 +6674,28 @@ static inline short _marpaESLIFRecognizer_resume_oneb(marpaESLIFRecognizer_t *ma
           alternative.marpaESLIFValueResult = marpaESLIFValueResult;
           break;
         }
-
-        /* If symbol has a if-action, check it */
-        if (symbolp->ifActionp != NULL) {
-          if (! _marpaESLIFRecognizer_recognizerIfActionCallbackb(marpaESLIFRecognizerp, symbolp->descp->asciis, symbolp->ifActionp, &ifCallbackp)) {
-            if ((marpaESLIFRecognizerp->parentRecognizerp == NULL) && (symbolp->type == MARPAESLIF_SYMBOL_TYPE_META)) {
-              /* We may have malloced for the alternative */
-              free(alternative.marpaESLIFValueResult.u.a.p);
-            }
-            goto err;
-          }
-          if (! ifCallbackp(marpaESLIFRecognizerp->marpaESLIFRecognizerOption.userDatavp, marpaESLIFRecognizerp, &(alternative.marpaESLIFValueResult), &marpaESLIFValueResultBool)) {
-            if ((marpaESLIFRecognizerp->parentRecognizerp == NULL) && (symbolp->type == MARPAESLIF_SYMBOL_TYPE_META)) {
-              /* We may have malloced for the alternative */
-              free(alternative.marpaESLIFValueResult.u.a.p);
-            }
-            goto err;
-          }
-          if (marpaESLIFValueResultBool == MARPAESLIFVALUERESULTBOOL_FALSE) {
-            /* This symbol is rejected -; */
-            MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Symbol %s is rejected by if-action", symbolp->descp->asciis);
-          }
-        } else {
-          marpaESLIFValueResultBool = MARPAESLIFVALUERESULTBOOL_TRUE;
-        }
       }
 
-      if (marpaESLIFValueResultBool != MARPAESLIFVALUERESULTBOOL_FALSE) {
-        alternative.grammarLengthi = 1; /* Scan mode is in the token-stream model */
-        alternative.usedb          = 1;
+      alternative.grammarLengthi = 1; /* Scan mode is in the token-stream model */
+      alternative.usedb          = 1;
 
-        if (! _marpaESLIFRecognizer_alternativeStackSymbol_setb(marpaESLIFRecognizerp, alternativeStackSymbolp, &alternative, alternativeStackSymboli)) {
-          goto err;
-        }
+      if (! _marpaESLIFRecognizer_alternativeStackSymbol_setb(marpaESLIFRecognizerp, alternativeStackSymbolp, &alternative, alternativeStackSymboli)) {
+        goto err;
+      }
 
-        /* Remember at least one alternative is ok */
-        alternativeStackSymboli++;
+      /* Remember at least one alternative is ok */
+      alternativeStackSymboli++;
 
-        /* Remember if this alternative have priority - this allows us to skip a block of code */
-        /* that have some cost, the usual pattern is to not have priorities on lexemes -; */
-        if (symbolp->priorityi != 0) {
-          havePriorityb = 1;
-        }
+      /* Remember if this alternative have priority - this allows us to skip a block of code */
+      /* that have some cost, the usual pattern is to not have priorities on lexemes -; */
+      if (symbolp->priorityi != 0) {
+        havePriorityb = 1;
+      }
 
-        /* Remember max matched length */
-        if (marpaESLIFValueResult.u.a.sizel > maxMatchedl) {
-          maxMatchedl = marpaESLIFValueResult.u.a.sizel;
-          MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Setted maxMatchedl to %ld", (unsigned long) maxMatchedl);
-        }
+      /* Remember max matched length */
+      if (marpaESLIFValueResult.u.a.sizel > maxMatchedl) {
+        maxMatchedl = marpaESLIFValueResult.u.a.sizel;
+        MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Setted maxMatchedl to %ld", (unsigned long) maxMatchedl);
       }
 
       break;
