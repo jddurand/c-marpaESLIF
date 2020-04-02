@@ -1,0 +1,217 @@
+From 44c8382acfe0902b302e0d7a5b1c6d9ee9226a51 Mon Sep 17 00:00:00 2001
+From: ph10 <ph10@6239d852-aaf2-0410-a92c-79f79f948069>
+Date: Tue, 16 Jul 2019 15:06:21 +0000
+Subject: [PATCH] Fix lookbehind within lookahead within lookbehind
+ misbehaviour bug.
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+git-svn-id: svn://vcs.exim.org/pcre2/code/trunk@1133 6239d852-aaf2-0410-a92c-79f79f948069
+Petr Písař: Ported to 10.33.
+
+Signed-off-by: Petr Písař <ppisar@redhat.com>
+---
+ src/pcre2_compile.c  | 58 +++++++++++++++++++++++++++++---------------
+ testdata/testinput1  |  6 +++++
+ testdata/testinput2  |  3 +++
+ testdata/testoutput1 |  9 +++++++
+ testdata/testoutput2 |  4 +++
+ 5 files changed, 61 insertions(+), 19 deletions(-)
+
+diff --git a/src/pcre2_compile.c b/src/pcre2_compile.c
+index f6e0a0b..2ae95ed 100644
+--- a/src/pcre2_compile.c
++++ b/src/pcre2_compile.c
+@@ -135,6 +135,8 @@ static BOOL
+   set_lookbehind_lengths(uint32_t **, int *, int *, parsed_recurse_check *,
+     compile_block *);
+ 
++static int
++  check_lookbehinds(uint32_t *, uint32_t **, compile_block *);
+ 
+ 
+ /*************************************************
+@@ -8997,15 +8999,15 @@ for (;; pptr++)
+       }
+     break;
+ 
+-    /* Lookaheads can be ignored, but we must start the skip inside the group
+-    so that it isn't treated as a group within the branch. */
++    /* Lookaheads do not contribute to the length of this branch, but they may
++    contain lookbehinds within them whose lengths need to be set. */
+ 
+     case META_LOOKAHEAD:
+     case META_LOOKAHEADNOT:
+-    pptr = parsed_skip(pptr + 1, PSKIP_KET);
+-    if (pptr == NULL) goto PARSED_SKIP_FAILED;
++    *errcodeptr = check_lookbehinds(pptr + 1, &pptr, cb);
++    if (*errcodeptr != 0) return -1;
+ 
+-    /* Also ignore any qualifiers that follow a lookahead assertion. */
++    /* Ignore any qualifiers that follow a lookahead assertion. */
+ 
+     switch (pptr[1])
+       {
+@@ -9319,20 +9321,28 @@ set_lookbehind_lengths() for each one. At the start, the errorcode is zero and
+ the error offset is marked unset. The enables the functions above not to
+ override settings from deeper nestings.
+ 
+-Arguments cb      points to the compile block
+-Returns:          0 on success, or an errorcode (cb->erroroffset will be set)
++This function is called recursively from get_branchlength() for lookaheads in
++order to process any lookbehinds that they may contain. It stops when it hits a
++non-nested closing parenthesis in this case, returning a pointer to it.
++
++Arguments
++  pptr    points to where to start (start of pattern or start of lookahead)
++  retptr  if not NULL, return the ket pointer here
++  cb      points to the compile block
++
++Returns:  0 on success, or an errorcode (cb->erroroffset will be set)
+ */
+ 
+ static int
+-check_lookbehinds(compile_block *cb)
++check_lookbehinds(uint32_t *pptr, uint32_t **retptr, compile_block *cb)
+ {
+-uint32_t *pptr;
+ int errorcode = 0;
+ int loopcount = 0;
++int nestlevel = 0;
+ 
+ cb->erroroffset = PCRE2_UNSET;
+ 
+-for (pptr = cb->parsed_pattern; *pptr != META_END; pptr++)
++for (; *pptr != META_END; pptr++)
+   {
+   if (*pptr < META_END) continue;  /* Literal */
+ 
+@@ -9346,14 +9356,30 @@ for (pptr = cb->parsed_pattern; *pptr != META_END; pptr++)
+       pptr += 1;
+     break;
+ 
++    case META_KET:
++    if (--nestlevel < 0)
++      {
++      if (retptr != NULL) *retptr = pptr;
++      return 0;
++      }
++    break;
++
++    case META_ATOMIC:
++    case META_CAPTURE:
++    case META_COND_ASSERT:
++    case META_LOOKAHEAD:
++    case META_LOOKAHEADNOT:
++    case META_NOCAPTURE:
++    case META_SCRIPT_RUN:
++    nestlevel++;
++    break;
++
+     case META_ACCEPT:
+     case META_ALT:
+     case META_ASTERISK:
+     case META_ASTERISK_PLUS:
+     case META_ASTERISK_QUERY:
+-    case META_ATOMIC:
+     case META_BACKREF:
+-    case META_CAPTURE:
+     case META_CIRCUMFLEX:
+     case META_CLASS:
+     case META_CLASS_EMPTY:
+@@ -9361,14 +9387,9 @@ for (pptr = cb->parsed_pattern; *pptr != META_END; pptr++)
+     case META_CLASS_END:
+     case META_CLASS_NOT:
+     case META_COMMIT:
+-    case META_COND_ASSERT:
+     case META_DOLLAR:
+     case META_DOT:
+     case META_FAIL:
+-    case META_KET:
+-    case META_LOOKAHEAD:
+-    case META_LOOKAHEADNOT:
+-    case META_NOCAPTURE:
+     case META_PLUS:
+     case META_PLUS_PLUS:
+     case META_PLUS_QUERY:
+@@ -9378,7 +9399,6 @@ for (pptr = cb->parsed_pattern; *pptr != META_END; pptr++)
+     case META_QUERY_QUERY:
+     case META_RANGE_ESCAPED:
+     case META_RANGE_LITERAL:
+-    case META_SCRIPT_RUN:
+     case META_SKIP:
+     case META_THEN:
+     break;
+@@ -9879,7 +9899,7 @@ lengths. */
+ 
+ if (has_lookbehind)
+   {
+-  errorcode = check_lookbehinds(&cb);
++  errorcode = check_lookbehinds(cb.parsed_pattern, NULL, &cb);
+   if (errorcode != 0) goto HAD_CB_ERROR;
+   }
+ 
+diff --git a/testdata/testinput1 b/testdata/testinput1
+index 4d9ec5a..ee9354b 100644
+--- a/testdata/testinput1
++++ b/testdata/testinput1
+@@ -6365,4 +6365,10 @@ ef) x/x,mark
+ /(?(DEFINE)(a|ab))(?1){1}+c/
+     abc    
+ 
++/(?<=(?=.(?<=x)))/aftertext
++    abx
++
++/(?<=(?=(?<=a)))b/
++    ab
++
+ # End of testinput1 
+diff --git a/testdata/testinput2 b/testdata/testinput2
+index 9412bf6..d85fc5f 100644
+--- a/testdata/testinput2
++++ b/testdata/testinput2
+@@ -5597,4 +5597,7 @@ a)"xI
+ # Multiplication overflow
+ /(X{65535})(?<=\1{32770})/
+ 
++/(?<=(?=.(?<=x)))/
++    ab\=ph
++
+ # End of testinput2
+diff --git a/testdata/testoutput1 b/testdata/testoutput1
+index fffb8ec..c9bfea8 100644
+--- a/testdata/testoutput1
++++ b/testdata/testoutput1
+@@ -10081,4 +10081,13 @@ No match
+     abc    
+ No match
+ 
++/(?<=(?=.(?<=x)))/aftertext
++    abx
++ 0: 
++ 0+ x
++
++/(?<=(?=(?<=a)))b/
++    ab
++ 0: b
++
+ # End of testinput1 
+diff --git a/testdata/testoutput2 b/testdata/testoutput2
+index 950095f..6405e26 100644
+--- a/testdata/testoutput2
++++ b/testdata/testoutput2
+@@ -16948,6 +16948,10 @@ Failed: error 187 at offset 15: lookbehind assertion is too long
+ /(X{65535})(?<=\1{32770})/
+ Failed: error 187 at offset 10: lookbehind assertion is too long
+ 
++/(?<=(?=.(?<=x)))/
++    ab\=ph
++No match
++
+ # End of testinput2
+ Error -70: PCRE2_ERROR_BADDATA (unknown error number)
+ Error -62: bad serialized data
+-- 
+2.20.1
+

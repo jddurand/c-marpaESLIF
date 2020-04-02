@@ -1,0 +1,160 @@
+From 76d59bdbc2d30bad1d11e0490b767058dc33d39c Mon Sep 17 00:00:00 2001
+From: ph10 <ph10@6239d852-aaf2-0410-a92c-79f79f948069>
+Date: Wed, 19 Jun 2019 16:27:50 +0000
+Subject: [PATCH] Don't ignore {1}+ when it is applied to a parenthesized item.
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+git-svn-id: svn://vcs.exim.org/pcre2/code/trunk@1111 6239d852-aaf2-0410-a92c-79f79f948069
+Petr Písař: Ported to 10.33.
+
+Signed-off-by: Petr Písař <ppisar@redhat.com>
+---
+ src/pcre2_compile.c  | 29 +++++++++++++++++++----------
+ testdata/testinput1  | 14 ++++++++++++++
+ testdata/testoutput1 | 18 ++++++++++++++++++
+ 3 files changed, 51 insertions(+), 10 deletions(-)
+
+diff --git a/src/pcre2_compile.c b/src/pcre2_compile.c
+index cd6fbea..c82c6ca 100644
+--- a/src/pcre2_compile.c
++++ b/src/pcre2_compile.c
+@@ -6723,10 +6723,6 @@ for (;; pptr++)
+     reqvary = (repeat_min == repeat_max)? 0 : REQ_VARY;
+     op_type = 0;
+ 
+-    /* If the repeat is {1} we can ignore it. */
+-
+-    if (repeat_max == 1 && repeat_min == 1) goto END_REPEAT;
+-
+     /* Adjust first and required code units for a zero repeat. */
+ 
+     if (repeat_min == 0)
+@@ -6769,7 +6765,10 @@ for (;; pptr++)
+     tempcode = previous;
+     op_previous = *previous;
+ 
+-    /* Now handle repetition for the different types of item. */
++    /* Now handle repetition for the different types of item. If the repeat
++    minimum and the repeat maximum are both 1, we can ignore the quantifier for
++    non-parenthesized items, as they have only one alternative. For anything in
++    parentheses, we must not ignore if {1} is possessive. */
+ 
+     switch (op_previous)
+       {
+@@ -6783,6 +6782,7 @@ for (;; pptr++)
+       case OP_CHARI:
+       case OP_NOT:
+       case OP_NOTI:
++      if (repeat_max == 1 && repeat_min == 1) goto END_REPEAT;
+       op_type = chartypeoffset[op_previous - OP_CHAR];
+ 
+       /* Deal with UTF characters that take up more than one code unit. */
+@@ -6829,6 +6829,7 @@ for (;; pptr++)
+         code = previous;
+         goto END_REPEAT;
+         }
++      if (repeat_max == 1 && repeat_min == 1) goto END_REPEAT;
+ 
+       if (repeat_min == 0 && repeat_max == REPEAT_UNLIMITED)
+         *code++ = OP_CRSTAR + repeat_type;
+@@ -6863,6 +6864,8 @@ for (;; pptr++)
+       repetition. */
+ 
+       case OP_RECURSE:
++      if (repeat_max == 1 && repeat_min == 1 && !possessive_quantifier)
++        goto END_REPEAT;
+ 
+       /* Generate unwrapped repeats for a non-zero minimum, except when the
+       minimum is 1 and the maximum unlimited, because that can be handled with
+@@ -6945,6 +6948,9 @@ for (;; pptr++)
+         PCRE2_UCHAR *bralink = NULL;
+         PCRE2_UCHAR *brazeroptr = NULL;
+ 
++        if (repeat_max == 1 && repeat_min == 1 && !possessive_quantifier)
++          goto END_REPEAT;
++
+         /* Repeating a DEFINE group (or any group where the condition is always
+         FALSE and there is only one branch) is pointless, but Perl allows the
+         syntax, so we just ignore the repeat. */
+@@ -7161,11 +7167,12 @@ for (;; pptr++)
+         and SCRIPT_RUN groups at runtime, but in a different way.]
+ 
+         Then, if the quantifier was possessive and the bracket is not a
+-        conditional, we convert the BRA code to the POS form, and the KET code to
+-        KETRPOS. (It turns out to be convenient at runtime to detect this kind of
+-        subpattern at both the start and at the end.) The use of special opcodes
+-        makes it possible to reduce greatly the stack usage in pcre2_match(). If
+-        the group is preceded by OP_BRAZERO, convert this to OP_BRAPOSZERO.
++        conditional, we convert the BRA code to the POS form, and the KET code
++        to KETRPOS. (It turns out to be convenient at runtime to detect this
++        kind of subpattern at both the start and at the end.) The use of
++        special opcodes makes it possible to reduce greatly the stack usage in
++        pcre2_match(). If the group is preceded by OP_BRAZERO, convert this to
++        OP_BRAPOSZERO.
+ 
+         Then, if the minimum number of matches is 1 or 0, cancel the possessive
+         flag so that the default action below, of wrapping everything inside
+@@ -7266,6 +7273,8 @@ for (;; pptr++)
+         int prop_type, prop_value;
+         PCRE2_UCHAR *oldcode;
+ 
++        if (repeat_max == 1 && repeat_min == 1) goto END_REPEAT;
++
+         op_type = OP_TYPESTAR - OP_STAR;      /* Use type opcodes */
+         mclength = 0;                         /* Not a character */
+ 
+diff --git a/testdata/testinput1 b/testdata/testinput1
+index 7b6918a..4d9ec5a 100644
+--- a/testdata/testinput1
++++ b/testdata/testinput1
+@@ -6351,4 +6351,18 @@ ef) x/x,mark
+     acb
+     abc     
+ 
++/(?:a|ab){1}+c/
++\= Expect no match
++    abc
++
++/(a|ab){1}+c/
++    abc
++    
++/(a+){1}+a/
++\= Expect no match
++    aaaa
++
++/(?(DEFINE)(a|ab))(?1){1}+c/
++    abc    
++
+ # End of testinput1 
+diff --git a/testdata/testoutput1 b/testdata/testoutput1
+index d9f8c3b..fffb8ec 100644
+--- a/testdata/testoutput1
++++ b/testdata/testoutput1
+@@ -10063,4 +10063,22 @@ MK: 2
+  0: a
+ MK: 2
+ 
++/(?:a|ab){1}+c/
++\= Expect no match
++    abc
++No match
++
++/(a|ab){1}+c/
++    abc
++No match
++    
++/(a+){1}+a/
++\= Expect no match
++    aaaa
++No match
++
++/(?(DEFINE)(a|ab))(?1){1}+c/
++    abc    
++No match
++
+ # End of testinput1 
+-- 
+2.20.1
+

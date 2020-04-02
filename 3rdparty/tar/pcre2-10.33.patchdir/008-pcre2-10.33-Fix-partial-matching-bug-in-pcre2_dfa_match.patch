@@ -1,0 +1,130 @@
+From 427e9b2fffc46d6b49a31df34c8b120bffc2ea60 Mon Sep 17 00:00:00 2001
+From: ph10 <ph10@6239d852-aaf2-0410-a92c-79f79f948069>
+Date: Wed, 26 Jun 2019 16:13:28 +0000
+Subject: [PATCH] Fix partial matching bug in pcre2_dfa_match().
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+git-svn-id: svn://vcs.exim.org/pcre2/code/trunk@1123 6239d852-aaf2-0410-a92c-79f79f948069
+Petr Písař: Ported to 10.33.
+---
+ src/pcre2_dfa_match.c | 11 ++++-----
+ testdata/testinput6   | 22 +++++++++++++++++
+ testdata/testoutput6  | 36 ++++++++++++++++++++++++++++
+
+diff --git a/src/pcre2_dfa_match.c b/src/pcre2_dfa_match.c
+index 911e9b9..538d15d 100644
+--- a/src/pcre2_dfa_match.c
++++ b/src/pcre2_dfa_match.c
+@@ -3152,8 +3152,8 @@ for (;;)
+ 
+   /* We have finished the processing at the current subject character. If no
+   new states have been set for the next character, we have found all the
+-  matches that we are going to find. If we are at the top level and partial
+-  matching has been requested, check for appropriate conditions.
++  matches that we are going to find. If partial matching has been requested,
++  check for appropriate conditions.
+ 
+   The "forced_ fail" variable counts the number of (*F) encountered for the
+   character. If it is equal to the original active_count (saved in
+@@ -3165,8 +3165,7 @@ for (;;)
+ 
+   if (new_count <= 0)
+     {
+-    if (rlevel == 1 &&                               /* Top level, and */
+-        could_continue &&                            /* Some could go on, and */
++    if (could_continue &&                            /* Some could go on, and */
+         forced_fail != workspace[1] &&               /* Not all forced fail & */
+         (                                            /* either... */
+         (mb->moptions & PCRE2_PARTIAL_HARD) != 0      /* Hard partial */
+@@ -3175,8 +3174,8 @@ for (;;)
+          match_count < 0)                            /* no matches */
+         ) &&                                         /* And... */
+         (
+-        partial_newline ||                           /* Either partial NL */
+-          (                                          /* or ... */
++        partial_newline ||                     /* Either partial NL */
++          (                                    /* or ... */
+           ptr >= end_subject &&                /* End of subject and */
+           ptr > mb->start_used_ptr)            /* Inspected non-empty string */
+           )
+diff --git a/testdata/testinput6 b/testdata/testinput6
+index 403e3fa..cc3ebd0 100644
+--- a/testdata/testinput6
++++ b/testdata/testinput6
+@@ -4972,4 +4972,26 @@
+ \= Expect no match
+     0
+ 
++/(?<=pqr)abc(?=xyz)/
++    123pqrabcxy\=ps,allusedtext
++    123pqrabcxyz\=ps,allusedtext
++
++/(?>a+b)/
++    aaaa\=ps
++    aaaab\=ps
++    
++/(abc)(?1)/
++    abca\=ps
++    abcabc\=ps
++
++/(?(?=abc).*|Z)/
++    ab\=ps
++    abcxyz\=ps
++
++/(abc)++x/
++    abcab\=ps
++    abc\=ps 
++    ab\=ps
++    abcx  
++
+ # End of testinput6
+diff --git a/testdata/testoutput6 b/testdata/testoutput6
+index 6a975dd..61cbfe2 100644
+--- a/testdata/testoutput6
++++ b/testdata/testoutput6
+@@ -7809,4 +7809,40 @@ No match
+     0
+ No match
+ 
++/(?<=pqr)abc(?=xyz)/
++    123pqrabcxy\=ps,allusedtext
++Partial match: pqrabcxy
++               <<<
++    123pqrabcxyz\=ps,allusedtext
++ 0: pqrabcxyz
++    <<<   >>>
++
++/(?>a+b)/
++    aaaa\=ps
++Partial match: aaaa
++    aaaab\=ps
++ 0: aaaab
++    
++/(abc)(?1)/
++    abca\=ps
++Partial match: abca
++    abcabc\=ps
++ 0: abcabc
++
++/(?(?=abc).*|Z)/
++    ab\=ps
++Partial match: ab
++    abcxyz\=ps
++ 0: abcxyz
++
++/(abc)++x/
++    abcab\=ps
++Partial match: abcab
++    abc\=ps 
++Partial match: abc
++    ab\=ps
++Partial match: ab
++    abcx  
++ 0: abcx
++
+ # End of testinput6
+-- 
+2.20.1
+
