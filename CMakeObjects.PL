@@ -188,7 +188,7 @@ my @additional_srcdir = ();
 {
     my $PCRE2_VERSION = '10.33';
     local $CWD = File::Spec->catdir('3rdparty', 'untar', "pcre2-${PCRE2_VERSION}");
-    print "... Compiling pcre2 version ${$PCRE2_VERSION}\n";
+    print "... Compiling pcre2 version ${PCRE2_VERSION}\n";
     my $fh;
     open($fh, '>', 'config_autoconf.ini') || die "Cannot open config_autoconf.ini, $!";
 
