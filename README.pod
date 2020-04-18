@@ -14,7 +14,7 @@ The L<marpaESLIF BNF|https://github.com/jddurand/c-marpaESLIF/tree/master/doc/BN
 
 =over
 
-=item Native regular expression support
+=item Native regular expression support, including regex callbacks into user-space
 
 =item Syntactic exception
 
@@ -24,9 +24,9 @@ The L<marpaESLIF BNF|https://github.com/jddurand/c-marpaESLIF/tree/master/doc/BN
 
 =item Zero-length symbols
 
-=item Embedded lua language
+=item Embedded lua language into the grammar
 
-=item Bindings to java, lua and perl
+=item Bindings to java, lua and perl languages
 
 =item JSON (strict and extended) grammars for decoding/encoding
 

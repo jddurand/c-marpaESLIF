@@ -5,47 +5,61 @@ package org.parser.marpa;
  */
 public class AppLogger implements ESLIFLoggerInterface {
 	public void trace(String message) {
+		flushAll();
 		System.out.println("[" + Thread.currentThread() + "] <TRACE> " + message);
-		System.out.flush();
+		flushAll();
 	}
 
 	public void debug(String message) {
+		flushAll();
 		System.out.println("[" + Thread.currentThread() + "] <DEBUG> " + message);	
-		System.out.flush();
+		flushAll();
 	}
 
 	public void info(String message) {
+		flushAll();
 		System.out.println("[" + Thread.currentThread() + "] <INFO> " + message);	
-		System.out.flush();
+		flushAll();
 	}
 
 	public void notice(String message) {
+		flushAll();
 		System.out.println("[" + Thread.currentThread() + "] <NOTICE> " + message);	
-		System.out.flush();
+		flushAll();
 	}
 
 	public void warning(String message) {
+		flushAll();
 		System.out.println("[" + Thread.currentThread() + "] <WARNING> " + message);	
-		System.out.flush();
+		flushAll();
 	}
 
 	public void error(String message) {
+		flushAll();
 		System.err.println("[" + Thread.currentThread() + "] <ERROR> " + message);	
-		System.err.flush();
+		flushAll();
 	}
 
 	public void critical(String message) {
+		flushAll();
 		System.err.println("[" + Thread.currentThread() + "] <CRITICAL> " + message);	
-		System.err.flush();
+		flushAll();
 	}
 
 	public void alert(String message) {
+		flushAll();
 		System.err.println("[" + Thread.currentThread() + "] <ALERT> " + message);	
-		System.err.flush();
+		flushAll();
 	}
 
 	public void emergency(String message) {
+		flushAll();
 		System.err.println("[" + Thread.currentThread() + "] <EMERGENCY> " + message);	
+		flushAll();
+	}
+	
+	private void flushAll() {
 		System.err.flush();
+		System.out.flush();
 	}
 }

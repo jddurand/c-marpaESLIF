@@ -104,6 +104,10 @@ Grammar default rule action
 
 Grammar default event action
 
+=item defaultRegexAction
+
+Grammar default regex action
+
 =item startId
 
 Start symbol Id
@@ -144,6 +148,7 @@ sub new {
                    defaultSymbolAction => $args{defaultSymbolAction},
                    defaultRuleAction   => $args{defaultRuleAction},
                    defaultEventAction  => $args{defaultEventAction},
+                   defaultRegexAction  => $args{defaultRegexAction},
                    startId             => $args{startId},
                    discardId           => $args{discardId},
                    symbolIds           => $args{symbolIds},
@@ -249,6 +254,18 @@ sub getDefaultEventAction {
   my ($self) = @_;
 
   return $self->{defaultEventAction}
+}
+
+=head2 $self->getDefaultRegexAction
+
+Returns grammar's default regex action, can be null
+
+=cut
+
+sub getDefaultRegexAction {
+  my ($self) = @_;
+
+  return $self->{defaultRegexAction}
 }
 
 =head2 $self->getStartId

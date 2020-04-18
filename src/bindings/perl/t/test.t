@@ -77,6 +77,12 @@ sub isWithTrack {
     return $isWithTrack;
 }
 
+sub RegexAction {
+    my ($self, $block) = @_;
+    $self->{log}->tracef("Regex callback: %s", $block);
+    return 1;
+}
+
 package MyValue;
 use strict;
 use diagnostics;
@@ -275,7 +281,7 @@ use Encode qw/decode encode/;
 # Init log
 #
 our $defaultLog4perlConf = '
-log4perl.rootLogger              = INFO, Screen
+log4perl.rootLogger              = TRACE, Screen
 log4perl.appender.Screen         = Log::Log4perl::Appender::Screen
 log4perl.appender.Screen.stderr  = 0
 log4perl.appender.Screen.layout  = PatternLayout
@@ -342,6 +348,7 @@ ok($currentLevel >= 0, "Current level is >= 0");
 my %GRAMMAR_PROPERTIES_BY_LEVEL = (
     '0' => { defaultRuleAction   => "do_op",
              defaultEventAction  => undef,
+             defaultRegexAction  => 'RegexAction',
              defaultSymbolAction => "do_symbol",
              description         => "Grammar level 0",
              discardId           => 1,
@@ -355,6 +362,7 @@ my %GRAMMAR_PROPERTIES_BY_LEVEL = (
              fallbackEncoding    => "UTF-8" },
     '1' => { defaultRuleAction   => "::concat",
              defaultEventAction  => undef,
+             defaultRegexAction  => 'RegexAction',
              defaultSymbolAction => "::transfer",
              description         => "Grammar level 1",
              discardId           => -1,
@@ -706,7 +714,7 @@ my %RULE_PROPERTIES_BY_LEVEL = (
                  sequence                 => 0,
                  propertyBitSet           => MarpaX::ESLIF::Rule::PropertyBitSet->MARPAESLIF_RULE_IS_PRODUCTIVE|
                                              MarpaX::ESLIF::Rule::PropertyBitSet->MARPAESLIF_RULE_IS_ACCESSIBLE,
-                 show                     => "<NUMBER> ~ /[\\d]+/" },
+                 show                     => "<NUMBER> ~ /[\\d]+(?C\"NUMBER\")/" },
         '1' => { action                   => undef,
                  description              => "Rule No 1",
                  discardEvent             => undef,
@@ -1302,7 +1310,7 @@ my %SYMBOL_PROPERTIES_BY_LEVEL = (
                  start => 0,
                  top => 1,
                  type => MarpaX::ESLIF::Symbol::Type->MARPAESLIF_SYMBOLTYPE_META},
-        '1' => { description => "/[\\d]+/",
+        '1' => { description => "/[\\d]+(?C\"NUMBER\")/",
                  discard => 0,
                  discardEvent => undef,
                  discardEventInitialState => 1,
@@ -1774,10 +1782,11 @@ sub doCmpProperties {
 
 __DATA__
 :start   ::= Expression
-:default ::=             action            => do_op
-                         symbol-action     => do_symbol
-                         default-encoding  => ASCII
-                         fallback-encoding => UTF-8
+:default ::=             action                => do_op
+                         symbol-action         => do_symbol
+                         default-encoding      => ASCII
+                         fallback-encoding     => UTF-8
+                         regex-action          => RegexAction
 :discard ::= whitespaces event  => discard_whitespaces$
 :discard ::= comment     event  => discard_comment$
 
@@ -1798,7 +1807,10 @@ Expression ::=
 
 :lexeme ::= NUMBER pause => before event => ^NUMBER symbol-action => perl_number priority => 1 if-action => ::lua->test_if_action
 :lexeme ::= NUMBER pause => after  event => NUMBER$ priority => 0
-NUMBER     ~ /[\d]+/
+
+:default ~ regex-action => RegexAction
+
+NUMBER     ~ /[\d]+(?C"NUMBER")/
 whitespaces ::= WHITESPACES
 WHITESPACES ~ [\s]+
 comment ::= /(?:(?:(?:\/\/)(?:[^\n]*)(?:\n|\z))|(?:(?:\/\*)(?:(?:[^\*]+|\*(?!\/))*)(?:\*\/)))/u

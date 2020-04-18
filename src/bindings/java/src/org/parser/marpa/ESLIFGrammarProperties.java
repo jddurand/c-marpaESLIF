@@ -25,6 +25,7 @@ public class ESLIFGrammarProperties {
     private String  defaultSymbolAction;
     private String  defaultRuleAction;
     private String  defaultEventAction;
+    private String  defaultRegexAction;
     private int     startId;
     private int     discardId;
     private int[]   symbolIds;
@@ -47,6 +48,7 @@ public class ESLIFGrammarProperties {
 	 * @param defaultSymbolAction Grammar default symbol action
 	 * @param defaultRuleAction Grammar default rule action
 	 * @param defaultEventAction Grammar default event action
+	 * @param defaultRegexAction Grammar default regex action
 	 * @param startId Start symbol Id
 	 * @param discardId Discard symbol Id
 	 * @param symbolIds Symbol Ids
@@ -54,7 +56,7 @@ public class ESLIFGrammarProperties {
 	 * @param defaultEncoding Grammar default encoding
 	 * @param fallbackEncoding Grammar fallback encoding
 	 */
-	public ESLIFGrammarProperties(int level, int maxLevel, String description, boolean latm, String defaultSymbolAction, String defaultRuleAction, String defaultEventAction, int startId, int discardId, int[] symbolIds, int[] ruleIds, String defaultEncoding, String fallbackEncoding) {
+	public ESLIFGrammarProperties(int level, int maxLevel, String description, boolean latm, String defaultSymbolAction, String defaultRuleAction, String defaultEventAction, String defaultRegexAction, int startId, int discardId, int[] symbolIds, int[] ruleIds, String defaultEncoding, String fallbackEncoding) {
 		this.level               = level;
 		this.maxLevel            = maxLevel;
 		this.description         = description;
@@ -62,6 +64,7 @@ public class ESLIFGrammarProperties {
 		this.defaultSymbolAction = defaultSymbolAction;
 		this.defaultRuleAction   = defaultRuleAction;
 		this.defaultEventAction  = defaultEventAction;
+		this.defaultRegexAction  = defaultRegexAction;
 		this.startId             = startId;
 		this.discardId           = discardId;
 		this.symbolIds           = symbolIds;
@@ -79,6 +82,7 @@ public class ESLIFGrammarProperties {
 		int result = 1;
 		result = prime * result + ((defaultEncoding == null) ? 0 : defaultEncoding.hashCode());
 		result = prime * result + ((defaultEventAction == null) ? 0 : defaultEventAction.hashCode());
+		result = prime * result + ((defaultRegexAction == null) ? 0 : defaultRegexAction.hashCode());
 		result = prime * result + ((defaultRuleAction == null) ? 0 : defaultRuleAction.hashCode());
 		result = prime * result + ((defaultSymbolAction == null) ? 0 : defaultSymbolAction.hashCode());
 		result = prime * result + ((description == null) ? 0 : description.hashCode());
@@ -120,6 +124,13 @@ public class ESLIFGrammarProperties {
 				return false;
 			}
 		} else if (!defaultEventAction.equals(other.defaultEventAction)) {
+			return false;
+		}
+		if (defaultRegexAction == null) {
+			if (other.defaultRegexAction != null) {
+				return false;
+			}
+		} else if (!defaultRegexAction.equals(other.defaultRegexAction)) {
 			return false;
 		}
 		if (defaultRuleAction == null) {
@@ -181,7 +192,7 @@ public class ESLIFGrammarProperties {
 	public String toString() {
 		return "ESLIFGrammarProperties [level=" + level + ", maxLevel=" + maxLevel + ", description=" + description
 				+ ", latm=" + latm + ", defaultSymbolAction=" + defaultSymbolAction + ", defaultRuleAction="
-				+ defaultRuleAction + ", defaultEventAction=" + defaultEventAction + ", startId=" + startId
+				+ defaultRuleAction + ", defaultEventAction=" + defaultEventAction + ", defaultRegexAction=" + defaultRegexAction + ", startId=" + startId
 				+ ", discardId=" + discardId + ", symbolIds=" + Arrays.toString(symbolIds) + ", ruleIds="
 				+ Arrays.toString(ruleIds) + ", defaultEncoding=" + defaultEncoding + ", fallbackEncoding="
 				+ fallbackEncoding + "]";
@@ -243,6 +254,13 @@ public class ESLIFGrammarProperties {
 	 */
 	public String getDefaultEventAction() {
 		return defaultEventAction;
+	}
+
+	/**
+	 * @return Grammar's default regex action, can be null
+	 */
+	public String getDefaultRegexAction() {
+		return defaultRegexAction;
 	}
 
 	/**

@@ -4,6 +4,7 @@ import java.io.BufferedReader;
 import java.io.UnsupportedEncodingException;
 import java.nio.charset.Charset;
 import java.util.Arrays;
+import java.util.HashMap;
 
 /**
  * Test Application Recognizer
@@ -80,5 +81,10 @@ public class AppRecognizer implements ESLIFRecognizerInterface {
 		public boolean event_action(ESLIFEvent[] eventArray) {
 			eslifLoggerInterface.debug("event_action(" + Arrays.toString(eventArray) + ")");
 			return true;
+		}	
+
+		public int regex_action(ESLIFRegexCallout eSLIFRegexCallout) {
+			eslifLoggerInterface.debug("regex_action(" + eSLIFRegexCallout + ")");
+			return 0;
 		}	
 }

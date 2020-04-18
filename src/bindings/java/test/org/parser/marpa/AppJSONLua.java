@@ -7,13 +7,13 @@ import java.util.concurrent.TimeUnit;
 /**
  * Import/export Application
  */
-public class AppJson implements Runnable {
+public class AppJSONLua implements Runnable {
 	ESLIFLoggerInterface eslifLogger;
 	
 	/**
 	 * @param eslifLogger logger interface
 	 */
-	public AppJson(ESLIFLoggerInterface eslifLogger) {
+	public AppJSONLua(ESLIFLoggerInterface eslifLogger) {
 		this.eslifLogger = eslifLogger;
 	}
 
@@ -40,7 +40,7 @@ public class AppJson implements Runnable {
 						"# \n" +
 						"# Default action is to propagate the first RHS value \n" +
 						"# \n" +
-						":default ::= action => ::shift event-action => event_action\n" +
+						":default ::= action => ::shift event-action => event_action regex-action => regex_action\n" +
 						" \n" +
 						"                   ####################################################### \n" +
 						"                   # >>>>>>>>>>>>>>>> Strict JSON Grammar <<<<<<<<<<<<<<<< \n" +
@@ -95,6 +95,7 @@ public class AppJson implements Runnable {
 						"number ::= NUMBER                                 action => ::lua->lua_number # Prepare for eventual bignum extension \n" +
 						" \n" +
 						":lexeme ::= NUMBER if-action => if_number\n" +
+						":default ~ regex-action => regex_action\n" +
 						"NUMBER   ~ _INT \n" +
 						"         | _INT _FRAC \n" +
 						"         | _INT _EXP \n" +
@@ -107,7 +108,7 @@ public class AppJson implements Runnable {
 						"_DIGIT19 ~ [1-9] \n" +
 						"_FRAC    ~ '.' _DIGITS \n" +
 						"_EXP     ~ _E _DIGITS \n" +
-						"_DIGITS  ~ /[0-9]+/ \n" +
+						"_DIGITS  ~ /(([0-9])+)(?C\"RegexAction\")/ \n" +
 						"_E       ~ /e[+-]?/i \n" +
 						" \n" +
 						"# ----------- \n" +
@@ -311,6 +312,8 @@ public class AppJson implements Runnable {
 		ESLIFGrammar eslifGrammar = null;
 		try {
 			eslifGrammar = new ESLIFGrammar(eslif, grammar);
+			eslifLogger.info("G1: " + eslifGrammar.showByLevel(0));
+			eslifLogger.info("L0: " + eslifGrammar.showByLevel(1));
 			for (int i = 0; i < strings.length; i++) {
 				String string = new String(strings[i]);
 	
@@ -319,6 +322,14 @@ public class AppJson implements Runnable {
 				AppValue eslifAppValue = new AppValue();
 				eslifLogger.info("Testing parse() on " + string);
 				try {
+					if (false) {
+						eslifLogger.info(" ATTACH ME - SLEEPING 10 SECONDS");
+						try {
+							TimeUnit.SECONDS.sleep(10);
+						} catch (InterruptedException e) {
+							System.err.println(e);
+						}
+					}
 					if (eslifGrammar.parse(eslifAppRecognizer, eslifAppValue)) {
 						eslifLogger.info("Result: " + eslifAppValue.getResult());
 					}

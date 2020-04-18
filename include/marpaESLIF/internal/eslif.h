@@ -74,6 +74,7 @@
 #define G1_RULE_ADVERB_ITEM_19                   "G1_rule_adverb_item_19"
 #define G1_RULE_ADVERB_ITEM_20                   "G1_rule_adverb_item_20"
 #define G1_RULE_ADVERB_ITEM_21                   "G1_rule_adverb_item_21"
+#define G1_RULE_ADVERB_ITEM_22                   "G1_rule_adverb_item_22"
 #define G1_RULE_ACTION_1                         "G1_rule_action_1"
 #define G1_RULE_ACTION_2                         "G1_rule_action_2"
 #define G1_RULE_SYMBOL_ACTION_1                  "G1_rule_symbol_action_1"
@@ -179,6 +180,9 @@
 #define G1_RULE_IF_ACTION                        "G1_rule_if_action"
 #define G1_RULE_IFACTION_NAME_1                  "G1_rule_ifaction_name_1"
 #define G1_RULE_IFACTION_NAME_2                  "G1_rule_ifaction_name_2"
+#define G1_RULE_REGEX_ACTION                     "G1_rule_regex_action"
+#define G1_RULE_REGEXACTION_NAME_1               "G1_rule_regexaction_name_1"
+#define G1_RULE_REGEXACTION_NAME_2               "G1_rule_regexaction_name_2"
 #define G1_RULE_EVENT_ACTION                     "G1_rule_event_action"
 #define G1_RULE_EVENTACTION_NAME_1               "G1_rule_eventaction_name_1"
 #define G1_RULE_EVENTACTION_NAME_2               "G1_rule_eventaction_name_2"
@@ -259,6 +263,7 @@
 #define G1_ACTION_ADVERB_ITEM_19                   "::shift" /* <adverb item> ::= <event action> */
 #define G1_ACTION_ADVERB_ITEM_20                   "::shift" /* <adverb item> ::= <default encoding> */
 #define G1_ACTION_ADVERB_ITEM_21                   "::shift" /* <adverb item> ::= <fallback encoding> */
+#define G1_ACTION_ADVERB_ITEM_22                   "::shift" /* <adverb item> ::= <regex action> */
 #define G1_ACTION_ACTION_1                         "G1_action_action_1"                         /* done */
 #define G1_ACTION_ACTION_2                         "G1_action_action_2"                         /* done */
 #define G1_ACTION_SYMBOLACTION_1                   "G1_action_symbolaction_1"                   /* done */
@@ -361,6 +366,9 @@
 #define G1_ACTION_IFACTION_NAME_1                  "::ascii" /* <if action name> ::= <ascii graph name> */
 #define G1_ACTION_IFACTION_NAME_2                  "::ascii" /* <if action name> ::= <lua action name> */
 #define G1_ACTION_IFACTION                         "G1_action_ifaction"                         /* done */
+#define G1_ACTION_REGEXACTION_NAME_1               "::ascii" /* <regex action name> ::= <ascii graph name> */
+#define G1_ACTION_REGEXACTION_NAME_2               "::ascii" /* <regex action name> ::= <lua action name> */
+#define G1_ACTION_REGEXACTION                      "G1_action_regexaction"                       /* done */
 #define G1_ACTION_EVENTACTION                      "G1_action_eventaction"                   /* done */
 #define G1_ACTION_EVENTACTION_NAME_1               "::ascii" /* <event action name> ::= <ascii graph name> */
 #define G1_ACTION_EVENTACTION_NAME_2               "::ascii" /* <event action name> ::= <lua identifier> */

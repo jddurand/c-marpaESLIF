@@ -275,7 +275,10 @@ Returns a true value on failure, a false value on failure.
   typedef struct marpaESLIFGrammarDefaults {
     marpaESLIFAction_t *defaultRuleActionp;   /* Default action for rules */
     marpaESLIFAction_t *defaultSymbolActionp; /* Default action for symbols */
-    marpaESLIFAction_t *defaultFreeActionp;   /* Default action for free */
+    marpaESLIFAction_t *defaultEventActionp;  /* Default action for events */
+    marpaESLIFAction_t *defaultRegexActionp;  /* Default action for regex */
+    char               *defaultEncodings;     /* Default encoding */
+    char               *fallbackEncodings;    /* Fallback encoding */
   } marpaESLIFGrammarDefaults_t;
 
   short marpaESLIFGrammar_defaultsb(marpaESLIFGrammar_t         *marpaESLIFGrammarp,
@@ -315,9 +318,11 @@ Default action for symbols, and correspond to the grammar keyword C<action>. Can
 =item defaultSymbolActionp
 Default action for symbols, and correspond to the grammar keyword C<symbol-action>. Can be a name of a string literal.
 
-=item defaultFreeActionp
+=item defaultEventActionp
+Default action for events, and correspond to the grammar keyword C<event-action>. Can be a name of a string literal.
 
-Default action for symbols, and correspond to the grammar keyword C<free-action>. Can only be a name.
+=item defaultRegexActionp
+Default action for regex callout, and correspond to the grammar keyword C<regex-action>. Can be a name of a string literal.
 
 =back
 
@@ -325,7 +330,6 @@ The keywords mentionned upper are set within a I<:default> statement, e.g.:
 
   :default ::= action        => myRuleAction
                symbol-action => ::u8"String Literal"
-               free-action   => myFreeAction
 
 Returns a true value on failure, a false value on failure.
 
@@ -394,7 +398,8 @@ Returns a true value on failure, a false value on failure.
     short                  latmb;                        /* LATM ? */
     marpaESLIFAction_t    *defaultSymbolActionp;         /* Default action for symbols - never NULL */
     marpaESLIFAction_t    *defaultRuleActionp;           /* Default action for rules - never NULL */
-    marpaESLIFAction_t    *defaultFreeActionp;           /* Default action for free - can be NULL */
+    marpaESLIFAction_t    *defaultEventActionp;          /* Default action for event - can be NULL */
+    marpaESLIFAction_t    *defaultRegexActionp;          /* Default action for regex - can be NULL */
     int                    starti;                       /* Start symbol Id - always >= 0 */
     int                    discardi;                     /* Discard symbol Id (-1 if none) */
     size_t                 nsymboll;                     /* Number of symbols - always > 0*/
@@ -1081,13 +1086,42 @@ At any location in the grammar, possible alternatives can be of the two major ty
                                       char   **encodingsp,
                                       size_t  *encodinglp);
   /* Recognizer callback definitions */
+
+  /* if-action callback: received a lexeme and return a boolean */
   typedef short (*marpaESLIFRecognizerIfCallback_t)(void *userDatavp,
                                                     marpaESLIFRecognizer_t *marpaESLIFRecognizerp,
                                                     marpaESLIFValueResult_t *marpaESLIFValueResultLexemep,
                                                     marpaESLIFValueResultBool_t *marpaESLIFValueResultBoolp);
+  /* if-action callback resolver */
   typedef marpaESLIFRecognizerIfCallback_t (*marpaESLIFRecognizerIfActionResolver_t)(void *userDatavp,
                                                                                      marpaESLIFRecognizer_t *marpaESLIFRecognizerp,
                                                                                      char *actions);
+
+  /* event-action callback: received an array of marpaESLIFEvent_t and return a boolean */
+  typedef short (*marpaESLIFRecognizerEventCallback_t)(void *userDatavp,
+                                                       marpaESLIFRecognizer_t *marpaESLIFRecognizerp,
+                                                       marpaESLIFEvent_t *eventArrayp,
+                                                       size_t eventArrayl,
+                                                       marpaESLIFValueResultBool_t *marpaESLIFValueResultBoolp);
+  /* event-action callback resolver */
+  typedef marpaESLIFRecognizerEventCallback_t (*marpaESLIFRecognizerEventActionResolver_t)(void *userDatavp,
+                                                                                           marpaESLIFRecognizer_t *marpaESLIFRecognizerp,
+                                                                                           char *actions);
+
+  /* regex-action callback: received a hash and return an integer */
+  typedef short (*marpaESLIFRecognizerRegexCallback_t)(void *userDatavp,
+                                                       marpaESLIFRecognizer_t *marpaESLIFRecognizerp,
+                                                       marpaESLIFValueResult_t *marpaESLIFCalloutBlockp,
+                                                       marpaESLIFValueResultInt_t *marpaESLIFValueResultOutp);
+  /* regex-action callback resolver */
+  typedef marpaESLIFRecognizerRegexCallback_t (*marpaESLIFRecognizerRegexActionResolver_t)(void *userDatavp,
+                                                                                           marpaESLIFRecognizer_t *marpaESLIFRecognizerp,
+                                                                                           char *actions);
+
+  /* End-user recognizer importer facility */
+  typedef short (*marpaESLIFRecognizerImport_t)(marpaESLIFRecognizer_t *marpaESLIFRecognizerp,
+                                                void *userDatavp,
+                                                marpaESLIFValueResult_t *marpaESLIFValueResultp);
 
   typedef struct marpaESLIFRecognizerOption {
     void                *userDatavp;                  /* User specific context */
@@ -1103,6 +1137,9 @@ At any location in the grammar, possible alternatives can be of the two major ty
     /*  stream buffer size augment policy in % */
     unsigned int         bufaddperci;                 /*                             Recommended: 50 */
     marpaESLIFRecognizerIfActionResolver_t ifActionResolverp; /* symbol if action resolver. */
+    marpaESLIFRecognizerEventActionResolver_t eventActionResolverp; /* Will return the function doing the wanted event action */
+    marpaESLIFRecognizerRegexActionResolver_t regexActionResolverp; /* Will return the function doing the wanted regex callout action */
+    marpaESLIFRecognizerImport_t              importerp;           /* Will ask end-user to import a marpaESLIFValueResult */
   } marpaESLIFRecognizerOption_t;
 
   marpaESLIFRecognizer_t *marpaESLIFRecognizer_newp(marpaESLIFGrammar_t          *marpaESLIFGrammarp,
@@ -1740,42 +1777,16 @@ At any point in the parsing lifetime it is possible to call for parse tree value
                                                                                    marpaESLIFValue_t *marpaESLIFValuep,
                                                                                    char              *actions);
 
-  typedef marpaESLIFValueFreeCallback_t   (*marpaESLIFValueFreeActionResolver_t)  (void              *userDatavp,
-                                                                                   marpaESLIFValue_t *marpaESLIFValuep,
-                                                                                   char              *actions);
-
-  /* Value result transformer helper */
-  typedef short (*marpaESLIFValueResultTransformUndef_t)(marpaESLIFValue_t *marpaESLIFValuep, void *userDatavp, void *contextp);
-  typedef short (*marpaESLIFValueResultTransformChar_t)(marpaESLIFValue_t *marpaESLIFValuep, void *userDatavp, void *contextp, marpaESLIFValueResultChar_t c);
-  typedef short (*marpaESLIFValueResultTransformShort_t)(marpaESLIFValue_t *marpaESLIFValuep, void *userDatavp, void *contextp, marpaESLIFValueResultShort_t b);
-  typedef short (*marpaESLIFValueResultTransformInt_t)(marpaESLIFValue_t *marpaESLIFValuep, void *userDatavp, void *contextp, marpaESLIFValueResultInt_t i);
-  typedef short (*marpaESLIFValueResultTransformLong_t)(marpaESLIFValue_t *marpaESLIFValuep, void *userDatavp, void *contextp, marpaESLIFValueResultLong_t l);
-  typedef short (*marpaESLIFValueResultTransformFloat_t)(marpaESLIFValue_t *marpaESLIFValuep, void *userDatavp, void *contextp, marpaESLIFValueResultFloat_t f);
-  typedef short (*marpaESLIFValueResultTransformDouble_t)(marpaESLIFValue_t *marpaESLIFValuep, void *userDatavp, void *contextp, marpaESLIFValueResultDouble_t d);
-  typedef short (*marpaESLIFValueResultTransformPtr_t)(marpaESLIFValue_t *marpaESLIFValuep, void *userDatavp, void *contextp, marpaESLIFValueResultPtr_t p);
-  typedef short (*marpaESLIFValueResultTransformArray_t)(marpaESLIFValue_t *marpaESLIFValuep, void *userDatavp, void *contextp, marpaESLIFValueResultArray_t a);
-  typedef short (*marpaESLIFValueResultTransformBool_t)(marpaESLIFValue_t *marpaESLIFValuep, void *userDatavp, void *contextp, marpaESLIFValueResultBool_t b);
-  typedef short (*marpaESLIFValueResultTransformString_t)(marpaESLIFValue_t *marpaESLIFValuep, void *userDatavp, void *contextp, marpaESLIFValueResultString_t s);
-  typedef struct marpaESLIFValueResultTransform {
-    marpaESLIFValueResultTransformUndef_t undefTransformerp;
-    marpaESLIFValueResultTransformChar_t charTransformerp;
-    marpaESLIFValueResultTransformShort_t shortTransformerp;
-    marpaESLIFValueResultTransformInt_t intTransformerp;
-    marpaESLIFValueResultTransformLong_t longTransformerp;
-    marpaESLIFValueResultTransformFloat_t floatTransformerp;
-    marpaESLIFValueResultTransformDouble_t doubleTransformerp;
-    marpaESLIFValueResultTransformPtr_t ptrTransformerp;
-    marpaESLIFValueResultTransformArray_t arrayTransformerp;
-    marpaESLIFValueResultTransformBool_t boolTransformerp;
-    marpaESLIFValueResultTransformString_t stringTransformerp;
-  } marpaESLIFValueResultTransform_t;
+  /* End-user valuator importer facility */
+  typedef short (*marpaESLIFRecognizerImport_t)(marpaESLIFRecognizer_t *marpaESLIFRecognizerp,
+                                                void *userDatavp,
+                                                marpaESLIFValueResult_t *marpaESLIFValueResultp);
 
   typedef struct marpaESLIFValueOption {
     void                                 *userDatavp;            /* User specific context */
     marpaESLIFValueRuleActionResolver_t   ruleActionResolverp;   /* Returns pointer to rule action */
     marpaESLIFValueSymbolActionResolver_t symbolActionResolverp; /* Returns pointer to symbol action */
-    marpaESLIFValueFreeActionResolver_t   freeActionResolverp;   /* Returns pointer to free action */
-    marpaESLIFValueResultTransform_t     *transformerp;          /* Asks end-user to process a value */
+    marpaESLIFValueImport_t               importerp;             /* Will ask end-user to import a marpaESLIFValueResult */
     short                                 highRankOnlyb;         /* Recommended: 1 */
     short                                 orderByRankb;          /* Recommended: 1 */
     short                                 ambiguousb;            /* Recommended: 0 */
@@ -1857,10 +1868,6 @@ The functions holding valuation results are totally unknown from marpaESLIF, whi
 
   symbolActionp = symbolActionResolverp(userDatavp, marpaESLIFValuep, actions)
 
-=item For free
-
-  freeActionp = freeActionResolverp(userDatavp, marpaESLIFValuep, actions)
-
 =back
 
 and nothing impose the action resolvers to always return the same function pointer for a given NUL-terminated ASCII C<action> string.
@@ -1941,21 +1948,7 @@ Then, and only in these cases, the C<nullableb> flag is a true value, C<arg0i> a
 
 Ok, so finally C<my_actionp> is called, and it decided to return a value of type I<long> and context C<0x78>.
 
-=item 3. Call the free resolver for C<"my_free_action">
-
-The function call is equivalent to
-
-  freeActionResolverp(userDatavp, marpaESLIFValuep, "my_free_action")
-
-Suppose that it returned a function pointer to C<my_free_actionp>, a function that exist in user-space.
-
-=item 4. Call C<my_free_actionp>
-
-  my_free_actionp(userDatavp, 17, p, l)
-
-where C<p> is a pointer to the memory holding previous value at stack indice C<0>. C<l> is zero in this case, we explain later when it can be different than zero. C<17> is the context, so that the function pointer C<my_free_actionp> knows what we are talking about.
-
-=item 5. Put user data at stack indice C<0> and context C<0x78>
+=item 3. Put user data at stack indice C<0> and context C<0x78>
 
 =back
 

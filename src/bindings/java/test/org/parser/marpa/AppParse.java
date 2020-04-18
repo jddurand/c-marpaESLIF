@@ -29,7 +29,8 @@ public class AppParse  {
 			}
 		}
 
-		if (false) {
+		if (true) {
+			// This is the multi-threaded test
 			eslifLogger.info("Running over " + nbthread + " threads, using two loggers");
 			
 			for (ithread = 0; ithread < nbthread; ithread++) {
@@ -69,7 +70,7 @@ public class AppParse  {
 		// Import/export test
 		new AppImportExport(eslifLogger).run();
 		// JSON test
-		new AppJson(eslifLogger).run();
+		new AppJSONLua(eslifLogger).run();
 		// JSONEncoder test
 		new AppJSONEncoder(eslifLogger).run();
 		// JSONDecoder test
