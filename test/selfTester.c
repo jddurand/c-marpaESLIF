@@ -276,7 +276,7 @@ const static char *selfs = "\n"
   "TEST_GROUP_FOR_EXCEPTION_1       ~ 'Y'\n"
   "<luascript>\n"
   "function LuaRegexAction()\n"
-  "  return -3\n"
+  "  return 0\n"
   "end\n"
   "</luascript>\n"
   "\n";
