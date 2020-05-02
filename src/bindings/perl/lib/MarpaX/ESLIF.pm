@@ -2,7 +2,8 @@ use strict;
 use warnings FATAL => 'all';
 
 package MarpaX::ESLIF;
-use MarpaX::ESLIF::String;   # Make sure it is loaded, the XS is using it
+use MarpaX::ESLIF::String;       # Make sure it is loaded, the XS is using it
+use MarpaX::ESLIF::RegexCallout; # Make sure it is loaded, the XS is using it
 
 # ABSTRACT: ESLIF is Extended ScanLess InterFace
 

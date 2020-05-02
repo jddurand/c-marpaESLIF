@@ -279,6 +279,8 @@ typedef struct MarpaX_ESLIF_Recognizer {
   marpaESLIF_t           *marpaESLIFp;
   genericStack_t          _internalStack;
   genericStack_t         *internalStackp;
+  /* For regex callback, we store the stash pointer of MarpaX::ESLIF::RegexCallout */
+  HV                     *regexCalloutStashp;
 } MarpaX_ESLIF_Recognizer_t;
 
 /* Value context */
@@ -1235,7 +1237,9 @@ static short marpaESLIFPerl_recognizerRegexCallbackb(void *userDatavp, marpaESLI
   dTHXa(Perl_MarpaX_ESLIF_Recognizerp->PerlInterpreterp);
 
   list = newAV();
-  svp = marpaESLIFPerl_recognizerGetSvp(aTHX_ marpaESLIFRecognizerp, internalStackp, marpaESLIFCalloutBlockp);
+  /* Note that by definition svp is a reference to a hash - we bless it to MarpaX::ESLIF::RegexCallout - svp count is unaffected */
+  svp = sv_bless(marpaESLIFPerl_recognizerGetSvp(aTHX_ marpaESLIFRecognizerp, internalStackp, marpaESLIFCalloutBlockp), Perl_MarpaX_ESLIF_Recognizerp->regexCalloutStashp);
+
   /* One reference count ownership is transfered to the array */
   av_push(list, svp);
   actionResult = marpaESLIFPerl_call_actionp(aTHX_ Perl_MarpaX_ESLIF_Recognizerp->Perl_recognizerInterfacep, Perl_MarpaX_ESLIF_Recognizerp->actions, list, NULL /* Perl_MarpaX_ESLIF_Recognizerp */, 0 /* evalb */, 0 /* evalSilentb */);
@@ -1478,6 +1482,7 @@ static void marpaESLIFPerl_recognizerContextInitv(pTHX_ marpaESLIF_t *marpaESLIF
 #endif
   Perl_MarpaX_ESLIF_Recognizerp->marpaESLIFp                        = marpaESLIFp;
   Perl_MarpaX_ESLIF_Recognizerp->internalStackp                     = &(Perl_MarpaX_ESLIF_Recognizerp->_internalStack);
+  Perl_MarpaX_ESLIF_Recognizerp->regexCalloutStashp                 = gv_stashpv("MarpaX::ESLIF::RegexCallout", 0);
 }
 
 /*****************************************************************************/
