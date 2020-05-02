@@ -80,7 +80,12 @@ sub isWithTrack {
 sub RegexAction {
     my ($self, $block) = @_;
     $self->{log}->tracef("Regex callback: %s", $block);
-    return 1;
+    foreach (qw/calloutNumber calloutString subject pattern captureTop captureLast offsetVector mark startMatch currentPosition nextItem/) {
+        my $method = 'get' . ucfirst($_);
+        $self->{log}->tracef("Regex callback: %s: %s", $_, $block->$method);
+    }
+    $self->{log}->tracef("Regex callback: %s", $block);
+    return 0;
 }
 
 package MyValue;
