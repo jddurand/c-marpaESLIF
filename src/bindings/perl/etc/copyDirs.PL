@@ -278,6 +278,7 @@ sub _dircopy {
         next if $_ eq 'Win32';
         next if $_ eq 'ipch';
         next if $_ eq 'CMake-codecov';
+        next if $_ eq 'testdata';
         if ($_ eq 'tar') {
           #
           # We skip only 'tar' directory of marpaESLIF
