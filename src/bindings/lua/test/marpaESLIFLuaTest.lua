@@ -127,10 +127,10 @@ function try(what)
 end
 
 ------------------------------------------------------------------------------
-logger:noticef('marpaESLIFLua version: %s', tostring(marpaESLIFLua.version()))
-logger:noticef('marpaESLIFLua version major: %s', tostring(marpaESLIFLua.versionMajor()))
-logger:noticef('marpaESLIFLua version minor: %s', tostring(marpaESLIFLua.versionMinor()))
-logger:noticef('marpaESLIFLua version patch: %s', tostring(marpaESLIFLua.versionPatch()))
+logger:noticef('marpaESLIFLua version: %s', tostring(marpaESLIFLua:version()))
+logger:noticef('marpaESLIFLua version major: %s', tostring(marpaESLIFLua:versionMajor()))
+logger:noticef('marpaESLIFLua version minor: %s', tostring(marpaESLIFLua:versionMinor()))
+logger:noticef('marpaESLIFLua version patch: %s', tostring(marpaESLIFLua:versionPatch()))
 ------------------------------------------------------------------------------
 local marpaESLIFp = marpaESLIFLua.marpaESLIF_new(logger)
 logger:noticef('marpaESLIF version: %s', tostring(marpaESLIFp:version()))
@@ -146,6 +146,7 @@ marpaESLIFGrammarp = marpaESLIFp:marpaESLIFGrammar_new(
 :default ::=             action        => do_op
                          symbol-action => do_symbol
                          event-action  => do_event
+                         regex-action  => do_regex
 :discard ::= whitespaces event  => discard_whitespaces$
 :discard ::= comment     event  => discard_comment$
 
@@ -171,7 +172,7 @@ Expression ::=
 NUMBER     ~ /[\d]+/
 whitespaces ::= WHITESPACES
 WHITESPACES ~ [\s]+
-comment ::= /(?:(?:(?:\/\/)(?:[^\n]*)(?:\n|\z))|(?:(?:\/\*)(?:(?:[^\*]+|\*(?!\/))*)(?:\*\/)))/u
+comment ::= /(((\/\/)([^\n]*)(\n|\z))|((\/\*)(([^\*]+|\*(?!\/))*)(\*\/)))(?C"Comment Regex Callout")/u
 ]]
 )
 -- marpaESLIFJSONp = nil
@@ -448,6 +449,20 @@ recognizerInterface = {
       logger:tracef('%s', tableDump(events))
       logger:tracef("do_event => true", tostring(do_event))
       return do_event
+   end,
+   ["do_regex"]             = function(self, block)
+      logger:tracef("do_regex(%s)", block)
+      logger:tracef('lua_regexaction: calloutNumber   = %s', tostring(block:getCalloutNumber()))
+      logger:tracef('lua_regexaction: calloutString   = %s', tostring(block:getCalloutString()))
+      logger:tracef('lua_regexaction: subject         = %s', tostring(block:getSubject()))
+      logger:tracef('lua_regexaction: pattern         = %s', tostring(block:getPattern()))
+      logger:tracef('lua_regexaction: captureTop      = %s', tostring(block:getCaptureTop()))
+      logger:tracef('lua_regexaction: captureLast     = %s', tostring(block:getCaptureLast()))
+      logger:tracef('lua_regexaction: offsetVector    = %s', tableDump(block:getOffsetVector()))
+      logger:tracef('lua_regexaction: mark            = %s', tostring(block:getMark()))
+      logger:tracef('lua_regexaction: currentPosition = %s', tostring(block:getCurrentPosition()))
+      logger:tracef('lua_regexaction: nextItem        = %s', tostring(block:getNextItem()))
+      return 0
    end
 }
 

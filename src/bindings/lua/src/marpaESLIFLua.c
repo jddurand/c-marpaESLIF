@@ -273,6 +273,18 @@ static int                                marpaESLIFLua_marpaESLIFJSONDecoder_ne
 static int                                marpaESLIFLuaJSONDecoder_decodei(lua_State *L);
 static short                              marpaESLIFLuaJSONDecoder_readerb(void *userDatavp, char **inputcpp, size_t *inputlp, short *eofbp, short *characterStreambp, char **encodingsp, size_t *encodinglp);
 
+static int                                marpaESLIFLua_marpaESLIFRegexCallout_getCalloutNumberi(lua_State *L);
+static int                                marpaESLIFLua_marpaESLIFRegexCallout_getCalloutStringi(lua_State *L);
+static int                                marpaESLIFLua_marpaESLIFRegexCallout_getSubjecti(lua_State *L);
+static int                                marpaESLIFLua_marpaESLIFRegexCallout_getPatterni(lua_State *L);
+static int                                marpaESLIFLua_marpaESLIFRegexCallout_getCaptureTopi(lua_State *L);
+static int                                marpaESLIFLua_marpaESLIFRegexCallout_getCaptureLasti(lua_State *L);
+static int                                marpaESLIFLua_marpaESLIFRegexCallout_getOffsetVectori(lua_State *L);
+static int                                marpaESLIFLua_marpaESLIFRegexCallout_getMarki(lua_State *L);
+static int                                marpaESLIFLua_marpaESLIFRegexCallout_getStartMatchi(lua_State *L);
+static int                                marpaESLIFLua_marpaESLIFRegexCallout_getCurrentPositioni(lua_State *L);
+static int                                marpaESLIFLua_marpaESLIFRegexCallout_getNextItemi(lua_State *L);
+
 #define MARPAESLIFLUA_NOOP
 
 static short marpaESLIFLua_lua_pushinteger(lua_State *L, lua_Integer n);
@@ -712,8 +724,7 @@ static short marpaESLIFLua_lua_isinteger(int *rcp, lua_State *L, int idx);
       goto err;                                                         \
     }                                                                   \
     if (! marpaESLIFLua_lua_getfield(NULL, L, -1, "__index")) goto err; /* Stack: marpaESLIFLuaJSONEncoder, metatable, metatable[__index] */ \
-    if (! marpaESLIFLua_lua_pushcfunction(L, marpaESLIFLuaJSONEncoder_encodei)) goto err; /* Stack: marpaESLIFLuaJSONEncoder, metatable, metatable[__index], marpaESLIFLuaJSONEncoder_encodei*/ \
-    if (! marpaESLIFLua_lua_setfield(L, -2, "encode")) goto err;        /* Stack: marpaESLIFLuaJSONEncoder, metatable, metatable[__index] */ \
+    MARPAESLIFLUA_STORE_FUNCTION(L, "encode", marpaESLIFLuaJSONEncoder_encodei); \
     if (! marpaESLIFLua_lua_pop(L, 2)) goto err;                        /* Stack: marpaESLIFLuaJSONEncoder */ \
   } while (0)
 
@@ -731,8 +742,7 @@ static short marpaESLIFLua_lua_isinteger(int *rcp, lua_State *L, int idx);
       goto err;                                                         \
     }                                                                   \
     if (! marpaESLIFLua_lua_getfield(NULL, L, -1, "__index")) goto err; /* Stack: marpaESLIFLuaJSONDecoder, metatable, metatable[__index] */ \
-    if (! marpaESLIFLua_lua_pushcfunction(L, marpaESLIFLuaJSONDecoder_decodei)) goto err; /* Stack: marpaESLIFLuaJSONDecoder, metatable, metatable[__index], marpaESLIFLuaJSONDecoder_decodei*/ \
-    if (! marpaESLIFLua_lua_setfield(L, -2, "decode")) goto err;        /* Stack: marpaESLIFLuaJSONDecoder, metatable, metatable[__index] */ \
+    MARPAESLIFLUA_STORE_FUNCTION(L, "decode", marpaESLIFLuaJSONDecoder_decodei); \
     if (! marpaESLIFLua_lua_pop(L, 2)) goto err;                        /* Stack: marpaESLIFLuaJSONDecoder */ \
   } while (0)
 
@@ -795,6 +805,31 @@ static short marpaESLIFLua_lua_isinteger(int *rcp, lua_State *L, int idx);
     MARPAESLIFLUA_STORE_FUNCTION(L, "value",                      marpaESLIFLua_marpaESLIFValue_valuei); \
     if (! marpaESLIFLua_lua_setfield(L, -2, "__index")) goto err;       \
     if (! marpaESLIFLua_lua_setmetatable(L, -2)) goto err;              \
+  } while (0)
+
+/* ----------------------------------------------------------------------------------- */
+/* Push of ESLIF callout object                                                        */
+/* This macro differs from the others because we already have a table that we imported */
+/* ----------------------------------------------------------------------------------- */
+#define MARPAESLIFLUA_MAKE_MARPAESLIFREGEXCALLBACK_OBJECT(L) do {       \
+    if (! marpaESLIFLua_lua_newtable(L)) goto err;                          /* Stack: function, regexCalloutTable, {} */ \
+    if (! marpaESLIFLua_lua_insert(L, -2)) goto err;                        /* Stack: function, {}, regexCalloutTable */ \
+    if (! marpaESLIFLua_lua_setfield(L, -2, "regexCalloutTable")) goto err; /* Stack: function, { "regexCalloutTable" = regexCalloutTable } */ \
+    if (! marpaESLIFLua_lua_newtable(L)) goto err;                          /* Stack: function, { "regexCalloutTable" = regexCalloutTable }, {} */ \
+    if (! marpaESLIFLua_lua_newtable(L)) goto err;                          /* Stack: function, { "regexCalloutTable" = regexCalloutTable }, { "__mode" = "v" }, {} */ \
+    MARPAESLIFLUA_STORE_FUNCTION(L, "getCalloutNumber",   marpaESLIFLua_marpaESLIFRegexCallout_getCalloutNumberi); \
+    MARPAESLIFLUA_STORE_FUNCTION(L, "getCalloutString",   marpaESLIFLua_marpaESLIFRegexCallout_getCalloutStringi); \
+    MARPAESLIFLUA_STORE_FUNCTION(L, "getSubject",         marpaESLIFLua_marpaESLIFRegexCallout_getSubjecti); \
+    MARPAESLIFLUA_STORE_FUNCTION(L, "getPattern",         marpaESLIFLua_marpaESLIFRegexCallout_getPatterni); \
+    MARPAESLIFLUA_STORE_FUNCTION(L, "getCaptureTop",      marpaESLIFLua_marpaESLIFRegexCallout_getCaptureTopi); \
+    MARPAESLIFLUA_STORE_FUNCTION(L, "getCaptureLast",     marpaESLIFLua_marpaESLIFRegexCallout_getCaptureLasti); \
+    MARPAESLIFLUA_STORE_FUNCTION(L, "getOffsetVector",    marpaESLIFLua_marpaESLIFRegexCallout_getOffsetVectori); \
+    MARPAESLIFLUA_STORE_FUNCTION(L, "getMark",            marpaESLIFLua_marpaESLIFRegexCallout_getMarki); \
+    MARPAESLIFLUA_STORE_FUNCTION(L, "getStartMatch",      marpaESLIFLua_marpaESLIFRegexCallout_getStartMatchi); \
+    MARPAESLIFLUA_STORE_FUNCTION(L, "getCurrentPosition", marpaESLIFLua_marpaESLIFRegexCallout_getCurrentPositioni); \
+    MARPAESLIFLUA_STORE_FUNCTION(L, "getNextItem",        marpaESLIFLua_marpaESLIFRegexCallout_getNextItemi); \
+    if (! marpaESLIFLua_lua_setfield(L, -2, "__index")) goto err;           /* Stack: function, { "regexCalloutTable" = regexCalloutTable }, { "__mode" = "v", __index = {...}}} */ \
+    if (! marpaESLIFLua_lua_setmetatable(L, -2)) goto err;                  /* Stack: function, { "regexCalloutTable" = regexCalloutTable } meta { "__mode" = "v", __index = {...}}} */ \
   } while (0)
 
 #ifdef MARPAESLIFLUA_EMBEDDED
@@ -940,8 +975,7 @@ static int marpaESLIFLua_installi(lua_State *L)
       marpaESLIFLua_luaL_error(L, "__index field of string metatable is not a table");
       goto err;
     } else {
-      if (! marpaESLIFLua_lua_pushcfunction(L, marpaESLIFLua_string_encodingi)) goto err; /* Stack: marpaESLIFLuaTable, "", metatable, metatable[__index], marpaESLIFLua_string_encodingi */
-      if (! marpaESLIFLua_lua_setfield(L, -2, "encoding")) goto err;		          /* Stack: marpaESLIFLuaTable, "", metatable, metatable[__index] */
+      MARPAESLIFLUA_STORE_FUNCTION(L, "encoding", marpaESLIFLua_string_encodingi);
       if (! marpaESLIFLua_lua_pop(L, 3)) goto err;                                        /* Stack: marpaESLIFLuaTable */
     }
   }
@@ -961,13 +995,6 @@ static int marpaESLIFLua_versioni(lua_State *L)
 /****************************************************************************/
 {
   static const char *funcs = "marpaESLIFLua_versioni";
-  int                topi;
-
-  if (! marpaESLIFLua_lua_gettop(&topi, L)) goto err;
-  if (topi != 0) {
-    marpaESLIFLua_luaL_error(L, "Usage: version()");
-    goto err;
-  }
 
   if (! marpaESLIFLua_lua_pushstring(NULL, L, MARPAESLIFLUA_VERSION)) goto err;
 
@@ -982,25 +1009,13 @@ static int marpaESLIFLua_versionMajori(lua_State *L)
 /****************************************************************************/
 {
   static const char *funcs = "marpaESLIFLua_versionMajori";
-  int                rci;
-  int                topi;
-
-  if (! marpaESLIFLua_lua_gettop(&topi, L)) goto err;
-  if (topi != 0) {
-    marpaESLIFLua_luaL_error(L, "Usage: versionMajor()");
-    goto err;
-  }
 
   if (! marpaESLIFLua_lua_pushinteger(L, (lua_Integer) MARPAESLIFLUA_VERSION_MAJOR)) goto err;
 
-  rci = 1;
-  goto done;
+  return 1;
 
  err:
-  rci = 0;
-
- done:
-  return rci;
+  return 0;
 }
 
 /****************************************************************************/
@@ -1008,25 +1023,13 @@ static int marpaESLIFLua_versionMinori(lua_State *L)
 /****************************************************************************/
 {
   static const char *funcs = "marpaESLIFLua_versionMinori";
-  int                rci;
-  int                topi;
-
-  if (! marpaESLIFLua_lua_gettop(&topi, L)) goto err;
-  if (topi != 0) {
-    marpaESLIFLua_luaL_error(L, "Usage: versionMinor()");
-    goto err;
-  }
 
   if (! marpaESLIFLua_lua_pushinteger(L, (lua_Integer) MARPAESLIFLUA_VERSION_MINOR)) goto err;
 
-  rci = 1;
-  goto done;
+  return 1;
 
  err:
-  rci = 0;
-
- done:
-  return rci;
+  return 0;
 }
 
 /****************************************************************************/
@@ -1034,25 +1037,13 @@ static int marpaESLIFLua_versionPatchi(lua_State *L)
 /****************************************************************************/
 {
   static const char *funcs = "marpaESLIFLua_versionPatchi";
-  int                rci;
-  int                topi;
-
-  if (! marpaESLIFLua_lua_gettop(&topi, L)) goto err;
-  if (topi != 0) {
-    marpaESLIFLua_luaL_error(L, "Usage: versionPatch()");
-    goto err;
-  }
 
   if (! marpaESLIFLua_lua_pushinteger(L, (lua_Integer) MARPAESLIFLUA_VERSION_PATCH)) goto err;
 
-  rci = 1;
-  goto done;
+  return 1;
 
  err:
-  rci = 0;
-
- done:
-  return rci;
+  return 0;
 }
 
 /****************************************************************************/
@@ -3803,6 +3794,7 @@ static short marpaESLIFLua_regexCallbackb(void *userDatavp, marpaESLIFRecognizer
                           1 /* nargs */,
                           {
                             if (! marpaESLIFLua_pushRecognizerb(marpaESLIFLuaRecognizerContextp, marpaESLIFRecognizerp, marpaESLIFCalloutBlockp)) goto err;
+                            MARPAESLIFLUA_MAKE_MARPAESLIFREGEXCALLBACK_OBJECT(L);
                           },
                           &tmpi
                           );
@@ -8450,3 +8442,46 @@ static short marpaESLIFLuaJSONDecoder_readerb(void *userDatavp, char **inputcpp,
   return 1;
 }
 
+/****************************************************************************/
+/* All regex callout methods obey the same implementation */
+#define MARPAESLIFLUA_MARPAESLIFREGEXCALLOUT_METHOD(L, methodName, memberName) do { \
+    static const char             *funcs = "marpaESLIFLua_marpaESLIFRegexCallout_" methodName "i"; \
+    int                            typei;                               \
+    int                            topi;                                \
+                                                                        \
+    if (! marpaESLIFLua_lua_gettop(&topi, L)) goto err;                 \
+    if (topi != 1) {                                                    \
+      marpaESLIFLua_luaL_errorf(L, "Usage: %s(%s)", funcs, "argument"); \
+      goto err;                                                         \
+    }                                                                   \
+                                                                        \
+    if (! marpaESLIFLua_lua_type(&typei, L, 1)) goto err;               \
+    if (typei != LUA_TTABLE) {                                          \
+      marpaESLIFLua_luaL_error(L, "argument must be a table");          \
+      goto err;                                                         \
+    }                                                                   \
+                                                                        \
+    if (! marpaESLIFLua_lua_getfield(NULL,L, 1, "regexCalloutTable")) goto err;   /* Stack: argument, regexCalloutTable */ \
+    if (! marpaESLIFLua_lua_getfield(NULL,L, 2, memberName)) goto err;            /* Stack: argument, regexCalloutTable, regexCalloutTable.memberName */ \
+    if (! marpaESLIFLua_lua_insert(L, -3)) goto err;                              /* Stack: regexCalloutTable.memberName, argument, regexCalloutTable */ \
+    if (! marpaESLIFLua_lua_pop(L, 2)) goto err;                                  /* Stack: regexCalloutTable.memberName */ \
+                                                                        \
+    return 1;                                                           \
+                                                                        \
+  err:                                                                  \
+    return 0;                                                           \
+  } while (0)
+
+/****************************************************************************/
+static int marpaESLIFLua_marpaESLIFRegexCallout_getCalloutNumberi(lua_State *L)   { MARPAESLIFLUA_MARPAESLIFREGEXCALLOUT_METHOD(L, "getCalloutNumber",   "callout_number"); }
+static int marpaESLIFLua_marpaESLIFRegexCallout_getCalloutStringi(lua_State *L)   { MARPAESLIFLUA_MARPAESLIFREGEXCALLOUT_METHOD(L, "getCalloutString",   "callout_string"); }
+static int marpaESLIFLua_marpaESLIFRegexCallout_getSubjecti(lua_State *L)         { MARPAESLIFLUA_MARPAESLIFREGEXCALLOUT_METHOD(L, "getSubject",         "subject"); }
+static int marpaESLIFLua_marpaESLIFRegexCallout_getPatterni(lua_State *L)         { MARPAESLIFLUA_MARPAESLIFREGEXCALLOUT_METHOD(L, "getPattern",         "pattern"); }
+static int marpaESLIFLua_marpaESLIFRegexCallout_getCaptureTopi(lua_State *L)      { MARPAESLIFLUA_MARPAESLIFREGEXCALLOUT_METHOD(L, "getCaptureTop",      "capture_top"); }
+static int marpaESLIFLua_marpaESLIFRegexCallout_getCaptureLasti(lua_State *L)     { MARPAESLIFLUA_MARPAESLIFREGEXCALLOUT_METHOD(L, "getCaptureLast",     "capture_last"); }
+static int marpaESLIFLua_marpaESLIFRegexCallout_getOffsetVectori(lua_State *L)    { MARPAESLIFLUA_MARPAESLIFREGEXCALLOUT_METHOD(L, "getOffsetVector",    "offset_vector"); }
+static int marpaESLIFLua_marpaESLIFRegexCallout_getMarki(lua_State *L)            { MARPAESLIFLUA_MARPAESLIFREGEXCALLOUT_METHOD(L, "getMark",            "mark"); }
+static int marpaESLIFLua_marpaESLIFRegexCallout_getStartMatchi(lua_State *L)      { MARPAESLIFLUA_MARPAESLIFREGEXCALLOUT_METHOD(L, "getStartMatch",      "start_match"); }
+static int marpaESLIFLua_marpaESLIFRegexCallout_getCurrentPositioni(lua_State *L) { MARPAESLIFLUA_MARPAESLIFREGEXCALLOUT_METHOD(L, "getCurrentPosition", "current_position"); }
+static int marpaESLIFLua_marpaESLIFRegexCallout_getNextItemi(lua_State *L)        { MARPAESLIFLUA_MARPAESLIFREGEXCALLOUT_METHOD(L, "getNextItem",        "next_item"); }
+/****************************************************************************/

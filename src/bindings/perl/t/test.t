@@ -353,7 +353,7 @@ ok($currentLevel >= 0, "Current level is >= 0");
 my %GRAMMAR_PROPERTIES_BY_LEVEL = (
     '0' => { defaultRuleAction   => "do_op",
              defaultEventAction  => undef,
-             defaultRegexAction  => 'RegexAction',
+             defaultRegexAction  => 'lua_regexAction',
              defaultSymbolAction => "do_symbol",
              description         => "Grammar level 0",
              discardId           => 1,
@@ -559,7 +559,7 @@ my %RULE_PROPERTIES_BY_LEVEL = (
                  sequence                 => 0,
                  propertyBitSet           => MarpaX::ESLIF::Rule::PropertyBitSet->MARPAESLIF_RULE_IS_PRODUCTIVE|
                                              MarpaX::ESLIF::Rule::PropertyBitSet->MARPAESLIF_RULE_IS_ACCESSIBLE,
-                 show => "<Expression[3]> ::= '(' <Expression[0]> ')' action => ::copy[1] name => 'Expression is ()'" },
+                 show => "<Expression[3]> ::= /\\((?C\"LParen\")/ <Expression[0]> ')' action => ::copy[1] name => 'Expression is ()'" },
         '9' => { action                   => undef,
                  description              => "Expression is **",
                  discardEvent             => undef,
@@ -1025,7 +1025,7 @@ my %SYMBOL_PROPERTIES_BY_LEVEL = (
                  start => 0,
                  top => 0,
                  type => MarpaX::ESLIF::Symbol::Type->MARPAESLIF_SYMBOLTYPE_META},
-        '10' => {description => "'('",
+        '10' => {description => "/\\((?C\"LParen\")/",
                  discard => 0,
                  discardEvent => undef,
                  discardEventInitialState => 1,
@@ -1791,7 +1791,7 @@ __DATA__
                          symbol-action         => do_symbol
                          default-encoding      => ASCII
                          fallback-encoding     => UTF-8
-                         regex-action          => RegexAction
+                         regex-action          => ::lua->lua_regexAction
 :discard ::= whitespaces event  => discard_whitespaces$
 :discard ::= comment     event  => discard_comment$
 
@@ -1803,7 +1803,7 @@ event Expression$ = completed Expression
 event ^Expression = predicted Expression
 Expression ::=
     Number                                           action => do_int            name => 'Expression is Number'
-    | '(' Expression ')'              assoc => group action => ::copy[1]         name => 'Expression is ()'
+    | /\((?C"LParen")/ Expression ')'              assoc => group action => ::copy[1]         name => 'Expression is ()'
    ||     Expression '**' Expression  assoc => right                             name => 'Expression is **'
    ||     Expression  '*' Expression                                             name => 'Expression is *'
     |     Expression  '/' Expression                                             name => 'Expression is /'
@@ -1823,5 +1823,11 @@ comment ::= /(?:(?:(?:\/\/)(?:[^\n]*)(?:\n|\z))|(?:(?:\/\*)(?:(?:[^\*]+|\*(?!\/)
 <luascript>
 function test_if_action(lexeme)
   return true
+end
+function lua_regexAction(callout)
+  print('Lua regex callback: '..tostring(callout))
+  print('... Callout number: '..tostring(callout['callout_number']))
+  print('... Callout string: '..tostring(callout['callout_string']))
+  return 0
 end
 </luascript>
