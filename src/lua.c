@@ -79,76 +79,6 @@ static int   _marpaESLIFGrammar_lua_writeri(lua_State *L, const void* p, size_t 
     }                                                                  \
   } while (0)
 
-#define LUA_PUSHNIL(containerp) do {                                   \
-    if (luaunpanic_pushnil(containerp->L)) {                           \
-      MARPAESLIFLUA_LOG_PANIC_STRING(containerp, lua_pushnil);         \
-      errno = ENOSYS;                                                  \
-      goto err;                                                        \
-    }                                                                  \
-  } while (0)
-
-#define LUA_PUSHLSTRING(containerp, s, l) do {                          \
-    if (luaunpanic_pushlstring(NULL, containerp->L, s, l)) {            \
-      MARPAESLIFLUA_LOG_PANIC_STRING(containerp, lua_pushlstring);      \
-      errno = ENOSYS;                                                   \
-      goto err;                                                         \
-    }                                                                   \
-  } while (0)
-
-#define LUAL_DOSTRING(containerp, string) do {                          \
-    int rc;                                                             \
-    if (luaunpanicL_dostring(&rc, containerp->L, string)) {             \
-      MARPAESLIFLUA_LOG_PANIC_STRING(containerp, luaL_dostring);        \
-      errno = ENOSYS;                                                   \
-      goto err;                                                         \
-    }                                                                   \
-    if (rc) {                                                           \
-      MARPAESLIFLUA_LOG_ERROR_STRING(containerp, luaL_dostring);        \
-      errno = ENOSYS;                                                   \
-      goto err;                                                         \
-    }                                                                   \
-  } while (0)
-
-#define LUA_PUSHLIGHTUSERDATA(containerp, p) do {                      \
-    if (luaunpanic_pushlightuserdata(containerp->L, p)) {              \
-      MARPAESLIFLUA_LOG_PANIC_STRING(containerp, lua_pushlightuserdata); \
-      errno = ENOSYS;                                                  \
-      goto err;                                                        \
-    }                                                                  \
-  } while (0)
-
-#define LUA_NEWTABLE(containerp) do {                                  \
-    if (luaunpanic_newtable(containerp->L)) {                          \
-      MARPAESLIFLUA_LOG_PANIC_STRING(containerp, lua_newtable);        \
-      errno = ENOSYS;                                                  \
-      goto err;                                                        \
-    }                                                                  \
-  } while (0)
-
-#define LUA_PUSHINTEGER(containerp, i) do {                            \
-    if (luaunpanic_pushinteger(containerp->L, i)) {                    \
-      MARPAESLIFLUA_LOG_PANIC_STRING(containerp, lua_pushinteger);     \
-      errno = ENOSYS;                                                  \
-      goto err;                                                        \
-    }                                                                  \
-  } while (0)
-
-#define LUA_PUSHNUMBER(containerp, x) do {                             \
-    if (luaunpanic_pushnumber(containerp->L, x)) {                     \
-      MARPAESLIFLUA_LOG_PANIC_STRING(containerp, lua_pushnumber);      \
-      errno = ENOSYS;                                                  \
-      goto err;                                                        \
-    }                                                                  \
-  } while (0)
-
-#define LUA_PUSHBOOLEAN(containerp, b) do {                            \
-    if (luaunpanic_pushboolean(containerp->L, b)) {                    \
-      MARPAESLIFLUA_LOG_PANIC_STRING(containerp, lua_pushboolean);     \
-      errno = ENOSYS;                                                  \
-      goto err;                                                        \
-    }                                                                  \
-  } while (0)
-
 #define LUA_DUMP(containerp, writer, data, strip) do {                  \
     int _rci = -1;                                                      \
     if (luaunpanic_dump(&_rci, containerp->L, writer, data, strip)) {   \
@@ -163,33 +93,9 @@ static int   _marpaESLIFGrammar_lua_writeri(lua_State *L, const void* p, size_t 
     }                                                                   \
   } while (0)
 
-#define LUA_RAWGETI(rcp, containerp, idx, n) do {                       \
-    if (luaunpanic_rawgeti(rcp, containerp->L, idx, n)) {               \
-      MARPAESLIFLUA_LOG_PANIC_STRING(containerp, lua_rawgeti);          \
-      errno = ENOSYS;                                                   \
-      goto err;                                                         \
-    }                                                                   \
-  } while (0)
-
 #define LUA_GETFIELDI(rcp, containerp, idx, k) do {                     \
     if (luaunpanic_getfield(rcp, containerp->L, idx, k)) {              \
       MARPAESLIFLUA_LOG_PANIC_STRING(containerp, lua_getfield);         \
-      errno = ENOSYS;                                                   \
-      goto err;                                                         \
-    }                                                                   \
-  } while (0)
-
-#define LUA_RAWSETI(containerp, idx, n) do {                            \
-    if (luaunpanic_rawseti(containerp->L, idx, n)) {                    \
-      MARPAESLIFLUA_LOG_PANIC_STRING(containerp, lua_rawseti);          \
-      errno = ENOSYS;                                                   \
-      goto err;                                                         \
-    }                                                                   \
-  } while (0)
-
-#define LUA_REMOVE(containerp, idx) do {                                \
-    if (luaunpanic_remove(containerp->L, idx)) {                        \
-      MARPAESLIFLUA_LOG_PANIC_STRING(containerp, lua_remove);           \
       errno = ENOSYS;                                                   \
       goto err;                                                         \
     }                                                                   \
@@ -225,9 +131,9 @@ static int   _marpaESLIFGrammar_lua_writeri(lua_State *L, const void* p, size_t 
     }                                                                   \
   } while (0)
 
-#define LUA_CALL(containerp, n, r) do {                                 \
-    if (luaunpanic_call(containerp->L, n, r)) {                         \
-      MARPAESLIFLUA_LOG_PANIC_STRING(containerp, lua_call);             \
+#define LUAL_CHECKSTACK(containerp, extra, msg) do {                    \
+    if (luaunpanicL_checkstack(containerp->L, extra, msg)) {            \
+      MARPAESLIFLUA_LOG_PANIC_STRING(containerp, luaL_checkstack);      \
       errno = ENOSYS;                                                   \
       goto err;                                                         \
     }                                                                   \
@@ -236,58 +142,6 @@ static int   _marpaESLIFGrammar_lua_writeri(lua_State *L, const void* p, size_t 
 #define LUA_SETTOP(containerp, idx) do {                             \
     if (luaunpanic_settop(containerp->L, idx)) {                     \
       MARPAESLIFLUA_LOG_PANIC_STRING(containerp, lua_settop);        \
-      errno = ENOSYS;                                                \
-      goto err;                                                      \
-    }                                                                \
-  } while (0)
-
-#define LUA_GETTOP(rcp, containerp) do {			     \
-    if (luaunpanic_settop(rcp, containerp->L)) {		     \
-      MARPAESLIFLUA_LOG_PANIC_STRING(containerp, lua_gettop);        \
-      errno = ENOSYS;                                                \
-      goto err;                                                      \
-    }                                                                \
-  } while (0)
-
-#define LUA_TYPE(containerp, rcp, idx) do {                          \
-    if (luaunpanic_type(rcp, containerp->L, idx)) {                  \
-      MARPAESLIFLUA_LOG_PANIC_STRING(containerp, lua_type);          \
-      errno = ENOSYS;                                                \
-      goto err;                                                      \
-    }                                                                \
-  } while (0)
-
-#define LUA_TOBOOLEAN(containerp, rcp, idx) do {                     \
-    if (luaunpanic_toboolean(rcp, containerp->L, idx)) {             \
-      MARPAESLIFLUA_LOG_PANIC_STRING(containerp, lua_toboolean);     \
-      errno = ENOSYS;                                                \
-      goto err;                                                      \
-    }                                                                \
-  } while (0)
-
-#define LUA_TONUMBER(containerp, rcp, idx) do {                         \
-    int isnum;                                                          \
-    if (luaunpanic_tonumberx(rcp, containerp->L, idx, &isnum)) {        \
-      MARPAESLIFLUA_LOG_PANIC_STRING(containerp, lua_tonumberx);        \
-      errno = ENOSYS;                                                   \
-      goto err;                                                         \
-    }                                                                   \
-    if (! isnum) {                                                      \
-      MARPAESLIF_ERROR(containerp->marpaESLIFp, "lua_tonumberx failure"); \
-    }                                                                   \
-  } while (0)
-
-#define LUA_TOLSTRING(containerp, rcpp, idx, lenp) do {                 \
-    if (luaunpanic_tolstring(rcpp, containerp->L, idx, lenp)) {         \
-      MARPAESLIFLUA_LOG_PANIC_STRING(containerp, lua_tolstring);        \
-      errno = ENOSYS;                                                   \
-      goto err;                                                         \
-    }                                                                   \
-  } while (0)
-
-#define LUA_TOPOINTER(containerp, rcpp, idx) do {                    \
-    if (luaunpanic_topointer(rcpp, containerp->L, idx)) {            \
-      MARPAESLIFLUA_LOG_PANIC_STRING(containerp, lua_topointer);     \
       errno = ENOSYS;                                                \
       goto err;                                                      \
     }                                                                \
@@ -326,14 +180,6 @@ static int   _marpaESLIFGrammar_lua_writeri(lua_State *L, const void* p, size_t 
     }                                                                   \
     if (_rci != 0) {                                                    \
       MARPAESLIFLUA_LOG_ERROR_STRING(containerp, lua_pcall);            \
-      errno = ENOSYS;                                                   \
-      goto err;                                                         \
-    }                                                                   \
-  } while (0)
-
-#define LUAL_SETFUNCS(containerp, l, nup) do {                          \
-    if (luaunpanicL_setfuncs(containerp->L, l, nup)) {                  \
-      MARPAESLIFLUA_LOG_PANIC_STRING(containerp, lua_pcall);            \
       errno = ENOSYS;                                                   \
       goto err;                                                         \
     }                                                                   \
@@ -845,6 +691,13 @@ static short marpaESLIFLua_lua_pushnil(lua_State *L)
 /****************************************************************************/
 {
   return ! luaunpanic_pushnil(L);
+}
+
+/****************************************************************************/
+static short marpaESLIFLua_luaL_checkstack(lua_State *L, int extra, const char *msg)
+/****************************************************************************/
+{
+  return ! luaunpanicL_checkstack(L, extra, msg);
 }
 
 /****************************************************************************/

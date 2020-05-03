@@ -307,6 +307,7 @@ static short marpaESLIFLua_lua_seti(lua_State *L, int index, lua_Integer i);
 static short marpaESLIFLua_lua_pushstring(const char **luasp, lua_State *L, const char *s);
 static short marpaESLIFLua_lua_pushlstring(const char **luasp, lua_State *L, const char *s, size_t len);
 static short marpaESLIFLua_lua_pushnil(lua_State *L);
+static short marpaESLIFLua_luaL_checkstack(lua_State *L, int extra, const char *msg);
 static short marpaESLIFLua_lua_getfield(int *luaip, lua_State *L, int index, const char *k);
 static short marpaESLIFLua_lua_call(lua_State *L, int nargs, int nresults);
 static short marpaESLIFLua_lua_settop(lua_State *L, int index);
@@ -6215,8 +6216,18 @@ static int marpaESLIFLua_marpaESLIFValue_valuei(lua_State *L)
 static short marpaESLIFLua_lua_pushinteger(lua_State *L, lua_Integer n)
 /****************************************************************************/
 {
+  short rcb;
+
+  if (! marpaESLIFLua_luaL_checkstack(L, 1, "Cannot grow stack by 1")) goto err;
   lua_pushinteger(L, n); /* Native lua call */
-  return 1;
+  rcb = 1;
+  goto done;
+
+ err:
+  rcb = 0;
+
+ done:
+  return rcb;
 }
 
 /****************************************************************************/
@@ -6228,30 +6239,39 @@ static short marpaESLIFLua_lua_setglobal (lua_State *L, const char *name)
 }
 
 /****************************************************************************/
-static short marpaESLIFLua_lua_getglobal (int *luaip, lua_State *L, const char *name)
+static short marpaESLIFLua_lua_getglobal (int *rcip, lua_State *L, const char *name)
 /****************************************************************************/
 {
-  int luai;
+  short rcb;
+  int   rci;
 
+  if (! marpaESLIFLua_luaL_checkstack(L, 1, "Cannot grow stack by 1")) goto err;
 #if LUA_VERSION_NUM < 503
   lua_getglobal(L, name); /* Native lua call */
-  luai = lua_type(L, -1);
+  rci = lua_type(L, -1);
 #else
-  luai = lua_getglobal(L, name); /* Native lua call */
+  rci = lua_getglobal(L, name); /* Native lua call */
 #endif
-  if (luaip != NULL) *luaip = luai;
+  if (rcip != NULL) *rcip = rci;
 
-  return 1;
+  rcb = 1;
+  goto done;
+
+ err:
+  rcb = 0;
+
+ done:
+  return rcb;
 }
 
 /****************************************************************************/
-static short marpaESLIFLua_lua_type(int *luaip, lua_State *L, int index)
+static short marpaESLIFLua_lua_type(int *rcip, lua_State *L, int index)
 /****************************************************************************/
 {
-  int luai;
+  int rci;
 
-  luai = lua_type(L, index); /* Native lua call */
-  if (luaip != NULL) *luaip = luai;
+  rci = lua_type(L, index); /* Native lua call */
+  if (rcip != NULL) *rcip = rci;
 
   return 1;
 }
@@ -6268,16 +6288,38 @@ static short marpaESLIFLua_lua_pop(lua_State *L, int n)
 static short marpaESLIFLua_lua_newtable(lua_State *L)
 /****************************************************************************/
 {
+  short rcb;
+
+  if (! marpaESLIFLua_luaL_checkstack(L, 1, "Cannot grow stack by 1")) goto err;
   lua_newtable(L); /* Native lua call */
-  return 1;
+
+  rcb = 1;
+  goto done;
+
+ err:
+  rcb = 0;
+
+ done:
+  return rcb;
 }
 
 /****************************************************************************/
 static short marpaESLIFLua_lua_pushcfunction (lua_State *L, lua_CFunction f)
 /****************************************************************************/
 {
+  short rcb;
+
+  if (! marpaESLIFLua_luaL_checkstack(L, 1, "Cannot grow stack by 1")) goto err;
   lua_pushcfunction(L, f); /* Native lua call */
-  return 1;
+
+  rcb = 1;
+  goto done;
+
+ err:
+  rcb = 0;
+
+ done:
+  return rcb;
 }
 
 /****************************************************************************/
@@ -6301,57 +6343,68 @@ static short marpaESLIFLua_lua_setmetatable (lua_State *L, int index)
 static short marpaESLIFLua_lua_insert(lua_State *L, int index)
 /****************************************************************************/
 {
+  short rcb;
+
+  if ((index > 0) && (! marpaESLIFLua_luaL_checkstack(L, index, "Cannot grow stack"))) goto err;
   lua_insert(L, index); /* Native lua call */
-  return 1;
+
+  rcb = 1;
+  goto done;
+
+ err:
+  rcb = 0;
+
+ done:
+  return rcb;
 }
 
 /****************************************************************************/
-static short marpaESLIFLua_lua_rawgeti(int *luaip, lua_State *L, int index, lua_Integer n)
+static short marpaESLIFLua_lua_rawgeti(int *rcip, lua_State *L, int index, lua_Integer n)
 /****************************************************************************/
 {
-  int luai;
+  int rci;
 
 #if LUA_VERSION_NUM < 503
   lua_rawgeti(L, index, n); /* Native lua call */
-  luai = lua_type(L, -1);
+  rci = lua_type(L, -1);
 #else
-  luai = lua_rawgeti(L, index, n); /* Native lua call */
+  rci = lua_rawgeti(L, index, n); /* Native lua call */
 #endif
-  if (luaip != NULL) *luaip = luai;
+  if (rcip != NULL) *rcip = rci;
 
   return 1;
 }
 
 /****************************************************************************/
-static short marpaESLIFLua_lua_rawget(int *luaip, lua_State *L, int index)
+static short marpaESLIFLua_lua_rawget(int *rcip, lua_State *L, int index)
 /****************************************************************************/
 {
-  int luai;
+  int rci;
 
 #if LUA_VERSION_NUM < 503
   lua_rawget(L, index); /* Native lua call */
-  luai = lua_type(L, -1);
+  rci = lua_type(L, -1);
 #else
-  luai = lua_rawget(L, index); /* Native lua call */
+  rci = lua_rawget(L, index); /* Native lua call */
 #endif
-  if (luaip != NULL) *luaip = luai;
+  if (rcip != NULL) *rcip = rci;
 
   return 1;
 }
 
 /****************************************************************************/
-static short marpaESLIFLua_lua_rawgetp(int *luaip, lua_State *L, int index, const void *p)
+static short marpaESLIFLua_lua_rawgetp(int *rcip, lua_State *L, int index, const void *p)
 /****************************************************************************/
 {
-  int luai;
+  int rci;
 
 #if LUA_VERSION_NUM < 503
   lua_rawgetp(L, index, p); /* Native lua call */
-  luai = lua_type(L, -1);
+  rci = lua_type(L, -1);
 #else
-  luai = lua_rawgetp(L, index, p); /* Native lua call */
+  rci = lua_rawgetp(L, index, p); /* Native lua call */
 #endif
-  if (luaip != NULL) *luaip = luai;
+  if (rcip != NULL) *rcip = rci;
 
   return 1;
 }
@@ -6369,9 +6422,19 @@ static short marpaESLIFLua_lua_remove(lua_State *L, int index)
 static short marpaESLIFLua_lua_createtable(lua_State *L, int narr, int nrec)
 /****************************************************************************/
 {
+  short rcb;
+
+  if (! marpaESLIFLua_luaL_checkstack(L, 1, "Cannot grow stack by 1")) goto err;
   lua_createtable(L, narr, nrec); /* Native lua call */
 
-  return 1;
+  rcb = 1;
+  goto done;
+
+ err:
+  rcb = 0;
+
+ done:
+  return rcb;
 }
 
 /****************************************************************************/
@@ -6406,11 +6469,20 @@ static short marpaESLIFLua_lua_pushstring(const char **luasp, lua_State *L, cons
 /****************************************************************************/
 {
   const char *luas;
+  short       rcb;
 
+  if (! marpaESLIFLua_luaL_checkstack(L, 1, "Cannot grow stack by 1")) goto err;
   luas = lua_pushstring(L, s); /* Native lua call */
   if (luasp != NULL) *luasp = luas;
 
-  return 1;
+  rcb = 1;
+  goto done;
+
+ err:
+  rcb = 0;
+
+ done:
+  return rcb;
 }
 
 /****************************************************************************/
@@ -6418,35 +6490,63 @@ static short marpaESLIFLua_lua_pushlstring(const char **luasp, lua_State *L, con
 /****************************************************************************/
 {
   const char *luas;
+  short       rcb;
 
+  if (! marpaESLIFLua_luaL_checkstack(L, 1, "Cannot grow stack by 1")) goto err;
   luas = lua_pushlstring(L, s, len); /* Native lua call */
   if (luasp != NULL) *luasp = luas;
 
-  return 1;
+  rcb = 1;
+  goto done;
+
+ err:
+  rcb = 0;
+
+ done:
+  return rcb;
 }
 
 /****************************************************************************/
 static short marpaESLIFLua_lua_pushnil(lua_State *L)
 /****************************************************************************/
 {
+  short rcb;
+
+  if (! marpaESLIFLua_luaL_checkstack(L, 1, "Cannot grow stack by 1")) goto err;
   lua_pushnil(L); /* Native lua call */
+
+  rcb = 1;
+  goto done;
+
+ err:
+  rcb = 0;
+
+ done:
+  return rcb;
+}
+
+/****************************************************************************/
+static short marpaESLIFLua_luaL_checkstack(lua_State *L, int extra, const char *msg)
+/****************************************************************************/
+{
+  luaL_checkstack(L, extra, msg); /* Native lua call */
 
   return 1;
 }
 
 /****************************************************************************/
-static short marpaESLIFLua_lua_getfield(int *luaip, lua_State *L, int index, const char *k)
+static short marpaESLIFLua_lua_getfield(int *rcip, lua_State *L, int index, const char *k)
 /****************************************************************************/
 {
-  int luai;
+  int rci;
 
 #if LUA_VERSION_NUM < 503
   lua_getfield(L, index, k); /* Native lua call */
-  luai = lua_type(L, -1);
+  rci = lua_type(L, -1);
 #else
-  luai = lua_getfield(L, index, k); /* Native lua call */
+  rci = lua_getfield(L, index, k); /* Native lua call */
 #endif
-  if (luaip != NULL) *luaip = luai;
+  if (rcip != NULL) *rcip = rci;
 
   return 1;
 }
@@ -6455,9 +6555,19 @@ static short marpaESLIFLua_lua_getfield(int *luaip, lua_State *L, int index, con
 static short marpaESLIFLua_lua_call(lua_State *L, int nargs, int nresults)
 /****************************************************************************/
 {
+  short rcb;
+
+  if (! marpaESLIFLua_luaL_checkstack(L, nresults, "Cannot grow stack")) goto err;
   lua_call(L, nargs, nresults); /* Native lua call */
 
-  return 1;
+  rcb = 1;
+  goto done;
+
+ err:
+  rcb = 0;
+
+ done:
+  return rcb;
 }
 
 /****************************************************************************/
@@ -6473,9 +6583,19 @@ static short marpaESLIFLua_lua_settop(lua_State *L, int index)
 static short marpaESLIFLua_lua_copy(lua_State *L, int fromidx, int toidx)
 /****************************************************************************/
 {
+  short rcb;
+
+  if ((toidx > 0) && (! marpaESLIFLua_luaL_checkstack(L, toidx, "Cannot grow stack"))) goto err;
   lua_copy(L, fromidx, toidx); /* Native lua call */
 
-  return 1;
+  rcb = 1;
+  goto done;
+
+ err:
+  rcb = 0;
+
+ done:
+  return rcb;
 }
 
 /****************************************************************************/
@@ -6500,48 +6620,97 @@ static short marpaESLIFLua_lua_rawset(lua_State *L, int index)
 static short marpaESLIFLua_lua_pushboolean(lua_State *L, int b)
 /****************************************************************************/
 {
+  short rcb;
+
+  if (! marpaESLIFLua_luaL_checkstack(L, 1, "Cannot grow stack by 1")) goto err;
   lua_pushboolean(L, b); /* Native lua call */
 
-  return 1;
+  rcb = 1;
+  goto done;
+
+ err:
+  rcb = 0;
+
+ done:
+  return rcb;
 }
 
 /****************************************************************************/
 static short marpaESLIFLua_lua_pushnumber(lua_State *L, lua_Number n)
 /****************************************************************************/
 {
+  short rcb;
+
+  if (! marpaESLIFLua_luaL_checkstack(L, 1, "Cannot grow stack by 1")) goto err;
   lua_pushnumber(L, n); /* Native lua call */
 
-  return 1;
+  rcb = 1;
+  goto done;
+
+ err:
+  rcb = 0;
+
+ done:
+  return rcb;
 }
 
 /****************************************************************************/
 static short marpaESLIFLua_lua_pushlightuserdata(lua_State *L, void *p)
 /****************************************************************************/
 {
+  short rcb;
+
+  if (! marpaESLIFLua_luaL_checkstack(L, 1, "Cannot grow stack by 1")) goto err;
   lua_pushlightuserdata(L, p); /* Native lua call */
 
-  return 1;
+  rcb = 1;
+  goto done;
+
+ err:
+  rcb = 0;
+
+ done:
+  return rcb;
 }
 
 /****************************************************************************/
 static short marpaESLIFLua_lua_newuserdata(void **rcpp, lua_State *L, size_t sz)
 /****************************************************************************/
 {
-  void *rcp;
+  void  *rcp;
+  short  rcb;
 
+  if (! marpaESLIFLua_luaL_checkstack(L, 1, "Cannot grow stack by 1")) goto err;
   rcp = lua_newuserdata(L, sz);
   if (rcpp != NULL) *rcpp = rcp;
 
-  return 1;
+  rcb = 1;
+  goto done;
+
+ err:
+  rcb = 0;
+
+ done:
+  return rcb;
 }
 
 /****************************************************************************/
 static short marpaESLIFLua_lua_pushvalue(lua_State *L, int index)
 /****************************************************************************/
 {
+  short rcb;
+
+  if (! marpaESLIFLua_luaL_checkstack(L, 1, "Cannot grow stack by 1")) goto err;
   lua_pushvalue(L, index); /* Native lua call */
 
-  return 1;
+  rcb = 1;
+  goto done;
+
+ err:
+  rcb = 0;
+
+ done:
+  return rcb;
 }
 
 /****************************************************************************/
@@ -6568,8 +6737,19 @@ static short marpaESLIFLua_luaL_unref(lua_State *L, int t, int ref)
 static short marpaESLIFLua_luaL_requiref(lua_State *L, const char *modname, lua_CFunction openf, int glb)
 /****************************************************************************/
 {
+  short rcb;
+
+  if (! marpaESLIFLua_luaL_checkstack(L, 1, "Cannot grow stack by 1")) goto err;
   luaL_requiref(L, modname, openf, glb); /* Native lua call */
-  return 1;
+
+  rcb = 1;
+  goto done;
+
+ err:
+  rcb = 0;
+
+ done:
+  return rcb;
 }
 
 /****************************************************************************/
@@ -6771,14 +6951,23 @@ static short marpaESLIFLua_lua_absindex(int *rcip, lua_State *L, int idx)
 static short marpaESLIFLua_lua_next(int *rcip, lua_State *L, int idx)
 /****************************************************************************/
 {
-  int rci;
+  int   rci;
+  short rcb;
 
+  if (! marpaESLIFLua_luaL_checkstack(L, 2, "Cannot grow stack by 2")) goto err;
   rci = lua_next(L, idx);
   if (rcip != NULL) {
     *rcip = rci;
   }
 
-  return 1;
+  rcb = 1;
+  goto done;
+
+ err:
+  rcb = 0;
+
+ done:
+  return rcb;
 }
 
 /****************************************************************************/
@@ -6827,42 +7016,69 @@ static short marpaESLIFLua_luaL_checkinteger(lua_Integer *rcp, lua_State *L, int
 static short marpaESLIFLua_lua_getmetatable(int *rcip, lua_State *L, int index)
 /****************************************************************************/
 {
-  int rci;
+  int   rci;
+  short rcb;
 
+  if (! marpaESLIFLua_luaL_checkstack(L, 1, "Cannot grow stack by 1")) goto err;
   rci = lua_getmetatable(L, index);
   if (rcip != NULL) {
     *rcip = rci;
   }
 
-  return 1;
+  rcb = 1;
+  goto done;
+
+ err:
+  rcb = 0;
+
+ done:
+  return rcb;
 }
 
 /****************************************************************************/
-static short marpaESLIFLua_luaL_callmeta(int *rcp, lua_State *L, int obj, const char *e)
+static short marpaESLIFLua_luaL_callmeta(int *rcip, lua_State *L, int obj, const char *e)
 /****************************************************************************/
 {
-  int rc;
+  int   rci;
+  short rcb;
 
-  rc = luaL_callmeta(L, obj, e);
-  if (rcp != NULL) {
-    *rcp = rc;
+  if (! marpaESLIFLua_luaL_checkstack(L, 1, "Cannot grow stack by 1")) goto err;
+  rci = luaL_callmeta(L, obj, e);
+  if (rcip != NULL) {
+    *rcip = rci;
   }
 
-  return 1;
+  rcb = 1;
+  goto done;
+
+ err:
+  rcb = 0;
+
+ done:
+  return rcb;
 }
 
 /****************************************************************************/
-static short marpaESLIFLua_luaL_getmetafield(int *rcp, lua_State *L, int obj, const char *e)
+static short marpaESLIFLua_luaL_getmetafield(int *rcip, lua_State *L, int obj, const char *e)
 /****************************************************************************/
 {
-  int rc;
+  int   rci;
+  short rcb;
 
-  rc = luaL_getmetafield(L, obj, e);
-  if (rcp != NULL) {
-    *rcp = rc;
+  if (! marpaESLIFLua_luaL_checkstack(L, 1, "Cannot grow stack by 1")) goto err;
+  rci = luaL_getmetafield(L, obj, e);
+  if (rcip != NULL) {
+    *rcip = rci;
   }
 
-  return 1;
+  rcb = 1;
+  goto done;
+
+ err:
+  rcb = 0;
+
+ done:
+  return rcb;
 }
 
 /****************************************************************************/
@@ -6934,8 +7150,19 @@ static short marpaESLIFLua_luaL_loadstring(int *rcp, lua_State *L, const char *f
 static short marpaESLIFLua_lua_pushglobaltable(lua_State *L)
 /****************************************************************************/
 {
+  short rcb;
+
+  if (! marpaESLIFLua_luaL_checkstack(L, 1, "Cannot grow stack by 1")) goto err;
   lua_pushglobaltable(L);
-  return 1;
+
+  rcb = 1;
+  goto done;
+
+ err:
+  rcb = 0;
+
+ done:
+  return rcb;
 }
 
 /****************************************************************************/
@@ -6950,8 +7177,10 @@ static short marpaESLIFLua_lua_settable(lua_State *L, int idx)
 static short marpaESLIFLua_lua_gettable(int *rcip, lua_State *L, int idx)
 /****************************************************************************/
 {
-  int rci;
+  int   rci;
+  short rcb;
 
+  if (! marpaESLIFLua_luaL_checkstack(L, 1, "Cannot grow stack by 1")) goto err;
 #if LUA_VERSION_NUM < 503
   lua_gettable(L, idx);
   rci = lua_type(L, -1);
@@ -6960,7 +7189,14 @@ static short marpaESLIFLua_lua_gettable(int *rcip, lua_State *L, int idx)
 #endif
   if (rcip != NULL) *rcip = rci;
 
-  return 1;
+  rcb = 1;
+  goto done;
+
+ err:
+  rcb = 0;
+
+ done:
+  return rcb;
 }
 
 /****************************************************************************/
@@ -7811,21 +8047,21 @@ static int marpaESLIFLua_marpaESLIFOpaque_freei(lua_State *L)
 }
 
 /****************************************************************************/
-static short marpaESLIFLua_metatypeb(int *luaip, lua_State *L, int index)
+static short marpaESLIFLua_metatypeb(int *rcip, lua_State *L, int index)
 /****************************************************************************/
 /* This function does quite the same thing as the _G.type override          */
 /****************************************************************************/
 {
   static const char *funcs = "marpaESLIFLua_metatypeb";
   short              rcb;
-  int                luai;
+  int                rci;
   int                getmetai;
   int                metatypei;
   int                metavaluetypei;
   const char        *types;
 
-  if (! marpaESLIFLua_lua_type(&luai, L, index)) goto err;
-  if ((luai == LUA_TTABLE) || (luai == LUA_TUSERDATA)) {
+  if (! marpaESLIFLua_lua_type(&rci, L, index)) goto err;
+  if ((rci == LUA_TTABLE) || (rci == LUA_TUSERDATA)) {
     /* Check if there is a __type meta field */
     getmetai = luaL_getmetafield(L, -1, "__type");
     if (getmetai != LUA_TNIL) {                                         /* Stack: ..., __type metafield */
@@ -7841,23 +8077,23 @@ static short marpaESLIFLua_metatypeb(int *luaip, lua_State *L, int index)
           if (types != NULL) {
             /* The set of allowed strings is restricted... */
             if (strcmp(types, "nil") == 0) {
-              luai = LUA_TNIL;
+              rci = LUA_TNIL;
             } else if (strcmp(types, "number") == 0) {
-              luai = LUA_TNUMBER;
+              rci = LUA_TNUMBER;
             } else if (strcmp(types, "boolean") == 0) {
-              luai = LUA_TBOOLEAN;
+              rci = LUA_TBOOLEAN;
             } else if (strcmp(types, "string") == 0) {
-              luai = LUA_TSTRING;
+              rci = LUA_TSTRING;
             } else if (strcmp(types, "table") == 0) {
-              luai = LUA_TTABLE;
+              rci = LUA_TTABLE;
             } else if (strcmp(types, "function") == 0) {
-              luai = LUA_TFUNCTION;
+              rci = LUA_TFUNCTION;
             } else if (strcmp(types, "userdata") == 0) {
-              luai = LUA_TUSERDATA;
+              rci = LUA_TUSERDATA;
             } else if (strcmp(types, "lightuserdata") == 0) {
-              luai = LUA_TLIGHTUSERDATA;                  /* Formally not allowed because light userdata can be accessed only via the C API */
+              rci = LUA_TLIGHTUSERDATA;                  /* Formally not allowed because light userdata can be accessed only via the C API */
             } else if (strcmp(types, "thread") == 0) {
-              luai = LUA_TTHREAD;
+              rci = LUA_TTHREAD;
             } else {
               marpaESLIFLua_luaL_errorf(L, "Unsupported type %s", types);
               goto err;
@@ -7871,8 +8107,8 @@ static short marpaESLIFLua_metatypeb(int *luaip, lua_State *L, int index)
     }
   }
 
-  if (luaip != NULL) {
-    *luaip = luai;
+  if (rcip != NULL) {
+    *rcip = rci;
   }
 
   rcb = 1;
