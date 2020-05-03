@@ -557,7 +557,7 @@ static int _marpaESLIFGrammar_lua_writeri(lua_State *L, const void* p, size_t sz
 static short marpaESLIFLua_lua_pushinteger(lua_State *L, lua_Integer n)
 /****************************************************************************/
 {
-  return ! luaunpanic_pushinteger(L, n);
+  return marpaESLIFLua_luaL_checkstack(L, 1, "Cannot grow stack by 1") && (! luaunpanic_pushinteger(L, n));
 }
 
 /****************************************************************************/
@@ -571,7 +571,7 @@ static short marpaESLIFLua_lua_setglobal(lua_State *L, const char *name)
 static short marpaESLIFLua_lua_getglobal(int *luaip, lua_State *L, const char *name)
 /****************************************************************************/
 {
-  return ! luaunpanic_getglobal(luaip, L, name);
+  return marpaESLIFLua_luaL_checkstack(L, 1, "Cannot grow stack by 1") && (! luaunpanic_getglobal(luaip, L, name));
 }
 
 /****************************************************************************/
@@ -592,14 +592,14 @@ static short marpaESLIFLua_lua_pop(lua_State *L, int n)
 static short marpaESLIFLua_lua_newtable(lua_State *L)
 /****************************************************************************/
 {
-  return ! luaunpanic_newtable(L);
+  return marpaESLIFLua_luaL_checkstack(L, 1, "Cannot grow stack by 1") && (! luaunpanic_newtable(L));
 }
 
 /****************************************************************************/
 static short marpaESLIFLua_lua_pushcfunction(lua_State *L, lua_CFunction f)
 /****************************************************************************/
 {
-  return ! luaunpanic_pushcfunction(L, f);
+  return marpaESLIFLua_luaL_checkstack(L, 1, "Cannot grow stack by 1") && (! luaunpanic_pushcfunction(L, f));
 }
 
 /****************************************************************************/
@@ -620,28 +620,28 @@ static short marpaESLIFLua_lua_setmetatable(lua_State *L, int index)
 static short marpaESLIFLua_lua_insert(lua_State *L, int index)
 /****************************************************************************/
 {
-  return ! luaunpanic_insert(L, index);
+  return ((index <= 0) || marpaESLIFLua_luaL_checkstack(L, index, "Cannot grow stack")) && (! luaunpanic_insert(L, index));
 }
 
 /****************************************************************************/
 static short marpaESLIFLua_lua_rawgeti(int *luaip, lua_State *L, int index, lua_Integer n)
 /****************************************************************************/
 {
-  return ! luaunpanic_rawgeti(luaip, L, index, n);
+  return marpaESLIFLua_luaL_checkstack(L, 1, "Cannot grow stack by 1") && (! luaunpanic_rawgeti(luaip, L, index, n));
 }
 
 /****************************************************************************/
 static short marpaESLIFLua_lua_rawget(int *luaip, lua_State *L, int index)
 /****************************************************************************/
 {
-  return ! luaunpanic_rawget(luaip, L, index);
+  return marpaESLIFLua_luaL_checkstack(L, 1, "Cannot grow stack by 1") && (! luaunpanic_rawget(luaip, L, index));
 }
 
 /****************************************************************************/
 static short marpaESLIFLua_lua_rawgetp(int *luaip, lua_State *L, int index, const void *p)
 /****************************************************************************/
 {
-  return ! luaunpanic_rawgetp(luaip, L, index, p);
+  return marpaESLIFLua_luaL_checkstack(L, 1, "Cannot grow stack by 1") && (! luaunpanic_rawgetp(luaip, L, index, p));
 }
 
 /****************************************************************************/
@@ -655,7 +655,7 @@ static short marpaESLIFLua_lua_remove(lua_State *L, int index)
 static short marpaESLIFLua_lua_createtable(lua_State *L, int narr, int nrec)
 /****************************************************************************/
 {
-  return ! luaunpanic_createtable(L, narr, nrec);
+  return marpaESLIFLua_luaL_checkstack(L, 1, "Cannot grow stack by 1") && (! luaunpanic_createtable(L, narr, nrec));
 }
 
 /****************************************************************************/
@@ -676,21 +676,21 @@ static short marpaESLIFLua_lua_seti(lua_State *L, int index, lua_Integer i)
 static short marpaESLIFLua_lua_pushstring(const char **luasp, lua_State *L, const char *s)
 /****************************************************************************/
 {
-  return ! luaunpanic_pushstring(luasp, L, s);
+  return marpaESLIFLua_luaL_checkstack(L, 1, "Cannot grow stack by 1") && (! luaunpanic_pushstring(luasp, L, s));
 }
 
 /****************************************************************************/
 static short marpaESLIFLua_lua_pushlstring(const char **luasp, lua_State *L, const char *s, size_t len)
 /****************************************************************************/
 {
-  return ! luaunpanic_pushlstring(luasp, L, s, len);
+  return marpaESLIFLua_luaL_checkstack(L, 1, "Cannot grow stack by 1") && (! luaunpanic_pushlstring(luasp, L, s, len));
 }
 
 /****************************************************************************/
 static short marpaESLIFLua_lua_pushnil(lua_State *L)
 /****************************************************************************/
 {
-  return ! luaunpanic_pushnil(L);
+  return marpaESLIFLua_luaL_checkstack(L, 1, "Cannot grow stack by 1") && (! luaunpanic_pushnil(L));
 }
 
 /****************************************************************************/
@@ -704,7 +704,7 @@ static short marpaESLIFLua_luaL_checkstack(lua_State *L, int extra, const char *
 static short marpaESLIFLua_lua_getfield(int *luaip, lua_State *L, int index, const char *k)
 /****************************************************************************/
 {
-  return ! luaunpanic_getfield(luaip, L, index, k);
+  return marpaESLIFLua_luaL_checkstack(L, 1, "Cannot grow stack by 1") && (! luaunpanic_getfield(luaip, L, index, k));
 }
 
 /****************************************************************************/
@@ -718,14 +718,14 @@ static short marpaESLIFLua_lua_call(lua_State *L, int nargs, int nresults)
 static short marpaESLIFLua_lua_settop(lua_State *L, int index)
 /****************************************************************************/
 {
-  return ! luaunpanic_settop(L, index);
+  return (index <= 0 || marpaESLIFLua_luaL_checkstack(L, index, "Cannot grow stack")) && (! luaunpanic_settop(L, index));
 }
 
 /****************************************************************************/
 static short marpaESLIFLua_lua_copy(lua_State *L, int fromidx, int toidx)
 /****************************************************************************/
 {
-  return ! luaunpanic_copy(L, fromidx, toidx);
+  return (toidx <= 0 || marpaESLIFLua_luaL_checkstack(L, toidx, "Cannot grow stack")) && (! luaunpanic_copy(L, fromidx, toidx));
 }
 
 /****************************************************************************/
@@ -746,35 +746,35 @@ static short marpaESLIFLua_lua_rawset(lua_State *L, int index)
 static short marpaESLIFLua_lua_pushboolean(lua_State *L, int b)
 /****************************************************************************/
 {
-  return ! luaunpanic_pushboolean(L, b);
+  return marpaESLIFLua_luaL_checkstack(L, 1, "Cannot grow stack by 1") && (! luaunpanic_pushboolean(L, b));
 }
 
 /****************************************************************************/
 static short marpaESLIFLua_lua_pushnumber(lua_State *L, lua_Number n)
 /****************************************************************************/
 {
-  return ! luaunpanic_pushnumber(L, n);
+  return marpaESLIFLua_luaL_checkstack(L, 1, "Cannot grow stack by 1") && (! luaunpanic_pushnumber(L, n));
 }
 
 /****************************************************************************/
 static short marpaESLIFLua_lua_pushlightuserdata(lua_State *L, void *p)
 /****************************************************************************/
 {
-  return ! luaunpanic_pushlightuserdata(L, p);
+  return marpaESLIFLua_luaL_checkstack(L, 1, "Cannot grow stack by 1") && (! luaunpanic_pushlightuserdata(L, p));
 }
 
 /****************************************************************************/
 static short marpaESLIFLua_lua_newuserdata(void **rcpp, lua_State *L, size_t sz)
 /****************************************************************************/
 {
-  return ! luaunpanic_newuserdata(rcpp, L, sz);
+  return marpaESLIFLua_luaL_checkstack(L, 1, "Cannot grow stack by 1") && (! luaunpanic_newuserdata(rcpp, L, sz));
 }
 
 /****************************************************************************/
 static short marpaESLIFLua_lua_pushvalue(lua_State *L, int index)
 /****************************************************************************/
 {
-  return ! luaunpanic_pushvalue(L, index);
+  return marpaESLIFLua_luaL_checkstack(L, 1, "Cannot grow stack by 1") && (! luaunpanic_pushvalue(L, index));
 }
 
 /****************************************************************************/
@@ -795,7 +795,7 @@ static short marpaESLIFLua_luaL_unref(lua_State *L, int t, int ref)
 static short marpaESLIFLua_luaL_requiref(lua_State *L, const char *modname, lua_CFunction openf, int glb)
 /****************************************************************************/
 {
-  return ! luaunpanicL_requiref(L, modname, openf, glb);
+  return marpaESLIFLua_luaL_checkstack(L, 1, "Cannot grow stack by 1") && (! luaunpanicL_requiref(L, modname, openf, glb));
 }
 
 /****************************************************************************/
@@ -900,7 +900,7 @@ static short marpaESLIFLua_lua_absindex(int *rcip, lua_State *L, int idx)
 static short marpaESLIFLua_lua_next(int *rcip, lua_State *L, int idx)
 /****************************************************************************/
 {
-  return ! luaunpanic_next(rcip, L, idx);
+  return marpaESLIFLua_luaL_checkstack(L, 2, "Cannot grow stack by 2") && (! luaunpanic_next(rcip, L, idx));
 }
 
 /****************************************************************************/
@@ -928,21 +928,21 @@ static short marpaESLIFLua_luaL_checkinteger(lua_Integer *rcp, lua_State *L, int
 static short marpaESLIFLua_lua_getmetatable(int *rcip, lua_State *L, int index)
 /****************************************************************************/
 {
-  return ! luaunpanic_getmetatable(rcip, L, index);
+  return marpaESLIFLua_luaL_checkstack(L, 1, "Cannot grow stack by 1") && (! luaunpanic_getmetatable(rcip, L, index));
 }
 
 /****************************************************************************/
-static short marpaESLIFLua_luaL_callmeta(int *rcp, lua_State *L, int obj, const char *e)
+static short marpaESLIFLua_luaL_callmeta(int *rcip, lua_State *L, int obj, const char *e)
 /****************************************************************************/
 {
-  return ! luaunpanicL_callmeta(rcp, L, obj, e);
+  return marpaESLIFLua_luaL_checkstack(L, 1, "Cannot grow stack by 1") && (! luaunpanicL_callmeta(rcip, L, obj, e));
 }
 
 /****************************************************************************/
-static short marpaESLIFLua_luaL_getmetafield(int *rcp, lua_State *L, int obj, const char *e)
+static short marpaESLIFLua_luaL_getmetafield(int *rcip, lua_State *L, int obj, const char *e)
 /****************************************************************************/
 {
-  return ! luaunpanicL_getmetafield(rcp, L, obj, e);
+  return marpaESLIFLua_luaL_checkstack(L, 1, "Cannot grow stack by 1") && (! luaunpanicL_getmetafield(rcip, L, obj, e));
 }
 
 /****************************************************************************/
@@ -967,24 +967,24 @@ static short marpaESLIFLua_lua_rawlen(size_t *rcp, lua_State *L, int idx)
 }
 
 /****************************************************************************/
-static short marpaESLIFLua_luaL_dostring(int *rcp, lua_State *L, const char *fn)
+static short marpaESLIFLua_luaL_dostring(int *rcip, lua_State *L, const char *fn)
 /****************************************************************************/
 {
-  return ! luaunpanicL_dostring(rcp, L, fn);
+  return marpaESLIFLua_luaL_checkstack(L, 1, "Cannot grow stack by 1") && (! luaunpanicL_dostring(rcip, L, fn));
 }
 
 /****************************************************************************/
-static short marpaESLIFLua_luaL_loadstring(int *rcp, lua_State *L, const char *fn)
+static short marpaESLIFLua_luaL_loadstring(int *rcip, lua_State *L, const char *fn)
 /****************************************************************************/
 {
-  return ! luaunpanicL_loadstring(rcp, L, fn);
+  return marpaESLIFLua_luaL_checkstack(L, 1, "Cannot grow stack by 1") && (! luaunpanicL_loadstring(rcip, L, fn));
 }
 
 /****************************************************************************/
 static short marpaESLIFLua_lua_pushglobaltable(lua_State *L)
 /****************************************************************************/
 {
-  return ! luaunpanic_pushglobaltable(L);
+  return marpaESLIFLua_luaL_checkstack(L, 1, "Cannot grow stack by 1") && (! luaunpanic_pushglobaltable(L));
 }
 
 /****************************************************************************/
@@ -995,17 +995,17 @@ static short marpaESLIFLua_lua_settable(lua_State *L, int idx)
 }
 
 /****************************************************************************/
-static short marpaESLIFLua_lua_gettable(int *rcp, lua_State *L, int idx)
+static short marpaESLIFLua_lua_gettable(int *rcip, lua_State *L, int idx)
 /****************************************************************************/
 {
-  return ! luaunpanic_gettable(rcp, L, idx);
+  return marpaESLIFLua_luaL_checkstack(L, 1, "Cannot grow stack by 1") && (! luaunpanic_gettable(rcip, L, idx));
 }
 
 /****************************************************************************/
-static short marpaESLIFLua_lua_isinteger(int *rcp, lua_State *L, int idx)
+static short marpaESLIFLua_lua_isinteger(int *rcip, lua_State *L, int idx)
 /****************************************************************************/
 {
-  return ! luaunpanic_isinteger(rcp, L, idx);
+  return ! luaunpanic_isinteger(rcip, L, idx);
 }
 
 /****************************************************************************/

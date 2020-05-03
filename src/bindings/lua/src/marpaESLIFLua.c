@@ -347,17 +347,17 @@ static short marpaESLIFLua_luaL_checklstring(const char **rcp, lua_State *L, int
 static short marpaESLIFLua_luaL_checkstring(const char **rcp, lua_State *L, int arg);
 static short marpaESLIFLua_luaL_checkinteger(lua_Integer *rcp, lua_State *L, int arg);
 static short marpaESLIFLua_lua_getmetatable(int *rcip, lua_State *L, int index);
-static short marpaESLIFLua_luaL_callmeta(int *rcp, lua_State *L, int obj, const char *e);
-static short marpaESLIFLua_luaL_getmetafield(int *rcp, lua_State *L, int obj, const char *e);
+static short marpaESLIFLua_luaL_callmeta(int *rcip, lua_State *L, int obj, const char *e);
+static short marpaESLIFLua_luaL_getmetafield(int *rcip, lua_State *L, int obj, const char *e);
 static short marpaESLIFLua_luaL_checktype(lua_State *L, int arg, int t);
 static short marpaESLIFLua_lua_topointer(const void **rcpp, lua_State *L, int idx);
-static short marpaESLIFLua_lua_rawlen(size_t *rcp, lua_State *L, int idx);
-static short marpaESLIFLua_luaL_dostring(int *rcp, lua_State *L, const char *fn);
-static short marpaESLIFLua_luaL_loadstring(int *rcp, lua_State *L, const char *s);
+static short marpaESLIFLua_lua_rawlen(size_t *rclp, lua_State *L, int idx);
+static short marpaESLIFLua_luaL_dostring(int *rcip, lua_State *L, const char *fn);
+static short marpaESLIFLua_luaL_loadstring(int *rcip, lua_State *L, const char *s);
 static short marpaESLIFLua_lua_pushglobaltable(lua_State *L);
 static short marpaESLIFLua_lua_settable(lua_State *L, int idx);
-static short marpaESLIFLua_lua_gettable(int *rcp, lua_State *L, int idx);
-static short marpaESLIFLua_lua_isinteger(int *rcp, lua_State *L, int idx);
+static short marpaESLIFLua_lua_gettable(int *rcip, lua_State *L, int idx);
+static short marpaESLIFLua_lua_isinteger(int *rcip, lua_State *L, int idx);
 
 /* Grrr lua defines that with a macro */
 #ifndef marpaESLIFLua_luaL_newlib
@@ -7119,31 +7119,50 @@ static short marpaESLIFLua_lua_rawlen(size_t *rcp, lua_State *L, int idx)
 }
 
 /****************************************************************************/
-static short marpaESLIFLua_luaL_dostring(int *rcp, lua_State *L, const char *fn)
+static short marpaESLIFLua_luaL_dostring(int *rcip, lua_State *L, const char *fn)
 /****************************************************************************/
 {
-  int rc;
+  int   rci;
+  short rcb;
 
-  rc = luaL_dostring(L, fn);
-  if (rcp != NULL) {
-    *rcp = rc;
+  if (! marpaESLIFLua_luaL_checkstack(L, 1, "Cannot grow stack by 1")) goto err;
+
+  rci = luaL_dostring(L, fn);
+  if (rcip != NULL) {
+    *rcip = rci;
   }
 
-  return 1;
+  rcb = 1;
+  goto done;
+
+ err:
+  rcb = 0;
+
+ done:
+  return rcb;
 }
 
 /****************************************************************************/
-static short marpaESLIFLua_luaL_loadstring(int *rcp, lua_State *L, const char *fn)
+static short marpaESLIFLua_luaL_loadstring(int *rcip, lua_State *L, const char *fn)
 /****************************************************************************/
 {
-  int rc;
+  int   rci;
+  short rcb;
 
-  rc = luaL_loadstring(L, fn);
-  if (rcp != NULL) {
-    *rcp = rc;
+  if (! marpaESLIFLua_luaL_checkstack(L, 1, "Cannot grow stack by 1")) goto err;
+  rci = luaL_loadstring(L, fn);
+  if (rcip != NULL) {
+    *rcip = rci;
   }
 
-  return 1;
+  rcb = 1;
+  goto done;
+
+ err:
+  rcb = 0;
+
+ done:
+  return rcb;
 }
 
 /****************************************************************************/
