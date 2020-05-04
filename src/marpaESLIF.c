@@ -18300,6 +18300,162 @@ static void  _marpaESLIFCalloutBlock_disposev(marpaESLIFRecognizer_t *marpaESLIF
   }
 }
 
+/*****************************************************************************/
+marpaESLIFTerminal_t *marpaESLIFTerminal_newp(marpaESLIF_t *marpaESLIFp, short regexb, marpaESLIFString_t *stringp, char *modifiers)
+/*****************************************************************************/
+{
+  marpaESLIF_string_t  *utf8p = NULL;
+  marpaESLIFTerminal_t *terminalp = NULL;
+
+  if (marpaESLIFp == NULL) {
+    errno = EINVAL;
+    return NULL;
+  }
+
+  utf8p = _marpaESLIF_string2utf8p(marpaESLIFp, stringp, 0 /* tconvsilentb */);
+  if (utf8p == NULL) {
+    goto err;
+  }
+
+  terminalp = _marpaESLIF_terminal_newp(marpaESLIFp,
+                                        NULL, /* grammarp */
+                                        0, /* eventSeti */
+                                        NULL, /* descEncodings */
+                                        NULL, /* descs */
+                                        0, /* descl */
+                                        regexb ? MARPAESLIF_TERMINAL_TYPE_REGEX : MARPAESLIF_TERMINAL_TYPE_STRING,
+                                        modifiers,
+                                        utf8p->bytep,
+                                        utf8p->bytel,
+                                        NULL, /* testFullMatchs */
+                                        NULL /* testPartialMatchs */);
+  goto done;
+
+ err:
+  marpaESLIFTerminal_freev(terminalp);
+
+ done:
+  if (utf8p != stringp) {
+    _marpaESLIF_string_freev(utf8p, 0 /* onStackb */);
+  }
+  return terminalp;
+}
+
+/*****************************************************************************/
+short marpaESLIFRecognizer_terminal_tryb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFTerminal_t *marpaESLIFTerminalp, short *matchbp, char **bytepp, size_t *bytelp)
+/*****************************************************************************/
+{
+  marpaESLIF_symbol_t        symbol;
+  marpaESLIF_matcher_value_t rci;
+  marpaESLIFValueResult_t    marpaESLIFValueResult;
+  short                      rcb;
+  char                      *bytep;
+  size_t                     bytel;
+  marpaESLIF_stream_t       *marpaESLIF_streamp;
+
+  if ((marpaESLIFRecognizerp == NULL) || (marpaESLIFTerminalp == NULL)) {
+    errno = EINVAL;
+    goto err;
+  }
+
+  /* We want to have the logic to handle MATCH_AGAIN, and it is the symbol method */
+  symbol.type                   = MARPAESLIF_SYMBOL_TYPE_TERMINAL;
+  symbol.u.terminalp            = marpaESLIFTerminalp;
+  /* ALL the reset is meaningless and not used */
+  symbol.startb                 = 0;
+  symbol.discardb               = 0;
+  symbol.discardRhsb            = 0;
+  symbol.lhsb                   = 0;
+  symbol.topb                   = 0; /* Revisited by grammar validation */
+  symbol.idi                    = -1;
+  symbol.descp                  = NULL;
+  symbol.eventBefores           = NULL;
+  symbol.eventBeforeb           = 0;
+  symbol.eventAfters            = NULL;
+  symbol.eventAfterb            = 0;
+  symbol.eventPredicteds        = NULL;
+  symbol.eventPredictedb        = 0;
+  symbol.eventNulleds           = NULL;
+  symbol.eventNulledb           = 0;
+  symbol.eventCompleteds        = NULL;
+  symbol.eventCompletedb        = 0;
+  symbol.discardEvents          = NULL;
+  symbol.discardEventb          = 0;
+  symbol.lookupLevelDeltai      = 0;
+  symbol.lookupMetas            = NULL;
+  symbol.lookupResolvedLeveli   = 0;
+  symbol.priorityi              = 0;
+  symbol.nullableRuleStackp     = NULL; /* Take care, this is a pointer to an stack inside symbol structure */
+  symbol.nullableActionp        = NULL;
+  symbol.propertyBitSet         = 0;
+  symbol.eventBitSet            = 0;
+  symbol.lhsRuleStackp          = NULL;
+  symbol.exceptionp             = NULL;
+  symbol.symbolActionp          = NULL;
+  symbol.ifActionp              = NULL;
+
+  marpaESLIF_streamp = marpaESLIFRecognizerp->marpaESLIF_streamp;
+  rcb = _marpaESLIFRecognizer_symbol_matcherb(marpaESLIFRecognizerp,
+                                              marpaESLIF_streamp,
+                                              &symbol,
+                                              &rci,
+                                              &marpaESLIFValueResult,
+                                              0, /* maxStartCompletionsi */
+                                               NULL, /* lastSizeBeforeCompletionlp */
+                                              NULL /* numberOfStartCompletionsip */);
+  switch (rci) {
+  case MARPAESLIF_MATCH_FAILURE:
+    if (matchbp != NULL) {
+      *matchbp = 0;
+    }
+    break;
+  case MARPAESLIF_MATCH_OK:
+    if (matchbp != NULL) {
+      *matchbp = 1;
+    }
+    bytel = marpaESLIFValueResult.u.a.sizel;
+    if (bytelp != NULL) {
+      *bytelp = marpaESLIFValueResult.u.a.sizel;
+    }
+    if (bytepp != NULL) {
+      if (marpaESLIFRecognizerp->marpaESLIFRecognizerParentp != NULL) {
+        /* This is an internal alternative that is always an offset */
+        bytep = (char *) malloc(bytel + 1);
+        if (bytep == NULL) {
+          MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "malloc failure, %s", strerror(errno));
+          goto err;
+        }
+        memcpy(bytep, marpaESLIFValueResult.u.a.p - (size_t) marpaESLIF_streamp->inputs, bytel);
+        bytep[bytel] = '\0'; /* Hiden NUL byte */
+      } else {
+        /* By definition terminal matcher that already allocated the area */
+        bytep = marpaESLIFValueResult.u.a.p;
+      }
+      *bytepp = bytep;
+    }
+    break;
+  default:
+    /* This is handling MARPAESLIF_MATCH_AGAIN that is a fatal error because _marpaESLIFRecognizer_symbol_matcherb() tried to handle that */
+    goto err;
+  }
+
+  rcb = 1;
+  goto done;
+
+ err:
+  rcb = 0;
+
+ done:
+  return rcb;
+}
+
+/*****************************************************************************/
+void marpaESLIFTerminal_freev(marpaESLIFTerminal_t *marpaESLIFTerminalp)
+/*****************************************************************************/
+{
+  _marpaESLIF_terminal_freev(marpaESLIFTerminalp);
+}
+
 #include "bootstrap.c"
 #include "lua.c"
 #include "json.c"

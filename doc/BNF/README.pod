@@ -59,7 +59,7 @@ They can be single (C<'>), double-quoted (C<">), or LEFT DOUBLE QUOTATION MARK (
   "string\"s\\"
   “str'"\”ing”:i
 
-Please note this is really a I<quoted string>, B<not> a string terminal. I.e. everything inside the quoted is taken as-is, with no interpretation.
+Please note this is really a I<quoted string>, B<not> a string terminal. I.e. everything inside the quote is taken as-is, with no interpretation.
 
 =item * Character classes
 

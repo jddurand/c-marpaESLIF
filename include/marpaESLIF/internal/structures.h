@@ -27,7 +27,7 @@ typedef struct  marpaESLIF_regex           marpaESLIF_regex_t;
 typedef         marpaESLIFString_t         marpaESLIF_string_t;
 typedef enum    marpaESLIF_symbol_type     marpaESLIF_symbol_type_t;
 typedef enum    marpaESLIF_terminal_type   marpaESLIF_terminal_type_t;
-typedef struct  marpaESLIF_terminal        marpaESLIF_terminal_t;
+typedef         marpaESLIFTerminal_t       marpaESLIF_terminal_t;
 typedef struct  marpaESLIF_meta            marpaESLIF_meta_t;
 typedef struct  marpaESLIF_symbol          marpaESLIF_symbol_t;
 typedef struct  marpaESLIF_rule            marpaESLIF_rule_t;
@@ -36,7 +36,6 @@ typedef enum    marpaESLIF_matcher_value   marpaESLIF_matcher_value_t;
 typedef enum    marpaESLIF_event_type      marpaESLIF_event_type_t;
 typedef struct  marpaESLIF_readerContext   marpaESLIF_readerContext_t;
 typedef struct  marpaESLIF_cloneContext    marpaESLIF_cloneContext_t;
-typedef         marpaESLIFValueType_t      marpaESLIF_stack_type_t;
 typedef struct  marpaESLIF_lexeme_data     marpaESLIF_lexeme_data_t;
 typedef struct  marpaESLIF_alternative     marpaESLIF_alternative_t;
 typedef         marpaESLIFAction_t         marpaESLIF_action_t;
@@ -96,7 +95,7 @@ struct marpaESLIF_regex {
   short                  calloutb;     /* Do this regex have any callout ? */
 };
 
-struct marpaESLIF_terminal {
+struct marpaESLIFTerminal {
   int                         idi;                 /* Terminal Id */
   marpaESLIF_string_t        *descp;               /* Terminal description */
   char                       *modifiers;           /* Modifiers */

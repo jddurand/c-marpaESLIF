@@ -15,7 +15,7 @@ typedef struct marpaESLIFTester_context {
   size_t           inputl;
 } marpaESLIFTester_context_t;
 
-const static char *selfs = "\n"
+const static char *selfs = "# Self grammar\n"
   "/*\n"
   " * **********************\n"
   " * Meta-grammar settings:\n"
@@ -297,6 +297,13 @@ int main() {
   marpaESLIFRecognizerOption_t marpaESLIFRecognizerOption;
   marpaESLIFGrammarDefaults_t  marpaESLIFGrammarDefaults;
   char                        *grammarscripts;
+  marpaESLIFTerminal_t        *stringTerminalp = NULL;
+  marpaESLIFTerminal_t        *regexTerminalp = NULL;
+  marpaESLIFString_t           string;
+  char                        *bytep;
+  size_t                       bytel;
+  marpaESLIFRecognizer_t      *marpaESLIFRecognizerp = NULL;
+  short                        matchb;
 
   genericLoggerp = GENERICLOGGER_NEW(GENERICLOGGER_LOGLEVEL_TRACE);
   GENERICLOGGER_LEVEL_SET(genericLoggerp, GENERICLOGGER_LOGLEVEL_INFO);
@@ -417,6 +424,46 @@ int main() {
     }
   }
 
+  /* Play with terminal outside of any grammar */
+  string.bytep          = "'# Self grammar'";
+  string.bytel          = strlen(string.bytep);
+  string.encodingasciis = "ASCII";
+  string.asciis         = NULL;
+  stringTerminalp = marpaESLIFTerminal_newp(marpaESLIFp, 0 /* regexb */, &string, NULL /* modifiers */);
+  if (stringTerminalp == NULL) {
+    goto err;
+  }
+
+  string.bytep          = "(*MARK:MarkName)::\\w+";
+  string.bytel          = strlen(string.bytep);
+  string.encodingasciis = "ASCII";
+  string.asciis         = NULL;
+  regexTerminalp = marpaESLIFTerminal_newp(marpaESLIFp, 1 /* regexb */, &string, "A" /* Remove anchoring */);
+  if (regexTerminalp == NULL) {
+    goto err;
+  }
+
+  marpaESLIFRecognizerp = marpaESLIFRecognizer_newp(marpaESLIFGrammarp, &marpaESLIFRecognizerOption);
+  if (marpaESLIFRecognizerp == NULL) {
+    goto err;
+  }
+
+  if (! marpaESLIFRecognizer_terminal_tryb(marpaESLIFRecognizerp, stringTerminalp, &matchb, &bytep, &bytel)) {
+    goto err;
+  }
+  if (matchb) {
+    GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "String terminal match on: %s", bytep);
+    free(bytep);
+  }
+
+  if (! marpaESLIFRecognizer_terminal_tryb(marpaESLIFRecognizerp, regexTerminalp, &matchb, &bytep, &bytel)) {
+    goto err;
+  }
+  if (matchb) {
+    GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "Regex terminal match on: %s", bytep);
+    free(bytep);
+  }
+
   exiti = 0;
   goto done;
 
@@ -424,6 +471,15 @@ int main() {
   exiti = 1;
 
  done:
+  if (marpaESLIFRecognizerp != NULL) {
+    marpaESLIFRecognizer_freev(marpaESLIFRecognizerp);
+  }
+  if (stringTerminalp != NULL) {
+    marpaESLIFTerminal_freev(stringTerminalp);
+  }
+  if (regexTerminalp != NULL) {
+    marpaESLIFTerminal_freev(regexTerminalp);
+  }
   GENERICLOGGER_LEVEL_SET(marpaESLIFOption.genericLoggerp, GENERICLOGGER_LOGLEVEL_INFO);
   marpaESLIFGrammar_freev(marpaESLIFGrammarp);
   marpaESLIF_freev(marpaESLIFp);

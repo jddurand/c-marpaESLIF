@@ -53,6 +53,7 @@ typedef struct marpaESLIFValueResult     marpaESLIFValueResult_t;
 typedef enum   marpaESLIFValueResultBool marpaESLIFValueResultBool_t;
 typedef int                              marpaESLIFValueResultInt_t;
 typedef struct marpaESLIFEvent           marpaESLIFEvent_t;
+typedef struct marpaESLIFTerminal        marpaESLIFTerminal_t;
 
 /* ========= */
 /* Callbacks */
@@ -651,6 +652,16 @@ extern "C" {
   marpaESLIF_EXPORT char                         *marpaESLIF_ftos(marpaESLIF_t *marpaESLIFp, float f);
   marpaESLIF_EXPORT char                         *marpaESLIF_dtos(marpaESLIF_t *marpaESLIFp, double d);
   marpaESLIF_EXPORT char                         *marpaESLIF_ldtos(marpaESLIF_t *marpaESLIFp, long double ld);
+
+  /* -------------------------------------- */
+  /* Terminals not not bound to any grammar */
+  /* -------------------------------------- */
+  /* regexb means that this is a string terminal. Then it is must start and end with the ' or " character */
+  marpaESLIF_EXPORT marpaESLIFTerminal_t        *marpaESLIFTerminal_newp(marpaESLIF_t *marpaESLIFp, short regexb, marpaESLIFString_t *stringp, char *modifiers);
+  /* If there is match, *matchbp will contain a true value, else a false value */
+  /* When there is match bytepp will contain a copy of the match and the end-user is responsible to free it. Length is in *bytelp */
+  marpaESLIF_EXPORT short                        marpaESLIFRecognizer_terminal_tryb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFTerminal_t *marpaESLIFTerminalp, short *matchbp, char **bytepp, size_t *bytelp);
+  marpaESLIF_EXPORT void                         marpaESLIFTerminal_freev(marpaESLIFTerminal_t *marpaESLIFTerminalp);
 #ifdef __cplusplus
 }
 #endif
