@@ -772,6 +772,7 @@ static int                           _marpaESLIF_pcre2_callouti(pcre2_callout_bl
 static int                           _marpaESLIF_pcre2_callout_enumeratei(pcre2_callout_enumerate_block *blockp, void *userDatavp);
 static void                          _marpaESLIFCalloutBlock_initb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp);
 static void                          _marpaESLIFCalloutBlock_disposev(marpaESLIFRecognizer_t *marpaESLIFRecognizerp);
+static marpaESLIFSymbol_t           *_marpaESLIFSymbol_newp(marpaESLIF_t *marpaESLIFp, marpaESLIF_terminal_type_t terminalType, marpaESLIFString_t *stringp, char *modifiers);
 
 /*****************************************************************************/
 static inline marpaESLIF_string_t *_marpaESLIF_string_newp(marpaESLIF_t *marpaESLIFp, char *encodingasciis, char *bytep, size_t bytel)
@@ -1011,6 +1012,7 @@ static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *mar
   size_t                            bytel;
   marpaESLIF_stream_t              *marpaESLIF_streamp;
   marpaESLIF_pcre2_callout_enumerate_context_t enumerate_context;
+  short                             modifierFoundb;
 
   /* Check some required parameters */
   if ((utf8s == NULL) || (utf8l <= 0)) {
@@ -1485,18 +1487,31 @@ static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *mar
       if (modifiers != NULL) {
         modifiersp = modifiers;
         while ((modifierc = *modifiersp++) != '\0') {
-          for (i = 0; i < (sizeof(marpaESLIF_regex_option_map) / sizeof(marpaESLIF_regex_option_map[0])); i++) {
-            if (modifierc == marpaESLIF_regex_option_map[i].modifierc) {
-              /* It is important to process pcre2OptionNoti first */
-              if (marpaESLIF_regex_option_map[i].pcre2OptionNoti != 0) {
-                MARPAESLIF_TRACEF(marpaESLIFp, funcs, "%s: regex modifier %c: removing %s", terminalp->descp->asciis, marpaESLIF_regex_option_map[i].modifierc, marpaESLIF_regex_option_map[i].pcre2OptionNots);
-                pcre2Optioni &= ~marpaESLIF_regex_option_map[i].pcre2OptionNoti;
-              }
-              if (marpaESLIF_regex_option_map[i].pcre2Optioni != 0) {
-                MARPAESLIF_TRACEF(marpaESLIFp, funcs, "%s: regex modifier %c: adding %s", terminalp->descp->asciis, marpaESLIF_regex_option_map[i].modifierc, marpaESLIF_regex_option_map[i].pcre2Options);
-                pcre2Optioni |= marpaESLIF_regex_option_map[i].pcre2Optioni;
+          modifierFoundb = 0;
+          /* String modifiers are a subset of regex modifiers. We have to filter ourself to detect */
+          /* if the modifier is allowed. */
+          /* Regex mode checks all possible modifiers and will naturelly bail if it is unknown. */
+          if (((type == MARPAESLIF_TERMINAL_TYPE_STRING) && ((modifierc == 'i') || (modifierc == 'c'))) ||
+              (type == MARPAESLIF_TERMINAL_TYPE_REGEX)) {
+            for (i = 0; i < (sizeof(marpaESLIF_regex_option_map) / sizeof(marpaESLIF_regex_option_map[0])); i++) {
+              if (modifierc == marpaESLIF_regex_option_map[i].modifierc) {
+                /* It is important to process pcre2OptionNoti first */
+                if (marpaESLIF_regex_option_map[i].pcre2OptionNoti != 0) {
+                  MARPAESLIF_TRACEF(marpaESLIFp, funcs, "%s: regex modifier %c: removing %s", terminalp->descp->asciis, marpaESLIF_regex_option_map[i].modifierc, marpaESLIF_regex_option_map[i].pcre2OptionNots);
+                  pcre2Optioni &= ~marpaESLIF_regex_option_map[i].pcre2OptionNoti;
+                }
+                if (marpaESLIF_regex_option_map[i].pcre2Optioni != 0) {
+                  MARPAESLIF_TRACEF(marpaESLIFp, funcs, "%s: regex modifier %c: adding %s", terminalp->descp->asciis, marpaESLIF_regex_option_map[i].modifierc, marpaESLIF_regex_option_map[i].pcre2Options);
+                  pcre2Optioni |= marpaESLIF_regex_option_map[i].pcre2Optioni;
+                }
+                modifierFoundb = 1;
+                break;
               }
             }
+          }
+          if (! modifierFoundb) {
+            MARPAESLIF_ERRORF(marpaESLIFp, "Unsupported modifier '%c'", modifierc);
+            goto err;
           }
         }
       }
@@ -18301,11 +18316,11 @@ static void  _marpaESLIFCalloutBlock_disposev(marpaESLIFRecognizer_t *marpaESLIF
 }
 
 /*****************************************************************************/
-marpaESLIFTerminal_t *marpaESLIFTerminal_newp(marpaESLIF_t *marpaESLIFp, short regexb, marpaESLIFString_t *stringp, char *modifiers)
+static marpaESLIFSymbol_t *_marpaESLIFSymbol_newp(marpaESLIF_t *marpaESLIFp, marpaESLIF_terminal_type_t terminalType, marpaESLIFString_t *stringp, char *modifiers)
 /*****************************************************************************/
 {
-  marpaESLIF_string_t  *utf8p = NULL;
-  marpaESLIFTerminal_t *terminalp = NULL;
+  marpaESLIF_string_t *utf8p = NULL;
+  marpaESLIFSymbol_t  *symbolp = NULL;
 
   if (marpaESLIFp == NULL) {
     errno = EINVAL;
@@ -18317,35 +18332,59 @@ marpaESLIFTerminal_t *marpaESLIFTerminal_newp(marpaESLIF_t *marpaESLIFp, short r
     goto err;
   }
 
-  terminalp = _marpaESLIF_terminal_newp(marpaESLIFp,
-                                        NULL, /* grammarp */
-                                        0, /* eventSeti */
-                                        NULL, /* descEncodings */
-                                        NULL, /* descs */
-                                        0, /* descl */
-                                        regexb ? MARPAESLIF_TERMINAL_TYPE_REGEX : MARPAESLIF_TERMINAL_TYPE_STRING,
-                                        modifiers,
-                                        utf8p->bytep,
-                                        utf8p->bytel,
-                                        NULL, /* testFullMatchs */
-                                        NULL /* testPartialMatchs */);
+  symbolp = _marpaESLIF_symbol_newp(marpaESLIFp);
+  if (symbolp == NULL) {
+    goto err;
+  }
+
+  symbolp->u.terminalp = _marpaESLIF_terminal_newp(marpaESLIFp,
+                                                   NULL, /* grammarp */
+                                                   0, /* eventSeti */
+                                                   NULL, /* descEncodings */
+                                                   NULL, /* descs */
+                                                   0, /* descl */
+                                                   terminalType,
+                                                   modifiers,
+                                                   utf8p->bytep,
+                                                   utf8p->bytel,
+                                                   NULL, /* testFullMatchs */
+                                                   NULL /* testPartialMatchs */);
+  if (symbolp->u.terminalp == NULL) {
+    goto err;
+  }
+  symbolp->type = MARPAESLIF_SYMBOL_TYPE_TERMINAL;
+
   goto done;
 
  err:
-  marpaESLIFTerminal_freev(terminalp);
+  marpaESLIFSymbol_freev(symbolp);
+  symbolp = NULL;
 
  done:
   if (utf8p != stringp) {
     _marpaESLIF_string_freev(utf8p, 0 /* onStackb */);
   }
-  return terminalp;
+  return symbolp;
 }
 
 /*****************************************************************************/
-short marpaESLIFRecognizer_terminal_tryb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFTerminal_t *marpaESLIFTerminalp, short *matchbp, char **bytepp, size_t *bytelp)
+marpaESLIFSymbol_t   *marpaESLIFSymbol_string_newp(marpaESLIF_t *marpaESLIFp, marpaESLIFString_t *stringp, char *modifiers)
 /*****************************************************************************/
 {
-  marpaESLIF_symbol_t        symbol;
+  return _marpaESLIFSymbol_newp(marpaESLIFp, MARPAESLIF_TERMINAL_TYPE_STRING, stringp, modifiers);
+}
+
+/*****************************************************************************/
+marpaESLIFSymbol_t *marpaESLIFSymbol_regex_newp(marpaESLIF_t *marpaESLIFp, marpaESLIFString_t *stringp, char *modifiers)
+/*****************************************************************************/
+{
+  return _marpaESLIFSymbol_newp(marpaESLIFp, MARPAESLIF_TERMINAL_TYPE_REGEX, stringp, modifiers);
+}
+
+/*****************************************************************************/
+short marpaESLIFRecognizer_symbol_tryb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFSymbol_t *marpaESLIFSymbolp, short *matchbp, char **bytepp, size_t *bytelp)
+/*****************************************************************************/
+{
   marpaESLIF_matcher_value_t rci;
   marpaESLIFValueResult_t    marpaESLIFValueResult;
   short                      rcb;
@@ -18353,55 +18392,19 @@ short marpaESLIFRecognizer_terminal_tryb(marpaESLIFRecognizer_t *marpaESLIFRecog
   size_t                     bytel;
   marpaESLIF_stream_t       *marpaESLIF_streamp;
 
-  if ((marpaESLIFRecognizerp == NULL) || (marpaESLIFTerminalp == NULL)) {
+  if ((marpaESLIFRecognizerp == NULL) || (marpaESLIFSymbolp == NULL)) {
     errno = EINVAL;
     goto err;
   }
 
-  /* We want to have the logic to handle MATCH_AGAIN, and it is the symbol method */
-  symbol.type                   = MARPAESLIF_SYMBOL_TYPE_TERMINAL;
-  symbol.u.terminalp            = marpaESLIFTerminalp;
-  /* ALL the reset is meaningless and not used */
-  symbol.startb                 = 0;
-  symbol.discardb               = 0;
-  symbol.discardRhsb            = 0;
-  symbol.lhsb                   = 0;
-  symbol.topb                   = 0; /* Revisited by grammar validation */
-  symbol.idi                    = -1;
-  symbol.descp                  = NULL;
-  symbol.eventBefores           = NULL;
-  symbol.eventBeforeb           = 0;
-  symbol.eventAfters            = NULL;
-  symbol.eventAfterb            = 0;
-  symbol.eventPredicteds        = NULL;
-  symbol.eventPredictedb        = 0;
-  symbol.eventNulleds           = NULL;
-  symbol.eventNulledb           = 0;
-  symbol.eventCompleteds        = NULL;
-  symbol.eventCompletedb        = 0;
-  symbol.discardEvents          = NULL;
-  symbol.discardEventb          = 0;
-  symbol.lookupLevelDeltai      = 0;
-  symbol.lookupMetas            = NULL;
-  symbol.lookupResolvedLeveli   = 0;
-  symbol.priorityi              = 0;
-  symbol.nullableRuleStackp     = NULL; /* Take care, this is a pointer to an stack inside symbol structure */
-  symbol.nullableActionp        = NULL;
-  symbol.propertyBitSet         = 0;
-  symbol.eventBitSet            = 0;
-  symbol.lhsRuleStackp          = NULL;
-  symbol.exceptionp             = NULL;
-  symbol.symbolActionp          = NULL;
-  symbol.ifActionp              = NULL;
-
   marpaESLIF_streamp = marpaESLIFRecognizerp->marpaESLIF_streamp;
   rcb = _marpaESLIFRecognizer_symbol_matcherb(marpaESLIFRecognizerp,
                                               marpaESLIF_streamp,
-                                              &symbol,
+                                              marpaESLIFSymbolp,
                                               &rci,
                                               &marpaESLIFValueResult,
                                               0, /* maxStartCompletionsi */
-                                               NULL, /* lastSizeBeforeCompletionlp */
+                                              NULL, /* lastSizeBeforeCompletionlp */
                                               NULL /* numberOfStartCompletionsip */);
   switch (rci) {
   case MARPAESLIF_MATCH_FAILURE:
@@ -18450,10 +18453,10 @@ short marpaESLIFRecognizer_terminal_tryb(marpaESLIFRecognizer_t *marpaESLIFRecog
 }
 
 /*****************************************************************************/
-void marpaESLIFTerminal_freev(marpaESLIFTerminal_t *marpaESLIFTerminalp)
+void marpaESLIFSymbol_freev(marpaESLIFSymbol_t *marpaESLIFSymbolp)
 /*****************************************************************************/
 {
-  _marpaESLIF_terminal_freev(marpaESLIFTerminalp);
+  _marpaESLIF_symbol_freev(marpaESLIFSymbolp);
 }
 
 #include "bootstrap.c"

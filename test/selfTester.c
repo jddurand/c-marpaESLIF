@@ -297,8 +297,8 @@ int main() {
   marpaESLIFRecognizerOption_t marpaESLIFRecognizerOption;
   marpaESLIFGrammarDefaults_t  marpaESLIFGrammarDefaults;
   char                        *grammarscripts;
-  marpaESLIFTerminal_t        *stringTerminalp = NULL;
-  marpaESLIFTerminal_t        *regexTerminalp = NULL;
+  marpaESLIFSymbol_t          *stringSymbolp = NULL;
+  marpaESLIFSymbol_t          *regexSymbolp = NULL;
   marpaESLIFString_t           string;
   char                        *bytep;
   size_t                       bytel;
@@ -425,12 +425,18 @@ int main() {
   }
 
   /* Play with terminal outside of any grammar */
-  string.bytep          = "'# Self grammar'";
+  string.bytep          = "'# Self grammar\n"
+  "/*\n"
+  " * **********************\n"
+  " * Meta-grammar settings:\n"
+  " * **********************\n"
+  " *'";
   string.bytel          = strlen(string.bytep);
   string.encodingasciis = "ASCII";
   string.asciis         = NULL;
-  stringTerminalp = marpaESLIFTerminal_newp(marpaESLIFp, 0 /* regexb */, &string, NULL /* modifiers */);
-  if (stringTerminalp == NULL) {
+
+  stringSymbolp = marpaESLIFSymbol_string_newp(marpaESLIFp, &string, NULL /* modifiers */);
+  if (stringSymbolp == NULL) {
     goto err;
   }
 
@@ -438,8 +444,9 @@ int main() {
   string.bytel          = strlen(string.bytep);
   string.encodingasciis = "ASCII";
   string.asciis         = NULL;
-  regexTerminalp = marpaESLIFTerminal_newp(marpaESLIFp, 1 /* regexb */, &string, "A" /* Remove anchoring */);
-  if (regexTerminalp == NULL) {
+
+  regexSymbolp = marpaESLIFSymbol_regex_newp(marpaESLIFp, &string, "A" /* Remove anchoring */);
+  if (regexSymbolp == NULL) {
     goto err;
   }
 
@@ -448,19 +455,19 @@ int main() {
     goto err;
   }
 
-  if (! marpaESLIFRecognizer_terminal_tryb(marpaESLIFRecognizerp, stringTerminalp, &matchb, &bytep, &bytel)) {
+  if (! marpaESLIFRecognizer_symbol_tryb(marpaESLIFRecognizerp, stringSymbolp, &matchb, &bytep, &bytel)) {
     goto err;
   }
   if (matchb) {
-    GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "String terminal match on: %s", bytep);
+    GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "String symbol match on: %s", bytep);
     free(bytep);
   }
 
-  if (! marpaESLIFRecognizer_terminal_tryb(marpaESLIFRecognizerp, regexTerminalp, &matchb, &bytep, &bytel)) {
+  if (! marpaESLIFRecognizer_symbol_tryb(marpaESLIFRecognizerp, regexSymbolp, &matchb, &bytep, &bytel)) {
     goto err;
   }
   if (matchb) {
-    GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "Regex terminal match on: %s", bytep);
+    GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "Regex symbol match on: %s", bytep);
     free(bytep);
   }
 
@@ -474,11 +481,11 @@ int main() {
   if (marpaESLIFRecognizerp != NULL) {
     marpaESLIFRecognizer_freev(marpaESLIFRecognizerp);
   }
-  if (stringTerminalp != NULL) {
-    marpaESLIFTerminal_freev(stringTerminalp);
+  if (stringSymbolp != NULL) {
+    marpaESLIFSymbol_freev(stringSymbolp);
   }
-  if (regexTerminalp != NULL) {
-    marpaESLIFTerminal_freev(regexTerminalp);
+  if (regexSymbolp != NULL) {
+    marpaESLIFSymbol_freev(regexSymbolp);
   }
   GENERICLOGGER_LEVEL_SET(marpaESLIFOption.genericLoggerp, GENERICLOGGER_LOGLEVEL_INFO);
   marpaESLIFGrammar_freev(marpaESLIFGrammarp);

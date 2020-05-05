@@ -2132,6 +2132,44 @@ Tries to convert accurately C<d> to a string. Result a C<NUL> terminated ASCII s
 
 Tries to convert accurately C<ld> to a string. Result a C<NUL> terminated ASCII string that the user will have to free if success, C<NULL> if failure. This should not be called everytime because it is very slow.
 
+=head2 External symbols
+
+A recognizer is allowed to perform a match try on any symbol that is a terminal, including those that are not part of the current grammar:
+
+  marpaESLIFSymbol_t          *marpaESLIFSymbol_string_newp(marpaESLIF_t *marpaESLIFp,
+                                                            marpaESLIFString_t *stringp,
+                                                            char *modifiers);
+  marpaESLIFSymbol_t          *marpaESLIFSymbol_regex_newp(marpaESLIF_t *marpaESLIFp,
+                                                           marpaESLIFString_t *stringp,
+                                                           char *modifiers);
+  /* If there is match, *matchbp will contain a true value, else a false value */
+  /* When there is match bytepp will contain a copy of the match and the end-user */
+  /* is responsible to free it. Length is in *bytelp */
+  short                        marpaESLIFRecognizer_symbol_tryb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp,
+                                                                marpaESLIFSymbol_t *marpaESLIFSymbolp,
+                                                                short *matchbp,
+                                                                char **bytepp,
+                                                                size_t *bytelp);
+  void                         marpaESLIFSymbol_freev(marpaESLIFSymbol_t *marpaESLIFSymbolp);
+
+C<Out-of-grammar> symbols of type terminal, i.e. strings or regular expressions, can be created at any time, exactly as if they where present in the grammar: they a described with a C<stringp> and can contain C<modifiers>, which can be C<NULL>.
+
+The C<modifiers>, if any, must be compliant with the grammar specification for strings and regular expressions, i.e.:
+
+=over
+
+=item Strings
+
+Only C<c> or C<i> modifiers are allowed
+
+=item Regular expressions
+
+Only C<e>, C<i>, C<j>, C<m>, C<n>, C<s>, C<x>, C<D>, C<J>, C<U>, C<a>, C<N>, C<u>, C<b>, C<c> or C<A> modifiers are allowed
+
+=back
+
+At recognition phase, there is a C<marpaESLIFRecognizerp> pointer available, and it can be instructed to try to match external symbols. The end-user is responsible to free eventual C<*bytepp> if it is not C<NULL>.
+
 =head1 NOTES
 
 =over

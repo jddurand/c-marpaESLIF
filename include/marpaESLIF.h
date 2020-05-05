@@ -53,7 +53,7 @@ typedef struct marpaESLIFValueResult     marpaESLIFValueResult_t;
 typedef enum   marpaESLIFValueResultBool marpaESLIFValueResultBool_t;
 typedef int                              marpaESLIFValueResultInt_t;
 typedef struct marpaESLIFEvent           marpaESLIFEvent_t;
-typedef struct marpaESLIFTerminal        marpaESLIFTerminal_t;
+typedef struct marpaESLIFSymbol          marpaESLIFSymbol_t;
 
 /* ========= */
 /* Callbacks */
@@ -656,12 +656,12 @@ extern "C" {
   /* -------------------------------------- */
   /* Terminals not not bound to any grammar */
   /* -------------------------------------- */
-  /* regexb means that this is a string terminal. Then it is must start and end with the ' or " character */
-  marpaESLIF_EXPORT marpaESLIFTerminal_t        *marpaESLIFTerminal_newp(marpaESLIF_t *marpaESLIFp, short regexb, marpaESLIFString_t *stringp, char *modifiers);
+  marpaESLIF_EXPORT marpaESLIFSymbol_t          *marpaESLIFSymbol_string_newp(marpaESLIF_t *marpaESLIFp, marpaESLIFString_t *stringp, char *modifiers);
+  marpaESLIF_EXPORT marpaESLIFSymbol_t          *marpaESLIFSymbol_regex_newp(marpaESLIF_t *marpaESLIFp, marpaESLIFString_t *stringp, char *modifiers);
   /* If there is match, *matchbp will contain a true value, else a false value */
   /* When there is match bytepp will contain a copy of the match and the end-user is responsible to free it. Length is in *bytelp */
-  marpaESLIF_EXPORT short                        marpaESLIFRecognizer_terminal_tryb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFTerminal_t *marpaESLIFTerminalp, short *matchbp, char **bytepp, size_t *bytelp);
-  marpaESLIF_EXPORT void                         marpaESLIFTerminal_freev(marpaESLIFTerminal_t *marpaESLIFTerminalp);
+  marpaESLIF_EXPORT short                        marpaESLIFRecognizer_symbol_tryb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFSymbol_t *marpaESLIFSymbolp, short *matchbp, char **bytepp, size_t *bytelp);
+  marpaESLIF_EXPORT void                         marpaESLIFSymbol_freev(marpaESLIFSymbol_t *marpaESLIFSymbolp);
 #ifdef __cplusplus
 }
 #endif
