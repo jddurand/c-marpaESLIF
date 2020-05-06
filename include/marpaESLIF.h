@@ -658,8 +658,12 @@ extern "C" {
   /* -------------------------------------- */
   marpaESLIF_EXPORT marpaESLIFSymbol_t          *marpaESLIFSymbol_string_newp(marpaESLIF_t *marpaESLIFp, marpaESLIFString_t *stringp, char *modifiers);
   marpaESLIF_EXPORT marpaESLIFSymbol_t          *marpaESLIFSymbol_regex_newp(marpaESLIF_t *marpaESLIFp, marpaESLIFString_t *stringp, char *modifiers);
+  /* An external symbol can be used directly inside the recognizer phase in the current input stream. The later will automatically expand if needed */
+  /* as in normal recognizer lifetime. */
+  /* It can be also used outside of any grammar on a free input string */
   /* If there is match, *matchbp will contain a true value, else a false value */
   /* When there is match bytepp will contain a copy of the match and the end-user is responsible to free it. Length is in *bytelp */
+  marpaESLIF_EXPORT short                        marpaESLIF_symbol_tryb(marpaESLIF_t *marpaESLIFp, marpaESLIFSymbol_t *marpaESLIFSymbolp, char *inputs, size_t inputl, short *matchbp, char **bytepp, size_t *bytelp);
   marpaESLIF_EXPORT short                        marpaESLIFRecognizer_symbol_tryb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFSymbol_t *marpaESLIFSymbolp, short *matchbp, char **bytepp, size_t *bytelp);
   marpaESLIF_EXPORT void                         marpaESLIFSymbol_freev(marpaESLIFSymbol_t *marpaESLIFSymbolp);
 #ifdef __cplusplus

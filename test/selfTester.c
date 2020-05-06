@@ -8,6 +8,14 @@
 static short inputReaderb(void *userDatavp, char **inputsp, size_t *inputlp, short *eofbp, short *characterStreambp, char **encodingsp, size_t *encodinglp);
 
 #define UTF_8_STRING "UTF-8"
+#define SUBJECT "::anything"
+#define STRING "# Self grammar\n"               \
+  "/*\n"                                        \
+  " * **********************\n"                 \
+  " * Meta-grammar settings:\n"                 \
+  " * **********************\n"                 \
+  " *"
+#define REGEX "(*MARK:MarkName)::\\w+"
 
 typedef struct marpaESLIFTester_context {
   genericLogger_t *genericLoggerp;
@@ -425,13 +433,8 @@ int main() {
   }
 
   /* Play with terminal outside of any grammar */
-  string.bytep          = "'# Self grammar\n"
-  "/*\n"
-  " * **********************\n"
-  " * Meta-grammar settings:\n"
-  " * **********************\n"
-  " *'";
-  string.bytel          = strlen(string.bytep);
+  string.bytep          = "'" STRING "'";
+  string.bytel          = strlen("'" STRING "'");
   string.encodingasciis = "ASCII";
   string.asciis         = NULL;
 
@@ -440,8 +443,8 @@ int main() {
     goto err;
   }
 
-  string.bytep          = "(*MARK:MarkName)::\\w+";
-  string.bytel          = strlen(string.bytep);
+  string.bytep          = REGEX;
+  string.bytel          = strlen(REGEX);
   string.encodingasciis = "ASCII";
   string.asciis         = NULL;
 
@@ -468,6 +471,22 @@ int main() {
   }
   if (matchb) {
     GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "Regex symbol match on: %s", bytep);
+    free(bytep);
+  }
+
+  if (! marpaESLIF_symbol_tryb(marpaESLIFp, stringSymbolp, STRING, strlen(STRING), &matchb, &bytep, &bytel)) {
+    goto err;
+  }
+  if (matchb) {
+    GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "String symbol match on: %s", bytep);
+    free(bytep);
+  }
+
+  if (! marpaESLIF_symbol_tryb(marpaESLIFp, regexSymbolp, SUBJECT, strlen(SUBJECT), &matchb, &bytep, &bytel)) {
+    goto err;
+  }
+  if (matchb) {
+    GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "Regex symbol match on: %s", SUBJECT);
     free(bytep);
   }
 

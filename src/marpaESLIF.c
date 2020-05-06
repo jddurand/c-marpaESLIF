@@ -18382,6 +18382,64 @@ marpaESLIFSymbol_t *marpaESLIFSymbol_regex_newp(marpaESLIF_t *marpaESLIFp, marpa
 }
 
 /*****************************************************************************/
+short marpaESLIF_symbol_tryb(marpaESLIF_t *marpaESLIFp, marpaESLIFSymbol_t *marpaESLIFSymbolp, char *inputs, size_t inputl, short *matchbp, char **bytepp, size_t *bytelp)
+/*****************************************************************************/
+{
+  /* This is almost like marpaESLIFRecognizer_symbol_tryb: we fake a recognizer on a complete fake stream */
+  marpaESLIFGrammar_t     marpaESLIFGrammar;
+  marpaESLIF_stream_t    *marpaESLIF_streamp;
+  marpaESLIFRecognizer_t *marpaESLIFRecognizerp = NULL;
+  short                   rcb;
+
+  if ((marpaESLIFp == NULL) || (marpaESLIFSymbolp == NULL)) {
+    errno = EINVAL;
+    goto err;
+  }
+
+  marpaESLIFGrammar.marpaESLIFp        = marpaESLIFp;
+  marpaESLIFGrammar.grammarStackp      = NULL;
+  marpaESLIFGrammar.grammarp           = NULL;
+  marpaESLIFGrammar.luabytep           = NULL;
+  marpaESLIFGrammar.luabytel           = 0;
+  marpaESLIFGrammar.luaprecompiledp    = NULL;
+  marpaESLIFGrammar.luaprecompiledl    = 0;
+  marpaESLIFGrammar.luadescp           = NULL;
+  marpaESLIFGrammar.internalRuleCounti = 0;
+  
+  /* Fake a recognizer. EOF flag will be set automatically in fake mode */
+  marpaESLIFRecognizerp = _marpaESLIFRecognizer_newp(&marpaESLIFGrammar,
+                                                     NULL, /* marpaESLIFRecognizerOptionp */
+                                                     0, /* discardb - not used anyway because we are in fake mode */
+                                                     1, /* noEventb - not used anyway because we are in fake mode */
+                                                     1, /* silentb */
+                                                     NULL, /* marpaESLIFRecognizerParentp */
+                                                     1, /* fakeb */
+                                                     0, /* maxStartCompletionsi */
+                                                     0, /* Already validated UTF-8 string ? */
+                                                     1 /* grammmarIsOnStackb */);
+  if (marpaESLIFRecognizerp == NULL) {
+    goto err;
+  }
+
+  marpaESLIF_streamp = marpaESLIFRecognizerp->marpaESLIF_streamp;
+  marpaESLIF_streamp->inputs = inputs;
+  marpaESLIF_streamp->inputl = inputl;
+  marpaESLIF_streamp->eofb   = 1;
+
+  rcb = marpaESLIFRecognizer_symbol_tryb(marpaESLIFRecognizerp, marpaESLIFSymbolp, matchbp, bytepp, bytelp);
+  goto done;
+
+ err:
+  rcb = 0;
+
+ done:
+  if (marpaESLIFRecognizerp != NULL) {
+    _marpaESLIFRecognizer_freev(marpaESLIFRecognizerp, 1 /* forceb */);
+  }
+  return rcb;
+}
+
+/*****************************************************************************/
 short marpaESLIFRecognizer_symbol_tryb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFSymbol_t *marpaESLIFSymbolp, short *matchbp, char **bytepp, size_t *bytelp)
 /*****************************************************************************/
 {
