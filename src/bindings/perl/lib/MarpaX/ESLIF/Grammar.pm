@@ -251,7 +251,7 @@ Please refer to L<MarpaX::ESLIF::Recognizer::Interface> and L<MarpaX::ESLIF::Val
 
 =head1 SEE ALSO
 
-L<MarpaX::ESLIF::Recognizer::Interface>, L<MarpaX::ESLIF::Recognizer::Interface>, L<MarpaX::ESLIF::Value::Interface>, L<MarpaX::ESLIF::Grammar::Properties>, L<MarpaX::ESLIF::Grammar::Rule::Properties>, L<MarpaX::ESLIF::Grammar::Symbol::Properties>
+L<MarpaX::ESLIF>, L<MarpaX::ESLIF::Recognizer::Interface>, L<MarpaX::ESLIF::Value::Interface>, L<MarpaX::ESLIF::Grammar::Properties>, L<MarpaX::ESLIF::Grammar::Rule::Properties>, L<MarpaX::ESLIF::Grammar::Symbol::Properties>
 
 =cut
 
