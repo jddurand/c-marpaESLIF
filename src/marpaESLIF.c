@@ -1017,6 +1017,7 @@ static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *mar
   /* Check some required parameters */
   if ((utf8s == NULL) || (utf8l <= 0)) {
     MARPAESLIF_ERROR(marpaESLIFp, "Invalid terminal origin");
+    errno = EINVAL;
     goto err;
   }
 
@@ -1184,6 +1185,7 @@ static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *mar
       }
       if (rci != MARPAESLIF_MATCH_OK) {
         MARPAESLIF_ERROR(marpaESLIFp, "Failed to detect all characters of terminal string");
+        errno = EINVAL;
         goto err;
       }
 #ifndef MARPAESLIF_NTRACE
@@ -1209,9 +1211,11 @@ static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *mar
       utf82ordi = _marpaESLIF_utf82ordi((PCRE2_SPTR8) matchedp, &codepointi, (PCRE2_SPTR8) (matchedp + matchedl));
       if (utf82ordi <= 0) {
         MARPAESLIF_ERRORF(marpaESLIFp, "Malformed UTF-8 character at offset %d", -utf82ordi);
+        errno = EINVAL;
         goto err;
       } else if (utf82ordi != (int) matchedl) {
         MARPAESLIF_ERRORF(marpaESLIFp, "Not all bytes consumed: %d instead of %ld", utf82ordi, (unsigned long) matchedl);
+        errno = EINVAL;
         goto err;
       }
       if (i == 1) {
@@ -1235,6 +1239,7 @@ static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *mar
             } else {
               MARPAESLIF_ERRORF(marpaESLIFp, "Impossible first codepoint 0x%02lx, should be 0x201c, \"'\" or '\"'", (unsigned long) codepointi);
             }
+            errno = EINVAL;
             goto err;
           }
         }
@@ -1243,6 +1248,7 @@ static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *mar
         /* Trailing backslash ? */
         if (backslashb) {
           MARPAESLIF_ERROR(marpaESLIFp, "Trailing backslash in string is not allowed");
+          errno = EINVAL;
           goto err;
         }
         /* Non-sense to not have the same value */
@@ -1259,6 +1265,7 @@ static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *mar
                               (unsigned long) codepointi,
                               (unsigned char) lastcodepointi, (unsigned long) lastcodepointi);
           }
+          errno = EINVAL;
           goto err;
         }
         break;
@@ -1283,6 +1290,7 @@ static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *mar
             } else {
               MARPAESLIF_ERROR(marpaESLIFp, "Backslash character found but no preceeding backslash");
             }
+            errno = EINVAL;
             goto err;
           }
           /* This is escaped first character */
@@ -1296,6 +1304,7 @@ static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *mar
             } else {
               MARPAESLIF_ERRORF(marpaESLIFp, "Got character 0x%02lx (non printable) preceeded by backslash: in your string only backslash character (\\) or the string delimitor (%c) can be escaped", (unsigned long) codepointi, (unsigned char) firstcodepointi);
             }
+            errno = EINVAL;
             goto err;
           }
           /* All is well */
@@ -1435,10 +1444,12 @@ static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *mar
       marpaESLIF_streamp = marpaESLIFRecognizerp->marpaESLIF_streamp;
       while (inputl > 0) {
         if (! _marpaESLIFRecognizer_terminal_matcherb(marpaESLIFRecognizerp, marpaESLIF_streamp, marpaESLIFp->anycharp, inputs, inputl, 1 /* eofb */, &rci, &marpaESLIFValueResult, NULL /* matchedLengthlp */)) {
+          errno = EINVAL;
           goto err;
         }
         if (rci != MARPAESLIF_MATCH_OK) {
           MARPAESLIF_ERROR(marpaESLIFp, "Failed to detect all characters of terminal string");
+          errno = EINVAL;
           goto err;
         }
 #ifndef MARPAESLIF_NTRACE
@@ -1462,9 +1473,11 @@ static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *mar
         utf82ordi = _marpaESLIF_utf82ordi((PCRE2_SPTR8) matchedp, &codepointi, (PCRE2_SPTR8) (matchedp + matchedl));
         if (utf82ordi <= 0) {
           MARPAESLIF_ERRORF(marpaESLIFp, "Malformed UTF-8 character at offset %d", -utf82ordi);
+          errno = EINVAL;
           goto err;
         } else if (utf82ordi != (int) matchedl) {
           MARPAESLIF_ERRORF(marpaESLIFp, "Not all bytes consumed: %d instead of %ld", utf82ordi, (unsigned long) matchedl);
+          errno = EINVAL;
           goto err;
         }
         /* Determine the number of hex digits to fully represent the code point, remembering if we need PCRE2_UTF flag */
@@ -1511,6 +1524,7 @@ static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *mar
           }
           if (! modifierFoundb) {
             MARPAESLIF_ERRORF(marpaESLIFp, "Unsupported modifier '%c'", modifierc);
+            errno = EINVAL;
             goto err;
           }
         }
@@ -1518,6 +1532,7 @@ static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *mar
       break;
     default:
       MARPAESLIF_ERRORF(marpaESLIFp, "Unsupported terminal type %d", type);
+      errno = EINVAL;
       goto err;
     }
 
@@ -1626,6 +1641,7 @@ static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *mar
 
   default:
     MARPAESLIF_ERRORF(marpaESLIFp, "%s: Unsupported terminal type %d", terminalp->descp->asciis, type);
+    errno = EINVAL;
     goto err;
     break;
   }
@@ -1674,10 +1690,12 @@ static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *mar
       marpaESLIF_streamp = marpaESLIFRecognizerTestp->marpaESLIF_streamp;
       if (! _marpaESLIFRecognizer_terminal_matcherb(marpaESLIFRecognizerTestp, marpaESLIF_streamp, terminalp, testFullMatchs, strlen(testFullMatchs), 1, &rci, NULL /* marpaESLIFValueResultp */, NULL /* matchedLengthlp */)) {
         MARPAESLIF_ERRORF(marpaESLIFp, "%s: testing full match: matcher general failure", terminalp->descp->asciis);
+        errno = EINVAL;
         goto err;
       }
       if (rci != MARPAESLIF_MATCH_OK) {
         MARPAESLIF_ERRORF(marpaESLIFp, "%s: testing full match: matcher returned rci = %d", terminalp->descp->asciis, rci);
+        errno = EINVAL;
         goto err;
       }
       /* MARPAESLIF_TRACEF(marpaESLIFp, funcs, "%s: testing full match is successful on %s", terminalp->descp->asciis, testFullMatchs); */
@@ -1688,10 +1706,12 @@ static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *mar
       marpaESLIF_streamp = marpaESLIFRecognizerTestp->marpaESLIF_streamp;
       if (! _marpaESLIFRecognizer_terminal_matcherb(marpaESLIFRecognizerTestp, marpaESLIF_streamp, terminalp, testPartialMatchs, strlen(testPartialMatchs), 0, &rci, NULL /* marpaESLIFValueResultp */, NULL /* matchedLengthlp */)) {
         MARPAESLIF_ERRORF(marpaESLIFp, "%s: testing partial match: matcher general failure", terminalp->descp->asciis);
+        errno = EINVAL;
         goto err;
       }
       if (rci != MARPAESLIF_MATCH_AGAIN) {
         MARPAESLIF_ERRORF(marpaESLIFp, "%s: testing partial match: matcher returned rci = %d", terminalp->descp->asciis, rci);
+        errno = EINVAL;
         goto err;
       }
       /* MARPAESLIF_TRACEF(marpaESLIFp, funcs, "%s: testing partial match is successful on %s when not at EOF", terminalp->descp->asciis, testPartialMatchs); */
