@@ -22,7 +22,18 @@ MarpaX::ESLIF::Symbol allows to create external symbols on demand
   my $eslif = MarpaX::ESLIF->new();
 
   my $stringSymbol = MarpaX::ESLIF::Symbol->new($eslif, type => 'string', pattern => '"String Pattern"');
-  my $regexSymbol = MarpaX::ESLIF::Symbol->new($eslif, type => 'regex', pattern => 'Regex.*Pattern');
+  #
+  # In ESLIF, a regex is anchored by default
+  #
+  my $regexSymbol = MarpaX::ESLIF::Symbol->new($eslif, type => 'regex', pattern => 'Regex.*Pattern', modifiers => 'A');
+
+  if (defined(my $match = $stringSymbol->try('String Pattern here'))) {
+      print "==> String match: $match\n";
+  }
+
+  if (defined(my $match = $regexSymbol->try('Should match Regex etc Pattern in there'))) {
+      print "==> Regex match: $match\n";
+  }
 
 External symbols can be of type C<string> or C<regex>. They can be used agains a L<MarpaX::ESLIF::Recognizer> or any external input.
 
@@ -116,6 +127,10 @@ sub new {
          croak "Type must be 'string' or 'regex'"
         )
 }
+
+=head2 $symbol->try($eslif, $scalar)
+
+Try to match the external symbol C<$symbol> on C<$scalar>, that can be anything. Return C<undef> if failure, the matched string if success.
 
 =head1 SEE ALSO
 

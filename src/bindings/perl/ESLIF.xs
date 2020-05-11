@@ -4309,6 +4309,40 @@ OUTPUT:
 
 =for comment
   /* ----------------------------------------------------------------------- */
+  /* MarpaX::ESLIF::Symbol::try                                              */
+  /* ----------------------------------------------------------------------- */
+=cut
+
+SV *
+try(Perl_MarpaX_ESLIF_Symbolp, Perl_inputp)
+  MarpaX_ESLIF_Symbol  Perl_MarpaX_ESLIF_Symbolp;
+  SV                  *Perl_inputp;
+PREINIT:
+  static const char *funcs = "MarpaX::ESLIF::Symbol::try";
+CODE:
+  char              *inputs;
+  size_t             inputl;
+  short              matchb;
+  char              *bytep;
+  size_t             bytel;
+  int                typei;
+
+  typei = marpaESLIFPerl_getTypei(aTHX_ Perl_inputp);
+  if ((typei & SCALAR) != SCALAR) {
+    MARPAESLIFPERL_CROAK("input must be a scalar");
+  }
+  inputs = SvPV(Perl_inputp, inputl);
+
+  if (! marpaESLIF_symbol_tryb(Perl_MarpaX_ESLIF_Symbolp->marpaESLIFp, Perl_MarpaX_ESLIF_Symbolp->marpaESLIFSymbolp, inputs, inputl, &matchb, &bytep, &bytel)) {
+    MARPAESLIFPERL_CROAKF("marpaESLIF_symbol_tryb failure, %s", strerror(errno));
+  }
+
+  RETVAL = matchb ? MARPAESLIFPERL_NEWSVPVN_UTF8((const char *) bytep, (STRLEN) bytel)  : &PL_sv_undef;
+OUTPUT:
+  RETVAL
+
+=for comment
+  /* ----------------------------------------------------------------------- */
   /* MarpaX::ESLIF::Symbol::DESTROY                                          */
   /* ----------------------------------------------------------------------- */
 =cut
