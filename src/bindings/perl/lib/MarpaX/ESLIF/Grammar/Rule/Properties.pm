@@ -32,7 +32,7 @@ Calls to grammar's currentRuleProperties() or rulePropertiesByLevel() methods ou
   :start   ::= Expression
   :default ::=             action        => do_op
                            symbol-action => do_symbol
-                           free-action   => do_free     # Supported but useless
+
   :desc    ::= 'Calculator'
   :discard ::= whitespaces event  => discard_whitespaces$
   :discard ::= comment     event  => discard_comment$

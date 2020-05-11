@@ -28,7 +28,7 @@ MarpaX::ESLIF::Grammar is the second step after getting a MarpaX::ESLIF instance
   :start   ::= Expression
   :default ::=             action        => do_op
                            symbol-action => do_symbol
-                           free-action   => do_free     # Supported but useless
+
   :desc    ::= 'Calculator'
   :discard ::= whitespaces event  => discard_whitespaces$
   :discard ::= comment     event  => discard_comment$
