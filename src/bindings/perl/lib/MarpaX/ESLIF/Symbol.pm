@@ -21,11 +21,8 @@ MarpaX::ESLIF::Symbol allows to create external symbols on demand
 
   my $eslif = MarpaX::ESLIF->new();
 
-  my $stringPattern = MarpaX::ESLIF::String->new('"String Pattern"', 'UTF-8');
-  my $stringSymbol = MarpaX::ESLIF::Symbol->new($eslif, 'string', $stringPattern);
-
-  my $regexPattern = MarpaX::ESLIF::String->new('Regex.*Pattern', 'UTF-8');
-  my $regexSymbol = MarpaX::ESLIF::Symbol->new($eslif, 'regex', $regexPattern);
+  my $stringSymbol = MarpaX::ESLIF::Symbol->new($eslif, type => 'string', pattern => '"String Pattern"');
+  my $regexSymbol = MarpaX::ESLIF::Symbol->new($eslif, type => 'regex', pattern => 'Regex.*Pattern');
 
 External symbols can be of type C<string> or C<regex>. They can be used agains a L<MarpaX::ESLIF::Recognizer> or any external input.
 
@@ -43,23 +40,29 @@ A string pattern I<must> follow ESLIF)s BNF, i.e. start and ends with:
 
 =head1 METHODS
 
-=head2 MarpaX::ESLIF::Symbol->new($eslif, $type, $pattern, $modifiers)
+=head2 MarpaX::ESLIF::Symbol->new($eslif, %options)
 
-Returns a symbol instance, noted C<$symbol> later.
+Returns a symbol instance, noted C<$symbol> later. C<%options> is a hash that contains:
 
 =over
 
-=item C<$type>
+=item C<type>
 
-Must be "string" or "regex".
+Must be "string" or "regex". Required.
 
-=item C<$pattern>
+=item C<pattern>
 
-Must be a L<MarpaX::ESLIF::String> instance.
+The pattern content. Required.
 
-=item C<$modifiers>
+=item C<encoding>
 
-Must follow the specification of the I<Terminals> section of L<MarpaX::ESLIF::BNF>:
+The pattern encoding. Optional.
+
+=item C<modifiers>
+
+A string containing modifiers. Optional.
+
+It must follow the specification of the I<Terminals> section of L<MarpaX::ESLIF::BNF>:
 
   ----------------------------------------------------------------
   Modifiers   Explanation
@@ -93,26 +96,25 @@ Note that a string pattern accepts only the C<i> and C<c> modifiers.
 # this.
 #
 sub new {
-    my ($class, $eslif, $type, $pattern, $modifiers)  = @_;
+    my ($class, $eslif, %options)  = @_;
 
-    croak "Pattern must be a MarpaX::ESLIF::String instance" unless $pattern->$_isa('MarpaX::ESLIF::String');
+    my $type = $options{type} // croak 'Type must be defined';
+    $type = "$type"; # Make type a true string
 
-    my $self;
-    $type //= '';
-    $modifiers //= '';
-    #
-    # Make type a true string
-    #
-    $type = "$type";
-    if ($type eq 'string') {
-        $self = $class->string_new($eslif->_getInstance, $pattern->value, bytes::length($pattern->value), $pattern->encoding, $modifiers)
-    } elsif ($type eq 'regex') {
-        $self = $class->regex_new($eslif->_getInstance, $pattern->value, bytes::length($pattern->value), $pattern->encoding, $modifiers)
-    } else {
-        croak "Type must be 'string' or 'regex'"
-    }
+    my $pattern = $options{pattern} // croak 'Pattern must be defined';
+    $pattern = "$pattern"; # Make pattern a true string
 
-    return $self
+    return
+        ($type eq 'string')
+        ?
+        $class->string_new($eslif->_getInstance, $pattern, bytes::length($pattern), $options{encoding}, $options{modifiers})
+        :
+        (($type eq 'regex')
+         ?
+         $class->regex_new($eslif->_getInstance, $pattern, bytes::length($pattern), $options{encoding}, $options{modifiers})
+         :
+         croak "Type must be 'string' or 'regex'"
+        )
 }
 
 =head1 SEE ALSO

@@ -4182,13 +4182,13 @@ PROTOTYPES: ENABLE
 =cut
 
 MarpaX_ESLIF_Symbol
-string_new(Perl_packagep, Perl_MarpaX_ESLIF_Enginep, bytep, bytel, encodingasciis, modifiers)
-  SV   *Perl_packagep;
-  void *Perl_MarpaX_ESLIF_Enginep;
-  char *bytep;
-  size_t bytel;
-  char *encodingasciis;
-  char *modifiers;
+string_new(Perl_packagep, Perl_MarpaX_ESLIF_Enginep, bytep, bytel, encodingasciisp, modifiersp)
+  SV     *Perl_packagep;
+  void   *Perl_MarpaX_ESLIF_Enginep;
+  char   *bytep;
+  size_t  bytel;
+  SV     *encodingasciisp;
+  SV     *modifiersp;
 PREINIT:
   static const char          *funcs          = "MarpaX::ESLIF::Symbol::string_new";
 CODE:
@@ -4196,6 +4196,31 @@ CODE:
   marpaESLIFSymbol_t         *marpaESLIFSymbolp;
   marpaESLIFString_t          marpaESLIFString;
   MarpaX_ESLIF_Symbol_t      *Perl_MarpaX_ESLIF_Symbolp;
+  int                         typei;
+  char                       *encodingasciis = NULL;
+  char                       *modifiers = NULL;
+
+  typei = marpaESLIFPerl_getTypei(aTHX_ encodingasciisp);
+  if ((typei & SCALAR) != SCALAR) {
+    /* This is an error unless it is undef */
+    if ((typei & UNDEF) != UNDEF) {
+      MARPAESLIFPERL_CROAK("encoding must be a scalar or undef");
+    }
+  }
+  if (SvOK(encodingasciisp)) {
+    encodingasciis = SvPV_nolen(encodingasciisp);
+  }
+
+  typei = marpaESLIFPerl_getTypei(aTHX_ modifiersp);
+  if ((typei & SCALAR) != SCALAR) {
+    /* This is an error unless it is undef */
+    if ((typei & UNDEF) != UNDEF) {
+      MARPAESLIFPERL_CROAK("modifiers must be a scalar or undef");
+    }
+  }
+  if (SvOK(modifiersp)) {
+    modifiers = SvPV_nolen(modifiersp);
+  }
 
   Newx(Perl_MarpaX_ESLIF_Symbolp, 1, MarpaX_ESLIF_Symbol_t);
   marpaESLIFPerl_symbolContextInitv(aTHX_ marpaESLIFp, ST(1) /* SV of eslif */, Perl_MarpaX_ESLIF_Symbolp);
@@ -4223,13 +4248,13 @@ OUTPUT:
 =cut
 
 MarpaX_ESLIF_Symbol
-regex_new(Perl_packagep, Perl_MarpaX_ESLIF_Enginep, bytep, bytel, encodingasciis, modifiers)
-  SV   *Perl_packagep;
-  void *Perl_MarpaX_ESLIF_Enginep;
-  char *bytep;
-  size_t bytel;
-  char *encodingasciis;
-  char *modifiers;
+regex_new(Perl_packagep, Perl_MarpaX_ESLIF_Enginep, bytep, bytel, encodingasciisp, modifiersp)
+  SV     *Perl_packagep;
+  void   *Perl_MarpaX_ESLIF_Enginep;
+  char   *bytep;
+  size_t  bytel;
+  SV     *encodingasciisp;
+  SV     *modifiersp;
 PREINIT:
   static const char          *funcs          = "MarpaX::ESLIF::Symbol::regex_new";
 CODE:
@@ -4237,6 +4262,31 @@ CODE:
   marpaESLIFSymbol_t         *marpaESLIFSymbolp;
   marpaESLIFString_t          marpaESLIFString;
   MarpaX_ESLIF_Symbol_t      *Perl_MarpaX_ESLIF_Symbolp;
+  int                         typei;
+  char                       *encodingasciis = NULL;
+  char                       *modifiers = NULL;
+
+  typei = marpaESLIFPerl_getTypei(aTHX_ encodingasciisp);
+  if ((typei & SCALAR) != SCALAR) {
+    /* This is an error unless it is undef */
+    if ((typei & UNDEF) != UNDEF) {
+      MARPAESLIFPERL_CROAK("encoding must be a scalar or undef");
+    }
+  }
+  if (SvOK(encodingasciisp)) {
+    encodingasciis = SvPV_nolen(encodingasciisp);
+  }
+
+  typei = marpaESLIFPerl_getTypei(aTHX_ modifiersp);
+  if ((typei & SCALAR) != SCALAR) {
+    /* This is an error unless it is undef */
+    if ((typei & UNDEF) != UNDEF) {
+      MARPAESLIFPERL_CROAK("modifiers must be a scalar or undef");
+    }
+  }
+  if (SvOK(modifiersp)) {
+    modifiers = SvPV_nolen(modifiersp);
+  }
 
   Newx(Perl_MarpaX_ESLIF_Symbolp, 1, MarpaX_ESLIF_Symbol_t);
   marpaESLIFPerl_symbolContextInitv(aTHX_ marpaESLIFp, ST(1) /* SV of eslif */, Perl_MarpaX_ESLIF_Symbolp);
