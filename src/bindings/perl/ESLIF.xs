@@ -4167,7 +4167,7 @@ OUTPUT:
 
 =for comment
   /* ======================================================================= */
-  /* MarpaX::ESLIF::Recognizer                                               */
+  /* MarpaX::ESLIF::Symbol                                                   */
   /* ======================================================================= */
 =cut
 
@@ -4479,6 +4479,32 @@ CODE:
   if (! marpaESLIFRecognizer_shareb(Perl_MarpaX_ESLIF_Recognizer->marpaESLIFRecognizerp, Perl_MarpaX_ESLIF_RecognizerShared->marpaESLIFRecognizerp)) {
     MARPAESLIFPERL_CROAKF("marpaESLIFRecognizer_shareb failure, %s", strerror(errno));
   }
+
+=for comment
+  /* ----------------------------------------------------------------------- */
+  /* MarpaX::ESLIF::Recognizer::symbolTry                                    */
+  /* ----------------------------------------------------------------------- */
+=cut
+
+SV *
+symbolTry(Perl_MarpaX_ESLIF_Recognizerp, Perl_MarpaX_ESLIF_Symbolp)
+  MarpaX_ESLIF_Recognizer Perl_MarpaX_ESLIF_Recognizerp;
+  MarpaX_ESLIF_Symbol  Perl_MarpaX_ESLIF_Symbolp;
+PREINIT:
+  static const char *funcs = "MarpaX::ESLIF::Recognizer::symbolTry";
+CODE:
+  short              matchb;
+  char              *bytep;
+  size_t             bytel;
+  int                typei;
+
+  if (! marpaESLIFRecognizer_symbol_tryb(Perl_MarpaX_ESLIF_Recognizerp->marpaESLIFRecognizerp, Perl_MarpaX_ESLIF_Symbolp->marpaESLIFSymbolp, &matchb, &bytep, &bytel)) {
+    MARPAESLIFPERL_CROAKF("marpaESLIFRecognizer_symbol_tryb failure, %s", strerror(errno));
+  }
+
+  RETVAL = matchb ? MARPAESLIFPERL_NEWSVPVN_UTF8((const char *) bytep, (STRLEN) bytel)  : &PL_sv_undef;
+OUTPUT:
+  RETVAL
 
 =for comment
   /* ----------------------------------------------------------------------- */
