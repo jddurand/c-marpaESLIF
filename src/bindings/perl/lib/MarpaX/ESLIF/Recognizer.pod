@@ -258,8 +258,12 @@ Hook the recognizer to enable or disable the use of C<:discard> if it exists. De
 
 Hook the recognizer to switch the use of C<:discard> if it exists. This is a I<permanent> setting.
 
+=head2 $eslifRecognizer->symbolTry($symbol)
+
+Tries to match the external symbol C<$symbol>, that is an instance of L<MarpaX::ESLIF::Symbol>. Return the match or C<undef>.
+
 =head1 SEE ALSO
 
-L<MarpaX::ESLIF::Recognizer::Interface>, L<MarpaX::ESLIF::Event::Type>, L<MarpaX::ESLIF::Logger::Level>
+L<MarpaX::ESLIF::Recognizer::Interface>, L<MarpaX::ESLIF::Event::Type>, L<MarpaX::ESLIF::Logger::Level>, L<MarpaX::ESLIF::Symbol>
 
 =cut
