@@ -8486,12 +8486,10 @@ static int marpaESLIFLuaJSONDecoder_decodei(lua_State *L)
   marpaESLIFValueOption_t                 marpaESLIFValueOption;
   marpaESLIFLuaValueContext_t             marpaESLIFLuaValueContext;
   marpaESLIFRecognizerOption_t            marpaESLIFRecognizerOption;
-  marpaESLIFLuaRecognizerContext_t        marpaESLIFLuaRecognizerContext;
   marpaESLIFJSONDecodeOption_t            marpaESLIFJSONDecodeOption;
   marpaESLIFLuaJsonDecoderReaderContext_t marpaESLIFLuaJsonDecoderReaderContext;
   marpaESLIFValueResult_t                 marpaESLIFValueResult;
   int                                     rci;
-  int                                     resultStacki;
   int                                     typei;
   int                                     topi;
   const char                             *encodings;

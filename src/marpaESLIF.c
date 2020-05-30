@@ -8946,7 +8946,6 @@ static inline marpaESLIFRecognizer_t *_marpaESLIFRecognizer_newp(marpaESLIFGramm
 {
   static const char             *funcs                 = "_marpaESLIFRecognizer_newp";
   marpaESLIF_t                  *marpaESLIFp           = marpaESLIFGrammarp->marpaESLIFp;
-  genericStack_t                *marpaESLIFRecognizerParentStackp;
   marpaESLIFRecognizer_t        *marpaESLIFRecognizerp = NULL;
   marpaWrapperRecognizerOption_t marpaWrapperRecognizerOption;
   marpaESLIF_grammar_t          *grammarp;
@@ -16668,8 +16667,6 @@ static inline void _marpaESLIFRecognizer_freev(marpaESLIFRecognizer_t *marpaESLI
   short                  *discardEventStatebp;
   short                  *beforeEventStatebp;
   short                  *afterEventStatebp;
-  int                     i;
-  void                   *p;
     
   /* We may decide to not free but say we can be reused, unless caller definitely want us to get out */
   if (! forceb) {
@@ -18185,7 +18182,8 @@ static int _marpaESLIF_pcre2_callouti(pcre2_callout_block *blockp, void *userDat
   if (blockp->mark == NULL) {
     MARPAESLIFCALLOUTBLOCK_INIT_UNDEF (marpaESLIFValuePairsp[MARPAESLIFCALLOUTBLOCK_MARK].value);
   } else {
-    MARPAESLIFCALLOUTBLOCK_INIT_LONG (marpaESLIFValuePairsp[MARPAESLIFCALLOUTBLOCK_MARK].value, blockp->mark);
+	  /* As per the doc, mark is a pointer to a zero-terminated string */
+    MARPAESLIFCALLOUTBLOCK_INIT_STRING(marpaESLIFValuePairsp[MARPAESLIFCALLOUTBLOCK_MARK].value, blockp->mark, strlen(blockp->mark));
   }
   MARPAESLIFCALLOUTBLOCK_INIT_LONG (marpaESLIFValuePairsp[MARPAESLIFCALLOUTBLOCK_START_MATCH].value, blockp->start_match);
   MARPAESLIFCALLOUTBLOCK_INIT_LONG (marpaESLIFValuePairsp[MARPAESLIFCALLOUTBLOCK_CURRENT_POSITION].value, blockp->current_position);

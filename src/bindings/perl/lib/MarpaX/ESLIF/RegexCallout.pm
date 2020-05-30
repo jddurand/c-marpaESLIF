@@ -564,7 +564,7 @@ sub getOffsetVector { return shift->{offset_vector} }
 
 =head2 $self->getMark
 
-Returns the current mark offset
+Returns the most recently passed C<NAME> of a C<(*MARK:NAME)>, C<(*PRUNE:NAME)> or C<(*THEN:NAME)> item in the match, undef if none.
 
 =cut
 
@@ -593,5 +593,11 @@ Returns the next item in the pattern
 =cut
 
 sub getNextItem { return shift->{next_item} }
+
+=head1 SEE ALSO
+
+L<PCRE2 Callout Specification|https://www.pcre.org/current/doc/html/pcre2callout.html>
+
+=cut
 
 1;

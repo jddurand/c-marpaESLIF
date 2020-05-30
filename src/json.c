@@ -485,10 +485,8 @@ short marpaESLIFJSON_encodeb(marpaESLIFGrammar_t *marpaESLIFGrammarJSONp, marpaE
   marpaESLIFValue_t            *marpaESLIFValuep      = NULL;
   short                         rcb;
   marpaESLIFAlternative_t       marpaESLIFAlternative;
-  marpaESLIFRecognizerOption_t  marpaESLIFRecognizerOption;
   marpaESLIFValueOption_t       marpaESLIFValueOption;
   marpaESLIFJSONContext_t       marpaESLIFJSONContext;
-  short                         continueb;
 
   if ((marpaESLIFGrammarJSONp == NULL) || (marpaESLIFValueResultp == NULL) || (marpaESLIFValueOptionp == NULL)) {
     errno = EINVAL;
