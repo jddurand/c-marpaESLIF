@@ -2345,6 +2345,27 @@ This type include character class. In such a case, the UTF-8 byte sequence corre
 
 =back
 
+=head1 THREAD-SAFETY
+
+All the objects are re-entrant but only I<marpaESLIF_t> and <marpaESLIFSymbol_t> are thread-safe. Therefore it is safe to use a <marpaESLIF_t> or a <marpESLIFSymbol_t> object as a singleton, other objects should be cloned if the same function is to be called on them from multiple threads, unless the user can synchronize their access.
+
+=head1 REFERENCE COUNT HELPERS
+
+  short marpaESLIFGrammar_ref_incb(marpaESLIFGrammar_t *marpaESLIFGrammarp, int *refip);
+  short marpaESLIFGrammar_ref_decb(marpaESLIFGrammar_t *marpaESLIFGrammarp, int *refip);
+  short marpaESLIFGrammar_refb(marpaESLIFGrammar_t *marpaESLIFGrammarp, int *refip);
+
+  short marpaESLIFRecognizer_ref_incb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, int *refip);
+  short marpaESLIFRecognizer_ref_decb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, int *refip);
+  short marpaESLIFRecognizer_refb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, int *refip);
+
+  short marpaESLIFValue_ref_incb(marpaESLIFValue_t *marpaESLIFValuep, int *refip);
+  short marpaESLIFValue_ref_decb(marpaESLIFValue_t *marpaESLIFValuep, int *refip);
+  short marpaESLIFValue_refb(marpaESLIFValue_t *marpaESLIFValuep, int *refip);
+
+All the methods above are reference count helpers for objects that are not thread-safe. there is no other logic on the reference count but initializing it to C<1> at object creation.
+These reference count helpers always return the current reference count in C<refip> if it is not C<NULL> and the call succeeds, i.e. returns a true value. The failure can only happen in there is an invalid argument of if the reference count has an internal turnaround. The aller is responsible to synhronize the access on these methods.
+
 =head1 SEE ALSO
 
 L<genericLogger|https://github.com/jddurand/c-genericLogger>,  L<PCRE2|http://www.pcre.org/>, L<libmarpa|https://jeffreykegler.github.io/Marpa-web-site/libmarpa.html>, L<marpaWrapper|https://github.com/jddurand/c-marpaWrapper>, L<marpaESLIF_BINDINGS|https://github.com/jddurand/c-marpaESLIF/tree/master/src/bindings>

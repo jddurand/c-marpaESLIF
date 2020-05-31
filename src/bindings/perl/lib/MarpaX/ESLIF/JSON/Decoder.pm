@@ -2,6 +2,7 @@ use strict;
 use warnings FATAL => 'all';
 
 package MarpaX::ESLIF::JSON::Decoder;
+use MarpaX::ESLIF::Registry;
 use MarpaX::ESLIF::JSON::Decoder::RecognizerInterface;
 use parent qw/MarpaX::ESLIF::Grammar/;
 
@@ -81,7 +82,7 @@ sub new {
     my $eslif = shift;
     my $strict = shift // 1;
 
-    my $self = $class->_new($eslif->_getInstance, $strict);
+    my $self = $class->_new(MarpaX::ESLIF::Registry->ESLIF_getEngine($eslif), $strict);
     return $self
 }
 

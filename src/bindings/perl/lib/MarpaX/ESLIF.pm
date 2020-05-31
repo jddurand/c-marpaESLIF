@@ -2,6 +2,7 @@ use strict;
 use warnings FATAL => 'all';
 
 package MarpaX::ESLIF;
+use MarpaX::ESLIF::Registry;     # Maintains thread-safe single ESLIF registry
 use MarpaX::ESLIF::String;       # Make sure it is loaded, the XS is using it
 use MarpaX::ESLIF::RegexCallout; # Make sure it is loaded, the XS is using it
 use MarpaX::ESLIF::Symbol;       # Make sure it is loaded, the XS is using it
@@ -58,6 +59,7 @@ use MarpaX::ESLIF::Grammar::Rule::Properties;
 use MarpaX::ESLIF::Grammar::Symbol::Properties;
 use MarpaX::ESLIF::JSON;
 use MarpaX::ESLIF::Logger::Level;
+use MarpaX::ESLIF::Symbol;
 use MarpaX::ESLIF::Symbol::PropertyBitSet;
 use MarpaX::ESLIF::Symbol::EventBitSet;
 use MarpaX::ESLIF::Symbol::Type;
@@ -153,40 +155,15 @@ sub _logger_to_self {
 }
 
 sub new {
-  my ($class, $loggerInterface) = @_;
-
-  my $self = $class->_logger_to_self($loggerInterface);
-
-  push(@REGISTRY, $self = bless [ MarpaX::ESLIF::Engine->allocate($loggerInterface), $loggerInterface ], $class) if ! defined($self);
-
-  return $self
+    return MarpaX::ESLIF::Registry->ESLIF_new(@_)
 }
 
 sub getInstance {
     goto &new
 }
 
-sub _getInstance {
-    return $_[0]->[0]
-}
-
-sub _getLoggerInterface {
-    return $_[0]->[1]
-}
-
 sub version {
-    MarpaX::ESLIF::Engine->version($_[0]->[0])
-}
-
-sub CLONE {
-    #
-    # One perl thread <-> one perl interpreter
-    #
-    map { $_->[0] = MarpaX::ESLIF::Engine->allocate($_->_getLoggerInterface) } @REGISTRY
-}
-
-sub DESTROY {
-    MarpaX::ESLIF::Engine->dispose($_[0]->[0])
+    MarpaX::ESLIF::Engine->version(MarpaX::ESLIF::Registry->ESLIF_getEngine($_[0]))
 }
 
 =head1 NOTES
@@ -238,5 +215,9 @@ ESLIF consider scalars that have only the internal PV flag.
 L<MarpaX::ESLIF::Introduction>, L<PCRE2|http://www.pcre.org/>, L<MarpaX::ESLIF::BNF>, L<MarpaX::ESLIF::Logger::Interface>, L<MarpaX::ESLIF::Grammar>, L<MarpaX::ESLIF::Recognizer>, L<Types::Standard>, L<JSON::MaybeXS>.
 
 =cut
+
+sub DESTROY {
+    MarpaX::ESLIF::Engine->dispose(MarpaX::ESLIF::Registry->ESLIF_getEngine($_[0]))
+}
 
 1;

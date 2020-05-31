@@ -2,6 +2,7 @@ use strict;
 use warnings FATAL => 'all';
 
 package MarpaX::ESLIF::Grammar;
+use MarpaX::ESLIF::Registry;
 
 # ABSTRACT: MarpaX::ESLIF's grammar
 
@@ -97,7 +98,7 @@ sub new {
     my $class = shift;
     my $eslif = shift;
 
-    my $self = $class->_new($eslif->_getInstance, @_);
+    my $self = $class->_new(MarpaX::ESLIF::Registry->ESLIF_getEngine($eslif), @_);
     return $self
 }
 

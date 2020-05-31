@@ -4343,15 +4343,16 @@ OUTPUT:
 
 =for comment
   /* ----------------------------------------------------------------------- */
-  /* MarpaX::ESLIF::Symbol::DESTROY                                          */
+  /* MarpaX::ESLIF::Symbol::dispose                                          */
   /* ----------------------------------------------------------------------- */
 =cut
 
 void
-DESTROY(Perl_MarpaX_ESLIF_Symbolp)
+dispose(Perl_packagep, Perl_MarpaX_ESLIF_Symbolp)
+  SV *Perl_packagep;
   MarpaX_ESLIF_Symbol Perl_MarpaX_ESLIF_Symbolp;
 PREINIT:
-  static const char *funcs = "MarpaX::ESLIF::Symbol::DESTROY";
+  static const char *funcs = "MarpaX::ESLIF::Symbol::dispose";
 CODE:
   marpaESLIFPerl_symbolContextFreev(aTHX_ Perl_MarpaX_ESLIF_Symbolp);
 

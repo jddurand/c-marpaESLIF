@@ -3,7 +3,6 @@ use warnings FATAL => 'all';
 
 package MarpaX::ESLIF::Symbol;
 use Carp qw/croak/;
-use Safe::Isa;
 
 # ABSTRACT: MarpaX::ESLIF's symbol
 
@@ -115,17 +114,7 @@ sub new {
     my $pattern = $options{pattern} // croak 'Pattern must be defined';
     $pattern = "$pattern"; # Make pattern a true string
 
-    return
-        ($type eq 'string')
-        ?
-        $class->string_new($eslif->_getInstance, $pattern, bytes::length($pattern), $options{encoding}, $options{modifiers})
-        :
-        (($type eq 'regex')
-         ?
-         $class->regex_new($eslif->_getInstance, $pattern, bytes::length($pattern), $options{encoding}, $options{modifiers})
-         :
-         croak "Type must be 'string' or 'regex'"
-        )
+    return MarpaX::ESLIF::Registry->ESLIFSymbol_new($eslif, $type, $pattern, $options{encoding}, $options{modifiers})
 }
 
 =head2 $symbol->try($eslif, $scalar)
@@ -137,5 +126,9 @@ Try to match the external symbol C<$symbol> on C<$scalar>, that can be anything.
 L<MarpaX::ESLIF>, L<MarpaX::ESLIF::Recognizer>
 
 =cut
+
+sub DESTROY {
+    MarpaX::ESLIF::Symbol->dispose($_[0])
+}
 
 1;

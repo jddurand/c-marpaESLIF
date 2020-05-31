@@ -258,6 +258,7 @@ struct marpaESLIF {
 };
 
 struct marpaESLIFGrammar {
+  int                        refi;               /* Reference counter - 1 for everyy new object */
   marpaESLIF_t              *marpaESLIFp;
   marpaESLIFGrammarOption_t  marpaESLIFGrammarOption;
   genericStack_t             _grammarStack;      /* Stack of grammars */
@@ -289,6 +290,7 @@ struct marpaESLIF_meta {
 };
 
 struct marpaESLIFValue {
+  int                          refi;               /* Reference counter - 1 for everyy new object */
   marpaESLIF_t                *marpaESLIFp;
   marpaESLIFRecognizer_t      *marpaESLIFRecognizerp;
   marpaESLIFValueOption_t      marpaESLIFValueOption;
@@ -339,6 +341,7 @@ struct marpaESLIF_stream {
 };
 
 struct marpaESLIFRecognizer {
+  int                          refi;               /* Reference counter - 1 for everyy new object */
   /* The variables starting with "_" are not supposed to ever be accessed  */
   /* except in very precise situations (typically the new()/free() or when */
   /* faking a new() method). */

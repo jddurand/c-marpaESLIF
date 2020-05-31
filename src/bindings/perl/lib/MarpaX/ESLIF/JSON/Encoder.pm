@@ -2,6 +2,7 @@ use strict;
 use warnings FATAL => 'all';
 
 package MarpaX::ESLIF::JSON::Encoder;
+use MarpaX::ESLIF::Registry;
 use parent qw/MarpaX::ESLIF::Grammar/;
 
 # ABSTRACT: ESLIF's JSON encoder interface
@@ -74,7 +75,7 @@ sub new {
     my $eslif = shift;
     my $strict = shift // 1;
 
-    my $self = $class->_new($eslif->_getInstance, $strict);
+    my $self = $class->_new(MarpaX::ESLIF::Registry->ESLIF_getEngine($eslif), $strict);
     return $self
 }
 
