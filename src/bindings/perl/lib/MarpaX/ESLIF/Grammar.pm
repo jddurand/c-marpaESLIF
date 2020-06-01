@@ -250,7 +250,7 @@ L<MarpaX::ESLIF>, L<MarpaX::ESLIF::Recognizer::Interface>, L<MarpaX::ESLIF::Valu
 =cut
 
 sub DESTROY {
-    MarpaX::ESLIF::grammar->dispose($_[0])
+    __PACKAGE__->dispose($_[0])
 }
 
 1;

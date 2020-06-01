@@ -3405,7 +3405,8 @@ OUTPUT:
 =cut
 
 void
-dispose(Perl_MarpaX_ESLIF_Grammarp)
+dispose(Perl_packagep, Perl_MarpaX_ESLIF_Grammarp)
+  SV *Perl_packagep;
   MarpaX_ESLIF_Grammar Perl_MarpaX_ESLIF_Grammarp;
 PREINIT:
   static const char *funcs = "MarpaX::ESLIF::Grammar::dispose";

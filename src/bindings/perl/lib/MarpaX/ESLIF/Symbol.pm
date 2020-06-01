@@ -129,7 +129,7 @@ L<MarpaX::ESLIF>, L<MarpaX::ESLIF::Recognizer>
 =cut
 
 sub DESTROY {
-    MarpaX::ESLIF::Symbol->dispose($_[0])
+    __PACKAGE__->dispose($_[0])
 }
 
 1;
