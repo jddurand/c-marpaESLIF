@@ -1,6 +1,13 @@
-# PODNAME: MarpaX::ESLIF::Recognizer
+use strict;
+use warnings FATAL => 'all';
+
+package MarpaX::ESLIF::Recognizer;
 
 # ABSTRACT: MarpaX::ESLIF's recognizer
+
+# AUTHORITY
+
+# VERSION
 
 =head1 DESCRIPTION
 
@@ -266,4 +273,14 @@ Tries to match the external symbol C<$symbol>, that is an instance of L<MarpaX::
 
 L<MarpaX::ESLIF::Recognizer::Interface>, L<MarpaX::ESLIF::Event::Type>, L<MarpaX::ESLIF::Logger::Level>, L<MarpaX::ESLIF::Symbol>
 
+=head1 NOTES
+
+L<MarpaX::ESLIF::Recognizer> cannot be reused across threads.
+
 =cut
+
+sub CLONE_SKIP {
+    return 1
+}
+
+1;

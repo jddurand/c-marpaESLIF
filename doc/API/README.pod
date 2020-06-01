@@ -220,13 +220,6 @@ Grammars themselves are assumed to always fit within a single block of memory. S
 
 Returns C<NULL> if failure, a grammar object instance on success.
 
-=head3 C<marpaESLIFGrammar_unsafe_newp>
-
-  marpaESLIFGrammar_t *marpaESLIFGrammar_unsafe_newp(marpaESLIF_t              *marpaESLIFp,
-                                                     marpaESLIFGrammarOption_t *marpaESLIFGrammarOptionp);
-
-This is the I<not thread-safe> version of C<marpaESLIFGrammar_newp>: you can call it only when you I<know> that your C<marpaESLIFp> is I<not accessed> concurrently with another call to C<marpaESLIFGrammar_unsafe_newp>.
-
 =head3 C<marpaESLIFGrammar_eslifp>
 
   marpaESLIF_t *marpaESLIFGrammar_eslifp(marpaESLIFGrammar_t *marpaESLIFGrammarp);
@@ -2196,10 +2189,6 @@ Special values like infinity or NaN, if supported, are trapped will always be ov
 
 It is guaranteed that ESLIF built-in actions (i.e. C<::ascii>, C<::shift>, etc..) never produces a C<marpaESLIFValueResult> of type C<PTR>. This mean that the type <PTR> is solely used for data exchange with hosts that cannot export or import using built-in ESLIF types.
 
-=item Thread-safety
-
-Any of the object of this API is thread-safe but is not I<reentrant>, except a C<marpaESLIF> instance. That is, if user need to access the same object from different threads, he is responsible of doing sychronization.
-
 =item Grammar show form
 
 The grammar show form is a concatenation of rule show forms and internal information, for every valid grammar level. For every grammar, the following is outputed:
@@ -2347,7 +2336,7 @@ This type include character class. In such a case, the UTF-8 byte sequence corre
 
 =head1 THREAD-SAFETY
 
-All the objects are re-entrant but only I<marpaESLIF_t> and <marpaESLIFSymbol_t> are thread-safe. Therefore it is safe to use a <marpaESLIF_t> or a <marpESLIFSymbol_t> object as a singleton, other objects should be cloned if the same function is to be called on them from multiple threads, unless the user can synchronize their access.
+All the objects are re-entrant but only I<marpaESLIF_t> and I<marpaESLIFSymbol_t> are thread-safe. Therefore it is safe to use a <marpaESLIF_t> or a I<marpESLIFSymbol_t> object as a singleton. I<marpaESLIFGrammar_t> objects should be cloned under thread creation. I<marpaESLIFRecognizer_t> and I<marpaESLIFValue_t> methods should be externally synchronized.
 
 =head1 REFERENCE COUNT HELPERS
 
