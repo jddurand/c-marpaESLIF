@@ -3382,8 +3382,7 @@ CODE:
   Newx(Perl_MarpaX_ESLIF_Grammarp, 1, MarpaX_ESLIF_Grammar_t);
   marpaESLIFPerl_grammarContextInitv(aTHX_ marpaESLIFp, ST(1) /* SV of eslif */, Perl_MarpaX_ESLIF_Grammarp);
 
-  /* We use the "unsafe" version because we made sure in ESLIF.pm that marpaESLIFp was reallocated at every new interpreter (== perl thread) */
-  marpaESLIFGrammarp = marpaESLIFGrammar_unsafe_newp(marpaESLIFp, &marpaESLIFGrammarOption);
+  marpaESLIFGrammarp = marpaESLIFGrammar_newp(marpaESLIFp, &marpaESLIFGrammarOption);
   if (marpaESLIFGrammarp == NULL) {
     int save_errno = errno;
     marpaESLIFPerl_grammarContextFreev(aTHX_ Perl_MarpaX_ESLIF_Grammarp);
@@ -3401,15 +3400,16 @@ OUTPUT:
 
 =for comment
   /* ----------------------------------------------------------------------- */
-  /* MarpaX::ESLIF::Grammar::DESTROY                                         */
+  /* MarpaX::ESLIF::Grammar::dispose                                         */
   /* ----------------------------------------------------------------------- */
 =cut
 
 void
-DESTROY(Perl_MarpaX_ESLIF_Grammarp)
+dispose(Perl_packagep, Perl_MarpaX_ESLIF_Grammarp)
+  SV *Perl_packagep;
   MarpaX_ESLIF_Grammar Perl_MarpaX_ESLIF_Grammarp;
 PREINIT:
-  static const char *funcs = "MarpaX::ESLIF::Grammar::DESTROY";
+  static const char *funcs = "MarpaX::ESLIF::Grammar::dispose";
 CODE:
   marpaESLIFPerl_grammarContextFreev(aTHX_ Perl_MarpaX_ESLIF_Grammarp);
 

@@ -3,6 +3,7 @@ use warnings FATAL => 'all';
 
 package MarpaX::ESLIF::Symbol;
 use Carp qw/croak/;
+use MarpaX::ESLIF::Registry;
 
 # ABSTRACT: MarpaX::ESLIF's symbol
 
@@ -128,7 +129,7 @@ L<MarpaX::ESLIF>, L<MarpaX::ESLIF::Recognizer>
 =cut
 
 sub DESTROY {
-    MarpaX::ESLIF::Symbol->dispose($_[0])
+    __PACKAGE__->dispose($_[0])
 }
 
 1;

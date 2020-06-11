@@ -44,7 +44,7 @@ sub _find_eslif {
 #
 # ESLIF Symbol Registry:
 #
-# Every element is an array reference that is: [ MarpaX::ESLIF::Symbol $instance, MarpaX::ESLIF::Engine pointer, $type, $pattern, $encoding, $modifiers ]
+# Every element is an array reference that is: [ MarpaX::ESLIF::Symbol instance, MarpaX::ESLIF::Engine pointer, $type, $pattern, $encoding, $modifiers ]
 #
 my @ESLIFSYMBOL_REGISTRY = ();
 
@@ -67,6 +67,31 @@ sub _find_eslifSymbol {
 	    ((! $definedEncoding && ! $_definedEncoding) || ($definedEncoding && $_definedEncoding && ($encoding eq $_->[4])))
 	    &&
 	    ((! $definedModifiers && ! $_definedModifiers) || ($definedModifiers && $_definedModifiers && ($modifiers eq $_->[4])))
+    }
+
+    return
+}
+
+#
+# ESLIF Grammar Registry:
+#
+# Every element is an array reference that is: [ MarpaX::ESLIF::Grammar instance, MarpaX::ESLIF::Engine pointer, $bnf, $encoding ]
+#
+my @ESLIFGRAMMAR_REGISTRY = ();
+
+sub _find_eslifGrammar {
+    my ($class, $engine, $bnf, $encoding) = @_;
+
+    my $definedEncoding = defined($encoding); # It is legal to create a grammar with no encoding
+
+    foreach (@ESLIFGRAMMAR_REGISTRY) {
+        my $_definedEncoding = defined($_->[3]);
+	return $_->[0] if
+	    $engine == $_->[1]
+	    &&
+	    $bnf eq $_->[2]
+	    &&
+	    ((! $definedEncoding && ! $_definedEncoding) || ($definedEncoding && $_definedEncoding && ($encoding eq $_->[3])))
     }
 
     return
@@ -136,6 +161,31 @@ sub ESLIFSymbol_new {
   return $eslifSymbol
 }
 
+=head2 ESLIFGrammar_new($class, $eslif, $bnf[, $encoding])
+
+Class method that return a singleton instance of a L<MarpaX::ESLIF::Grammar>.
+
+=cut
+
+sub _ESLIFGrammar_new {
+    my $class = shift;
+
+    return MarpaX::ESLIF::Grammar->_new(@_)
+}
+
+sub ESLIFGrammar_new {
+  my ($class, $eslif, @rest) = @_;
+
+  my $engine = $class->ESLIF_getEngine($eslif);
+  my @args = ($engine, @rest);
+
+  my $eslifGrammar = $class->_find_eslifGrammar(@args);
+
+  push(@ESLIFGRAMMAR_REGISTRY, [ $eslifGrammar = $class->_ESLIFGrammar_new(@args), @args ]) if ! defined($eslifGrammar);
+
+  return $eslifGrammar
+}
+
 =head2 CLONE()
 
 Manages singleton thread-safe objects of type L<MarpaX::ESLIF> and L<MarpaX::ESLIF::Symbol>.
@@ -166,19 +216,19 @@ sub CLONE {
 	my $pattern = $_->[3];
 	my $encoding = $_->[4];
 	my $modifiers = $_->[5];
-	$_->[0] = ($type eq 'string')
-	    ?
-	    MarpaX::ESLIF::Symbol->string_new($new_engine, $pattern, bytes::length($pattern), $encoding, $modifiers)
-	    :
-	    (($type eq 'regex')
-	     ?
-	     MarpaX::ESLIF::Symbol->regex_new($new_engine, $pattern, bytes::length($pattern), $encoding, $modifiers)
-	     :
-	     croak "Type must be 'string' or 'regex'"
-	    );
-	$_->[1] = $new_engine
+	$_->[0] = __PACKAGE__->_ESLIFSymbol_new($_->[1] = $new_engine, $type, $pattern, $encoding, $modifiers)
     }
-    
+    #
+    # Clone grammars that referenced the old engine
+    #
+    foreach (@ESLIFGRAMMAR_REGISTRY) {
+	my $old_engine = $_->[1];
+	my $new_engine = $ENGINES{$old_engine} // croak "Failed to get new engine that replaces $old_engine";
+	$_->[1] = $new_engine;
+	my @args = @{$_};
+	shift @args;
+	$_->[0] = __PACKAGE__->_ESLIFGrammar_new(@args)
+    }
 }
 
 1;

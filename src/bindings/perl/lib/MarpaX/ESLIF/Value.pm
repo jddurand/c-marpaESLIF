@@ -1,6 +1,13 @@
-# PODNAME: MarpaX::ESLIF::Value
+use strict;
+use warnings FATAL => 'all';
+
+package MarpaX::ESLIF::Value;
 
 # ABSTRACT: MarpaX::ESLIF's value
+
+# AUTHORITY
+
+# VERSION
 
 =head1 DESCRIPTION
 
@@ -40,4 +47,14 @@ Returns a boolean indicating if there a value to retrieve via the valueInterface
 
 L<MarpaX::ESLIF::Value::Interface>
 
+=head1 NOTES
+
+L<MarpaX::ESLIF::Value> cannot be reused across threads.
+
 =cut
+
+sub CLONE_SKIP {
+    return 1
+}
+
+1;

@@ -501,7 +501,6 @@ extern "C" {
   marpaESLIF_EXPORT marpaESLIFGrammar_t          *marpaESLIF_grammarp(marpaESLIF_t *marpaESLIFp);
 
   marpaESLIF_EXPORT marpaESLIFGrammar_t          *marpaESLIFGrammar_newp(marpaESLIF_t *marpaESLIFp, marpaESLIFGrammarOption_t *marpaESLIFGrammarOptionp);
-  marpaESLIF_EXPORT marpaESLIFGrammar_t          *marpaESLIFGrammar_unsafe_newp(marpaESLIF_t *marpaESLIFp, marpaESLIFGrammarOption_t *marpaESLIFGrammarOptionp);
   marpaESLIF_EXPORT short                         marpaESLIFGrammar_ref_incb(marpaESLIFGrammar_t *marpaESLIFGrammarp, int *refip);
   marpaESLIF_EXPORT short                         marpaESLIFGrammar_ref_decb(marpaESLIFGrammar_t *marpaESLIFGrammarp, int *refip);
   marpaESLIF_EXPORT short                         marpaESLIFGrammar_refb(marpaESLIFGrammar_t *marpaESLIFGrammarp, int *refip);

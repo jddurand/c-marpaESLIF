@@ -89,17 +89,10 @@ Encoding will always be guessed if not given.
 
 =cut
 
-#
-# Tiny wrapper on MarpaX::ESLIF::Grammar->new, that is using the instance as void *.
-# Could have been writen in the XS itself, but I feel it is more comprehensible like
-# this.
-#
 sub new {
     my $class = shift;
-    my $eslif = shift;
 
-    my $self = $class->_new(MarpaX::ESLIF::Registry->ESLIF_getEngine($eslif), @_);
-    return $self
+    return MarpaX::ESLIF::Registry->ESLIFGrammar_new(@_)
 }
 
 =head2 $eslifGrammar->ngrammar()
@@ -255,5 +248,9 @@ Please refer to L<MarpaX::ESLIF::Recognizer::Interface> and L<MarpaX::ESLIF::Val
 L<MarpaX::ESLIF>, L<MarpaX::ESLIF::Recognizer::Interface>, L<MarpaX::ESLIF::Value::Interface>, L<MarpaX::ESLIF::Grammar::Properties>, L<MarpaX::ESLIF::Grammar::Rule::Properties>, L<MarpaX::ESLIF::Grammar::Symbol::Properties>
 
 =cut
+
+sub DESTROY {
+    __PACKAGE__->dispose($_[0])
+}
 
 1;
