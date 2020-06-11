@@ -10986,7 +10986,7 @@ static inline void _marpaESLIF_grammar_createshowv(marpaESLIFGrammar_t *marpaESL
   int                          *ruleip;
   size_t                        rulel;
   char                         *ruleshows;
-  int                           l;
+  size_t                        l;
   char                          quote[2][2];
   genericStack_t               *symbolStackp = grammarp->symbolStackp;
   marpaESLIF_symbol_t          *symbolp;
