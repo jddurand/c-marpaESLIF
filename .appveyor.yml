@@ -101,7 +101,7 @@ init:
 
 build_script:
   - cd C:\projects\%APPVEYOR_PROJECT_NAME%
-  - cmake -Wno-dev -G "%_GENERATOR%" -DCMAKE_BUILD_TYPE=Release -DALL_IN_ONE=TRUE .
+  - cmake -Wno-dev -G "%_GENERATOR%" -DCMAKE_BUILD_TYPE=Release -DALL_IN_ONE=TRUE -DICU_DEBUG=TRUE .
   - nmake
 
 test_script:

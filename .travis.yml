@@ -12,14 +12,14 @@ script:
   - perl CMakeObjects.PL
   - rm -rf output
 # ALL_IN_ONE
-  - cmake . -DALL_IN_ONE=ON
+  - cmake -DICU_DEBUG=TRUE -DALL_IN_ONE=ON .
   - make check
   - make pack
   - cpack -G NSIS
   - make install DESTDIR=/tmp
   - rm -rf output CMakeCache.txt CMakeFiles
 # Not ALL_IN_ONE
-  - cmake .
+  - cmake -DICU_DEBUG=TRUE .
   - make check
   - make pack
   - cpack -G NSIS
@@ -36,7 +36,7 @@ script:
   - tconv -g `find ./output/3rdparty/cchardet-1.0.0/test/testdata/ -type f`
   - rm -rf output CMakeCache.txt CMakeFiles
 # Not ALL_IN_ONE and codecov
-  - cmake -DCMAKE_BUILD_TYPE=Debug -DENABLE_COVERAGE=ON .
+  - cmake -DCMAKE_BUILD_TYPE=Debug -DENABLE_COVERAGE=ON -DICU_DEBUG=TRUE .
   - make
   - make check
   - ./output/lib/tconv --help
