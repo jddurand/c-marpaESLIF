@@ -1,7 +1,7 @@
 MACRO (FINDISNAN)
   GET_PROPERTY(source_dir_set GLOBAL PROPERTY MYPACKAGE_SOURCE_DIR SET)
   IF (NOT ${source_dir_set})
-    MESSAGE (WARNING "Cannot check inline, property MYPACKAGE_SOURCE_DIR is not set")
+    MESSAGE (WARNING "Cannot check isnan, property MYPACKAGE_SOURCE_DIR is not set")
   ELSE ()
     IF (NOT C_ISNAN_SINGLETON)
       GET_PROPERTY(source_dir GLOBAL PROPERTY MYPACKAGE_SOURCE_DIR)
@@ -19,19 +19,36 @@ MACRO (FINDISNAN)
       #
       # Test
       #
-      MESSAGE(STATUS "Looking for working isnan")
-      TRY_COMPILE (C_HAS_ISNAN ${CMAKE_CURRENT_BINARY_DIR}
-        ${source_dir}/isnan.c
-        COMPILE_DEFINITIONS -DC_ISNAN=isnan -DHAVE_MATH_H=${_HAVE_MATH_H})
-      IF (C_HAS_ISNAN)
-        MESSAGE(STATUS "Looking for working isnan - found")
-        SET (_C_ISNAN isnan)
-        SET (_C_ISNAN_FOUND TRUE)
+      FOREACH (KEYWORD "isnan" "_isnan" "__isnan")
+        MESSAGE(STATUS "Looking for ${KEYWORD}")
+        TRY_COMPILE (C_HAS_${KEYWORD} ${CMAKE_CURRENT_BINARY_DIR}
+          ${source_dir}/isnan.c
+          COMPILE_DEFINITIONS -DC_ISNAN=${KEYWORD} -DHAVE_MATH_H=${_HAVE_MATH_H})
+        IF (C_HAS_${KEYWORD})
+          MESSAGE(STATUS "Looking for ${KEYWORD} - found")
+          SET (_C_ISNAN ${KEYWORD})
+          SET (_C_ISNAN_FOUND TRUE)
+          BREAK ()
+        ENDIF ()
+      ENDFOREACH ()
+      IF (NOT _C_ISNAN_FOUND)
+        MESSAGE(STATUS "Looking for isnan replacement")
+        TRY_COMPILE (C_HAS_ISNAN_REPLACEMENT ${CMAKE_CURRENT_BINARY_DIR}
+          ${source_dir}/isnan.c
+          COMPILE_DEFINITIONS -DHAVE_ISNAN_REPLACEMENT=1 -DHAVE_MATH_H=${_HAVE_MATH_H})
+        IF (C_HAS_ISNAN_REPLACEMENT)
+          MESSAGE(STATUS "Looking for isnan replacement - found")
+          SET (_C_ISNAN_REPLACEMENT TRUE)
+        ENDIF ()
       ENDIF ()
     ENDIF ()
     IF (_C_ISNAN_FOUND)
       SET (C_ISNAN "${_C_ISNAN}" CACHE STRING "C isnan implementation")
       MARK_AS_ADVANCED (C_ISNAN)
+    ENDIF ()
+    IF (_C_ISNAN_REPLACEMENT)
+      SET (C_ISNAN_REPLACEMENT "(__builtin_isnan(__VA_ARGS__))" CACHE STRING "C ISNAN_REPLACEMENT implementation")
+      MARK_AS_ADVANCED (C_ISNAN_REPLACEMENT)
     ENDIF ()
     SET (C_ISNAN_SINGLETON TRUE CACHE BOOL "C isnan check singleton")
     MARK_AS_ADVANCED (C_ISNAN_SINGLETON)

@@ -1,7 +1,7 @@
 MACRO (FINDSTRTOLD)
   GET_PROPERTY(source_dir_set GLOBAL PROPERTY MYPACKAGE_SOURCE_DIR SET)
   IF (NOT ${source_dir_set})
-    MESSAGE (WARNING "Cannot check inline, property MYPACKAGE_SOURCE_DIR is not set")
+    MESSAGE (WARNING "Cannot check strtold, property MYPACKAGE_SOURCE_DIR is not set")
   ELSE ()
     IF (NOT C_STRTOLD_SINGLETON)
       GET_PROPERTY(source_dir GLOBAL PROPERTY MYPACKAGE_SOURCE_DIR)
@@ -9,7 +9,7 @@ MACRO (FINDSTRTOLD)
       #
       # Test
       #
-      FOREACH (KEYWORD "strtold")
+      FOREACH (KEYWORD "strtold" "_strtold" "__strtold")
         MESSAGE(STATUS "Looking for ${KEYWORD}")
         TRY_COMPILE (C_HAS_${KEYWORD} ${CMAKE_CURRENT_BINARY_DIR}
           ${source_dir}/strtold.c
