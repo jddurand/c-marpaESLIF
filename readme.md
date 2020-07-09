@@ -63,17 +63,49 @@ key: 4    value: monkey
 
 ```
 
-
 # Installing
-From the root of the repository, type (requires LuaRocks):
 
-```
-luarocks --local make
+For the impatient:
+```sh
+git clone https://github.com/mfrigerio17/lua-template-engine.git
+cd lua-template-engine/
+
+# This one will need root privileges
+mkdir -p /usr/local/share/lua/5.2/ && cp src/template-text.lua /usr/local/share/lua/5.2/
+
+# Run a sample
+lua src/sample/fromreadme.lua
 ```
 
-Before running a script that uses the module, you might need:
+You may simply copy the source file `template-text.lua` in a system-wide Lua
+directory.
+
+Alternatively, you can use [LuaRocks](https://luarocks.org/).
+From the root of the repository, type:
+
+```sh
+luarocks --local make           # installs the module locally
+eval `luarocks path`            # need this everytime, with --local
+lua src/sample/fromreadme.lua   # try a sample
 ```
-eval `luarocks path`
+
+Avoid the `--local` switch to install the module in a system-wide Lua directory.
+
+## Installing LuaRocks
+See [the official website](https://luarocks.org/).
+
+Beware that the package-manger version of LuaRocks might default to Lua 5.1.
+Install it manually with something like the following (replace `apt` with your
+package manager, and run the install commands with root privileges):
+
+```sh
+apt install make wget unzip   # required later
+apt install liblua5.2-dev     # also required, by LuaRocks
+wget https://luarocks.org/releases/luarocks-3.3.1.tar.gz
+tar zxpf luarocks-3.3.1.tar.gz
+cd luarocks-3.3.1
+./configure --lua-version=5.2
+make && make install
 ```
 
 # Dependencies
