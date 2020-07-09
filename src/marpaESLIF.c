@@ -5465,7 +5465,6 @@ static inline marpaESLIFGrammar_t *_marpaESLIFGrammar_newp(marpaESLIF_t *marpaES
       MARPAESLIF_ERRORF(marpaESLIFp, "malloc failure, %s", strerror(errno));
       goto err;
     }
-    marpaESLIFGrammarp->refi                    = 1;
     marpaESLIFGrammarp->marpaESLIFp             = marpaESLIFp;
     marpaESLIFGrammarp->marpaESLIFGrammarOption = *marpaESLIFGrammarOptionp;
     marpaESLIFGrammarp->grammarStackp           = NULL;
@@ -8945,7 +8944,6 @@ static inline marpaESLIFRecognizer_t *_marpaESLIFRecognizer_newp(marpaESLIFGramm
     }
   }
 
-  marpaESLIFRecognizerp->refi                            = 1;
   marpaESLIFRecognizerp->marpaESLIFp                     = marpaESLIFp;
   _marpaESLIFRecognizer_redoGrammarv(marpaESLIFRecognizerp, marpaESLIFGrammarp, fakeb, grammarIsOnStackb);
   marpaESLIFRecognizerp->marpaESLIFRecognizerOption      = *marpaESLIFRecognizerOptionp;
@@ -13978,7 +13976,6 @@ static inline marpaESLIFValue_t *_marpaESLIFValue_newp(marpaESLIFRecognizer_t *m
     goto err;
   }
 
-  marpaESLIFValuep->refi                        = 1;
   marpaESLIFValuep->marpaESLIFp                 = marpaESLIFp;
   marpaESLIFValuep->marpaESLIFRecognizerp       = marpaESLIFRecognizerp;
   marpaESLIFValuep->marpaESLIFValueOption       = *marpaESLIFValueOptionp;
@@ -18503,7 +18500,6 @@ void marpaESLIFSymbol_freev(marpaESLIFSymbol_t *marpaESLIFSymbolp)
   _marpaESLIF_symbol_freev(marpaESLIFSymbolp);
 }
 
-#include "ref.c"
 #include "bootstrap.c"
 #include "lua.c"
 #include "json.c"

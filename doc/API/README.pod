@@ -2179,6 +2179,10 @@ Outside of recognition phase, you can use C<marpaESLIFp> on a free input, identi
 
 =over
 
+=item REENTRANT AND THREAD-SAFETY
+
+All the objects are re-entrant but not thread-safe.
+
 =item Float values
 
 when a C<MARPAESLIF_VALUE_TYPE_DOUBLE> or C<MARPAESLIF_VALUE_TYPE_LONG_DOUBLE> type is pushed to the stack, marpaESLIF will always tries to downgrade to C<float>, or C<double> or C<float>, respectively, if there is no loss of information. This is in particular sensible to the C<MARPAESLIF_VALUE_TYPE_LONG_DOUBLE> type, because the latter is not always well supported by all external languages, e.g. Java.
@@ -2333,27 +2337,6 @@ This type include character class. In such a case, the UTF-8 byte sequence corre
 =back
 
 =back
-
-=head1 THREAD-SAFETY
-
-All the objects are re-entrant but only I<marpaESLIF_t> and I<marpaESLIFSymbol_t> are thread-safe. Therefore it is safe to use a <marpaESLIF_t> or a I<marpESLIFSymbol_t> object as a singleton. I<marpaESLIFGrammar_t> objects should be cloned under thread creation. I<marpaESLIFRecognizer_t> and I<marpaESLIFValue_t> methods should be externally synchronized.
-
-=head1 REFERENCE COUNT HELPERS
-
-  short marpaESLIFGrammar_ref_incb(marpaESLIFGrammar_t *marpaESLIFGrammarp, int *refip);
-  short marpaESLIFGrammar_ref_decb(marpaESLIFGrammar_t *marpaESLIFGrammarp, int *refip);
-  short marpaESLIFGrammar_refb(marpaESLIFGrammar_t *marpaESLIFGrammarp, int *refip);
-
-  short marpaESLIFRecognizer_ref_incb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, int *refip);
-  short marpaESLIFRecognizer_ref_decb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, int *refip);
-  short marpaESLIFRecognizer_refb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, int *refip);
-
-  short marpaESLIFValue_ref_incb(marpaESLIFValue_t *marpaESLIFValuep, int *refip);
-  short marpaESLIFValue_ref_decb(marpaESLIFValue_t *marpaESLIFValuep, int *refip);
-  short marpaESLIFValue_refb(marpaESLIFValue_t *marpaESLIFValuep, int *refip);
-
-All the methods above are reference count helpers for objects that are not thread-safe. there is no other logic on the reference count but initializing it to C<1> at object creation.
-These reference count helpers always return the current reference count in C<refip> if it is not C<NULL> and the call succeeds, i.e. returns a true value. The failure can only happen in there is an invalid argument of if the reference count has an internal turnaround. The aller is responsible to synhronize the access on these methods.
 
 =head1 SEE ALSO
 

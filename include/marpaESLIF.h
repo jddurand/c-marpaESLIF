@@ -501,9 +501,6 @@ extern "C" {
   marpaESLIF_EXPORT marpaESLIFGrammar_t          *marpaESLIF_grammarp(marpaESLIF_t *marpaESLIFp);
 
   marpaESLIF_EXPORT marpaESLIFGrammar_t          *marpaESLIFGrammar_newp(marpaESLIF_t *marpaESLIFp, marpaESLIFGrammarOption_t *marpaESLIFGrammarOptionp);
-  marpaESLIF_EXPORT short                         marpaESLIFGrammar_ref_incb(marpaESLIFGrammar_t *marpaESLIFGrammarp, int *refip);
-  marpaESLIF_EXPORT short                         marpaESLIFGrammar_ref_decb(marpaESLIFGrammar_t *marpaESLIFGrammarp, int *refip);
-  marpaESLIF_EXPORT short                         marpaESLIFGrammar_refb(marpaESLIFGrammar_t *marpaESLIFGrammarp, int *refip);
   marpaESLIF_EXPORT marpaESLIF_t                 *marpaESLIFGrammar_eslifp(marpaESLIFGrammar_t *marpaESLIFGrammarp);
   marpaESLIF_EXPORT marpaESLIFGrammarOption_t    *marpaESLIFGrammar_optionp(marpaESLIFGrammar_t *marpaESLIFGrammarp);
   marpaESLIF_EXPORT short                         marpaESLIFGrammar_ngrammarib(marpaESLIFGrammar_t *marpaESLIFGrammarp, int *ngrammarip);
@@ -537,9 +534,6 @@ extern "C" {
   marpaESLIF_EXPORT void                          marpaESLIFGrammar_freev(marpaESLIFGrammar_t *marpaESLIFGrammarp);
 
   marpaESLIF_EXPORT marpaESLIFRecognizer_t       *marpaESLIFRecognizer_newp(marpaESLIFGrammar_t *marpaESLIFGrammarp, marpaESLIFRecognizerOption_t *marpaESLIFRecognizerOptionp);
-  marpaESLIF_EXPORT short                         marpaESLIFRecognizer_ref_incb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, int *refip);
-  marpaESLIF_EXPORT short                         marpaESLIFRecognizer_ref_decb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, int *refip);
-  marpaESLIF_EXPORT short                         marpaESLIFRecognizer_refb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, int *refip);
   marpaESLIF_EXPORT marpaESLIFRecognizer_t       *marpaESLIFRecognizer_newFromp(marpaESLIFGrammar_t *marpaESLIFGrammarp, marpaESLIFRecognizer_t *marpaESLIFRecognizerSharedp);
   marpaESLIF_EXPORT short                         marpaESLIFRecognizer_set_exhausted_flagb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, short exhaustedb);
   marpaESLIF_EXPORT short                         marpaESLIFRecognizer_isExhaustedb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, short *exhaustedbp);
@@ -572,9 +566,6 @@ extern "C" {
   marpaESLIF_EXPORT void                          marpaESLIFRecognizer_freev(marpaESLIFRecognizer_t *marpaESLIFRecognizerp);
 
   marpaESLIF_EXPORT marpaESLIFValue_t            *marpaESLIFValue_newp(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFValueOption_t *marpaESLIFValueOptionp);
-  marpaESLIF_EXPORT short                         marpaESLIFValue_ref_incb(marpaESLIFValue_t *marpaESLIFValuep, int *refip);
-  marpaESLIF_EXPORT short                         marpaESLIFValue_ref_decb(marpaESLIFValue_t *marpaESLIFValuep, int *refip);
-  marpaESLIF_EXPORT short                         marpaESLIFValue_refb(marpaESLIFValue_t *marpaESLIFValuep, int *refip);
   marpaESLIF_EXPORT marpaESLIFRecognizer_t       *marpaESLIFValue_recognizerp(marpaESLIFValue_t *marpaESLIFValuep);
   marpaESLIF_EXPORT marpaESLIFValueOption_t      *marpaESLIFValue_optionp(marpaESLIFValue_t *marpaESLIFValuep);
   marpaESLIF_EXPORT short                         marpaESLIFValue_valueb(marpaESLIFValue_t *marpaESLIFValuep);
@@ -666,9 +657,6 @@ extern "C" {
   /* -------------------------------------- */
   marpaESLIF_EXPORT marpaESLIFSymbol_t           *marpaESLIFSymbol_string_newp(marpaESLIF_t *marpaESLIFp, marpaESLIFString_t *stringp, char *modifiers);
   marpaESLIF_EXPORT marpaESLIFSymbol_t           *marpaESLIFSymbol_regex_newp(marpaESLIF_t *marpaESLIFp, marpaESLIFString_t *stringp, char *modifiers);
-  marpaESLIF_EXPORT short                         marpaESLIFSymbol_ref_incb(marpaESLIFSymbol_t *marpaESLIFSymbolp, int *refip);
-  marpaESLIF_EXPORT short                         marpaESLIFSymbol_ref_decb(marpaESLIFSymbol_t *marpaESLIFSymbolp, int *refip);
-  marpaESLIF_EXPORT short                         marpaESLIFSymbol_refb(marpaESLIFSymbol_t *marpaESLIFSymbolp, int *refip);
   /* An external symbol can be used directly inside the recognizer phase in the current input stream. The later will automatically expand if needed */
   /* as in normal recognizer lifetime. */
   /* It can be also used outside of any grammar on a free input string */
