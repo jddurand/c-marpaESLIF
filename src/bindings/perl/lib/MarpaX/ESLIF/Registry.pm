@@ -4,7 +4,7 @@ use warnings FATAL => 'all';
 package MarpaX::ESLIF::Registry;
 use Carp qw/croak/;
 
-# ABSTRACT: Registry for thread-safe ESLIF objects
+# ABSTRACT: ESLIF registry
 
 # AUTHORITY
 
@@ -12,86 +12,22 @@ use Carp qw/croak/;
 
 =head1 DESCRIPTION
 
-This class ensures that L<MarpaX::ESLIF> and L<MarpaX::ESLIF::Symbol> instancecs correctly with perl's C<CLONE> and C<DESTROY>.
+This class ensures is a generic constructor, destructor and cloner for all objects in the L<MarpaX::ESLIF> namespace. It ensures in particular the singleton and clonable behaviour of L<MarpaX::ESLIF>, L<MarpaX::ESLIF::Grammar> and L<MarpaX::ESLIF::Symbol> objects.
 
 =cut
 
 #
-# ESLIF Registry:
+# Different registries exist per clonable class, because we want to control the order when cloning
+# If eq_ref is defined, then the object is implicitly a singleton
 #
-# Every element is a MarpaX::ESLIF instance that an array reference of [ MarpaX::ESLIF::Engine pointer, $loggerInterface ] blessed to MarpaX::ESLIF
-#
-my @ESLIF_REGISTRY = ();
 
-sub _find_eslif {
-    my ($class, $loggerInterface) = @_;
+my %REGISTRY;
 
-    my $definedLoggerInterface = defined($loggerInterface); # It is legal to create an eslif with no logger interface
+sub _find {
+    my ($eq_ref, $objects_ref, @args) = @_;
 
-    foreach (@ESLIF_REGISTRY) {
-        my $_definedLoggerInterface = defined($_[1]);
-	return $_
-            if (
-                (! $definedLoggerInterface && ! $_definedLoggerInterface)
-                ||
-                ($definedLoggerInterface && $_definedLoggerInterface && ($loggerInterface == $_[1]))
-            )
-    }
-
-    return
-}
-
-#
-# ESLIF Symbol Registry:
-#
-# Every element is an array reference that is: [ MarpaX::ESLIF::Symbol instance, MarpaX::ESLIF::Engine pointer, $type, $pattern, $encoding, $modifiers ]
-#
-my @ESLIFSYMBOL_REGISTRY = ();
-
-sub _find_eslifSymbol {
-    my ($class, $engine, $type, $pattern, $encoding, $modifiers) = @_;
-
-    my $definedEncoding = defined($encoding); # It is legal to create a symbol with no encoding
-    my $definedModifiers = defined($modifiers); # It is legal to create a symbol with no modifier
-
-    foreach (@ESLIFSYMBOL_REGISTRY) {
-        my $_definedEncoding = defined($_->[4]);
-        my $_definedModifiers = defined($_->[5]);
-	return $_->[0] if
-	    $engine == $_->[1]
-	    &&
-	    $type eq $_->[2]
-	    &&
-	    $pattern eq $_->[3]
-	    &&
-	    ((! $definedEncoding && ! $_definedEncoding) || ($definedEncoding && $_definedEncoding && ($encoding eq $_->[4])))
-	    &&
-	    ((! $definedModifiers && ! $_definedModifiers) || ($definedModifiers && $_definedModifiers && ($modifiers eq $_->[4])))
-    }
-
-    return
-}
-
-#
-# ESLIF Grammar Registry:
-#
-# Every element is an array reference that is: [ MarpaX::ESLIF::Grammar instance, MarpaX::ESLIF::Engine pointer, $bnf, $encoding ]
-#
-my @ESLIFGRAMMAR_REGISTRY = ();
-
-sub _find_eslifGrammar {
-    my ($class, $engine, $bnf, $encoding) = @_;
-
-    my $definedEncoding = defined($encoding); # It is legal to create a grammar with no encoding
-
-    foreach (@ESLIFGRAMMAR_REGISTRY) {
-        my $_definedEncoding = defined($_->[3]);
-	return $_->[0] if
-	    $engine == $_->[1]
-	    &&
-	    $bnf eq $_->[2]
-	    &&
-	    ((! $definedEncoding && ! $_definedEncoding) || ($definedEncoding && $_definedEncoding && ($encoding eq $_->[3])))
+    foreach (@{$objects_ref}) {
+        return $_ if $eq_ref->($_->{args_ref}, @args)
     }
 
     return
@@ -99,135 +35,117 @@ sub _find_eslifGrammar {
 
 =head1 METHODS
 
-=head2 ESLIF_new($class, $loggerInterface)
+=head2 $class->new($bless, $clonable, $eq_ref, $allocate_ref, @args)
 
-Class method that return a singleton instance of a L<MarpaX::ESLIF>.
-
-=cut
-
-sub ESLIF_new {
-  my ($class, $bless, $loggerInterface) = @_;
-
-  my $eslif = $class->_find_eslif($loggerInterface);
-
-  push(@ESLIF_REGISTRY, $eslif = bless [ MarpaX::ESLIF::Engine->allocate($loggerInterface), $loggerInterface ], 'MarpaX::ESLIF') if ! defined($eslif);
-
-  return $eslif
-}
-
-=head2 ESLIF_getEngine($class, $eslif)
-
-Class method that return the L<MarpaX::ESLIF::Engine> pointer associated to a L<MarpaX::ESLIF>.
+Generic constructor of a C<$bless> instance created using C<$allocate_ref->(@args)>. If C<$eq_ref> is set, the instance is implicitly a singleton. If C<$clonable> is a true value, the instance is clonable.
 
 =cut
 
-sub ESLIF_getEngine {
-    my ($class, $eslif) = @_;
+sub new {
+    my ($bless, $clonable, $eq_ref, $allocate_ref, $dispose_ref, @args) = @_;
 
-    return $eslif->[0]
+    #
+    # Some arguments MUST be provided
+    #
+    croak 'bless must be set' if (! defined($bless));
+    croak 'clonable must be set' if (! defined($clonable));
+    croak 'allocate_ref must be set' if (! defined($allocate_ref));
+    croak 'dispose_ref must be set' if (! defined($dispose_ref));
+
+    #
+    # We keep track of all objects in order to not loose any referenced dependency
+    #
+    my $registry_ref = $REGISTRY{$bless} //= { $bless => { objects_ref => [] }};
+    my $singleton = defined($eq_ref);
+
+    my $self;
+    if ($singleton && defined($self = _find($eq_ref, $registry_ref->{objects_ref}, @args))) {
+        return $self
+    }
+
+    push(@{$registry_ref->{objects_ref}},
+         $self = bless { engine => $bless->$allocate_ref(@args),
+                         allocate_ref => $allocate_ref,
+                         dispose_ref => $dispose_ref,
+                         singleton => $singleton,
+                         clonable => $clonable,
+                         args_ref => \@args}, $bless);
+
+    return $self
 }
 
-=head2 ESLIFSymbol_new($class, $eslif, $type, $pattern)
+=head2 $self->DESTROY()
 
-Class method that return a singleton instance of a L<MarpaX::ESLIF::Symbol>.
+Generic destructor. It always calls C<$self>'s C<dispose> method.
 
 =cut
 
-sub _ESLIFSymbol_new {
-    my ($class, $engine, $type, $pattern, $encoding, $modifiers) = @_;
+sub DESTROY {
+    my ($self) = @_;
 
-    return ($type eq 'string')
-        ?
-        MarpaX::ESLIF::Symbol->string_new($engine, $pattern, bytes::length($pattern), $encoding, $modifiers)
-        :
-        (($type eq 'regex')
-         ?
-         MarpaX::ESLIF::Symbol->regex_new($engine, $pattern, bytes::length($pattern), $encoding, $modifiers)
-         :
-         croak "Type must be 'string' or 'regex'"
-        )
-}
+    my $bless = ref($self);
+    my $engine = $self->{engine};
+    my $dispose_ref = $self->{dispose_ref};
 
-sub ESLIFSymbol_new {
-  my ($class, $eslif, $type, $pattern, $encoding, $modifiers) = @_;
+    if ($self->{singleton}) {
+        my $objects_ref = $REGISTRY{$bless}->{objects_ref};
 
-  my $engine = $class->ESLIF_getEngine($eslif);
-  my @args = ($engine, $type, $pattern, $encoding, $modifiers);
+        foreach (0..$#{@{$objects_ref}}) {
+            if ($objects_ref->[$_] == $self) {
+                $bless->$dispose_ref($engine);
+                splice(@{$objects_ref}, $_, 1);
+                return
+            }
+        }
 
-  my $eslifSymbol = $class->_find_eslifSymbol(@args);
+        warn "Unregistered object $self";
+    }
 
-  push(@ESLIFSYMBOL_REGISTRY, [ $eslifSymbol = $class->_ESLIFSymbol_new(@args), @args ]) if ! defined($eslifSymbol);
-
-  return $eslifSymbol
-}
-
-=head2 ESLIFGrammar_new($class, $eslif, $bnf[, $encoding])
-
-Class method that return a singleton instance of a L<MarpaX::ESLIF::Grammar>.
-
-=cut
-
-sub _ESLIFGrammar_new {
-    my $class = shift;
-
-    return MarpaX::ESLIF::Grammar->_new(@_)
-}
-
-sub ESLIFGrammar_new {
-  my ($class, $eslif, @rest) = @_;
-
-  my $engine = $class->ESLIF_getEngine($eslif);
-  my @args = ($engine, @rest);
-
-  my $eslifGrammar = $class->_find_eslifGrammar(@args);
-
-  push(@ESLIFGRAMMAR_REGISTRY, [ $eslifGrammar = $class->_ESLIFGrammar_new(@args), @args ]) if ! defined($eslifGrammar);
-
-  return $eslifGrammar
+    $bless->$dispose_ref($engine)
 }
 
 =head2 CLONE()
 
-Manages singleton thread-safe objects of type L<MarpaX::ESLIF> and L<MarpaX::ESLIF::Symbol>.
+Manages singleton thread-safe objects of type L<MarpaX::ESLIF>, L<MarpaX::ESLIF::Grammar> and L<MarpaX::ESLIF::Symbol>.
 
 =cut
+
+sub _registry_clone {
+    my ($registry_ref) = @_;
+
+    my $objects_ref = $registry_ref->{objects_ref};
+
+    foreach my $self (@{$objects_ref}) {
+        if ($self->{clonable}) {
+            my $allocate_ref = $self->{allocate_ref};
+            my $args_ref = $self->{args_ref};
+            $self->{engine} = $self->$allocate_ref(@{$args_ref})
+        } else {
+            $self->{engine} = undef
+        }
+    }
+}
+
+#
+# When cloning every package that has the CLONE method is considered, even if there is no instance of that package
+#
 
 sub CLONE {
     #
     # We keep track of engines that got replaced
     #
-    my %ENGINES = ();
-
-    foreach (@ESLIF_REGISTRY) {
-	my $old_engine = $_->[0];
-	my $new_engine = $_->[0] = MarpaX::ESLIF::Engine->allocate($_->[1]);
-	#
-	# $old_engine is stringified but this is ok
-	#
-	$ENGINES{$old_engine} = $new_engine
+    #
+    # We always look at MarpaX::ESLIF first.
+    #
+    my $eslif_bless = 'MarpaX::ESLIF';
+    if (exists($REGISTRY{$eslif_bless})) {
+        _registry_clone($REGISTRY{$eslif_bless})
     }
     #
-    # Clone symbols that referenced the old engine
+    # We know that all other objects are derived immediately from ESLIF, not more
     #
-    foreach (@ESLIFSYMBOL_REGISTRY) {
-	my $old_engine = $_->[1];
-	my $new_engine = $ENGINES{$old_engine} // croak "Failed to get new engine that replaces $old_engine";
-	my $type = $_->[2];
-	my $pattern = $_->[3];
-	my $encoding = $_->[4];
-	my $modifiers = $_->[5];
-	$_->[0] = __PACKAGE__->_ESLIFSymbol_new($_->[1] = $new_engine, $type, $pattern, $encoding, $modifiers)
-    }
-    #
-    # Clone grammars that referenced the old engine
-    #
-    foreach (@ESLIFGRAMMAR_REGISTRY) {
-	my $old_engine = $_->[1];
-	my $new_engine = $ENGINES{$old_engine} // croak "Failed to get new engine that replaces $old_engine";
-	$_->[1] = $new_engine;
-	my @args = @{$_};
-	shift @args;
-	$_->[0] = __PACKAGE__->_ESLIFGrammar_new(@args)
+    foreach my $bless (map { grep $_ ne $eslif_bless } keys %REGISTRY) {
+        _registry_clone($REGISTRY{$bless})
     }
 }
 

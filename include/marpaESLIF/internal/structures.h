@@ -133,6 +133,7 @@ struct marpaESLIFSymbol {
     marpaESLIF_terminal_t     *terminalp; /* Symbol is a terminal */
     marpaESLIF_meta_t         *metap;     /* Symbol is a meta identifier, i.e. a rule */
   } u;
+  marpaESLIF_t                *marpaESLIFp;
   short                        startb;                 /* Start symbol ? */
   short                        discardb;               /* Discard LHS symbol (i.e. :discard) ? */
   short                        discardRhsb;            /* Discard RHS symbol ? */

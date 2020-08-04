@@ -5,6 +5,8 @@ package MarpaX::ESLIF::JSON::Encoder;
 use MarpaX::ESLIF::Registry;
 use parent qw/MarpaX::ESLIF::Grammar/;
 
+my $CLONABLE = 1;
+
 # ABSTRACT: ESLIF's JSON encoder interface
 
 # AUTHORITY
@@ -70,13 +72,23 @@ A true value means strict JSON, else relax JSON. Default is a true value.
 # Could have been writen in the XS itself, but I feel it is more comprehensible like
 # this.
 #
-sub new {
-    my $class = shift;
-    my $eslif = shift;
-    my $strict = shift // 1;
+sub _allocate {
+    my ($class, $eslif, @rest) = @_;
 
-    my $self = $class->_new(MarpaX::ESLIF::Registry->ESLIF_getEngine($eslif), $strict);
-    return $self
+    return MarpaX::ESLIF::Engine::JSON::Encoder::allocate->($eslif->{engine}, @rest)
+    
+}
+
+sub _dispose {
+    my ($class) = shift;
+
+    return MarpaX::ESLIF::Grammar::Engine->dispose(@_)
+}
+
+sub new {
+    my ($class, $eslif, $strict) = @_;
+    
+    return MarpaX::ESLIF::Registry::new($class, $CLONABLE, undef, \&_allocate, \&_dispose, $eslif, $strict // 1)
 }
 
 =head2 $eslifJSONEncoder->encode($value)
@@ -98,5 +110,9 @@ sub encode {
 Formally, the JSON implementation is only a grammar coded directly in the ESLIF library, therefore this module inherits from L<MarpaX::ESLIF::Grammar>.
 
 =cut
+
+sub DESTROY {
+    goto &MarpaX::ESLIF::Registry::DESTROY
+}
 
 1;

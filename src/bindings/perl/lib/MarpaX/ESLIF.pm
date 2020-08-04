@@ -5,12 +5,12 @@ package MarpaX::ESLIF;
 use MarpaX::ESLIF::Registry;     # Maintains thread-safe single ESLIF registry
 use MarpaX::ESLIF::String;       # Make sure it is loaded, the XS is using it
 use MarpaX::ESLIF::RegexCallout; # Make sure it is loaded, the XS is using it
-use MarpaX::ESLIF::Symbol;       # Make sure it is loaded, the XS is using it
 
 # ABSTRACT: ESLIF is Extended ScanLess InterFace
 
 # AUTHORITY
 
+my $CLONABLE = 1;
 use vars qw/$VERSION/;
 use Config;
 
@@ -59,10 +59,12 @@ use MarpaX::ESLIF::Grammar::Rule::Properties;
 use MarpaX::ESLIF::Grammar::Symbol::Properties;
 use MarpaX::ESLIF::JSON;
 use MarpaX::ESLIF::Logger::Level;
+use MarpaX::ESLIF::Recognizer;
 use MarpaX::ESLIF::Symbol;
 use MarpaX::ESLIF::Symbol::PropertyBitSet;
 use MarpaX::ESLIF::Symbol::EventBitSet;
 use MarpaX::ESLIF::Symbol::Type;
+use MarpaX::ESLIF::Value;
 use MarpaX::ESLIF::Value::Type;
 use MarpaX::ESLIF::Rule::PropertyBitSet;
 
@@ -121,9 +123,48 @@ C<$loggerInterface> is an optional parameter that, when its exists, must be an o
 
 An example of logging implementation can be a L<Log::Any> adapter.
 
+=cut
+
+sub _eq {
+    my ($args_ref, $loggerInterface) = @_;
+
+    my $definedLoggerInterface = defined($loggerInterface); # It is legal to create an eslif with no logger interface
+    my $_definedLoggerInterface = defined($args_ref->[1]);
+    return (
+        (! $definedLoggerInterface && ! $_definedLoggerInterface)
+        ||
+        ($definedLoggerInterface && $_definedLoggerInterface && ($loggerInterface == $_[1]))
+        )
+}
+
+sub _allocate {
+    my ($class) = shift;
+
+    return MarpaX::ESLIF::Engine->allocate(@_)
+}
+
+sub _dispose {
+    my ($class) = shift;
+
+    return MarpaX::ESLIF::Engine->dispose(@_)
+}
+
+sub new {
+    my ($class) = shift;
+
+    return MarpaX::ESLIF::Registry::new($class, $CLONABLE, \&_eq, \&_allocate, \&_dispose, @_)
+}
+
+
 =head2 MarpaX::ESLIF->getInstance($loggerInterface)
 
 Alias to C<new>.
+
+=cut
+
+sub getInstance {
+    goto &new
+}
 
 =head2 $eslif->version()
 
@@ -133,37 +174,10 @@ Returns a string containing the current underlying ESLIF library version.
 
 =cut
 
-my @REGISTRY = ();
-
-sub _logger_to_self {
-    my ($class, $loggerInterface) = @_;
-
-    my $definedLoggerInterface = defined($loggerInterface);
-
-    foreach (@REGISTRY) {
-        my $_loggerInterface = $_->_getLoggerInterface;
-        my $_definedLoggerInterface = defined($_loggerInterface);
-	return $_
-            if (
-                (! $definedLoggerInterface && ! $_definedLoggerInterface)
-                ||
-                ($definedLoggerInterface && $_definedLoggerInterface && ($loggerInterface == $_loggerInterface))
-            )
-    }
-
-    return
-}
-
-sub new {
-    return MarpaX::ESLIF::Registry->ESLIF_new(@_)
-}
-
-sub getInstance {
-    goto &new
-}
-
 sub version {
-    MarpaX::ESLIF::Engine->version(MarpaX::ESLIF::Registry->ESLIF_getEngine($_[0]))
+    my $self = shift;
+
+    return MarpaX::ESLIF::Engine::version($self->{engine})
 }
 
 =head1 NOTES
@@ -217,7 +231,7 @@ L<MarpaX::ESLIF::Introduction>, L<PCRE2|http://www.pcre.org/>, L<MarpaX::ESLIF::
 =cut
 
 sub DESTROY {
-    MarpaX::ESLIF::Engine->dispose(MarpaX::ESLIF::Registry->ESLIF_getEngine($_[0]))
+    goto &MarpaX::ESLIF::Registry::DESTROY
 }
 
 1;

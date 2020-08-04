@@ -5,6 +5,8 @@ package MarpaX::ESLIF::Symbol;
 use Carp qw/croak/;
 use MarpaX::ESLIF::Registry;
 
+my $CLONABLE = 1;
+
 # ABSTRACT: MarpaX::ESLIF's symbol
 
 # AUTHORITY
@@ -101,26 +103,63 @@ Note that a string pattern accepts only the C<i> and C<c> modifiers.
 
 =cut
 
-#
-# Tiny wrapper on MarpaX::ESLIF::Symbol->new, that is using the instance as void *.
-# Could have been writen in the XS itself, but I feel it is more comprehensible like
-# this.
-#
+sub _eq {
+    my ($args_ref, $eslif, $type, $pattern, $encoding, $modifiers) = @_;
+
+    my $definedEncoding = defined($encoding); # It is legal to create a symbol with no encoding
+    my $definedModifiers = defined($modifiers); # It is legal to create a symbol with no modifier
+
+    my $_definedEncoding = defined($args_ref->[4]);
+    my $_definedModifiers = defined($args_ref->[5]);
+    return $_ if
+        $eslif == $args_ref->[1]
+        &&
+        $type eq $args_ref->[2]
+        &&
+        $pattern eq $args_ref->[3]
+        &&
+        ((! $definedEncoding && ! $_definedEncoding) || ($definedEncoding && $_definedEncoding && ($encoding eq $args_ref->[4])))
+        &&
+        ((! $definedModifiers && ! $_definedModifiers) || ($definedModifiers && $_definedModifiers && ($modifiers eq $args_ref->[4])))
+}
+
+sub _allocate {
+    my ($class, $eslif, $type, $pattern, $encoding, $modifiers) = @_;
+
+    return ($type eq 'string')
+        ?
+        MarpaX::ESLIF::Symbol->string_allocate($eslif, $pattern, bytes::length($pattern), $encoding, $modifiers)
+        :
+        (($type eq 'regex')
+         ?
+         MarpaX::ESLIF::Symbol->regex_allocate($eslif, $pattern, bytes::length($pattern), $encoding, $modifiers)
+         :
+         croak "Type must be 'string' or 'regex'"
+        )
+}
+
+sub _dispose {
+    my ($class) = shift;
+
+    return MarpaX::ESLIF::Symbol::Engine->dispose(@_)
+}
+
 sub new {
-    my ($class, $eslif, %options)  = @_;
-
-    my $type = $options{type} // croak 'Type must be defined';
-    $type = "$type"; # Make type a true string
-
-    my $pattern = $options{pattern} // croak 'Pattern must be defined';
-    $pattern = "$pattern"; # Make pattern a true string
-
-    return MarpaX::ESLIF::Registry->ESLIFSymbol_new($eslif, $type, $pattern, $options{encoding}, $options{modifiers})
+    my $class = shift;
+    
+    return MarpaX::ESLIF::Registry::new($class, $CLONABLE, \&_eq, \&_allocate, \&_dispose, @_)
 }
 
 =head2 $symbol->try($eslif, $scalar)
 
 Try to match the external symbol C<$symbol> on C<$scalar>, that can be anything. Return C<undef> if failure, the matched string if success.
+
+=cut
+
+sub try {
+    my $self = shift;
+    return MarpaX::ESLIF::Symbol::Engine::try($self->[0], @_)
+}
 
 =head1 SEE ALSO
 
@@ -129,7 +168,7 @@ L<MarpaX::ESLIF>, L<MarpaX::ESLIF::Recognizer>
 =cut
 
 sub DESTROY {
-    __PACKAGE__->dispose($_[0])
+    goto &MarpaX::ESLIF::Registry::ESLIFSymbol_DESTROY
 }
 
 1;

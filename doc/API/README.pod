@@ -2141,13 +2141,12 @@ A recognizer is allowed to perform a match try on any symbol that is a terminal,
   /* If there is match, *matchbp will contain a true value, else a false value */
   /* When there is match bytepp will contain a copy of the match and the end-user */
   /* is responsible to free it. Length is in *bytelp */
-  short                        marpaESLIF_symbol_tryb(marpaESLIF_t *marpaESLIFp,
-                                                      marpaESLIFSymbol_t *marpaESLIFSymbolp,
-                                                      char *inputs,
-                                                      size_t inputl,
-                                                      short *matchbp,
-                                                      char **bytepp,
-                                                      size_t *bytelp);
+  short                        marpaESLIFSymbol_tryb(marpaESLIFSymbol_t *marpaESLIFSymbolp,
+                                                     char *inputs,
+                                                     size_t inputl,
+                                                     short *matchbp,
+                                                     char **bytepp,
+                                                     size_t *bytelp);
   short                        marpaESLIFRecognizer_symbol_tryb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp,
                                                                 marpaESLIFSymbol_t *marpaESLIFSymbolp,
                                                                 short *matchbp,

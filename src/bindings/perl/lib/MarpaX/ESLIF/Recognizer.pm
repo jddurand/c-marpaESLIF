@@ -2,6 +2,9 @@ use strict;
 use warnings FATAL => 'all';
 
 package MarpaX::ESLIF::Recognizer;
+use MarpaX::ESLIF::Registry;     # Maintains thread-safe single ESLIF registry
+
+my $CLONABLE = 0;
 
 # ABSTRACT: MarpaX::ESLIF's recognizer
 
@@ -39,11 +42,47 @@ An object implementing L<MarpaX::ESLIF::Recognizer::Interface> methods. Required
 
 =back
 
+=cut
+
+sub _allocate {
+    my ($class, $eslifGrammar, @rest) = @_;
+
+    return MarpaX::ESLIF::Recognizer::Engine->allocate($eslifGrammar->{engine}, @rest)
+    
+}
+
+sub _dispose {
+    my ($class) = shift;
+
+    return MarpaX::ESLIF::Recognizer::Engine->dispose(@_)
+}
+
+sub new {
+    my $class = shift;
+    
+    return MarpaX::ESLIF::Registry::new($class, $CLONABLE, undef, \&_allocate, \&_dispose, @_)
+}
+
 =head2 $eslifRecognizer->newFrom($eslifGrammar)
 
   my $eslifRecognizerNewFom = $eslifRecognizer->newFrom($eslifGrammar);
 
 Returns a recognizer instance that is sharing the stream of C<$eslifRecognizer>, but applied to the other grammar C<$eslifGrammar>.
+
+=cut
+
+sub _allocate_newFrom {
+    my ($class, $eslifRecognizer, $eslifGrammar) = @_;
+
+    return MarpaX::ESLIF::Engine::Recognizer::newFrom($eslifRecognizer->{engine}, $eslifGrammar->{engine})
+    
+}
+
+sub newFrom {
+    my $class = shift;
+    
+    return MarpaX::ESLIF::Registry::new($class, $CLONABLE, undef, &_allocate_newFrom, @_)
+}
 
 =head2 $eslifRecognizer->set_exhausted_flag($flag)
 
@@ -51,19 +90,51 @@ Returns a recognizer instance that is sharing the stream of C<$eslifRecognizer>,
 
 Changes the isWithExhaustion() flag associated with the C<$eslifRecognizer> recognizer instance.
 
+=cut
+
+sub set_exhausted_flag {
+    my ($self, @args) = @_;
+    
+    return MarpaX::ESLIF::Recognizer::Engine::set_exhausted_flag($self->{engine}, @args)
+}
+
 =head2 $eslifRecognizer->share($eslifRecognizerShared)
 
   $eslifRecognizer->share($eslifRecognizerShared);
 
 Shares the stream of C<$eslifRecognizerShared> recognizer instance with the C<$eslifRecognizer> instance.
 
+=cut
+
+sub share {
+    my ($self, @args) = @_;
+    
+    return MarpaX::ESLIF::Recognizer::Engine::share($self->{engine}, @args)
+}
+
 =head2 $eslifRecognizer->isCanContinue()
 
 Returns a true value if recognizing can continue.
 
+=cut
+
+sub isCanContinue {
+    my ($self, @args) = @_;
+    
+    return MarpaX::ESLIF::Recognizer::Engine::isCanContinue($self->{engine})
+}
+
 =head2 $eslifRecognizer->isExhausted()
 
 Returns a true value if parse is exhausted, always set even if there is no exhaustion event.
+
+=cut
+
+sub isExhausted {
+    my ($self, @args) = @_;
+    
+    return MarpaX::ESLIF::Recognizer::Engine::isExhausted($self->{engine})
+}
 
 =head2 $eslifRecognizer->scan($initialEvents)
 
@@ -73,6 +144,14 @@ This method can generate events. Initial events are those that are happening at 
 
 Returns a boolean indicating if the call was successful or not.
 
+=cut
+
+sub scan {
+    my ($self, @args) = @_;
+    
+    return MarpaX::ESLIF::Recognizer::Engine::scan($self->{engine}, @args)
+}
+
 =head2 $eslifRecognizer->resume($deltaLength)
 
 This method tell the recognizer to continue. Events can be generate after resume completion.
@@ -80,6 +159,14 @@ This method tell the recognizer to continue. Events can be generate after resume
 C<$deltaLength> is optional and is a number of B<bytes> to skip forward before resume goes on, must be positive or greater than 0. In case of a character stream, user will have to compute the number of bytes as if the input was in the UTF-8 encoding. Default value is C<0>.
 
 Returns a boolean indicating if the call was successful or not.
+
+=cut
+
+sub resume {
+    my ($self, @args) = @_;
+    
+    return MarpaX::ESLIF::Recognizer::Engine::resume($self->{engine}, @args)
+}
 
 =head2 $eslifRecognizer->events()
 
@@ -102,6 +189,14 @@ The name of the symbol that triggered the event. Can be C<undef> in case of exha
 The name of the event that triggered the event. Can be C<undef> in case of exhaustion event.
 
 =back
+
+=cut
+
+sub events {
+    my ($self, @args) = @_;
+    
+    return MarpaX::ESLIF::Recognizer::Engine::events($self->{engine})
+}
 
 =head2 $eslifRecognizer->eventOnOff($symbol, $eventTypes, $onOff)
 
@@ -131,11 +226,27 @@ Note that trying to change the state of an event that was not pre-declared in th
 
 Returns a reference to an array of hash references, eventually empty if there is none. Each array element is a reference to a hash containing these keys:
 
+=cut
+
+sub eventOnOff {
+    my ($self, $symbol, $eventType, $onOff) = @_;
+    
+    return MarpaX::ESLIF::Recognizer::Engine::eventOnOff($self->{engine}, $symbol, $eventType, $onOff)
+}
+
 =head2 $eslifRecognizer->lexemeAlternative($name, $anything, $grammarLength)
 
 A lexeme is a terminal in the legacy parsing terminology. The lexeme word mean that in the grammar it is associated to a sub-grammar. Pushing an alternative mean that the end-user is intructing the recognizer that, at this precise moment of lexing, there is a given lexeme associated with the C<$name> parameter, with a given opaque value <$anything>. Grammar length parameter C<$grammarLength> is optional, and defaults to C<1>, i.e. one lexeme (which is a symbol in the grammar) correspond to one token. Nevertheless it is possible to say that an alternative span over more than one symbol.
 
 Returns a boolean indicating if the call was successful or not.
+
+=cut
+
+sub lexemeAlternative {
+    my ($self, $name, $anything, $grammarLength) = @_;
+    
+    return MarpaX::ESLIF::Recognizer::Engine::lexemeAlternative($self->{engine}, $name, $anything, $grammarLength)
+}
 
 =head2 $eslifRecognizer->lexemeComplete($length)
 
@@ -144,6 +255,14 @@ This method can generate events.
 
 Returns a boolean indicating if the call was successful or not.
 
+=cut
+
+sub lexemeComplete {
+    my ($self, @args) = @_;
+    
+    return MarpaX::ESLIF::Recognizer::Engine::lexemeComplete($self->{engine}, @args)
+}
+
 =head2 $eslifRecognizer->lexemeRead($name, $anything, $length, $grammarLength)
 
 A short-hand version of lexemeAlternative() followed by lexemeComplete(), with the same meaning for all parameters.
@@ -151,11 +270,27 @@ This method can generate events.
 
 Returns a boolean indicating if the call was successful or not.
 
+=cut
+
+sub lexemeRead {
+    my ($self, $anything, $length, $grammarLength) = @_;
+    
+    return MarpaX::ESLIF::Recognizer::Engine::lexemeRead($self->{engine}, $anything, $length, $grammarLength)
+}
+
 =head2 $eslifRecognizer->lexemeTry($name)
 
 The end-user can ask the recognizer if a lexeme C<$name> may match.
 
 Returns a boolean indicating if the lexeme is recognized.
+
+=cut
+
+sub lexemeTry {
+    my ($self, @args) = @_;
+    
+    return MarpaX::ESLIF::Recognizer::Engine::lexemeTry($self->{engine}, @args)
+}
 
 =head2 $eslifRecognizer->discardTry()
 
@@ -163,11 +298,27 @@ The end-user can ask the recognizer if C<:discard> rule may match.
 
 Returns a boolean indicating if :discard is recognized.
 
+=cut
+
+sub discardTry {
+    my ($self, @args) = @_;
+    
+    return MarpaX::ESLIF::Recognizer::Engine::discardTry($self->{engine})
+}
+
 =head2 $eslifRecognizer->lexemeExpected()
 
 Ask the recognizer a list of expected lexemes.
 
 Returns a reference to an array of names, eventually empty.
+
+=cut
+
+sub lexemeExpected {
+    my ($self, @args) = @_;
+    
+    return MarpaX::ESLIF::Recognizer::Engine::lexemeExpected($self->{engine})
+}
 
 =head2 $eslifRecognizer->lexemeLastPause($name)
 
@@ -175,17 +326,41 @@ Ask the recognizer the end-user data associated to last lexeme I<pause after> ev
 
 Returns the associated bytes, or C<undef>.
 
+=cut
+
+sub lexemeLastPause {
+    my ($self, @args) = @_;
+    
+    return MarpaX::ESLIF::Recognizer::Engine::lexemeLastPause($self->{engine}, @args)
+}
+
 =head2 $eslifRecognizer->lexemeLastTry($name)
 
 Ask the recognizer the end-user data associated to last successful lexeme try. This data will be an exact copy of the last bytes that matched for a given lexeme, where data is the internal representation of end-user data, meaning that it may be UTF-8 sequence of bytes in case of character stream.
 
 Returns the associated bytes, or C<undef>.
 
+=cut
+
+sub lexemeLastTry {
+    my ($self, @args) = @_;
+    
+    return MarpaX::ESLIF::Recognizer::Engine::lexemeLastTry($self->{engine}, @args)
+}
+
 =head2 $eslifRecognizer->discardLastTry()
 
 Ask the recognizer the end-user data associated to last successful discard try. This data will be an exact copy of the last bytes that matched for a given lexeme, where data is the internal representation of end-user data, meaning that it may be UTF-8 sequence of bytes in case of character stream.
 
 Returns the associated bytes, or C<undef>.
+
+=cut
+
+sub discardLastTry {
+    my ($self) = @_;
+    
+    return MarpaX::ESLIF::Recognizer::Engine::discardLastTry($self->{engine})
+}
 
 =head2 $eslifRecognizer->discardLast()
 
@@ -195,17 +370,27 @@ For performance reasons, last discard data is available only if the recognizer i
 
 Returns the associated bytes, or C<undef>.
 
+=cut
+
+sub discardLast {
+    my ($self) = @_;
+    
+    return MarpaX::ESLIF::Recognizer::Engine::discardLast($self->{engine})
+}
+
 =head2 $eslifRecognizer->isEof()
 
 This method is similar to the isEof()'s recognizer interface. Except that this is asking the question directly to the recognizer's internal state, that maintains a copy of this flag.
 
 Returns a boolean indicating of end-of-user-data is reached.
 
-=head2 $eslifRecognizer->isExhausted()
+=cut
 
-This method returns a true value if the underlying grammar is exhausted, a false value otherwise, and croaks on failure.
-
-Returns a boolean indicating of end-of-user-data is reached.
+sub isEof {
+    my ($self) = @_;
+    
+    return MarpaX::ESLIF::Recognizer::Engine::isEof($self->{engine})
+}
 
 =head2 $eslifRecognizer->read()
 
@@ -213,11 +398,27 @@ Forces the recognizer to read more data. Usually, the recognizer interface is ca
 
 Returns a boolean value indicating success or not.
 
+=cut
+
+sub read {
+    my ($self) = @_;
+    
+    return MarpaX::ESLIF::Recognizer::Engine::read($self->{engine})
+}
+
 =head2 $eslifRecognizer->input()
 
 Get a copy of the current internal recognizer buffer, starting at the exact byte where resume() would start. An undefined output does not mean there is an error, but that internal buffers are completely consumed. ESLIF will automatically require more data unless the EOF flag is set. Internal buffer is always UTF-8 encoded to every chunk of data that was declared to be a character stream.
 
 Returns the associated input bytes, or C<undef>.
+
+=cut
+
+sub input {
+    my ($self) = @_;
+    
+    return MarpaX::ESLIF::Recognizer::Engine::input($self->{engine})
+}
 
 =head2 $eslifRecognizer->progressLog($start, $end, $loggerLevel)
 
@@ -225,11 +426,27 @@ Asks to get a logging representation of the current parse progress. The format i
 
 Nothing is returned.
 
+=cut
+
+sub progressLog {
+    my ($self, $start, $end, $loggerLevel) = @_;
+    
+    return MarpaX::ESLIF::Recognizer::Engine::progressLog($self->{engine}, $start, $end, $loggerLevel)
+}
+
 =head2 $eslifRecognizer->lastCompletedOffset($name)
 
 The recognizer is tentatively keeping an absolute offset every time a lexeme is complete. We say tentatively in the sense that no overflow checking is done, thus this number is not reliable in case the user data spanned over a very large number of bytes. In addition, the unit is in bytes. C<$name> can be any symbol in the grammar.
 
 Returns the absolute offset in bytes.
+
+=cut
+
+sub lastCompletedOffset {
+    my ($self, @args) = @_;
+    
+    return MarpaX::ESLIF::Recognizer::Engine::lastCompletedOffset($self->{engine}, @args)
+}
 
 =head2 $eslifRecognizer->lastCompletedLength($name)
 
@@ -237,9 +454,25 @@ The recognizer is tentatively computing the length of every symbol completion. S
 
 Returns the absolute length in bytes.
 
+=cut
+
+sub lastCompletedLength {
+    my ($self, @args) = @_;
+    
+    return MarpaX::ESLIF::Recognizer::Engine::lastCompletedLength($self->{engine}, @args)
+}
+
 =head2 $eslifRecognizer->lastCompletedLocation($name)
 
 Returns an array containing at indices 0 and 1 the values of C<$eslifRecognizer->lastCompletedOffset($name)> and C<$eslifRecognizer->lastCompletedLength($name)>, respectively.
+
+=cut
+
+sub lastCompletedLocation {
+    my ($self, @args) = @_;
+    
+    return MarpaX::ESLIF::Recognizer::Engine::lastCompletedLocation($self->{engine}, @args)
+}
 
 =head2 $eslifRecognizer->line()
 
@@ -247,27 +480,75 @@ If, at creation, the recognizer interface returned a true value for the C<$recog
 
 Returns the line number, or 0.
 
+=cut
+
+sub line {
+    my ($self) = @_;
+    
+    return MarpaX::ESLIF::Recognizer::Engine::line($self->{engine})
+}
+
 =head2 $eslifRecognizer->column()
 
 If, at creation, the recognizer interface returned a true value for the C<$recognizerInterface->isWithNewline()> method, then the recognizer will track the number of columns for ever character-oriented chunk of data.
 
 Returns the column number, or 0.
 
+=cut
+
+sub column {
+    my ($self) = @_;
+    
+    return MarpaX::ESLIF::Recognizer::Engine::column($self->{engine})
+}
+
 =head2 $eslifRecognizer->location()
 
 Returns an array containing at indices 0 and 1 the values of C<$eslifRecognizer->line()> and C<$eslifRecognizer->column()>, respectively.
+
+=cut
+
+sub location {
+    my ($self) = @_;
+    
+    return MarpaX::ESLIF::Recognizer::Engine::location($self->{engine})
+}
 
 =head2 $eslifRecognizer->hookDiscard($discardOnOff)
 
 Hook the recognizer to enable or disable the use of C<:discard> if it exists. Default mode is on. This is a I<permanent> setting.
 
+=cut
+
+sub hookDiscard {
+    my ($self, @args) = @_;
+    
+    return MarpaX::ESLIF::Recognizer::Engine::hookDiscard($self->{engine}, @args)
+}
+
 =head2 $eslifRecognizer->hookDiscardSwitch()
 
 Hook the recognizer to switch the use of C<:discard> if it exists. This is a I<permanent> setting.
 
+=cut
+
+sub hookDiscardSwitch {
+    my ($self) = @_;
+    
+    return MarpaX::ESLIF::Recognizer::Engine::hookDiscardSwitch($self->{engine})
+}
+
 =head2 $eslifRecognizer->symbolTry($symbol)
 
 Tries to match the external symbol C<$symbol>, that is an instance of L<MarpaX::ESLIF::Symbol>. Return the match or C<undef>.
+
+=cut
+
+sub symbolTry {
+    my ($self, $symbol) = @_;
+    
+    return MarpaX::ESLIF::Recognizer::Engine::symbolTry($self->{engine}, $symbol->{engine})
+}
 
 =head1 SEE ALSO
 
@@ -279,8 +560,8 @@ L<MarpaX::ESLIF::Recognizer> cannot be reused across threads.
 
 =cut
 
-sub CLONE_SKIP {
-    return 1
+sub DESTROY {
+    goto &MarpaX::ESLIF::Registry::DESTROY
 }
 
 1;

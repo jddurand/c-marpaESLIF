@@ -3734,8 +3734,9 @@ static inline marpaESLIF_symbol_t *_marpaESLIF_symbol_newp(marpaESLIF_t *marpaES
     goto err;
   }
 
-  symbolp->type   = MARPAESLIF_SYMBOL_TYPE_NA;
+  symbolp->type                   = MARPAESLIF_SYMBOL_TYPE_NA;
   /* Union itself is undetermined at this stage */
+  symbolp->marpaESLIFp            = marpaESLIFp;
   symbolp->startb                 = 0;
   symbolp->discardb               = 0;
   symbolp->discardRhsb            = 0;
@@ -18365,7 +18366,19 @@ marpaESLIFSymbol_t *marpaESLIFSymbol_regex_newp(marpaESLIF_t *marpaESLIFp, marpa
 }
 
 /*****************************************************************************/
-short marpaESLIF_symbol_tryb(marpaESLIF_t *marpaESLIFp, marpaESLIFSymbol_t *marpaESLIFSymbolp, char *inputs, size_t inputl, short *matchbp, char **bytepp, size_t *bytelp)
+marpaESLIF_t *marpaESLIFSymbol_eslifp(marpaESLIFSymbol_t *marpaESLIFSymbolp)
+/*****************************************************************************/
+{
+  if (marpaESLIFSymbolp == NULL) {
+    errno = EINVAL;
+    return NULL;
+  }
+
+  return marpaESLIFSymbolp->marpaESLIFp;
+}
+
+/*****************************************************************************/
+short marpaESLIFSymbol_tryb(marpaESLIFSymbol_t *marpaESLIFSymbolp, char *inputs, size_t inputl, short *matchbp, char **bytepp, size_t *bytelp)
 /*****************************************************************************/
 {
   /* This is almost like marpaESLIFRecognizer_symbol_tryb: we fake a recognizer on a complete fake stream */
@@ -18374,12 +18387,12 @@ short marpaESLIF_symbol_tryb(marpaESLIF_t *marpaESLIFp, marpaESLIFSymbol_t *marp
   marpaESLIFRecognizer_t *marpaESLIFRecognizerp = NULL;
   short                   rcb;
 
-  if ((marpaESLIFp == NULL) || (marpaESLIFSymbolp == NULL)) {
+  if (marpaESLIFSymbolp == NULL) {
     errno = EINVAL;
     goto err;
   }
 
-  marpaESLIFGrammar.marpaESLIFp        = marpaESLIFp;
+  marpaESLIFGrammar.marpaESLIFp        = marpaESLIFSymbolp->marpaESLIFp;
   marpaESLIFGrammar.grammarStackp      = NULL;
   marpaESLIFGrammar.grammarp           = NULL;
   marpaESLIFGrammar.luabytep           = NULL;

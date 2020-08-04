@@ -16,6 +16,10 @@ sub isWithExhaustion       { 0 }
 sub isWithNewline          { 1 }
 sub isWithTrack            { 1 }
 
+sub DESTROY {
+    die " DESTROY";
+}
+
 package MyValueInterface;
 use strict;
 use diagnostics;
