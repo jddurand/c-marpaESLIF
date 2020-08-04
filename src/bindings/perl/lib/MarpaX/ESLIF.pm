@@ -140,13 +140,13 @@ sub _eq {
 sub _allocate {
     my ($class) = shift;
 
-    return MarpaX::ESLIF::Engine->allocate(@_)
+    return MarpaX::ESLIF->allocate(@_)
 }
 
 sub _dispose {
     my ($class) = shift;
 
-    return MarpaX::ESLIF::Engine->dispose(@_)
+    return MarpaX::ESLIF->dispose(@_)
 }
 
 sub new {
@@ -171,14 +171,6 @@ sub getInstance {
   printf "ESLIF library version: %s\n", $eslif->version;
 
 Returns a string containing the current underlying ESLIF library version.
-
-=cut
-
-sub version {
-    my $self = shift;
-
-    return MarpaX::ESLIF::Engine::version($self->{engine})
-}
 
 =head1 NOTES
 

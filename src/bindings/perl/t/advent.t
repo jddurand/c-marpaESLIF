@@ -192,7 +192,7 @@ for my $test_data (@tests) {
           my $last_hand;
           my ($handoffset, $handlength) = eval { $re->lastCompletedLocation('hand') };
           if (! defined($handoffset) && ! defined($handlength)) {
-              $log->errorf("MarpaX::ESLIF::Value->new error, %s", $@);
+              $log->errorf("MarpaX::ESLIF::Recognizer->lastCompletedLocation error, %s", $@);
           }
           if ( $handlength ) {
               $last_hand = decode('UTF-8', my $tmp = substr($byte_input, $handoffset, $handlength), Encode::FB_CROAK);

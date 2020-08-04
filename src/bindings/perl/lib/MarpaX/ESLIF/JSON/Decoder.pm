@@ -80,16 +80,16 @@ A true value means strict JSON, else relax JSON. Default is a true value.
 # this.
 #
 sub _allocate {
-    my ($class, $eslif, @rest) = @_;
+    my ($class, $eslif, $strict) = @_;
 
-    return MarpaX::ESLIF::Engine::JSON::Decoder::allocate->($eslif->{engine}, @rest)
+    return MarpaX::ESLIF::JSON::Decoder->allocate($eslif, $strict)
     
 }
 
 sub _dispose {
     my ($class) = shift;
 
-    return MarpaX::ESLIF::Grammar::Engine->dispose(@_)
+    return MarpaX::ESLIF::Grammar->dispose(@_)
 }
 
 sub new {

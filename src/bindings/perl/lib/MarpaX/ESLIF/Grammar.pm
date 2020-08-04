@@ -113,13 +113,13 @@ sub _eq {
 sub _allocate {
     my ($class, $eslif, @rest) = @_;
 
-    return MarpaX::ESLIF::Grammar::Engine->allocate($eslif->{engine}, @rest)
+    return MarpaX::ESLIF::Grammar->allocate($eslif, @rest)
 }
 
 sub _dispose {
     my ($class) = shift;
 
-    return MarpaX::ESLIF::Grammar::Engine->dispose(@_)
+    return MarpaX::ESLIF::Grammar->dispose(@_)
 }
 
 sub new {
@@ -136,25 +136,11 @@ Returns the number of sub-grammars.
 
 A grammar can have multiple I<sub-grammars>, identified by a level. Internally this is a I<sparse> array of grammars, and it is legal that a level is not defined.
 
-=cut
-
-sub ngrammar {
-    my $self = shift;
-    return MarpaX::ESLIF::Grammar::Engine::ngrammar($self->{engine})
-}
-
 =head2 $eslifGrammar->currentLevel()
 
   printf "Current indice: %d\n", $eslifGrammar->currentLevel;
 
 Returns the current level, which is always the first indice that have a defined sub-grammar.
-
-=cut
-
-sub currentLevel {
-    my $self = shift;
-    return MarpaX::ESLIF::Grammar::Engine::currentLevel($self->{engine})
-}
 
 =head2 $eslifGrammar->currentDescription()
 
@@ -162,25 +148,11 @@ sub currentLevel {
 
 Returns the description of the current level, with the same encoding as found in the grammar. This correspong to the C<:desc> meta-symbol in a grammar.
 
-=cut
-
-sub currentDescription {
-    my $self = shift;
-    return MarpaX::ESLIF::Grammar::Engine::currentDescription($self->{engine})
-}
-
 =head2 $eslifGrammar->descriptionByLevel($level)
 
   printf "Level 1 description: %s\n", $eslifGrammar->descriptionByLevel(1);
 
 Returns the description of the grammar at indice C<$level>, with the same encoding as found in the grammar.
-
-=cut
-
-sub descriptionByLevel {
-    my $self = shift;
-    return MarpaX::ESLIF::Grammar::Engine::descriptionByLevel($self->{engine}, @_)
-}
 
 =head2 $eslifGrammar->currentRuleIds()
 
@@ -190,25 +162,11 @@ Returns the list of rule identifiers of the current grammar, as a reference to a
 
 I<Rule identifiers are integers that uniquely identify a rule>.
 
-=cut
-
-sub currentRuleIds {
-    my $self = shift;
-    return MarpaX::ESLIF::Grammar::Engine::currentRuleIds($self->{engine})
-}
-
 =head2 $eslifGrammar->ruleIdsByLevel($level)
 
   printf "Level 1 Rule Ids: %s\n", join(' ', @{$eslifGrammar->ruleIdsByLevel(1)});
 
 Returns the list of rule identifiers at indice C<$level>, as a reference to an array of integers.
-
-=cut
-
-sub ruleIdsByLevel {
-    my $self = shift;
-    return MarpaX::ESLIF::Grammar::Engine::ruleIdsByLevel($self->{engine}, @_)
-}
 
 =head2 $eslifGrammar->currentSymbolIds()
 
@@ -216,25 +174,11 @@ sub ruleIdsByLevel {
 
 Returns the list of symbol identifiers at current level, as a reference to an array of integers.
 
-=cut
-
-sub currentSymbolIds {
-    my $self = shift;
-    return MarpaX::ESLIF::Grammar::Engine::currentSymbolIds($self->{engine})
-}
-
 =head2 $eslifGrammar->symbolIdsByLevel($level)
 
   printf "Level 1 Symbol Ids: %s\n", join(' ', @{$eslifGrammar->symbolIdsByLevel(1)});
 
 Returns the list of symbol identifiers at indice C<$level>, as a reference to an array of integers.
-
-=cut
-
-sub symbolIdsByLevel {
-    my $self = shift;
-    return MarpaX::ESLIF::Grammar::Engine::symbolIdsByLevel($self->{engine}, @_)
-}
 
 =head2 $eslifGrammar->currentProperties()
 
@@ -242,25 +186,11 @@ sub symbolIdsByLevel {
 
 Returns the current grammar properties as an instance of <MarpaX::ESLIF::Grammar::Properties>.
 
-=cut
-
-sub currentProperties {
-    my $self = shift;
-    return MarpaX::ESLIF::Grammar::Engine::currentProperties($self->{engine})
-}
-
 =head2 $eslifGrammar->propertiesByLevel($level)
 
   use Data::Dumper; printf "Properties at level %d: %s\n", $level, Dumper($eslifGrammar->propertiesByLevel($level));
 
 Returns the grammar properties at level C<$level> as an instance of <MarpaX::ESLIF::Grammar::Properties>.
-
-=cut
-
-sub propertiesByLevel {
-    my $self = shift;
-    return MarpaX::ESLIF::Grammar::Engine::propertiesByLevel($self->{engine}, @_)
-}
 
 =head2 $eslifGrammar->currentRuleProperties($ruleId)
 
@@ -268,25 +198,11 @@ sub propertiesByLevel {
 
 Returns the rule number C<$ruleId> properties as an instance of C<MarpaX::ESLIF::Grammar::Rule::Properties>.
 
-=cut
-
-sub currentRuleProperties {
-    my $self = shift;
-    return MarpaX::ESLIF::Grammar::Engine::currentRuleProperties($self->{engine}, @_)
-}
-
 =head2 $eslifGrammar->rulePropertiesByLevel($level, $ruleId)
 
   use Data::Dumper; printf "Rule Properties at level %d: %s\n", $level, Dumper($eslifGrammar->currentRuleProperties($ruleId));
 
 Returns the rule number C<$ruleId> properties at grammar level C<$level> as an instance of C<MarpaX::ESLIF::Grammar::Rule::Properties>.
-
-=cut
-
-sub rulePropertiesByLevel {
-    my ($self, $level, $ruleId) = @_;
-    return MarpaX::ESLIF::Grammar::Engine::rulePropertiesByLevel($self->{engine}, $level, $ruleId)
-}
 
 =head2 $eslifGrammar->currentSymbolProperties($symbolId)
 
@@ -294,25 +210,11 @@ sub rulePropertiesByLevel {
 
 Returns the symbol number C<$symbolId> properties as an instance of C<MarpaX::ESLIF::Grammar::Symbol::Properties>.
 
-=cut
-
-sub currentSymbolProperties {
-    my $self = shift;
-    return MarpaX::ESLIF::Grammar::Engine::currentSymbolProperties($self->{engine}, @_)
-}
-
 =head2 $eslifGrammar->symbolPropertiesByLevel($level, $symbolId)
 
   use Data::Dumper; printf "Symbol Properties at level %d: %s\n", $level, Dumper($eslifGrammar->currentSymbolProperties($symbolId));
 
 Returns the symbol number C<$symbolId> properties at grammar level C<$level> as an instance of C<MarpaX::ESLIF::Grammar::Symbol::Properties>.
-
-=cut
-
-sub symbolPropertiesByLevel {
-    my ($self, $level, $symbolId) = @_;
-    return MarpaX::ESLIF::Grammar::Engine::symbolPropertiesByLevel($self->{engine}, $level, $symbolId)
-}
 
 =head2 $eslifGrammar->ruleDisplay($ruleId)
 
@@ -320,25 +222,11 @@ sub symbolPropertiesByLevel {
 
 Returns the name of a rule identified by its rule ID C<$ruleId>.
 
-=cut
-
-sub ruleDisplay {
-    my $self = shift;
-    return MarpaX::ESLIF::Grammar::Engine::ruleDisplay($self->{engine}, @_)
-}
-
 =head2 $eslifGrammar->symbolDisplay($symbolId)
 
   printf "Symbols display:\n\t%s\n", join("\n\t", map { $eslifGrammar->symbolDisplay($_) } @{$eslifGrammar->currentSymbolIds});
 
 Returns the name of a rule identified by its rule ID C<$ruleId>.
-
-=cut
-
-sub symbolDisplay {
-    my $self = shift;
-    return MarpaX::ESLIF::Grammar::Engine::symbolDisplay($self->{engine}, @_)
-}
 
 =head2 $eslifGrammar->ruleShow($ruleId)
 
@@ -346,25 +234,11 @@ sub symbolDisplay {
 
 Returns the description of a rule identified by its rule ID C<$ruleId>.
 
-=cut
-
-sub ruleShow {
-    my $self = shift;
-    return MarpaX::ESLIF::Grammar::Engine::ruleShow($self->{engine}, @_)
-}
-
 =head2 $eslifGrammar->ruleDisplayByLevel($level, $ruleId)
 
   printf "Level 1 Rule display:\n\t%s\n", join("\n\t", map { $eslifGrammar->ruleDisplayByLevel(1, $_) } @{$eslifGrammar->ruleIdsByLevel(1)});
 
 Returns the name of a rule at a specificed indice C<$level> identified by its rule ID C<$ruleId>. This correspond to the C<name> adverb, if present, else a default naming applies.
-
-=cut
-
-sub ruleDisplayByLevel {
-    my ($self, $level, $ruleId) = @_;
-    return MarpaX::ESLIF::Grammar::Engine::ruleDisplayByLevel($self->{engine}, $level, $ruleId)
-}
 
 =head2 $eslifGrammar->symbolDisplayByLevel($level, $symbolId)
 
@@ -372,25 +246,11 @@ sub ruleDisplayByLevel {
 
 Returns the name of a symbol at a specificed indice C<$level> identified by its symbol ID C<$symbolId>. This correspond to the C<name> adverb, if present, else a default naming applies.
 
-=cut
-
-sub symbolDisplayByLevel {
-    my ($self, $level, $symbolId) = @_;
-    return MarpaX::ESLIF::Grammar::Engine::symbolDisplayByLevel($self->{engine}, $level, $symbolId)
-}
-
 =head2 $eslifGrammar->ruleShowByLevel($level, $ruleId)
 
   printf "Level 1 Rules shows:\n\t%s\n", join("\n\t", map { $eslifGrammar->ruleShowByLevel(1, $_) } @{$eslifGrammar->ruleIdsByLevel(1)});
 
 Returns the description of a rule at a specified indice C<$level>, identified by its rule ID C<$ruleId>.
-
-=cut
-
-sub ruleShowByLevel {
-    my ($self, $level, $ruleid) = @_;
-    return MarpaX::ESLIF::Grammar::Engine::ruleShowByLevel($self->{engine}, $level, $ruleid)
-}
 
 =head2 $eslifGrammar->show()
 
@@ -398,25 +258,11 @@ sub ruleShowByLevel {
 
 Returns the description of current grammar.
 
-=cut
-
-sub show {
-    my $self = shift;
-    return MarpaX::ESLIF::Grammar::Engine::show($self->{engine})
-}
-
 =head2 $eslifGrammar->showByLevel($level)
 
   printf "Level 1 grammar description: %s\n", $eslifGrammar->showByLevel(1);
 
 Returns the description of the grammar at indice C<$level>.
-
-=cut
-
-sub showByLevel {
-    my $self = shift;
-    return MarpaX::ESLIF::Grammar::Engine::showByLevel($self->{engine}, @_)
-}
 
 =head2 $eslifGrammar->parse($recognizerInterface, $valueInterface)
 
@@ -429,13 +275,6 @@ sub showByLevel {
 Short version of input validation and valuation, that will never give back control to the user until the end or a failure. No event is possible when using this method. If this method returns true, then it is guaranteed that the result is in C<$valueInterface->getResult()>.
 
 Please refer to L<MarpaX::ESLIF::Recognizer::Interface> and L<MarpaX::ESLIF::Value::Interface> for the C<$recognizerInterface> and C<$valueInterface> required parameters.
-
-=cut
-
-sub parse {
-    my ($self, $recognizerInterface, $valueInterface) = @_;
-    return MarpaX::ESLIF::Grammar::Engine::parse($self->{engine}, $recognizerInterface, $valueInterface)
-}
 
 =head1 SEE ALSO
 

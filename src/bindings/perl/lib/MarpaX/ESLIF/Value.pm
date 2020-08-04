@@ -48,14 +48,14 @@ An object implementing L<MarpaX::ESLIF::Value::Interface> methods. Required.
 sub _allocate {
     my ($class, $eslifRecognizer, @rest) = @_;
 
-    return MarpaX::ESLIF::Engine::Value::allocate->($eslifRecognizer->{engine}, @rest)
+    return MarpaX::ESLIF::Value->allocate($eslifRecognizer, @rest)
     
 }
 
 sub _dispose {
     my ($class) = shift;
 
-    return MarpaX::ESLIF::Value::Engine->dispose(@_)
+    return MarpaX::ESLIF::Value->dispose(@_)
 }
 
 sub new {
@@ -67,14 +67,6 @@ sub new {
 =head2 $eslifValue->value()
 
 Returns a boolean indicating if there a value to retrieve via the valueInterface's getResult() method.
-
-=cut
-
-sub value {
-    my ($self) = @_;
-    
-    return MarpaX::ESLIF::Recognizer::Engine::value($self->{engine})
-}
 
 =head1 SEE ALSO
 

@@ -141,7 +141,7 @@ sub _allocate {
 sub _dispose {
     my ($class) = shift;
 
-    return MarpaX::ESLIF::Symbol::Engine->dispose(@_)
+    return MarpaX::ESLIF::Symbol->dispose(@_)
 }
 
 sub new {
@@ -154,13 +154,6 @@ sub new {
 
 Try to match the external symbol C<$symbol> on C<$scalar>, that can be anything. Return C<undef> if failure, the matched string if success.
 
-=cut
-
-sub try {
-    my $self = shift;
-    return MarpaX::ESLIF::Symbol::Engine::try($self->[0], @_)
-}
-
 =head1 SEE ALSO
 
 L<MarpaX::ESLIF>, L<MarpaX::ESLIF::Recognizer>
@@ -168,7 +161,7 @@ L<MarpaX::ESLIF>, L<MarpaX::ESLIF::Recognizer>
 =cut
 
 sub DESTROY {
-    goto &MarpaX::ESLIF::Registry::ESLIFSymbol_DESTROY
+    goto &MarpaX::ESLIF::Registry::DESTROY
 }
 
 1;
