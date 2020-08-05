@@ -129,11 +129,11 @@ sub _eq {
     my ($args_ref, $loggerInterface) = @_;
 
     my $definedLoggerInterface = defined($loggerInterface); # It is legal to create an eslif with no logger interface
-    my $_definedLoggerInterface = defined($args_ref->[1]);
+    my $_definedLoggerInterface = defined($args_ref->[0]);
     return (
         (! $definedLoggerInterface && ! $_definedLoggerInterface)
         ||
-        ($definedLoggerInterface && $_definedLoggerInterface && ($loggerInterface == $_[1]))
+        ($definedLoggerInterface && $_definedLoggerInterface && ($loggerInterface == $_[0]))
         )
 }
 

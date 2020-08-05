@@ -92,22 +92,11 @@ Encoding will always be guessed if not given.
 =cut
 
 sub _eq {
-    my ($args_ref, $eslif, $type, $pattern, $encoding, $modifiers) = @_;
+    my ($args_ref, $eslif, $data) = @_;
 
-    my $definedEncoding = defined($encoding); # It is legal to create a symbol with no encoding
-    my $definedModifiers = defined($modifiers); # It is legal to create a symbol with no modifier
-
-    my $_definedEncoding = defined($args_ref->[4]);
-    my $_definedModifiers = defined($args_ref->[5]);
-    return $eslif == $_->[1]
+    return $eslif == $args_ref->[0]
         &&
-        $type eq $_->[2]
-        &&
-        $pattern eq $_->[3]
-        &&
-        ((! $definedEncoding && ! $_definedEncoding) || ($definedEncoding && $_definedEncoding && ($encoding eq $_->[4])))
-        &&
-        ((! $definedModifiers && ! $_definedModifiers) || ($definedModifiers && $_definedModifiers && ($modifiers eq $_->[4])))
+        $data eq $args_ref->[1]
 }
 
 sub _allocate {
