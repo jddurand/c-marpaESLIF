@@ -133,7 +133,7 @@ sub _eq {
     return (
         (! $definedLoggerInterface && ! $_definedLoggerInterface)
         ||
-        ($definedLoggerInterface && $_definedLoggerInterface && ($loggerInterface == $_[0]))
+        ($definedLoggerInterface && $_definedLoggerInterface && ($loggerInterface == $args_ref->[0]))
         )
 }
 
