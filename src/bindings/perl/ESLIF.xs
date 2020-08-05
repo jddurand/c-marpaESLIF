@@ -892,9 +892,6 @@ static short marpaESLIFPerl_readerCallbackb(void *userDatavp, char **inputcpp, s
 
   marpaESLIFPerl_recognizerContextCleanupv(aTHX_ MarpaX_ESLIF_Recognizerp);
 
-  fprintf(stderr, "Perl_recognizerInterfacep = 0x%lx\n", (unsigned long) Perl_recognizerInterfacep);
-  sv_dump(Perl_recognizerInterfacep);
-
   /* Call the read interface */
   if (! marpaESLIFPerl_call_methodb(aTHX_ Perl_recognizerInterfacep, "read")) {
     MARPAESLIFPERL_CROAK("Recognizer->read() method failure");
@@ -1458,8 +1455,6 @@ static void marpaESLIFPerl_recognizerContextInitv(pTHX_ MarpaX_ESLIF_Grammar_t *
   }
 
   MarpaX_ESLIF_Recognizerp->MarpaX_ESLIF_Grammarp         = MarpaX_ESLIF_Grammarp;
-  fprintf(stderr, "Perl_recognizerInterfacep = 0x%lx\n", (unsigned long) Perl_recognizerInterfacep);
-  sv_dump(Perl_recognizerInterfacep);
   MarpaX_ESLIF_Recognizerp->Perl_recognizerInterfacep     = Perl_recognizerInterfacep;
   MarpaX_ESLIF_Recognizerp->previous_Perl_datap           = NULL;
   MarpaX_ESLIF_Recognizerp->previous_Perl_encodingp       = NULL;
@@ -5229,7 +5224,7 @@ lastCompletedLocation(p, name)
   char *name;
 PREINIT:
   static const char *funcs = "MarpaX::ESLIF::Recognizer::lastCompletedLocation";
-CODE:
+PPCODE:
   MarpaX_ESLIF_Recognizer_t *MarpaX_ESLIF_Recognizerp = marpaESLIFPerl_engine(aTHX_ p);
   size_t                     lengthl;
   char                      *offsetp;
@@ -5238,7 +5233,6 @@ CODE:
     MARPAESLIFPERL_CROAKF("marpaESLIFRecognizer_last_completedb failure, %s", strerror(errno));
   }
   EXTEND(SP, 2);
-  fprintf(stderr, "Good: offsetp=%ld, lengthl=%ld\n", (unsigned long) offsetp, (unsigned long) lengthl);
   PUSHs(sv_2mortal(newSViv(PTR2IV(offsetp))));
   PUSHs(sv_2mortal(newSViv((IV) lengthl)));
 
@@ -5297,7 +5291,7 @@ location(p)
   SV *p;
 PREINIT:
   static const char *funcs = "MarpaX::ESLIF::Recognizer::location";
-CODE:
+PPCODE:
   MarpaX_ESLIF_Recognizer_t *MarpaX_ESLIF_Recognizerp = marpaESLIFPerl_engine(aTHX_ p);
   size_t                     linel;
   size_t                     columnl;
