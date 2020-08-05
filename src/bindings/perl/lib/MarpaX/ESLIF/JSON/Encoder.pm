@@ -72,23 +72,10 @@ A true value means strict JSON, else relax JSON. Default is a true value.
 # Could have been writen in the XS itself, but I feel it is more comprehensible like
 # this.
 #
-sub _allocate {
-    my ($class, $eslif, $strict) = @_;
-
-    return MarpaX::ESLIF::JSON::Encoder->allocate($eslif, $strict)
-    
-}
-
-sub _dispose {
-    my ($class) = shift;
-
-    return MarpaX::ESLIF::Grammar->dispose(@_)
-}
-
 sub new {
     my ($class, $eslif, $strict) = @_;
     
-    return MarpaX::ESLIF::Registry::new($class, $CLONABLE, undef, \&_allocate, \&_dispose, $eslif, $strict // 1)
+    return MarpaX::ESLIF::Registry::new($class, $CLONABLE, undef, \&MarpaX::ESLIF::JSON::Encoder::allocate, \&MarpaX::ESLIF::JSON::Encoder::dispose, $eslif, $strict // 1)
 }
 
 =head2 $eslifJSONEncoder->encode($value)

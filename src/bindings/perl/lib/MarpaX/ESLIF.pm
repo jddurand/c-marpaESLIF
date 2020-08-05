@@ -130,29 +130,18 @@ sub _eq {
 
     my $definedLoggerInterface = defined($loggerInterface); # It is legal to create an eslif with no logger interface
     my $_definedLoggerInterface = defined($args_ref->[0]);
-    return (
-        (! $definedLoggerInterface && ! $_definedLoggerInterface)
-        ||
-        ($definedLoggerInterface && $_definedLoggerInterface && ($loggerInterface == $args_ref->[0]))
+    return
+	(
+	 (! $definedLoggerInterface && ! $_definedLoggerInterface)
+	 ||
+	 ($definedLoggerInterface && $_definedLoggerInterface && ($loggerInterface == $args_ref->[0]))
         )
-}
-
-sub _allocate {
-    my ($class) = shift;
-
-    return MarpaX::ESLIF->allocate(@_)
-}
-
-sub _dispose {
-    my ($class) = shift;
-
-    return MarpaX::ESLIF->dispose(@_)
 }
 
 sub new {
     my ($class) = shift;
 
-    return MarpaX::ESLIF::Registry::new($class, $CLONABLE, \&_eq, \&_allocate, \&_dispose, @_)
+    return MarpaX::ESLIF::Registry::new($class, $CLONABLE, \&_eq, \&MarpaX::ESLIF::allocate, \&MarpaX::ESLIF::dispose, @_)
 }
 
 

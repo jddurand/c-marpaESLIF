@@ -94,27 +94,19 @@ Encoding will always be guessed if not given.
 sub _eq {
     my ($args_ref, $eslif, $data) = @_;
 
-    return $eslif == $args_ref->[0]
+    my $definedData = defined($data);
+    my $_definedData = defined($args_ref->[1]);
+    
+    return
+	($eslif == $args_ref->[0])
         &&
-        $data eq $args_ref->[1]
-}
-
-sub _allocate {
-    my ($class, $eslif, @rest) = @_;
-
-    return MarpaX::ESLIF::Grammar->allocate($eslif, @rest)
-}
-
-sub _dispose {
-    my ($class) = shift;
-
-    return MarpaX::ESLIF::Grammar->dispose(@_)
+        ($definedData && $_definedData && ($data eq $args_ref->[1]))
 }
 
 sub new {
     my $class = shift;
     
-    return MarpaX::ESLIF::Registry::new($class, $CLONABLE, \&_eq, \&_allocate, \&_dispose, @_)
+    return MarpaX::ESLIF::Registry::new($class, $CLONABLE, \&_eq, \&MarpaX::ESLIF::Grammar::allocate, \&MarpaX::ESLIF::Grammar::dispose, @_)
 }
 
 =head2 $eslifGrammar->ngrammar()

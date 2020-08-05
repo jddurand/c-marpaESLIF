@@ -109,16 +109,16 @@ sub _eq {
     my $definedEncoding = defined($encoding); # It is legal to create a symbol with no encoding
     my $definedModifiers = defined($modifiers); # It is legal to create a symbol with no modifier
 
-    my $_definedEncoding = defined($args_ref->[4]);
-    my $_definedModifiers = defined($args_ref->[5]);
+    my $_definedEncoding = defined($args_ref->[3]);
+    my $_definedModifiers = defined($args_ref->[4]);
     return $_ if
-        $eslif == $args_ref->[1]
+        $eslif == $args_ref->[0]
         &&
-        $type eq $args_ref->[2]
+        $type eq $args_ref->[1]
         &&
-        $pattern eq $args_ref->[3]
+        $pattern eq $args_ref->[2]
         &&
-        ((! $definedEncoding && ! $_definedEncoding) || ($definedEncoding && $_definedEncoding && ($encoding eq $args_ref->[4])))
+        ((! $definedEncoding && ! $_definedEncoding) || ($definedEncoding && $_definedEncoding && ($encoding eq $args_ref->[3])))
         &&
         ((! $definedModifiers && ! $_definedModifiers) || ($definedModifiers && $_definedModifiers && ($modifiers eq $args_ref->[4])))
 }

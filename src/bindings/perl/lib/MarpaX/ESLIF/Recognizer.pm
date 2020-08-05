@@ -44,23 +44,10 @@ An object implementing L<MarpaX::ESLIF::Recognizer::Interface> methods. Required
 
 =cut
 
-sub _allocate {
-    my ($class, $eslifGrammar, @rest) = @_;
-
-    return MarpaX::ESLIF::Recognizer->allocate($eslifGrammar, @rest)
-    
-}
-
-sub _dispose {
-    my ($class) = shift;
-
-    return MarpaX::ESLIF::Recognizer->dispose(@_)
-}
-
 sub new {
     my $class = shift;
     
-    return MarpaX::ESLIF::Registry::new($class, $CLONABLE, undef, \&_allocate, \&_dispose, @_)
+    return MarpaX::ESLIF::Registry::new($class, $CLONABLE, undef, \&MarpaX::ESLIF::Recognizer::allocate, \&MarpaX::ESLIF::Recognizer::dispose, @_)
 }
 
 =head2 $eslifRecognizer->newFrom($eslifGrammar)

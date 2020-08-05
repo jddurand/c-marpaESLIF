@@ -45,23 +45,10 @@ An object implementing L<MarpaX::ESLIF::Value::Interface> methods. Required.
 
 =cut
 
-sub _allocate {
-    my ($class, $eslifRecognizer, @rest) = @_;
-
-    return MarpaX::ESLIF::Value->allocate($eslifRecognizer, @rest)
-    
-}
-
-sub _dispose {
-    my ($class) = shift;
-
-    return MarpaX::ESLIF::Value->dispose(@_)
-}
-
 sub new {
     my $class = shift;
     
-    return MarpaX::ESLIF::Registry::new($class, $CLONABLE, undef, \&_allocate, \&_dispose, @_)
+    return MarpaX::ESLIF::Registry::new($class, $CLONABLE, undef, \&MarpaX::ESLIF::Value::allocate, \&MarpaX::ESLIF::Value::dispose, @_)
 }
 
 =head2 $eslifValue->value()

@@ -2,7 +2,12 @@ use strict;
 use warnings FATAL => 'all';
 
 package MarpaX::ESLIF::Registry;
+use Devel::GlobalDestruction;
 use Carp qw/croak/;
+use Scalar::Util qw/weaken/;
+use Task::Weaken;
+
+use namespace::clean; # to avoid having an "in_global_destruction" method
 
 # ABSTRACT: ESLIF registry
 
@@ -19,15 +24,16 @@ This class ensures is a generic constructor, destructor and cloner for all objec
 #
 # Different registries exist per clonable class, because we want to control the order when cloning
 # If eq_ref is defined, then the object is implicitly a singleton
-#
+# Take care, in order to be INDEPENDANT of weaken perl capacibility, self is stored stringified
 
 my %REGISTRY;
 
 sub _find {
     my ($eq_ref, $objects_ref, @args) = @_;
 
+    my $self;
     foreach (@{$objects_ref}) {
-        return $_ if $eq_ref->($_->{args_ref}, @args)
+	return $_ if $eq_ref->($_->{args_ref}, @args)
     }
 
     return
@@ -59,17 +65,24 @@ sub new {
     my $singleton = defined($eq_ref);
 
     my $self;
-    if ($singleton && defined($self = _find($eq_ref, $registry_ref->{objects_ref}, @args))) {
-        return $self
+    if ($singleton) {
+	if (defined($self = _find($eq_ref, $registry_ref->{objects_ref}, @args))) {
+	    return $self
+	}
     }
 
-    push(@{$registry_ref->{objects_ref}},
-         $self = bless { engine => $bless->$allocate_ref(@args),
-                         allocate_ref => $allocate_ref,
-                         dispose_ref => $dispose_ref,
-                         singleton => $singleton,
-                         clonable => $clonable,
-                         args_ref => \@args}, $bless);
+    $self = bless { engine => $bless->$allocate_ref(@args),
+		    allocate_ref => $allocate_ref,
+		    dispose_ref => $dispose_ref,
+		    singleton => $singleton,
+		    clonable => $clonable,
+		    args_ref => \@args}, $bless;
+    
+    if ($singleton) {
+	my $weaken_self = $self;
+	weaken($weaken_self);
+	push(@{$registry_ref->{objects_ref}}, $weaken_self)
+    }
 
     return $self
 }
@@ -84,24 +97,29 @@ sub DESTROY {
     my ($self) = @_;
 
     my $bless = ref($self);
-    my $engine = $self->{engine};
     my $dispose_ref = $self->{dispose_ref};
 
     if ($self->{singleton}) {
         my $objects_ref = $REGISTRY{$bless}->{objects_ref};
+	my @objects = @{$objects_ref};
 
-        foreach (0..$#{@{$objects_ref}}) {
-            if ($objects_ref->[$_] == $self) {
-                $bless->$dispose_ref($engine);
-                splice(@{$objects_ref}, $_, 1);
-                return
-            }
+        foreach (0..$#objects) {
+	    my $this = $objects[$_];
+	    next unless defined($this) && ($this->{engine} == $self->{engine});
+	    $self->$dispose_ref();
+	    splice(@{$objects_ref}, $_, 1);
+	    return
         }
 
-        warn "Unregistered object $self";
+	#
+	# This can happen during global destruction: @{$objects_ref} is emptied
+	#
+	if (! in_global_destruction) {
+	    warn "Unregistered object $self";
+	}
     }
 
-    $bless->$dispose_ref($engine)
+    $self->$dispose_ref()
 }
 
 =head2 CLONE()
@@ -114,21 +132,24 @@ sub _registry_clone {
     my ($registry_ref) = @_;
 
     my $objects_ref = $registry_ref->{objects_ref};
+    my @objects = @{$objects_ref};
+    my @new_objects = ();
 
-    foreach my $self (@{$objects_ref}) {
+    foreach (0..$#objects) {
+	my $self = $objects[$_];
         if ($self->{clonable}) {
+	    my $previous_engine = $self->{engine};
             my $allocate_ref = $self->{allocate_ref};
             my $args_ref = $self->{args_ref};
-            $self->{engine} = $self->$allocate_ref(@{$args_ref})
-        } else {
-            $self->{engine} = undef
+            $self->{engine} = $self->$allocate_ref(@{$args_ref});
+	    my $weaken_self = $self;
+	    weaken($weaken_self);
+	    push(@new_objects, $weaken_self)
         }
     }
-}
 
-#
-# When cloning every package that has the CLONE method is considered, even if there is no instance of that package
-#
+    $registry_ref->{objects_ref} = \@new_objects;
+}
 
 sub CLONE {
     #
@@ -144,7 +165,7 @@ sub CLONE {
     #
     # We know that all other objects are derived immediately from ESLIF, not more
     #
-    foreach my $bless (map { grep $_ ne $eslif_bless } keys %REGISTRY) {
+    foreach my $bless (grep { $_ ne $eslif_bless } keys %REGISTRY) {
         _registry_clone($REGISTRY{$bless})
     }
 }
