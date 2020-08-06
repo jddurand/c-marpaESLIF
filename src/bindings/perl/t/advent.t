@@ -138,13 +138,16 @@ my @suit_line = (
 );
 
 for my $test_data (@tests) {
-    my ( $input, $expected_result, $expected_value ) = @{$test_data};
-    my ( $actual_result, $actual_value );
+    my ($input, $expected_result, $expected_value) = @{$test_data};
+    $log->infof('Testing input: %s, expected result: %s, expected value: %s', $input, $expected_result, $expected_value);
+
+    my ($actual_result, $actual_value);
 
     utf8::encode(my $byte_input = $input);
 
     for my $suit_line_data (@suit_line) {
-        my ( $suit_line, $suit_line_type ) = @{$suit_line_data};
+        my ($suit_line, $suit_line_type) = @{$suit_line_data};
+        $log->infof('Testing suite line: %s, type: %s, expected value: %s', $suit_line, $suit_line_type);
       PROCESSING: {
           # Note: in production, you would compute the three grammar variants
           # ahead of time.
