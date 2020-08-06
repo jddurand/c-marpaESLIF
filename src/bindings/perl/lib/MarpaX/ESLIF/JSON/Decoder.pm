@@ -82,7 +82,7 @@ A true value means strict JSON, else relax JSON. Default is a true value.
 sub new {
     my ($class, $eslif, $strict) = @_;
     
-    return MarpaX::ESLIF::Registry::new($class, $CLONABLE, undef, \&MarpaX::ESLIF::JSON::Decoder::allocate, \&MarpaX::ESLIF::JSON::Decoder::dispose, $eslif, $strict // 1)
+    return MarpaX::ESLIF::Registry::new($class, $CLONABLE, undef, \&MarpaX::ESLIF::JSON::Decoder::allocate, \&MarpaX::ESLIF::Grammar::dispose, $eslif, $strict // 1)
 }
 
 =head2 $eslifJSONDecoder->decode($string, %options)

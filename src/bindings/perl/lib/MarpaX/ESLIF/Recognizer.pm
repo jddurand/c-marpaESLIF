@@ -61,14 +61,12 @@ Returns a recognizer instance that is sharing the stream of C<$eslifRecognizer>,
 sub _allocate_newFrom {
     my ($class, $eslifRecognizer, $eslifGrammar) = @_;
 
-    return MarpaX::ESLIF::Recognizer::allocate_newFrom($eslifRecognizer, $eslifGrammar)
+    return $eslifRecognizer->allocate_newFrom($eslifGrammar)
     
 }
 
 sub newFrom {
-    my $class = shift;
-    
-    return MarpaX::ESLIF::Registry::new($class, $CLONABLE, undef, &_allocate_newFrom, \&_dispose, @_)
+    return MarpaX::ESLIF::Registry::new(ref($_[0]), $CLONABLE, undef, \&_allocate_newFrom, \&MarpaX::ESLIF::Recognizer::dispose, @_)
 }
 
 =head2 $eslifRecognizer->set_exhausted_flag($flag)

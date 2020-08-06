@@ -18,8 +18,7 @@ use constant { NTHREAD => 3 };
 use Test::More;
 
 my $number_of_tests_in_unit_test = 10;
-my $number_of_test_thread_only = 12;
-my $number_of_tests = 1 + ((NTHREAD + 1) * $number_of_tests_in_unit_test) + (NTHREAD * $number_of_test_thread_only);
+my $number_of_tests = 1 + ((NTHREAD + 1) * $number_of_tests_in_unit_test);
 my $nwaitingGoSignal = 0;
 my $go = 0;
 
@@ -127,7 +126,6 @@ sub test_eslif_multiton {
     #
     # 6 tests
     #
-
     $log->tracef("Thread $tid - Testing ESLIF multiton creation with logger=%s", "$log");
     my $eslif_with_logger = MarpaX::ESLIF->new($log);
     ok(defined($eslif_with_logger), "Thread $tid - \$eslif_with_logger is defined");
@@ -153,7 +151,6 @@ sub test_eslifGrammar_multiton {
     #
     # 3 tests
     #
-
     my $tid = threads->tid();
 
     $log->trace("Thread $tid - Testing ESLIFGrammar multiton using $eslif");
@@ -185,8 +182,19 @@ sub valuation_test {
 }
 
 sub unit_test {
+    #
+    # 6 tests
+    #
     my ($eslif_with_logger, $eslif2_with_logger, $eslif_without_logger, $eslif2_without_logger) = test_eslif_multiton();
+
+    #
+    # 3 tests
+    #
     my ($eslifGrammar, $eslifGrammar2) = test_eslifGrammar_multiton($eslif_with_logger);
+
+    #
+    # 1 test
+    #
     valuation_test($eslifGrammar);
 
     return ($eslif_with_logger, $eslif2_with_logger, $eslif_without_logger, $eslif2_without_logger, $eslifGrammar, $eslifGrammar2);

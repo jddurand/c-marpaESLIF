@@ -61,19 +61,19 @@ Returns a symbol instance, noted C<$symbol> later. C<%options> is a hash that co
 
 =item C<type>
 
-Must be "string" or "regex". Required.
+Value must be "string" or "regex". Required.
 
 =item C<pattern>
 
-The pattern content. Required.
+Value is the pattern content. Required.
 
 =item C<encoding>
 
-The pattern encoding. Optional.
+Value is the pattern encoding. Optional.
 
 =item C<modifiers>
 
-A string containing modifiers. Optional.
+Value is a string containing modifiers. Optional.
 
 It must follow the specification of the I<Terminals> section of L<MarpaX::ESLIF::BNF>:
 
@@ -104,7 +104,12 @@ Note that a string pattern accepts only the C<i> and C<c> modifiers.
 =cut
 
 sub _eq {
-    my ($args_ref, $eslif, $type, $pattern, $encoding, $modifiers) = @_;
+    my ($args_ref, $eslif, %options) = @_;
+
+    my $type = $options{type} // croak 'type must be defined';
+    my $pattern = $options{pattern} // croak 'pattern must be defined';
+    my $encoding = $options{encoding};
+    my $modifiers = $options{modifiers};
 
     my $definedEncoding = defined($encoding); # It is legal to create a symbol with no encoding
     my $definedModifiers = defined($modifiers); # It is legal to create a symbol with no modifier
@@ -124,7 +129,12 @@ sub _eq {
 }
 
 sub _allocate {
-    my ($class, $eslif, $type, $pattern, $encoding, $modifiers) = @_;
+    my ($class, $eslif, %options) = @_;
+
+    my $type = $options{type} // croak 'type must be defined';
+    my $pattern = $options{pattern} // croak 'pattern must be defined';
+    my $encoding = $options{encoding};
+    my $modifiers = $options{modifiers};
 
     return ($type eq 'string')
         ?
@@ -138,16 +148,10 @@ sub _allocate {
         )
 }
 
-sub _dispose {
-    my ($class) = shift;
-
-    return MarpaX::ESLIF::Symbol->dispose(@_)
-}
-
 sub new {
     my $class = shift;
     
-    return MarpaX::ESLIF::Registry::new($class, $CLONABLE, \&_eq, \&_allocate, \&_dispose, @_)
+    return MarpaX::ESLIF::Registry::new($class, $CLONABLE, \&_eq, \&_allocate, \&MarpaX::ESLIF::Symbol::dispose, @_)
 }
 
 =head2 $symbol->try($eslif, $scalar)
