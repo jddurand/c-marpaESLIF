@@ -474,7 +474,7 @@ int main() {
     free(bytep);
   }
 
-  if (! marpaESLIF_symbol_tryb(marpaESLIFp, stringSymbolp, STRING, strlen(STRING), &matchb, &bytep, &bytel)) {
+  if (! marpaESLIFSymbol_tryb(stringSymbolp, STRING, strlen(STRING), &matchb, &bytep, &bytel)) {
     goto err;
   }
   if (matchb) {
@@ -482,7 +482,7 @@ int main() {
     free(bytep);
   }
 
-  if (! marpaESLIF_symbol_tryb(marpaESLIFp, regexSymbolp, SUBJECT, strlen(SUBJECT), &matchb, &bytep, &bytel)) {
+  if (! marpaESLIFSymbol_tryb(regexSymbolp, SUBJECT, strlen(SUBJECT), &matchb, &bytep, &bytel)) {
     goto err;
   }
   if (matchb) {
