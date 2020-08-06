@@ -2,12 +2,9 @@ use strict;
 use warnings FATAL => 'all';
 
 package MarpaX::ESLIF::Registry;
-use Devel::GlobalDestruction;
 use Carp qw/croak/;
 use Scalar::Util qw/weaken/;
 use Task::Weaken;
-
-use namespace::clean; # to avoid having an "in_global_destruction" method
 
 # ABSTRACT: ESLIF registry
 
@@ -110,13 +107,9 @@ sub DESTROY {
 	    splice(@{$objects_ref}, $_, 1);
 	    return
         }
-
 	#
 	# This can happen during global destruction: @{$objects_ref} is emptied
 	#
-	if (! in_global_destruction) {
-	    warn "Unregistered object $self";
-	}
     }
 
     $self->$dispose_ref()
