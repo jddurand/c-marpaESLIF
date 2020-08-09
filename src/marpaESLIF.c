@@ -9548,7 +9548,7 @@ static inline short _marpaESLIFGrammar_parseb(marpaESLIFGrammar_t *marpaESLIFGra
   if (rcb && (marpaESLIFRecognizerParentp != NULL) && (marpaESLIFValueResultp != NULL)) {
     /* In lexeme mode, the result is expressed as an offset and in addition the stream is shared */
     /* This has to be done AFTER child recognizer is freed, because it this free that restores parent stream position */
-    MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Applying offset %p to result {%ld,%ld} => {%p,%ld}",
+    MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerParentp, funcs, "Applying offset %p to result {%ld,%ld} => {%p,%ld}",
                                 marpaESLIFRecognizerParentp->marpaESLIF_streamp->inputs,
                                 (unsigned long) marpaESLIFValueResultp->u.a.p,
                                 (unsigned long) marpaESLIFValueResultp->u.a.sizel,
