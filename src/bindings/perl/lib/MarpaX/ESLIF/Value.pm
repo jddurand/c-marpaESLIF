@@ -2,10 +2,15 @@ use strict;
 use warnings FATAL => 'all';
 
 package MarpaX::ESLIF::Value;
-use MarpaX::ESLIF::Registry;     # Maintains thread-safe single ESLIF registry
+use parent qw/MarpaX::ESLIF::Base/;
 
-my $CLONABLE = 0;
-
+#
+# Base required class methods
+#
+sub _CLONABLE { return sub { 0 } }
+sub _ALLOCATE { return \&MarpaX::ESLIF::Value::allocate }
+sub _DISPOSE  { return \&MarpaX::ESLIF::Value::dispose }
+sub _EQ       { return }
 
 # ABSTRACT: MarpaX::ESLIF's value
 
@@ -43,14 +48,6 @@ An object implementing L<MarpaX::ESLIF::Value::Interface> methods. Required.
 
 =back
 
-=cut
-
-sub new {
-    my $class = shift;
-    
-    return MarpaX::ESLIF::Registry::new($class, $CLONABLE, undef, \&MarpaX::ESLIF::Value::allocate, \&MarpaX::ESLIF::Value::dispose, @_)
-}
-
 =head2 $eslifValue->value()
 
 Returns a boolean indicating if there a value to retrieve via the valueInterface's getResult() method.
@@ -65,8 +62,8 @@ L<MarpaX::ESLIF::Value> cannot be reused across threads.
 
 =cut
 
-sub DESTROY {
-    goto &MarpaX::ESLIF::Registry::DESTROY
+sub CLONE_SKIP {
+    return 1
 }
 
 1;

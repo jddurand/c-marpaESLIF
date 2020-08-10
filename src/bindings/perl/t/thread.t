@@ -14,7 +14,7 @@ use threads::shared;
 use Log::Log4perl qw/:easy/;
 use Log::Any::Adapter;
 use Log::Any qw/$log/;
-use constant { NTHREAD => 3 };
+use constant { NTHREAD => 1 };
 use Test::More;
 
 my $number_of_tests_in_unit_test = 10;

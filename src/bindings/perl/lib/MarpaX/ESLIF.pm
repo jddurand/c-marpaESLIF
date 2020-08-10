@@ -2,7 +2,7 @@ use strict;
 use warnings FATAL => 'all';
 
 package MarpaX::ESLIF;
-use MarpaX::ESLIF::Registry;     # Maintains thread-safe single ESLIF registry
+use parent qw/MarpaX::ESLIF::Base/;
 use MarpaX::ESLIF::String;       # Make sure it is loaded, the XS is using it
 use MarpaX::ESLIF::RegexCallout; # Make sure it is loaded, the XS is using it
 
@@ -10,9 +10,29 @@ use MarpaX::ESLIF::RegexCallout; # Make sure it is loaded, the XS is using it
 
 # AUTHORITY
 
-my $CLONABLE = 1;
 use vars qw/$VERSION/;
 use Config;
+
+#
+# Base required class methods
+#
+sub _CLONABLE { return sub { 1 } }
+sub _ALLOCATE { return \&MarpaX::ESLIF::allocate }
+sub _DISPOSE  { return \&MarpaX::ESLIF::dispose }
+sub _EQ {
+    return sub {
+        my ($class, $args_ref, $loggerInterface) = @_;
+
+        my $definedLoggerInterface = defined($loggerInterface); # It is legal to create an eslif with no logger interface
+        my $_definedLoggerInterface = defined($args_ref->[0]);
+        return
+            (
+             (! $definedLoggerInterface && ! $_definedLoggerInterface)
+             ||
+             ($definedLoggerInterface && $_definedLoggerInterface && ($loggerInterface == $args_ref->[0]))
+            )
+    }
+}
 
 #
 # Internal routine used at bootstrap that says is nvtype is a double
@@ -123,28 +143,6 @@ C<$loggerInterface> is an optional parameter that, when its exists, must be an o
 
 An example of logging implementation can be a L<Log::Any> adapter.
 
-=cut
-
-sub _eq {
-    my ($args_ref, $loggerInterface) = @_;
-
-    my $definedLoggerInterface = defined($loggerInterface); # It is legal to create an eslif with no logger interface
-    my $_definedLoggerInterface = defined($args_ref->[0]);
-    return
-	(
-	 (! $definedLoggerInterface && ! $_definedLoggerInterface)
-	 ||
-	 ($definedLoggerInterface && $_definedLoggerInterface && ($loggerInterface == $args_ref->[0]))
-        )
-}
-
-sub new {
-    my ($class) = shift;
-
-    return MarpaX::ESLIF::Registry::new($class, $CLONABLE, \&_eq, \&MarpaX::ESLIF::allocate, \&MarpaX::ESLIF::dispose, @_)
-}
-
-
 =head2 MarpaX::ESLIF->getInstance($loggerInterface)
 
 Alias to C<new>.
@@ -210,9 +208,5 @@ ESLIF consider scalars that have only the internal PV flag.
 L<MarpaX::ESLIF::Introduction>, L<PCRE2|http://www.pcre.org/>, L<MarpaX::ESLIF::BNF>, L<MarpaX::ESLIF::Logger::Interface>, L<MarpaX::ESLIF::Grammar>, L<MarpaX::ESLIF::Recognizer>, L<Types::Standard>, L<JSON::MaybeXS>.
 
 =cut
-
-sub DESTROY {
-    goto &MarpaX::ESLIF::Registry::DESTROY
-}
 
 1;

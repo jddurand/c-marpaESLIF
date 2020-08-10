@@ -2,10 +2,25 @@ use strict;
 use warnings FATAL => 'all';
 
 package MarpaX::ESLIF::JSON::Encoder;
-use MarpaX::ESLIF::Registry;
 use parent qw/MarpaX::ESLIF::Grammar/;
 
-my $CLONABLE = 1;
+#
+# Base required class methods
+#
+sub _ALLOCATE { return \&MarpaX::ESLIF::JSON::Encoder::allocate }
+sub _EQ {
+    return sub {
+        my ($class, $args_ref, $eslif, $strict) = @_;
+
+        my $definedStrict = defined($strict);
+        my $_definedStrict = defined($args_ref->[1]);
+    
+        return
+            ($eslif == $args_ref->[0])
+            &&
+            ($definedStrict && $_definedStrict && ($strict == $args_ref->[1]))
+    }
+}
 
 # ABSTRACT: ESLIF's JSON encoder interface
 
@@ -65,41 +80,16 @@ A true value means strict JSON, else relax JSON. Default is a true value.
 
 =back
 
-=cut
-
-#
-# Tiny wrapper on MarpaX::ESLIF::JSON::Encoder->new, that is using the instance as void *.
-# Could have been writen in the XS itself, but I feel it is more comprehensible like
-# this.
-#
-sub new {
-    my ($class, $eslif, $strict) = @_;
-    
-    return MarpaX::ESLIF::Registry::new($class, $CLONABLE, undef, \&MarpaX::ESLIF::JSON::Encoder::allocate, \&MarpaX::ESLIF::Grammar::dispose, $eslif, $strict // 1)
-}
-
 =head2 $eslifJSONEncoder->encode($value)
 
    my $string = $eslifJSONEncoder->encode($value);
 
 Returns a string containing encoded JSON data.
 
-=cut
-
-sub encode {
-    my ($self, $value) = @_;
-
-    return MarpaX::ESLIF::JSON::Encoder::_encode($self, $value)
-}
-
 =head1 NOTES
 
 Formally, the JSON implementation is only a grammar coded directly in the ESLIF library, therefore this module inherits from L<MarpaX::ESLIF::Grammar>.
 
 =cut
-
-sub DESTROY {
-    goto &MarpaX::ESLIF::Registry::DESTROY
-}
 
 1;

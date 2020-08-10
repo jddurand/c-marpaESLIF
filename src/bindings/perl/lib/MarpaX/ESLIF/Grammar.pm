@@ -2,15 +2,33 @@ use strict;
 use warnings FATAL => 'all';
 
 package MarpaX::ESLIF::Grammar;
-use MarpaX::ESLIF::Registry;     # Maintains thread-safe single ESLIF registry
-
-my $CLONABLE = 1;
+use parent qw/MarpaX::ESLIF::Base/;
 
 # ABSTRACT: MarpaX::ESLIF's grammar
 
 # AUTHORITY
 
 # VERSION
+
+#
+# Base required class methods
+#
+sub _CLONABLE { return sub { 1 } }
+sub _ALLOCATE { return \&MarpaX::ESLIF::Grammar::allocate }
+sub _DISPOSE  { return \&MarpaX::ESLIF::Grammar::dispose }
+sub _EQ {
+    return sub {
+        my ($class, $args_ref, $eslif, $data) = @_;
+
+        my $definedData = defined($data);
+        my $_definedData = defined($args_ref->[1]);
+    
+        return
+            ($eslif == $args_ref->[0])
+            &&
+            ($definedData && $_definedData && ($data eq $args_ref->[1]))
+    }
+}
 
 =head1 DESCRIPTION
 
@@ -88,26 +106,6 @@ A scalar containing the grammar encoding. Optional.
 Encoding will always be guessed if not given.
 
 =back
-
-=cut
-
-sub _eq {
-    my ($args_ref, $eslif, $data) = @_;
-
-    my $definedData = defined($data);
-    my $_definedData = defined($args_ref->[1]);
-    
-    return
-	($eslif == $args_ref->[0])
-        &&
-        ($definedData && $_definedData && ($data eq $args_ref->[1]))
-}
-
-sub new {
-    my $class = shift;
-    
-    return MarpaX::ESLIF::Registry::new($class, $CLONABLE, \&_eq, \&MarpaX::ESLIF::Grammar::allocate, \&MarpaX::ESLIF::Grammar::dispose, @_)
-}
 
 =head2 $eslifGrammar->ngrammar()
 
@@ -262,9 +260,5 @@ Please refer to L<MarpaX::ESLIF::Recognizer::Interface> and L<MarpaX::ESLIF::Val
 L<MarpaX::ESLIF>, L<MarpaX::ESLIF::Recognizer::Interface>, L<MarpaX::ESLIF::Value::Interface>, L<MarpaX::ESLIF::Grammar::Properties>, L<MarpaX::ESLIF::Grammar::Rule::Properties>, L<MarpaX::ESLIF::Grammar::Symbol::Properties>
 
 =cut
-
-sub DESTROY {
-    goto &MarpaX::ESLIF::Registry::DESTROY
-}
 
 1;

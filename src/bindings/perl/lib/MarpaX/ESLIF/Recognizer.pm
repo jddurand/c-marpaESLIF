@@ -2,9 +2,15 @@ use strict;
 use warnings FATAL => 'all';
 
 package MarpaX::ESLIF::Recognizer;
-use MarpaX::ESLIF::Registry;     # Maintains thread-safe single ESLIF registry
+use parent qw/MarpaX::ESLIF::Base/;
 
-my $CLONABLE = 0;
+#
+# Base required class methods
+#
+sub _CLONABLE { return sub { 0 } }
+sub _ALLOCATE { return \&MarpaX::ESLIF::Recognizer::allocate }
+sub _DISPOSE  { return \&MarpaX::ESLIF::Recognizer::dispose }
+sub _EQ       { return }
 
 # ABSTRACT: MarpaX::ESLIF's recognizer
 
@@ -42,14 +48,6 @@ An object implementing L<MarpaX::ESLIF::Recognizer::Interface> methods. Required
 
 =back
 
-=cut
-
-sub new {
-    my $class = shift;
-    
-    return MarpaX::ESLIF::Registry::new($class, $CLONABLE, undef, \&MarpaX::ESLIF::Recognizer::allocate, \&MarpaX::ESLIF::Recognizer::dispose, @_)
-}
-
 =head2 $eslifRecognizer->newFrom($eslifGrammar)
 
   my $eslifRecognizerNewFom = $eslifRecognizer->newFrom($eslifGrammar);
@@ -59,14 +57,21 @@ Returns a recognizer instance that is sharing the stream of C<$eslifRecognizer>,
 =cut
 
 sub _allocate_newFrom {
-    my ($class, $eslifRecognizer, $eslifGrammar) = @_;
+    my ($self, $eslifGrammar) = @_;  
 
-    return $eslifRecognizer->allocate_newFrom($eslifGrammar)
-    
+    return $self->allocate_newFrom($eslifGrammar)
 }
 
 sub newFrom {
-    return MarpaX::ESLIF::Registry::new(ref($_[0]), $CLONABLE, undef, \&_allocate_newFrom, \&MarpaX::ESLIF::Recognizer::dispose, @_)
+    my $self = shift;
+    {
+        no warnings 'redefine';
+        local *_ALLOCATE = sub { return \&_allocate_newFrom };
+        #
+        # Take care, this is method that returns a new instance
+        #
+        return $self->new(@_)
+    }
 }
 
 =head2 $eslifRecognizer->set_exhausted_flag($flag)
@@ -297,8 +302,8 @@ L<MarpaX::ESLIF::Recognizer> cannot be reused across threads.
 
 =cut
 
-sub DESTROY {
-    goto &MarpaX::ESLIF::Registry::DESTROY
+sub CLONE_SKIP {
+    return 1
 }
 
 1;

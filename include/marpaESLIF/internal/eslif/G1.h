@@ -1026,7 +1026,7 @@ bootstrap_grammar_terminal_t bootstrap_grammar_G1_terminals[] = {
   { G1_TERMINAL_REGEX_ACTION, MARPAESLIF_TERMINAL_TYPE_STRING, NULL,
     "'regex-action'",
 #ifndef MARPAESLIF_NTRACE
-    "regex-action", "i"
+    "regex-action", "regex"
 #else
     NULL, NULL
 #endif

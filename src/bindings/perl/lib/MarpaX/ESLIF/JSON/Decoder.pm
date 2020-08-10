@@ -2,11 +2,26 @@ use strict;
 use warnings FATAL => 'all';
 
 package MarpaX::ESLIF::JSON::Decoder;
-use MarpaX::ESLIF::Registry;
-use MarpaX::ESLIF::JSON::Decoder::RecognizerInterface;
 use parent qw/MarpaX::ESLIF::Grammar/;
+use MarpaX::ESLIF::JSON::Decoder::RecognizerInterface;
 
-my $CLONABLE = 1;
+#
+# Base required class methods
+#
+sub _ALLOCATE { return \&MarpaX::ESLIF::JSON::Decoder::allocate }
+sub _EQ {
+    return sub {
+        my ($class, $args_ref, $eslif, $strict) = @_;
+
+        my $definedStrict = defined($strict);
+        my $_definedStrict = defined($args_ref->[1]);
+    
+        return
+            ($eslif == $args_ref->[0])
+            &&
+            ($definedStrict && $_definedStrict && ($strict == $args_ref->[1]))
+    }
+}
 
 # ABSTRACT: ESLIF's JSON decoder interface
 
@@ -72,19 +87,6 @@ A true value means strict JSON, else relax JSON. Default is a true value.
 
 =back
 
-=cut
-
-#
-# Tiny wrapper on MarpaX::ESLIF::JSON::Decoder->new, that is using the instance as void *.
-# Could have been writen in the XS itself, but I feel it is more comprehensible like
-# this.
-#
-sub new {
-    my ($class, $eslif, $strict) = @_;
-    
-    return MarpaX::ESLIF::Registry::new($class, $CLONABLE, undef, \&MarpaX::ESLIF::JSON::Decoder::allocate, \&MarpaX::ESLIF::Grammar::dispose, $eslif, $strict // 1)
-}
-
 =head2 $eslifJSONDecoder->decode($string, %options)
 
    my $value = $eslifJSONDecoder->decode($string);
@@ -135,7 +137,7 @@ sub decode {
     my ($self, $string, %options) = @_;
 
     my $recognizerInterface = MarpaX::ESLIF::JSON::Decoder::RecognizerInterface->new($string, $options{encoding});
-    return MarpaX::ESLIF::JSON::Decoder::_decode($self, $recognizerInterface, $options{disallowDupkeys}, $options{maxDepth}, $options{noReplacementCharacter})
+    return $self->_decode($recognizerInterface, $options{disallowDupkeys}, $options{maxDepth}, $options{noReplacementCharacter})
 }
 
 =head1 NOTES
@@ -143,9 +145,5 @@ sub decode {
 Formally, the JSON implementation is only a grammar coded directly in the ESLIF library, therefore this module inherits from L<MarpaX::ESLIF::Grammar>.
 
 =cut
-
-sub DESTROY {
-    goto &MarpaX::ESLIF::Registry::DESTROY
-}
 
 1;
