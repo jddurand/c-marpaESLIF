@@ -688,6 +688,7 @@ static short marpaESLIFLua_lua_isinteger(int *rcip, lua_State *L, int idx);
     MARPAESLIFLUA_STORE_FUNCTION(L, "marpaESLIFGrammar_new",      marpaESLIFLua_marpaESLIFGrammar_newi); \
     MARPAESLIFLUA_STORE_FUNCTION(L, "marpaESLIFJSONEncoder_new",  marpaESLIFLua_marpaESLIFJSONEncoder_newi); \
     MARPAESLIFLUA_STORE_FUNCTION(L, "marpaESLIFJSONDecoder_new",  marpaESLIFLua_marpaESLIFJSONDecoder_newi); \
+    MARPAESLIFLUA_STORE_FUNCTION(L, "marpaESLIFSymbol_new",       marpaESLIFLua_marpaESLIFSymbol_newi); \
     if (! marpaESLIFLua_lua_setfield(L, -2, "__index")) goto err;       \
     if (! marpaESLIFLua_lua_setmetatable(L, -2)) goto err;              \
   } while (0)
@@ -6179,12 +6180,9 @@ static int marpaESLIFLua_marpaESLIFRecognizer_symbolTryi(lua_State *L)
     marpaESLIFLua_luaL_error(L, "marpaESLIFSymbolp must be a table");
     goto err;
   }
-  if (! marpaESLIFLua_lua_getfield(NULL,L, 1, "marpaESLIFLuaSymbolContextp")) goto err;
+  if (! marpaESLIFLua_lua_getfield(NULL,L, 2, "marpaESLIFLuaSymbolContextp")) goto err;
   if (! marpaESLIFLua_lua_touserdata((void **) &marpaESLIFLuaSymbolContextp, L, -1)) goto err;
   if (! marpaESLIFLua_lua_pop(L, 1)) goto err;
-
-  /* Clear the stack */
-  if (! marpaESLIFLua_lua_settop(L, 0)) goto err;
 
   if (! marpaESLIFRecognizer_symbol_tryb(marpaESLIFLuaRecognizerContextp->marpaESLIFRecognizerp, marpaESLIFLuaSymbolContextp->marpaESLIFSymbolp, &matchb, &bytep, &bytel)) {
     marpaESLIFLua_luaL_errorf(L, "marpaESLIFRecognizer_symbol_tryb failure, %s", strerror(errno));
@@ -6192,9 +6190,9 @@ static int marpaESLIFLua_marpaESLIFRecognizer_symbolTryi(lua_State *L)
   }
 
   if (matchb) {
-    if (! marpaESLIFLua_lua_pushnil(L)) goto err;
-  } else {
     if (! marpaESLIFLua_lua_pushlstring(NULL, L, (const char *) bytep, bytel)) goto err;
+  } else {
+    if (! marpaESLIFLua_lua_pushnil(L)) goto err;
   }
 
   return 1;
@@ -8956,7 +8954,7 @@ static int marpaESLIFLua_marpaESLIFSymbol_newi(lua_State *L)
   marpaESLIFString.encodingasciis = encodings;
   marpaESLIFString.asciis         = NULL;
 
-  marpaESLIFLuaSymbolContextp->marpaESLIFSymbolp = strcmp(types, "regex") == 0 ? marpaESLIFSymbol_string_newp(marpaESLIFp, &marpaESLIFString, modifiers) : marpaESLIFSymbol_regex_newp(marpaESLIFp, &marpaESLIFString, modifiers);
+  marpaESLIFLuaSymbolContextp->marpaESLIFSymbolp = strcmp(types, "regex") == 0 ? marpaESLIFSymbol_regex_newp(marpaESLIFp, &marpaESLIFString, modifiers) : marpaESLIFSymbol_string_newp(marpaESLIFp, &marpaESLIFString, modifiers);
   if (marpaESLIFLuaSymbolContextp->marpaESLIFSymbolp == NULL) {
     int save_errno = errno;
     marpaESLIFLua_symbolContextFreev(marpaESLIFLuaSymbolContextp, 0 /* onStackb */);

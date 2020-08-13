@@ -639,12 +639,30 @@ changeEventState = function(context, eslifRecognizer, eventType, symbol, eventTy
    eslifRecognizer:eventOnOff(symbol, eventTypes, state)
 end
 
+local symbolRegexPattern = '[\\d]+'
+local symbolRegex  = marpaESLIFp:marpaESLIFSymbol_new('regex', symbolRegexPattern);
+
+local symbolStringPattern = '"("'
+local symbolString = marpaESLIFp:marpaESLIFSymbol_new('string', symbolStringPattern);
+
 i = 0
 for _, localstring in pairs(strings) do
    local context = "main loop"
    logger:noticef('Testing scan/resume on %s', localstring)
-   local eslifRecognizer = marpaESLIFGrammarp:marpaESLIFRecognizer_new(recognizerInterface)
    recognizerInterface:init(localstring)
+   local eslifRecognizer = marpaESLIFGrammarp:marpaESLIFRecognizer_new(recognizerInterface)
+   local matchRegex = eslifRecognizer:symbolTry(symbolRegex)
+   if (matchRegex == nil) then
+      logger:infof("%s: no match", symbolRegexPattern)
+   else
+      logger:infof("%s: match: %s", symbolRegexPattern, matchRegex)
+   end
+   local matchString = eslifRecognizer:symbolTry(symbolString)
+   if (matchString == nil) then
+      logger:infof("%s: no match", symbolStringPattern)
+   else
+      logger:infof("%s: match: %s", symbolStringPattern, matchString)
+   end
    if (doScan(eslifRecognizer, true)) then
       showLocation("After doScan", eslifRecognizer)
       if (not eslifRecognizer:isEof()) then
