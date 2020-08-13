@@ -69,6 +69,8 @@ public class ESLIFRecognizer {
 	private native long              jniLine() throws ESLIFException;
 	private native long              jniColumn() throws ESLIFException;
 	private native void              jniShare(ESLIFRecognizer eslifRecognizerShared) throws ESLIFException;
+	private native void              jniUnshare() throws ESLIFException;
+	private native byte[]            jniSymbolTry(ESLIFSymbol eslifSymbol) throws ESLIFException;
 
 	/**
 	 * 
@@ -99,6 +101,17 @@ public class ESLIFRecognizer {
 	public void share(ESLIFRecognizer eslifRecognizerShared) throws ESLIFException {
 		jniShare(eslifRecognizerShared);
 		setEslifRecognizerShared(eslifRecognizerShared);
+	}
+
+	/**
+	 * 
+	 * @throws ESLIFException if the interface failed
+	 * 
+	 * Stops sharing the stream. Equivalent to a call to share with a null shared recognizer.
+	 */
+	public void unshare() throws ESLIFException {
+		jniUnshare();
+		setEslifRecognizerShared(null);
 	}
 
 	/**
@@ -456,6 +469,21 @@ public class ESLIFRecognizer {
 	 */
 	public synchronized long column() throws ESLIFException {
 		return jniColumn();
+	}
+
+	/**
+	 * Try to match a symbol. 
+	 * 
+	 * @param the symbol
+	 * @throws ESLIFException if the interface failed
+	 * 
+	 * @return null if no match, else the matched bytes
+	 */
+	public synchronized byte[] symbolTry(ESLIFSymbol eslifSymbol) throws ESLIFException {
+		if (eslifSymbol == null) {
+			throw new IllegalArgumentException("eslifSymbol must not be null");
+		}
+		return jniSymbolTry(eslifSymbol);
 	}
 
 	/*

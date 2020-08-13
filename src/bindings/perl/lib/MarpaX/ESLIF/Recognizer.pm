@@ -86,6 +86,14 @@ Changes the isWithExhaustion() flag associated with the C<$eslifRecognizer> reco
 
 Shares the stream of C<$eslifRecognizerShared> recognizer instance with the C<$eslifRecognizer> instance.
 
+=head2 $eslifRecognizer->unshare()
+
+  $eslifRecognizer->unshare();
+
+Unshares the stream of C<$eslifRecognizer> instance. This is equivalent to:
+
+  $eslifRecognizer->share(undef);
+
 =head2 $eslifRecognizer->isCanContinue()
 
 Returns a true value if recognizing can continue.

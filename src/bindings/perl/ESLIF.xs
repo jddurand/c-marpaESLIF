@@ -4492,9 +4492,33 @@ PREINIT:
   static const char *funcs = "MarpaX::ESLIF::Recognizer::share";
 CODE:
   MarpaX_ESLIF_Recognizer_t *MarpaX_ESLIF_Recognizerp       = marpaESLIFPerl_engine(aTHX_ p1);
-  MarpaX_ESLIF_Recognizer_t *MarpaX_ESLIF_RecognizerSharedp = marpaESLIFPerl_engine(aTHX_ p2);
 
-  if (! marpaESLIFRecognizer_shareb(MarpaX_ESLIF_Recognizerp->marpaESLIFRecognizerp, MarpaX_ESLIF_RecognizerSharedp->marpaESLIFRecognizerp)) {
+  if (SvTRUE(p2)) {
+    MarpaX_ESLIF_Recognizer_t *MarpaX_ESLIF_RecognizerSharedp = marpaESLIFPerl_engine(aTHX_ p2);
+    if (! marpaESLIFRecognizer_shareb(MarpaX_ESLIF_Recognizerp->marpaESLIFRecognizerp, MarpaX_ESLIF_RecognizerSharedp->marpaESLIFRecognizerp)) {
+      MARPAESLIFPERL_CROAKF("marpaESLIFRecognizer_shareb failure, %s", strerror(errno));
+    }
+  } else {
+    if (! marpaESLIFRecognizer_shareb(MarpaX_ESLIF_Recognizerp->marpaESLIFRecognizerp, NULL)) {
+      MARPAESLIFPERL_CROAKF("marpaESLIFRecognizer_shareb failure, %s", strerror(errno));
+    }
+  }
+
+=for comment
+  /* ----------------------------------------------------------------------- */
+  /* MarpaX::ESLIF::Recognizer::unshare                                      */
+  /* ----------------------------------------------------------------------- */
+=cut
+
+void
+unshare(p)
+  SV *p;
+PREINIT:
+  static const char *funcs = "MarpaX::ESLIF::Recognizer::unshare";
+CODE:
+  MarpaX_ESLIF_Recognizer_t *MarpaX_ESLIF_Recognizerp = marpaESLIFPerl_engine(aTHX_ p);
+
+  if (! marpaESLIFRecognizer_shareb(MarpaX_ESLIF_Recognizerp->marpaESLIFRecognizerp, NULL)) {
     MARPAESLIFPERL_CROAKF("marpaESLIFRecognizer_shareb failure, %s", strerror(errno));
   }
 

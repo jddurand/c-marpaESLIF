@@ -227,6 +227,7 @@ static int                                marpaESLIFLua_marpaESLIFRecognizer_fre
 static int                                marpaESLIFLua_marpaESLIFRecognizer_newFromi(lua_State *L);
 static int                                marpaESLIFLua_marpaESLIFRecognizer_set_exhausted_flagi(lua_State *L);
 static int                                marpaESLIFLua_marpaESLIFRecognizer_sharei(lua_State *L);
+static int                                marpaESLIFLua_marpaESLIFRecognizer_unsharei(lua_State *L);
 static int                                marpaESLIFLua_marpaESLIFRecognizer_isCanContinuei(lua_State *L);
 static int                                marpaESLIFLua_marpaESLIFRecognizer_isExhaustedi(lua_State *L);
 static int                                marpaESLIFLua_marpaESLIFRecognizer_scani(lua_State *L);
@@ -780,6 +781,7 @@ static short marpaESLIFLua_lua_isinteger(int *rcip, lua_State *L, int idx);
   MARPAESLIFLUA_STORE_FUNCTION(L, "newFrom",                         marpaESLIFLua_marpaESLIFRecognizer_newFromi); \
   MARPAESLIFLUA_STORE_FUNCTION(L, "set_exhausted_flag",              marpaESLIFLua_marpaESLIFRecognizer_set_exhausted_flagi); \
   MARPAESLIFLUA_STORE_FUNCTION(L, "share",                           marpaESLIFLua_marpaESLIFRecognizer_sharei); \
+  MARPAESLIFLUA_STORE_FUNCTION(L, "unshare",                         marpaESLIFLua_marpaESLIFRecognizer_unsharei); \
   MARPAESLIFLUA_STORE_FUNCTION(L, "isCanContinue",                   marpaESLIFLua_marpaESLIFRecognizer_isCanContinuei); \
   MARPAESLIFLUA_STORE_FUNCTION(L, "isExhausted",                     marpaESLIFLua_marpaESLIFRecognizer_isExhaustedi); \
   MARPAESLIFLUA_STORE_FUNCTION(L, "scan",                            marpaESLIFLua_marpaESLIFRecognizer_scani); \
@@ -4549,6 +4551,7 @@ static int marpaESLIFLua_marpaESLIFRecognizer_sharei(lua_State *L)
   static const char                *funcs = "marpaESLIFLua_marpaESLIFRecognizer_sharei";
   marpaESLIFLuaRecognizerContext_t *marpaESLIFLuaRecognizerContextp;
   marpaESLIFLuaRecognizerContext_t *marpaESLIFLuaRecognizerContextSharedp;
+  marpaESLIFRecognizer_t           *marpaESLIFRecognizerSharedp;
   int                               typei;
   int                               topi;
  
@@ -4564,18 +4567,72 @@ static int marpaESLIFLua_marpaESLIFRecognizer_sharei(lua_State *L)
     goto err;
   }
 
+  if (! marpaESLIFLua_lua_getfield(NULL,L, 1, "marpaESLIFLuaRecognizerContextp")) goto err;   /* Stack: marpaESLIFRecognizerTable, marpaESLIFRecognizerSharedTable, marpaESLIFLuaRecognizerContextFromp */
+  if (! marpaESLIFLua_lua_touserdata((void **) &marpaESLIFLuaRecognizerContextp, L, -1)) goto err;
+  if (! marpaESLIFLua_lua_pop(L, 1)) goto err;
+
   if (! marpaESLIFLua_lua_type(&typei, L, 2)) goto err;
+  if (typei == LUA_TNIL) {
+    marpaESLIFRecognizerSharedp = NULL;
+  } else if (typei == LUA_TTABLE) {
+    if (! marpaESLIFLua_lua_getfield(NULL,L, 2, "marpaESLIFLuaRecognizerContextp")) goto err;         /* Stack: marpaESLIFRecognizerTable, marpaESLIFRecognizerSharedTable, marpaESLIFLuaRecognizerContextFromp */
+    if (! marpaESLIFLua_lua_touserdata((void **) &marpaESLIFLuaRecognizerContextSharedp, L, -1)) goto err;
+    if (! marpaESLIFLua_lua_pop(L, 1)) goto err;
+
+    marpaESLIFRecognizerSharedp = marpaESLIFLuaRecognizerContextSharedp->marpaESLIFRecognizerp;
+  } else {
+    marpaESLIFLua_luaL_error(L, "marpaESLIFRecognizerSharedp must be a table or nil");
+    goto err;
+  }
+
+  /*
+   * The eventual previous reference on another shared recognizer has its refcount decreased.
+   */
+  if (marpaESLIFLuaRecognizerContextp->recognizer_orig_r != LUA_NOREF) {
+    MARPAESLIFLUA_UNREF(L, marpaESLIFLuaRecognizerContextp->recognizer_orig_r);
+  }
+
+  if (! marpaESLIFLua_lua_pushnil(L)) goto err;                             /* Stack: marpaESLIFRecognizerTable, marpaESLIFRecognizerSharedTable, nil */
+  if (! marpaESLIFLua_lua_copy(L, 2, -1)) goto err;                         /* Stack: marpaESLIFRecognizerTable, marpaESLIFRecognizerSharedTable, marpaESLIFRecognizerSharedTable */
+  MARPAESLIFLUA_REF(L, marpaESLIFLuaRecognizerContextp->recognizer_orig_r); /* Stack: marpaESLIFRecognizerTable, marpaESLIFRecognizerSharedTable */
+
+  if (! marpaESLIFRecognizer_shareb(marpaESLIFLuaRecognizerContextp->marpaESLIFRecognizerp, marpaESLIFRecognizerSharedp)) {
+    marpaESLIFLua_luaL_errorf(L, "marpaESLIFRecognizer_shareb failure, %s", strerror(errno));
+    goto err;
+  }
+
+  /* Clear the stack */
+  if (! marpaESLIFLua_lua_settop(L, 0)) goto err;
+
+  return 0;
+
+ err:
+  return 0;
+}
+
+/*****************************************************************************/
+static int marpaESLIFLua_marpaESLIFRecognizer_unsharei(lua_State *L)
+/*****************************************************************************/
+{
+  static const char                *funcs = "marpaESLIFLua_marpaESLIFRecognizer_unsharei";
+  marpaESLIFLuaRecognizerContext_t *marpaESLIFLuaRecognizerContextp;
+  int                               typei;
+  int                               topi;
+ 
+  if (! marpaESLIFLua_lua_gettop(&topi, L)) goto err;
+  if (topi != 1) {
+    marpaESLIFLua_luaL_error(L, "Usage: marpaESLIFRecognizer_unsharei(marpaESLIFRecognizerp)");
+    goto err;
+  }
+  
+  if (! marpaESLIFLua_lua_type(&typei, L, 1)) goto err;
   if (typei != LUA_TTABLE) {
-    marpaESLIFLua_luaL_error(L, "marpaESLIFRecognizerSharedp must be a table");
+    marpaESLIFLua_luaL_error(L, "marpaESLIFRecognizerp must be a table");
     goto err;
   }
 
   if (! marpaESLIFLua_lua_getfield(NULL,L, 1, "marpaESLIFLuaRecognizerContextp")) goto err;   /* Stack: marpaESLIFRecognizerTable, marpaESLIFRecognizerSharedTable, marpaESLIFLuaRecognizerContextFromp */
   if (! marpaESLIFLua_lua_touserdata((void **) &marpaESLIFLuaRecognizerContextp, L, -1)) goto err;
-  if (! marpaESLIFLua_lua_pop(L, 1)) goto err;
-
-  if (! marpaESLIFLua_lua_getfield(NULL,L, 2, "marpaESLIFLuaRecognizerContextp")) goto err;         /* Stack: marpaESLIFRecognizerTable, marpaESLIFRecognizerSharedTable, marpaESLIFLuaRecognizerContextFromp */
-  if (! marpaESLIFLua_lua_touserdata((void **) &marpaESLIFLuaRecognizerContextSharedp, L, -1)) goto err;
   if (! marpaESLIFLua_lua_pop(L, 1)) goto err;
 
   /*
@@ -4585,11 +4642,7 @@ static int marpaESLIFLua_marpaESLIFRecognizer_sharei(lua_State *L)
     MARPAESLIFLUA_UNREF(L, marpaESLIFLuaRecognizerContextp->recognizer_orig_r);
   }
 
-  if (! marpaESLIFLua_lua_pushnil(L)) goto err;                                              /* Stack: marpaESLIFRecognizerTable, marpaESLIFRecognizerSharedTable, nil */
-  if (! marpaESLIFLua_lua_copy(L, 2, -1)) goto err;                                          /* Stack: marpaESLIFRecognizerTable, marpaESLIFRecognizerSharedTable, marpaESLIFRecognizerSharedTable */
-  MARPAESLIFLUA_REF(L, marpaESLIFLuaRecognizerContextp->recognizer_orig_r); /* Stack: marpaESLIFRecognizerTable, marpaESLIFRecognizerSharedTable */
-
-  if (! marpaESLIFRecognizer_shareb(marpaESLIFLuaRecognizerContextp->marpaESLIFRecognizerp, marpaESLIFLuaRecognizerContextSharedp->marpaESLIFRecognizerp)) {
+  if (! marpaESLIFRecognizer_shareb(marpaESLIFLuaRecognizerContextp->marpaESLIFRecognizerp, NULL)) {
     marpaESLIFLua_luaL_errorf(L, "marpaESLIFRecognizer_shareb failure, %s", strerror(errno));
     goto err;
   }
