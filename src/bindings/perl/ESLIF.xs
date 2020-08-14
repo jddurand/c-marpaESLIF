@@ -1977,7 +1977,7 @@ static short marpaESLIFPerl_importb(pTHX_ marpaESLIFPerl_importContext_t *import
       if ((marpaESLIFPerl_stringGeneratorContext.s == NULL) || (marpaESLIFPerl_stringGeneratorContext.l <= 1)) {
         /* This should never happen */
         GENERICLOGGER_FREE(genericLoggerp);
-        MARPAESLIFPERL_CROAKF("Internal error when doing string representation of long %ld", marpaESLIFValueResultp->u.ld);
+        MARPAESLIFPERL_CROAKF("Internal error when doing string representation of long %ld", marpaESLIFValueResultp->u.l);
       }
       stringp = newSVpvn((const char *) marpaESLIFPerl_stringGeneratorContext.s, (STRLEN) (marpaESLIFPerl_stringGeneratorContext.l - 1));
       free(marpaESLIFPerl_stringGeneratorContext.s);
@@ -2199,7 +2199,7 @@ static short marpaESLIFPerl_importb(pTHX_ marpaESLIFPerl_importContext_t *import
       if ((marpaESLIFPerl_stringGeneratorContext.s == NULL) || (marpaESLIFPerl_stringGeneratorContext.l <= 1)) {
         /* This should never happen */
         GENERICLOGGER_FREE(genericLoggerp);
-        MARPAESLIFPERL_CROAKF("Internal error when doing string representation of long %ld", marpaESLIFValueResultp->u.ld);
+        MARPAESLIFPERL_CROAKF("Internal error when doing string representation of long %lld", marpaESLIFValueResultp->u.ll);
       }
       stringp = newSVpvn((const char *) marpaESLIFPerl_stringGeneratorContext.s, (STRLEN) (marpaESLIFPerl_stringGeneratorContext.l - 1));
       free(marpaESLIFPerl_stringGeneratorContext.s);
@@ -4452,7 +4452,7 @@ CODE:
   if (MarpaX_ESLIF_Recognizerp->marpaESLIFRecognizerp == NULL) {
     int save_errno = errno;
     marpaESLIFPerl_recognizerContextFreev(aTHX_ MarpaX_ESLIF_Recognizerp, 0 /* onStackb */);
-    MARPAESLIFPERL_CROAKF("marpaESLIFRecognizer_newp failure, %s", strerror(errno));
+    MARPAESLIFPERL_CROAKF("marpaESLIFRecognizer_newp failure, %s", strerror(save_errno));
   }
 
   RETVAL = MarpaX_ESLIF_Recognizerp;
@@ -4540,7 +4540,6 @@ CODE:
   short                      matchb;
   char                      *bytep;
   size_t                     bytel;
-  int                        typei;
 
   if (! marpaESLIFRecognizer_symbol_tryb(MarpaX_ESLIF_Recognizerp->marpaESLIFRecognizerp, MarpaX_ESLIF_Symbolp->marpaESLIFSymbolp, &matchb, &bytep, &bytel)) {
     MARPAESLIFPERL_CROAKF("marpaESLIFRecognizer_symbol_tryb failure, %s", strerror(errno));
