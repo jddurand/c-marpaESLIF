@@ -1,7 +1,7 @@
 #ifndef GENERATED_INTTYPES_H
 #  define GENERATED_INTTYPES_H
 
-#  cmakedefine HAVE_SYS_INTTYPES_H @HAVE_SYS_INTTYPES_H@
+#cmakedefine HAVE_SYS_INTTYPES_H @HAVE_SYS_INTTYPES_H@
 
 #  ifdef HAVE_SYS_INTTYPES_H
 #    include <sys/inttypes.h>
@@ -10,19 +10,19 @@
 /* Inspired by https://gasnet.lbl.gov/amudp/dist/portable_inttypes.h */
 
 #    include <stdint.h> /* NO CHECK because this is part of our repair process that makes sure that stdint.h exist */
-#    cmakedefine HAVE_C99MODIFIERS @HAVE_C99MODIFIERS@
+#cmakedefine HAVE_C99MODIFIERS @HAVE_C99MODIFIERS@
 #    ifdef HAVE_C99MODIFIERS
 #      define HAVE_C99_FORMAT_SPECIFIERS 1
 #    else
 #      define HAVE_C99_FORMAT_SPECIFIERS 0
 #    endif
-#    cmakedefine HAVE_SIZEOF_CHAR @HAVE_SIZEOF_CHAR@
-#    cmakedefine HAVE_SIZEOF_SHORT @HAVE_SIZEOF_SHORT@
-#    cmakedefine HAVE_SIZEOF_INT @HAVE_SIZEOF_INT@
-#    cmakedefine HAVE_SIZEOF_LONG_LONG @HAVE_SIZEOF_LONG_LONG@
-#    cmakedefine HAVE_SIZEOF_VOID_STAR @HAVE_SIZEOF_VOID_STAR@
-#    cmakedefine HAVE_SIZEOF_SIZE_T @HAVE_SIZEOF_SIZE_T@
-#    cmakedefine HAVE_SIZEOF_PTRDIFF_T @HAVE_SIZEOF_PTRDIFF_T@
+#cmakedefine HAVE_SIZEOF_CHAR @HAVE_SIZEOF_CHAR@
+#cmakedefine HAVE_SIZEOF_SHORT @HAVE_SIZEOF_SHORT@
+#cmakedefine HAVE_SIZEOF_INT @HAVE_SIZEOF_INT@
+#cmakedefine HAVE_SIZEOF_LONG_LONG @HAVE_SIZEOF_LONG_LONG@
+#cmakedefine HAVE_SIZEOF_VOID_STAR @HAVE_SIZEOF_VOID_STAR@
+#cmakedefine HAVE_SIZEOF_SIZE_T @HAVE_SIZEOF_SIZE_T@
+#cmakedefine HAVE_SIZEOF_PTRDIFF_T @HAVE_SIZEOF_PTRDIFF_T@
 
 #    if HAVE_C99_FORMAT_SPECIFIERS || (!defined(HAVE_C99_FORMAT_SPECIFIERS) && __STDC_VERSION__ >= 199901L)
 /* prefer libc-provided length modifiers added in C99 if we can determine they are available */
