@@ -16,4 +16,4 @@ where:
 
 Example:
 
-3rdparty/tar/patchit 3rdparty/tar/pcre2-10.23.tar.gz 3rdparty/tar/pcre2-10.23-patched.tar.gz 3rdparty/tar/pcre2-10.23.patchdir
+3rdparty/tar/patchit 3rdparty/tar/pcre2-10.33.tar.gz 3rdparty/tar/pcre2-10.33-patched.tar.gz 3rdparty/tar/pcre2-10.33.patchdir

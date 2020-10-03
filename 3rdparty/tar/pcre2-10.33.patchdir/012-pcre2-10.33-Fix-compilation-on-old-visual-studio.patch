@@ -1,0 +1,23 @@
+diff -Naur pcre2-10.33.orig/src/pcre2_jit_compile.c pcre2-10.33/src/pcre2_jit_compile.c
+--- pcre2-10.33.orig/src/pcre2_jit_compile.c	2019-04-16 12:50:49.000000000 +0200
++++ pcre2-10.33/src/pcre2_jit_compile.c	2020-10-03 07:20:07.692948558 +0200
+@@ -3870,9 +3870,6 @@
+ STR_PTR for invalid character sequences. */
+ DEFINE_COMPILER;
+ 
+-SLJIT_UNUSED_ARG(backtracks);
+-SLJIT_UNUSED_ARG(must_be_valid);
+-
+ #if defined SUPPORT_UNICODE && PCRE2_CODE_UNIT_WIDTH != 32
+ struct sljit_jump *jump;
+ #endif
+@@ -3881,6 +3878,9 @@
+ #if PCRE2_CODE_UNIT_WIDTH == 8
+ struct sljit_label *label;
+ 
++SLJIT_UNUSED_ARG(backtracks);
++SLJIT_UNUSED_ARG(must_be_valid);
++
+ if (common->utf)
+   {
+   if (!must_be_valid && common->invalid_utf)
