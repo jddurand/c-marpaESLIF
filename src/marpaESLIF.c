@@ -13508,7 +13508,7 @@ static inline short _marpaESLIFRecognizer_valueStack_i_setb(marpaESLIFRecognizer
     /* ------------------ */
     /* Flatten view of all original pointers - no need to check for recursivity: it is already in the stack so this was already approved */
     MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "Getting non-shallowed original pointers");
-    rcBeforeb = _marpaESLIF_flatten_pointers(marpaESLIFRecognizerp, beforePtrStackp, NULL /* afterPtrHashp */, marpaESLIFValueResultOrigp, 1 /* noShallowb */);
+    rcBeforeb = _marpaESLIF_flatten_pointers(marpaESLIFRecognizerp, beforePtrStackp, NULL /* flattenPtrHashp */, marpaESLIFValueResultOrigp, 1 /* noShallowb */);
     if (! rcBeforeb) {
       goto err;
     }
@@ -13517,7 +13517,7 @@ static inline short _marpaESLIFRecognizer_valueStack_i_setb(marpaESLIFRecognizer
     if (rcBeforeb > 0) {
       /* Flatten view of all replacement pointers */
       MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "Getting all replacement pointers");
-      rcAfterb = _marpaESLIF_flatten_pointers(marpaESLIFRecognizerp, NULL /* afterPtrStackp */, afterPtrHashp, marpaESLIFValueResultp, 0 /* noShallowb */);
+      rcAfterb = _marpaESLIF_flatten_pointers(marpaESLIFRecognizerp, NULL /* flattenPtrStackp */, afterPtrHashp, marpaESLIFValueResultp, 0 /* noShallowb */);
       if (! rcAfterb) {
         goto err;
       }
@@ -13533,7 +13533,7 @@ static inline short _marpaESLIFRecognizer_valueStack_i_setb(marpaESLIFRecognizer
              - marpaESLIFValueResultTmp is in contextp
              - p is in representationp
              - hashindexi is in u.i */
-          MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Got fake marpaESLIFValueResultTmp.{type,contextp <== marpaESLIFValueResultp,representationp <== p, u.i <== hashindexi}={%s,%p,%p,%d}", _marpaESLIF_value_types(marpaESLIFValueResultTmpp->type), marpaESLIFValueResultTmpp->contextp, marpaESLIFValueResultTmpp->representationp, marpaESLIFValueResultTmpp->u.i);
+          MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Got fake marpaESLIFValueResultTmp.{contextp <== marpaESLIFValueResultp,representationp <== p, u.i <== hashindexi}={%p,%p,%d}", marpaESLIFValueResultTmpp->contextp, marpaESLIFValueResultTmpp->representationp, marpaESLIFValueResultTmpp->u.i);
 
           p = marpaESLIFValueResultTmpp->representationp;
           hashindexi = marpaESLIFValueResultTmpp->u.i;
@@ -13597,7 +13597,7 @@ static inline short _marpaESLIFRecognizer_valueStack_i_setb(marpaESLIFRecognizer
              - marpaESLIFValueResultTmp is in contextp
              - p is in representationp
              - hashindexi is in u.i */
-          MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Got fake marpaESLIFValueResultTmp.{type,contextp <== marpaESLIFValueResultp,representationp <== p, u.i <== hashindexi}={%s,%p,%p,%d}", _marpaESLIF_value_types(marpaESLIFValueResultTmpp->type), marpaESLIFValueResultTmpp->contextp, marpaESLIFValueResultTmpp->representationp, marpaESLIFValueResultTmpp->u.i);
+          MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Got fake marpaESLIFValueResultTmp.{contextp <== marpaESLIFValueResultp,representationp <== p, u.i <== hashindexi}={%p,%p,%d}", marpaESLIFValueResultTmpp->contextp, marpaESLIFValueResultTmpp->representationp, marpaESLIFValueResultTmpp->u.i);
 
           marpaESLIFValueResultWorkp = (marpaESLIFValueResult_t *) marpaESLIFValueResultTmpp->contextp;
           /* We can free the original pointer */
@@ -17917,7 +17917,7 @@ static inline short _marpaESLIF_flatten_pointers(marpaESLIFRecognizer_t *marpaES
         marpaESLIFValueResultTmp.contextp = marpaESLIFValueResultTmpp;
         marpaESLIFValueResultTmp.representationp = (marpaESLIFRepresentation_t) p;
         marpaESLIFValueResultTmp.u.i = hashindexi;
-        MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Pushing fake marpaESLIFValueResultTmp.{type,contextp <== marpaESLIFValueResultp,representationp <== p, u.i <== hashindexi}={%s,%p,%p,%d}", "INT", marpaESLIFValueResultTmp.contextp, marpaESLIFValueResultTmp.representationp, marpaESLIFValueResultTmp.u.i);
+        MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Pushing fake marpaESLIFValueResultTmp.{contextp <== marpaESLIFValueResultp,representationp <== p, u.i <== hashindexi}={%p,%p,%d}", marpaESLIFValueResultTmp.contextp, marpaESLIFValueResultTmp.representationp, marpaESLIFValueResultTmp.u.i);
         GENERICSTACK_PUSH_CUSTOM(flattenPtrStackp, marpaESLIFValueResultTmp);
         if (GENERICSTACK_ERROR(flattenPtrStackp)) {
           MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "flattenPtrStackp push failure, %s", strerror(errno));
@@ -18303,8 +18303,9 @@ static void  _marpaESLIFCalloutBlock_disposev(marpaESLIFRecognizer_t *marpaESLIF
 static marpaESLIFSymbol_t *_marpaESLIFSymbol_newp(marpaESLIF_t *marpaESLIFp, marpaESLIF_terminal_type_t terminalType, marpaESLIFString_t *stringp, char *modifiers)
 /*****************************************************************************/
 {
-  marpaESLIF_string_t *utf8p = NULL;
-  marpaESLIFSymbol_t  *symbolp = NULL;
+  marpaESLIF_string_t   *utf8p     = NULL;
+  marpaESLIFSymbol_t    *symbolp   = NULL;
+  marpaESLIF_terminal_t *terminalp = NULL;
 
   if (marpaESLIFp == NULL) {
     errno = EINVAL;
@@ -18321,22 +18322,25 @@ static marpaESLIFSymbol_t *_marpaESLIFSymbol_newp(marpaESLIF_t *marpaESLIFp, mar
     goto err;
   }
 
-  symbolp->u.terminalp = _marpaESLIF_terminal_newp(marpaESLIFp,
-                                                   NULL, /* grammarp */
-                                                   0, /* eventSeti */
-                                                   NULL, /* descEncodings */
-                                                   NULL, /* descs */
-                                                   0, /* descl */
-                                                   terminalType,
-                                                   modifiers,
-                                                   utf8p->bytep,
-                                                   utf8p->bytel,
-                                                   NULL, /* testFullMatchs */
-                                                   NULL /* testPartialMatchs */);
-  if (symbolp->u.terminalp == NULL) {
+  terminalp = _marpaESLIF_terminal_newp(marpaESLIFp,
+					NULL, /* grammarp */
+					0, /* eventSeti */
+					NULL, /* descEncodings */
+					NULL, /* descs */
+					0, /* descl */
+					terminalType,
+					modifiers,
+					utf8p->bytep,
+					utf8p->bytel,
+					NULL, /* testFullMatchs */
+					NULL /* testPartialMatchs */);
+  if (terminalp == NULL) {
     goto err;
   }
-  symbolp->type = MARPAESLIF_SYMBOL_TYPE_TERMINAL;
+  symbolp->type        = MARPAESLIF_SYMBOL_TYPE_TERMINAL;
+  symbolp->u.terminalp = terminalp;
+  symbolp->idi         = terminalp->idi;
+  symbolp->descp       = terminalp->descp;
 
   goto done;
 
