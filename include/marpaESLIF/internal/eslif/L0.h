@@ -64,7 +64,7 @@ typedef enum bootstrap_grammar_L0_enum {
   L0_META_BRACKETED_NAME,
   L0_META_BRACKETED_NAME_STRING,
   L0_META_QUOTED_STRING,
-  L0_META_QUOTED_NAME,
+  L0_META_QUOTED_STRING_LITERAL,
   L0_META_CHARACTER_CLASS,
   L0_META_REGULAR_EXPRESSION,
   L0_META_GRAPH_ASCII_NAME
@@ -93,7 +93,7 @@ bootstrap_grammar_meta_t bootstrap_grammar_L0_metas[] = {
   { L0_META_BRACKETED_NAME,               L0_JOIN_G1_META_BRACKETED_NAME,              0,       0,           0,            0 },
   { L0_META_BRACKETED_NAME_STRING,        "bracketed name string",                     0,       0,           0,            0 },
   { L0_META_QUOTED_STRING,                L0_JOIN_G1_META_QUOTED_STRING,               0,       0,           0,            0 },
-  { L0_META_QUOTED_NAME,                  L0_JOIN_G1_META_QUOTED_NAME,                 0,       0,           0,            0 },
+  { L0_META_QUOTED_STRING_LITERAL,        L0_JOIN_G1_META_QUOTED_STRING_LITERAL,       0,       0,           0,            0 },
   { L0_META_CHARACTER_CLASS,              L0_JOIN_G1_META_CHARACTER_CLASS,             0,       0,           0,            0 },
   { L0_META_REGULAR_EXPRESSION,           L0_JOIN_G1_META_REGULAR_EXPRESSION,          0,       0,           0,            0 },
   { L0_META_GRAPH_ASCII_NAME,             L0_JOIN_G1_META_GRAPH_ASCII_NAME,            0,       0,           0,            0 }
@@ -423,7 +423,7 @@ bootstrap_grammar_rule_t bootstrap_grammar_L0_rules[] = {
   { L0_META_QUOTED_STRING,                    "quoted string 2",                              MARPAESLIF_RULE_TYPE_ALTERNATIVE, 3, { L0_TERMINAL_QUOTED_STRING,
                                                                                                                                      L0_TERMINAL_SEMICOLON,
                                                                                                                                      L0_TERMINAL_STRING_MODIFIERS                 }, -1,                        -1,      -1,             0, NULL },
-  { L0_META_QUOTED_NAME,                      "quoted name",                                  MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { L0_TERMINAL_QUOTED_STRING                    }, -1,                        -1,      -1,             0, NULL },
+  { L0_META_QUOTED_STRING_LITERAL,            "quoted string literal",                        MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { L0_TERMINAL_QUOTED_STRING                    }, -1,                        -1,      -1,             0, NULL },
   { L0_META_CHARACTER_CLASS,                  "character class 1",                            MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { L0_TERMINAL_CHARACTER_CLASS_REGEXP           }, -1,                        -1,      -1,             0, NULL },
   { L0_META_CHARACTER_CLASS,                  "character class 2",                            MARPAESLIF_RULE_TYPE_ALTERNATIVE, 3, { L0_TERMINAL_CHARACTER_CLASS_REGEXP,
                                                                                                                                      L0_TERMINAL_SEMICOLON,

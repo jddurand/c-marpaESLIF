@@ -195,7 +195,7 @@ typedef enum bootstrap_grammar_G1_enum {
   G1_META_FALSE,
   G1_META_TRUE,
   G1_META_STANDARD_NAME,
-  G1_META_QUOTED_NAME,
+  G1_META_QUOTED_STRING_LITERAL,
   G1_META_QUOTED_STRING,
   G1_META_CHARACTER_CLASS,
   G1_META_REGULAR_EXPRESSION,
@@ -303,7 +303,7 @@ bootstrap_grammar_meta_t bootstrap_grammar_G1_metas[] = {
   { G1_META_FALSE,                            L0_JOIN_G1_META_FALSE,                       0,       0,           0,            0 },
   { G1_META_TRUE,                             L0_JOIN_G1_META_TRUE,                        0,       0,           0,            0 },
   { G1_META_STANDARD_NAME,                    L0_JOIN_G1_META_STANDARD_NAME,               0,       0,           0,            0 },
-  { G1_META_QUOTED_NAME,                      L0_JOIN_G1_META_QUOTED_NAME,                 0,       0,           0,            0 },
+  { G1_META_QUOTED_STRING_LITERAL,            L0_JOIN_G1_META_QUOTED_STRING_LITERAL,       0,       0,           0,            0 },
   { G1_META_QUOTED_STRING,                    L0_JOIN_G1_META_QUOTED_STRING,               0,       0,           0,            0 },
   { G1_META_CHARACTER_CLASS,                  L0_JOIN_G1_META_CHARACTER_CLASS,             0,       0,           0,            0 },
   { G1_META_REGULAR_EXPRESSION,               L0_JOIN_G1_META_REGULAR_EXPRESSION,          0,       0,           0,            0 },
@@ -1106,7 +1106,7 @@ bootstrap_grammar_rule_t bootstrap_grammar_G1_rules[] = {
   */
   { G1_META_DESC_RULE,                        G1_RULE_DESC_RULE,                              MARPAESLIF_RULE_TYPE_ALTERNATIVE, 3, { G1_TERMINAL__DESC,
                                                                                                                                      G1_META_OP_DECLARE,
-                                                                                                                                     G1_META_QUOTED_NAME                          }, -1,                        -1,      -1,              0, G1_ACTION_DESC_RULE },
+                                                                                                                                     G1_META_QUOTED_STRING_LITERAL                }, -1,                        -1,      -1,              0, G1_ACTION_DESC_RULE },
   { G1_META_EMPTY_RULE,                       G1_RULE_EMPTY_RULE,                             MARPAESLIF_RULE_TYPE_ALTERNATIVE, 3, { G1_META_LHS,
                                                                                                                                      G1_META_OP_DECLARE,
                                                                                                                                      G1_META_ADVERB_LIST                          }, -1,                        -1,      -1,              0, G1_ACTION_EMPTY_RULE },
@@ -1342,7 +1342,7 @@ bootstrap_grammar_rule_t bootstrap_grammar_G1_rules[] = {
   /*
     lhsi                                      descs                                           type                          nrhsl  { rhsi }                                       }  minimumi           separatori  properb hideseparatorb  actions
   */
-  { G1_META_ALTERNATIVE_NAME,                 G1_RULE_ALTERNATIVE_NAME_2,                     MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_QUOTED_NAME                          }, -1,                        -1,      -1,              0, G1_ACTION_ALTERNATIVE_NAME_2 },
+  { G1_META_ALTERNATIVE_NAME,                 G1_RULE_ALTERNATIVE_NAME_2,                     MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_QUOTED_STRING_LITERAL                }, -1,                        -1,      -1,              0, G1_ACTION_ALTERNATIVE_NAME_2 },
   { G1_META_EVENT_NAME,                       G1_RULE_EVENT_NAME_1,                           MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_RESTRICTED_ASCII_GRAPH_NAME          }, -1,                        -1,      -1,              0, G1_ACTION_EVENT_NAME_1 },
   /*
     lhsi                                      descs                                           type                          nrhsl  { rhsi }                                       }  minimumi           separatori  properb hideseparatorb  actions

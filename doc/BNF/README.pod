@@ -156,7 +156,12 @@ Without any indication, a lexeme is always assumed to be at the grammar of the n
 
   X ::= Y@'Grammar Description'
 
-This is working because a grammar description is unique across all sub-grammars.
+This is working because a grammar description is unique across all sub-grammars. Note that when accessing a grammar by description, the later must have been declared before, using the C<:desc> rule. Therefore a good practice is to forward declare all grammars at the beginning, e.g.:
+
+  :desc    ::= 'Main Grammar'
+  :desc      ~ 'Sub Grammar 1'
+  :desc :[2]:= 'Sub Grammar 2'
+  :desc :[3]:= 'Sub Grammar 3'
 
 =item explicitely by relative level
 
@@ -652,8 +657,8 @@ Events can be specified, with an eventual initializer, given that default initia
 A name can be associated to the rule, in the form:
 
   name => something
-  name => 'quoted name'  # No modifier is allowed after the string
-  name => "quoted name"  # No modifier is allowed after the string
+  name => 'quoted string literal'  # No modifier is allowed after the string
+  name => "quoted string literal"  # No modifier is allowed after the string
 
 =back
 
@@ -706,7 +711,7 @@ marpaESLIF BNF can be expressed in itself:
                                    | <autorank statement>
                                    | <lua script statement>
   <start rule>                   ::= ':start' <op declare> <symbol>
-  <desc rule>                    ::= ':desc' <op declare> <quoted name>
+  <desc rule>                    ::= ':desc' <op declare> <quoted string literal>
   <empty rule>                   ::= <lhs> <op declare> <adverb list>
   <null statement>               ::= ';'
   <statement group>              ::= '{' <statements> '}'
@@ -793,7 +798,7 @@ marpaESLIF BNF can be expressed in itself:
   <default encoding>             ::= 'default-encoding' /=>|\x{21D2}/u <default encoding name>
   <fallback encoding>            ::= 'fallback-encoding' /=>|\x{21D2}/u <fallback encoding name>
   <alternative name>             ::= <standard name>
-                                   | <quoted name>
+                                   | <quoted string literal>
   <event name>                   ::= <restricted ascii graph name>
                                    | ':symbol'
                                    | ':discard[on]'
@@ -893,7 +898,7 @@ marpaESLIF BNF can be expressed in itself:
   <bracketed name string>          ~ /[\s\w]+/
   <quoted string>                  ~ /(?:(?|(?:')(?:[^\\']*(?:\\.[^\\']*)*)(?:')|(?:")(?:[^\\"]*(?:\\.[^\\"]*)*)(?:")|(?:\x{201C})(?:[^\\\x{201D}]*(?:\\.[^\\\x{201D}]*)*)(?:\x{201D})))/su
                                    | /(?:(?|(?:')(?:[^\\']*(?:\\.[^\\']*)*)(?:')|(?:")(?:[^\\"]*(?:\\.[^\\"]*)*)(?:")|(?:\x{201C})(?:[^\\\x{201D}]*(?:\\.[^\\\x{201D}]*)*)(?:\x{201D})))/su ':' /ic?/
-  <quoted name>                    ~ /(?:(?|(?:')(?:[^\\']*(?:\\.[^\\']*)*)(?:')|(?:")(?:[^\\"]*(?:\\.[^\\"]*)*)(?:")|(?:\x{201C})(?:[^\\\x{201D}]*(?:\\.[^\\\x{201D}]*)*)(?:\x{201D})))/su
+  <quoted string literal>          ~ /(?:(?|(?:')(?:[^\\']*(?:\\.[^\\']*)*)(?:')|(?:")(?:[^\\"]*(?:\\.[^\\"]*)*)(?:")|(?:\x{201C})(?:[^\\\x{201D}]*(?:\\.[^\\\x{201D}]*)*)(?:\x{201D})))/su
   <character class>                ~ /((?:\[(?:(?>[^\[\]]+)|(?-1))*\]))/
                                    | /((?:\[(?:(?>[^\[\]]+)|(?-1))*\]))/ ':' /[eijmnsxDJUuaNbcA]+/
   <regular expression>             ~ /(?:(?|(?:\/(?![*\/]))(?:[^\\\/]*(?:\\.[^\\\/]*)*)(?:\/)))/su
