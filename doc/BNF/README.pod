@@ -764,6 +764,7 @@ marpaESLIF BNF can be expressed in itself:
                                    | <regex action>
   <action>                       ::= 'action' /=>|\x{21D2}/u <action name>
                                    | 'action' /=>|\x{21D2}/u <string literal>
+                                   | 'action' /=>|\x{21D2}/u <quoted string literal>
   <left association>             ::= 'assoc' /=>|\x{21D2}/u 'left'
   <right association>            ::= 'assoc' /=>|\x{21D2}/u 'right'
   <group association>            ::= 'assoc' /=>|\x{21D2}/u 'group'
@@ -792,6 +793,7 @@ marpaESLIF BNF can be expressed in itself:
   <null adverb>                  ::= ','
   <symbol action>                ::= 'symbol-action' /=>|\x{21D2}/u <symbol action name>
                                    | 'symbol-action' /=>|\x{21D2}/u <string literal>
+                                   | 'symbol-action' /=>|\x{21D2}/u <quoted string literal>
   <if action>                    ::= 'if-action' /=>|\x{21D2}/u <if action name>
   <regex action>                 ::= 'regex-action' /=>|\x{21D2}/u <regex action name>
   <event action>                 ::= 'event-action' /=>|\x{21D2}/u <event action name>
