@@ -395,7 +395,7 @@ The grammar's C<symbol-action> can be overwritten by setting such entry in C<:le
   :lexeme   ::= symbolname2 symbol-action => Custom_action
   :terminal ::= 'ThisTerminal' symbol-action => ::lua->lua_custom_action
 
-A lexeme or a terminal can have a C<if-action> setting, that applies I<only> when the lexeme or a terminal is discovered via the automatic scan. The C<if-action> must refer to a callback in user-land's recognizer interface or in embedded lua interpreter, and must return a boolean:
+A lexeme or a terminal can have an C<if-action> setting, that applies I<only> when the lexeme or a terminal is discovered via the automatic scan. The C<if-action> must refer to a callback in user-land's recognizer interface or in embedded lua interpreter, and must return a boolean:
 
   :lexeme   ::= symbolname1 if-action => Custom_action1
   :lexeme   ::= symbolname2 if-action => lua::->Custom_action2
