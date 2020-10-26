@@ -125,6 +125,7 @@
 #define G1_RULE_RHS_ALTERNATIVE_7                "G1_rule_rhs_alternative_7"
 #define G1_RULE_RHS_PRIMARY_1                    "G1_rule_rhs_primary_1"
 #define G1_RULE_RHS_PRIMARY_2                    "G1_rule_rhs_primary_2"
+#define G1_RULE_RHS_PRIMARY_3                    "G1_rule_rhs_primary_3"
 #define G1_RULE_SINGLE_SYMBOL_1                  "G1_rule_single_symbol_1"
 #define G1_RULE_SINGLE_SYMBOL_2                  "G1_rule_single_symbol_2"
 #define G1_RULE_TERMINAL_1                       "G1_rule_terminal_1"
@@ -192,6 +193,9 @@
 #define G1_RULE_DEFAULTENCODING_NAME             "G1_rule_defaultencoding_name"
 #define G1_RULE_FALLBACK_ENCODING                "G1_rule_fallback_encoding"
 #define G1_RULE_FALLBACKENCODING_NAME            "G1_rule_fallbackencoding_name"
+#define G1_RULE_PARAMETER_CALL_1                 "G1_rule_parameter_call_1"
+#define G1_RULE_PARAMETER_CALL_2                 "G1_rule_parameter_call_2"
+#define G1_RULE_PARAMETER_DECL                   "G1_rule_parameter_decl"
 
 #define G1_ACTION_STATEMENTS                       "::undef"
 #define G1_ACTION_STATEMENT_01                     "::undef"
@@ -305,7 +309,8 @@
 #define G1_ACTION_EVENT_NAME_3                     "::ascii" /* <event name> ::= ':discard[on]' */
 #define G1_ACTION_EVENT_NAME_4                     "::ascii" /* <event name> ::= ':discard[off]' */
 #define G1_ACTION_EVENT_NAME_5                     "::ascii" /* <event name> ::= ':discard[switch]' */
-#define G1_ACTION_LHS                              "::shift" /* lhs ::= <symbol name> */
+#define G1_ACTION_LHS_1                            "G1_action_lhs_1" /* lhs ::= <symbol name> */
+#define G1_ACTION_LHS_2                            "G1_action_lhs_2" /* lhs ::= <lhs> '<(' <parameters decl> ')>' */
 #define G1_ACTION_RHS                              "G1_action_rhs"                              /* done */
 #define G1_ACTION_RHS_ALTERNATIVE_1                "::shift" /* <rhs alternative> ::= <rhs primary> */
 #define G1_ACTION_RHS_ALTERNATIVE_2                "G1_action_rhs_alternative_2"                /* done */
@@ -316,6 +321,7 @@
 #define G1_ACTION_RHS_ALTERNATIVE_7                "G1_action_rhs_alternative_7"                /* done */
 #define G1_ACTION_RHS_PRIMARY_1                    "G1_action_rhs_primary_1"                    /* done */
 #define G1_ACTION_RHS_PRIMARY_2                    "G1_action_rhs_primary_2"                    /* done */
+#define G1_ACTION_RHS_PRIMARY_3                    "G1_action_rhs_primary_3"                    /* done */
 #define G1_ACTION_SINGLE_SYMBOL_1                  "G1_action_single_symbol_1"                  /* done */
 #define G1_ACTION_SINGLE_SYMBOL_2                  "::shift"                                    /* done */
 #define G1_ACTION_TERMINAL_1                       "G1_action_terminal_1"                       /* done */
@@ -380,6 +386,11 @@
 #define G1_ACTION_DEFAULTENCODING_NAME             "::ascii" /* <default encoding name> ::= <ascii graph name> */
 #define G1_ACTION_FALLBACKENCODING                 "G1_action_fallbackencoding"                   /* done */
 #define G1_ACTION_FALLBACKENCODING_NAME            "::ascii" /* <fallback encoding name> ::= <ascii graph name> */
+#define G1_ACTION_PARAMETERS_CALL                  "G1_action_parameters_call" /* <parameters call> ::= <parameter call>* separator => ',' hide-separator => 1 */
+#define G1_ACTION_PARAMETER_CALL_1                 "::shift" /* <parameter call> ::= <rhs primary> */
+#define G1_ACTION_PARAMETER_CALL_2                 "G1_rule_parameter_call_2"                   /* done */
+#define G1_ACTION_PARAMETERS_DECL                  "G1_action_parameters_decl" /* <parameters decl> ::= <parameter decl>* separator => ',' hide-separator => 1 */
+#define G1_ACTION_PARAMETER_DECL                   "::shift"                     /* done */
 
 typedef struct bootstrap_grammar_terminal {
   int                        idi;                 /* Identifier */

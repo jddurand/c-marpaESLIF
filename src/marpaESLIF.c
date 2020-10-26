@@ -3768,6 +3768,8 @@ static inline marpaESLIF_symbol_t *_marpaESLIF_symbol_newp(marpaESLIF_t *marpaES
   symbolp->exceptionp             = NULL;
   symbolp->symbolActionp          = NULL;
   symbolp->ifActionp              = NULL;
+  symbolp->parametersDeclStack    = NULL;
+  symbolp->parametersCallStack    = NULL;
 
   symbolp->nullableRuleStackp = &(symbolp->_nullableRuleStack);
   GENERICSTACK_INIT(symbolp->nullableRuleStackp);
@@ -3782,6 +3784,22 @@ static inline marpaESLIF_symbol_t *_marpaESLIF_symbol_newp(marpaESLIF_t *marpaES
   if (GENERICSTACK_ERROR(symbolp->lhsRuleStackp)) {
     MARPAESLIF_ERRORF(marpaESLIFp, "symbolp->lhsRuleStackp initialization failure, %s", strerror(errno));
     symbolp->lhsRuleStackp = NULL;
+    goto err;
+  }
+  
+  symbolp->parametersDeclStack = &(symbolp->_parametersDeclStack);
+  GENERICSTACK_INIT(symbolp->parametersDeclStack);
+  if (GENERICSTACK_ERROR(symbolp->parametersDeclStack)) {
+    MARPAESLIF_ERRORF(marpaESLIFp, "symbolp->parametersDeclStack initialization failure, %s", strerror(errno));
+    symbolp->parametersDeclStack = NULL;
+    goto err;
+  }
+  
+  symbolp->parametersCallStack = &(symbolp->_parametersCallStack);
+  GENERICSTACK_INIT(symbolp->parametersCallStack);
+  if (GENERICSTACK_ERROR(symbolp->parametersCallStack)) {
+    MARPAESLIF_ERRORF(marpaESLIFp, "symbolp->parametersCallStack initialization failure, %s", strerror(errno));
+    symbolp->parametersCallStack = NULL;
     goto err;
   }
   
@@ -3832,6 +3850,8 @@ static inline void _marpaESLIF_symbol_freev(marpaESLIF_symbol_t *symbolp)
 
     GENERICSTACK_RESET(symbolp->nullableRuleStackp); /* Take care, this is a pointer to stack internal to symbol structure */
     GENERICSTACK_RESET(symbolp->lhsRuleStackp); /* Take care, this is a pointer to stack internal to symbol structure */
+    GENERICSTACK_RESET(symbolp->parametersDeclStack); /* Take care, this is a pointer to stack internal to symbol structure */
+    GENERICSTACK_RESET(symbolp->parametersCallStack); /* Take care, this is a pointer to stack internal to symbol structure */
 
     free(symbolp);
   }

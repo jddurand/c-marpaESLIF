@@ -167,6 +167,10 @@ struct marpaESLIFSymbol {
   marpaESLIF_symbol_t         *exceptionp;             /* Pointer to an exception itself, the one after the '-' character */
   marpaESLIFAction_t          *symbolActionp;          /* Custom symbol, only for terminals or lexemes */
   marpaESLIFAction_t          *ifActionp;              /* if semantic, only for meta symbols that are lexemes or terminals */
+  genericStack_t               _parametersDeclStack;   /* Stack of parameters declaration when it is an LHS - must be shared between all LHS lines */
+  genericStack_t              *parametersDeclStack;    /* Pointer to stack of parameters when it is an LHS - must be shared between all LHS lines */
+  genericStack_t               _parametersCallStack;   /* Stack of parameters call when it is an RHS - it is part of the symbol uniqueness */
+  genericStack_t              *parametersCallStack;    /* Pointer to stack of parameters call when it is an RHS - it is part of the symbol uniqueness */
 };
 
 /* A rule */

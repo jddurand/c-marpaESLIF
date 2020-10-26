@@ -46,6 +46,8 @@ typedef enum _marpaESLIFBootstrapStackTypeEnum {
   marpaESLIFBootstrapStackTypeEnum_ALTERNATIVE_NAME,
   marpaESLIFBootstrapStackTypeEnum_ARRAY,
   marpaESLIFBootstrapStackTypeEnum_STRING,
+  marpaESLIFBootstrapStackTypeEnum_LHS,
+  marpaESLIFBootstrapStackTypeEnum_PARAMETERS_DECL,
   _marpaESLIFBootstrapStackTypeEnum_LAST
 } marpaESLIFBootstrapStackTypeEnum_t;
 
@@ -90,9 +92,8 @@ static char _MARPAESLIF_BOOTSTRAP_STACK_TYPE[_marpaESLIFBootstrapStackTypeEnum_L
 #define MARPAESLIF_BOOTSTRAP_STACK_TYPE_ALTERNATIVE_NAME                 &(_MARPAESLIF_BOOTSTRAP_STACK_TYPE[marpaESLIFBootstrapStackTypeEnum_ALTERNATIVE_NAME])
 #define MARPAESLIF_BOOTSTRAP_STACK_TYPE_ARRAY                            &(_MARPAESLIF_BOOTSTRAP_STACK_TYPE[marpaESLIFBootstrapStackTypeEnum_ARRAY])
 #define MARPAESLIF_BOOTSTRAP_STACK_TYPE_STRING                           &(_MARPAESLIF_BOOTSTRAP_STACK_TYPE[marpaESLIFBootstrapStackTypeEnum_STRING])
-
-#define MARPAESLIF_BOOTSTRAP_STACK_TYPE_START MARPAESLIF_BOOTSTRAP_STACK_TYPE_NA
-#define MARPAESLIF_BOOTSTRAP_STACK_TYPE_END MARPAESLIF_BOOTSTRAP_STACK_TYPE_STRING
+#define MARPAESLIF_BOOTSTRAP_STACK_TYPE_LHS                              &(_MARPAESLIF_BOOTSTRAP_STACK_TYPE[marpaESLIFBootstrapStackTypeEnum_LHS])
+#define MARPAESLIF_BOOTSTRAP_STACK_TYPE_PARAMETERS_DECL                  &(_MARPAESLIF_BOOTSTRAP_STACK_TYPE[marpaESLIFBootstrapStackTypeEnum_PARAMETERS_DECL])
 
 /* Forward declarations */
 typedef enum   marpaESLIF_bootstrap_stack_context               marpaESLIF_bootstrap_stack_context_t;
@@ -116,6 +117,7 @@ typedef struct marpaESLIF_bootstrap_rhs_primary_exception     marpaESLIF_bootstr
 typedef struct marpaESLIF_bootstrap_rhs_primary_quantified    marpaESLIF_bootstrap_rhs_primary_quantified_t;
 typedef struct marpaESLIF_bootstrap_alternative               marpaESLIF_bootstrap_alternative_t;
 typedef struct marpaESLIF_bootstrap_event_initialization      marpaESLIF_bootstrap_event_initialization_t;
+typedef struct marpaESLIF_bootstrap_lhs                       marpaESLIF_bootstrap_lhs_t;
 
 enum marpaESLIF_bootstrap_adverb_list_item_type {
   MARPAESLIF_BOOTSTRAP_ADVERB_LIST_ITEM_TYPE_NA = 0,
@@ -151,6 +153,11 @@ struct marpaESLIF_bootstrap_utf_string {
   char  *bytep;
   size_t bytel;
   char  *modifiers;
+};
+
+struct marpaESLIF_bootstrap_lhs {
+  char           *names;
+  genericStack_t *parametersDeclp;
 };
 
 enum marpaESLIF_bootstrap_single_symbol_type {
