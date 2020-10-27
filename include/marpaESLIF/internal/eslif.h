@@ -387,8 +387,8 @@
 #define G1_ACTION_FALLBACKENCODING                 "G1_action_fallbackencoding"                   /* done */
 #define G1_ACTION_FALLBACKENCODING_NAME            "::ascii" /* <fallback encoding name> ::= <ascii graph name> */
 #define G1_ACTION_PARAMETERS_CALL                  "G1_action_parameters_call" /* <parameters call> ::= <parameter call>* separator => ',' hide-separator => 1 */
-#define G1_ACTION_PARAMETER_CALL_1                 "::shift" /* <parameter call> ::= <rhs primary> */
-#define G1_ACTION_PARAMETER_CALL_2                 "G1_rule_parameter_call_2"                   /* done */
+#define G1_ACTION_PARAMETER_CALL_1                 "G1_action_parameter_call_1" /* <parameter call> ::= <rhs primary> */
+#define G1_ACTION_PARAMETER_CALL_2                 "G1_action_parameter_call_2"                   /* done */
 #define G1_ACTION_PARAMETERS_DECL                  "G1_action_parameters_decl" /* <parameters decl> ::= <parameter decl>* separator => ',' hide-separator => 1 */
 #define G1_ACTION_PARAMETER_DECL                   "::shift"                     /* done */
 
