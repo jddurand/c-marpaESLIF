@@ -8070,12 +8070,12 @@ static short _marpaESLIF_bootstrap_G1_action_parameter_call_2b(void *userDatavp,
 
  err:
   _marpaESLIF_bootstrap_parameter_call_freev(parameterCallp);
-  if (barenames != NULL) {
-    free(barenames);
-  }
   rcb = 0;
 
  done:
+  if (barenames != NULL) {
+    free(barenames);
+  }
   return rcb;
 }
 
