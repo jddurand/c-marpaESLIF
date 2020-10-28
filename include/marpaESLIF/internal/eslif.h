@@ -197,6 +197,9 @@
 #define G1_RULE_FALLBACKENCODING_NAME            "G1_rule_fallbackencoding_name"
 #define G1_RULE_PARAMETER_CALL_1                 "G1_rule_parameter_call_1"
 #define G1_RULE_PARAMETER_CALL_2                 "G1_rule_parameter_call_2"
+#define G1_RULE_PARAMETER_CALL_3                 "G1_rule_parameter_call_3"
+#define G1_RULE_PARAMETER_CALL_4                 "G1_rule_parameter_call_4"
+#define G1_RULE_PARAMETER_CALL_5                 "G1_rule_parameter_call_5"
 #define G1_RULE_PARAMETER_DECL                   "G1_rule_parameter_decl"
 
 #define G1_ACTION_STATEMENTS                       "::undef"
@@ -391,7 +394,10 @@
 #define G1_ACTION_FALLBACKENCODING_NAME            "::ascii" /* <fallback encoding name> ::= <ascii graph name> */
 #define G1_ACTION_PARAMETERS_CALL                  "G1_action_parameters_call" /* <parameters call> ::= <parameter call>* separator => ',' hide-separator => 1 */
 #define G1_ACTION_PARAMETER_CALL_1                 "G1_action_parameter_call_1" /* <parameter call> ::= <rhs primary> */
-#define G1_ACTION_PARAMETER_CALL_2                 "G1_action_parameter_call_2"
+#define G1_ACTION_PARAMETER_CALL_2                 "G1_action_parameter_call_2" /* <parameter call> ::= '$' <parameter declaration> */
+#define G1_ACTION_PARAMETER_CALL_3                 "G1_action_parameter_call_3" /* <parameter call> ::= '::undef' */
+#define G1_ACTION_PARAMETER_CALL_4                 "G1_action_parameter_call_4" /* <parameter call> ::= '::true' */
+#define G1_ACTION_PARAMETER_CALL_5                 "G1_action_parameter_call_5" /* <parameter call> ::= '::false' */
 #define G1_ACTION_PARAMETERS_DECL                  "G1_action_parameters_decl" /* <parameters decl> ::= <parameter decl>* separator => ',' hide-separator => 1 */
 #define G1_ACTION_PARAMETER_DECL                   "::shift"
 

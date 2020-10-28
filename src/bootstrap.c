@@ -181,6 +181,10 @@ static        short _marpaESLIF_bootstrap_G1_action_parameters_declb(void *userD
 static        short _marpaESLIF_bootstrap_G1_action_parameters_callb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
 static        short _marpaESLIF_bootstrap_G1_action_parameter_call_1b(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
 static        short _marpaESLIF_bootstrap_G1_action_parameter_call_2b(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
+static        short _marpaESLIF_bootstrap_G1_action_parameter_call_3b(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
+static        short _marpaESLIF_bootstrap_G1_action_parameter_call_4b(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
+static        short _marpaESLIF_bootstrap_G1_action_parameter_call_5b(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
+static inline short _marpaESLIF_bootstrap_G1_action_parameter_call___builtinb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb, marpaESLIF_bootstrap_parameter_call_type_t type);
 
 /* Helpers */
 #define MARPAESLIF_BOOTSTRAP_GET_ARRAY(marpaESLIFValuep, indicei, _p, _l) do { \
@@ -826,6 +830,10 @@ static inline void _marpaESLIF_bootstrap_parameter_call_freev(marpaESLIF_bootstr
       if (parameterCallp->u.names != NULL) {
         free(parameterCallp->u.names);
       }
+      break;
+    case MARPAESLIF_BOOTSTRAP_PARAMETER_CALL_TYPE_BUILTIN_UNDEF:
+    case MARPAESLIF_BOOTSTRAP_PARAMETER_CALL_TYPE_BUILTIN_TRUE:
+    case MARPAESLIF_BOOTSTRAP_PARAMETER_CALL_TYPE_BUILTIN_FALSE:
       break;
     default:
       break;
@@ -1989,6 +1997,9 @@ static marpaESLIFValueRuleCallback_t _marpaESLIF_bootstrap_ruleActionResolver(vo
   else if (strcmp(actions, "G1_action_parameters_call")                  == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_action_parameters_callb;                  }
   else if (strcmp(actions, "G1_action_parameter_call_1")                 == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_action_parameter_call_1b;                 }
   else if (strcmp(actions, "G1_action_parameter_call_2")                 == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_action_parameter_call_2b;                 }
+  else if (strcmp(actions, "G1_action_parameter_call_3")                 == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_action_parameter_call_3b;                 }
+  else if (strcmp(actions, "G1_action_parameter_call_4")                 == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_action_parameter_call_4b;                 }
+  else if (strcmp(actions, "G1_action_parameter_call_5")                 == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_action_parameter_call_5b;                 }
   else
   {
     MARPAESLIF_ERRORF(marpaESLIFp, "Unsupported action \"%s\"", actions);
@@ -8068,3 +8079,62 @@ static short _marpaESLIF_bootstrap_G1_action_parameter_call_2b(void *userDatavp,
   return rcb;
 }
 
+/*****************************************************************************/
+static short _marpaESLIF_bootstrap_G1_action_parameter_call_3b(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb)
+/*****************************************************************************/
+{
+  /* <parameter call> ::= '::undef' */
+  return _marpaESLIF_bootstrap_G1_action_parameter_call___builtinb(userDatavp, marpaESLIFValuep, arg0i, argni, resulti, nullableb, MARPAESLIF_BOOTSTRAP_PARAMETER_CALL_TYPE_BUILTIN_UNDEF);
+}
+
+/*****************************************************************************/
+static short _marpaESLIF_bootstrap_G1_action_parameter_call_4b(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb)
+/*****************************************************************************/
+{
+  /* <parameter call> ::= '::true' */
+  return _marpaESLIF_bootstrap_G1_action_parameter_call___builtinb(userDatavp, marpaESLIFValuep, arg0i, argni, resulti, nullableb, MARPAESLIF_BOOTSTRAP_PARAMETER_CALL_TYPE_BUILTIN_TRUE);
+}
+
+/*****************************************************************************/
+static short _marpaESLIF_bootstrap_G1_action_parameter_call_5b(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb)
+/*****************************************************************************/
+{
+  /* <parameter call> ::= '::false' */
+  return _marpaESLIF_bootstrap_G1_action_parameter_call___builtinb(userDatavp, marpaESLIFValuep, arg0i, argni, resulti, nullableb, MARPAESLIF_BOOTSTRAP_PARAMETER_CALL_TYPE_BUILTIN_FALSE);
+}
+
+/*****************************************************************************/
+static inline short _marpaESLIF_bootstrap_G1_action_parameter_call___builtinb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb, marpaESLIF_bootstrap_parameter_call_type_t type)
+/*****************************************************************************/
+{
+  /* <parameter call> ::= BUILTIN */
+  marpaESLIF_bootstrap_parameter_call_t *parameterCallp = NULL;
+  marpaESLIF_t                          *marpaESLIFp    = marpaESLIFValuep->marpaESLIFp; /* marpaESLIFGrammar_eslifp(marpaESLIFRecognizer_grammarp(marpaESLIFValue_recognizerp(marpaESLIFValuep))); */
+  short                                  rcb;
+
+  /* Cannot be nullable */
+  if (nullableb) {
+    MARPAESLIF_ERROR(marpaESLIFp, "Nullable mode is not supported");
+    goto err;
+  }
+
+  /* Make that an parameter call */
+  parameterCallp = (marpaESLIF_bootstrap_parameter_call_t *) malloc(sizeof(marpaESLIF_bootstrap_parameter_call_t));
+  if (parameterCallp == NULL) {
+    MARPAESLIF_ERRORF(marpaESLIFp, "malloc failure, %s", strerror(errno));
+    goto err;
+  }
+  parameterCallp->type = type;
+
+  MARPAESLIF_BOOTSTRAP_SET_PTR(marpaESLIFValuep, resulti, MARPAESLIF_BOOTSTRAP_STACK_TYPE_PARAMETER_CALL, parameterCallp);
+
+  rcb = 1;
+  goto done;
+
+ err:
+  _marpaESLIF_bootstrap_parameter_call_freev(parameterCallp);
+  rcb = 0;
+
+ done:
+  return rcb;
+}
