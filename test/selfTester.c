@@ -177,8 +177,7 @@ const static char *selfs = "# Self grammar\n"
   "<lhs>                          ::= <symbol name>\n"
   "<lhs>                          ::= <lhs> '<-(' <parameters declaration> ')'\n"
   "<rhs>                          ::= <rhs alternative>+\n"
-  "<rhs alternative>              ::= <single symbol>\n"
-  "                                 | <symbol name> '@' <grammar reference>\n"
+  "<rhs alternative>              ::= <rhs primary>\n"
   "                                 | '(-' <priorities> '-)'\n"
   "                                 | '(' <priorities> ')'\n"
   "                                 | '(-' <rhs primary> '-' <rhs primary> <adverb list> '-)'\n"
@@ -370,7 +369,7 @@ int main() {
     goto err;
   }
   GENERICLOGGER_INFO (marpaESLIFOption.genericLoggerp, "-------------------------");
-  GENERICLOGGER_INFO (marpaESLIFOption.genericLoggerp, "ESLIF was generated with these options:");
+  GENERICLOGGER_INFO (marpaESLIFOption.genericLoggerp, "ESLIF@library was generated with these options:");
   GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "... genericLoggerp: %p", marpaESLIFOptionp->genericLoggerp);
   if (marpaESLIFOptionp->genericLoggerp != marpaESLIFOption.genericLoggerp) {
     GENERICLOGGER_ERRORF(marpaESLIFOption.genericLoggerp, "... genericLoggerp != %p", marpaESLIFOption.genericLoggerp);
@@ -383,7 +382,7 @@ int main() {
     goto err;
   }
   GENERICLOGGER_INFO (marpaESLIFOption.genericLoggerp, "-------------------------");
-  GENERICLOGGER_INFO (marpaESLIFOption.genericLoggerp, "ESLIF's grammar was generated with these options:");
+  GENERICLOGGER_INFO (marpaESLIFOption.genericLoggerp, "ESLIF@library grammar was generated with these options:");
   GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "... bytep    : %p", marpaESLIFGrammarOptionp->bytep);
   GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "... bytel    : %ld", (unsigned long) marpaESLIFGrammarOptionp->bytel);
   GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "... encodings: %p", marpaESLIFGrammarOptionp->encodings);
@@ -392,11 +391,11 @@ int main() {
 
   /* Dump grammar */
   if (marpaESLIFGrammar_ngrammarib(marpaESLIF_grammarp(marpaESLIFp), &ngrammari)) {
-    GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "ESLIF's ngrammari is %d", ngrammari);
+    GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "ESLIF@library ngrammari is %d", ngrammari);
     for (leveli = 0; leveli < ngrammari; leveli++) {
       if (marpaESLIFGrammar_grammarshowform_by_levelb(marpaESLIF_grammarp(marpaESLIFp), &grammarshows, leveli, NULL)) {
         GENERICLOGGER_INFO (marpaESLIFOption.genericLoggerp, "-------------------------");
-        GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "ESLIF grammar at level %d:", leveli);
+        GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "ESLIF@library grammar at level %d:", leveli);
         GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "-------------------------\n%s", grammarshows);
       } else {
         GENERICLOGGER_ERRORF(marpaESLIFOption.genericLoggerp, "marpaESLIFGrammar_grammarshowform_by_levelb(marpaESLIF_grammarp(marpaESLIFp), &grammarshows, leveli, NULL) failure, %s", strerror(errno));
@@ -414,7 +413,7 @@ int main() {
     goto err;
   }
   GENERICLOGGER_INFO (marpaESLIFOption.genericLoggerp, "-------------------------");
-  GENERICLOGGER_INFO (marpaESLIFOption.genericLoggerp, "ESLIF grammar script:");
+  GENERICLOGGER_INFO (marpaESLIFOption.genericLoggerp, "ESLIF@library grammar script:");
   GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "-------------------------\n%s", grammarscripts);
 
   marpaESLIFGrammarOption.bytep               = (void *) selfs;
@@ -445,7 +444,7 @@ int main() {
     goto err;
   }
   GENERICLOGGER_INFO (marpaESLIFOption.genericLoggerp, "-------------------------");
-  GENERICLOGGER_INFO (marpaESLIFOption.genericLoggerp, "ESLIF grammar script:");
+  GENERICLOGGER_INFO (marpaESLIFOption.genericLoggerp, "TEST grammar script:");
   GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "-------------------------\n%s", grammarscripts);
 
   /* So in theory we must be able to reparse ESLIF using itself -; */

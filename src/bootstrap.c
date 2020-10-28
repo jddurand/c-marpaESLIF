@@ -191,7 +191,7 @@ static        short _marpaESLIF_bootstrap_G1_action_parameter_call_2b(void *user
     }                                                                   \
                                                                         \
     if (_marpaESLIFValueResultp->type != MARPAESLIF_VALUE_TYPE_ARRAY) { \
-      MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "marpaESLIFValueResultp->type is not ARRAY (got %d, %s)", _marpaESLIFValueResultp->type, _marpaESLIF_value_types(_marpaESLIFValueResultp->type)); \
+      MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "marpaESLIFValueResultp->type at indice %d is not ARRAY (got %d, %s)", indicei, _marpaESLIFValueResultp->type, _marpaESLIF_value_types(_marpaESLIFValueResultp->type)); \
       goto err;                                                         \
     }                                                                   \
                                                                         \
@@ -208,7 +208,7 @@ static        short _marpaESLIF_bootstrap_G1_action_parameter_call_2b(void *user
     }                                                                   \
                                                                         \
     if (_marpaESLIFValueResultp->type != MARPAESLIF_VALUE_TYPE_PTR) {   \
-      MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "marpaESLIFValueResultp->type is not PTR (got %d, %s)", _marpaESLIFValueResultp->type, _marpaESLIF_value_types(_marpaESLIFValueResultp->type)); \
+      MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "marpaESLIFValueResultp->type at indice %d is not PTR (got %d, %s)", indicei, _marpaESLIFValueResultp->type, _marpaESLIF_value_types(_marpaESLIFValueResultp->type)); \
       goto err;                                                         \
     }                                                                   \
                                                                         \
@@ -224,7 +224,7 @@ static        short _marpaESLIF_bootstrap_G1_action_parameter_call_2b(void *user
     }                                                                   \
                                                                         \
     if (_marpaESLIFValueResultp->type != MARPAESLIF_VALUE_TYPE_STRING) {   \
-      MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "marpaESLIFValueResultp->type is not STRING (got %d, %s)", _marpaESLIFValueResultp->type, _marpaESLIF_value_types(_marpaESLIFValueResultp->type)); \
+      MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "marpaESLIFValueResultp->type at indice %d is not STRING (got %d, %s)", indicei, _marpaESLIFValueResultp->type, _marpaESLIF_value_types(_marpaESLIFValueResultp->type)); \
       goto err;                                                         \
     }                                                                   \
     if (strcmp(_marpaESLIFValueResultp->u.s.encodingasciis, "ASCII") != 0) { \
@@ -243,7 +243,7 @@ static        short _marpaESLIF_bootstrap_G1_action_parameter_call_2b(void *user
     }                                                                   \
                                                                         \
     if (_marpaESLIFValueResult.type != MARPAESLIF_VALUE_TYPE_PTR) {     \
-      MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "marpaESLIFValueResult.type is not PTR (got %d, %s)", _marpaESLIFValueResult.type, _marpaESLIF_value_types(_marpaESLIFValueResult.type)); \
+      MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "marpaESLIFValueResult.type at indice %d is not PTR (got %d, %s)", indicei, _marpaESLIFValueResult.type, _marpaESLIF_value_types(_marpaESLIFValueResult.type)); \
       goto err;                                                         \
     }                                                                   \
                                                                         \
@@ -258,7 +258,7 @@ static        short _marpaESLIF_bootstrap_G1_action_parameter_call_2b(void *user
     }                                                                   \
                                                                         \
     if (_marpaESLIFValueResult.type != MARPAESLIF_VALUE_TYPE_STRING) {     \
-      MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "marpaESLIFValueResult.type is not STRING (got %d, %s)", _marpaESLIFValueResult.type, _marpaESLIF_value_types(_marpaESLIFValueResult.type)); \
+      MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "marpaESLIFValueResult.type at indice %d is not STRING (got %d, %s)", indicei, _marpaESLIFValueResult.type, _marpaESLIF_value_types(_marpaESLIFValueResult.type)); \
       goto err;                                                         \
     }                                                                   \
     if (_marpaESLIFValueResult.u.s.encodingasciis == NULL) {            \
@@ -283,7 +283,7 @@ static        short _marpaESLIF_bootstrap_G1_action_parameter_call_2b(void *user
     }                                                                   \
                                                                         \
     if (_marpaESLIFValueResult.type != MARPAESLIF_VALUE_TYPE_ARRAY) {   \
-      MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "marpaESLIFValueResult.type is not ARRAY (got %d, %s)", _marpaESLIFValueResult.type, _marpaESLIF_value_types(_marpaESLIFValueResult.type)); \
+      MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "marpaESLIFValueResult.type at indice %d is not ARRAY (got %d, %s)", indicei, _marpaESLIFValueResult.type, _marpaESLIF_value_types(_marpaESLIFValueResult.type)); \
       goto err;                                                         \
     }                                                                   \
                                                                         \
@@ -333,7 +333,7 @@ static        short _marpaESLIF_bootstrap_G1_action_parameter_call_2b(void *user
     }                                                                   \
                                                                         \
     if (_marpaESLIFValueResultp->type != MARPAESLIF_VALUE_TYPE_BOOL) { \
-      MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "marpaESLIFValueResultp->type is not BOOL (got %d, %s)", _marpaESLIFValueResultp->type, _marpaESLIF_value_types(_marpaESLIFValueResultp->type)); \
+      MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "marpaESLIFValueResultp->type at indice %d is not BOOL (got %d, %s)", indicei, _marpaESLIFValueResultp->type, _marpaESLIF_value_types(_marpaESLIFValueResultp->type)); \
       goto err;                                                         \
     }                                                                   \
                                                                         \
@@ -349,7 +349,7 @@ static        short _marpaESLIF_bootstrap_G1_action_parameter_call_2b(void *user
     }                                                                   \
                                                                         \
     if (_marpaESLIFValueResultp->type != MARPAESLIF_VALUE_TYPE_SHORT) { \
-      MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "marpaESLIFValueResultp->type is not SHORT (got %d, %s)", _marpaESLIFValueResultp->type, _marpaESLIF_value_types(_marpaESLIFValueResultp->type)); \
+      MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "marpaESLIFValueResultp->type at indice %d is not SHORT (got %d, %s)", indicei, _marpaESLIFValueResultp->type, _marpaESLIF_value_types(_marpaESLIFValueResultp->type)); \
       goto err;                                                         \
     }                                                                   \
                                                                         \
@@ -365,7 +365,7 @@ static        short _marpaESLIF_bootstrap_G1_action_parameter_call_2b(void *user
     }                                                                   \
                                                                         \
     if (_marpaESLIFValueResultp->type != MARPAESLIF_VALUE_TYPE_INT) { \
-      MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "marpaESLIFValueResultp->type is not INT (got %d, %s)", _marpaESLIFValueResultp->type, _marpaESLIF_value_types(_marpaESLIFValueResultp->type)); \
+      MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "marpaESLIFValueResultp->type at indice %d is not INT (got %d, %s)", indicei, _marpaESLIFValueResultp->type, _marpaESLIF_value_types(_marpaESLIFValueResultp->type)); \
       goto err;                                                         \
     }                                                                   \
                                                                         \
