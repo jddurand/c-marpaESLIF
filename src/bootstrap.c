@@ -111,6 +111,7 @@ static        short _marpaESLIF_bootstrap_G1_action_rhs_alternative_7b(void *use
 static        short _marpaESLIF_bootstrap_G1_action_rhs_primary_1b(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
 static        short _marpaESLIF_bootstrap_G1_action_rhs_primary_2b(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
 static        short _marpaESLIF_bootstrap_G1_action_rhs_primary_3b(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
+static        short _marpaESLIF_bootstrap_G1_action_rhs_primary_4b(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
 static        short _marpaESLIF_bootstrap_G1_action_alternativeb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
 static        short _marpaESLIF_bootstrap_G1_action_alternativesb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
 static        short _marpaESLIF_bootstrap_G1_action_prioritiesb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
@@ -209,6 +210,14 @@ static        short _marpaESLIF_bootstrap_G1_action_parameter_call_2b(void *user
                                                                         \
     if (_marpaESLIFValueResultp->type != MARPAESLIF_VALUE_TYPE_PTR) {   \
       MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "marpaESLIFValueResultp->type at indice %d is not PTR (got %d, %s)", indicei, _marpaESLIFValueResultp->type, _marpaESLIF_value_types(_marpaESLIFValueResultp->type)); \
+      if (_marpaESLIFValueResultp->type == MARPAESLIF_VALUE_TYPE_ARRAY) { \
+        MARPAESLIF_HEXDUMPV(marpaESLIFValuep->marpaESLIFRecognizerp,    \
+                            "",                                         \
+                            "Bytes content",                            \
+                            _marpaESLIFValueResultp->u.a.p,             \
+                            _marpaESLIFValueResultp->u.a.sizel,         \
+                            0 /* traceb */);                            \
+      }                                                                 \
       goto err;                                                         \
     }                                                                   \
                                                                         \
@@ -225,6 +234,14 @@ static        short _marpaESLIF_bootstrap_G1_action_parameter_call_2b(void *user
                                                                         \
     if (_marpaESLIFValueResultp->type != MARPAESLIF_VALUE_TYPE_STRING) {   \
       MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "marpaESLIFValueResultp->type at indice %d is not STRING (got %d, %s)", indicei, _marpaESLIFValueResultp->type, _marpaESLIF_value_types(_marpaESLIFValueResultp->type)); \
+      if (_marpaESLIFValueResultp->type == MARPAESLIF_VALUE_TYPE_ARRAY) { \
+        MARPAESLIF_HEXDUMPV(marpaESLIFValuep->marpaESLIFRecognizerp,    \
+                            "",                                         \
+                            "Bytes content",                            \
+                            _marpaESLIFValueResultp->u.a.p,             \
+                            _marpaESLIFValueResultp->u.a.sizel,         \
+                            0 /* traceb */);                            \
+      }                                                                 \
       goto err;                                                         \
     }                                                                   \
     if (strcmp(_marpaESLIFValueResultp->u.s.encodingasciis, "ASCII") != 0) { \
@@ -244,6 +261,14 @@ static        short _marpaESLIF_bootstrap_G1_action_parameter_call_2b(void *user
                                                                         \
     if (_marpaESLIFValueResult.type != MARPAESLIF_VALUE_TYPE_PTR) {     \
       MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "marpaESLIFValueResult.type at indice %d is not PTR (got %d, %s)", indicei, _marpaESLIFValueResult.type, _marpaESLIF_value_types(_marpaESLIFValueResult.type)); \
+      if (_marpaESLIFValueResult.type == MARPAESLIF_VALUE_TYPE_ARRAY) {  \
+        MARPAESLIF_HEXDUMPV(marpaESLIFValuep->marpaESLIFRecognizerp,    \
+                            "",                                         \
+                            "Bytes content",                            \
+                            _marpaESLIFValueResult.u.a.p,               \
+                            _marpaESLIFValueResult.u.a.sizel,           \
+                            0 /* traceb */);                            \
+      }                                                                 \
       goto err;                                                         \
     }                                                                   \
                                                                         \
@@ -259,6 +284,14 @@ static        short _marpaESLIF_bootstrap_G1_action_parameter_call_2b(void *user
                                                                         \
     if (_marpaESLIFValueResult.type != MARPAESLIF_VALUE_TYPE_STRING) {     \
       MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "marpaESLIFValueResult.type at indice %d is not STRING (got %d, %s)", indicei, _marpaESLIFValueResult.type, _marpaESLIF_value_types(_marpaESLIFValueResult.type)); \
+      if (_marpaESLIFValueResult.type == MARPAESLIF_VALUE_TYPE_ARRAY) { \
+        MARPAESLIF_HEXDUMPV(marpaESLIFValuep->marpaESLIFRecognizerp,    \
+                            "",                                         \
+                            "Bytes content",                            \
+                            _marpaESLIFValueResult.u.a.p,               \
+                            _marpaESLIFValueResult.u.a.sizel,           \
+                            0 /* traceb */);                            \
+      }                                                                 \
       goto err;                                                         \
     }                                                                   \
     if (_marpaESLIFValueResult.u.s.encodingasciis == NULL) {            \
@@ -334,6 +367,14 @@ static        short _marpaESLIF_bootstrap_G1_action_parameter_call_2b(void *user
                                                                         \
     if (_marpaESLIFValueResultp->type != MARPAESLIF_VALUE_TYPE_BOOL) { \
       MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "marpaESLIFValueResultp->type at indice %d is not BOOL (got %d, %s)", indicei, _marpaESLIFValueResultp->type, _marpaESLIF_value_types(_marpaESLIFValueResultp->type)); \
+      if (_marpaESLIFValueResultp->type == MARPAESLIF_VALUE_TYPE_ARRAY) { \
+        MARPAESLIF_HEXDUMPV(marpaESLIFValuep->marpaESLIFRecognizerp,    \
+                            "",                                         \
+                            "Bytes content",                            \
+                            _marpaESLIFValueResultp->u.a.p,             \
+                            _marpaESLIFValueResultp->u.a.sizel,         \
+                            0 /* traceb */);                            \
+      }                                                                 \
       goto err;                                                         \
     }                                                                   \
                                                                         \
@@ -350,6 +391,14 @@ static        short _marpaESLIF_bootstrap_G1_action_parameter_call_2b(void *user
                                                                         \
     if (_marpaESLIFValueResultp->type != MARPAESLIF_VALUE_TYPE_SHORT) { \
       MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "marpaESLIFValueResultp->type at indice %d is not SHORT (got %d, %s)", indicei, _marpaESLIFValueResultp->type, _marpaESLIF_value_types(_marpaESLIFValueResultp->type)); \
+      if (_marpaESLIFValueResultp->type == MARPAESLIF_VALUE_TYPE_ARRAY) { \
+        MARPAESLIF_HEXDUMPV(marpaESLIFValuep->marpaESLIFRecognizerp,    \
+                            "",                                         \
+                            "Bytes content",                            \
+                            _marpaESLIFValueResultp->u.a.p,             \
+                            _marpaESLIFValueResultp->u.a.sizel,         \
+                            0 /* traceb */);                            \
+      }                                                                 \
       goto err;                                                         \
     }                                                                   \
                                                                         \
@@ -366,6 +415,14 @@ static        short _marpaESLIF_bootstrap_G1_action_parameter_call_2b(void *user
                                                                         \
     if (_marpaESLIFValueResultp->type != MARPAESLIF_VALUE_TYPE_INT) { \
       MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "marpaESLIFValueResultp->type at indice %d is not INT (got %d, %s)", indicei, _marpaESLIFValueResultp->type, _marpaESLIF_value_types(_marpaESLIFValueResultp->type)); \
+      if (_marpaESLIFValueResultp->type == MARPAESLIF_VALUE_TYPE_ARRAY) { \
+        MARPAESLIF_HEXDUMPV(marpaESLIFValuep->marpaESLIFRecognizerp,    \
+                            "",                                         \
+                            "Bytes content",                            \
+                            _marpaESLIFValueResultp->u.a.p,             \
+                            _marpaESLIFValueResultp->u.a.sizel,         \
+                            0 /* traceb */);                            \
+      }                                                                 \
       goto err;                                                         \
     }                                                                   \
                                                                         \
@@ -1864,6 +1921,7 @@ static marpaESLIFValueRuleCallback_t _marpaESLIF_bootstrap_ruleActionResolver(vo
   else if (strcmp(actions, "G1_action_rhs_primary_1")                    == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_action_rhs_primary_1b;                    }
   else if (strcmp(actions, "G1_action_rhs_primary_2")                    == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_action_rhs_primary_2b;                    }
   else if (strcmp(actions, "G1_action_rhs_primary_3")                    == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_action_rhs_primary_3b;                    }
+  else if (strcmp(actions, "G1_action_rhs_primary_4")                    == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_action_rhs_primary_4b;                    }
   else if (strcmp(actions, "G1_action_alternative")                      == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_action_alternativeb;                      }
   else if (strcmp(actions, "G1_action_alternatives")                     == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_action_alternativesb;                     }
   else if (strcmp(actions, "G1_action_priorities")                       == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_action_prioritiesb;                       }
@@ -3367,7 +3425,7 @@ static short _marpaESLIF_bootstrap_G1_action_rhs_primary_2b(void *userDatavp, ma
   marpaESLIF_t                             *marpaESLIFp = marpaESLIFValuep->marpaESLIFp; /* marpaESLIFGrammar_eslifp(marpaESLIFRecognizer_grammarp(marpaESLIFValue_recognizerp(marpaESLIFValuep))); */
   char                                     *symbolNames = NULL;
   marpaESLIF_bootstrap_grammar_reference_t *grammarReferencep = NULL;
-  short                               rcb;
+  short                                     rcb;
 
   /* Cannot be nullable */
   if (nullableb) {
@@ -3434,11 +3492,13 @@ static short _marpaESLIF_bootstrap_G1_action_rhs_primary_2b(void *userDatavp, ma
 static short _marpaESLIF_bootstrap_G1_action_rhs_primary_3b(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb)
 /*****************************************************************************/
 {
-  /* <rhs primary> ::= <rhs primary> /(?:\<\()|(?:\x{FF08})/u <parameters call> /(?:\)>)|(?:\x{FF09})/u */
-  marpaESLIF_t                       *marpaESLIFp          = marpaESLIFValuep->marpaESLIFp; /* marpaESLIFGrammar_eslifp(marpaESLIFRecognizer_grammarp(marpaESLIFValue_recognizerp(marpaESLIFValuep))); */
-  marpaESLIF_bootstrap_rhs_primary_t *rhsPrimaryp          = NULL;
-  genericStack_t                     *parametersCallStackp = NULL;
-  short                               rcb;
+  /* <rhs primary> ::= <single symbol> /(?:\<\()|(?:\x{FF08})/u <parameters call> /(?:\)>)|(?:\x{FF09})/u */
+  /* <single symbol> is on the stack, typed MARPAESLIF_BOOTSTRAP_STACK_TYPE_SINGLE_SYMBOL */
+  marpaESLIF_bootstrap_rhs_primary_t   *rhsPrimaryp          = NULL;
+  marpaESLIF_t                         *marpaESLIFp          = marpaESLIFValuep->marpaESLIFp; /* marpaESLIFGrammar_eslifp(marpaESLIFRecognizer_grammarp(marpaESLIFValue_recognizerp(marpaESLIFValuep))); */
+  marpaESLIF_bootstrap_single_symbol_t *singleSymbolp        = NULL;
+  genericStack_t                       *parametersCallStackp = NULL;
+  short                                 rcb;
 
   /* Cannot be nullable */
   if (nullableb) {
@@ -3446,9 +3506,10 @@ static short _marpaESLIF_bootstrap_G1_action_rhs_primary_3b(void *userDatavp, ma
     goto err;
   }
 
-  MARPAESLIF_BOOTSTRAP_GETANDFORGET_PTR(marpaESLIFValuep, arg0i, rhsPrimaryp);
-  if (rhsPrimaryp == NULL) {
-    MARPAESLIF_ERROR(marpaESLIFp, "RHS primary is not set");
+  MARPAESLIF_BOOTSTRAP_GETANDFORGET_PTR(marpaESLIFValuep, arg0i, singleSymbolp);
+  /* It is a non-sense to not have valid information */
+  if (singleSymbolp == NULL) {
+    MARPAESLIF_ERRORF(marpaESLIFp, "singleSymbolp at indice %d is NULL", argni);
     goto err;
   }
 
@@ -3458,9 +3519,20 @@ static short _marpaESLIF_bootstrap_G1_action_rhs_primary_3b(void *userDatavp, ma
     goto err;
   }
 
-  /* Inject parameters in current RHS primary */
+  /* Make that an rhs primary structure */
+  rhsPrimaryp = (marpaESLIF_bootstrap_rhs_primary_t *) malloc(sizeof(marpaESLIF_bootstrap_rhs_primary_t));
+  if (rhsPrimaryp == NULL) {
+    MARPAESLIF_ERRORF(marpaESLIFp, "malloc failure, %s", strerror(errno));
+    goto err;
+  }
+  rhsPrimaryp->skipb                = 0;
+  rhsPrimaryp->symbolShallowp       = NULL;
+  rhsPrimaryp->type                 = MARPAESLIF_BOOTSTRAP_RHS_PRIMARY_TYPE_SINGLE_SYMBOL;
   rhsPrimaryp->parametersCallStackp = parametersCallStackp;
-  parametersCallStackp = NULL; /* rhsPrimaryStackp is in rhsPrimaryp */
+  rhsPrimaryp->u.singleSymbolp      = singleSymbolp;
+
+  singleSymbolp = NULL; /* singleSymbolp is now in rhsPrimaryp */
+  parametersCallStackp = NULL; /* parametersCallStackp is now in rhsPrimaryp */
 
   MARPAESLIF_BOOTSTRAP_SET_PTR(marpaESLIFValuep, resulti, MARPAESLIF_BOOTSTRAP_STACK_TYPE_RHS_PRIMARY, rhsPrimaryp);
 
@@ -3469,10 +3541,97 @@ static short _marpaESLIF_bootstrap_G1_action_rhs_primary_3b(void *userDatavp, ma
 
  err:
   _marpaESLIF_bootstrap_rhs_primary_freev(rhsPrimaryp);
-  _marpaESLIF_bootstrap_parameters_call_freev(parametersCallStackp);
   rcb = 0;
 
  done:
+  if (singleSymbolp != NULL) {
+    _marpaESLIF_bootstrap_single_symbol_freev(singleSymbolp);
+  }
+  _marpaESLIF_bootstrap_parameters_call_freev(parametersCallStackp);
+
+  return rcb;
+}
+
+/*****************************************************************************/
+static short _marpaESLIF_bootstrap_G1_action_rhs_primary_4b(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb)
+/*****************************************************************************/
+{
+  /* <rhs primary> ::= <symbol name> '@' <grammar reference> /(?:\<\()|(?:\x{FF08})/u <parameters call> /(?:\)>)|(?:\x{FF09})/u */
+  marpaESLIF_bootstrap_rhs_primary_t       *rhsPrimaryp          = NULL;
+  marpaESLIF_t                             *marpaESLIFp          = marpaESLIFValuep->marpaESLIFp; /* marpaESLIFGrammar_eslifp(marpaESLIFRecognizer_grammarp(marpaESLIFValue_recognizerp(marpaESLIFValuep))); */
+  char                                     *symbolNames          = NULL;
+  marpaESLIF_bootstrap_grammar_reference_t *grammarReferencep    = NULL;
+  genericStack_t                           *parametersCallStackp = NULL;
+  short                                     rcb;
+
+  /* Cannot be nullable */
+  if (nullableb) {
+    MARPAESLIF_ERROR(marpaESLIFp, "Nullable mode is not supported");
+    goto err;
+  }
+
+  /* symbolNames is an ASCII string that we pushed to a PTR that we own  */
+  MARPAESLIF_BOOTSTRAP_GETANDFORGET_PTR(marpaESLIFValuep, arg0i, symbolNames);
+  /* It is a non-sense to not have valid information */
+  if (symbolNames == NULL) {
+    MARPAESLIF_ERRORF(marpaESLIFp, "symbolNames at indice %d is NULL", arg0i);
+    goto err;
+  }
+
+  /* <grammar reference> is a pointer */
+  MARPAESLIF_BOOTSTRAP_GETANDFORGET_PTR(marpaESLIFValuep, arg0i+2, grammarReferencep);
+  /* It is a non-sense to not have valid information */
+  if (grammarReferencep == NULL) {
+    MARPAESLIF_ERRORF(marpaESLIFp, "_marpaESLIFValue_stack_getAndForgetb at indice %d returned NULL", arg0i+2);
+    goto err;
+  }
+
+  MARPAESLIF_BOOTSTRAP_GETANDFORGET_PTR(marpaESLIFValuep, arg0i + 4, parametersCallStackp);
+  if (parametersCallStackp == NULL) {
+    MARPAESLIF_ERROR(marpaESLIFp, "RHS parameters call stack is not set");
+    goto err;
+  }
+
+  /* Make that an rhs primary structure */
+  rhsPrimaryp = (marpaESLIF_bootstrap_rhs_primary_t *) malloc(sizeof(marpaESLIF_bootstrap_rhs_primary_t));
+  if (rhsPrimaryp == NULL) {
+    MARPAESLIF_ERRORF(marpaESLIFp, "malloc failure, %s", strerror(errno));
+    goto err;
+  }
+  rhsPrimaryp->skipb                = 0;
+  rhsPrimaryp->symbolShallowp       = NULL;
+  rhsPrimaryp->type                 = MARPAESLIF_BOOTSTRAP_RHS_PRIMARY_TYPE_NA;
+  rhsPrimaryp->parametersCallStackp = parametersCallStackp;
+
+  parametersCallStackp = NULL; /* parametersCallStackp is now in rhsPrimaryp */
+
+  rhsPrimaryp->u.symbolNameAndReferencep = (marpaESLIF_bootstrap_symbol_name_and_reference_t *) malloc(sizeof(marpaESLIF_bootstrap_symbol_name_and_reference_t));
+  if (rhsPrimaryp->u.symbolNameAndReferencep == NULL) {
+    MARPAESLIF_ERRORF(marpaESLIFp, "malloc failure, %s", strerror(errno));
+    goto err;
+  }
+  rhsPrimaryp->type = MARPAESLIF_BOOTSTRAP_RHS_PRIMARY_TYPE_SYMBOL_NAME_AND_REFERENCE;
+  rhsPrimaryp->u.symbolNameAndReferencep->symbols           = symbolNames;
+  rhsPrimaryp->u.symbolNameAndReferencep->grammarReferencep = grammarReferencep;
+  symbolNames = NULL; /* symbolNames is in symbolNameAndReferencep */
+  grammarReferencep = NULL; /* grammarReferencep  is in symbolNameAndReferencep */
+
+  MARPAESLIF_BOOTSTRAP_SET_PTR(marpaESLIFValuep, resulti, MARPAESLIF_BOOTSTRAP_STACK_TYPE_RHS_PRIMARY, rhsPrimaryp);
+
+  rcb = 1;
+  goto done;
+
+ err:
+  _marpaESLIF_bootstrap_rhs_primary_freev(rhsPrimaryp);
+  rcb = 0;
+
+ done:
+  if (symbolNames != NULL) {
+    free(symbolNames);
+  }
+  _marpaESLIF_bootstrap_grammar_reference_freev(grammarReferencep);
+  _marpaESLIF_bootstrap_parameters_call_freev(parametersCallStackp);
+
   return rcb;
 }
 
@@ -7599,11 +7758,11 @@ static short _marpaESLIF_bootstrap_G1_action_lhs_1b(void *userDatavp, marpaESLIF
     goto err;
   }
 
-  /* symbolNames is an ASCII string that we pushed into a PTR that we own */
-  MARPAESLIF_BOOTSTRAP_GETANDFORGET_PTR(marpaESLIFValuep, argni, names);
+  /* names is an ASCII string that we pushed into a PTR that we own */
+  MARPAESLIF_BOOTSTRAP_GETANDFORGET_PTR(marpaESLIFValuep, arg0i, names);
   /* It is a non-sense to not have no names in this case */
   if (names == NULL) {
-    MARPAESLIF_ERRORF(marpaESLIFp, "name at indice %d returned NULL", argni);
+    MARPAESLIF_ERRORF(marpaESLIFp, "name at indice %d returned NULL", arg0i);
     goto err;
   }
 
@@ -7616,18 +7775,20 @@ static short _marpaESLIF_bootstrap_G1_action_lhs_1b(void *userDatavp, marpaESLIF
   lhsp->names           = names;
   lhsp->parametersDeclp = NULL;
 
+  names = NULL; /* names is in lhsp */
+
   MARPAESLIF_BOOTSTRAP_SET_PTR(marpaESLIFValuep, resulti, MARPAESLIF_BOOTSTRAP_STACK_TYPE_LHS, lhsp);
 
   rcb = 1;
   goto done;
 
  err:
-  if (names != NULL) {
-    free(names);
-  }
   rcb = 0;
 
  done:
+  if (names != NULL) {
+    free(names);
+  }
   return rcb;
 }
 
@@ -7635,8 +7796,9 @@ static short _marpaESLIF_bootstrap_G1_action_lhs_1b(void *userDatavp, marpaESLIF
 static short _marpaESLIF_bootstrap_G1_action_lhs_2b(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb)
 /*****************************************************************************/
 {
-  /* <lhs> ::= <lhs> /(?:\<\()|(?:\x{FF08})/u <parameters declaration> /(?:\)>)|(?:\x{FF09})/u */
+  /* <lhs> ::= <symbol name> /(?:\<\()|(?:\x{FF08})/u <parameters declaration> /(?:\)>)|(?:\x{FF09})/u */
   marpaESLIF_t               *marpaESLIFp     = marpaESLIFValuep->marpaESLIFp; /*marpaESLIFGrammar_eslifp(marpaESLIFRecognizer_grammarp(marpaESLIFValue_recognizerp(marpaESLIFValuep))); */
+  char                       *names           = NULL;
   marpaESLIF_bootstrap_lhs_t *lhsp            = NULL;
   genericStack_t             *parametersDeclp = NULL;
   short                       rcb;
@@ -7647,8 +7809,32 @@ static short _marpaESLIF_bootstrap_G1_action_lhs_2b(void *userDatavp, marpaESLIF
     goto err;
   }
 
-  MARPAESLIF_BOOTSTRAP_GETANDFORGET_PTR(marpaESLIFValuep, arg0i,     lhsp);
-  MARPAESLIF_BOOTSTRAP_GETANDFORGET_PTR(marpaESLIFValuep, arg0i + 2, lhsp->parametersDeclp);
+  /* names is an ASCII string that we pushed into a PTR that we own */
+  MARPAESLIF_BOOTSTRAP_GETANDFORGET_PTR(marpaESLIFValuep, arg0i, names);
+  /* It is a non-sense to have no names in this case */
+  if (names == NULL) {
+    MARPAESLIF_ERRORF(marpaESLIFp, "name at indice %d returned NULL", arg0i);
+    goto err;
+  }
+
+  MARPAESLIF_BOOTSTRAP_GETANDFORGET_PTR(marpaESLIFValuep, arg0i + 2, parametersDeclp);
+  /* It is a non-sense to have no parametersDeclp in this case */
+  if (parametersDeclp == NULL) {
+    MARPAESLIF_ERRORF(marpaESLIFp, "parametersDeclp at indice %d returned NULL", argni);
+    goto err;
+  }
+
+  lhsp = (marpaESLIF_bootstrap_lhs_t *) malloc(sizeof(marpaESLIF_bootstrap_lhs_t));
+  if (lhsp == NULL) {
+    MARPAESLIF_ERRORF(marpaESLIFp, "malloc failure, %s", strerror(errno));
+    goto err;
+  }
+
+  lhsp->names           = names;
+  lhsp->parametersDeclp = parametersDeclp;
+
+  names = NULL; /* names is in lhsp */
+  parametersDeclp = NULL; /* names is in lhsp */
 
   MARPAESLIF_BOOTSTRAP_SET_PTR(marpaESLIFValuep, resulti, MARPAESLIF_BOOTSTRAP_STACK_TYPE_LHS, lhsp);
 
@@ -7662,6 +7848,11 @@ static short _marpaESLIF_bootstrap_G1_action_lhs_2b(void *userDatavp, marpaESLIF
   rcb = 0;
 
  done:
+  if (names != NULL) {
+    free(names);
+  }
+  _marpaESLIF_bootstrap_parameters_decl_freev(parametersDeclp);
+  
   return rcb;
 }
 
