@@ -6209,7 +6209,6 @@ static int marpaESLIFLua_marpaESLIFRecognizer_symbolTryi(lua_State *L)
   marpaESLIFLuaRecognizerContext_t *marpaESLIFLuaRecognizerContextp;
   marpaESLIFLuaSymbolContext_t     *marpaESLIFLuaSymbolContextp;
   int                               typei;
-  marpaESLIF_t                     *marpaESLIFp;
   short                             matchb;
   char                             *bytep;
   size_t                            bytel;
@@ -9062,8 +9061,6 @@ static int marpaESLIFLua_marpaESLIFSymbol_tryi(lua_State *L)
 {
   static const char                *funcs = "marpaESLIFLua_marpaESLIFSymbol_tryi";
   marpaESLIFLuaSymbolContext_t     *marpaESLIFLuaSymbolContextp;
-  int                               rci;
-  int                               resultStacki;
   int                               typei;
   int                               topi;
   marpaESLIFSymbol_t               *marpaESLIFSymbolp;

@@ -847,8 +847,6 @@ static inline void _marpaESLIF_bootstrap_parameter_call_freev(marpaESLIF_bootstr
 /*****************************************************************************/
 {
   static const char *funcs = "_marpaESLIF_bootstrap_parameter_call_freev";
-  int                i;
-  char              *names;
 
   if (parameterCallp != NULL) {
     switch (parameterCallp->type) {
@@ -1848,7 +1846,6 @@ static inline marpaESLIF_bootstrap_utf_string_t *_marpaESLIF_bootstrap_unquote_s
   marpaESLIF_bootstrap_utf_string_t *rcp   = NULL;
   marpaESLIF_bootstrap_utf_string_t rc;
   unsigned char                     *p;
-  size_t                             l;
 
   if ((bytep == NULL) || (bytel <= 0)) {
     MARPAESLIF_ERRORF(marpaESLIFp, "Invalid quoted string literal: bytep=%p, bytel=%ld", bytep, (unsigned long) bytel);
