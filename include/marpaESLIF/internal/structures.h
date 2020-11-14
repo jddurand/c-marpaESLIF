@@ -41,6 +41,9 @@ typedef struct  marpaESLIF_alternative     marpaESLIF_alternative_t;
 typedef         marpaESLIFAction_t         marpaESLIF_action_t;
 typedef         marpaESLIFActionType_t     marpaESLIF_action_type_t;
 typedef struct  marpaESLIF_stream          marpaESLIF_stream_t;
+typedef enum    marpaESLIF_parameter_type  marpaESLIF_parameter_type_t;
+typedef struct  marpaESLIF_parameter       marpaESLIF_parameter_t;
+typedef struct  marpaESLIF_argument        marpaESLIF_argument_t;
 
 /* Symbol types */
 enum marpaESLIF_symbol_type {
@@ -167,10 +170,6 @@ struct marpaESLIFSymbol {
   marpaESLIF_symbol_t         *exceptionp;             /* Pointer to an exception itself, the one after the '-' character */
   marpaESLIFAction_t          *symbolActionp;          /* Custom symbol, only for terminals or lexemes */
   marpaESLIFAction_t          *ifActionp;              /* if semantic, only for meta symbols that are lexemes or terminals */
-  genericStack_t               _parametersDeclStack;   /* Stack of parameters declaration when it is an LHS - must be shared between all LHS lines */
-  genericStack_t              *parametersDeclStack;    /* Pointer to stack of parameters when it is an LHS - must be shared between all LHS lines */
-  genericStack_t               _parametersCallStack;   /* Stack of parameters call when it is an RHS - it is part of the symbol uniqueness */
-  genericStack_t              *parametersCallStack;    /* Pointer to stack of parameters call when it is an RHS - it is part of the symbol uniqueness */
 };
 
 /* A rule */
@@ -291,6 +290,7 @@ struct marpaESLIF_meta {
   marpaESLIFGrammar_t         *marpaESLIFGrammarLexemeClonep;   /* Cloned ESLIF grammar in lexeme search mode (no event) */
   size_t                       nSymbolStartl;                   /* Number of lexemes at the very beginning of marpaWrapperGrammarStartp */
   int                         *symbolArrayStartp;               /* Lexemes at the very beginning of marpaWrapperGrammarStartp */
+  genericStack_t              *parameterStackp;
 };
 
 struct marpaESLIFValue {
@@ -344,7 +344,7 @@ struct marpaESLIF_stream {
 };
 
 struct marpaESLIFRecognizer {
-  /* The variables starting with "_" are not supposed to ever be accessed  */
+  /* The variables starting with "_" are not supposed to never be accessed */
   /* except in very precise situations (typically the new()/free() or when */
   /* faking a new() method). */
   marpaESLIF_t                *marpaESLIFp;
@@ -535,6 +535,31 @@ marpaESLIFValueOption_t marpaESLIFValueOption_default_template = {
 struct marpaESLIFStringHelper {
   marpaESLIF_t       *marpaESLIFp;
   marpaESLIFString_t *marpaESLIFStringp;
+};
+
+/* Parameters types */
+enum marpaESLIF_parameter_type {
+  MARPAESLIF_PARAMETER_TYPE_NA         = 0x00,
+  MARPAESLIF_PARAMETER_TYPE_RHS        = 0x01, /* RHS */
+  MARPAESLIF_PARAMETER_TYPE_ARGUMENT   = 0x02, /* Argument */
+  MARPAESLIF_PARAMETER_TYPE_UNDEF      = 0x04, /* ::undef */
+  MARPAESLIF_PARAMETER_TYPE_TRUE       = 0x08, /* ::true */
+  MARPAESLIF_PARAMETER_TYPE_FALSE      = 0x10  /* ::false */
+};
+
+/* Argument */
+struct marpaESLIF_argument {
+  char *names; /* Argument name */
+  int   namei; /* Argument position v.s. the LSH - grammar validation will set it */
+};
+
+/* Parameter */
+struct marpaESLIF_parameter {
+  marpaESLIF_parameter_type_t type;
+  union {
+    marpaESLIF_symbol_t   *rhsp;
+    marpaESLIF_argument_t  argument;
+  } u;
 };
 
 #include "marpaESLIF/internal/eslif.h"

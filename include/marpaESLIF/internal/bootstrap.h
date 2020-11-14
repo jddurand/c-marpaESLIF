@@ -178,7 +178,7 @@ enum marpaESLIF_bootstrap_single_symbol_type {
 struct marpaESLIF_bootstrap_single_symbol {
   marpaESLIF_bootstrap_single_symbol_type_t type;
   union {
-    char *symbols;
+    char                              *symbols;
     marpaESLIF_bootstrap_utf_string_t *characterClassp;
     marpaESLIF_bootstrap_utf_string_t *regularExpressionp;
     marpaESLIF_bootstrap_utf_string_t *quotedStringp;
@@ -192,7 +192,7 @@ struct marpaESLIF_bootstrap_adverb_list_item {
     short                                        left_associationb;
     short                                        right_associationb;
     short                                        group_associationb;
-    marpaESLIF_bootstrap_single_symbol_t        *separatorSingleSymbolp;
+    marpaESLIF_bootstrap_rhs_primary_t          *separatorRhsPrimaryp;
     short                                        properb;
     short                                        hideseparatorb;
     int                                          ranki;
@@ -263,7 +263,7 @@ struct marpaESLIF_bootstrap_rhs_primary {
   short                                    skipb;
   marpaESLIF_symbol_t                     *symbolShallowp;
   marpaESLIF_bootstrap_rhs_primary_type_t  type;
-  genericStack_t                          *parametersCallStackp;
+  genericStack_t                          *parameterCallStackp;
   union {
     marpaESLIF_bootstrap_single_symbol_t             *singleSymbolp;
     marpaESLIF_bootstrap_symbol_name_and_reference_t *symbolNameAndReferencep;
