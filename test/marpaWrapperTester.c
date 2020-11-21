@@ -28,6 +28,7 @@ static short symbolOptionSetter(void *userDatavp, int symboli, marpaWrapperGramm
 static short ruleOptionSetter(void *userDatavp, int symboli, marpaWrapperGrammarRuleOption_t *marpaWrapperGrammarRuleOptionp);
 static short okRuleCallback(void *userDatavp, genericStack_t *parentRuleiStackp, int rulei, int arg0i, int argni);
 static short okSymbolCallback(void *userDatavp, genericStack_t *parentRuleiStackp, int symboli, int argi);
+static int   checkEarlemes(marpaWrapperRecognizer_t *marpaWrapperRecognizerp, genericLogger_t *genericLoggerp);
 
 static marpaWrapperGrammarCloneOption_t marpaWrapperGrammarCloneOption = {
   NULL, /* userDatavp */
@@ -62,6 +63,7 @@ int main(int argc, char **argv)
   int                            symbolPropertyBitSet;
   int                            symbolEventBitSet;
   int                            rulePropertyBitSet;
+  marpaWrapperRecognizerContext_t context;
   
   marpaWrapperGrammarOption_t    marpaWrapperGrammarOption    = { GENERICLOGGER_NEW(GENERICLOGGER_LOGLEVEL_TRACE),
 								  0 /* warningIsErrorb */,
@@ -182,6 +184,36 @@ int main(int argc, char **argv)
     }
   }
 
+  /* Context set */
+  context.valuei = 0;
+  context.valuep = &context;
+  if (rci == 0) {
+    if (marpaWrapperRecognizer_contextSetb(marpaWrapperRecognizerp, context) == 0) {
+      rci = 1;
+    }
+  }
+
+  /* Context get */
+  if (rci == 0) {
+    if (marpaWrapperRecognizer_contextGetb(marpaWrapperRecognizerp, -1, &context) == 0) {
+      rci = 1;
+    } else {
+      if ((context.valuei != 0) || (context.valuep != &context)) {
+        GENERICLOGGER_ERRORF(marpaWrapperRecognizerOption.genericLoggerp, "context.valuei = %d != 0", context.valuei);
+        GENERICLOGGER_ERRORF(marpaWrapperRecognizerOption.genericLoggerp, "context.valuep = %p != %p", context.valuep, &context);
+        rci = 1;
+      } else {
+        GENERICLOGGER_INFOF(marpaWrapperRecognizerOption.genericLoggerp, "Good, context.valuei = %d", context.valuei);
+        GENERICLOGGER_INFOF(marpaWrapperRecognizerOption.genericLoggerp, "Good, context.valuep = %p", context.valuep);
+      }
+    }
+  }
+
+  /* Earlemes */
+  if (rci == 0) {
+    rci = checkEarlemes(marpaWrapperRecognizerp, marpaWrapperRecognizerOption.genericLoggerp);
+  }
+  
   /* --------------------------------------------------------------- */
   /* 2 - 0 * 3 + 1                                                   */
   /* --------------------------------------------------------------- */
@@ -213,6 +245,9 @@ int main(int argc, char **argv)
     } else {
       GENERICLOGGER_TRACEF(marpaWrapperRecognizerOption.genericLoggerp, "... Latest Earleme Set ID: %d", earleySetIdi);
     }
+  }
+  if (rci == 0) {
+    rci = checkEarlemes(marpaWrapperRecognizerp, marpaWrapperRecognizerOption.genericLoggerp);
   }
   /* -- */
   /* op */
@@ -820,3 +855,41 @@ static short okSymbolCallback(void *userDatavp, genericStack_t *parentRuleiStack
 {
   return 1;
 }
+
+/****************************************************************************/
+static int checkEarlemes(marpaWrapperRecognizer_t *marpaWrapperRecognizerp, genericLogger_t *genericLoggerp)
+/****************************************************************************/
+{
+  int rci = 0;
+  int i;
+
+  /* Current earleme */
+  if (rci == 0) {
+    if (marpaWrapperRecognizer_currentEarlemeb(marpaWrapperRecognizerp, &i) == 0) {
+      rci = 1;
+    } else {
+      GENERICLOGGER_INFOF(genericLoggerp, "Current earleme is %d", i);
+    }
+  }
+  
+  /* Earleme */
+  if (rci == 0) {
+    if (marpaWrapperRecognizer_earlemeb(marpaWrapperRecognizerp, -1, &i) == 0) {
+      rci = 1;
+    } else {
+      GENERICLOGGER_INFOF(genericLoggerp, "Earleme at position -1 is %d", i);
+    }
+  }
+  
+  /* Furthest earleme */
+  if (rci == 0) {
+    if (marpaWrapperRecognizer_furthestEarlemeb(marpaWrapperRecognizerp, &i) == 0) {
+      rci = 1;
+    } else {
+      GENERICLOGGER_INFOF(genericLoggerp, "Furthest earleme is %d", i);
+    }
+  }
+
+  return rci;
+}
+

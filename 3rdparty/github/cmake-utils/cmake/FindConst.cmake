@@ -1,0 +1,32 @@
+MACRO (FINDCONST)
+  GET_PROPERTY(source_dir_set GLOBAL PROPERTY MYPACKAGE_SOURCE_DIR SET)
+  IF (NOT ${source_dir_set})
+    MESSAGE (WARNING "Cannot check const, property MYPACKAGE_SOURCE_DIR is not set")
+  ELSE ()
+    IF (NOT C_CONST_SINGLETON)
+      GET_PROPERTY(source_dir GLOBAL PROPERTY MYPACKAGE_SOURCE_DIR)
+      SET (_C_CONST_FOUND FALSE)
+      #
+      # Test
+      #
+      FOREACH (KEYWORD "const")
+        MESSAGE(STATUS "Looking for ${KEYWORD}")
+        TRY_COMPILE (C_HAS_${KEYWORD} ${CMAKE_CURRENT_BINARY_DIR}
+          ${source_dir}/const.c
+          COMPILE_DEFINITIONS -DC_CONST=${KEYWORD})
+        IF (C_HAS_${KEYWORD})
+          MESSAGE(STATUS "Looking for ${KEYWORD} - found")
+          SET (_C_CONST ${KEYWORD})
+          SET (_C_CONST_FOUND TRUE)
+          BREAK ()
+        ENDIF ()
+      ENDFOREACH ()
+    ENDIF ()
+    IF (_C_CONST_FOUND)
+      SET (C_CONST "${_C_CONST}" CACHE STRING "C const implementation")
+      MARK_AS_ADVANCED (C_CONST)
+    ENDIF ()
+    SET (C_CONST_SINGLETON TRUE CACHE BOOL "C const check singleton")
+    MARK_AS_ADVANCED (C_CONST_SINGLETON)
+  ENDIF ()
+ENDMACRO()
