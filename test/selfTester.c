@@ -175,9 +175,9 @@ const static char *selfs = "# Self grammar\n"
   "                                 | ':discard[off]'\n"
   "                                 | ':discard[switch]'\n"
   "<lhs>                          ::= <symbol name>\n"
+  "                                 | <symbol name> '<-(' <parameters declaration> ')'\n"
   "<rhs>                          ::= <rhs alternative>+\n"
-  "<rhs alternative>              ::= <single symbol>\n"
-  "                                 | <symbol name> '@' <grammar reference>\n"
+  "<rhs alternative>              ::= <rhs primary>\n"
   "                                 | '(-' <priorities> '-)'\n"
   "                                 | '(' <priorities> ')'\n"
   "                                 | '(-' <rhs primary> '-' <rhs primary> <adverb list> '-)'\n"
@@ -186,6 +186,16 @@ const static char *selfs = "# Self grammar\n"
   "                                 | '(' <rhs primary> <quantifier> <adverb list> ')'\n"
   "<rhs primary>                  ::= <single symbol>\n"
   "                                 | <symbol name> '@' <grammar reference>\n"
+  "                                 | <single symbol> '->(' <parameters call> ')'\n"
+  "                                 | <symbol name> '@' <grammar reference> '->(' <parameters call> ')'\n"
+  "<parameters call>              ::= <parameter call>* separator => ',' proper => 1 hide-separator => 1\n"
+  "<parameter call>               ::= <rhs primary> action => ::shift\n"
+  "                                 | '$' <parameter declaration>\n"
+  "                                 | '::undef'\n"
+  "                                 | '::true'\n"
+  "                                 | '::false'\n"
+  "<parameters declaration>       ::= <parameter declaration>* separator => ',' proper => 1 hide-separator => 1\n"
+  "<parameter declaration>        ::= <bare name>\n"
   "<single symbol>                ::= <symbol>\n"
   "                                 | <terminal>\n"
   "<terminal>                     ::= <character class>\n"
@@ -276,6 +286,19 @@ const static char *selfs = "# Self grammar\n"
   "<regular expression>             ~ /(*NO_JIT)((?|(?:\\/(?![*\\/]))(?:[^\\\\\\/]*(?:\\\\.[^\\\\\\/]*)*)(?:\\/)))(?C\"some \"\"arbitrary\"\" text 1\")/su\n"
   "                                 | /(*NO_JIT)((?|(?:\\/(?![*\\/]))(?:[^\\\\\\/]*(?:\\\\.[^\\\\\\/]*)*)(?:\\/)))(?C\"some \"\"arbitrary\"\" text 2\")/su /[eijmnsxDJUuaNbcA]+/\n"
   "\n"
+  "param_lhs_0_parameter          <-( )                 ::= 'X'\n"
+  "param_lhs_0_parameter          <-( )                 ::= 'Y'\n"
+  "param_lhs_1_parameter          <-( x )               ::= 'X'\n"
+  "param_lhs_1_parameter          <-( x )               ::= 'Y'\n"
+  "param_lhs_2_parameters         <-( x, y )            ::= 'X'\n"
+  "param_lhs_2_parameters         <-( x, y )            ::= PARAM1 ->( $x )\n"
+  "param_lhs_2_parameters         <-( x, y )            ::= PARAM2 ->( $x )\n"
+  "param_lhs_2_parameters         <-( x, y )            ::= PARAM3 ->( 'x', $x )\n"
+  "param_lhs_2_parameters         <-( x, y )            ::= PARAM4 ->( 'x', $x, PARAM5->($y) )\n"
+  "param_lhs_3_parameters         <-( x, y, z )         ::= PARAM6 ->( 'x', $x, PARAM7->($y), <PARAM 8> )\n"
+  "param_lhs_3_parameters         <-( x, y, z )         ::= PARAM9 ->( 'x', $x, PARAM10->($y), <PARAM 11>->() )\n"
+  "param_lhs_3_parameters         <-( x, y, z )         ::= PARAM12->( 'x', $x, PARAM13->($y), <PARAM 14>->(), <PARAM 15>->($z) )\n"
+  "param_lhs_6_parameters         <-( x, y, z )         ::= PARAM12->( 'x', $x, PARAM13->($y), <PARAM 14>->(), <PARAM 15>->($z), ::undef, ::true, ::false )\n"
   "test_group                     ::= 'X' (  'Y' action => ::convert[UTF-8]\n"
   "                                       |  'Z'\n"
   "                                       || (-'yy'-)\n"
@@ -291,6 +314,22 @@ const static char *selfs = "# Self grammar\n"
   "TEST_GROUP_FOR_ACTION_2          ~ 'X' action => \xE2\x80\x9C\x21Z\x21\xE2\x80\x9D\n"
   "\n"
   "DUMMY_RULE_FOR_LEVEL_2      :[2]:= 'dummy'\n"
+  "\n"
+  "<PARAM1>                         ~ 'X'\n"
+  "<PARAM2>                         ~ 'X'\n"
+  "<PARAM3>                         ~ 'X'\n"
+  "<PARAM4>                         ~ 'X'\n"
+  "<PARAM5>                         ~ 'X'\n"
+  "<PARAM6>                         ~ 'X'\n"
+  "<PARAM7>                         ~ 'X'\n"
+  "<PARAM8>                         ~ 'X'\n"
+  "<PARAM9>                         ~ 'X'\n"
+  "<PARAM10>                        ~ 'X'\n"
+  "<PARAM 11>                       ~ 'X'\n"
+  "<PARAM12>                        ~ 'X'\n"
+  "<PARAM13>                        ~ 'X'\n"
+  "<PARAM 14>                       ~ 'X'\n"
+  "<PARAM 15>                       ~ 'X'\n"
   "<luascript>\n"
   "function LuaRegexAction()\n"
   "  return 0\n"
@@ -335,7 +374,7 @@ int main() {
     goto err;
   }
   GENERICLOGGER_INFO (marpaESLIFOption.genericLoggerp, "-------------------------");
-  GENERICLOGGER_INFO (marpaESLIFOption.genericLoggerp, "ESLIF was generated with these options:");
+  GENERICLOGGER_INFO (marpaESLIFOption.genericLoggerp, "ESLIF@library was generated with these options:");
   GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "... genericLoggerp: %p", marpaESLIFOptionp->genericLoggerp);
   if (marpaESLIFOptionp->genericLoggerp != marpaESLIFOption.genericLoggerp) {
     GENERICLOGGER_ERRORF(marpaESLIFOption.genericLoggerp, "... genericLoggerp != %p", marpaESLIFOption.genericLoggerp);
@@ -348,7 +387,7 @@ int main() {
     goto err;
   }
   GENERICLOGGER_INFO (marpaESLIFOption.genericLoggerp, "-------------------------");
-  GENERICLOGGER_INFO (marpaESLIFOption.genericLoggerp, "ESLIF's grammar was generated with these options:");
+  GENERICLOGGER_INFO (marpaESLIFOption.genericLoggerp, "ESLIF@library grammar was generated with these options:");
   GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "... bytep    : %p", marpaESLIFGrammarOptionp->bytep);
   GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "... bytel    : %ld", (unsigned long) marpaESLIFGrammarOptionp->bytel);
   GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "... encodings: %p", marpaESLIFGrammarOptionp->encodings);
@@ -357,11 +396,11 @@ int main() {
 
   /* Dump grammar */
   if (marpaESLIFGrammar_ngrammarib(marpaESLIF_grammarp(marpaESLIFp), &ngrammari)) {
-    GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "ESLIF's ngrammari is %d", ngrammari);
+    GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "ESLIF@library ngrammari is %d", ngrammari);
     for (leveli = 0; leveli < ngrammari; leveli++) {
       if (marpaESLIFGrammar_grammarshowform_by_levelb(marpaESLIF_grammarp(marpaESLIFp), &grammarshows, leveli, NULL)) {
         GENERICLOGGER_INFO (marpaESLIFOption.genericLoggerp, "-------------------------");
-        GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "ESLIF grammar at level %d:", leveli);
+        GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "ESLIF@library grammar at level %d:", leveli);
         GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "-------------------------\n%s", grammarshows);
       } else {
         GENERICLOGGER_ERRORF(marpaESLIFOption.genericLoggerp, "marpaESLIFGrammar_grammarshowform_by_levelb(marpaESLIF_grammarp(marpaESLIFp), &grammarshows, leveli, NULL) failure, %s", strerror(errno));
@@ -379,7 +418,7 @@ int main() {
     goto err;
   }
   GENERICLOGGER_INFO (marpaESLIFOption.genericLoggerp, "-------------------------");
-  GENERICLOGGER_INFO (marpaESLIFOption.genericLoggerp, "ESLIF grammar script:");
+  GENERICLOGGER_INFO (marpaESLIFOption.genericLoggerp, "ESLIF@library grammar script:");
   GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "-------------------------\n%s", grammarscripts);
 
   marpaESLIFGrammarOption.bytep               = (void *) selfs;
@@ -410,7 +449,7 @@ int main() {
     goto err;
   }
   GENERICLOGGER_INFO (marpaESLIFOption.genericLoggerp, "-------------------------");
-  GENERICLOGGER_INFO (marpaESLIFOption.genericLoggerp, "ESLIF grammar script:");
+  GENERICLOGGER_INFO (marpaESLIFOption.genericLoggerp, "TEST grammar script:");
   GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "-------------------------\n%s", grammarscripts);
 
   /* So in theory we must be able to reparse ESLIF using itself -; */

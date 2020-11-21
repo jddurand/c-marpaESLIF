@@ -149,7 +149,7 @@ static marpaESLIFValueResult_t marpaESLIFValueResultLazy = {
 #define MARPAESLIF_CHECK_MATCH_RESULT(funcs, marpaESLIFRecognizerp, inputs, symbolp, rci, marpaESLIFValueResult) do { \
     _MARPAESLIF_CHECK_MATCH_RESULT(funcs, marpaESLIFRecognizerp, symbolp, rci, marpaESLIFValueResult); \
     if (rci == MARPAESLIF_MATCH_OK) {                                   \
-      MARPAESLIF_HEXDUMPV(marpaESLIFRecognizerp, "Match dump for ", symbolp->descp->asciis, marpaESLIFValueResult.u.a.p, marpaESLIFValueResult.u.a.sizel, 1); \
+      MARPAESLIF_HEXDUMPV(funcs, marpaESLIFRecognizerp, "Match dump for ", symbolp->descp->asciis, marpaESLIFValueResult.u.a.p, marpaESLIFValueResult.u.a.sizel, 1); \
     }                                                                   \
   } while (0)
 #else
@@ -555,7 +555,7 @@ static inline marpaESLIF_string_t   *_marpaESLIF_string2utf8p(marpaESLIF_t *marp
 static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *marpaESLIFp, marpaESLIF_grammar_t *grammarp, int eventSeti, char *descEncodings, char *descs, size_t descl, marpaESLIF_terminal_type_t type, char *modifiers, char *utf8s, size_t utf8l, char *testFullMatchs, char *testPartialMatchs);
 static inline void                   _marpaESLIF_terminal_freev(marpaESLIF_terminal_t *terminalp);
 
-static inline marpaESLIF_meta_t     *_marpaESLIF_meta_newp(marpaESLIF_t *marpaESLIFp, marpaESLIF_grammar_t *grammarp, int eventSeti, char *asciinames, char *descEncodings, char *descs, size_t descl);
+static inline marpaESLIF_meta_t     *_marpaESLIF_meta_newp(marpaESLIF_t *marpaESLIFp, marpaESLIF_grammar_t *grammarp, int eventSeti, char *asciinames, char *descEncodings, char *descs, size_t descl, genericStack_t *parameterStackp);
 static inline void                   _marpaESLIF_meta_freev(marpaESLIF_meta_t *metap);
 
 static inline marpaESLIF_grammar_t  *_marpaESLIF_grammar_newp(marpaESLIFGrammar_t *marpaESLIFGrammarp, marpaWrapperGrammarOption_t *marpaWrapperGrammarOptionp, int leveli, char *descEncodings, char *descs, size_t descl, marpaESLIF_action_t *defaultSymbolActionp, marpaESLIF_action_t *defaultRuleActionp, marpaESLIF_action_t *defaultEventActionp, marpaESLIF_action_t *defaultRegexActionp, char *defaultEncodings, char *fallbackEncodings);
@@ -773,6 +773,8 @@ static int                           _marpaESLIF_pcre2_callout_enumeratei(pcre2_
 static void                          _marpaESLIFCalloutBlock_initb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp);
 static void                          _marpaESLIFCalloutBlock_disposev(marpaESLIFRecognizer_t *marpaESLIFRecognizerp);
 static marpaESLIFSymbol_t           *_marpaESLIFSymbol_newp(marpaESLIF_t *marpaESLIFp, marpaESLIF_terminal_type_t terminalType, marpaESLIFString_t *stringp, char *modifiers);
+static void                          _marpaESLIF_parameterStack_freev(genericStack_t *parameterStackp);
+static void                          _marpaESLIF_parameter_freev(marpaESLIF_parameter_t *parameterp);
 
 /*****************************************************************************/
 static inline marpaESLIF_string_t *_marpaESLIF_string_newp(marpaESLIF_t *marpaESLIFp, char *encodingasciis, char *bytep, size_t bytel)
@@ -1173,7 +1175,7 @@ static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *mar
       goto err;
     }
 #ifndef MARPAESLIF_NTRACE
-    MARPAESLIF_HEXDUMPV(marpaESLIFRecognizerp, "String conversion to regexp for ", terminalp->descp->asciis, utf8s, utf8l, 1 /* traceb */);
+    MARPAESLIF_HEXDUMPV(funcs, marpaESLIFRecognizerp, "String conversion to regexp for ", terminalp->descp->asciis, utf8s, utf8l, 1 /* traceb */);
 #endif
 
     /* Please note that at the very very early startup, when we create marpaESLIFp, there is NO marpaESLIFp->anycharp yet! */
@@ -1569,7 +1571,7 @@ static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *mar
       pcre2_get_error_message(pcre2Errornumberi, pcre2ErrorBuffer, sizeof(pcre2ErrorBuffer));
       MARPAESLIF_ERRORF(marpaESLIFp, "%s: pcre2_compile failure at offset %ld: %s", terminalp->descp->asciis, (unsigned long) pcre2ErrorOffsetl, pcre2ErrorBuffer);
       if (marpaESLIFRecognizerp != NULL) {
-        MARPAESLIF_HEXDUMPV(marpaESLIFRecognizerp, "Dump of PCRE2 pattern", " as an UTF-8 sequence of bytes", utf8s, utf8l, 0 /* traceb */);
+        MARPAESLIF_HEXDUMPV(funcs, marpaESLIFRecognizerp, "Dump of PCRE2 pattern", " as an UTF-8 sequence of bytes", utf8s, utf8l, 0 /* traceb */);
       }
       goto err;
     }
@@ -1755,7 +1757,7 @@ static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *mar
 }
 
 /*****************************************************************************/
-static inline marpaESLIF_meta_t *_marpaESLIF_meta_newp(marpaESLIF_t *marpaESLIFp, marpaESLIF_grammar_t *grammarp, int eventSeti, char *asciinames, char *descEncodings, char *descs, size_t descl)
+static inline marpaESLIF_meta_t *_marpaESLIF_meta_newp(marpaESLIF_t *marpaESLIFp, marpaESLIF_grammar_t *grammarp, int eventSeti, char *asciinames, char *descEncodings, char *descs, size_t descl, genericStack_t *parameterStackp)
 /*****************************************************************************/
 {
   static const char                *funcs = "_marpaESLIF_meta_newp";
@@ -1788,6 +1790,7 @@ static inline marpaESLIF_meta_t *_marpaESLIF_meta_newp(marpaESLIF_t *marpaESLIFp
   metap->marpaESLIFGrammarLexemeClonep   = NULL; /* Eventually changed when validating the grammar */
   metap->nSymbolStartl                   = 0;    /* Number of lexemes at the very beginning of marpaWrapperGrammarStartp */
   metap->symbolArrayStartp               = NULL; /* Lexemes at the very beginning of marpaWrapperGrammarStartp */
+  metap->parameterStackp                 = NULL;
 
   marpaWrapperGrammarSymbolOption.terminalb = 0;
   marpaWrapperGrammarSymbolOption.startb    = 0;
@@ -1816,6 +1819,10 @@ static inline marpaESLIF_meta_t *_marpaESLIF_meta_newp(marpaESLIF_t *marpaESLIFp
     goto err;
   }
 
+  /* Has to be here: this is parameter allocated by the caller, and we want to store the pointer */
+  /* only when everything is ok. */
+  metap->parameterStackp = parameterStackp;
+
   goto done;
 
  err:
@@ -1842,6 +1849,8 @@ static inline void _marpaESLIF_meta_freev(marpaESLIF_meta_t *metap)
     if (metap->symbolArrayStartp != NULL) {
       free(metap->symbolArrayStartp);
     }
+    _marpaESLIF_parameterStack_freev(metap->parameterStackp);
+    
     /* All the rest are shallow pointers - in particular marpaESLIFGrammarLexemeClonep is a hack for performance reasons */
     free(metap);
   }
@@ -1990,7 +1999,7 @@ static inline marpaESLIF_grammar_t *_marpaESLIF_bootstrap_grammarp(marpaESLIFGra
     symbolp = NULL;
   }
 
-  /* Then the non-terminals */
+  /* Then the non-terminals - Note that bootstrap is not parameterized at all */
   for (i = 0; i < bootstrap_grammar_metai; i++) {
     symbolp = _marpaESLIF_symbol_newp(marpaESLIFp);
     if (symbolp == NULL) {
@@ -2002,8 +2011,8 @@ static inline marpaESLIF_grammar_t *_marpaESLIF_bootstrap_grammarp(marpaESLIFGra
                                   bootstrap_grammar_metap[i].descs,
                                   NULL, /* descEncodings */
 				  NULL, /* descs */
-				  0 /* descl */
-				  );
+				  0, /* descl */
+                                  NULL /* parameterStackp */);
     if (metap == NULL) {
       goto err;
     }
@@ -3830,8 +3839,8 @@ static inline void _marpaESLIF_symbol_freev(marpaESLIF_symbol_t *symbolp)
     _marpaESLIF_action_freev(symbolp->symbolActionp);
     _marpaESLIF_action_freev(symbolp->ifActionp);
 
-    GENERICSTACK_RESET(symbolp->nullableRuleStackp); /* Take care, this is a pointer to stack internal to symbol structure */
-    GENERICSTACK_RESET(symbolp->lhsRuleStackp); /* Take care, this is a pointer to stack internal to symbol structure */
+    GENERICSTACK_RESET(symbolp->nullableRuleStackp); /* Take care, this is a pointer to a stack internal to symbol structure */
+    GENERICSTACK_RESET(symbolp->lhsRuleStackp); /* Take care, this is a pointer to a stack internal to symbol structure */
 
     free(symbolp);
   }
@@ -5370,7 +5379,8 @@ static inline char *_marpaESLIF_charconvb(marpaESLIF_t *marpaESLIFp, char *toEnc
 	    dumps = inbuforigp;
 	    dumpl = consumedl;
 	  }
-	  MARPAESLIF_HEXDUMPV(marpaESLIFRecognizerp,
+	  MARPAESLIF_HEXDUMPV(funcs,
+                              marpaESLIFRecognizerp,
 			      (fromCodes != NULL) ? fromCodes : "", /* In theory, it is impossible to have fromCodes == NULL here */
 			      " data before the failure",
 			      dumps,
@@ -5385,7 +5395,8 @@ static inline char *_marpaESLIF_charconvb(marpaESLIF_t *marpaESLIFp, char *toEnc
 
 	  dumps = inbuforigp + consumedl;
 	  dumpl = inleftl > 128 ? 128 : inleftl;
-	  MARPAESLIF_HEXDUMPV(marpaESLIFRecognizerp,
+	  MARPAESLIF_HEXDUMPV(funcs,
+                              marpaESLIFRecognizerp,
 			      (fromCodes != NULL) ? fromCodes : "", /* In theory, it is impossible to have fromCodes == NULL here */
 			      " data after the failure",
 			      dumps,
@@ -7254,7 +7265,8 @@ static inline short _marpaESLIFRecognizer_resume_oneb(marpaESLIFRecognizer_t *ma
           dumps = marpaESLIF_streamp->buffers;
           dumpl = marpaESLIF_streamp->inputs - marpaESLIF_streamp->buffers;
         }
-        MARPAESLIF_HEXDUMPV(marpaESLIFRecognizerp,
+        MARPAESLIF_HEXDUMPV(funcs,
+                            marpaESLIFRecognizerp,
                             "",
                             marpaESLIF_streamp->utfb ? "UTF-8 converted data before the failure" : "Raw data before the failure",
                             dumps,
@@ -7279,7 +7291,8 @@ static inline short _marpaESLIFRecognizer_resume_oneb(marpaESLIFRecognizer_t *ma
 
         dumps = marpaESLIF_streamp->inputs;
         dumpl = marpaESLIF_streamp->inputl > 128 ? 128 : marpaESLIF_streamp->inputl;
-        MARPAESLIF_HEXDUMPV(marpaESLIFRecognizerp,
+        MARPAESLIF_HEXDUMPV(funcs,
+                            marpaESLIFRecognizerp,
                             "",
                             marpaESLIF_streamp->utfb ? "UTF-8 converted data after the failure" : "Raw data after the failure",
                             dumps,
@@ -12342,7 +12355,7 @@ static inline short _marpaESLIFRecognizer_encoding_eqb(marpaESLIFRecognizer_t *m
     goto err;
   }
 #ifndef MARPAESLIF_NTRACE
-  MARPAESLIF_HEXDUMPV(marpaESLIFRecognizerParentp, "Trying to match", terminalp->descp->asciis, utf8s, utf8l, 1 /* traceb */);
+  MARPAESLIF_HEXDUMPV(funcs, marpaESLIFRecognizerParentp, "Trying to match", terminalp->descp->asciis, utf8s, utf8l, 1 /* traceb */);
 #endif
   /* Try to match */
   if (! _marpaESLIFRecognizer_terminal_matcherb(marpaESLIFRecognizerp,
@@ -18515,6 +18528,44 @@ void marpaESLIFSymbol_freev(marpaESLIFSymbol_t *marpaESLIFSymbolp)
 /*****************************************************************************/
 {
   _marpaESLIF_symbol_freev(marpaESLIFSymbolp);
+}
+
+/*****************************************************************************/
+static void _marpaESLIF_parameterStack_freev(genericStack_t *parameterStackp)
+/*****************************************************************************/
+{
+  size_t                  iteratorl;
+  size_t                  parameterStackl;
+  marpaESLIF_parameter_t *parameterp;
+
+  if (parameterStackp != NULL) {
+    parameterStackl = GENERICSTACK_USED(parameterStackp);
+    for (iteratorl = 0; iteratorl < parameterStackl; iteratorl < parameterStackl) {
+      parameterp = (marpaESLIF_parameter_t *) GENERICSTACK_GET_PTR(parameterStackp, iteratorl);
+      _marpaESLIF_parameter_freev(parameterp);
+    }
+    GENERICSTACK_FREE(parameterStackp);
+  }
+}
+
+/*****************************************************************************/
+static void _marpaESLIF_parameter_freev(marpaESLIF_parameter_t *parameterp)
+/*****************************************************************************/
+{
+  if (parameterp != NULL) {
+    switch (parameterp->type) {
+    case MARPAESLIF_PARAMETER_TYPE_ARGUMENT:
+      /* Only this type have an inner non-shallow pointer */
+      if (parameterp->u.argument.names != NULL) {
+        free(parameterp->u.argument.names);
+      }
+      break;
+    default:
+      break;
+    }
+  }
+
+  free(parameterp);
 }
 
 #include "bootstrap.c"

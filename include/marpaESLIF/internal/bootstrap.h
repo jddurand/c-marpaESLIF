@@ -46,9 +46,14 @@ typedef enum _marpaESLIFBootstrapStackTypeEnum {
   marpaESLIFBootstrapStackTypeEnum_ALTERNATIVE_NAME,
   marpaESLIFBootstrapStackTypeEnum_ARRAY,
   marpaESLIFBootstrapStackTypeEnum_STRING,
+  marpaESLIFBootstrapStackTypeEnum_LHS,
+  marpaESLIFBootstrapStackTypeEnum_PARAMETERS_DECL,
+  marpaESLIFBootstrapStackTypeEnum_PARAMETER_CALL,
+  marpaESLIFBootstrapStackTypeEnum_PARAMETERS_CALL,
   _marpaESLIFBootstrapStackTypeEnum_LAST
 } marpaESLIFBootstrapStackTypeEnum_t;
 
+/* Private contexts are generic constant pointers. The following internal constant is a way to have such values. */
 static char _MARPAESLIF_BOOTSTRAP_STACK_TYPE[_marpaESLIFBootstrapStackTypeEnum_LAST];
 
 #define MARPAESLIF_BOOTSTRAP_STACK_TYPE_NA                               &(_MARPAESLIF_BOOTSTRAP_STACK_TYPE[marpaESLIFBootstrapStackTypeEnum_NA])
@@ -90,9 +95,10 @@ static char _MARPAESLIF_BOOTSTRAP_STACK_TYPE[_marpaESLIFBootstrapStackTypeEnum_L
 #define MARPAESLIF_BOOTSTRAP_STACK_TYPE_ALTERNATIVE_NAME                 &(_MARPAESLIF_BOOTSTRAP_STACK_TYPE[marpaESLIFBootstrapStackTypeEnum_ALTERNATIVE_NAME])
 #define MARPAESLIF_BOOTSTRAP_STACK_TYPE_ARRAY                            &(_MARPAESLIF_BOOTSTRAP_STACK_TYPE[marpaESLIFBootstrapStackTypeEnum_ARRAY])
 #define MARPAESLIF_BOOTSTRAP_STACK_TYPE_STRING                           &(_MARPAESLIF_BOOTSTRAP_STACK_TYPE[marpaESLIFBootstrapStackTypeEnum_STRING])
-
-#define MARPAESLIF_BOOTSTRAP_STACK_TYPE_START MARPAESLIF_BOOTSTRAP_STACK_TYPE_NA
-#define MARPAESLIF_BOOTSTRAP_STACK_TYPE_END MARPAESLIF_BOOTSTRAP_STACK_TYPE_STRING
+#define MARPAESLIF_BOOTSTRAP_STACK_TYPE_LHS                              &(_MARPAESLIF_BOOTSTRAP_STACK_TYPE[marpaESLIFBootstrapStackTypeEnum_LHS])
+#define MARPAESLIF_BOOTSTRAP_STACK_TYPE_PARAMETERS_DECL                  &(_MARPAESLIF_BOOTSTRAP_STACK_TYPE[marpaESLIFBootstrapStackTypeEnum_PARAMETERS_DECL])
+#define MARPAESLIF_BOOTSTRAP_STACK_TYPE_PARAMETER_CALL                   &(_MARPAESLIF_BOOTSTRAP_STACK_TYPE[marpaESLIFBootstrapStackTypeEnum_PARAMETER_CALL])
+#define MARPAESLIF_BOOTSTRAP_STACK_TYPE_PARAMETERS_CALL                  &(_MARPAESLIF_BOOTSTRAP_STACK_TYPE[marpaESLIFBootstrapStackTypeEnum_PARAMETERS_CALL])
 
 /* Forward declarations */
 typedef enum   marpaESLIF_bootstrap_stack_context               marpaESLIF_bootstrap_stack_context_t;
@@ -105,6 +111,7 @@ typedef enum   marpaESLIF_bootstrap_inaccessible_treatment_type marpaESLIF_boots
 typedef enum   marpaESLIF_bootstrap_on_or_off_type              marpaESLIF_bootstrap_on_or_off_type_t;
 typedef enum   marpaESLIF_bootstrap_event_initializer_type      marpaESLIF_bootstrap_event_initializer_type_t;
 typedef enum   marpaESLIF_bootstrap_event_declaration_type      marpaESLIF_bootstrap_event_declaration_type_t;
+typedef enum   marpaESLIF_bootstrap_parameter_call_type         marpaESLIF_bootstrap_parameter_call_type_t;
 
 typedef struct marpaESLIF_bootstrap_utf_string                marpaESLIF_bootstrap_utf_string_t;
 typedef struct marpaESLIF_bootstrap_single_symbol             marpaESLIF_bootstrap_single_symbol_t;
@@ -116,6 +123,8 @@ typedef struct marpaESLIF_bootstrap_rhs_primary_exception     marpaESLIF_bootstr
 typedef struct marpaESLIF_bootstrap_rhs_primary_quantified    marpaESLIF_bootstrap_rhs_primary_quantified_t;
 typedef struct marpaESLIF_bootstrap_alternative               marpaESLIF_bootstrap_alternative_t;
 typedef struct marpaESLIF_bootstrap_event_initialization      marpaESLIF_bootstrap_event_initialization_t;
+typedef struct marpaESLIF_bootstrap_lhs                       marpaESLIF_bootstrap_lhs_t;
+typedef struct marpaESLIF_bootstrap_parameter_call            marpaESLIF_bootstrap_parameter_call_t;
 
 enum marpaESLIF_bootstrap_adverb_list_item_type {
   MARPAESLIF_BOOTSTRAP_ADVERB_LIST_ITEM_TYPE_NA = 0,
@@ -153,6 +162,11 @@ struct marpaESLIF_bootstrap_utf_string {
   char  *modifiers;
 };
 
+struct marpaESLIF_bootstrap_lhs {
+  char           *names;
+  genericStack_t *parametersDeclp;
+};
+
 enum marpaESLIF_bootstrap_single_symbol_type {
   MARPAESLIF_BOOTSTRAP_SINGLE_SYMBOL_TYPE_NA = 0,
   MARPAESLIF_BOOTSTRAP_SINGLE_SYMBOL_TYPE_SYMBOL,
@@ -164,7 +178,7 @@ enum marpaESLIF_bootstrap_single_symbol_type {
 struct marpaESLIF_bootstrap_single_symbol {
   marpaESLIF_bootstrap_single_symbol_type_t type;
   union {
-    char *symbols;
+    char                              *symbols;
     marpaESLIF_bootstrap_utf_string_t *characterClassp;
     marpaESLIF_bootstrap_utf_string_t *regularExpressionp;
     marpaESLIF_bootstrap_utf_string_t *quotedStringp;
@@ -178,7 +192,7 @@ struct marpaESLIF_bootstrap_adverb_list_item {
     short                                        left_associationb;
     short                                        right_associationb;
     short                                        group_associationb;
-    marpaESLIF_bootstrap_single_symbol_t        *separatorSingleSymbolp;
+    marpaESLIF_bootstrap_rhs_primary_t          *separatorRhsPrimaryp;
     short                                        properb;
     short                                        hideseparatorb;
     int                                          ranki;
@@ -249,6 +263,7 @@ struct marpaESLIF_bootstrap_rhs_primary {
   short                                    skipb;
   marpaESLIF_symbol_t                     *symbolShallowp;
   marpaESLIF_bootstrap_rhs_primary_type_t  type;
+  genericStack_t                          *parameterCallStackp;
   union {
     marpaESLIF_bootstrap_single_symbol_t             *singleSymbolp;
     marpaESLIF_bootstrap_symbol_name_and_reference_t *symbolNameAndReferencep;
@@ -284,6 +299,22 @@ enum marpaESLIF_bootstrap_event_initializer_type {
 struct marpaESLIF_bootstrap_event_initialization {
   char                                         *eventNames;
   marpaESLIF_bootstrap_event_initializer_type_t initializerb;
+};
+
+enum marpaESLIF_bootstrap_parameter_call_type {
+  MARPAESLIF_BOOTSTRAP_PARAMETER_CALL_TYPE_RHS_PRIMARY = 0,
+  MARPAESLIF_BOOTSTRAP_PARAMETER_CALL_TYPE_PARAMETER_DECL,
+  MARPAESLIF_BOOTSTRAP_PARAMETER_CALL_TYPE_BUILTIN_UNDEF,
+  MARPAESLIF_BOOTSTRAP_PARAMETER_CALL_TYPE_BUILTIN_TRUE,
+  MARPAESLIF_BOOTSTRAP_PARAMETER_CALL_TYPE_BUILTIN_FALSE
+};
+
+struct marpaESLIF_bootstrap_parameter_call {
+  marpaESLIF_bootstrap_parameter_call_type_t type;
+  union {
+    marpaESLIF_bootstrap_rhs_primary_t *rhsPrimaryp;
+    char                               *names;
+  } u;
 };
 
 static marpaESLIFValueRuleCallback_t _marpaESLIF_bootstrap_ruleActionResolver(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, char *actions);
