@@ -385,7 +385,6 @@ short marpaWrapperRecognizer_progressb(marpaWrapperRecognizer_t *marpaWrapperRec
   Marpa_Earley_Set_ID earleySetIdi;
   Marpa_Earley_Set_ID marpaEarleySetIdEndi;
   Marpa_Earley_Set_ID earleySetOrigIdi;
-  Marpa_Earleme       marpEarlemei;
   Marpa_Rule_ID       rulei;
   int                 realStarti = starti;
   int                 realEndi = endi;
@@ -431,13 +430,6 @@ short marpaWrapperRecognizer_progressb(marpaWrapperRecognizer_t *marpaWrapperRec
   marpaEarleySetIdEndi   = (Marpa_Earley_Set_ID) realEndi;
   nProgressl = 0;
   for (earleySetIdi = marpaEarleySetIdStarti; earleySetIdi <= marpaEarleySetIdEndi; earleySetIdi++) {
-
-    MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "marpa_r_earleme(%p, %d)", marpaWrapperRecognizerp->marpaRecognizerp, (int) earleySetIdi);
-    marpEarlemei = marpa_r_earleme(marpaWrapperRecognizerp->marpaRecognizerp, earleySetIdi);
-    if (marpEarlemei < 0) {
-      MARPAWRAPPER_MARPA_G_ERROR(genericLoggerp, marpaWrapperRecognizerp->marpaWrapperGrammarp->marpaGrammarp);
-      goto err;
-    }
 
     MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "marpa_r_progress_report_start(%p, %d)", marpaWrapperRecognizerp->marpaRecognizerp, (int) earleySetIdi);
     nbItemsi = marpa_r_progress_report_start(marpaWrapperRecognizerp->marpaRecognizerp, earleySetIdi);
@@ -495,7 +487,7 @@ short marpaWrapperRecognizer_progressb(marpaWrapperRecognizer_t *marpaWrapperRec
 }
 
 /****************************************************************************/
-short marpaWrapperRecognizer_progressLogb(marpaWrapperRecognizer_t *marpaWrapperRecognizerp, int starti, int endi, genericLoggerLevel_t logleveli, void *userDatavp, symbolDescriptionCallback_t symbolDescriptionCallbackp)
+short marpaWrapperRecognizer_progressLogb(marpaWrapperRecognizer_t *marpaWrapperRecognizerp, int starti, int endi, genericLoggerLevel_t logleveli, void *userDatavp, marpaWrapperRecognizerSymbolDescriptionCallback_t symbolDescriptionCallbackp)
 /****************************************************************************/
 {
   MARPAWRAPPER_FUNCS(marpaWrapperRecognizer_progressLogb)
@@ -688,4 +680,212 @@ marpaWrapperGrammar_t *marpaWrapperRecognizer_grammarp(marpaWrapperRecognizer_t 
 
   MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "return %p", marpaWrapperGrammarp);
   return marpaWrapperGrammarp;
+}
+
+/****************************************************************************/
+short marpaWrapperRecognizer_contextSetb(marpaWrapperRecognizer_t *marpaWrapperRecognizerp, marpaWrapperRecognizerContext_t context)
+/****************************************************************************/
+{
+  MARPAWRAPPER_FUNCS(marpaWrapperRecognizer_contextSetb)
+#ifndef MARPAWRAPPER_NTRACE
+  genericLogger_t       *genericLoggerp;
+#endif
+
+  if (marpaWrapperRecognizerp == NULL) {
+    errno = EINVAL;
+    goto err;
+  }
+
+#ifndef MARPAWRAPPER_NTRACE
+  genericLoggerp       = marpaWrapperRecognizerp->marpaWrapperRecognizerOption.genericLoggerp;
+#endif
+
+  MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "marpa_r_latest_earley_set_values_set(%p, %d, %p)", marpaWrapperRecognizerp->marpaRecognizerp, context.valuei, context.valuep);
+  if (marpa_r_latest_earley_set_values_set(marpaWrapperRecognizerp->marpaRecognizerp, context.valuei, context.valuep) < 0) {
+    MARPAWRAPPER_MARPA_G_ERROR(genericLoggerp, marpaWrapperRecognizerp->marpaWrapperGrammarp->marpaGrammarp);
+    goto err;
+  }
+
+
+  MARPAWRAPPER_TRACE(genericLoggerp, funcs, "return 1");
+  return 1;
+
+ err:
+  MARPAWRAPPER_TRACE(genericLoggerp, funcs, "return 0");
+  return 0;
+}
+
+/****************************************************************************/
+short marpaWrapperRecognizer_contextGetb(marpaWrapperRecognizer_t *marpaWrapperRecognizerp, int i, marpaWrapperRecognizerContext_t *contextp)
+/****************************************************************************/
+{
+  MARPAWRAPPER_FUNCS(marpaWrapperRecognizer_contextGetb)
+  int                    reali = i;
+  Marpa_Earley_Set_ID    marpaLatestEarleySetIdi;
+  int                    valuei;
+  void                  *valuep;
+#ifndef MARPAWRAPPER_NTRACE
+  genericLogger_t       *genericLoggerp;
+#endif
+
+  if (marpaWrapperRecognizerp == NULL) {
+    errno = EINVAL;
+    goto err;
+  }
+
+#ifndef MARPAWRAPPER_NTRACE
+  genericLoggerp       = marpaWrapperRecognizerp->marpaWrapperRecognizerOption.genericLoggerp;
+#endif
+
+  /* This function always succeed as per doc */
+  MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "marpa_r_latest_earley_set(%p)", marpaWrapperRecognizerp->marpaRecognizerp);
+  marpaLatestEarleySetIdi = marpa_r_latest_earley_set(marpaWrapperRecognizerp->marpaRecognizerp);
+  if (reali < 0) {
+    reali += (marpaLatestEarleySetIdi + 1);
+  }
+  if (reali < 0) {
+    MARPAWRAPPER_ERRORF(genericLoggerp, "i must be in range [%d-%d]", (int) (-(marpaLatestEarleySetIdi+1)), (int) marpaLatestEarleySetIdi);
+    errno = EINVAL;
+    goto err;
+  }
+
+  MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "marpa_r_earley_set_values(%p, %d, %p, %p)", marpaWrapperRecognizerp->marpaRecognizerp, reali, &valuei, &valuep);
+  if (marpa_r_earley_set_values(marpaWrapperRecognizerp->marpaRecognizerp, (Marpa_Earley_Set_ID) reali, &valuei, &valuep) < 0) {
+    MARPAWRAPPER_MARPA_G_ERROR(genericLoggerp, marpaWrapperRecognizerp->marpaWrapperGrammarp->marpaGrammarp);
+    goto err;
+  }
+
+  if (contextp != NULL) {
+    contextp->valuei = valuei;
+    contextp->valuep = valuep;
+  }
+
+  MARPAWRAPPER_TRACE(genericLoggerp, funcs, "return 1");
+  return 1;
+
+ err:
+  MARPAWRAPPER_TRACE(genericLoggerp, funcs, "return 0");
+  return 0;
+}
+
+/****************************************************************************/
+short marpaWrapperRecognizer_currentEarlemeb(marpaWrapperRecognizer_t *marpaWrapperRecognizerp, int *ip)
+/****************************************************************************/
+{
+  MARPAWRAPPER_FUNCS(marpaWrapperRecognizer_currentEarlemeb)
+  Marpa_Earleme currentEarlemei;
+#ifndef MARPAWRAPPER_NTRACE
+  genericLogger_t       *genericLoggerp;
+#endif
+
+  if (marpaWrapperRecognizerp == NULL) {
+    errno = EINVAL;
+    goto err;
+  }
+
+#ifndef MARPAWRAPPER_NTRACE
+  genericLoggerp       = marpaWrapperRecognizerp->marpaWrapperRecognizerOption.genericLoggerp;
+#endif
+
+  MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "marpa_r_current_earleme(%p)", marpaWrapperRecognizerp->marpaRecognizerp);
+  /* Always succeeds as per the doc */
+  currentEarlemei = marpa_r_current_earleme(marpaWrapperRecognizerp->marpaRecognizerp);
+
+  if (ip != NULL) {
+    *ip = (int) currentEarlemei;
+  }
+
+  MARPAWRAPPER_TRACE(genericLoggerp, funcs, "return 1");
+  return 1;
+
+ err:
+  MARPAWRAPPER_TRACE(genericLoggerp, funcs, "return 0");
+  return 0;
+}
+
+/****************************************************************************/
+short marpaWrapperRecognizer_earlemeb(marpaWrapperRecognizer_t *marpaWrapperRecognizerp, int i, int *ip)
+/****************************************************************************/
+{
+  MARPAWRAPPER_FUNCS(marpaWrapperRecognizer_earlemeb)
+  int                    reali = i;
+  Marpa_Earley_Set_ID    marpaLatestEarleySetIdi;
+  Marpa_Earleme          earlemei;
+#ifndef MARPAWRAPPER_NTRACE
+  genericLogger_t       *genericLoggerp;
+#endif
+
+  if (marpaWrapperRecognizerp == NULL) {
+    errno = EINVAL;
+    goto err;
+  }
+
+#ifndef MARPAWRAPPER_NTRACE
+  genericLoggerp       = marpaWrapperRecognizerp->marpaWrapperRecognizerOption.genericLoggerp;
+#endif
+
+  /* This function always succeed as per doc */
+  MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "marpa_r_latest_earley_set(%p)", marpaWrapperRecognizerp->marpaRecognizerp);
+  marpaLatestEarleySetIdi = marpa_r_latest_earley_set(marpaWrapperRecognizerp->marpaRecognizerp);
+  if (reali < 0) {
+    reali += (marpaLatestEarleySetIdi + 1);
+  }
+  if (reali < 0) {
+    MARPAWRAPPER_ERRORF(genericLoggerp, "i must be in range [%d-%d]", (int) (-(marpaLatestEarleySetIdi+1)), (int) marpaLatestEarleySetIdi);
+    errno = EINVAL;
+    goto err;
+  }
+
+  MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "marpa_r_earleme(%p, %d)", marpaWrapperRecognizerp->marpaRecognizerp, reali);
+  earlemei = marpa_r_earleme(marpaWrapperRecognizerp->marpaRecognizerp, (Marpa_Earley_Set_ID) reali);
+  if (earlemei < 0) {
+    MARPAWRAPPER_MARPA_G_ERROR(genericLoggerp, marpaWrapperRecognizerp->marpaWrapperGrammarp->marpaGrammarp);
+    goto err;
+  }
+
+  if (ip != NULL) {
+    *ip = (int) earlemei;
+  }
+
+  MARPAWRAPPER_TRACE(genericLoggerp, funcs, "return 1");
+  return 1;
+
+ err:
+  MARPAWRAPPER_TRACE(genericLoggerp, funcs, "return 0");
+  return 0;
+}
+
+/****************************************************************************/
+short marpaWrapperRecognizer_furthestEarlemeb(marpaWrapperRecognizer_t *marpaWrapperRecognizerp, int *ip)
+/****************************************************************************/
+{
+  MARPAWRAPPER_FUNCS(marpaWrapperRecognizer_furthestEarlemeb)
+  Marpa_Earleme furthestEarlemei;
+#ifndef MARPAWRAPPER_NTRACE
+  genericLogger_t       *genericLoggerp;
+#endif
+
+  if (marpaWrapperRecognizerp == NULL) {
+    errno = EINVAL;
+    goto err;
+  }
+
+#ifndef MARPAWRAPPER_NTRACE
+  genericLoggerp       = marpaWrapperRecognizerp->marpaWrapperRecognizerOption.genericLoggerp;
+#endif
+
+  MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "marpa_r_furthest_earleme(%p)", marpaWrapperRecognizerp->marpaRecognizerp);
+  /* Always succeeds as per the doc */
+  furthestEarlemei = marpa_r_furthest_earleme(marpaWrapperRecognizerp->marpaRecognizerp);
+
+  if (ip != NULL) {
+    *ip = (int) furthestEarlemei;
+  }
+
+  MARPAWRAPPER_TRACE(genericLoggerp, funcs, "return 1");
+  return 1;
+
+ err:
+  MARPAWRAPPER_TRACE(genericLoggerp, funcs, "return 0");
+  return 0;
 }
