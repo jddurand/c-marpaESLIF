@@ -1618,7 +1618,7 @@ static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *mar
         goto err;
       }
       if (pcre2JitOptionl == 0) {
-        MARPAESLIF_TRACEF(marpaESLIFp, funcs, "%s: (*NO_JIT) detected in regex - disabling JIT match", terminalp->descp->asciis);
+        MARPAESLIF_TRACEF(marpaESLIFp, funcs, "%s: JIT size empty in regex - disabling JIT match", terminalp->descp->asciis);
         terminalp->regex.jitCompleteb = 0;
         terminalp->regex.jitPartialb = 0;
       }
