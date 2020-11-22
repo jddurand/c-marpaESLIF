@@ -48,11 +48,10 @@ const static int __genericStack_max_initial_indice = -1; /* Not used */
 /* you should define GENERICSTACK_ZERO_INT_IS_NOT_ZERO_BYTES              */
 /* ====================================================================== */
 #ifdef GENERICSTACK_ZERO_INT_IS_NOT_ZERO_BYTES
-#define _GENERICSTACK_CALLOC(memsetflag, dst, nmemb, size) do {		\
+#define _GENERICSTACK_CALLOC(memsetflag, dst, nmemb, type) do {		\
     memsetflag = 1;							\
-    dst = malloc(nmemb * size);						\
+    dst = (type *) malloc((nmemb) * sizeof(type));			\
   } while (0)
-#define _GENERICSTACK_MALLOC(memsetflag, size) memsetflag=1, malloc(size)
 #if GENERICSTACK_DEFAULT_LENGTH > 0
 #define _GENERICSTACK_NA_MEMSET(stackName, indiceStart, indiceEnd) do {	\
     int _indiceStart = indiceStart;                                     \
@@ -63,17 +62,18 @@ const static int __genericStack_max_initial_indice = -1; /* Not used */
 	int _i_for_memset_max = (_indiceEnd >= __genericStack_max_initial_indice) ? __genericStack_max_initial_indice : _indiceEnd; \
 	for (_i_for_memset = _indiceStart;				\
 	     _i_for_memset <= _i_for_memset_max;			\
-	     _i_for_extend++) {						\
-	  stackName->initialItems[_i_for_extend].type = GENERICSTACKITEMTYPE_NA; \
+	     _i_for_memset++) {						\
+	  stackName->initialItems[_i_for_memset].type = GENERICSTACKITEMTYPE_NA; \
 	}								\
       }									\
       if (_indiceEnd > __genericStack_max_initial_indice) {		\
+	int _i_for_memset;						\
 	int _i_for_memset_min = (_indiceStart <= __genericStack_max_initial_indice) ? 0 : _indiceStart - __genericStack_max_initial_indice - 1; \
 	int _i_for_memset_max = _indiceEnd - __genericStack_max_initial_indice - 1; \
 	for (_i_for_memset = _i_for_memset_min;				\
 	     _i_for_memset <= _i_for_memset_max;			\
-	     _i_for_extend++) {						\
-	  stackName->heapItems[_i_for_extend].type = GENERICSTACKITEMTYPE_NA; \
+	     _i_for_memset++) {						\
+	  stackName->heapItems[_i_for_memset].type = GENERICSTACKITEMTYPE_NA; \
 	}								\
       }									\
     }									\
@@ -83,20 +83,20 @@ const static int __genericStack_max_initial_indice = -1; /* Not used */
     int _indiceStart = indiceStart;                                     \
     int _indiceEnd = indiceEnd;                                         \
     if (_indiceStart <= _indiceEnd) {					\
+      int _i_for_memset;						\
       for (_i_for_memset = _indiceStart;                                \
 	   _i_for_memset <= _indiceEnd;					\
-	   _i_for_extend++) {						\
-	stackName->heapItems[_i_for_extend].type = GENERICSTACKITEMTYPE_NA; \
+	   _i_for_memset++) {						\
+	stackName->heapItems[_i_for_memset].type = GENERICSTACKITEMTYPE_NA; \
       }									\
     }									\
   } while (0)
 #endif /* GENERICSTACK_DEFAULT_LENGTH */
 #else /* GENERICSTACK_ZERO_INT_IS_NOT_ZERO_BYTES */
-#define _GENERICSTACK_CALLOC(memsetflag, dst, nmemb, size) do {		\
+#define _GENERICSTACK_CALLOC(memsetflag, dst, nmemb, type) do {		\
     memsetflag = 0;							\
-    dst = calloc(nmemb, size);						\
+    dst = (type *) calloc(nmemb, sizeof(type));				\
   } while (0)
-#define _GENERICSTACK_MALLOC(memsetflag, size) memsetflag=0, malloc(size)
 #if GENERICSTACK_DEFAULT_LENGTH > 0
 #define _GENERICSTACK_NA_MEMSET(stackName, indiceStart, indiceEnd) do {	\
     int _indiceStart = indiceStart;                                     \
@@ -133,9 +133,6 @@ const static int __genericStack_max_initial_indice = -1; /* Not used */
 #endif
 
 #if GENERICSTACK_DEFAULT_LENGTH > 0
-#define _GENERICSTACK_DECLARE_INITIAL_ITEMS()			\
-  genericStackItem_t  defaultItems[GENERICSTACK_DEFAULT_LENGTH];	\
-  genericStackItem_t *initialItems
 #ifdef GENERICSTACK_ZERO_INT_IS_NOT_ZERO_BYTES
 #define _GENERICSTACK_INIT_INITIAL_ITEMS(stackName)	\
   stackName->initialItems = stackName->defaultItems;	\
@@ -145,8 +142,6 @@ const static int __genericStack_max_initial_indice = -1; /* Not used */
   stackName->initialItems = stackName->defaultItems;
 #endif
 #else
-#define _GENERICSTACK_DECLARE_INITIAL_ITEMS()	\
-  genericStackItem_t *initialItems
 #define _GENERICSTACK_INIT_INITIAL_ITEMS(stackName)	\
   stackName->initialItems = NULL;
 #endif
@@ -250,7 +245,10 @@ typedef struct genericStack {
   int tmpIndex;
   int tmpSize;
   genericStackItem_t *tmpItems;
-  _GENERICSTACK_DECLARE_INITIAL_ITEMS();
+#if GENERICSTACK_DEFAULT_LENGTH > 0
+  genericStackItem_t  defaultItems[GENERICSTACK_DEFAULT_LENGTH];
+#endif
+  genericStackItem_t *initialItems;
 } genericStack_t;
 
 /* General note: parameters for internal macros are not enclosed in ()    */
@@ -314,7 +312,6 @@ typedef struct genericStack {
     if ((_genericStackExtend_wantedLength > GENERICSTACK_DEFAULT_LENGTH) &&	\
 	(_genericStackExtend_wantedLength > _genericStackExtend_currentLength)) { \
       int _genericStackExtend_wantedHeapLength = _genericStackExtend_wantedLength - GENERICSTACK_DEFAULT_LENGTH; \
-      int _genericStackExtend_currentHeapLength = _genericStackExtend_currentLength - GENERICSTACK_DEFAULT_LENGTH; \
       int _genericStackExtend_newHeapLength;				\
       genericStackItem_t *_genericStackExtend_heapItems = stackName->heapItems; \
       short _genericStackExtend_memsetb;				\
@@ -345,7 +342,7 @@ typedef struct genericStack {
         errno = EINVAL;                                                 \
       } else {                                                          \
         if (_genericStackExtend_heapItems == NULL) {			\
-          _GENERICSTACK_CALLOC(_genericStackExtend_memsetb, _genericStackExtend_heapItems, _genericStackExtend_newHeapLength, sizeof(genericStackItem_t)); \
+          _GENERICSTACK_CALLOC(_genericStackExtend_memsetb, _genericStackExtend_heapItems, _genericStackExtend_newHeapLength, genericStackItem_t); \
         } else {                                                        \
           _genericStackExtend_memsetb = 1;                              \
           _genericStackExtend_heapItems = (genericStackItem_t *) realloc(_genericStackExtend_heapItems, sizeof(genericStackItem_t) * _genericStackExtend_newHeapLength); \
@@ -379,31 +376,31 @@ typedef struct genericStack {
 /* Initialization                                                         */
 /* ====================================================================== */
 #define GENERICSTACK_INIT(stackName) do {                               \
-    if ((stackName) != NULL) {						\
+    if (stackName != NULL) {						\
       _GENERICSTACK_INIT_INITIAL_ITEMS(stackName);			\
-      (stackName)->heapItems = NULL;					\
-      (stackName)->heapLength = 0;					\
-      (stackName)->used = 0;						\
-      (stackName)->error = 0;						\
+      stackName->heapItems = NULL;					\
+      stackName->heapLength = 0;					\
+      stackName->used = 0;						\
+      stackName->error = 0;						\
     }									\
   } while (0)
 
 #define GENERICSTACK_NEW(stackName) do {				\
-    (stackName) = malloc(sizeof(genericStack_t));			\
-    GENERICSTACK_INIT((stackName));					\
+    stackName = (genericStack_t *) malloc(sizeof(genericStack_t));	\
+    GENERICSTACK_INIT(stackName);					\
   } while (0)
 
 #define GENERICSTACK_NEW_SIZED(stackName, wantedLength) do {		\
-    GENERICSTACK_NEW((stackName));					\
+    GENERICSTACK_NEW(stackName);					\
     if (! GENERICSTACK_ERROR(stackName)) {				\
-      _GENERICSTACK_EXTEND((stackName), (wantedLength));		\
+      _GENERICSTACK_EXTEND(stackName, wantedLength);			\
     }									\
   } while (0)
 
 #define GENERICSTACK_INIT_SIZED(stackName, wantedLength) do {		\
-    GENERICSTACK_INIT((stackName));					\
+    GENERICSTACK_INIT(stackName);					\
     if (! GENERICSTACK_ERROR(stackName)) {				\
-      _GENERICSTACK_EXTEND((stackName), (wantedLength));		\
+      _GENERICSTACK_EXTEND(stackName, wantedLength);			\
     }									\
   } while (0)
 
