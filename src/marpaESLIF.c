@@ -984,6 +984,7 @@ static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *mar
   short                             memcmpb               = 0;
   marpaESLIF_terminal_t            *terminalp             = NULL;
   marpaWrapperGrammarSymbolOption_t marpaWrapperGrammarSymbolOption;
+  size_t                            pcre2JitOptionl = 0;
   marpaESLIF_uint32_t               pcre2Optioni = PCRE2_ANCHORED;
   int                               pcre2Errornumberi;
   PCRE2_SIZE                        pcre2ErrorOffsetl;
@@ -1610,13 +1611,13 @@ static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *mar
     /* Even if JIT compiles ok, the pattern may have said (*NO_JIT) and the only way to know about that */
     /* is to check PCRE2_INFO_JITSIZE */
     if (terminalp->regex.jitCompleteb || terminalp->regex.jitPartialb) {
-      pcre2Errornumberi = pcre2_pattern_info(terminalp->regex.patternp, PCRE2_INFO_JITSIZE, &pcre2Optioni);
+      pcre2Errornumberi = pcre2_pattern_info(terminalp->regex.patternp, PCRE2_INFO_JITSIZE, &pcre2JitOptionl);
       if (pcre2Errornumberi != 0) {
         pcre2_get_error_message(pcre2Errornumberi, pcre2ErrorBuffer, sizeof(pcre2ErrorBuffer));
         MARPAESLIF_ERRORF(marpaESLIFp, "%s: pcre2_pattern_info failure: %s", terminalp->descp->asciis, pcre2ErrorBuffer);
         goto err;
       }
-      if (pcre2Optioni == 0) {
+      if (pcre2JitOptionl == 0) {
         MARPAESLIF_TRACEF(marpaESLIFp, funcs, "%s: (*NO_JIT) detected in regex - disabling JIT match", terminalp->descp->asciis);
         terminalp->regex.jitCompleteb = 0;
         terminalp->regex.jitPartialb = 0;
