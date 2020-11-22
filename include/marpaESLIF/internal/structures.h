@@ -290,7 +290,7 @@ struct marpaESLIF_meta {
   marpaESLIFGrammar_t         *marpaESLIFGrammarLexemeClonep;   /* Cloned ESLIF grammar in lexeme search mode (no event) */
   size_t                       nSymbolStartl;                   /* Number of lexemes at the very beginning of marpaWrapperGrammarStartp */
   int                         *symbolArrayStartp;               /* Lexemes at the very beginning of marpaWrapperGrammarStartp */
-  genericStack_t              *parameterStackp;
+  int                          argumenti;                       /* Number of arguments, -1 means absence of arguments */
 };
 
 struct marpaESLIFValue {
