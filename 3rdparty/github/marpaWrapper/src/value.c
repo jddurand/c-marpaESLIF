@@ -48,7 +48,7 @@ marpaWrapperValue_t *marpaWrapperValue_newp(marpaWrapperRecognizer_t *marpaWrapp
   }
 
   /* Create a value instance */
-  marpaWrapperValuep = malloc(sizeof(marpaWrapperValue_t));
+  marpaWrapperValuep = (marpaWrapperValue_t *) malloc(sizeof(marpaWrapperValue_t));
   if (marpaWrapperValuep == NULL) {
     MARPAWRAPPER_ERRORF(genericLoggerp, "malloc failure: %s", strerror(errno));
     goto err;

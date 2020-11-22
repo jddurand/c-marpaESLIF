@@ -17,12 +17,6 @@ typedef struct traverseContext {
 static char *penn_tag_symbols(traverseContext_t *traverseContextp, int symbolIdi);
 static char *penn_tag_rules(traverseContext_t *traverseContextp, int ruleIdi);
 static short full_traverserCallbacki(marpaWrapperAsfTraverser_t *traverserp, void *userDatavp, int *valueip);
-static short okSymbolCallback(void *userDatavp, genericStack_t *parentRuleiStackp, int symboli, int argi);
-static short okNullingCallback(void *userDatavp, genericStack_t *parentRuleiStackp, int symboli);
-static short okRuleCallback(void *userDatavp, genericStack_t *parentRuleiStackp, int rulei, int arg0i, int argni);
-static short valueRuleCallback(void *userDatavp, int rulei, int arg0i, int argni, int resulti);
-static short valueSymbolCallback(void *userDatavp, int symboli, int argi, int resulti);
-static short valueNullingCallback(void *userDatavp, int symboli, int resulti);
 static void  freeStringStackv(genericStack_t *stringStackp);
 static void  freeStringArrayStackv(genericStack_t *stringStackp);
 
@@ -56,7 +50,6 @@ int main(int argc, char **argv) {
   int                            symbolip[MAX_SYMBOL];
   int                            ruleip[MAX_RULE];
   int                            rci = 0;
-  int                           *symbolArrayp = NULL;
   int                            valuei;
   traverseContext_t              traverseContext = { NULL, symbolip, ruleip, NULL, NULL, GENERICLOGGER_NEW(GENERICLOGGER_LOGLEVEL_DEBUG) };
   
@@ -227,7 +220,7 @@ int main(int argc, char **argv) {
     int             i;
     GENERICLOGGER_INFO(traverseContext.genericLoggerp, "full traverser returns:");
 
-    stringStackp = GENERICSTACK_GET_PTR(traverseContext.outputStackp, valuei);
+    stringStackp = (genericStack_t *) GENERICSTACK_GET_PTR(traverseContext.outputStackp, valuei);
     for (i = 0; i < GENERICSTACK_USED(stringStackp); i++) {
       GENERICLOGGER_INFOF(traverseContext.genericLoggerp, "Indice %d:\n%s", i, GENERICSTACK_GET_PTR(stringStackp, i));
     }    
@@ -341,236 +334,6 @@ static char *penn_tag_rules(traverseContext_t *traverseContextp, int ruleIdi)
   return s;
 }
 
-/********************************************************************************/
-static short okSymbolCallback(void *userDatavp, genericStack_t *parentRuleiStackp, int symboli, int argi)
-/********************************************************************************/
-{
-  traverseContext_t *traverseContextp = (traverseContext_t *) userDatavp;
-  genericLogger_t   *genericLoggerp = traverseContextp->genericLoggerp;
-  short              rcb;
-  char              *descs;
-
-  descs = penn_tag_symbols(traverseContextp, symboli);
-  if (descs == NULL) {
-    GENERICLOGGER_ERRORF(genericLoggerp, "okSymbolCallback description failure for symbol %d", symboli);
-    goto err;
-  }
-  
-  /* We accept any symbol */
-  rcb = 1;
-  goto done;
-
- err:
-  rcb = 0;
-
- done:
-  GENERICLOGGER_DEBUGF(genericLoggerp, "[okSymbolCallback] Symbol %d %s: returns %d", symboli, descs != NULL ? descs : "???", (int) rcb);
-  if (descs != NULL) {
-    free(descs);
-  }
-  return rcb;
-}
-
-/********************************************************************************/
-static short okNullingCallback(void *userDatavp, genericStack_t *parentRuleiStackp, int symboli)
-/********************************************************************************/
-{
-  traverseContext_t *traverseContextp = (traverseContext_t *) userDatavp;
-  genericLogger_t   *genericLoggerp = traverseContextp->genericLoggerp;
-  short              rcb;
-  char              *descs;
-
-  descs = penn_tag_symbols(traverseContextp, symboli);
-  if (descs == NULL) {
-    GENERICLOGGER_ERRORF(genericLoggerp, "okNullingCallback description failure for symbol %d", symboli);
-    goto err;
-  }
-  
-  /* We reject any nullable in our grammar */
-  rcb = -1;
-  goto done;
-
- err:
-  rcb = 0;
-
- done:
-  GENERICLOGGER_DEBUGF(genericLoggerp, "[okSymbolCallback] Symbol %d %s: returns %d", symboli, descs != NULL ? descs : "???", (int) rcb);
-  if (descs != NULL) {
-    free(descs);
-  }
-  return rcb;
-}
-
-/********************************************************************************/
-static short okRuleCallback(void *userDatavp, genericStack_t *parentRuleiStackp, int rulei, int arg0i, int argni)
-/********************************************************************************/
-{
-  traverseContext_t *traverseContextp = (traverseContext_t *) userDatavp;
-  genericLogger_t   *genericLoggerp = traverseContextp->genericLoggerp;
-  short              rcb;
-  char              *descs;
-
-  descs = penn_tag_rules(traverseContextp, rulei);
-  if (descs == NULL) {
-    GENERICLOGGER_ERRORF(genericLoggerp, "okRuleCallback description failure for rule %d", rulei);
-    goto err;
-  }
-  
-  /* We want to rejected first ::= 'B' */
-  rcb = (rulei == FIRST_RULE02) ? -1 : 1;
-  goto done;
-
- err:
-  rcb = 0;
-
- done:
-  GENERICLOGGER_DEBUGF(genericLoggerp, "[okRuleCallback] Rule %d %s: returns %d", rulei, descs != NULL ? descs : "???", (int) rcb);
-  if (descs != NULL) {
-    free(descs);
-  }
-  return rcb;
-}
-
-/********************************************************************************/
-static short valueRuleCallback(void *userDatavp, int rulei, int arg0i, int argni, int resulti)
-/********************************************************************************/
-{
-  traverseContext_t *traverseContextp = (traverseContext_t *) userDatavp;
-  genericLogger_t   *genericLoggerp   = traverseContextp->genericLoggerp;
-  char              *p                = NULL;
-  int                i;
-  char              *q;
-  char              *descs;
-  char              *tmp;
-  short              rcb;
-
-  descs = penn_tag_rules(traverseContextp, rulei);
-  if (descs == NULL) {
-    GENERICLOGGER_ERRORF(genericLoggerp, "valueRuleCallback description failure for rule %d", rulei);
-    goto err;
-  }
-
-  /* "(descs" */
-  p = (char *) malloc(1 + strlen(descs) + 1);
-  if (p == NULL) {
-    GENERICLOGGER_ERRORF(genericLoggerp, "[valueRuleCallback] malloc failure, %s", strerror(errno));
-    goto err;
-  }
-  strcpy(p, "(");
-  strcat(p, descs);
-  for (i = arg0i; i <= argni; i++) {
-    q = GENERICSTACK_GET_PTR(traverseContextp->outputStackp, i);
-    if (GENERICSTACK_ERROR(traverseContextp->outputStackp)) {
-      GENERICLOGGER_ERRORF(genericLoggerp, "[valueRuleCallback] outputStackp get failure, %s", strerror(errno));
-      goto err;
-    }
-    tmp = (char *) realloc(p, strlen(p) + 1 /* space */ + strlen(q) /* value*/ + 1 /* 0 */);
-    if (tmp == NULL) {
-      GENERICLOGGER_ERRORF(genericLoggerp, "valueRuleCallback realloc failure, %s", strerror(errno));
-      goto err;
-    }
-    p = tmp;
-    strcat(p, " ");
-    strcat(p, q);
-  }
-  /* Append ")" */
-  tmp = (char *) realloc(p, strlen(p) + 2);
-  if (tmp == NULL) {
-    GENERICLOGGER_ERRORF(genericLoggerp, "valueRuleCallback realloc failure, %s", strerror(errno));
-    goto err;
-  }
-  p = tmp;
-  strcat(p, ")");
-  GENERICSTACK_SET_PTR(traverseContextp->outputStackp, p, resulti);
-  if (GENERICSTACK_ERROR(traverseContextp->outputStackp)) {
-    GENERICLOGGER_ERRORF(genericLoggerp, "[valueRuleCallback] outputStackp set failure, %s", strerror(errno));
-    goto err;
-  }
-
-  rcb = 1;
-  goto done;
-
- err:
-  rcb = 0;
-  if (p != NULL) {
-    free(p);
-  }
-
- done:
-  GENERICLOGGER_DEBUGF(genericLoggerp, "[valueRuleCallback] Rule %s, return %d, output stack [%d..%d] => output stack %d %s", descs != NULL ? descs : "???", (int) rcb, arg0i, argni, resulti, rcb ? p : "");
-  if (descs != NULL) {
-    free(descs);
-  }
-  return rcb;
-}
-
-/********************************************************************************/
-static short valueSymbolCallback(void *userDatavp, int symboli, int argi, int resulti)
-/********************************************************************************/
-{
-  traverseContext_t *traverseContextp = (traverseContext_t *) userDatavp;
-  genericLogger_t   *genericLoggerp   = traverseContextp->genericLoggerp;
-  char              *p                = NULL;
-  char              *s                = NULL;
-  char              *descs;
-  short              rcb;
-
-  descs = penn_tag_symbols(traverseContextp, symboli);
-  if (descs == NULL) {
-    GENERICLOGGER_ERRORF(genericLoggerp, "valueSymbolCallback description failure for symbol %d", symboli);
-    goto err;
-  }
-
-  s = GENERICSTACK_GET_PTR(traverseContextp->inputStackp, argi);
-  if (GENERICSTACK_ERROR(traverseContextp->inputStackp)) {
-    GENERICLOGGER_ERRORF(genericLoggerp, "[valueSymbolCallback] inputStackp get failure, %s", strerror(errno));
-    goto err;
-  }
-  /* We generate "(descs s)" */
-  p = (char *) malloc(1 + strlen(descs) + 1 + strlen(s) + 1 + 1);
-  if (p == NULL) {
-    GENERICLOGGER_ERRORF(genericLoggerp, "[valueSymbolCallback] malloc failure, %s", strerror(errno));
-    goto err;
-  }
-  strcpy(p, "(");
-  strcat(p, descs);
-  strcat(p, " ");
-  strcat(p, s);
-  strcat(p, ")");
-  GENERICSTACK_SET_PTR(traverseContextp->outputStackp, p, resulti);
-  if (GENERICSTACK_ERROR(traverseContextp->outputStackp)) {
-    GENERICLOGGER_ERRORF(genericLoggerp, "[valueSymbolCallback] outputStackp set failure, %s", strerror(errno));
-    goto err;
-  }
-
-  rcb = 1;
-  goto done;
-
- err:
-  rcb = 0;
-  if (p != NULL) {
-    free(p);
-  }
-
- done:
-  GENERICLOGGER_DEBUGF(genericLoggerp, "[valueSymbolCallback] Symbol %s, return %d, input stack %d \"%s\" => output stack %d %s", descs != NULL ? descs : "???", (int) rcb, argi, s != NULL ? s : "???", resulti, rcb ? p : "");
-  if (descs != NULL) {
-    free(descs);
-  }
-  return rcb;
-}
-
-/********************************************************************************/
-static short valueNullingCallback(void *userDatavp, int symboli, int resulti)
-/********************************************************************************/
-{
-  traverseContext_t *traverseContextp = (traverseContext_t *) userDatavp;
-  genericLogger_t   *genericLoggerp = traverseContextp->genericLoggerp;
-
-  GENERICLOGGER_DEBUG(genericLoggerp, "[valueNullingCallback] return 0");
-  return 0;
-}
-
 /* Copy of full traverser of marpaWrapperAsfTester.c, to show what are all the parse trees */
 /********************************************************************************/
 static short full_traverserCallbacki(marpaWrapperAsfTraverser_t *traverserp, void *userDatavp, int *valueip)
@@ -609,14 +372,14 @@ static short full_traverserCallbacki(marpaWrapperAsfTraverser_t *traverserp, voi
     
     marpaWrapperAsf_traverse_rh_valueb(traverserp, 0, &spanIdi, NULL /* lengthip */);
     indicei     = spanIdi + 1; /* The spanId correspond to the inputstack indice spanId+1 */
-    tokenValues = GENERICSTACK_GET_PTR(traverseContextp->inputStackp, indicei);
+    tokenValues = (char *) GENERICSTACK_GET_PTR(traverseContextp->inputStackp, indicei);
 
     GENERICLOGGER_DEBUGF(genericLoggerp, "[%s][%d:%d] ... spanIdi=%d", funcs, ruleIdi, symbolIdi, spanIdi);
     GENERICLOGGER_DEBUGF(genericLoggerp, "[%s][%d:%d] ... Token is \"%s\"", funcs, ruleIdi, symbolIdi, tokenValues);
 
     /* We want to generate the string "(penntag literal)" */
     stringl = 1 + strlen(symbolNames) + 1 + strlen(tokenValues) + 1 + 1;
-    strings = malloc(stringl);
+    strings = (char *) malloc(stringl);
     sprintf(strings, "(%s %s)", symbolNames, tokenValues);
 
     /* We return a stack of string containing only one string */
@@ -653,16 +416,16 @@ static short full_traverserCallbacki(marpaWrapperAsfTraverser_t *traverserp, voi
         GENERICSTACK_NEW(newResultStackp);
 
         for (i = 0; i < GENERICSTACK_USED(resultStackp); i++) {
-          genericStack_t *oldResultStackp = GENERICSTACK_GET_PTR(resultStackp, i);
+          genericStack_t *oldResultStackp = (genericStack_t *) GENERICSTACK_GET_PTR(resultStackp, i);
           int             childValuei;
           genericStack_t *childValueStackp;
           int             j;
 
 	  marpaWrapperAsf_traverse_rh_valueb(traverserp, rhIxi, &childValuei, NULL /* lengthip */);
-          childValueStackp = GENERICSTACK_GET_PTR(traverseContextp->outputStackp, (size_t) childValuei);
+          childValueStackp = (genericStack_t *) GENERICSTACK_GET_PTR(traverseContextp->outputStackp, (size_t) childValuei);
 
           for (j = 0; j < GENERICSTACK_USED(childValueStackp); j++) {
-            char           *newValues = GENERICSTACK_GET_PTR(childValueStackp, j);
+            char           *newValues = (char *) GENERICSTACK_GET_PTR(childValueStackp, j);
             int             k;
             genericStack_t *stackp;
 
@@ -677,7 +440,7 @@ static short full_traverserCallbacki(marpaWrapperAsfTraverser_t *traverserp, voi
         }
 
         while (GENERICSTACK_USED(resultStackp) > 0) {
-          genericStack_t *stackp = GENERICSTACK_POP_PTR(resultStackp);
+          genericStack_t *stackp = (genericStack_t *) GENERICSTACK_POP_PTR(resultStackp);
           GENERICSTACK_FREE(stackp);
         }
         GENERICSTACK_FREE(resultStackp);
@@ -691,7 +454,7 @@ static short full_traverserCallbacki(marpaWrapperAsfTraverser_t *traverserp, voi
         int i;
 
         for (i = 0; i < GENERICSTACK_USED(resultStackp); i++) {
-          genericStack_t *stackp = GENERICSTACK_GET_PTR(resultStackp, i);
+          genericStack_t *stackp = (genericStack_t *) GENERICSTACK_GET_PTR(resultStackp, i);
           int             j;
           size_t          stringl;
           char           *strings;
@@ -699,19 +462,19 @@ static short full_traverserCallbacki(marpaWrapperAsfTraverser_t *traverserp, voi
           /* All rh values are concatenated */
           stringl = 0;
           for (j = 0; j < GENERICSTACK_USED(stackp); j++) {
-            char *values = GENERICSTACK_GET_PTR(stackp, j);
+            char *values = (char *) GENERICSTACK_GET_PTR(stackp, j);
             stringl += strlen(values);
           }
-          strings = malloc(++stringl); /* null character */
+          strings = (char *) malloc(++stringl); /* null character */
           strings[0] = '\0';
           for (j = 0; j < GENERICSTACK_USED(stackp); j++) {
-            char *values = GENERICSTACK_GET_PTR(stackp, j);
+            char *values = (char *) GENERICSTACK_GET_PTR(stackp, j);
             strcat(strings, values);
           }
           GENERICSTACK_PUSH_PTR(stringStackp, strings);
         }
         while (GENERICSTACK_USED(resultStackp) > 0) {
-          genericStack_t *stackp = GENERICSTACK_POP_PTR(resultStackp);
+          genericStack_t *stackp = (genericStack_t *) GENERICSTACK_POP_PTR(resultStackp);
           GENERICSTACK_FREE(stackp);
         }
         GENERICSTACK_FREE(resultStackp);
@@ -726,7 +489,7 @@ static short full_traverserCallbacki(marpaWrapperAsfTraverser_t *traverserp, voi
         }
 
         for (i = 0; i < GENERICSTACK_USED(resultStackp); i++) {
-          genericStack_t *stackp = GENERICSTACK_GET_PTR(resultStackp, i);
+          genericStack_t *stackp = (genericStack_t *) GENERICSTACK_GET_PTR(resultStackp, i);
           int             j;
           size_t          stringl;
           char           *strings;
@@ -734,20 +497,20 @@ static short full_traverserCallbacki(marpaWrapperAsfTraverser_t *traverserp, voi
           /* All rh values are concatenated and enclosed in "(penntag XXX)" */
           stringl = 1 + strlen(symbolNames) + 1;
           for (j = 0; j < GENERICSTACK_USED(stackp); j++) {
-            char *values = GENERICSTACK_GET_PTR(stackp, j);
+            char *values = (char *) GENERICSTACK_GET_PTR(stackp, j);
             if (j > 0) {
               stringl += strlen(joinWs);
             }
             stringl += strlen(values);
           }
           stringl++;
-          strings = malloc(++stringl); /* null character */
+          strings = (char *) malloc(++stringl); /* null character */
           strings[0] = '\0';
           strcat(strings, "(");
           strcat(strings, symbolNames);
           strcat(strings, " ");
           for (j = 0; j < GENERICSTACK_USED(stackp); j++) {
-            char *values = GENERICSTACK_GET_PTR(stackp, j);
+            char *values = (char *) GENERICSTACK_GET_PTR(stackp, j);
             if (j > 0) {
               strcat(strings, joinWs);
               stringl += strlen(joinWs);
@@ -758,7 +521,7 @@ static short full_traverserCallbacki(marpaWrapperAsfTraverser_t *traverserp, voi
           GENERICSTACK_PUSH_PTR(stringStackp, strings);
         }
         while (GENERICSTACK_USED(resultStackp) > 0) {
-          genericStack_t *stackp = GENERICSTACK_POP_PTR(resultStackp);
+          genericStack_t *stackp = (genericStack_t *) GENERICSTACK_POP_PTR(resultStackp);
           GENERICSTACK_FREE(stackp);
         }
         GENERICSTACK_FREE(resultStackp);
@@ -832,7 +595,7 @@ static void freeStringArrayStackv(genericStack_t *stringArrayStackp)
   if (! GENERICSTACK_ERROR(stringArrayStackp)) {
     for (i = 0; i < usedi; i++) {
       if (GENERICSTACK_IS_PTR(stringArrayStackp, i)) {
-	freeStringStackv(GENERICSTACK_GET_PTR(stringArrayStackp, i));
+	freeStringStackv((genericStack_t *) GENERICSTACK_GET_PTR(stringArrayStackp, i));
       }
     }
     GENERICSTACK_FREE(stringArrayStackp);
