@@ -28,6 +28,7 @@ static short symbolOptionSetter(void *userDatavp, int symboli, marpaWrapperGramm
 static short ruleOptionSetter(void *userDatavp, int symboli, marpaWrapperGrammarRuleOption_t *marpaWrapperGrammarRuleOptionp);
 static short okRuleCallback(void *userDatavp, genericStack_t *parentRuleiStackp, int rulei, int arg0i, int argni);
 static short okSymbolCallback(void *userDatavp, genericStack_t *parentRuleiStackp, int symboli, int argi);
+static int   checkEarlemes(marpaWrapperRecognizer_t *marpaWrapperRecognizerp, genericLogger_t *genericLoggerp);
 
 static marpaWrapperGrammarCloneOption_t marpaWrapperGrammarCloneOption = {
   NULL, /* userDatavp */
@@ -62,6 +63,7 @@ int main(int argc, char **argv)
   int                            symbolPropertyBitSet;
   int                            symbolEventBitSet;
   int                            rulePropertyBitSet;
+  marpaWrapperRecognizerContext_t context;
   
   marpaWrapperGrammarOption_t    marpaWrapperGrammarOption    = { GENERICLOGGER_NEW(GENERICLOGGER_LOGLEVEL_TRACE),
 								  0 /* warningIsErrorb */,
@@ -182,6 +184,36 @@ int main(int argc, char **argv)
     }
   }
 
+  /* Context set */
+  context.valuei = 0;
+  context.valuep = &context;
+  if (rci == 0) {
+    if (marpaWrapperRecognizer_contextSetb(marpaWrapperRecognizerp, context) == 0) {
+      rci = 1;
+    }
+  }
+
+  /* Context get */
+  if (rci == 0) {
+    if (marpaWrapperRecognizer_contextGetb(marpaWrapperRecognizerp, -1, &context) == 0) {
+      rci = 1;
+    } else {
+      if ((context.valuei != 0) || (context.valuep != &context)) {
+        GENERICLOGGER_ERRORF(marpaWrapperRecognizerOption.genericLoggerp, "context.valuei = %d != 0", context.valuei);
+        GENERICLOGGER_ERRORF(marpaWrapperRecognizerOption.genericLoggerp, "context.valuep = %p != %p", context.valuep, &context);
+        rci = 1;
+      } else {
+        GENERICLOGGER_INFOF(marpaWrapperRecognizerOption.genericLoggerp, "Good, context.valuei = %d", context.valuei);
+        GENERICLOGGER_INFOF(marpaWrapperRecognizerOption.genericLoggerp, "Good, context.valuep = %p", context.valuep);
+      }
+    }
+  }
+
+  /* Earlemes */
+  if (rci == 0) {
+    rci = checkEarlemes(marpaWrapperRecognizerp, marpaWrapperRecognizerOption.genericLoggerp);
+  }
+  
   /* --------------------------------------------------------------- */
   /* 2 - 0 * 3 + 1                                                   */
   /* --------------------------------------------------------------- */
@@ -213,6 +245,9 @@ int main(int argc, char **argv)
     } else {
       GENERICLOGGER_TRACEF(marpaWrapperRecognizerOption.genericLoggerp, "... Latest Earleme Set ID: %d", earleySetIdi);
     }
+  }
+  if (rci == 0) {
+    rci = checkEarlemes(marpaWrapperRecognizerp, marpaWrapperRecognizerOption.genericLoggerp);
   }
   /* -- */
   /* op */
@@ -402,7 +437,7 @@ int main(int argc, char **argv)
 				    valueRuleCallback,
 				    valueSymbolCallback,
 				    NULL) > 0) {
-      stackValueAndDescription_t *resultp = GENERICSTACK_GET_PTR(valueContext.outputStackp, 0);
+      stackValueAndDescription_t *resultp = (stackValueAndDescription_t *) GENERICSTACK_GET_PTR(valueContext.outputStackp, 0);
       GENERICLOGGER_INFOF(valueContext.genericLoggerp, "[Value mode] %s => %d", resultp->s, resultp->i);
     }
   }
@@ -432,7 +467,7 @@ int main(int argc, char **argv)
                                        valueSymbolCallback,
                                        NULL /* nullingCallbackp */
                                        ) > 0) {
-      stackValueAndDescription_t *resultp = GENERICSTACK_GET_PTR(valueContext.outputStackp, 0);
+      stackValueAndDescription_t *resultp = (stackValueAndDescription_t *) GENERICSTACK_GET_PTR(valueContext.outputStackp, 0);
       GENERICLOGGER_INFOF(valueContext.genericLoggerp, "[Asf value mode] %s => %d", resultp->s, resultp->i);
     }
   }
@@ -495,12 +530,10 @@ static short valueRuleCallback(void *userDatavp, int rulei, int arg0i, int argni
 {
   static const char           funcs[] = "valueRuleCallback";
   valueContext_t             *valueContextp           = (valueContext_t *) userDatavp;
-  marpaWrapperRecognizer_t   *marpaWrapperRecognizerp = valueContextp->marpaWrapperRecognizerp;
   marpaWrapperValue_t        *marpaWrapperValuep      = valueContextp->marpaWrapperValuep;
   marpaWrapperAsfValue_t     *marpaWrapperAsfValuep   = valueContextp->marpaWrapperAsfValuep;
   genericStack_t             *outputStackp            = valueContextp->outputStackp;
   genericLogger_t            *genericLoggerp          = valueContextp->genericLoggerp;
-  int                        *ruleip                  = valueContextp->ruleip;
   stackValueAndDescription_t *resultp                 = NULL;
   char                       *modes                   = marpaWrapperValuep ? "Value mode" : "Asf value mode";
   short                       rcb;
@@ -531,7 +564,7 @@ static short valueRuleCallback(void *userDatavp, int rulei, int arg0i, int argni
     goto err;
   }
 
-  resultp = malloc(sizeof(stackValueAndDescription_t));
+  resultp = (stackValueAndDescription_t *) malloc(sizeof(stackValueAndDescription_t));
   if (resultp == NULL) {
     GENERICLOGGER_ERRORF(genericLoggerp, "malloc error, %s", strerror(errno));
     goto err;
@@ -540,7 +573,7 @@ static short valueRuleCallback(void *userDatavp, int rulei, int arg0i, int argni
   switch (rulei) {
   case START_RULE:
     {
-      stackValueAndDescription_t *varp = GENERICSTACK_GET_PTR(outputStackp, arg0i);
+      stackValueAndDescription_t *varp = (stackValueAndDescription_t *) GENERICSTACK_GET_PTR(outputStackp, arg0i);
 
       *resultp = *varp;
       GENERICLOGGER_TRACEF(genericLoggerp, "[%s][%s] START_RULE: {s=%s,i=%d} at output stack No %d -> {s=%s,i=%d} at output stack No %d", modes, funcs, varp->s, varp->i, arg0i, resultp->s, resultp->i, resulti);
@@ -548,9 +581,9 @@ static short valueRuleCallback(void *userDatavp, int rulei, int arg0i, int argni
     break;
   case OP_RULE:
     {
-      stackValueAndDescription_t *var1p = GENERICSTACK_GET_PTR(outputStackp,  arg0i  );
+      stackValueAndDescription_t *var1p = (stackValueAndDescription_t *) GENERICSTACK_GET_PTR(outputStackp,  arg0i  );
       char                        var2c = GENERICSTACK_GET_CHAR(outputStackp, arg0i+1);
-      stackValueAndDescription_t *var3p = GENERICSTACK_GET_PTR(outputStackp,  arg0i+2);
+      stackValueAndDescription_t *var3p = (stackValueAndDescription_t *) GENERICSTACK_GET_PTR(outputStackp,  arg0i+2);
 
       sprintf(resultp->s, "(%s %c %s)", var1p->s, var2c, var3p->s);
       switch (var2c) {
@@ -578,7 +611,7 @@ static short valueRuleCallback(void *userDatavp, int rulei, int arg0i, int argni
     break;
   case NUMBER_RULE:
     {
-      stackValueAndDescription_t *varp = GENERICSTACK_GET_PTR(outputStackp, arg0i);
+      stackValueAndDescription_t *varp = (stackValueAndDescription_t *) GENERICSTACK_GET_PTR(outputStackp, arg0i);
 
       *resultp = *varp;
       GENERICLOGGER_TRACEF(genericLoggerp, "[%s][%s] START_RULE: {s=%s,i=%d} at output stack No %d -> {s=%s,i=%d} at output stack No %d", modes, funcs, varp->s, varp->i, arg0i, resultp->s, resultp->i, resulti);
@@ -619,13 +652,11 @@ static short valueSymbolCallback(void *userDatavp, int symboli, int argi, int re
 {
   static const char           funcs[]                 = "valueSymbolCallback";
   valueContext_t             *valueContextp           = (valueContext_t *) userDatavp;
-  marpaWrapperRecognizer_t   *marpaWrapperRecognizerp = valueContextp->marpaWrapperRecognizerp;
   marpaWrapperValue_t        *marpaWrapperValuep      = valueContextp->marpaWrapperValuep;
   marpaWrapperAsfValue_t     *marpaWrapperAsfValuep   = valueContextp->marpaWrapperAsfValuep;
   genericStack_t             *inputStackp             = valueContextp->inputStackp;
   genericStack_t             *outputStackp            = valueContextp->outputStackp;
   genericLogger_t            *genericLoggerp          = valueContextp->genericLoggerp;
-  int                        *symbolip                = valueContextp->symbolip;
   stackValueAndDescription_t *resultp                 = NULL;
   char                       *modes                   = marpaWrapperValuep ? "Value mode" : "Asf value mode";
   short                       rcb;
@@ -677,7 +708,7 @@ static short valueSymbolCallback(void *userDatavp, int symboli, int argi, int re
     {
       int vari = GENERICSTACK_GET_INT(inputStackp, argi);
 
-      resultp = malloc(sizeof(stackValueAndDescription_t));
+      resultp = (stackValueAndDescription_t *) malloc(sizeof(stackValueAndDescription_t));
       if (resultp == NULL) {
 	GENERICLOGGER_ERRORF(genericLoggerp, "malloc error, %s", strerror(errno));
 	goto err;
@@ -771,7 +802,7 @@ static void dumpStacks(char *modes, valueContext_t *valueContextp)
       } else if (GENERICSTACK_IS_DOUBLE(outputStackp, i)) {
 	GENERICLOGGER_TRACEF(genericLoggerp, "[%s][%s] ... output stack No %d is DOUBLE", modes, funcs, i);
       } else if (GENERICSTACK_IS_PTR(outputStackp, i)) {
-	stackValueAndDescription_t *p = GENERICSTACK_GET_PTR(outputStackp, i);
+	stackValueAndDescription_t *p = (stackValueAndDescription_t *) GENERICSTACK_GET_PTR(outputStackp, i);
 	GENERICLOGGER_TRACEF(genericLoggerp, "[%s][%s] ... output stack No %d is PTR {\"%s\", %d}", modes, funcs, i, p->s, p->i);
       } else {
 	GENERICLOGGER_TRACEF(genericLoggerp, "[%s][%s] ... output stack No %d is ?????", modes, funcs, i);
@@ -820,3 +851,41 @@ static short okSymbolCallback(void *userDatavp, genericStack_t *parentRuleiStack
 {
   return 1;
 }
+
+/****************************************************************************/
+static int checkEarlemes(marpaWrapperRecognizer_t *marpaWrapperRecognizerp, genericLogger_t *genericLoggerp)
+/****************************************************************************/
+{
+  int rci = 0;
+  int i;
+
+  /* Current earleme */
+  if (rci == 0) {
+    if (marpaWrapperRecognizer_currentEarlemeb(marpaWrapperRecognizerp, &i) == 0) {
+      rci = 1;
+    } else {
+      GENERICLOGGER_INFOF(genericLoggerp, "Current earleme is %d", i);
+    }
+  }
+  
+  /* Earleme */
+  if (rci == 0) {
+    if (marpaWrapperRecognizer_earlemeb(marpaWrapperRecognizerp, -1, &i) == 0) {
+      rci = 1;
+    } else {
+      GENERICLOGGER_INFOF(genericLoggerp, "Earleme at position -1 is %d", i);
+    }
+  }
+  
+  /* Furthest earleme */
+  if (rci == 0) {
+    if (marpaWrapperRecognizer_furthestEarlemeb(marpaWrapperRecognizerp, &i) == 0) {
+      rci = 1;
+    } else {
+      GENERICLOGGER_INFOF(genericLoggerp, "Furthest earleme is %d", i);
+    }
+  }
+
+  return rci;
+}
+

@@ -7,7 +7,6 @@ typedef struct myContext {
 } myContext_t;
 
 static int    mySparseArrayIndFunction(void *userDatavp, genericStackItemType_t itemType, void **pp);
-static void   mySparseArrayKeyFreeFunction(void *userDatavp, void **pp);
 static void  *mySparseArrayValCopyFunction(void *userDatavp, void **pp);
 static void   mySparseArrayValFreeFunction(void *userDatavp, void **pp);
 static int    mySparseArrayTest(short withAllocb);
@@ -176,50 +175,6 @@ static int mySparseArrayIndFunction(void *userDatavp, genericStackItemType_t ite
 }
 
 /*********************************************************************/
-static short mySparseArrayKeyCmpFunction(void *userDatavp, void **pp1, void **pp2)
-/*********************************************************************/
-{
-  char             funcs[] = "mySparseArrayKeyCmpFunction";
-  myContext_t     *myContextp = (myContext_t *) userDatavp;
-  genericLogger_t *genericLoggerp = myContextp->genericLoggerp;
-  short            rcb = 0;
-  myContext_t     *c1p = (myContext_t *) *pp1;
-  myContext_t     *c2p = (myContext_t *) *pp2;
-
-  GENERICLOGGER_TRACEF(genericLoggerp, "... [%s] Doing a comparison of pointers %p and %p", funcs, c1p, c2p);
-
-  if ((c1p != NULL) && (c2p != NULL)) {
-    rcb = (c1p->genericLoggerp == c2p->genericLoggerp);
-  }
-  
-  GENERICLOGGER_TRACEF(genericLoggerp, "... [%s] Return %d", funcs, (int) rcb);
-  return rcb;
-}
-
-/*********************************************************************/
-static void *mySparseArrayKeyCopyFunction(void *userDatavp, void **pp)
-/*********************************************************************/
-{
-  char             funcs[] = "mySparseArrayKeyCopyFunction";
-  myContext_t     *myContextp = (myContext_t *) userDatavp;
-  genericLogger_t *genericLoggerp = myContextp->genericLoggerp;
-  myContext_t     *cp = (myContext_t *) *pp;
-  myContext_t     *c = NULL;
-
-  if (cp != NULL) {
-    c = malloc(sizeof(myContext_t));
-    if (c == NULL) {
-      GENERICLOGGER_ERRORF(genericLoggerp, "... [%s] malloc error, %s", funcs, strerror(errno));
-    } else {
-      c->genericLoggerp = cp->genericLoggerp;
-    }
-  }
-
-  GENERICLOGGER_TRACEF(genericLoggerp, "... [%s] Return %p", funcs, c);
-  return c;
-}
-
-/*********************************************************************/
 static void *mySparseArrayValCopyFunction(void *userDatavp, void **pp)
 /*********************************************************************/
 {
@@ -230,7 +185,7 @@ static void *mySparseArrayValCopyFunction(void *userDatavp, void **pp)
   myContext_t     *c = NULL;
 
   if (cp != NULL) {
-    c = malloc(sizeof(myContext_t));
+    c = (myContext_t *) malloc(sizeof(myContext_t));
     if (c == NULL) {
       GENERICLOGGER_ERRORF(genericLoggerp, "... [%s] malloc error, %s", funcs, strerror(errno));
     } else {
@@ -240,21 +195,6 @@ static void *mySparseArrayValCopyFunction(void *userDatavp, void **pp)
 
   GENERICLOGGER_TRACEF(genericLoggerp, "... [%s] Return %p", funcs, c);
   return c;
-}
-
-/*********************************************************************/
-static void  mySparseArrayKeyFreeFunction(void *userDatavp, void **pp)
-/*********************************************************************/
-{
-  char             funcs[] = "mySparseArrayKeyFreeFunction";
-  myContext_t     *myContextp = (myContext_t *) userDatavp;
-  myContext_t     *cp = (myContext_t *) *pp;
-  genericLogger_t *genericLoggerp = myContextp->genericLoggerp;
-
-  if (cp != NULL) {
-    GENERICLOGGER_TRACEF(genericLoggerp, "... [%s] Freeing malloced area %p", funcs, cp);
-    free(cp);
-  }
 }
 
 /*********************************************************************/
@@ -287,8 +227,8 @@ static void mySparseArrayDump(myContext_t *myContextp, genericSparseArray_t *myS
     if (! GENERICSTACK_IS_PTR(mySparseArrayp->keyStackp, i)) {
       continue;
     }
-    subKeyStackp = GENERICSTACK_GET_PTR(mySparseArrayp->keyStackp, i);
-    subValStackp = GENERICSTACK_GET_PTR(mySparseArrayp->valStackp, i);
+    subKeyStackp = (genericStack_t *) GENERICSTACK_GET_PTR(mySparseArrayp->keyStackp, i);
+    subValStackp = (genericStack_t *) GENERICSTACK_GET_PTR(mySparseArrayp->valStackp, i);
 
     for (j = 0; j < GENERICSTACK_USED(subKeyStackp); j++) {
       int key;
@@ -298,7 +238,7 @@ static void mySparseArrayDump(myContext_t *myContextp, genericSparseArray_t *myS
 	continue;
       }
       key = GENERICSTACK_GET_INT(subKeyStackp, j);
-      val = GENERICSTACK_GET_PTR(subValStackp, j);
+      val = (myContext_t *) GENERICSTACK_GET_PTR(subValStackp, j);
       GENERICLOGGER_TRACEF(myContextp->genericLoggerp, "... [Row/Col=%d/%d] %d => %p", (int) i, (int) j, key, val);
     }
   }

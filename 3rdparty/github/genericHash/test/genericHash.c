@@ -319,7 +319,7 @@ static void *myHashKeyCopyFunction(void *userDatavp, void **pp)
   myContext_t     *c = NULL;
 
   if (cp != NULL) {
-    c = malloc(sizeof(myContext_t));
+    c = (myContext_t *) malloc(sizeof(myContext_t));
     if (c == NULL) {
       GENERICLOGGER_ERRORF(genericLoggerp, "... [%s] malloc error, %s", funcs, strerror(errno));
     } else {
@@ -342,7 +342,7 @@ static void *myHashValCopyFunction(void *userDatavp, void **pp)
   myContext_t     *c = NULL;
 
   if (cp != NULL) {
-    c = malloc(sizeof(myContext_t));
+    c = (myContext_t *) malloc(sizeof(myContext_t));
     if (c == NULL) {
       GENERICLOGGER_ERRORF(genericLoggerp, "... [%s] malloc error, %s", funcs, strerror(errno));
     } else {
@@ -399,8 +399,8 @@ static void myHashDump(myContext_t *myContextp, genericHash_t *myHashp)
     if (! GENERICSTACK_IS_PTR(myHashp->keyStackp, i)) {
       continue;
     }
-    subKeyStackp = GENERICSTACK_GET_PTR(myHashp->keyStackp, i);
-    subValStackp = GENERICSTACK_GET_PTR(myHashp->valStackp, i);
+    subKeyStackp = (genericStack_t *) GENERICSTACK_GET_PTR(myHashp->keyStackp, i);
+    subValStackp = (genericStack_t *) GENERICSTACK_GET_PTR(myHashp->valStackp, i);
 
     GENERICLOGGER_TRACEF(myContextp->genericLoggerp, "[Row=%d] Key used/length/initial length/heap length=%d/%d/%d/%d",
 			 i,
@@ -422,8 +422,8 @@ static void myHashDump(myContext_t *myContextp, genericHash_t *myHashp)
       if (! GENERICSTACK_IS_PTR(subKeyStackp, j)) {
 	continue;
       }
-      key = GENERICSTACK_GET_PTR(subKeyStackp, j);
-      val = GENERICSTACK_GET_PTR(subValStackp, j);
+      key = (myContext_t *) GENERICSTACK_GET_PTR(subKeyStackp, j);
+      val = (myContext_t *) GENERICSTACK_GET_PTR(subValStackp, j);
       GENERICLOGGER_TRACEF(myContextp->genericLoggerp, "[Row/Col=%d/%d] %p => %p", (int) i, (int) j, key, val);
     }
   }

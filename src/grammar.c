@@ -70,7 +70,7 @@ marpaWrapperGrammar_t *marpaWrapperGrammar_newp(marpaWrapperGrammarOption_t *mar
   }
 #endif
 
-  marpaWrapperGrammarp = malloc(sizeof(marpaWrapperGrammar_t));
+  marpaWrapperGrammarp = (marpaWrapperGrammar_t *) malloc(sizeof(marpaWrapperGrammar_t));
   if (marpaWrapperGrammarp == NULL) {
     MARPAWRAPPER_ERRORF(genericLoggerp, "malloc failure: %s", strerror(errno));
     goto err;
@@ -500,7 +500,7 @@ int marpaWrapperGrammar_newRulei(marpaWrapperGrammar_t *marpaWrapperGrammarp, ma
     }
     MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "marpa_g_sequence_new(%p, %d, %d, %d, %d, %s)", marpaWrapperGrammarp->marpaGrammarp, lhsSymboli, (int) rhsSymbolip[0], (int) marpaWrapperGrammarRuleOption.separatorSymboli, marpaWrapperGrammarRuleOption.minimumi, ((sequenceFlagsi & MARPA_PROPER_SEPARATION) == MARPA_PROPER_SEPARATION) ? "MARPA_PROPER_SEPARATION" : "0");
     marpaRuleIdi = marpa_g_sequence_new(marpaWrapperGrammarp->marpaGrammarp,
-					lhsSymboli,
+					(Marpa_Symbol_ID) lhsSymboli,
 					(Marpa_Symbol_ID) rhsSymbolip[0],
 					(Marpa_Symbol_ID) marpaWrapperGrammarRuleOption.separatorSymboli,
 					marpaWrapperGrammarRuleOption.minimumi,
@@ -508,9 +508,9 @@ int marpaWrapperGrammar_newRulei(marpaWrapperGrammar_t *marpaWrapperGrammarp, ma
   } else {
     MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "marpa_g_rule_new(%p, %d, %p, %d)", marpaWrapperGrammarp->marpaGrammarp, lhsSymboli, rhsSymbolip, (int) rhsSymboll);
     marpaRuleIdi = marpa_g_rule_new(marpaWrapperGrammarp->marpaGrammarp,
-				    lhsSymboli,
+				    (Marpa_Symbol_ID) lhsSymboli,
 				    (Marpa_Symbol_ID *) rhsSymbolip,
-				    rhsSymboll);
+				    (int) rhsSymboll);
   }
 
   if (marpaRuleIdi == -2) {
