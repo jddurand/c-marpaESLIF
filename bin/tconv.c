@@ -436,7 +436,7 @@ static void fileconvert(int outputFd, char *filenames,
   tconv_helper_t         *tconv_helperp = NULL;
   tconv_helper_context_t  context;
 
-  inbufp = malloc(bufsizel);
+  inbufp = (char *) malloc(bufsizel);
   if (inbufp == NULL) {
     GENERICLOGGER_ERRORF(NULL, "malloc: %s", strerror(errno));
     goto end;
