@@ -687,7 +687,7 @@ short marpaWrapperRecognizer_contextSetb(marpaWrapperRecognizer_t *marpaWrapperR
 /****************************************************************************/
 {
   MARPAWRAPPER_FUNCS(marpaWrapperRecognizer_contextSetb)
-  genericLogger_t       *genericLoggerp;
+  genericLogger_t       *genericLoggerp = NULL;
 
   if (marpaWrapperRecognizerp == NULL) {
     errno = EINVAL;
@@ -720,7 +720,7 @@ short marpaWrapperRecognizer_contextGetb(marpaWrapperRecognizer_t *marpaWrapperR
   Marpa_Earley_Set_ID    marpaLatestEarleySetIdi;
   int                    valuei;
   void                  *valuep;
-  genericLogger_t       *genericLoggerp;
+  genericLogger_t       *genericLoggerp = NULL;
 
   if (marpaWrapperRecognizerp == NULL) {
     errno = EINVAL;
@@ -767,7 +767,7 @@ short marpaWrapperRecognizer_currentEarlemeb(marpaWrapperRecognizer_t *marpaWrap
   MARPAWRAPPER_FUNCS(marpaWrapperRecognizer_currentEarlemeb)
   Marpa_Earleme currentEarlemei;
 #ifndef MARPAWRAPPER_NTRACE
-  genericLogger_t       *genericLoggerp;
+  genericLogger_t       *genericLoggerp = NULL;
 #endif
 
   if (marpaWrapperRecognizerp == NULL) {
@@ -803,7 +803,7 @@ short marpaWrapperRecognizer_earlemeb(marpaWrapperRecognizer_t *marpaWrapperReco
   int                    reali = i;
   Marpa_Earley_Set_ID    marpaLatestEarleySetIdi;
   Marpa_Earleme          earlemei;
-  genericLogger_t       *genericLoggerp;
+  genericLogger_t       *genericLoggerp = NULL;
 
   if (marpaWrapperRecognizerp == NULL) {
     errno = EINVAL;
@@ -850,7 +850,7 @@ short marpaWrapperRecognizer_furthestEarlemeb(marpaWrapperRecognizer_t *marpaWra
   MARPAWRAPPER_FUNCS(marpaWrapperRecognizer_furthestEarlemeb)
   Marpa_Earleme furthestEarlemei;
 #ifndef MARPAWRAPPER_NTRACE
-  genericLogger_t       *genericLoggerp;
+  genericLogger_t       *genericLoggerp = NULL;
 #endif
 
   if (marpaWrapperRecognizerp == NULL) {

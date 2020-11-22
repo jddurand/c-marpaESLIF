@@ -3745,6 +3745,7 @@ static inline void _marpaWrapperAsf_dump_stack(marpaWrapperAsf_t *marpaWrapperAs
   MARPAWRAPPER_FUNCS(_marpaWrapperAsf_dump_stack)
   genericLogger_t         *genericLoggerp           = marpaWrapperAsfp->marpaWrapperAsfOption.genericLoggerp;
   int                      i;
+  char                     c;
 
   if (what == NULL) {
     what = "uncategorized";
@@ -3760,7 +3761,8 @@ static inline void _marpaWrapperAsf_dump_stack(marpaWrapperAsf_t *marpaWrapperAs
 	MARPAWRAPPER_TRACE(genericLoggerp, funcs, "... stackp[%d] is NA");
 	break;
       case GENERICSTACKITEMTYPE_CHAR:
-	MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "... stackp[%d] is CHAR: '%c' (0x%d)", i, GENERICSTACK_GET_CHAR(stackp, i), (int) GENERICSTACK_GET_CHAR(stackp, i));
+        c = GENERICSTACK_GET_CHAR(stackp, i);
+	MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "... stackp[%d] is CHAR: '%c' (0x%d)", i, c, (int) c);
 	break;
       case GENERICSTACKITEMTYPE_SHORT:
 	MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "... stackp[%d] is SHORT: %d", i, (int) GENERICSTACK_GET_SHORT(stackp, i));
