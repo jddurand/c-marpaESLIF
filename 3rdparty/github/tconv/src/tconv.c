@@ -369,9 +369,9 @@ tconv_t tconv_open_ext(const char *tocodes, const char *fromcodes, tconv_option_
 	    charset_frees = "tconv_charset_freep";
 	  }
 	}
-        tconvp->charsetExternal.tconv_charset_newp  = dlsym(tconvp->sharedLibraryHandlep, charset_news);
-        tconvp->charsetExternal.tconv_charset_runp  = dlsym(tconvp->sharedLibraryHandlep, charset_runs);
-        tconvp->charsetExternal.tconv_charset_freep = dlsym(tconvp->sharedLibraryHandlep, charset_frees);
+        tconvp->charsetExternal.tconv_charset_newp  = (tconv_charset_new_t) dlsym(tconvp->sharedLibraryHandlep, charset_news);
+        tconvp->charsetExternal.tconv_charset_runp  = (tconv_charset_run_t) dlsym(tconvp->sharedLibraryHandlep, charset_runs);
+        tconvp->charsetExternal.tconv_charset_freep = (tconv_charset_free_t) dlsym(tconvp->sharedLibraryHandlep, charset_frees);
         tconvp->charsetExternal.optionp             = tconvOptionp->charsetp->u.plugin.optionp;
         break;
       case TCONV_CHARSET_ICU:
@@ -445,9 +445,9 @@ tconv_t tconv_open_ext(const char *tocodes, const char *fromcodes, tconv_option_
 	    convert_frees = "tconv_convert_freep";
 	  }
 	}
-        tconvp->convertExternal.tconv_convert_newp  = dlsym(tconvp->sharedLibraryHandlep, convert_news);
-        tconvp->convertExternal.tconv_convert_runp  = dlsym(tconvp->sharedLibraryHandlep, convert_runs);
-        tconvp->convertExternal.tconv_convert_freep = dlsym(tconvp->sharedLibraryHandlep, convert_frees);
+        tconvp->convertExternal.tconv_convert_newp  = (tconv_convert_new_t) dlsym(tconvp->sharedLibraryHandlep, convert_news);
+        tconvp->convertExternal.tconv_convert_runp  = (tconv_convert_run_t) dlsym(tconvp->sharedLibraryHandlep, convert_runs);
+        tconvp->convertExternal.tconv_convert_freep = (tconv_convert_free_t) dlsym(tconvp->sharedLibraryHandlep, convert_frees);
         tconvp->convertExternal.optionp             = tconvOptionp->convertp->u.plugin.optionp;
         break;
       case TCONV_CONVERT_ICU:
