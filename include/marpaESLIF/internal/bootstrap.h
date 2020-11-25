@@ -6,6 +6,10 @@
 /* This file contain the declaration of all bootstrap actions, i.e. the ESLIF grammar itself */
 /* This is an example of how to use the API */
 
+static const char *MARPAESLIF_BOOTSTRAP_PSEUDO_LEXEME_BEGIN             = "$begin";
+static const char *MARPAESLIF_BOOTSTRAP_PSEUDO_LEXEME_NEWLINE           = "$newline";
+static const char *MARPAESLIF_BOOTSTRAP_PSEUDO_LEXEME_END               = "$end";
+
 typedef enum _marpaESLIFBootstrapStackTypeEnum {
   marpaESLIFBootstrapStackTypeEnum_NA = 0,
   marpaESLIFBootstrapStackTypeEnum_OP_DECLARE,
@@ -158,7 +162,10 @@ enum marpaESLIF_bootstrap_single_symbol_type {
   MARPAESLIF_BOOTSTRAP_SINGLE_SYMBOL_TYPE_SYMBOL,
   MARPAESLIF_BOOTSTRAP_SINGLE_SYMBOL_TYPE_CHARACTER_CLASS,
   MARPAESLIF_BOOTSTRAP_SINGLE_SYMBOL_TYPE_REGULAR_EXPRESSION,
-  MARPAESLIF_BOOTSTRAP_SINGLE_SYMBOL_TYPE_QUOTED_STRING
+  MARPAESLIF_BOOTSTRAP_SINGLE_SYMBOL_TYPE_QUOTED_STRING,
+  MARPAESLIF_BOOTSTRAP_SINGLE_SYMBOL_TYPE_BEGIN,
+  MARPAESLIF_BOOTSTRAP_SINGLE_SYMBOL_TYPE_NEWLINE,
+  MARPAESLIF_BOOTSTRAP_SINGLE_SYMBOL_TYPE_END
 };
 
 struct marpaESLIF_bootstrap_single_symbol {

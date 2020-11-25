@@ -28,6 +28,7 @@ typedef         marpaESLIFString_t         marpaESLIF_string_t;
 typedef enum    marpaESLIF_symbol_type     marpaESLIF_symbol_type_t;
 typedef enum    marpaESLIF_terminal_type   marpaESLIF_terminal_type_t;
 typedef struct  marpaESLIF_terminal        marpaESLIF_terminal_t;
+typedef enum    marpaESLIF_pseudo_type     marpaESLIF_pseudo_type_t;
 typedef struct  marpaESLIF_meta            marpaESLIF_meta_t;
 typedef         marpaESLIFSymbol_t         marpaESLIF_symbol_t;
 typedef struct  marpaESLIF_rule            marpaESLIF_rule_t;
@@ -275,6 +276,13 @@ struct marpaESLIFGrammar {
   int                        internalRuleCounti; /* Internal counter when creating internal rules (groups '(-...-)' and '(...)' */
 };
 
+enum marpaESLIF_pseudo_type {
+  MARPAESLIF_PSEUDO_TYPE_NA = 0,
+  MARPAESLIF_PSEUDO_TYPE_BEGIN,
+  MARPAESLIF_PSEUDO_TYPE_NEWLINE,
+  MARPAESLIF_PSEUDO_TYPE_END
+};
+
 struct marpaESLIF_meta {
   int                          idi;                             /* Non-terminal Id */
   char                        *asciinames;
@@ -287,6 +295,7 @@ struct marpaESLIF_meta {
   marpaESLIFGrammar_t         *marpaESLIFGrammarLexemeClonep;   /* Cloned ESLIF grammar in lexeme search mode (no event) */
   size_t                       nSymbolStartl;                   /* Number of lexemes at the very beginning of marpaWrapperGrammarStartp */
   int                         *symbolArrayStartp;               /* Lexemes at the very beginning of marpaWrapperGrammarStartp */
+  marpaESLIF_pseudo_type_t     pseudoe;                         /* Is it a pseudo lexeme ? */
 };
 
 struct marpaESLIFValue {

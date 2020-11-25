@@ -1477,7 +1477,7 @@ This function should never fail, a false value indicates something fatal happene
 
   short marpaESLIFRecognizer_eofb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, short *eofbp);
 
-Returns in the value pointed by C<eofbp> the current EOF state, when it is not C<NULL>.
+Returns in the value pointed by C<eofbp> the current EOF state, when it is not C<NULL>. Take care, it jus says that the reader callback said that there is nothing more to read, this do not mean that the parser reached this point. To have the equivalent of "end of file is reached" parser state, please refer to the method C<marpaESLIFRecognizer_stream_isEndb>.
 
 This function should never fail, a false value indicates something fatal happened or the arguments are not correct.
 
@@ -1737,6 +1737,46 @@ Returns a true value on success, a false value on failure.
   void marpaESLIFRecognizer_freev(marpaESLIFRecognizer_t *marpaESLIFRecognizerp);
 
 The destructor of a marpaESLIFRecognizer instance C<marpaESLIFRecognizerp> instance. No-op if C<marpaESLIFRecognizerp> is C<NULL>.
+
+=head3 C<marpaESLIFRecognizer_stream_isBeginb>
+
+  short marpaESLIFRecognizer_stream_isBeginb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, short *beginbp);
+
+Returns in the value pointed by C<beginbp>, if not C<NULL>, a boolean saying if the parser has started to read data.
+
+This function should never fail, a false value indicates something fatal happened or the arguments are not correct.
+
+=head3 C<marpaESLIFRecognizer_stream_isNewlineb>
+
+  short marpaESLIFRecognizer_stream_isNewlineb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, short *newlinebp);
+
+Returns in the value pointed by C<newlinebp>, if not C<NULL>, a boolean saying if the parser has matched a newline. Take care, newline counting is done only when:
+
+=over
+
+=item the recognizer has been instanciated with the C<newlineb> option set to a true value
+
+=over
+
+==item Note that if the grammar contains the pseudo-lexeme C<::newline>, anywhere, then C<newlineb> is automatically set to true, regardless of user's choice
+
+=back
+
+=item the current stream bunch of data is treated as a character buffer, or if last one terminal match used a regular expression that has the C<PCRE2_UTF> flag
+
+=item current recognizer is the top-level recognizer
+
+=back
+
+This function should never fail, a false value indicates something fatal happened or the arguments are not correct.
+
+=head3 C<marpaESLIFRecognizer_stream_isEndb>
+
+  short marpaESLIFRecognizer_stream_isEndb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, short *endbp);
+
+Returns in the value pointed by C<endbp>, if not C<NULL>, a boolean saying if the parser has reached and end of input, meaning that reader callback did set the C<eofb> flag I<and> that all remaining data has been consumed. Alike C<marpaESLIFRecognizer_stream_isNewlineb>, end of buffer flag is internally updated only by the top-level recognizer.
+
+This function should never fail, a false value indicates something fatal happened or the arguments are not correct.
 
 =head2 ESLIFValue
 
