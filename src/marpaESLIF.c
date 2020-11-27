@@ -18518,6 +18518,78 @@ void marpaESLIFSymbol_freev(marpaESLIFSymbol_t *marpaESLIFSymbolp)
   _marpaESLIF_symbol_freev(marpaESLIFSymbolp);
 }
 
+/*****************************************************************************/
+short marpaESLIFRecognizer_contextLocationb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, int *contextip)
+/*****************************************************************************/
+/* Note: for us context location is the latest Earleme Set Id                */
+/*****************************************************************************/
+{
+  if (marpaESLIFRecognizerp == NULL) {
+    errno = EINVAL;
+    return 0;
+  }
+
+  return marpaWrapperRecognizer_latestb(marpaESLIFRecognizerp->marpaWrapperRecognizerp, contextip);
+}
+
+/*****************************************************************************/
+short marpaESLIFRecognizer_contextSetb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, int i)
+/*****************************************************************************/
+/* We do not use generic pointers, forcing the end-user to do bookkeeping.   */
+/*****************************************************************************/
+{
+  short                           rcb;
+  marpaWrapperRecognizerContext_t marpaWrapperRecognizerContext;
+  
+  if (marpaESLIFRecognizerp == NULL) {
+    errno = EINVAL;
+    goto err;
+  }
+
+  marpaWrapperRecognizerContext.valuei = i;
+  marpaWrapperRecognizerContext.valuep = NULL;
+
+  rcb = marpaWrapperRecognizer_contextSetb(marpaESLIFRecognizerp->marpaWrapperRecognizerp, marpaWrapperRecognizerContext);
+  goto done;
+
+ err:
+  rcb = 0;
+
+ done:
+  return rcb;
+}
+
+/*****************************************************************************/
+short marpaESLIFRecognizer_contextGetb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, int contexti, int *ip)
+/*****************************************************************************/
+/* We do not use generic pointers, forcing the end-user to do bookkeeping.   */
+/*****************************************************************************/
+{
+  short                           rcb;
+  marpaWrapperRecognizerContext_t marpaWrapperRecognizerContext;
+  
+  if (marpaESLIFRecognizerp == NULL) {
+    errno = EINVAL;
+    goto err;
+  }
+
+  if (! marpaWrapperRecognizer_contextGetb(marpaESLIFRecognizerp->marpaWrapperRecognizerp, contexti, &marpaWrapperRecognizerContext)) {
+    goto err;
+  }
+
+  if (ip != NULL) {
+    *ip = marpaWrapperRecognizerContext.valuei;
+  }
+
+  goto done;
+
+ err:
+  rcb = 0;
+
+ done:
+  return rcb;
+}
+
 #include "bootstrap.c"
 #include "lua.c"
 #include "json.c"
