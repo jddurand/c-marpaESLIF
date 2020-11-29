@@ -768,7 +768,7 @@ marpaESLIF BNF can be expressed in itself:
   <left association>             ::= 'assoc' /=>|\x{21D2}/u 'left'
   <right association>            ::= 'assoc' /=>|\x{21D2}/u 'right'
   <group association>            ::= 'assoc' /=>|\x{21D2}/u 'group'
-  <separator specification>      ::= 'separator' /=>|\x{21D2}/u <single symbol>
+  <separator specification>      ::= 'separator' /=>|\x{21D2}/u <rhs primary>
   <proper specification>         ::= 'proper' /=>|\x{21D2}/u <false>
                                    | 'proper' /=>|\x{21D2}/u <true>
   <hide separator specification> ::= 'hide-separator' /=>|\x{21D2}/u <false>

@@ -48,6 +48,7 @@ typedef enum _marpaESLIFBootstrapStackTypeEnum {
   marpaESLIFBootstrapStackTypeEnum_ALTERNATIVE_NAME,
   marpaESLIFBootstrapStackTypeEnum_ARRAY,
   marpaESLIFBootstrapStackTypeEnum_STRING,
+  marpaESLIFBootstrapStackTypeEnum_LHS,
   _marpaESLIFBootstrapStackTypeEnum_LAST
 } marpaESLIFBootstrapStackTypeEnum_t;
 
@@ -94,9 +95,7 @@ static char _MARPAESLIF_BOOTSTRAP_STACK_TYPE[_marpaESLIFBootstrapStackTypeEnum_L
 #define MARPAESLIF_BOOTSTRAP_STACK_TYPE_ALTERNATIVE_NAME                 &(_MARPAESLIF_BOOTSTRAP_STACK_TYPE[marpaESLIFBootstrapStackTypeEnum_ALTERNATIVE_NAME])
 #define MARPAESLIF_BOOTSTRAP_STACK_TYPE_ARRAY                            &(_MARPAESLIF_BOOTSTRAP_STACK_TYPE[marpaESLIFBootstrapStackTypeEnum_ARRAY])
 #define MARPAESLIF_BOOTSTRAP_STACK_TYPE_STRING                           &(_MARPAESLIF_BOOTSTRAP_STACK_TYPE[marpaESLIFBootstrapStackTypeEnum_STRING])
-
-#define MARPAESLIF_BOOTSTRAP_STACK_TYPE_START MARPAESLIF_BOOTSTRAP_STACK_TYPE_NA
-#define MARPAESLIF_BOOTSTRAP_STACK_TYPE_END MARPAESLIF_BOOTSTRAP_STACK_TYPE_STRING
+#define MARPAESLIF_BOOTSTRAP_STACK_TYPE_LHS                              &(_MARPAESLIF_BOOTSTRAP_STACK_TYPE[marpaESLIFBootstrapStackTypeEnum_LHS])
 
 /* Forward declarations */
 typedef enum   marpaESLIF_bootstrap_stack_context               marpaESLIF_bootstrap_stack_context_t;
@@ -114,6 +113,7 @@ typedef enum   marpaESLIF_bootstrap_event_declaration_type      marpaESLIF_boots
 typedef struct marpaESLIF_bootstrap_utf_string                marpaESLIF_bootstrap_utf_string_t;
 typedef struct marpaESLIF_bootstrap_single_symbol             marpaESLIF_bootstrap_single_symbol_t;
 typedef struct marpaESLIF_bootstrap_symbol                    marpaESLIF_bootstrap_symbol_t;
+typedef struct marpaESLIF_bootstrap_lhs                       marpaESLIF_bootstrap_lhs_t;
 typedef struct marpaESLIF_bootstrap_terminal                  marpaESLIF_bootstrap_terminal_t;
 typedef struct marpaESLIF_bootstrap_adverb_list_item          marpaESLIF_bootstrap_adverb_list_item_t;
 typedef struct marpaESLIF_bootstrap_grammar_reference         marpaESLIF_bootstrap_grammar_reference_t;
@@ -170,6 +170,10 @@ struct marpaESLIF_bootstrap_symbol {
   char *symbols;
 };
 
+struct marpaESLIF_bootstrap_lhs {
+  char *symbols;
+};
+
 enum marpaESLIF_bootstrap_terminal_type {
   MARPAESLIF_BOOTSTRAP_TERMINAL_TYPE_NA = 0,
   MARPAESLIF_BOOTSTRAP_TERMINAL_TYPE_CHARACTER_CLASS,
@@ -201,7 +205,7 @@ struct marpaESLIF_bootstrap_adverb_list_item {
     short                                        left_associationb;
     short                                        right_associationb;
     short                                        group_associationb;
-    marpaESLIF_bootstrap_single_symbol_t        *separatorSingleSymbolp;
+    marpaESLIF_bootstrap_rhs_primary_t          *separatorRhsPrimaryp;
     short                                        properb;
     short                                        hideseparatorb;
     int                                          ranki;
