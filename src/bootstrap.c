@@ -5088,18 +5088,17 @@ static short _marpaESLIF_bootstrap_G1_action_start_ruleb(void *userDatavp, marpa
 /*****************************************************************************/
 {
   /* <start rule>  ::= ':start' <op declare> symbol */
-  static const char    *funcs              = "_marpaESLIF_bootstrap_G1_action_start_ruleb";
-  marpaESLIFGrammar_t  *marpaESLIFGrammarp = (marpaESLIFGrammar_t *) userDatavp;
-  marpaESLIF_t         *marpaESLIFp        = marpaESLIFValuep->marpaESLIFp; /* marpaESLIFGrammar_eslifp(marpaESLIFRecognizer_grammarp(marpaESLIFValue_recognizerp(marpaESLIFValuep))); */
-  int                  leveli;
-  char                 *symbolNames;
-  marpaESLIF_grammar_t *grammarp;
-  marpaESLIF_symbol_t  *startp;
-  short                 rcb;
+  static const char              *funcs              = "_marpaESLIF_bootstrap_G1_action_start_ruleb";
+  marpaESLIFGrammar_t            *marpaESLIFGrammarp = (marpaESLIFGrammar_t *) userDatavp;
+  marpaESLIF_t                   *marpaESLIFp        = marpaESLIFValuep->marpaESLIFp; /* marpaESLIFGrammar_eslifp(marpaESLIFRecognizer_grammarp(marpaESLIFValue_recognizerp(marpaESLIFValuep))); */
+  int                             leveli;
+  marpaESLIF_bootstrap_symbol_t  *bootstrapSymbolp;
+  marpaESLIF_grammar_t           *grammarp;
+  marpaESLIF_symbol_t            *startp;
+  short                           rcb;
 
   MARPAESLIF_BOOTSTRAP_GET_INT(marpaESLIFValuep, arg0i+1, leveli);
-  /* symbolNames is an ASCII string that we pushed into a PTR that we own */
-  MARPAESLIF_BOOTSTRAP_GET_PTR(marpaESLIFValuep, arg0i+2, symbolNames);
+  MARPAESLIF_BOOTSTRAP_GET_PTR(marpaESLIFValuep, arg0i+2, bootstrapSymbolp);
 
   /* Check grammar at that level exist */
   grammarp = _marpaESLIF_bootstrap_check_grammarp(marpaESLIFp, marpaESLIFGrammarp, leveli, NULL);
@@ -5108,7 +5107,7 @@ static short _marpaESLIF_bootstrap_G1_action_start_ruleb(void *userDatavp, marpa
   }
 
   /* Check the symbol */
-  startp = _marpaESLIF_bootstrap_check_meta_by_namep(marpaESLIFp, grammarp, symbolNames, 1 /* createb */);
+  startp = _marpaESLIF_bootstrap_check_meta_by_namep(marpaESLIFp, grammarp, bootstrapSymbolp->symbols, 1 /* createb */);
   if (startp == NULL) {
     goto err;
   }
@@ -5930,7 +5929,7 @@ static short _marpaESLIF_bootstrap_G1_action_lexeme_ruleb(void *userDatavp, marp
   marpaESLIFGrammar_t                         *marpaESLIFGrammarp = (marpaESLIFGrammar_t *) userDatavp;
   marpaESLIF_t                                *marpaESLIFp        = marpaESLIFValuep->marpaESLIFp; /* marpaESLIFGrammar_eslifp(marpaESLIFRecognizer_grammarp(marpaESLIFValue_recognizerp(marpaESLIFValuep))); */
   genericStack_t                              *adverbListItemStackp = NULL;
-  char                                        *symbolNames;
+  marpaESLIF_bootstrap_symbol_t               *bootstrapSymbolp;
   marpaESLIF_symbol_t                         *symbolp;
   int                                          leveli;
   marpaESLIF_grammar_t                        *grammarp;
@@ -5943,8 +5942,7 @@ static short _marpaESLIF_bootstrap_G1_action_lexeme_ruleb(void *userDatavp, marp
   short                                        rcb;
 
   MARPAESLIF_BOOTSTRAP_GET_INT(marpaESLIFValuep, arg0i+1, leveli);
-  /* symbolNames is an ASCII string that we pushed to a PTR that we own */
-  MARPAESLIF_BOOTSTRAP_GET_PTR(marpaESLIFValuep, arg0i+2, symbolNames);
+  MARPAESLIF_BOOTSTRAP_GET_PTR(marpaESLIFValuep, arg0i+2, bootstrapSymbolp);
   /* adverb list may be undef */
   MARPAESLIF_BOOTSTRAP_IS_UNDEF(marpaESLIFValuep, argni, undefb);
   if (! undefb) {
@@ -5963,7 +5961,7 @@ static short _marpaESLIF_bootstrap_G1_action_lexeme_ruleb(void *userDatavp, marp
   }
 
   /* Check the symbol exist */
-  symbolp = _marpaESLIF_bootstrap_check_meta_by_namep(marpaESLIFp, grammarp, symbolNames, 1 /* createb */);
+  symbolp = _marpaESLIF_bootstrap_check_meta_by_namep(marpaESLIFp, grammarp, bootstrapSymbolp->symbols, 1 /* createb */);
   if (symbolp == NULL) {
     goto err;
   }
@@ -6020,7 +6018,7 @@ static short _marpaESLIF_bootstrap_G1_action_lexeme_ruleb(void *userDatavp, marp
   if (eventInitializationp != NULL) {
     /* It is a non-sense to have an event initialization without pause information */
     if (eventInitializationp->eventNames == NULL) {
-      MARPAESLIF_ERRORF(marpaESLIFp, "In :lexeme rule for symbol <%s>, event name is NULL", symbolNames);
+      MARPAESLIF_ERRORF(marpaESLIFp, "In :lexeme rule for symbol <%s>, event name is NULL", bootstrapSymbolp->symbols);
       goto err;
     }
     switch (pausei) {
@@ -6041,7 +6039,7 @@ static short _marpaESLIF_bootstrap_G1_action_lexeme_ruleb(void *userDatavp, marp
         symbolp->eventBeforeb = 0;
         break;
       default:
-        MARPAESLIF_ERRORF(marpaESLIFp, "In :lexeme rule for symbol <%s>, unsupported event initializer type %d", symbolNames, (int) eventInitializationp->initializerb);
+        MARPAESLIF_ERRORF(marpaESLIFp, "In :lexeme rule for symbol <%s>, unsupported event initializer type %d", bootstrapSymbolp->symbols, (int) eventInitializationp->initializerb);
         goto err;
         break;
       }
@@ -6063,16 +6061,16 @@ static short _marpaESLIF_bootstrap_G1_action_lexeme_ruleb(void *userDatavp, marp
         symbolp->eventAfterb = 0;
         break;
       default:
-        MARPAESLIF_ERRORF(marpaESLIFp, "In :lexeme rule for symbol <%s>, unsupported event initializer type %d", symbolNames, (int) eventInitializationp->initializerb);
+        MARPAESLIF_ERRORF(marpaESLIFp, "In :lexeme rule for symbol <%s>, unsupported event initializer type %d", bootstrapSymbolp->symbols, (int) eventInitializationp->initializerb);
         goto err;
         break;
       }
       break;
     case MARPAESLIF_BOOTSTRAP_PAUSE_TYPE_NA:
-      MARPAESLIF_ERRORF(marpaESLIFp, "In :lexeme rule for symbol <%s>, you must supply pause => before, or pause => after, when giving an event name", symbolNames);
+      MARPAESLIF_ERRORF(marpaESLIFp, "In :lexeme rule for symbol <%s>, you must supply pause => before, or pause => after, when giving an event name", bootstrapSymbolp->symbols);
       goto err;
     default:
-      MARPAESLIF_ERRORF(marpaESLIFp, "In :lexeme rule for symbol <%s>, Unsupported pause type %d", symbolNames, pausei);
+      MARPAESLIF_ERRORF(marpaESLIFp, "In :lexeme rule for symbol <%s>, Unsupported pause type %d", bootstrapSymbolp->symbols, pausei);
       goto err;
     }
   } else {
@@ -6080,7 +6078,7 @@ static short _marpaESLIF_bootstrap_G1_action_lexeme_ruleb(void *userDatavp, marp
     switch (pausei) {
     case MARPAESLIF_BOOTSTRAP_PAUSE_TYPE_BEFORE:
     case MARPAESLIF_BOOTSTRAP_PAUSE_TYPE_AFTER:
-      MARPAESLIF_ERRORF(marpaESLIFp, "In :lexeme rule for symbol <%s>, you must supply event => <event initializer> when giving a pause speficiation", symbolNames);
+      MARPAESLIF_ERRORF(marpaESLIFp, "In :lexeme rule for symbol <%s>, you must supply event => <event initializer> when giving a pause speficiation", bootstrapSymbolp->symbols);
       goto err;
     default:
       break;
@@ -6428,7 +6426,7 @@ static inline short _marpaESLIF_bootstrap_G1_action_event_declarationb(void *use
   marpaESLIFGrammar_t                         *marpaESLIFGrammarp = (marpaESLIFGrammar_t *) userDatavp;
   marpaESLIF_t                                *marpaESLIFp        = marpaESLIFValuep->marpaESLIFp; /* marpaESLIFGrammar_eslifp(marpaESLIFRecognizer_grammarp(marpaESLIFValue_recognizerp(marpaESLIFValuep))); */
   marpaESLIF_bootstrap_event_initialization_t *eventInitializationp;
-  char                                        *symbolNames;
+  marpaESLIF_bootstrap_symbol_t               *bootstrapSymbolp;
   marpaESLIF_grammar_t                        *grammarp;
   marpaESLIF_symbol_t                         *symbolp;
   char                                       **eventsp = NULL;
@@ -6456,8 +6454,7 @@ static inline short _marpaESLIF_bootstrap_G1_action_event_declarationb(void *use
   if (intb) {
     MARPAESLIF_BOOTSTRAP_GET_INT(marpaESLIFValuep, arg0i+2, leveli);
   }
-  /* symbolNames is an ASCII string that we pushed to a PTR that we own */
-  MARPAESLIF_BOOTSTRAP_GET_PTR(marpaESLIFValuep, arg0i+4, symbolNames);
+  MARPAESLIF_BOOTSTRAP_GET_PTR(marpaESLIFValuep, arg0i+4, bootstrapSymbolp);
 
   /* Check grammar at that level exist */
   grammarp = _marpaESLIF_bootstrap_check_grammarp(marpaESLIFp, marpaESLIFGrammarp, leveli, NULL);
@@ -6466,14 +6463,14 @@ static inline short _marpaESLIF_bootstrap_G1_action_event_declarationb(void *use
   }
 
   /* Check the symbol */
-  symbolp = _marpaESLIF_bootstrap_check_meta_by_namep(marpaESLIFp, grammarp, symbolNames, 1 /* createb */);
+  symbolp = _marpaESLIF_bootstrap_check_meta_by_namep(marpaESLIFp, grammarp, bootstrapSymbolp->symbols, 1 /* createb */);
   if (symbolp == NULL) {
     goto err;
   }
 
   /* It is a non-sense to have an event initialization without a name */
   if (eventInitializationp->eventNames == NULL) {
-    MARPAESLIF_ERRORF(marpaESLIFp, "In event declaration for symbol <%s>, event name is NULL", symbolNames);
+    MARPAESLIF_ERRORF(marpaESLIFp, "In event declaration for symbol <%s>, event name is NULL", bootstrapSymbolp->symbols);
     goto err;
   }
 
@@ -6501,7 +6498,7 @@ static inline short _marpaESLIF_bootstrap_G1_action_event_declarationb(void *use
 #endif
     break;
   default:
-    MARPAESLIF_ERRORF(marpaESLIFp, "In event declaration for symbol <%s>, unsupported event type %d", symbolNames, type);
+    MARPAESLIF_ERRORF(marpaESLIFp, "In event declaration for symbol <%s>, unsupported event type %d", bootstrapSymbolp->symbols, type);
     goto err;
     break;
   }
@@ -6522,7 +6519,7 @@ static inline short _marpaESLIF_bootstrap_G1_action_event_declarationb(void *use
     *eventbp = 0;
     break;
   default:
-    MARPAESLIF_ERRORF(marpaESLIFp, "In completion event declaration for symbol <%s>, unsupported event initializer type %d", symbolNames, (int) eventInitializationp->initializerb);
+    MARPAESLIF_ERRORF(marpaESLIFp, "In completion event declaration for symbol <%s>, unsupported event initializer type %d", bootstrapSymbolp->symbols, (int) eventInitializationp->initializerb);
     goto err;
     break;
   }
@@ -6530,7 +6527,7 @@ static inline short _marpaESLIF_bootstrap_G1_action_event_declarationb(void *use
   MARPAESLIF_BOOTSTRAP_SET_UNDEF(marpaESLIFValuep, resulti, MARPAESLIF_BOOTSTRAP_STACK_TYPE_NA /* context not used */);
 
 #ifndef MARPAESLIF_NTRACE
-  MARPAESLIF_TRACEF(marpaESLIFp, funcs, "Setted %s event %s=%s for symbol <%s> at grammar level %d", types, *eventsp, *eventbp ? "on" : "off", symbolNames, leveli);
+  MARPAESLIF_TRACEF(marpaESLIFp, funcs, "Setted %s event %s=%s for symbol <%s> at grammar level %d", types, *eventsp, *eventbp ? "on" : "off", bootstrapSymbolp->symbols, leveli);
 #endif
 
   rcb = 1;
