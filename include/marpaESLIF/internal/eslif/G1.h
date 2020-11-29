@@ -1263,7 +1263,7 @@ bootstrap_grammar_rule_t bootstrap_grammar_G1_rules[] = {
                                                                                                                                      G1_TERMINAL_GROUP                            }, -1,                        -1,      -1,              0, G1_ACTION_GROUP_ASSOCIATION },
   { G1_META_SEPARATOR_SPECIFICATION,          G1_RULE_SEPARATOR_SPECIFICATION,                MARPAESLIF_RULE_TYPE_ALTERNATIVE, 3, { G1_TERMINAL_SEPARATOR,
                                                                                                                                      G1_TERMINAL_THEN,
-                                                                                                                                     G1_META_SINGLE_SYMBOL                        }, -1,                        -1,      -1,              0, G1_ACTION_SEPARATOR_SPECIFICATION },
+                                                                                                                                     G1_META_RHS_PRIMARY                          }, -1,                        -1,      -1,              0, G1_ACTION_SEPARATOR_SPECIFICATION },
   /*
     lhsi                                      descs                                           type                          nrhsl  { rhsi }                                       }  minimumi           separatori  properb hideseparatorb  actions
   */
