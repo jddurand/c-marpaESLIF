@@ -816,7 +816,7 @@ marpaESLIF BNF can be expressed in itself:
                                    | '(-' <rhs primary> <quantifier> <adverb list> '-)'
                                    | '(' <rhs primary> <quantifier> <adverb list> ')'
   <rhs primary>                  ::= <single symbol>
-                                   | <symbol name> '@' <grammar reference>
+                                   | <symbol> '@' <grammar reference>
   <single symbol>                ::= <symbol>
                                    | <terminal>
   <terminal>                     ::= <character class>
