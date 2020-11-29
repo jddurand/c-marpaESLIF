@@ -1393,7 +1393,7 @@ bootstrap_grammar_rule_t bootstrap_grammar_G1_rules[] = {
                                                                                                                                      G1_META_ADVERB_LIST,
                                                                                                                                      G1_TERMINAL_RPAREN                           }, -1,                        -1,      -1,              0, G1_ACTION_RHS_ALTERNATIVE_7 },
   { G1_META_RHS_PRIMARY,                      G1_RULE_RHS_PRIMARY_1,                          MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_SINGLE_SYMBOL                        }, -1,                        -1,      -1,              0, G1_ACTION_RHS_PRIMARY_1 },
-  { G1_META_RHS_PRIMARY,                      G1_RULE_RHS_PRIMARY_2,                          MARPAESLIF_RULE_TYPE_ALTERNATIVE, 3, { G1_META_SYMBOL_NAME,
+  { G1_META_RHS_PRIMARY,                      G1_RULE_RHS_PRIMARY_2,                          MARPAESLIF_RULE_TYPE_ALTERNATIVE, 3, { G1_META_SYMBOL,
                                                                                                                                      G1_TERMINAL_AT_SIGN,
                                                                                                                                      G1_META_GRAMMAR_REFERENCE                    }, -1,                        -1,      -1,              0, G1_ACTION_RHS_PRIMARY_2 },
   /*
