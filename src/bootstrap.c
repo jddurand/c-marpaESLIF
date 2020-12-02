@@ -4033,6 +4033,7 @@ static inline short _marpaESLIF_bootstrap_G1_action_priority_loosen_ruleb(marpaE
             MARPAESLIF_ERRORF(marpaESLIFp, "malloc failure, %s", strerror(errno));
             goto err;
           }
+          prioritizedRhsAlternativep->u.rhsPrimaryp->symbolShallowp  = NULL;
           prioritizedRhsAlternativep->u.rhsPrimaryp->type            = MARPAESLIF_BOOTSTRAP_RHS_PRIMARY_TYPE_SINGLE_SYMBOL;
           prioritizedRhsAlternativep->u.rhsPrimaryp->u.singleSymbolp = (marpaESLIF_bootstrap_single_symbol_t *) malloc(sizeof(marpaESLIF_bootstrap_single_symbol_t));
           if (prioritizedRhsAlternativep->u.rhsPrimaryp->u.singleSymbolp == NULL) {
