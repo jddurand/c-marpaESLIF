@@ -307,7 +307,7 @@
 #define G1_ACTION_EVENT_NAME_5                     "::ascii" /* <event name> ::= ':discard[switch]' */
 #define G1_ACTION_LHS                              "::shift" /* lhs ::= <symbol name> */
 #define G1_ACTION_RHS                              "G1_action_rhs"                              /* done */
-#define G1_ACTION_RHS_ALTERNATIVE_1                "::shift" /* <rhs alternative> ::= <rhs primary> */
+#define G1_ACTION_RHS_ALTERNATIVE_1                "G1_action_rhs_alternative_1"                /* done */
 #define G1_ACTION_RHS_ALTERNATIVE_2                "G1_action_rhs_alternative_2"                /* done */
 #define G1_ACTION_RHS_ALTERNATIVE_3                "G1_action_rhs_alternative_3"                /* done */
 #define G1_ACTION_RHS_ALTERNATIVE_4                "G1_action_rhs_alternative_4"                /* done */
