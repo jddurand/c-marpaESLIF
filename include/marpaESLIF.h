@@ -62,7 +62,11 @@ typedef struct marpaESLIFSymbol          marpaESLIFSymbol_t;
 typedef void  (*marpaESLIFValueResultFreeCallback_t)(void *userDatavp, marpaESLIFValueResult_t *marpaESLIFValueResultp);
 
 /* Reader recognizer callback. It returns encoding information, giving eventual encoding in *encodingsp, spreaded over *encodinglp bytes. Encoding of encoding is free. */
-typedef short (*marpaESLIFReader_t)(void *userDatavp, char **inputcpp, size_t *inputlp, short *eofbp, short *characterStreambp, char **encodingsp, size_t *encodinglp);
+/* The content of inputcpp and encodingsp might be volatile data that the end-user want to dispose immediately after the reader callback, therefore there is a */
+/* disposal argument that is guaranteed to be called if it is not NULL. */
+/* A typical situation is e.g. the JNI environment: inputcp may be the result of a call to GetByteArrayElements(). This implies a call to ReleaseByteArrayElements(). */
+typedef void  (*marpaESLIFReaderDispose_t)(void *userDatavp, char *inputcp, size_t inputl, short eofb, short characterStreamb, char *encodings, size_t encodingl);
+typedef short (*marpaESLIFReader_t)(void *userDatavp, char **inputcpp, size_t *inputlp, short *eofbp, short *characterStreambp, char **encodingsp, size_t *encodinglp, marpaESLIFReaderDispose_t *disposeCallbackpp);
 
 /* If recognizer callback: marpaESLIFValueResultLexemep is of type ARRAY and represents the binary memory chunk of current lexeme */
 typedef short (*marpaESLIFRecognizerIfCallback_t)(void *userDatavp, marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFValueResult_t *marpaESLIFValueResultLexemep, marpaESLIFValueResultBool_t *marpaESLIFValueResultBoolp);
@@ -202,7 +206,8 @@ typedef marpaESLIFValueSymbolCallback_t (*marpaESLIFValueSymbolActionResolver_t)
 /* It is legal to return NULL in encodingmaybesp, then this is an opaque sequence of bytes, else */
 /* this is considered as a string in this given encoding. */
 /* Note that it is the responsibility of the caller to make sure that *inputcpp and **encodingmaybesp points to valid memory area when the call returns */
-typedef short (*marpaESLIFRepresentation_t)(void *userDatavp, marpaESLIFValueResult_t *marpaESLIFValueResultp, char **inputcpp, size_t *inputlp, char **encodingasciisp);
+typedef void (*marpaESLIFRepresentationDispose_t)(void *userDatavp, char *inputcp, size_t inputl, char *encodingasciis);
+typedef short (*marpaESLIFRepresentation_t)(void *userDatavp, marpaESLIFValueResult_t *marpaESLIFValueResultp, char **inputcpp, size_t *inputlp, char **encodingasciisp, marpaESLIFRepresentationDispose_t *disposeCallbackpp);
 typedef char marpaESLIFValueResultChar_t;
 typedef short marpaESLIFValueResultShort_t;
 typedef long marpaESLIFValueResultLong_t;

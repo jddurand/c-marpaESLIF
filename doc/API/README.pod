@@ -925,10 +925,16 @@ Value type is C<marpaESLIFValueResultString_t>, typedef'ed to: C<struct { unsign
 
 A Value result is of type C<marpaESLIFValueResult_t> with more meta data:
 
+  typedef void (*marpaESLIFRepresentationDispose_t)(void *userDatavp,
+                                                    char *inputcp,
+                                                    size_t inputl,
+                                                    char *encodingasciis);
   typedef short (*marpaESLIFRepresentation_t)(void *userDatavp,
                                               marpaESLIFValueResult_t *marpaESLIFValueResultp,
                                               char **inputcpp,
-                                              size_t *inputlp);
+                                              size_t *inputlp,
+                                              char **encodingasciisp,
+                                              marpaESLIFRepresentationDispose_t *disposeCallbackpp);
   typedef struct marpaESLIFValueResult {
     void                      *contextp;          /* Free value meaningful only to the user */
     marpaESLIFRepresentation_t representationp;   /* How a user-land alternative is represented if it was in the input */
@@ -969,6 +975,8 @@ where C<::concat> is a binary concatenation, and C<::convert[ENCODING]> is a str
 =item
 
 Representation callback exists: The binary content of the representation is taken as-is.
+
+The callback can give a disposal function pointer that is guaranteed to be called when ESLIF do not need representation data anymore.
 
 =item
 
@@ -1071,13 +1079,21 @@ At any location in the grammar, possible alternatives can be of the two major ty
 
 =head3 C<marpaESLIFRecognizer_newp>
 
+  typedef void  (*marpaESLIFReaderDispose_t)(void *userDatavp,
+                                             char *inputcp,
+                                             size_t inputl,
+                                             short eofb,
+                                             short characterStreamb,
+                                             char *encodings,
+                                             size_t encodingl);
   typedef short (*marpaESLIFReader_t)(void    *userDatavp,
                                       char   **inputcpp,
                                       size_t  *inputlp,
                                       short   *eofbp,
                                       short   *characterStreambp,
                                       char   **encodingsp,
-                                      size_t  *encodinglp);
+                                      size_t  *encodinglp,
+                                      marpaESLIFReaderDispose_t *disposeCallbackpp);
   /* Recognizer callback definitions */
 
   /* if-action callback: received a lexeme and return a boolean */
@@ -1171,6 +1187,10 @@ The place where the user will give a pointer to a buffer containing encoding inf
 =item C<encodinglp>
 
 The place where the user will give a size of the buffer starting at C<*encodingsp>. Default is C<0>.
+
+=item C<disposeCallbackpp>
+
+A uesr-defined function pointer that, if not C<NULL>, is guaranteed to be called as soon as ESLIF do not need anymore what the reader returned.
 
 =back
 

@@ -616,7 +616,7 @@ static inline char                  *_marpaESLIF_charconvb(marpaESLIF_t *marpaES
 
 static inline char                  *_marpaESLIF_utf82printableascii_newp(marpaESLIF_t *marpaESLIFp, char *descs, size_t descl);
 static inline void                   _marpaESLIF_utf82printableascii_freev(char *utf82printableasciip);
-static        short                  _marpaESLIFReader_grammarReader(void *userDatavp, char **inputsp, size_t *inputlp, short *eofbp, short *characterStreambp, char **encodingsp, size_t *encodinglp);
+static        short                  _marpaESLIFReader_grammarReader(void *userDatavp, char **inputsp, size_t *inputlp, short *eofbp, short *characterStreambp, char **encodingsp, size_t *encodinglp, marpaESLIFReaderDispose_t *disposeCallbackpp);
 static inline short                  _marpaESLIFRecognizer_resume_oneb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, short initialEventsb, short *canContinuebp, short *isExhaustedbp);
 static inline short                  _marpaESLIF_recognizer_start_is_completeb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, short *completebp);
 static inline short                  _marpaESLIFRecognizer_resumeb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, size_t deltaLengthl, short initialEventsb, short *continuebp, short *isExhaustedbp);
@@ -8213,7 +8213,7 @@ short marpaESLIFGrammar_parse_by_levelb(marpaESLIFGrammar_t *marpaESLIFGrammarp,
 }
 
 /*****************************************************************************/
-static short _marpaESLIFReader_grammarReader(void *userDatavp, char **inputsp, size_t *inputlp, short *eofbp, short *characterStreambp, char **encodingsp, size_t *encodinglp)
+static short _marpaESLIFReader_grammarReader(void *userDatavp, char **inputsp, size_t *inputlp, short *eofbp, short *characterStreambp, char **encodingsp, size_t *encodinglp, marpaESLIFReaderDispose_t *disposeCallbackpp)
 /*****************************************************************************/
 {
   static const char          *funcs                     = "marpaESLIFReader_grammarReader";
@@ -8228,6 +8228,7 @@ static short _marpaESLIFReader_grammarReader(void *userDatavp, char **inputsp, s
   *characterStreambp    = 1; /* We say this is a stream of characters */
   *encodingsp           = marpaESLIF_readerContextp->marpaESLIFGrammarOptionp->encodings;
   *encodinglp           = marpaESLIF_readerContextp->marpaESLIFGrammarOptionp->encodingl;
+  *disposeCallbackpp    = NULL;
 
 #ifndef MARPAESLIF_NTRACE
   MARPAESLIF_TRACEF(marpaESLIFp, funcs, "return 1 (*inputsp=%p, *inputlp=%ld, *eofbp=%d, *characterStreambp=%d)", *inputsp, (unsigned long) *inputlp, (int) *eofbp, (int) *characterStreambp);
@@ -10551,6 +10552,8 @@ static inline short _marpaESLIFRecognizer_readb(marpaESLIFRecognizer_t *marpaESL
   short                         eofb                       = 0;
   short                         characterStreamb           = 0;
   char                         *utf8s                      = NULL;
+  marpaESLIFReaderDispose_t     disposeCallbackp           = NULL;
+  short                         disposeCallbackb           = 0; /* To know if we have to call disposer */
   size_t                        utf8l;
   short                         appendDatab;
   short                         charconvb;
@@ -10565,10 +10568,18 @@ static inline short _marpaESLIFRecognizer_readb(marpaESLIFRecognizer_t *marpaESL
   }
 
  again:
-  if (! marpaESLIFRecognizerOption.readerCallbackp(marpaESLIFRecognizerOption.userDatavp, &inputs, &inputl, &eofb, &characterStreamb, &encodings, &encodingl)) {
+  if (disposeCallbackb) {
+    if (disposeCallbackp != NULL) {
+      disposeCallbackp(marpaESLIFRecognizerOption.userDatavp, inputs, inputl, eofb, characterStreamb, encodings, encodingl);
+      disposeCallbackp = NULL;
+    }
+    disposeCallbackb = 0;
+  }
+  if (! marpaESLIFRecognizerOption.readerCallbackp(marpaESLIFRecognizerOption.userDatavp, &inputs, &inputl, &eofb, &characterStreamb, &encodings, &encodingl, &disposeCallbackp)) {
     MARPAESLIF_ERROR(marpaESLIFp, "reader failure");
     goto err;
   }
+  disposeCallbackb = (disposeCallbackp != NULL) ? 1 : 0;
 
   if ((inputs != NULL) && (inputl > 0)) {
     if (characterStreamb) {
@@ -10746,6 +10757,11 @@ static inline short _marpaESLIFRecognizer_readb(marpaESLIFRecognizer_t *marpaESL
  done:
   if (utf8s != NULL) {
     free(utf8s);
+  }
+  if (disposeCallbackb) {
+    if (disposeCallbackp != NULL) {
+      disposeCallbackp(marpaESLIFRecognizerOption.userDatavp, inputs, inputl, eofb, characterStreamb, encodings, encodingl);
+    }
   }
 
   MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "return %d", (int) rcb);
@@ -14211,6 +14227,8 @@ static short _marpaESLIFRecognizer_concat_valueResultCallbackb(void *userDatavp,
   char                                   *encodingasciitofrees        = NULL;
   short                                   stringb                     = contextp->stringb;
   short                                   jsonb                       = contextp->jsonb || contextp->jsonfb; /* Note that jsonb implies UTF-8's stringb by construction */
+  marpaESLIFRepresentationDispose_t       disposeCallbackp            = NULL;
+  short                                   disposeCallbackb            = 0; /* To know if we have to call disposer */
   char                                   *srcs;
   size_t                                  srcl;
   genericStack_t                          todoStack;
@@ -14285,9 +14303,17 @@ static short _marpaESLIFRecognizer_concat_valueResultCallbackb(void *userDatavp,
       srcs = NULL;
       srcl = 0;
       encodingasciis = NULL;
-      if (! representationp(representationUserDatavp, marpaESLIFValueResultp, &srcs, &srcl, &encodingasciis)) {
+      if (disposeCallbackb) {
+	if (disposeCallbackp != NULL) {
+	  disposeCallbackp(representationUserDatavp, srcs, srcl, encodingasciis);
+	  disposeCallbackp = NULL;
+	}
+	disposeCallbackb = 0;
+      }
+      if (! representationp(representationUserDatavp, marpaESLIFValueResultp, &srcs, &srcl, &encodingasciis, &disposeCallbackp)) {
         goto err;
       }
+      disposeCallbackb = (disposeCallbackp != NULL) ? 1 : 0;
       if ((srcs != NULL) && (srcl > 0)) {
         if (encodingasciis != NULL) {
           MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "Got user string representation");
@@ -14861,6 +14887,14 @@ static short _marpaESLIFRecognizer_concat_valueResultCallbackb(void *userDatavp,
   GENERICLOGGER_FREE(genericLoggerp);
   MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "return %d", (int) rcb);
   MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_DEC;
+  if (disposeCallbackb) {
+    if (disposeCallbackp != NULL) {
+      disposeCallbackp(representationUserDatavp, srcs, srcl, encodingasciis);
+      disposeCallbackp = NULL;
+    }
+    disposeCallbackb = 0;
+  }
+
   return rcb;
 }
 

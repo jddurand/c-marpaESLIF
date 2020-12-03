@@ -1009,7 +1009,7 @@ static short marpaESLIFLua_lua_isinteger(int *rcip, lua_State *L, int idx)
 }
 
 /****************************************************************************/
-static short _marpaESLIFValue_lua_representationb(void *userDatavp, marpaESLIFValueResult_t *marpaESLIFValueResultp, char **inputcpp, size_t *inputlp, char **encodingasciisp)
+static short _marpaESLIFValue_lua_representationb(void *userDatavp, marpaESLIFValueResult_t *marpaESLIFValueResultp, char **inputcpp, size_t *inputlp, char **encodingasciisp, marpaESLIFRepresentationDispose_t *disposeCallbackpp)
 /****************************************************************************/
 {
   static const char                *funcs = "_marpaESLIFValue_lua_representationb";
@@ -1017,7 +1017,6 @@ static short _marpaESLIFValue_lua_representationb(void *userDatavp, marpaESLIFVa
   marpaESLIFValue_t                *marpaESLIFValuep = (marpaESLIFValue_t *) userDatavp;
   marpaESLIFRecognizer_t           *marpaESLIFRecognizerp = marpaESLIFValuep->marpaESLIFRecognizerp;
   marpaESLIFLuaValueContext_t      *marpaESLIFLuaValueContextp;
-  marpaESLIFRepresentation_t        representationCallbackp;
   int                               typei;
   short                             rcb;
 
@@ -1042,9 +1041,7 @@ static short _marpaESLIFValue_lua_representationb(void *userDatavp, marpaESLIFVa
   LUA_POP(marpaESLIFValuep, 2);                                                  /* stack: ... */
 
   /* Proxy to the lua representation callback action - then userDatavp has to be marpaESLIFLuaValueContextp */
-  representationCallbackp = marpaESLIFLua_representationb;
-
-  rcb = representationCallbackp((void *) marpaESLIFLuaValueContextp /* userDatavp */, marpaESLIFValueResultp, inputcpp, inputlp, encodingasciisp);
+  rcb = marpaESLIFLua_representationb((void *) marpaESLIFLuaValueContextp /* userDatavp */, marpaESLIFValueResultp, inputcpp, inputlp, encodingasciisp, disposeCallbackpp);
   if (! rcb) goto err;
 
   goto done;

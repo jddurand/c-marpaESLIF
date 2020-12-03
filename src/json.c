@@ -4,7 +4,8 @@
 #undef  FILENAMES
 #define FILENAMES "json.c" /* For logging */
 
-static short                                _marpaESLIFJSONReaderb(void *userDatavp, char **inputcpp, size_t *inputlp, short *eofbp, short *characterStreambp, char **encodingsp, size_t *encodinglp);
+static void                                 _marpaESLIFJSONReaderDisposev(void *userDatavp, char *inputcp, size_t inputl, short eofb, short characterStreamb, char *encodings, size_t encodingl);
+static short                                _marpaESLIFJSONReaderb(void *userDatavp, char **inputcpp, size_t *inputlp, short *eofbp, short *characterStreambp, char **encodingsp, size_t *encodinglp, marpaESLIFReaderDispose_t *disposeCallbackpp);
 static marpaESLIFRecognizerEventCallback_t  _marpaESLIFJSONRecognizerEventActionResolverp(void *userDatavp, marpaESLIFRecognizer_t *marpaESLIFRecognizerp, char *actions);
 static short                                _marpaESLIFJSONRecognizerEventCallbackb(void *userDatavp, marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFEvent_t *eventArrayp, size_t eventArrayl, marpaESLIFValueResultBool_t *marpaESLIFValueResultBoolp);
 static short                                _marpaESLIFJSON_incb(void *userDatavp, marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFValueResultBool_t *marpaESLIFValueResultBoolp);
@@ -19,15 +20,18 @@ static short                                _marpaESLIFJSON_negative_infinityb(v
 static short                                _marpaESLIFJSON_positive_nanb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
 static short                                _marpaESLIFJSON_negative_nanb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
 static short                                _marpaESLIFJSON_proposalb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, marpaESLIFJSONProposalAction_t proposalp, char *strings, size_t stringl, marpaESLIFValueResult_t *marpaESLIFValueResultp);
-static short                                _marpaESLIFJSONRepresentationb(void *userDatavp, marpaESLIFValueResult_t *marpaESLIFValueResultp, char **inputcpp, size_t *inputlp, char **encodingasciisp);
+static void                                 _marpaESLIFJSONRepresentationDisposev(void *userDatavp, char *inputcp, size_t inputl, char *encodingasciis);
+static short                                _marpaESLIFJSONRepresentationb(void *userDatavp, marpaESLIFValueResult_t *marpaESLIFValueResultp, char **inputcpp, size_t *inputlp, char **encodingasciisp, marpaESLIFRepresentationDispose_t *disposeCallbackpp);
 
 typedef struct marpaESLIFJSONContext {
-  size_t                        currentDepthl;
-  marpaESLIFJSONDecodeOption_t *marpaESLIFJSONDecodeOptionp;
-  marpaESLIFRecognizerOption_t *marpaESLIFRecognizerOptionp;
-  marpaESLIFValueOption_t      *marpaESLIFValueOptionp;
+  size_t                             currentDepthl;
+  marpaESLIFJSONDecodeOption_t      *marpaESLIFJSONDecodeOptionp;
+  marpaESLIFRecognizerOption_t      *marpaESLIFRecognizerOptionp;
+  marpaESLIFValueOption_t           *marpaESLIFValueOptionp;
   /* For number parsing, we are unfortunately dependant on locale */
-  char                          decimalPointc;
+  char                              decimalPointc;
+  marpaESLIFReaderDispose_t         readerDisposep;
+  marpaESLIFRepresentationDispose_t representationDisposep;
 } marpaESLIFJSONContext_t;
 
 static const char *marpaESLIFJSON_encode_extended_grammars =
@@ -336,7 +340,7 @@ static inline marpaESLIFGrammar_t *_marpaESLIFJSON_decode_newp(marpaESLIF_t *mar
   }
 
   marpaESLIFGrammarOption.bytep     = strictb ? (char *) marpaESLIFJSON_decode_strict_grammars : (char *) marpaESLIFJSON_decode_extended_grammars;
-  marpaESLIFGrammarOption.bytel     = strlen(marpaESLIFGrammarOption.bytep);
+  marpaESLIFGrammarOption.bytel     = strlen((const char *) marpaESLIFGrammarOption.bytep);
   marpaESLIFGrammarOption.encodings = "ASCII";
   marpaESLIFGrammarOption.encodingl = 5; /* strlen("ASCII") */
 
@@ -368,7 +372,7 @@ static inline marpaESLIFGrammar_t *_marpaESLIFJSON_encode_newp(marpaESLIF_t *mar
   }
 
   marpaESLIFGrammarOption.bytep     = strictb ? (char *) marpaESLIFJSON_encode_strict_grammars : (char *) marpaESLIFJSON_encode_extended_grammars;
-  marpaESLIFGrammarOption.bytel     = strlen(marpaESLIFGrammarOption.bytep);
+  marpaESLIFGrammarOption.bytel     = strlen((const char *) marpaESLIFGrammarOption.bytep);
   marpaESLIFGrammarOption.encodings = "ASCII";
   marpaESLIFGrammarOption.encodingl = 5; /* strlen("ASCII") */
 
@@ -410,6 +414,8 @@ short marpaESLIFJSON_decodeb(marpaESLIFGrammar_t *marpaESLIFGrammarJSONp, marpaE
   marpaESLIFJSONContext.marpaESLIFRecognizerOptionp = marpaESLIFRecognizerOptionp;
   marpaESLIFJSONContext.marpaESLIFValueOptionp      = marpaESLIFValueOptionp;
   marpaESLIFJSONContext.decimalPointc               = MARPAESLIF_DECIMAL_POINT(marpaESLIFGrammarJSONp->marpaESLIFp);
+  marpaESLIFJSONContext.readerDisposep              = NULL;
+  marpaESLIFJSONContext.representationDisposep      = NULL;
 
   marpaESLIFRecognizerOption                      = *marpaESLIFRecognizerOptionp;
   marpaESLIFRecognizerOption.userDatavp           = &marpaESLIFJSONContext;
@@ -496,6 +502,8 @@ short marpaESLIFJSON_encodeb(marpaESLIFGrammar_t *marpaESLIFGrammarJSONp, marpaE
   marpaESLIFJSONContext.marpaESLIFRecognizerOptionp = NULL; /* Not used */
   marpaESLIFJSONContext.marpaESLIFValueOptionp      = marpaESLIFValueOptionp;
   marpaESLIFJSONContext.decimalPointc               = '.'; /* Not used */
+  marpaESLIFJSONContext.readerDisposep              = NULL;
+  marpaESLIFJSONContext.representationDisposep      = NULL;
 
   marpaESLIFValueOption                           = *marpaESLIFValueOptionp;
   marpaESLIFValueOption.userDatavp                = &marpaESLIFJSONContext;
@@ -547,14 +555,32 @@ short marpaESLIFJSON_encodeb(marpaESLIFGrammar_t *marpaESLIFGrammarJSONp, marpaE
 }
 
 /*****************************************************************************/
-static short _marpaESLIFJSONReaderb(void *userDatavp, char **inputcpp, size_t *inputlp, short *eofbp, short *characterStreambp, char **encodingsp, size_t *encodinglp)
+static void _marpaESLIFJSONReaderDisposev(void *userDatavp, char *inputcp, size_t inputl, short eofb, short characterStreamb, char *encodings, size_t encodingl)
 /*****************************************************************************/
 {
   marpaESLIFJSONContext_t      *marpaESLIFJSONContextp      = (marpaESLIFJSONContext_t *) userDatavp;
   marpaESLIFRecognizerOption_t *marpaESLIFRecognizerOptionp = marpaESLIFJSONContextp->marpaESLIFRecognizerOptionp;
 
+  /* Proxy to caller's read disposer */
+  if (marpaESLIFJSONContextp->readerDisposep != NULL) {
+    marpaESLIFJSONContextp->readerDisposep(marpaESLIFRecognizerOptionp->userDatavp, inputcp, inputl, eofb, characterStreamb, encodings, encodingl);
+  }
+}
+
+/*****************************************************************************/
+static short _marpaESLIFJSONReaderb(void *userDatavp, char **inputcpp, size_t *inputlp, short *eofbp, short *characterStreambp, char **encodingsp, size_t *encodinglp, marpaESLIFReaderDispose_t *disposeCallbackpp)
+/*****************************************************************************/
+{
+  short                         rcb;
+  marpaESLIFJSONContext_t      *marpaESLIFJSONContextp      = (marpaESLIFJSONContext_t *) userDatavp;
+  marpaESLIFRecognizerOption_t *marpaESLIFRecognizerOptionp = marpaESLIFJSONContextp->marpaESLIFRecognizerOptionp;
+
   /* Proxy to caller's recognizer */
-  return marpaESLIFRecognizerOptionp->readerCallbackp(marpaESLIFRecognizerOptionp->userDatavp, inputcpp, inputlp, eofbp, characterStreambp, encodingsp, encodinglp);
+  rcb = marpaESLIFRecognizerOptionp->readerCallbackp(marpaESLIFRecognizerOptionp->userDatavp, inputcpp, inputlp, eofbp, characterStreambp, encodingsp, encodinglp, &(marpaESLIFJSONContextp->readerDisposep));
+
+  *disposeCallbackpp = _marpaESLIFJSONReaderDisposev;
+
+  return rcb;
 }
 
 /*****************************************************************************/
@@ -1240,14 +1266,32 @@ static short _marpaESLIFJSON_negative_nanb(void *userDatavp, marpaESLIFValue_t *
 }
 
 /*****************************************************************************/
-static short _marpaESLIFJSONRepresentationb(void *userDatavp, marpaESLIFValueResult_t *marpaESLIFValueResultp, char **inputcpp, size_t *inputlp, char **encodingasciisp)
+static void _marpaESLIFJSONRepresentationDisposev(void *userDatavp, char *inputcp, size_t inputl, char *encodingasciis)
 /*****************************************************************************/
 {
+  marpaESLIFJSONContext_t      *marpaESLIFJSONContextp      = (marpaESLIFJSONContext_t *) userDatavp;
+  marpaESLIFRecognizerOption_t *marpaESLIFRecognizerOptionp = marpaESLIFJSONContextp->marpaESLIFRecognizerOptionp;
+
+  /* Proxy to caller's representation disposer */
+  if (marpaESLIFJSONContextp->representationDisposep != NULL) {
+    marpaESLIFJSONContextp->representationDisposep(marpaESLIFRecognizerOptionp->userDatavp, inputcp, inputl, encodingasciis);
+  }
+}
+
+/*****************************************************************************/
+static short _marpaESLIFJSONRepresentationb(void *userDatavp, marpaESLIFValueResult_t *marpaESLIFValueResultp, char **inputcpp, size_t *inputlp, char **encodingasciisp, marpaESLIFRepresentationDispose_t *disposeCallbackpp)
+/*****************************************************************************/
+{
+  short                    rcb;
   marpaESLIFJSONContext_t *marpaESLIFJSONContextp = (marpaESLIFJSONContext_t *) userDatavp;
   marpaESLIFValueOption_t *marpaESLIFValueOptionp = marpaESLIFJSONContextp->marpaESLIFValueOptionp;
 
   /* Proxy to caller's representation */
-  return marpaESLIFValueResultp->representationp(marpaESLIFValueOptionp->userDatavp, marpaESLIFValueResultp, inputcpp, inputlp, encodingasciisp);
+  rcb = marpaESLIFValueResultp->representationp(marpaESLIFValueOptionp->userDatavp, marpaESLIFValueResultp, inputcpp, inputlp, encodingasciisp, &(marpaESLIFJSONContextp->representationDisposep));
+
+  *disposeCallbackpp = _marpaESLIFJSONRepresentationDisposev;
+
+  return rcb;
 }
 
 /*****************************************************************************/

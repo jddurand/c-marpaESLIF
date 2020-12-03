@@ -1318,17 +1318,12 @@ static inline marpaESLIF_symbol_t  *_marpaESLIF_bootstrap_check_rhsPrimaryp(marp
   char                                  tmps[1024];
   char                                 *referencedSymbols = NULL;
   genericStack_t                       *alternativesStackp = NULL;
-  marpaESLIF_symbol_t                  *rhsp;
-  marpaESLIF_symbol_t                  *rhsExceptionp;
   marpaESLIF_action_t                  *actionp = NULL;
   int                                   ranki = 0;
-  marpaESLIF_bootstrap_utf_string_t    *namingp;
   marpaESLIF_rule_t                    *rulep  = NULL;
-  marpaESLIF_bootstrap_rhs_primary_t   *separatorRhsPrimaryp;
   short                                 nullRanksHighb = 0;
   short                                 properb = 0;
   short                                 hideseparatorb = 0;
-  marpaESLIF_symbol_t                  *separatorp;
 
   /* This can recurse, we want to avoid that */
   if (rhsPrimaryp->symbolShallowp != NULL) {
@@ -1802,7 +1797,6 @@ static inline marpaESLIF_bootstrap_utf_string_t *_marpaESLIF_bootstrap_unquote_s
   marpaESLIF_bootstrap_utf_string_t *rcp   = NULL;
   marpaESLIF_bootstrap_utf_string_t rc;
   unsigned char                     *p;
-  size_t                             l;
 
   if ((bytep == NULL) || (bytel <= 0)) {
     MARPAESLIF_ERRORF(marpaESLIFp, "Invalid quoted string literal: bytep=%p, bytel=%ld", bytep, (unsigned long) bytel);
