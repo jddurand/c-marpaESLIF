@@ -2575,73 +2575,73 @@ Current bindings exist for the Lua, Java and Perl languages, with this default i
 
 =over
 
-=item [1]
+=item
 
-Context dependant, can be a lua specific value, injected by hand during recognizer phase for example, falling back to a LUA_TUSERDATA
+[1] Context dependant, can be a lua specific value, injected by hand during recognizer phase for example, falling back to a LUA_TUSERDATA
 
-=item [2]
+=item
 
-Encoding information is attached to internal string. Since strings in Lua are unique, one string can have only one encoding.
+[2] Encoding information is attached to internal string. Since strings in Lua are unique, one string can have only one encoding.
 
-=item [3]
+=item
 
-A special niled table that indexed by number
+[3] A special niled table that indexed by number
 
-=item [4]
+=item
 
-A special niled table indexed by strings
+[4] A special niled table indexed by strings
 
-=item [5]
+=item
 
-java.lang.Byte or java.lang.Short or java.lang.Integer or java.lang.Long or java.math.BigInteger, depends on C<CHAR_BIT>
+[5] java.lang.Byte or java.lang.Short or java.lang.Integer or java.lang.Long or java.math.BigInteger, depends on C<CHAR_BIT>
 
-=item [6]
+=item
 
-java.lang.Float (includes +/-Inf and Nan) or java.lang.Double or java.math.BigDecimal, depends on the C native data size
+[6] java.lang.Float (includes +/-Inf and Nan) or java.lang.Double or java.math.BigDecimal, depends on the C native data size
 
-=item [7]
+=item
 
-java.lang.Float or java.lang.Double or java.math.BigDecimal, depends on the C native data size
+[7] java.lang.Float or java.lang.Double or java.math.BigDecimal, depends on the C native data size
 
-=item [8]
+=item
 
-java.lang.Float or java.lang.Double or java.math.BigDecimal
+[8] java.lang.Float or java.lang.Double or java.math.BigDecimal
 
-=item [9]
+=item
 
-java.lang.Object, if a lua specific value, injected by hand during recognizer phase for example, falling back to java.lang.Long
+[9] java.lang.Object, if a lua specific value, injected by hand during recognizer phase for example, falling back to java.lang.Long
 
-=item [10]
+=item
 
-java.lang.Float or java.lang.Double or java.math.BigDecimal
+[10] java.lang.Float or java.lang.Double or java.math.BigDecimal
 
-=item [11]
+=item
 
-java.lang.Byte or java.lang.Short or java.lang.Integer or java.lang.Long or java.math.BigInteger
+[11] java.lang.Byte or java.lang.Short or java.lang.Integer or java.lang.Long or java.math.BigInteger
 
-=item [12]
+=item
 
-IV or Math::BigInt
+[12] IV or Math::BigInt
 
-=item [13]
+=item
 
-SV*, if be a perl specific value, injected by hand during recognizer phase for example, falling back PTR2IV()
+[13] SV*, if be a perl specific value, injected by hand during recognizer phase for example, falling back PTR2IV()
 
-=item [14]
+=item
 
-$MarpaX::ESLIF::true or $MarpaX::ESLIF::false
+[14] $MarpaX::ESLIF::true or $MarpaX::ESLIF::false
 
-=item [15]
+=item
 
-PV* or MarpaX::ESLIF::String instance
+[15] PV* or MarpaX::ESLIF::String instance
 
-=item [16]
+=item
 
-NV or Math::BigFloat
+[16] NV or Math::BigFloat
 
-=item [17]
+=item
 
-IV or Math::BigInt
+[17] IV or Math::BigInt
 
 =back
 
