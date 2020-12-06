@@ -153,7 +153,7 @@ typedef struct marpaESLIFRecognizerOption {
   marpaESLIFRecognizerIfActionResolver_t    ifActionResolverp;   /* Will return the function doing the wanted if action */
   marpaESLIFRecognizerEventActionResolver_t eventActionResolverp; /* Will return the function doing the wanted event action */
   marpaESLIFRecognizerRegexActionResolver_t regexActionResolverp; /* Will return the function doing the wanted regex callout action */
-  marpaESLIFRecognizerImport_t              importerp;           /* Will ask end-user to import a marpaESLIFValueResult */
+  marpaESLIFRecognizerImport_t              importerp;           /* If end-user want to import a marpaESLIFValueResult */
 } marpaESLIFRecognizerOption_t;
 
 typedef enum marpaESLIFEventType {
@@ -600,9 +600,9 @@ extern "C" {
   /* Import helpers                                                                                                                                                 */
   /* -------------------------------------------------------------------------------------------------------------------------------------------------------------- */
   /* ROW and TABLE types are flat'idified:                                                                                                                          */
-  /* - For an ROW type, all members are imported first in order, then the row marpaESLIFValueResult itself (which contains the number of elements in u.r.sizel)     */
+  /* - For a ROW type, all members are imported first in order, then the row marpaESLIFValueResult itself (which contains the number of elements in u.r.sizel)      */
   /*   i.e. value[0], value[1], ... value[value.u.r.sizel - 1], value                                                                                               */
-  /* - For an TABLE type, all members are imported first in order, then the array marpaESLIFValueResult itself (which contains the number of elements in u.t.sizel) */
+  /* - For a TABLE type, all members are imported first in order, then the array marpaESLIFValueResult itself (which contains the number of elements in u.t.sizel)  */
   /*   i.e. table[0], table[1], ... table[table.u.t.sizel - 1], table                                                                                               */
   /*   Since a table member is nothign else but a row with an even number of elements, it means this can be reinterpreted as:                                       */
   /*        key[0],value[0]...,key[(table.u.t.sizel/2)-1],value[(table.u.t.sizel/2)-1]                                                                              */
@@ -614,9 +614,9 @@ extern "C" {
   /*   At the end it must have exactly one element in its internal stack.                                                                                           */
   /* -------------------------------------------------------------------------------------------------------------------------------------------------------------- */
   /* marpaESLIFValue_importb call the end-user importerp() function callback. */
-  marpaESLIF_EXPORT short                         marpaESLIFValue_importb(marpaESLIFValue_t *marpaESLIFValuep, marpaESLIFValueResult_t *marpaESLIFValueResultp, marpaESLIFValueResult_t *marpaESLIFValueResultResolvedp);
+  marpaESLIF_EXPORT short                         marpaESLIFValue_importb(marpaESLIFValue_t *marpaESLIFValuep, marpaESLIFValueResult_t *marpaESLIFValueResultp);
   /* marpaESLIFRecognizer_importb call the end-user importerp() function callback. */
-  marpaESLIF_EXPORT short                         marpaESLIFRecognizer_importb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFValueResult_t *marpaESLIFValueResultp, marpaESLIFValueResult_t *marpaESLIFValueResultResolvedp);
+  marpaESLIF_EXPORT short                         marpaESLIFRecognizer_importb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFValueResult_t *marpaESLIFValueResultp);
 
   /* Helper routine to guess the encoding of a byte array. If it returns a non-NULL value it is the responsibility of the caller to free it */
   marpaESLIF_EXPORT char                         *marpaESLIF_encodings(marpaESLIF_t *marpaESLIFp, char *bytep, size_t bytel);

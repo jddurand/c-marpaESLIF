@@ -1066,7 +1066,7 @@ static SV *marpaESLIFPerl_valueGetSvp(pTHX_ marpaESLIFValue_t *marpaESLIFValuep,
     }
   }
 
-  if (! marpaESLIFValue_importb(marpaESLIFValuep, marpaESLIFValueResultp, NULL /* marpaESLIFValueResultResolvedp */)) {
+  if (! marpaESLIFValue_importb(marpaESLIFValuep, marpaESLIFValueResultp)) {
     MARPAESLIFPERL_CROAKF("marpaESLIFValue_importb failure, %s", strerror(errno));
   }
 
@@ -1085,7 +1085,7 @@ static SV *marpaESLIFPerl_recognizerGetSvp(pTHX_ marpaESLIFRecognizer_t *marpaES
 {
   static const char *funcs = "marpaESLIFPerl_recognizerGetSvp";
 
-  if (! marpaESLIFRecognizer_importb(marpaESLIFRecognizerp, marpaESLIFValueResultp, NULL /* marpaESLIFValueResultResolvedp */)) {
+  if (! marpaESLIFRecognizer_importb(marpaESLIFRecognizerp, marpaESLIFValueResultp)) {
     MARPAESLIFPERL_CROAKF("marpaESLIFRecognizer_importb failure, %s", strerror(errno));
   }
 

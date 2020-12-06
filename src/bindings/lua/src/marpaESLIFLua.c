@@ -4147,12 +4147,12 @@ static short marpaESLIFLua_pushValueb(marpaESLIFLuaValueContext_t *marpaESLIFLua
 
 #ifdef MARPAESLIFLUA_EMBEDDED
   /* In embedded mode we must never trust userDatavp */
-  if (! _marpaESLIFValue_eslif2hostb(marpaESLIFValuep, marpaESLIFValueResultp, NULL /* marpaESLIFValueResultResolvedp */, marpaESLIFLuaValueContextp /* forcedUserDatavp */, marpaESLIFLua_valueImporterb /* forcedImporterp */)) {
+  if (! _marpaESLIFValue_eslif2hostb(marpaESLIFValuep, marpaESLIFValueResultp, marpaESLIFLuaValueContextp /* forcedUserDatavp */, marpaESLIFLua_valueImporterb /* forcedImporterp */)) {
     marpaESLIFLua_luaL_errorf(L, "_marpaESLIFValue_eslif2hostb failure, %s", strerror(errno));
     goto err;
   }
 #else
-  if (! marpaESLIFValue_importb(marpaESLIFValuep, marpaESLIFValueResultp, NULL /* marpaESLIFValueResultResolvedp */)) {
+  if (! marpaESLIFValue_importb(marpaESLIFValuep, marpaESLIFValueResultp)) {
     marpaESLIFLua_luaL_errorf(L, "marpaESLIFValue_importb failure, %s", strerror(errno));
     goto err;
   }
@@ -4174,12 +4174,12 @@ static short marpaESLIFLua_pushRecognizerb(marpaESLIFLuaRecognizerContext_t *mar
 
 #ifdef MARPAESLIFLUA_EMBEDDED
   /* In embedded mode we must never trust userDatavp */
-  if (! _marpaESLIFRecognizer_eslif2hostb(marpaESLIFRecognizerp, marpaESLIFValueResultp, NULL /* marpaESLIFValueResultResolvedp */, marpaESLIFLuaRecognizerContextp /* forcedUserDatavp */, marpaESLIFLua_recognizerImporterb /* forcedImporterp */)) {
+  if (! _marpaESLIFRecognizer_eslif2hostb(marpaESLIFRecognizerp, marpaESLIFValueResultp, marpaESLIFLuaRecognizerContextp /* forcedUserDatavp */, marpaESLIFLua_recognizerImporterb /* forcedImporterp */)) {
     marpaESLIFLua_luaL_errorf(L, "_marpaESLIFRecognizer_eslif2hostb failure, %s", strerror(errno));
     goto err;
   }
 #else
-  if (! marpaESLIFRecognizer_importb(marpaESLIFRecognizerp, marpaESLIFValueResultp, NULL /* marpaESLIFValueResultResolvedp */)) {
+  if (! marpaESLIFRecognizer_importb(marpaESLIFRecognizerp, marpaESLIFValueResultp)) {
     marpaESLIFLua_luaL_errorf(L, "marpaESLIFRecognizer_importb failure, %s", strerror(errno));
     goto err;
   }

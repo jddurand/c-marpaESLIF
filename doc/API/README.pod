@@ -921,6 +921,49 @@ Value type is C<marpaESLIFValueResultBool_t>, typedef'ed to: C<enum>. Recommende
 
 Value type is C<marpaESLIFValueResultString_t>, typedef'ed to: C<struct { unsigned char *p; short shallowb; size_t sizel; char *encodingasciis; }>. C<p> and C<encodingasciis> I<must> be set, even for an empty string.
 
+=item MARPAESLIF_VALUE_TYPE_ROW
+
+Value type is C<marpaESLIFValueResultRow_t>, naively corresponding the notion of array in any traditional language, and typedef'ed to:
+
+  typedef struct marpaESLIFValueResultRow {
+    marpaESLIFValueResult_t             *p;
+    void                                *freeUserDatavp;
+    marpaESLIFValueResultFreeCallback_t  freeCallbackp;
+    short                                shallowb;
+    size_t                               sizel;
+  } marpaESLIFValueResultRow_t;
+
+where C<p> is an array of C<marpaESLIFValueResult_t> values, of size C<sizel>, that can be zero.
+
+=item MARPAESLIF_VALUE_TYPE_TABLE
+
+Value type is C<marpaESLIFValueResultTable_t>, naively corresponding the notion of hash in any language that supports it, i.e. a key and a value, typedef'ed to:
+
+  typedef struct marpaESLIFValueResultPair marpaESLIFValueResultPair_t;
+  typedef struct marpaESLIFValueResultTable {
+    marpaESLIFValueResultPair_t         *p;
+    void                                *freeUserDatavp;
+    marpaESLIFValueResultFreeCallback_t  freeCallbackp;
+    short                                shallowb;
+    size_t                               sizel;
+  } marpaESLIFValueResultTable_t;
+  struct marpaESLIFValueResultPair {
+    marpaESLIFValueResult_t    key;
+    marpaESLIFValueResult_t    value;
+  };
+
+where C<p> is an array of pairs of C<marpaESLIFValueResult_t> key and value, of size C<sizel>, that can be zero.
+
+In contrary to most languages, the key can be of any type, it is not restricted to a string.
+
+=item MARPAESLIF_VALUE_TYPE_LONG_DOUBLE
+
+Value type is C<marpaESLIFValueResultLongDouble_t>, typedef'ed to: C<long double>.
+
+=item MARPAESLIF_VALUE_TYPE_LONG_LONG
+
+Value type is C<marpaESLIFValueResultLongLong_t>, typedef'ed to: C<long long>, when your compiler has support for this native C type.
+
 =back
 
 A Value result is of type C<marpaESLIFValueResult_t> with more meta data:
@@ -940,16 +983,22 @@ A Value result is of type C<marpaESLIFValueResult_t> with more meta data:
     marpaESLIFRepresentation_t representationp;   /* How a user-land alternative is represented if it was in the input */
     marpaESLIFValueType_t      type;              /* Type for tagging the following union */
     union {
-      marpaESLIFValueResultChar_t   c;            /* Value is a char */
-      marpaESLIFValueResultShort_t  b;            /* Value is a short */
-      marpaESLIFValueResultInt_t    i;            /* Value is an int */
-      marpaESLIFValueResultLong_t   l;            /* Value is a long */
-      marpaESLIFValueResultFloat_t  f;            /* Value is a float */
-      marpaESLIFValueResultDouble_t d;            /* Value is a double */
-      marpaESLIFValueResultPtr_t    p;            /* Value is a pointer */
-      marpaESLIFValueResultArray_t  a;            /* Value is an array */
-      marpaESLIFValueResultBool_t   y;            /* Value is a boolean */
-      marpaESLIFValueResultString_t s;            /* Value is a string */
+      marpaESLIFValueResultChar_t        c;            /* Value is a char */
+      marpaESLIFValueResultShort_t       b;            /* Value is a short */
+      marpaESLIFValueResultInt_t         i;            /* Value is an int */
+      marpaESLIFValueResultLong_t        l;            /* Value is a long */
+      marpaESLIFValueResultFloat_t       f;            /* Value is a float */
+      marpaESLIFValueResultDouble_t      d;            /* Value is a double */
+      marpaESLIFValueResultPtr_t         p;            /* Value is a pointer */
+      marpaESLIFValueResultArray_t       a;            /* Value is an array */
+      marpaESLIFValueResultBool_t        y;            /* Value is a boolean */
+      marpaESLIFValueResultString_t      s;            /* Value is a string */
+      marpaESLIFValueResultRow_t         r;            /* Value is a row of values */
+      marpaESLIFValueResultTable_t       t;            /* Value is a row of values, where sizel is even */
+      marpaESLIFValueResultLongDouble_t ld;            /* Value is a long double */
+#ifdef MARPAESLIF_HAVE_LONG_LONG
+      marpaESLIFValueResultLongLong_t   ll;            /* Value is a long long */
+#endif
     } u;
   } marpaESLIFValueResult_t;
 
@@ -1148,7 +1197,7 @@ At any location in the grammar, possible alternatives can be of the two major ty
     marpaESLIFRecognizerIfActionResolver_t ifActionResolverp; /* symbol if action resolver. */
     marpaESLIFRecognizerEventActionResolver_t eventActionResolverp; /* Will return the function doing the wanted event action */
     marpaESLIFRecognizerRegexActionResolver_t regexActionResolverp; /* Will return the function doing the wanted regex callout action */
-    marpaESLIFRecognizerImport_t              importerp;           /* Will ask end-user to import a marpaESLIFValueResult */
+    marpaESLIFRecognizerImport_t              importerp;           /* Importer facility */
   } marpaESLIFRecognizerOption_t;
 
   marpaESLIFRecognizer_t *marpaESLIFRecognizer_newp(marpaESLIFGrammar_t          *marpaESLIFGrammarp,
@@ -1285,6 +1334,30 @@ To prevent too many memory allocations, when marpaESLIF need to increase its int
 If a lexeme or a terminal is a candidate for automatic parsing (I<scan> or I<parse> modes), this callback must not be C<NULL> and return a function pointer. The later will be be called with a C<marpaESLIFValueResultLexemep> argument that is guaranteed to be of type C<ARRAY>, and must return in C<marpaESLIFValueResultBoolp>, guaranteed to not be C<NULL>, a boolean value saying of the lexeme or terminal can be taken in account in the parse tree.
 
 The function will return a true value in case of success, a false value otherwise.
+
+=item C<eventActionResolverp>
+
+If the grammar has set a generic event callback via C<:default event-action>, this callback must not be C<NULL> and return a function pointer. The later will be be called with a C<actions> pointer containing an C<NUL> terminated ASCII string representing the name of the event action.
+
+=item C<regexActionResolverp>
+
+If the grammar has set a generic regular expression callback via C<:default regex-action>, this callback must not be C<NULL> and return a function pointer. The later will be be called with a C<marpaESLIFCalloutBlockp> pointer containing regular expression information, and a pointer to a C<marpaESLIFValueResultInt_t> value that will be reinjected into PCRE2, following L<PCRE2 callout|https://www.pcre.org/current/doc/html/pcre2callout.html> specification, i.e. (quote from PCRE2 documentation):
+
+=over
+
+=item If the value is zero, matching proceeds as normal.
+
+=item If the value is greater than zero, matching fails at the current point, but the testing of other matching possibilities goes ahead, just as if a lookahead assertion had failed.
+
+=item If the value is less than zero, the match is abandoned, and the matching function returns the negative value.
+
+Note that in this case, if the negative value is lower than C<PCRE2_ERROR_INTERNAL_DUPMATCH>, ESLIF will emit a warning and change it to C<PCRE2_ERROR_CALLOUT>
+
+=back
+
+=item C<importerp>
+
+User-defined importer facility function during the recognizer phase. Please refer to the IMPORT VALUE section in this document.
 
 =back
 
@@ -1791,9 +1864,9 @@ At any point in the parsing lifetime it is possible to call for parse tree value
                                                                                    char              *actions);
 
   /* End-user valuator importer facility */
-  typedef short (*marpaESLIFRecognizerImport_t)(marpaESLIFRecognizer_t *marpaESLIFRecognizerp,
-                                                void *userDatavp,
-                                                marpaESLIFValueResult_t *marpaESLIFValueResultp);
+  typedef short (*marpaESLIFValueImport_t)(marpaESLIFValue_t *marpaESLIFValuep,
+                                           void *userDatavp,
+                                           marpaESLIFValueResult_t *marpaESLIFValueResultp);
 
   typedef struct marpaESLIFValueOption {
     void                                 *userDatavp;            /* User specific context */
@@ -1813,6 +1886,22 @@ At any point in the parsing lifetime it is possible to call for parse tree value
 where C<userDatavp> is a user opaque value, holding user specific context. Action resolvers are looked up later in this section. The other parameters are:
 
 =over
+
+=item ruleActionResolverp
+
+If there a custom rule, this callback must not be C<NULL> and return a function pointer that will be used to perform valuation. This function must be return a true value otherwise valuation will stop.
+
+See below.
+
+=item symbolActionResolverp
+
+If there a custom generic C<:default symbol-action>, this callback must not be C<NULL> and return a function pointer that will be used to perform symbol value transition. This function must be return a true value otherwise valuation will stop.
+
+See below.
+
+=item importerp
+
+See the IMPORT VALUE section in this document.
 
 =item highRankOnlyb
 
@@ -2354,6 +2443,159 @@ This type include character class. In such a case, the UTF-8 byte sequence corre
 =back
 
 =back
+
+=back
+
+=head1 IMPORT VALUE
+
+Both recognizer and valuation support the notion of importer. An importer is optional in the recognizer's phase, and usually vital for the valuation phase. Except the namespace, they have very similar signatures.
+
+Automatic imports rely on the C<importerp> option in their respective constructors:
+
+  marpaESLIFRecognizerImport_t importerp; /* Importer facility */
+  marpaESLIFValueImport_t      importerp; /* Will ask end-user to import a marpaESLIFValueResult */
+
+These callbacks must return function pointers that have this signature (function names here are just examples):
+
+  short userDefinedRecognizerImporter(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, void *userDatavp, marpaESLIFValueResult_t *marpaESLIFValueResultp);
+  short userDefinedValueImporter(marpaESLIFValue_t *marpaESLIFValuep, void *userDatavp, marpaESLIFValueResult_t *marpaESLIFValueResultp);
+
+i.e. they are called with their respective namespace and user-defined C<userDatavp> that is set in their respective constructors.
+
+On-demande imports are also possible using these methods:
+
+  short marpaESLIFValue_importb(marpaESLIFValue_t *marpaESLIFValuep, marpaESLIFValueResult_t *marpaESLIFValueResultp);
+  short marpaESLIFRecognizer_importb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFValueResult_t *marpaESLIFValueResultp);
+
+that are just proxies to C<userDefinedRecognizerImporter> and C<userDefinedValueImporter>, respectively.
+
+An importer is a stack safe recursive mechanism that establishes the following data contract with the implementation:
+
+=over
+
+=item C<MARPAESLIF_VALUE_TYPE_ROW> and C<MARPAESLIF_VALUE_TYPE_TABLE> marpaESLIFValueResult's types are flatified:
+
+=over
+
+=item C<MARPAESLIF_VALUE_TYPE_ROW>
+
+=over
+
+=item All members are imported first in order
+
+In other words, the row has C<marpaESLIFValueResultp->u.r.sizel> items, so:
+
+  marpaESLIFValueResultp->u.r.p[0]
+  ...
+  marpaESLIFValueResultp->u.r.p[marpaESLIFValueResultp->u.r.sizel-1]
+
+are imported.
+
+=item Then the marpaESLIFValueResult itself, of type C<MARPAESLIF_VALUE_TYPE_ROW> is imported:
+
+  marpaESLIFValueResultp /* Type is MARPAESLIF_VALUE_TYPE_ROW */
+
+=back
+
+=item C<MARPAESLIF_VALUE_TYPE_TABLE>
+
+=over
+
+=item All key/value members are imported first in order
+
+In other words, the table has C<marpaESLIFValueResultp->u.t.sizel> items, so:
+
+  &(marpaESLIFValueResultp->u.t.p[0].key)
+  &(marpaESLIFValueResultp->u.t.p[0].value)
+  ...
+  &(marpaESLIFValueResultp->u.r.p[marpaESLIFValueResultp->u.r.sizel-1].key)
+  &(marpaESLIFValueResultp->u.r.p[marpaESLIFValueResultp->u.r.sizel-1].value)
+
+are imported.
+
+=item Then the marpaESLIFValueResult itself, of type C<MARPAESLIF_VALUE_TYPE_TABLE> is imported:
+
+  marpaESLIFValueResultp /* Type is MARPAESLIF_VALUE_TYPE_TABLE */
+
+=back
+
+=back
+
+=item Other marpaESLIFValueResult types are imported as-is, because they are just proxies to native C data types, they are not containers.
+
+=back
+
+This mean that the importer callback should maintain an internal stack of marpaESLIFValueResult_t items everytime it is called and:
+
+=over
+
+=item push to its stack anything that is not a C<MARPAESLIF_VALUE_TYPE_ROW> nor a C<MARPAESLIF_VALUE_TYPE_TABLE>
+
+=item pop from its stack C<marpaESLIFValueResultp->u.r.sizel> elements when it receives a C<MARPAESLIF_VALUE_TYPE_ROW> callback, transforming them to what is an array for the host language
+
+=item pop from its stack C<marpaESLIFValueResultp->u.t.sizel * 2> elements when it receives a C<MARPAESLIF_VALUE_TYPE_TABLE> callback, transforming them to what is a hash for the host language
+
+=item pop from its stack any other type, transforming it to something meaningful in the host language
+
+=back
+
+At the end it must have exactly one element in its internal stack.
+
+Current bindings exist for the Lua, Java and Perl languages, with this default implementation:
+
+    Type                                  Lua Type          Java (JNI) Type       Perl (XS) Type
+
+    MARPAESLIF_VALUE_TYPE_UNDEF           LUA_TNIL          NULL                  &PL_sv_undef
+    MARPAESLIF_VALUE_TYPE_CHAR            LUA_TSTRING       Depends [5]           PV*
+    MARPAESLIF_VALUE_TYPE_SHORT           LUA_TNUMBER       Depends [6]           Depends [12]
+    MARPAESLIF_VALUE_TYPE_INT             LUA_TNUMBER       Depends [6]           Depends [12]
+    MARPAESLIF_VALUE_TYPE_LONG            LUA_TNUMBER       Depends [6]           Depends [12]
+    MARPAESLIF_VALUE_TYPE_FLOAT           LUA_TNUMBER       Depends [7]           NV
+    MARPAESLIF_VALUE_TYPE_DOUBLE          LUA_TNUMBER       Depends [8]           NV
+    MARPAESLIF_VALUE_TYPE_PTR             Depends [1]       Depends [9]           Depends [13]
+    MARPAESLIF_VALUE_TYPE_ARRAY           LUA_TSTRING       byte[]                PV*
+    MARPAESLIF_VALUE_TYPE_BOOL            LUA_TBOOLEAN      java.lang.Bool        Depends [14]
+    MARPAESLIF_VALUE_TYPE_STRING          LUA_TSTRING [2]   java.lang.String      Depends [15]
+    MARPAESLIF_VALUE_TYPE_ROW             LUA_TTABLE [3]    object[]              AV*
+    MARPAESLIF_VALUE_TYPE_TABLE           LUA_TTABLE [4]    java.util.HashMap     HV*
+    MARPAESLIF_VALUE_TYPE_LONG_DOUBLE     LUA_TNUMBER       Depends [10]          Depends [16]
+    MARPAESLIF_VALUE_TYPE_LONG_LONG       LUA_TNUMBER       Depends [11]          Depends [17]
+
+=over
+
+=item [1] Context dependant, can be a lua specific value, injected by hand during recognizer phase for example, falling back to a LUA_TUSERDATA
+
+=item [2] Encoding information is attached to internal string. Since strings in Lua are unique, one string can have only one encoding.
+
+=item [3] A special niled table that indexed by number
+
+=item [4] A special niled table indexed by strings
+
+=item [5] java.lang.Byte or java.lang.Short or java.lang.Integer or java.lang.Long or java.math.BigInteger, depends on C<CHAR_BIT>
+
+=item [6] java.lang.Float (includes +/-Inf and Nan) or java.lang.Double or java.math.BigDecimal, depends on the C native data size
+
+=item [7] java.lang.Float or java.lang.Double or java.math.BigDecimal, depends on the C native data size
+
+=item [8] java.lang.Float or java.lang.Double or java.math.BigDecimal
+
+=item [9] java.lang.Object, if a lua specific value, injected by hand during recognizer phase for example, falling back to java.lang.Long
+
+=item [10] java.lang.Float or java.lang.Double or java.math.BigDecimal
+
+=item [11] java.lang.Byte or java.lang.Short or java.lang.Integer or java.lang.Long or java.math.BigInteger
+
+=item [12] IV or Math::BigInt
+
+=item [13] SV*, if be a perl specific value, injected by hand during recognizer phase for example, falling back PTR2IV()
+
+=item [14] $MarpaX::ESLIF::true or $MarpaX::ESLIF::false
+
+=item [15] PV* or MarpaX::ESLIF::String instance
+
+=item [16] NV or Math::BigFloat
+
+=item [17] IV or Math::BigInt
 
 =back
 

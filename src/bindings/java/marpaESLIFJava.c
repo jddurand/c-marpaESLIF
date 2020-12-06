@@ -916,16 +916,16 @@ fieldsValuesStorage_t fieldsValues[] = {
     char                         *_p; /* To skip eventual spaces at the beginning of the string */ \
                                                                         \
     if (sizeof(c_format_cast) <= sizeof(jbyte)) {                       \
-      fprintf(stderr, "==> %s: import Byte 0x%lx\n", funcs, (unsigned long) c_value); fflush(stdout); fflush(stderr); \
+      /* fprintf(stderr, "==> %s: import Byte 0x%lx\n", funcs, (unsigned long) c_value); fflush(stdout); fflush(stderr); */  \
       MARPAESLIFJAVA_NEW_BYTE(envp, objectp, c_value);                  \
     } else if (sizeof(c_format_cast) <= sizeof(jshort)) {               \
-      fprintf(stderr, "==> %s: import Short '%d'\n", funcs, (int) c_value); fflush(stdout); fflush(stderr); \
+      /* fprintf(stderr, "==> %s: import Short '%d'\n", funcs, (int) c_value); fflush(stdout); fflush(stderr); */  \
       MARPAESLIFJAVA_NEW_SHORT(envp, objectp, c_value);                 \
     } else if (sizeof(c_format_cast) <= sizeof(jint)) {                 \
-      fprintf(stderr, "==> %s: import Integer '%d'\n", funcs, (int) c_value); fflush(stdout); fflush(stderr); \
+      /* fprintf(stderr, "==> %s: import Integer '%d'\n", funcs, (int) c_value); fflush(stdout); fflush(stderr); */  \
       MARPAESLIFJAVA_NEW_INTEGER(envp, objectp, c_value);               \
     } else if (sizeof(c_format_cast) <= sizeof(jlong)) {                \
-      fprintf(stderr, "==> %s: import Long '%ld'\n", funcs, (long) c_value); fflush(stdout); fflush(stderr); \
+      /* fprintf(stderr, "==> %s: import Long '%ld'\n", funcs, (long) c_value); fflush(stdout); fflush(stderr); */  \
       MARPAESLIFJAVA_NEW_LONG(envp, objectp, c_value);                  \
     } else { /* Try with java.math.BigInteger */                        \
       /* We go through the string representation, hopefully containing all digits... */ \
@@ -953,7 +953,7 @@ fieldsValuesStorage_t fieldsValues[] = {
         free(_stringGenerator.s);                                       \
         RAISEEXCEPTIONF(envp, "NewStringUTF(\"%s\") failure", _stringGenerator.s); \
       }                                                                 \
-      fprintf(stderr, "==> %s: import BigInteger '%s'\n", funcs, (char *) _p); fflush(stdout); fflush(stderr); \
+      /* fprintf(stderr, "==> %s: import BigInteger '%s'\n", funcs, (char *) _p); fflush(stdout); fflush(stderr); */  \
       objectp = (*envp)->NewObject(envp, JAVA_MATH_BIGINTEGER_CLASSP, JAVA_MATH_BIGINTEGER_CLASS_String_init_METHODP, _numberp); \
       if (objectp == NULL) {                                            \
         GENERICLOGGER_FREE(_genericLoggerp);                            \
@@ -5954,7 +5954,7 @@ static short marpaESLIFJava_valueGetObjectp(marpaESLIFValueContext_t *marpaESLIF
     }
   }
 
-  if (! marpaESLIFValue_importb(marpaESLIFValuep, marpaESLIFValueResultp, NULL /* marpaESLIFValueResultResolvedp */)) {
+  if (! marpaESLIFValue_importb(marpaESLIFValuep, marpaESLIFValueResultp)) {
     RAISEEXCEPTIONF(marpaESLIFValueContextp->envp, "marpaESLIFValue_importb failure, %s", strerror(errno));
   }
 
@@ -5985,7 +5985,7 @@ static short marpaESLIFJava_recognizerGetObjectp(marpaESLIFRecognizerContext_t *
   jobject                  objectp;
   short                    rcb;
 
-  if (! marpaESLIFRecognizer_importb(marpaESLIFRecognizerp, marpaESLIFValueResultp, NULL /* marpaESLIFValueResultResolvedp */)) {
+  if (! marpaESLIFRecognizer_importb(marpaESLIFRecognizerp, marpaESLIFValueResultp)) {
     RAISEEXCEPTIONF(marpaESLIFRecognizerContextp->envp, "marpaESLIFRecognizer_importb failure, %s", strerror(errno));
   }
 
@@ -6062,7 +6062,7 @@ static short marpaESLIFJava_importb(JNIEnv *envp, marpaESLIF_t *marpaESLIFp, gen
     MARPAESLIF_VALUE_TYPE_STRING                                java.lang.String
     MARPAESLIF_VALUE_TYPE_ROW                                   object[]
     MARPAESLIF_VALUE_TYPE_TABLE                                 java.util.HashMap
-    MARPAESLIF_VALUE_TYPE_LONG_DOUBLE                           Float or Double or java.math.BigDecimal
+    MARPAESLIF_VALUE_TYPE_LONG_DOUBLE                           java.lang.Float or java.lang.Double or java.math.BigDecimal
     MARPAESLIF_VALUE_TYPE_LONG_LONG    long long >= 64          java.lang.Byte or java.lang.Short or java.lang.Integer or java.lang.Long or java.math.BigInteger
     
   */
