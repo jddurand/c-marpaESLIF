@@ -2510,8 +2510,8 @@ All key/value members are imported first in order. In other words, the table has
   &(marpaESLIFValueResultp->u.t.p[0].key)
   &(marpaESLIFValueResultp->u.t.p[0].value)
   ...
-  &(marpaESLIFValueResultp->u.r.p[marpaESLIFValueResultp->u.r.sizel-1].key)
-  &(marpaESLIFValueResultp->u.r.p[marpaESLIFValueResultp->u.r.sizel-1].value)
+  &(marpaESLIFValueResultp->u.t.p[marpaESLIFValueResultp->u.t.sizel-1].key)
+  &(marpaESLIFValueResultp->u.t.p[marpaESLIFValueResultp->u.t.sizel-1].value)
 
 are imported.
 
