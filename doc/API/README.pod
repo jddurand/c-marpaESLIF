@@ -2539,11 +2539,11 @@ push to its stack anything that is not a C<MARPAESLIF_VALUE_TYPE_ROW> nor a C<MA
 
 =item
 
-pop from its stack C<marpaESLIFValueResultp->u.r.sizel> elements when it receives a C<MARPAESLIF_VALUE_TYPE_ROW> callback, transforming them to what is an array for the host language
+pop from its stack C<u.r.sizel> elements when it receives a C<MARPAESLIF_VALUE_TYPE_ROW> callback, transforming them to what is an array for the host language
 
 =item
 
-pop from its stack C<marpaESLIFValueResultp->u.t.sizel * 2> elements when it receives a C<MARPAESLIF_VALUE_TYPE_TABLE> callback, transforming them to what is a hash for the host language
+pop from its stack C<u.t.sizel * 2> elements when it receives a C<MARPAESLIF_VALUE_TYPE_TABLE> callback, transforming them to what is a hash for the host language
 
 =item
 
