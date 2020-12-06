@@ -2481,9 +2481,9 @@ An importer is a stack safe recursive mechanism that establishes the following d
 
 =over
 
-=item All members are imported first in order
+=item
 
-In other words, the row has C<marpaESLIFValueResultp->u.r.sizel> items, so:
+All members are imported first in order. In other words, the row has C<marpaESLIFValueResultp->u.r.sizel> items, so:
 
   marpaESLIFValueResultp->u.r.p[0]
   ...
@@ -2491,7 +2491,9 @@ In other words, the row has C<marpaESLIFValueResultp->u.r.sizel> items, so:
 
 are imported.
 
-=item Then the marpaESLIFValueResult itself, of type C<MARPAESLIF_VALUE_TYPE_ROW> is imported:
+=item
+
+Then the marpaESLIFValueResult itself, of type C<MARPAESLIF_VALUE_TYPE_ROW> is imported:
 
   marpaESLIFValueResultp /* Type is MARPAESLIF_VALUE_TYPE_ROW */
 
@@ -2501,9 +2503,9 @@ are imported.
 
 =over
 
-=item All key/value members are imported first in order
+=item
 
-In other words, the table has C<marpaESLIFValueResultp->u.t.sizel> items, so:
+All key/value members are imported first in order. In other words, the table has C<marpaESLIFValueResultp->u.t.sizel> items, so:
 
   &(marpaESLIFValueResultp->u.t.p[0].key)
   &(marpaESLIFValueResultp->u.t.p[0].value)
@@ -2513,7 +2515,9 @@ In other words, the table has C<marpaESLIFValueResultp->u.t.sizel> items, so:
 
 are imported.
 
-=item Then the marpaESLIFValueResult itself, of type C<MARPAESLIF_VALUE_TYPE_TABLE> is imported:
+=item
+
+Then the marpaESLIFValueResult itself, of type C<MARPAESLIF_VALUE_TYPE_TABLE> is imported:
 
   marpaESLIFValueResultp /* Type is MARPAESLIF_VALUE_TYPE_TABLE */
 
@@ -2529,13 +2533,21 @@ This mean that the importer callback should maintain an internal stack of marpaE
 
 =over
 
-=item push to its stack anything that is not a C<MARPAESLIF_VALUE_TYPE_ROW> nor a C<MARPAESLIF_VALUE_TYPE_TABLE>
+=item
 
-=item pop from its stack C<marpaESLIFValueResultp->u.r.sizel> elements when it receives a C<MARPAESLIF_VALUE_TYPE_ROW> callback, transforming them to what is an array for the host language
+push to its stack anything that is not a C<MARPAESLIF_VALUE_TYPE_ROW> nor a C<MARPAESLIF_VALUE_TYPE_TABLE>
 
-=item pop from its stack C<marpaESLIFValueResultp->u.t.sizel * 2> elements when it receives a C<MARPAESLIF_VALUE_TYPE_TABLE> callback, transforming them to what is a hash for the host language
+=item
 
-=item pop from its stack any other type, transforming it to something meaningful in the host language
+pop from its stack C<marpaESLIFValueResultp->u.r.sizel> elements when it receives a C<MARPAESLIF_VALUE_TYPE_ROW> callback, transforming them to what is an array for the host language
+
+=item
+
+pop from its stack C<marpaESLIFValueResultp->u.t.sizel * 2> elements when it receives a C<MARPAESLIF_VALUE_TYPE_TABLE> callback, transforming them to what is a hash for the host language
+
+=item
+
+pop from its stack any other type, transforming it to something meaningful in the host language
 
 =back
 
@@ -2563,39 +2575,73 @@ Current bindings exist for the Lua, Java and Perl languages, with this default i
 
 =over
 
-=item [1] Context dependant, can be a lua specific value, injected by hand during recognizer phase for example, falling back to a LUA_TUSERDATA
+=item [1]
 
-=item [2] Encoding information is attached to internal string. Since strings in Lua are unique, one string can have only one encoding.
+Context dependant, can be a lua specific value, injected by hand during recognizer phase for example, falling back to a LUA_TUSERDATA
 
-=item [3] A special niled table that indexed by number
+=item [2]
 
-=item [4] A special niled table indexed by strings
+Encoding information is attached to internal string. Since strings in Lua are unique, one string can have only one encoding.
 
-=item [5] java.lang.Byte or java.lang.Short or java.lang.Integer or java.lang.Long or java.math.BigInteger, depends on C<CHAR_BIT>
+=item [3]
 
-=item [6] java.lang.Float (includes +/-Inf and Nan) or java.lang.Double or java.math.BigDecimal, depends on the C native data size
+A special niled table that indexed by number
 
-=item [7] java.lang.Float or java.lang.Double or java.math.BigDecimal, depends on the C native data size
+=item [4]
 
-=item [8] java.lang.Float or java.lang.Double or java.math.BigDecimal
+A special niled table indexed by strings
 
-=item [9] java.lang.Object, if a lua specific value, injected by hand during recognizer phase for example, falling back to java.lang.Long
+=item [5]
 
-=item [10] java.lang.Float or java.lang.Double or java.math.BigDecimal
+java.lang.Byte or java.lang.Short or java.lang.Integer or java.lang.Long or java.math.BigInteger, depends on C<CHAR_BIT>
 
-=item [11] java.lang.Byte or java.lang.Short or java.lang.Integer or java.lang.Long or java.math.BigInteger
+=item [6]
 
-=item [12] IV or Math::BigInt
+java.lang.Float (includes +/-Inf and Nan) or java.lang.Double or java.math.BigDecimal, depends on the C native data size
 
-=item [13] SV*, if be a perl specific value, injected by hand during recognizer phase for example, falling back PTR2IV()
+=item [7]
 
-=item [14] $MarpaX::ESLIF::true or $MarpaX::ESLIF::false
+java.lang.Float or java.lang.Double or java.math.BigDecimal, depends on the C native data size
 
-=item [15] PV* or MarpaX::ESLIF::String instance
+=item [8]
 
-=item [16] NV or Math::BigFloat
+java.lang.Float or java.lang.Double or java.math.BigDecimal
 
-=item [17] IV or Math::BigInt
+=item [9]
+
+java.lang.Object, if a lua specific value, injected by hand during recognizer phase for example, falling back to java.lang.Long
+
+=item [10]
+
+java.lang.Float or java.lang.Double or java.math.BigDecimal
+
+=item [11]
+
+java.lang.Byte or java.lang.Short or java.lang.Integer or java.lang.Long or java.math.BigInteger
+
+=item [12]
+
+IV or Math::BigInt
+
+=item [13]
+
+SV*, if be a perl specific value, injected by hand during recognizer phase for example, falling back PTR2IV()
+
+=item [14]
+
+$MarpaX::ESLIF::true or $MarpaX::ESLIF::false
+
+=item [15]
+
+PV* or MarpaX::ESLIF::String instance
+
+=item [16]
+
+NV or Math::BigFloat
+
+=item [17]
+
+IV or Math::BigInt
 
 =back
 
