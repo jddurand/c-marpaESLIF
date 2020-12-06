@@ -2529,7 +2529,7 @@ Then the marpaESLIFValueResult itself, of type C<MARPAESLIF_VALUE_TYPE_TABLE> is
 
 =back
 
-This mean that the importer callback should maintain an internal stack of marpaESLIFValueResult_t items everytime it is called and:
+This mean that the importer callback should maintain an internal stack of its transformed marpaESLIFValueResult_t items everytime it is called and:
 
 =over
 
