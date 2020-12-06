@@ -61,6 +61,14 @@ sub BUILDARGS {
     $value = "$value"; # Make sure it is a PV
     $encoding = "$encoding"; # Make sure it is a PV
 
+    #
+    # We TRUST the encoding. If user lies, behaviour will be undetermined.
+    #
+    my $lcEncoding = lc($encoding);
+    if ($lcEncoding eq 'utf8' || $lcEncoding eq 'utf-8') {
+        utf8::upgrade($value)
+    }
+
     return {value => $value, encoding => $encoding}
 }
 
