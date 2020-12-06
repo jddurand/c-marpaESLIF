@@ -342,8 +342,8 @@ typedef struct MarpaX_ESLIF_Value {
 } MarpaX_ESLIF_Value_t;
 
 /* Static functions declarations */
-static void                            marpaESLIFPerl_constants_init(pTHX_ MarpaX_ESLIF_constants_t *constantsp);
-static void                            marpaESLIFPerl_constants_dispose(pTHX_ MarpaX_ESLIF_constants_t *constantsp);
+static void                            marpaESLIFPerl_constants_initv(pTHX_ MarpaX_ESLIF_constants_t *constantsp);
+static void                            marpaESLIFPerl_constants_disposev(pTHX_ MarpaX_ESLIF_constants_t *constantsp);
 static int                             marpaESLIFPerl_getTypei(pTHX_ SV* svp);
 static short                           marpaESLIFPerl_canb(pTHX_ SV *svp, const char *methods);
 static void                            marpaESLIFPerl_call_methodv(pTHX_ SV *interfacep, const char *methods, SV *argsvp);
@@ -1335,7 +1335,7 @@ static void marpaESLIFPerl_ContextInitv(pTHX_ MarpaX_ESLIF_t *MarpaX_ESLIFp)
 #ifdef PERL_IMPLICIT_CONTEXT
   MarpaX_ESLIFp->PerlInterpreterp      = aTHX;
 #endif
-  marpaESLIFPerl_constants_init(aTHX_ &(MarpaX_ESLIFp->constants));
+  marpaESLIFPerl_constants_initv(aTHX_ &(MarpaX_ESLIFp->constants));
 }
 
 /*****************************************************************************/
@@ -1347,7 +1347,7 @@ static void marpaESLIFPerl_ContextFreev(pTHX_ MarpaX_ESLIF_t *MarpaX_ESLIFp)
       marpaESLIF_freev(MarpaX_ESLIFp->marpaESLIFp);
     }
     genericLogger_freev(&(MarpaX_ESLIFp->genericLoggerp)); /* This is NULL aware */
-    marpaESLIFPerl_constants_dispose(aTHX_ &(MarpaX_ESLIFp->constants));
+    marpaESLIFPerl_constants_disposev(aTHX_ &(MarpaX_ESLIFp->constants));
     Safefree(MarpaX_ESLIFp);
   }
 }
@@ -1633,6 +1633,10 @@ static void marpaESLIFPerl_representationDisposev(void *userDatavp, char *inputc
 
   if (inputcp != NULL) {
     Safefree(inputcp);
+  }
+  /* encoding may refer to the constant UTF8s */
+  if ((encodingasciis != NULL) && (encodingasciis != UTF8s)) {
+    Safefree(encodingasciis);
   }
 }
 
@@ -2970,7 +2974,7 @@ static void *marpaESLIFPerl_engine(pTHX_ SV *Perl_argumentp)
 }
 
 /*****************************************************************************/
-static void marpaESLIFPerl_constants_init(pTHX_ MarpaX_ESLIF_constants_t *constantsp)
+static void marpaESLIFPerl_constants_initv(pTHX_ MarpaX_ESLIF_constants_t *constantsp)
 /*****************************************************************************/
 {
   constantsp->MarpaX__ESLIF__String_svp  = newSVpvn("MarpaX::ESLIF::String", strlen("MarpaX::ESLIF::String"));
@@ -3009,7 +3013,7 @@ static void marpaESLIFPerl_constants_init(pTHX_ MarpaX_ESLIF_constants_t *consta
 }
 
 /*****************************************************************************/
-static void marpaESLIFPerl_constants_dispose(pTHX_ MarpaX_ESLIF_constants_t *constantsp)
+static void marpaESLIFPerl_constants_disposev(pTHX_ MarpaX_ESLIF_constants_t *constantsp)
 /*****************************************************************************/
 {
   MARPAESLIFPERL_REFCNT_DEC(constantsp->MarpaX__ESLIF__String_svp);
