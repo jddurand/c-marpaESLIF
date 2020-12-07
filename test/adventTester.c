@@ -68,7 +68,7 @@ const static test_parse_result_type_t tests_parse_result[] = {
   PARSE_FAILED_AFTER_FINDING_HANDS
 };
 
-static short inputReaderb(void *userDatavp, char **inputsp, size_t *inputlp, short *eofbp, short *characterStreambp, char **encodingsp, size_t *encodinglp);
+static short inputReaderb(void *userDatavp, char **inputsp, size_t *inputlp, short *eofbp, short *characterStreambp, char **encodingsp, size_t *encodinglp, marpaESLIFReaderDispose_t *disposeCallbackpp);
 static int   card2inti(char *inputs, size_t inputl);
 static char *int2cards(genericLogger_t *genericLoggerp, int cardi);
 static short manage_eventsb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, genericLogger_t *genericLoggerp, genericStack_t *cardStackp, test_parse_result_type_t *test_parse_result_typep);
@@ -327,7 +327,7 @@ int main() {
 }
 
 /*****************************************************************************/
-static short inputReaderb(void *userDatavp, char **inputsp, size_t *inputlp, short *eofbp, short *characterStreambp, char **encodingsp, size_t *encodinglp)
+static short inputReaderb(void *userDatavp, char **inputsp, size_t *inputlp, short *eofbp, short *characterStreambp, char **encodingsp, size_t *encodinglp, marpaESLIFReaderDispose_t *disposeCallbackpp)
 /*****************************************************************************/
 {
   marpaESLIFTester_context_t *marpaESLIFTester_contextp = (marpaESLIFTester_context_t *) userDatavp;
@@ -338,6 +338,7 @@ static short inputReaderb(void *userDatavp, char **inputsp, size_t *inputlp, sho
   *characterStreambp    = 1; /* We say this is a stream of characters */
   *encodingsp           = NULL;
   *encodinglp           = 0;
+  *disposeCallbackpp    = NULL;
 
   return 1;
 }
