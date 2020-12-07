@@ -26,7 +26,7 @@ typedef struct value_context {
 
 static char intContext;
 static char doubleContext;
-static short                         inputReaderb(void *userDatavp, char **inputsp, size_t *inputlp, short *eofbp, short *characterStreambp, char **encodingsp, size_t *encodinglp);
+static short                         inputReaderb(void *userDatavp, char **inputsp, size_t *inputlp, short *eofbp, short *characterStreambp, char **encodingsp, size_t *encodinglp, marpaESLIFReaderDispose_t *disposeCallbackpp);
 static marpaESLIFValueRuleCallback_t ruleActionResolverp(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, char *actions);
 static short                         do_int(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
 static short                         do_op(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
@@ -180,7 +180,7 @@ int main() {
 }
 
 /*****************************************************************************/
-static short inputReaderb(void *userDatavp, char **inputsp, size_t *inputlp, short *eofbp, short *characterStreambp, char **encodingsp, size_t *encodinglp)
+static short inputReaderb(void *userDatavp, char **inputsp, size_t *inputlp, short *eofbp, short *characterStreambp, char **encodingsp, size_t *encodinglp, marpaESLIFReaderDispose_t *disposeCallbackpp)
 /*****************************************************************************/
 {
   reader_context_t *reader_contextp = (reader_context_t *) userDatavp;
@@ -191,6 +191,7 @@ static short inputReaderb(void *userDatavp, char **inputsp, size_t *inputlp, sho
   *characterStreambp = 1;    /* We say this is a stream of characters */
   *encodingsp        = NULL;
   *encodinglp        = 0;
+  *disposeCallbackpp = NULL;
 
   return 1;
 }

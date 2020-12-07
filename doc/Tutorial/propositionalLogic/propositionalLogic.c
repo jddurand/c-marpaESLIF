@@ -246,14 +246,13 @@ static short action_not(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, i
 /*****************************************************************************/
 {
   valueContext_t          *valueContextp = (valueContext_t *) userDatavp;
-  short                    valb;
   short                    resultb;
   marpaESLIFValueResult_t  marpaESLIFValueResult;
 
   if (! getFromstack(userDatavp, marpaESLIFValuep, argni)) return 0;
 
   resultb = (valueContextp->result ? 0 : 1);
-  GENERICLOGGER_DEBUGF(valueContextp->genericLoggerp, ".............. {P, Q, R} = {%d, %d, %d}... NOT %d : %d", (int) valueContextp->p, (int) valueContextp->q, (int) valueContextp->r, (int) valb, (int) resultb);
+  GENERICLOGGER_DEBUGF(valueContextp->genericLoggerp, ".............. {P, Q, R} = {%d, %d, %d}... NOT %d : %d", (int) valueContextp->p, (int) valueContextp->q, (int) valueContextp->r, (int) valueContextp->result, (int) resultb);
 
   marpaESLIFValueResult.contextp = MY_CONTEXT;  /* It has to be > 0 */
   marpaESLIFValueResult.representationp = NULL; /* No special representation */
@@ -424,7 +423,7 @@ static short getFromstack(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep,
     return 0;
   }
 
-  if (! marpaESLIFValue_importb(marpaESLIFValuep, marpaESLIFValueResultp, NULL /* marpaESLIFValueResultResolvedp */)) {
+  if (! marpaESLIFValue_importb(marpaESLIFValuep, marpaESLIFValueResultp)) {
     GENERICLOGGER_DEBUGF(valueContextp->genericLoggerp, "marpaESLIFValue_importb failure, %s", strerror(errno));
     return 0;
   }
