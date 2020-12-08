@@ -4444,7 +4444,7 @@ static inline short _marpaESLIFRecognizer_terminal_matcherb(marpaESLIFRecognizer
   static const char                 *funcs          = "_marpaESLIFRecognizer_terminal_matcherb";
   marpaESLIF_matcher_value_t         rci            = MARPAESLIF_MATCH_FAILURE; /* Default value. It is also faster from generated code point of view. */
   pcre2_match_context               *match_contextp = NULL;
-  marpaESLIF_regex_t                 marpaESLIF_regex;
+  marpaESLIF_regex_t                *marpaESLIF_regexp;
   int                                pcre2Errornumberi;
   PCRE2_UCHAR                        pcre2ErrorBuffer[256];
   PCRE2_SIZE                        *pcre2_ovectorp;
@@ -4469,12 +4469,12 @@ static inline short _marpaESLIFRecognizer_terminal_matcherb(marpaESLIFRecognizer
 
   if (inputl > 0) {
 
-    marpaESLIF_regex = terminalp->regex;
+    marpaESLIF_regexp = &(terminalp->regex);
 
     /* If the regexp is working in UTF mode then we check that character conversion   */
     /* was done. This is how we are sure that calling regexp with PCRE2_NO_UTF_CHECK  */
     /* is ok: we have done ourself the UTF-8 validation on the subject.               */
-    if (marpaESLIF_regex.utfb) {                     /* UTF-8 correctness is required */
+    if (marpaESLIF_regexp->utfb) {                    /* UTF-8 correctness is required */
       if (! marpaESLIF_streamp->utfb) {
         pcre2_optioni = pcre2_option_binary_default;  /* We have done no check : PCRE2 will do it */
         binmodeb = 1;
@@ -4540,7 +4540,7 @@ static inline short _marpaESLIFRecognizer_terminal_matcherb(marpaESLIFRecognizer
      to execute the regex ONLY if the whole stream was read in one
      call to the user's read callback.
     */
-    if (! marpaESLIF_regex.isAnchoredb) {
+    if (! marpaESLIF_regexp->isAnchoredb) {
       if (! marpaESLIF_streamp->noAnchorIsOkb) {
         /* This is an error unless we are at EOF */
         if (! eofb) {
@@ -4550,7 +4550,7 @@ static inline short _marpaESLIFRecognizer_terminal_matcherb(marpaESLIFRecognizer
       }
     }
 
-    if (marpaESLIF_regex.calloutb && (marpaESLIFRecognizerp->marpaESLIFGrammarp->grammarp->defaultRegexActionp != NULL)) {
+    if (marpaESLIF_regexp->calloutb && (marpaESLIFRecognizerp->marpaESLIFGrammarp->grammarp->defaultRegexActionp != NULL)) {
       match_contextp = pcre2_match_context_create(NULL);
       if (match_contextp == NULL) {
         MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "pcre2_match_context_create failure, %s", strerror(errno));
@@ -4578,13 +4578,13 @@ static inline short _marpaESLIFRecognizer_terminal_matcherb(marpaESLIFRecognizer
     /* In conclusion we always start with the full match.        */
     /* --------------------------------------------------------- */
 #ifdef PCRE2_CONFIG_JIT
-    if ((!needUtf8Validationb) && marpaESLIF_regex.jitCompleteb) {      /* JIT fast path is never doing UTF-8 validation */
-      pcre2Errornumberi = pcre2_jit_match(marpaESLIF_regex.patternp,    /* code */
+    if ((!needUtf8Validationb) && marpaESLIF_regexp->jitCompleteb) {    /* JIT fast path is never doing UTF-8 validation */
+      pcre2Errornumberi = pcre2_jit_match(marpaESLIF_regexp->patternp,  /* code */
                                           (PCRE2_SPTR) inputs,          /* subject */
                                           (PCRE2_SIZE) inputl,          /* length */
                                           (PCRE2_SIZE) 0,               /* startoffset */
                                           pcre2_optioni,                /* options */
-                                          marpaESLIF_regex.match_datap, /* match data */
+                                          marpaESLIF_regexp->match_datap, /* match data */
                                           match_contextp                /* match context */
                                           );
       if (pcre2Errornumberi == PCRE2_ERROR_JIT_STACKLIMIT) {
@@ -4595,12 +4595,12 @@ static inline short _marpaESLIFRecognizer_terminal_matcherb(marpaESLIFRecognizer
     } else {
     eof_nojitcomplete:
 #endif
-      pcre2Errornumberi = pcre2_match(marpaESLIF_regex.patternp,    /* code */
+      pcre2Errornumberi = pcre2_match(marpaESLIF_regexp->patternp,  /* code */
                                       (PCRE2_SPTR) inputs,          /* subject */
                                       (PCRE2_SIZE) inputl,          /* length */
                                       (PCRE2_SIZE) 0,               /* startoffset */
                                       pcre2_optioni,                /* options */
-                                      marpaESLIF_regex.match_datap, /* match data */
+                                      marpaESLIF_regexp->match_datap, /* match data */
                                       match_contextp                /* match context */
                                       );
 #ifdef PCRE2_CONFIG_JIT
@@ -4608,7 +4608,7 @@ static inline short _marpaESLIFRecognizer_terminal_matcherb(marpaESLIFRecognizer
 #endif
 
     /* In any case - set UTF buffer correctness if needed and if possible */
-    if (binmodeb && marpaESLIF_regex.utfb) {
+    if (binmodeb && marpaESLIF_regexp->utfb) {
       if ((pcre2Errornumberi >= 0) || (pcre2Errornumberi == PCRE2_ERROR_NOMATCH)) {
         /* Either regex is successful, either it failed with the accepted failure code PCRE2_ERROR_NOMATCH */
         MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "%s: UTF-8 correctness successful and remembered", terminalp->descp->asciis);
@@ -4626,11 +4626,11 @@ static inline short _marpaESLIFRecognizer_terminal_matcherb(marpaESLIFRecognizer
         MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "%s for %s", "MARPAESLIF_MATCH_FAILURE", terminalp->descp->asciis);
       } else {
         /* Check the length of matched data */
-        if (pcre2_get_ovector_count(marpaESLIF_regex.match_datap) <= 0) {
+        if (pcre2_get_ovector_count(marpaESLIF_regexp->match_datap) <= 0) {
           MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "%s: pcre2_get_ovector_count returned no number of pairs of values", terminalp->descp->asciis);
           goto err;
         }
-        pcre2_ovectorp = pcre2_get_ovector_pointer(marpaESLIF_regex.match_datap);
+        pcre2_ovectorp = pcre2_get_ovector_pointer(marpaESLIF_regexp->match_datap);
         if (pcre2_ovectorp == NULL) {
           MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "%s: pcre2_get_ovector_pointer returned NULL", terminalp->descp->asciis);
           goto err;
@@ -4650,11 +4650,11 @@ static inline short _marpaESLIFRecognizer_terminal_matcherb(marpaESLIFRecognizer
       if (pcre2Errornumberi >= 0) {
         /* Full match is successful. */
         /* Check the length of matched data */
-        if (pcre2_get_ovector_count(marpaESLIF_regex.match_datap) <= 0) {
+        if (pcre2_get_ovector_count(marpaESLIF_regexp->match_datap) <= 0) {
           MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "%s: pcre2_get_ovector_count returned no number of pairs of values", terminalp->descp->asciis);
           goto err;
         }
-        pcre2_ovectorp = pcre2_get_ovector_pointer(marpaESLIF_regex.match_datap);
+        pcre2_ovectorp = pcre2_get_ovector_pointer(marpaESLIF_regexp->match_datap);
         if (pcre2_ovectorp == NULL) {
           MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "%s: pcre2_get_ovector_pointer returned NULL", terminalp->descp->asciis);
           goto err;
@@ -4680,13 +4680,13 @@ static inline short _marpaESLIFRecognizer_terminal_matcherb(marpaESLIFRecognizer
         /* Please note that we explicitely NEVER ask for UTF-8 correctness here, because previous section */
         /* made sure it has always been done. */
 #ifdef PCRE2_CONFIG_JIT
-        if (marpaESLIF_regex.jitPartialb) {
-          pcre2Errornumberi = pcre2_jit_match(marpaESLIF_regex.patternp,    /* code */
+        if (marpaESLIF_regexp->jitPartialb) {
+          pcre2Errornumberi = pcre2_jit_match(marpaESLIF_regexp->patternp,  /* code */
                                               (PCRE2_SPTR) inputs,          /* subject */
                                               (PCRE2_SIZE) inputl,          /* length */
                                               (PCRE2_SIZE) 0,               /* startoffset */
                                               pcre2_option_partial_default, /* options - this one is supported in JIT mode */
-                                              marpaESLIF_regex.match_datap, /* match data */
+                                              marpaESLIF_regexp->match_datap, /* match data */
                                               match_contextp                /* match context */
                                               );
           if (pcre2Errornumberi == PCRE2_ERROR_JIT_STACKLIMIT) {
@@ -4697,12 +4697,12 @@ static inline short _marpaESLIFRecognizer_terminal_matcherb(marpaESLIFRecognizer
         } else {
         eof_nojitpartial:
 #endif
-          pcre2Errornumberi = pcre2_match(marpaESLIF_regex.patternp,    /* code */
+          pcre2Errornumberi = pcre2_match(marpaESLIF_regexp->patternp,  /* code */
                                           (PCRE2_SPTR) inputs,          /* subject */
                                           (PCRE2_SIZE) inputl,          /* length */
                                           (PCRE2_SIZE) 0,               /* startoffset */
                                           pcre2_option_partial_default, /* options - this one is supported in JIT mode */
-                                          marpaESLIF_regex.match_datap, /* match data */
+                                          marpaESLIF_regexp->match_datap, /* match data */
                                           match_contextp                /* match context */
                                           );
 #ifdef PCRE2_CONFIG_JIT
