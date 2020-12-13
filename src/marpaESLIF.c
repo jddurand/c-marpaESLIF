@@ -14704,7 +14704,7 @@ static short _marpaESLIFRecognizer_concat_valueResultCallbackb(void *userDatavp,
     case MARPAESLIF_VALUE_TYPE_ROW:
       /* String default representation: concatenation of sub-members representation, in reverse order for intuitive representation -; */
       MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "ROW {%p,%ld}", marpaESLIFValueResultp->u.r.p, (unsigned long) marpaESLIFValueResultp->u.r.sizel);
-      GENERICSTACK_PUSH_PTR(todoStackp, &marpaESLIFValueResultRightSquare);
+      GENERICSTACK_PUSH_PTR(todoStackp, (marpaESLIFValueResult_t *) &marpaESLIFValueResultRightSquare);
       if (GENERICSTACK_ERROR(todoStackp)) {
         MARPAESLIF_ERRORF(marpaESLIFp, "todoStackp push failure, %s", strerror(errno));
         goto err;
@@ -14720,7 +14720,7 @@ static short _marpaESLIFRecognizer_concat_valueResultCallbackb(void *userDatavp,
           }
           if (j > 0) {
             /* , */
-            GENERICSTACK_PUSH_PTR(todoStackp, &marpaESLIFValueResultComma);
+            GENERICSTACK_PUSH_PTR(todoStackp, (marpaESLIFValueResult_t *) &marpaESLIFValueResultComma);
             if (GENERICSTACK_ERROR(todoStackp)) {
               MARPAESLIF_ERRORF(marpaESLIFp, "todoStackp push failure, %s", strerror(errno));
               goto err;
@@ -14728,7 +14728,7 @@ static short _marpaESLIFRecognizer_concat_valueResultCallbackb(void *userDatavp,
           }
         }
       }
-      GENERICSTACK_PUSH_PTR(todoStackp, &marpaESLIFValueResultLeftSquare);
+      GENERICSTACK_PUSH_PTR(todoStackp, (marpaESLIFValueResult_t *) &marpaESLIFValueResultLeftSquare);
       if (GENERICSTACK_ERROR(todoStackp)) {
         MARPAESLIF_ERRORF(marpaESLIFp, "todoStackp push failure, %s", strerror(errno));
         goto err;
@@ -14737,7 +14737,7 @@ static short _marpaESLIFRecognizer_concat_valueResultCallbackb(void *userDatavp,
     case MARPAESLIF_VALUE_TYPE_TABLE:
       /* Nothing else but a row with an even number of elements, in reverse order for intuitive representation -; */
       MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "TABLE {%p,%ld}", marpaESLIFValueResultp->u.t.p, (unsigned long) marpaESLIFValueResultp->u.t.sizel);
-      GENERICSTACK_PUSH_PTR(todoStackp, &marpaESLIFValueResultRightBracket);
+      GENERICSTACK_PUSH_PTR(todoStackp, (marpaESLIFValueResult_t *) &marpaESLIFValueResultRightBracket);
       if (GENERICSTACK_ERROR(todoStackp)) {
         MARPAESLIF_ERRORF(marpaESLIFp, "todoStackp push failure, %s", strerror(errno));
         goto err;
@@ -14753,7 +14753,7 @@ static short _marpaESLIFRecognizer_concat_valueResultCallbackb(void *userDatavp,
             goto err;
           }
           /* : */
-          GENERICSTACK_PUSH_PTR(todoStackp, &marpaESLIFValueResultColon);
+          GENERICSTACK_PUSH_PTR(todoStackp, (marpaESLIFValueResult_t *) &marpaESLIFValueResultColon);
           if (GENERICSTACK_ERROR(todoStackp)) {
             MARPAESLIF_ERRORF(marpaESLIFp, "todoStackp push failure, %s", strerror(errno));
             goto err;
@@ -14767,7 +14767,7 @@ static short _marpaESLIFRecognizer_concat_valueResultCallbackb(void *userDatavp,
           if (jsonb) {
             /* In JSON mode, key is always a string. We preceede the test at the beginning of the loop */
             /* by ensuring this is the case, by pushing an internal marker */
-            GENERICSTACK_PUSH_PTR(todoStackp, &marpaESLIFValueResultNextValueResultMustDisplayAsJsonString);
+            GENERICSTACK_PUSH_PTR(todoStackp, (marpaESLIFValueResult_t *) &marpaESLIFValueResultNextValueResultMustDisplayAsJsonString);
             if (GENERICSTACK_ERROR(todoStackp)) {
               MARPAESLIF_ERRORF(marpaESLIFp, "todoStackp push failure, %s", strerror(errno));
               goto err;
@@ -14775,7 +14775,7 @@ static short _marpaESLIFRecognizer_concat_valueResultCallbackb(void *userDatavp,
           }
           if (j > 0) {
             /* , */
-            GENERICSTACK_PUSH_PTR(todoStackp, &marpaESLIFValueResultComma);
+            GENERICSTACK_PUSH_PTR(todoStackp, (marpaESLIFValueResult_t *) &marpaESLIFValueResultComma);
             if (GENERICSTACK_ERROR(todoStackp)) {
               MARPAESLIF_ERRORF(marpaESLIFp, "todoStackp push failure, %s", strerror(errno));
               goto err;
@@ -14783,7 +14783,7 @@ static short _marpaESLIFRecognizer_concat_valueResultCallbackb(void *userDatavp,
           }
         }
       }
-      GENERICSTACK_PUSH_PTR(todoStackp, &marpaESLIFValueResultLeftBracket);
+      GENERICSTACK_PUSH_PTR(todoStackp, (marpaESLIFValueResult_t *) &marpaESLIFValueResultLeftBracket);
       if (GENERICSTACK_ERROR(todoStackp)) {
         MARPAESLIF_ERRORF(marpaESLIFp, "todoStackp push failure, %s", strerror(errno));
         goto err;
