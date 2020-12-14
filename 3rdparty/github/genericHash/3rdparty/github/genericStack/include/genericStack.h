@@ -2,6 +2,7 @@
 #define GENERICSTACK_H
 
 #include <stdlib.h>       /* For malloc, free */
+#include <stddef.h>       /* For size_t */
 #include <string.h>       /* For memcpy */
 #include <errno.h>        /* For errno */
 
@@ -48,7 +49,7 @@
 #endif
 
 /* ====================================================================== */
-/* In theory we should check for size_t turnaround. In practice this is   */
+/* In theory we should check for int turnaround. In practice this is      */
 /* instructions for nothing, this is a so improbable case. Nevertheless   */
 /* if you insist, set the variable GENERICSTACK_PARANOID.                 */
 /* ====================================================================== */
@@ -173,10 +174,10 @@ typedef struct genericStack {
   genericStackItem_t  defaultItems[GENERICSTACK_DEFAULT_LENGTH];
 #endif
   genericStackItem_t *heapItems;
-  size_t              initialLengthl; /* Initial length                   */
-  size_t              heapl;   /* Heap length                             */
-  size_t              lengthl; /* Available length                        */
-  size_t              usedl;   /* Used length                             */
+  int                 initialLengthi; /* Initial length                   */
+  int                 heapi;   /* Heap length                             */
+  int                 lengthi; /* Available length                        */
+  int                 usedi;   /* Used length                             */
   int                 errori;  /* True if the stack had an error          */
 } genericStack_t;
 
@@ -187,45 +188,45 @@ typedef struct genericStack {
 /* ====================================================================== */
 
 #ifdef GENERICSTACK_ZERO_INT_IS_NOT_ZERO_BYTES
-/* we want to memset items[start...endl] - no protection on indices because we call it only when we know we need it */
-static GENERICSTACK_INLINE void _GENERICSTACK_NA_MEMSET(genericStack_t *stackp, size_t startl, size_t endl) {
-  size_t indicel;
+/* we want to memset items[starti...endi] - no protection on indices because we call it only when we know we need it */
+static GENERICSTACK_INLINE void _GENERICSTACK_NA_MEMSET(genericStack_t *stackp, int starti, int endi) {
+  int indicei;
 
-  for (indicel = startl; indicel <= endl; indicel++) {
-    stackp->items[indicel].type = GENERICSTACKITEMTYPE_NA;
+  for (indicei = starti; indicei <= endi; indicei++) {
+    stackp->items[indicei].type = GENERICSTACKITEMTYPE_NA;
   }
 }
 
 #  if GENERICSTACK_DEFAULT_LENGTH > 0
-static GENERICSTACK_INLINE short _GENERICSTACK_CREATE_HEAP(genericStack_t *stackp, size_t heapl) {
+static GENERICSTACK_INLINE short _GENERICSTACK_CREATE_HEAP(genericStack_t *stackp, int heapi) {
   short rcb;
 
-  stackp->heapItems = (genericStackItem_t *) malloc(heapl * sizeof(genericStackItem_t));
+  stackp->heapItems = (genericStackItem_t *) malloc(heapi * sizeof(genericStackItem_t));
   if (stackp->heapItems == NULL) {
     stackp->errori = 1;
     rcb = 0;
   } else {
     stackp->items = stackp->heapItems;
-    if (stackp->usedl > 0) {
-      memcpy(stackp->items, stackp->defaultItems, stackp->usedl * sizeof(genericStackItem_t));
+    if (stackp->usedi > 0) {
+      memcpy(stackp->items, stackp->defaultItems, stackp->usedi * sizeof(genericStackItem_t));
     }
-    stackp->lengthl = stackp->heapl = heapl;
+    stackp->lengthi = stackp->heapi = heapi;
     rcb = 1;
   }
 
   return rcb;
 }
 #  else /* GENERICSTACK_DEFAULT_LENGTH > 0 */
-static GENERICSTACK_INLINE short _GENERICSTACK_CREATE_HEAP(genericStack_t *stackp, size_t heapl) {
+static GENERICSTACK_INLINE short _GENERICSTACK_CREATE_HEAP(genericStack_t *stackp, int heapi) {
   short rcb;
 
-  stackp->heapItems = (genericStackItem_t *) malloc(heapl * sizeof(genericStackItem_t));
+  stackp->heapItems = (genericStackItem_t *) malloc(heapi * sizeof(genericStackItem_t));
   if (stackp->heapItems == NULL) {
     stackp->errori = 1;
     rcb = 0;
   } else {
     stackp->items = stackp->heapItems;
-    stackp->lengthl = stackp->heapl = heapl;
+    stackp->lengthi = stackp->heapi = heapi;
     rcb = 1;
   }
 
@@ -233,41 +234,41 @@ static GENERICSTACK_INLINE short _GENERICSTACK_CREATE_HEAP(genericStack_t *stack
 }
 #  endif /* GENERICSTACK_DEFAULT_LENGTH > 0 */
 #else /* GENERICSTACK_ZERO_INT_IS_NOT_ZERO_BYTES */
-static GENERICSTACK_INLINE void _GENERICSTACK_NA_MEMSET(genericStack_t *stackp, size_t startl, size_t endl) {
-  memset(&(stackp->items[startl]), '\0', (endl - startl + 1) * sizeof(genericStackItem_t));
+static GENERICSTACK_INLINE void _GENERICSTACK_NA_MEMSET(genericStack_t *stackp, int starti, int endi) {
+  memset(&(stackp->items[starti]), '\0', (endi - starti + 1) * sizeof(genericStackItem_t));
 }
 #  if GENERICSTACK_DEFAULT_LENGTH > 0
-static GENERICSTACK_INLINE short _GENERICSTACK_CREATE_HEAP(genericStack_t *stackp, size_t heapl) {
+static GENERICSTACK_INLINE short _GENERICSTACK_CREATE_HEAP(genericStack_t *stackp, int heapi) {
   short rcb;
 
   /* No need to calloc: GENERICSTACK_NA_MEMSET() does the job when needed, and in practice this almost never happens */
-  stackp->heapItems = (genericStackItem_t *) malloc(heapl * sizeof(genericStackItem_t));
+  stackp->heapItems = (genericStackItem_t *) malloc(heapi * sizeof(genericStackItem_t));
   if (stackp->heapItems == NULL) {
     stackp->errori = 1;
     rcb = 0;
   } else {
     stackp->items = stackp->heapItems;
-    if (stackp->usedl > 0) {
-      memcpy(stackp->items, stackp->defaultItems, stackp->usedl * sizeof(genericStackItem_t));
+    if (stackp->usedi > 0) {
+      memcpy(stackp->items, stackp->defaultItems, stackp->usedi * sizeof(genericStackItem_t));
     }
     /* No need to memset */
-    stackp->lengthl = stackp->heapl = heapl;
+    stackp->lengthi = stackp->heapi = heapi;
     rcb = 1;
   }
 
   return rcb;
 }
 #  else /* GENERICSTACK_DEFAULT_LENGTH > 0 */
-static GENERICSTACK_INLINE short _GENERICSTACK_CREATE_HEAP(genericStack_t *stackp, size_t heapl) {
+static GENERICSTACK_INLINE short _GENERICSTACK_CREATE_HEAP(genericStack_t *stackp, int heapi) {
   short rcb;
 
-  stackp->heapItems = (genericStackItem_t *) malloc(heapl * sizeof(genericStackItem_t));
+  stackp->heapItems = (genericStackItem_t *) malloc(heapi * sizeof(genericStackItem_t));
   if (stackp->heapItems == NULL) {
     stackp->errori = 1;
     rcb = 0;
   } else {
     stackp->items = stackp->heapItems;
-    stackp->lengthl = stackp->heapl = heapl;
+    stackp->lengthi = stackp->heapi = heapi;
     rcb = 1;
   }
 
@@ -276,79 +277,79 @@ static GENERICSTACK_INLINE short _GENERICSTACK_CREATE_HEAP(genericStack_t *stack
 #  endif /* GENERICSTACK_DEFAULT_LENGTH > 0 */
 #endif /* GENERICSTACK_ZERO_INT_IS_NOT_ZERO_BYTES */
 
-static GENERICSTACK_INLINE short _GENERICSTACK_EXTEND_HEAP(genericStack_t *stackp, size_t heapl) {
+static GENERICSTACK_INLINE short _GENERICSTACK_EXTEND_HEAP(genericStack_t *stackp, int heapi) {
   short rcb;
 
   /* We are already on the heap, so previous value is in items */
-  if ((stackp->heapItems = (genericStackItem_t *) realloc(stackp->items, heapl * sizeof(genericStackItem_t))) == NULL) {
+  if ((stackp->heapItems = (genericStackItem_t *) realloc(stackp->items, heapi * sizeof(genericStackItem_t))) == NULL) {
     stackp->errori = 1;
     stackp->heapItems = stackp->items;
     rcb = 0;
   } else {
     /* Initialize new items to type GENERICSTACK_NA */
-    /* Previous length was stackp->heapl: [0..stackp->heapl-1] */
-    /* New length is heapl: [0..stackp->heapl.. heapl] */
+    /* Previous length was stackp->heapi: [0..stackp->heapi-1] */
+    /* New length is heapi: [0..stackp->heapi.. heapi] */
     stackp->items = stackp->heapItems;
-    stackp->lengthl = stackp->heapl = heapl;
+    stackp->lengthi = stackp->heapi = heapi;
     rcb = 1;
   }
 
   return rcb;
 }
 
-static GENERICSTACK_INLINE short _GENERICSTACK_EXTEND(genericStack_t *stackp, size_t wantedl, size_t targetIndicel) {
+static GENERICSTACK_INLINE short _GENERICSTACK_EXTEND(genericStack_t *stackp, int wantedi, int targetIndicei) {
   short rcb;
   
   /* Do we need to go the heap ? */
-  if (wantedl <= GENERICSTACK_DEFAULT_LENGTH) {
+  if (wantedi <= GENERICSTACK_DEFAULT_LENGTH) {
     rcb = 1;
   } else {
     /* Is heap already large enough ? */
-    if (wantedl <= stackp->heapl) {
+    if (wantedi <= stackp->heapi) {
       rcb = 1;
     } else {
-      /* Get the multiple of 2 that is >= wantedl */
-      size_t heapl;
+      /* Get the multiple of 2 that is >= wantedi */
+      int heapi;
 #ifdef GENERICSTACK_PARANOID
-      size_t previousHeapl;
+      int previousHeapi;
 #endif
 
       /* https://www.geeksforgeeks.org/smallest-power-of-2-greater-than-or-equal-to-n/ */
-      if (!(wantedl & (wantedl - 1))) {
-        heapl = wantedl;
+      if (!(wantedi & (wantedi - 1))) {
+        heapi = wantedi;
       } else {
 #ifdef GENERICSTACK_PARANOID
-        previousHeapl =
+        previousHeapi =
 #endif
-          heapl = 1;
-        while (heapl < wantedl) {
+          heapi = 1;
+        while (heapi < wantedi) {
           /* We count on compiler to optimize (<<= 1, + twice etc.) */
-          heapl *= 2;
+          heapi *= 2;
 #ifdef GENERICSTACK_PARANOID
-          if (heapl < previousHeapl) {
+          if (heapi < previousHeapi) {
             /* Turnaround */
-            heapl = 0;
+            heapi = 0;
             break;
           }
-          previousHeapl = heapl;
+          previousHeapi = heapi;
 #endif
         }
       }
 
-      if (heapl == 0) {
+      if (heapi == 0) {
         stackp->errori = 1;
         errno = EINVAL;
         rcb = 0;
       } else {
-        rcb = (stackp->heapItems == NULL) ? _GENERICSTACK_CREATE_HEAP(stackp, heapl) : _GENERICSTACK_EXTEND_HEAP(stackp, heapl);
+        rcb = (stackp->heapItems == NULL) ? _GENERICSTACK_CREATE_HEAP(stackp, heapi) : _GENERICSTACK_EXTEND_HEAP(stackp, heapi);
       }
     }
   }
 
   /* Are we targetting something that is bigger than the next unused indice ? */
-  if (targetIndicel > stackp->usedl) {
-    /* Current usage is: [0..stackp>usedl-1], user targets [0..stackp->usedl-1..targetIndicel where targetIndicel is bigger than stackp->usedl */
-    _GENERICSTACK_NA_MEMSET(stackp, stackp->usedl, targetIndicel - 1);
+  if (targetIndicei > stackp->usedi) {
+    /* Current usage is: [0..stackp>usedi-1], user targets [0..stackp->usedi-1..targetIndicei where targetIndicei is bigger than stackp->usedi */
+    _GENERICSTACK_NA_MEMSET(stackp, stackp->usedi, targetIndicei - 1);
   }
 
   return rcb;
@@ -358,24 +359,24 @@ static GENERICSTACK_INLINE short _GENERICSTACK_EXTEND(genericStack_t *stackp, si
 static GENERICSTACK_INLINE void _GENERICSTACK_INIT(genericStack_t *stackp) {
   stackp->items                                  = stackp->defaultItems;
   stackp->heapItems                              = NULL;
-  stackp->lengthl = stackp->initialLengthl       = GENERICSTACK_DEFAULT_LENGTH;
-  stackp->errori = stackp->usedl = stackp->heapl = 0;
+  stackp->lengthi = stackp->initialLengthi       = GENERICSTACK_DEFAULT_LENGTH;
+  stackp->errori = stackp->usedi = stackp->heapi = 0;
 }
 #else /* GENERICSTACK_DEFAULT_LENGTH > 0 */
 static GENERICSTACK_INLINE void _GENERICSTACK_INIT(genericStack_t *stackp) {
   stackp->heapItems = stackp->items                                                         = NULL;
-  stackp->errori = stackp->usedl = stackp->heapl = stackp->lengthl = stackp->initialLengthl = 0;
+  stackp->errori = stackp->usedi = stackp->heapi = stackp->lengthi = stackp->initialLengthi = 0;
 }
 #endif /* GENERICSTACK_DEFAULT_LENGTH > 0 */
 
-static GENERICSTACK_INLINE short _GENERICSTACK_INIT_SIZED(genericStack_t *stackp, size_t lengthl) {
+static GENERICSTACK_INLINE short _GENERICSTACK_INIT_SIZED(genericStack_t *stackp, int lengthi) {
   short rcb;
 
   /* Note that _GENERICSTACK_INIT() never alters stackp->errori */
   _GENERICSTACK_INIT(stackp);
-  rcb = _GENERICSTACK_EXTEND(stackp, lengthl, 0);
+  rcb = _GENERICSTACK_EXTEND(stackp, lengthi, 0);
   if (rcb) {
-    stackp->initialLengthl = lengthl;
+    stackp->initialLengthi = lengthi;
   }
 
   return rcb;
@@ -387,7 +388,7 @@ static GENERICSTACK_INLINE void _GENERICSTACK_RESET(genericStack_t *stackp) {
       free(stackp->heapItems);
       stackp->heapItems = NULL;
     }
-    stackp->usedl = stackp->heapl = stackp->lengthl = 0;
+    stackp->usedi = stackp->heapi = stackp->lengthi = 0;
   }
 }
 
@@ -410,13 +411,13 @@ static GENERICSTACK_INLINE genericStack_t *_GENERICSTACK_NEW() {
     return stackp;
 }
 
-static GENERICSTACK_INLINE genericStack_t *_GENERICSTACK_NEW_SIZED(size_t lengthl) {
+static GENERICSTACK_INLINE genericStack_t *_GENERICSTACK_NEW_SIZED(int lengthi) {
   genericStack_t *stackp = (genericStack_t *) malloc(sizeof(genericStack_t));
 
   if (stackp != NULL) {
     /* Note that _GENERICSTACK_INIT() never alters stackp->errori */
     _GENERICSTACK_INIT(stackp);
-    if (! _GENERICSTACK_EXTEND(stackp, lengthl, 0)) {
+    if (! _GENERICSTACK_EXTEND(stackp, lengthi, 0)) {
       _GENERICSTACK_FREE(stackp);
       stackp = NULL;
     }
@@ -427,29 +428,29 @@ static GENERICSTACK_INLINE genericStack_t *_GENERICSTACK_NEW_SIZED(size_t length
 
 static GENERICSTACK_INLINE void _GENERICSTACK_RELAX(genericStack_t *stackp) {
   if (stackp != NULL) {
-    stackp->usedl = 0;
+    stackp->usedi = 0;
   }
 }
 
 #ifdef GENERICSTACK_PARANOID
 #  define __GENERICSTACK_SET_BY_TYPE(varType, itemType, dst) \
-  static GENERICSTACK_INLINE short _GENERICSTACK_SET_##itemType(genericStack_t *stackp, varType var, size_t indexl) { \
+  static GENERICSTACK_INLINE short _GENERICSTACK_SET_##itemType(genericStack_t *stackp, varType var, int indexi) { \
     short rcb;                                                          \
-    size_t lengthl = indexl + 1;                                        \
+    int lengthi = indexi + 1;                                           \
                                                                         \
     /* Turnaround */                                                    \
-    if (lengthl < indexl) {                                             \
+    if (lengthi < indexi) {                                             \
       stackp->errori = 1;                                               \
       rcb = 0;                                                          \
     } else {                                                            \
-      if (! _GENERICSTACK_EXTEND(stackp, lengthl, indexl)) {            \
+      if (! _GENERICSTACK_EXTEND(stackp, lengthi, indexi)) {            \
         rcb = 0;                                                        \
       } else {                                                          \
-        if (stackp->usedl < lengthl) {                                  \
-          stackp->usedl = lengthl;                                      \
+        if (stackp->usedi < lengthi) {                                  \
+          stackp->usedi = lengthi;                                      \
         }                                                               \
-        stackp->items[indexl].type = GENERICSTACKITEMTYPE_##itemType;   \
-        stackp->items[indexl].u.dst = var;                              \
+        stackp->items[indexi].type = GENERICSTACKITEMTYPE_##itemType;   \
+        stackp->items[indexi].u.dst = var;                              \
         rcb = 1;                                                        \
       }                                                                 \
     }                                                                   \
@@ -458,18 +459,18 @@ static GENERICSTACK_INLINE void _GENERICSTACK_RELAX(genericStack_t *stackp) {
 }
 #else /* GENERICSTACK_PARANOID */
 #  define __GENERICSTACK_SET_BY_TYPE(varType, itemType, dst) \
-  static GENERICSTACK_INLINE short _GENERICSTACK_SET_##itemType(genericStack_t *stackp, varType var, size_t indexl) { \
+  static GENERICSTACK_INLINE short _GENERICSTACK_SET_##itemType(genericStack_t *stackp, varType var, int indexi) { \
     short rcb;                                                          \
-    size_t lengthl = indexl + 1;                                        \
+    int lengthi = indexi + 1;                                           \
                                                                         \
-    if (! _GENERICSTACK_EXTEND(stackp, lengthl, indexl)) {              \
+    if (! _GENERICSTACK_EXTEND(stackp, lengthi, indexi)) {              \
       rcb = 0;                                                          \
     } else {                                                            \
-      if (stackp->usedl < lengthl) {                                    \
-        stackp->usedl = lengthl;                                        \
+      if (stackp->usedi < lengthi) {                                    \
+        stackp->usedi = lengthi;                                        \
       }                                                                 \
-      stackp->items[indexl].type = GENERICSTACKITEMTYPE_##itemType;     \
-      stackp->items[indexl].u.dst = var;                                \
+      stackp->items[indexi].type = GENERICSTACKITEMTYPE_##itemType;     \
+      stackp->items[indexi].u.dst = var;                                \
       rcb = 1;                                                          \
     }                                                                   \
                                                                         \
@@ -479,23 +480,23 @@ static GENERICSTACK_INLINE void _GENERICSTACK_RELAX(genericStack_t *stackp) {
 
 #ifdef GENERICSTACK_PARANOID
 #  define __GENERICSTACK_SET_BY_TYPEP(varType, itemType, dst) \
-  static GENERICSTACK_INLINE short _GENERICSTACK_SET_##itemType##P(genericStack_t *stackp, varType *var, size_t indexl) { \
+  static GENERICSTACK_INLINE short _GENERICSTACK_SET_##itemType##P(genericStack_t *stackp, varType *var, int indexi) { \
     short rcb;                                                          \
-    size_t lengthl = indexl + 1;                                        \
+    int lengthi = indexi + 1;                                           \
                                                                         \
     /* Turnaround */                                                    \
-    if (lengthl < indexl) {                                             \
+    if (lengthi < indexi) {                                             \
       stackp->errori = 1;                                               \
       rcb = 0;                                                          \
     } else {                                                            \
-      if (! _GENERICSTACK_EXTEND(stackp, lengthl, indexl)) {            \
+      if (! _GENERICSTACK_EXTEND(stackp, lengthi, indexi)) {            \
         rcb = 0;                                                        \
       } else {                                                          \
-        if (stackp->usedl < lengthl) {                                  \
-          stackp->usedl = lengthl;                                      \
+        if (stackp->usedi < lengthi) {                                  \
+          stackp->usedi = lengthi;                                      \
         }                                                               \
-        stackp->items[indexl].type = GENERICSTACKITEMTYPE_##itemType;   \
-        stackp->items[indexl].u.dst = *var;                             \
+        stackp->items[indexi].type = GENERICSTACKITEMTYPE_##itemType;   \
+        stackp->items[indexi].u.dst = *var;                             \
         rcb = 1;                                                        \
       }                                                                 \
     }                                                                   \
@@ -504,18 +505,18 @@ static GENERICSTACK_INLINE void _GENERICSTACK_RELAX(genericStack_t *stackp) {
 }
 #else /* GENERICSTACK_PARANOID */
 #  define __GENERICSTACK_SET_BY_TYPEP(varType, itemType, dst) \
-  static GENERICSTACK_INLINE short _GENERICSTACK_SET_##itemType##P(genericStack_t *stackp, varType *var, size_t indexl) { \
+  static GENERICSTACK_INLINE short _GENERICSTACK_SET_##itemType##P(genericStack_t *stackp, varType *var, int indexi) { \
     short rcb;                                                          \
-    size_t lengthl = indexl + 1;                                        \
+    int lengthi = indexi + 1;                                           \
                                                                         \
-    if (! _GENERICSTACK_EXTEND(stackp, lengthl, indexl)) {              \
+    if (! _GENERICSTACK_EXTEND(stackp, lengthi, indexi)) {              \
       rcb = 0;                                                          \
     } else {                                                            \
-      if (stackp->usedl < lengthl) {                                    \
-        stackp->usedl = lengthl;                                        \
+      if (stackp->usedi < lengthi) {                                    \
+        stackp->usedi = lengthi;                                        \
       }                                                                 \
-      stackp->items[indexl].type = GENERICSTACKITEMTYPE_##itemType;     \
-      stackp->items[indexl].u.dst = *var;                               \
+      stackp->items[indexi].type = GENERICSTACKITEMTYPE_##itemType;     \
+      stackp->items[indexi].u.dst = *var;                               \
       rcb = 1;                                                          \
     }                                                                   \
                                                                         \
@@ -549,24 +550,24 @@ __GENERICSTACK_SET_BY_TYPEP(genericStackItemTypeArray_t, ARRAY, a)
   __GENERICSTACK_SET_BY_TYPEP(GENERICSTACK_CUSTOM, CUSTOM, custom)
 #endif
 /* Special case for N/A: there is no associated data */
-static GENERICSTACK_INLINE short _GENERICSTACK_SET_NA(genericStack_t *stackp, size_t indexl) {
+static GENERICSTACK_INLINE short _GENERICSTACK_SET_NA(genericStack_t *stackp, int indexi) {
   short rcb;
-  size_t lengthl = indexl + 1;
+  int lengthi = indexi + 1;
 
 #ifdef GENERICSTACK_PARANOID
   /* Turnaround */
-  if (lengthl < indexl) {
+  if (lengthi < indexi) {
     stackp->errori = 1;
     rcb = 0;
   } else {
 #endif
-    if (! _GENERICSTACK_EXTEND(stackp, lengthl, indexl)) {
+    if (! _GENERICSTACK_EXTEND(stackp, lengthi, indexi)) {
       rcb = 0;
     } else {
-      if (stackp->usedl < lengthl) {
-        stackp->usedl = lengthl;
+      if (stackp->usedi < lengthi) {
+        stackp->usedi = lengthi;
       }
-      stackp->items[indexl].type = GENERICSTACKITEMTYPE_NA;
+      stackp->items[indexi].type = GENERICSTACKITEMTYPE_NA;
       rcb = 1;
     }
 #ifdef GENERICSTACK_PARANOID
@@ -581,45 +582,45 @@ static GENERICSTACK_INLINE short _GENERICSTACK_SET_NA(genericStack_t *stackp, si
 /* ====================================================================== */
 #define GENERICSTACK_ERROR(stackp)               (stackp)->errori
 #define GENERICSTACK_ERROR_RESET(stackp)         (stackp)->errori = 0
-#define GENERICSTACK_INITIAL_LENGTH(stackp)      (stackp)->initialLengthl
-#define GENERICSTACK_HEAP_LENGTH(stackp)         (stackp)->heapl
-#define GENERICSTACK_LENGTH(stackp)              (stackp)->lengthl
-#define GENERICSTACK_USED(stackp)                (stackp)->usedl
+#define GENERICSTACK_INITIAL_LENGTH(stackp)      (stackp)->initialLengthi
+#define GENERICSTACK_HEAP_LENGTH(stackp)         (stackp)->heapi
+#define GENERICSTACK_LENGTH(stackp)              (stackp)->lengthi
+#define GENERICSTACK_USED(stackp)                (stackp)->usedi
 #define GENERICSTACK_INIT(stackp)                _GENERICSTACK_INIT(stackp)
 #define GENERICSTACK_NEW(stackp)                 (stackp) = _GENERICSTACK_NEW()
-#define GENERICSTACK_NEW_SIZED(stackp, lengthl)  (stackp) = _GENERICSTACK_NEW_SIZED(lengthl)
-#define GENERICSTACK_INIT_SIZED(stackp, lengthl) _GENERICSTACK_INIT_SIZED(stackp, lengthl)
+#define GENERICSTACK_NEW_SIZED(stackp, lengthi)  (stackp) = _GENERICSTACK_NEW_SIZED(lengthi)
+#define GENERICSTACK_INIT_SIZED(stackp, lengthi) _GENERICSTACK_INIT_SIZED(stackp, lengthi)
 
 /* ====================================================================== */
 /* GET interface                                                          */
 /* ====================================================================== */
-#define GENERICSTACK_GET_CHAR(stackp, indexl)                   ((stackp)->items[indexl].u.c)
-#define GENERICSTACK_GET_SHORT(stackp, indexl)                  ((stackp)->items[indexl].u.s)
-#define GENERICSTACK_GET_INT(stackp, indexl)                    ((stackp)->items[indexl].u.i)
-#define GENERICSTACK_GET_LONG(stackp, indexl)                   ((stackp)->items[indexl].u.l)
-#define GENERICSTACK_GET_LONG_DOUBLE(stackp, indexl)            ((stackp)->items[indexl].u.ld)
-#define GENERICSTACK_GET_FLOAT(stackp, indexl)                  ((stackp)->items[indexl].u.f)
-#define GENERICSTACK_GET_DOUBLE(stackp, indexl)                 ((stackp)->items[indexl].u.d)
-#define GENERICSTACK_GET_PTR(stackp, indexl)                    ((stackp)->items[indexl].u.p)
-#define GENERICSTACK_GET_ARRAY(stackp, indexl)                  ((stackp)->items[indexl].u.a)
-#define GENERICSTACK_GET_ARRAYP(stackp, indexl)                 (&((stackp)->items[indexl].u.a))
+#define GENERICSTACK_GET_CHAR(stackp, indexi)                   ((stackp)->items[indexi].u.c)
+#define GENERICSTACK_GET_SHORT(stackp, indexi)                  ((stackp)->items[indexi].u.s)
+#define GENERICSTACK_GET_INT(stackp, indexi)                    ((stackp)->items[indexi].u.i)
+#define GENERICSTACK_GET_LONG(stackp, indexi)                   ((stackp)->items[indexi].u.l)
+#define GENERICSTACK_GET_LONG_DOUBLE(stackp, indexi)            ((stackp)->items[indexi].u.ld)
+#define GENERICSTACK_GET_FLOAT(stackp, indexi)                  ((stackp)->items[indexi].u.f)
+#define GENERICSTACK_GET_DOUBLE(stackp, indexi)                 ((stackp)->items[indexi].u.d)
+#define GENERICSTACK_GET_PTR(stackp, indexi)                    ((stackp)->items[indexi].u.p)
+#define GENERICSTACK_GET_ARRAY(stackp, indexi)                  ((stackp)->items[indexi].u.a)
+#define GENERICSTACK_GET_ARRAYP(stackp, indexi)                 (&((stackp)->items[indexi].u.a))
 #if GENERICSTACK_HAVE_LONG_LONG > 0
-#  define GENERICSTACK_GET_LONG_LONG(stackp, indexl)            ((stackp)->items[indexl].u.ll)
+#  define GENERICSTACK_GET_LONG_LONG(stackp, indexi)            ((stackp)->items[indexi].u.ll)
 #endif
 #if GENERICSTACK_HAVE__BOOL > 0
-#  define GENERICSTACK_GET__BOOL(stackp, indexl)                ((stackp)->items[indexl].u.b)
+#  define GENERICSTACK_GET__BOOL(stackp, indexi)                ((stackp)->items[indexi].u.b)
 #endif
 #if GENERICSTACK_HAVE__COMPLEX > 0
-#  define GENERICSTACK_GET_FLOAT__COMPLEX(stackp, indexl)       ((stackp)->items[indexl].u.fc)
-#  define GENERICSTACK_GET_DOUBLE__COMPLEX(stackp, indexl)      ((stackp)->items[indexl].u.dc)
-#  define GENERICSTACK_GET_LONG_DOUBLE__COMPLEX(stackp, indexl) ((stackp)->items[indexl].u.ldc)
+#  define GENERICSTACK_GET_FLOAT__COMPLEX(stackp, indexi)       ((stackp)->items[indexi].u.fc)
+#  define GENERICSTACK_GET_DOUBLE__COMPLEX(stackp, indexi)      ((stackp)->items[indexi].u.dc)
+#  define GENERICSTACK_GET_LONG_DOUBLE__COMPLEX(stackp, indexi) ((stackp)->items[indexi].u.ldc)
 #endif
 #if GENERICSTACK_HAVE_CUSTOM > 0
-#  define GENERICSTACK_GET_CUSTOM(stackp, indexl)               ((stackp)->items[indexl].u.custom)
-#  define GENERICSTACK_GET_CUSTOMP(stackp, indexl)              (&((stackp)->items[indexl].u.custom))
+#  define GENERICSTACK_GET_CUSTOM(stackp, indexi)               ((stackp)->items[indexi].u.custom)
+#  define GENERICSTACK_GET_CUSTOMP(stackp, indexi)              (&((stackp)->items[indexi].u.custom))
 #endif
-/* Per def N/A value is undefined - we just have to make sure indexl is processed */
-#define GENERICSTACK_GET_NA(stackp, indexl)                     (indexl)
+/* Per def N/A value is undefined - we just have to make sure indexi is processed */
+#define GENERICSTACK_GET_NA(stackp, indexi)                     (indexi)
 
 /* ====================================================================== */
 /* SET interface                                                          */
@@ -654,60 +655,60 @@ static GENERICSTACK_INLINE short _GENERICSTACK_SET_NA(genericStack_t *stackp, si
 /* ====================================================================== */
 /* PUSH interface: built on top of SET                                    */
 /* ====================================================================== */
-#define GENERICSTACK_PUSH_CHAR(stackp, var)                   GENERICSTACK_SET_CHAR(stackp, var, (stackp)->usedl)
-#define GENERICSTACK_PUSH_SHORT(stackp, var)                  GENERICSTACK_SET_SHORT(stackp, var, (stackp)->usedl)
-#define GENERICSTACK_PUSH_INT(stackp, var)                    GENERICSTACK_SET_INT(stackp, var, (stackp)->usedl)
-#define GENERICSTACK_PUSH_LONG(stackp, var)                   GENERICSTACK_SET_LONG(stackp, var, (stackp)->usedl)
-#define GENERICSTACK_PUSH_LONG_DOUBLE(stackp, var)            GENERICSTACK_SET_LONG_DOUBLE(stackp, var, (stackp)->usedl)
-#define GENERICSTACK_PUSH_FLOAT(stackp, var)                  GENERICSTACK_SET_FLOAT(stackp, var, (stackp)->usedl)
-#define GENERICSTACK_PUSH_DOUBLE(stackp, var)                 GENERICSTACK_SET_DOUBLE(stackp, var, (stackp)->usedl)
-#define GENERICSTACK_PUSH_PTR(stackp, var)                    GENERICSTACK_SET_PTR(stackp, var, (stackp)->usedl)
-#define GENERICSTACK_PUSH_ARRAY(stackp, var)                  GENERICSTACK_SET_ARRAY(stackp, var, (stackp)->usedl)
-#define GENERICSTACK_PUSH_ARRAYP(stackp, var)                 GENERICSTACK_SET_ARRAYP(stackp, var, (stackp)->usedl)
+#define GENERICSTACK_PUSH_CHAR(stackp, var)                   GENERICSTACK_SET_CHAR(stackp, var, (stackp)->usedi)
+#define GENERICSTACK_PUSH_SHORT(stackp, var)                  GENERICSTACK_SET_SHORT(stackp, var, (stackp)->usedi)
+#define GENERICSTACK_PUSH_INT(stackp, var)                    GENERICSTACK_SET_INT(stackp, var, (stackp)->usedi)
+#define GENERICSTACK_PUSH_LONG(stackp, var)                   GENERICSTACK_SET_LONG(stackp, var, (stackp)->usedi)
+#define GENERICSTACK_PUSH_LONG_DOUBLE(stackp, var)            GENERICSTACK_SET_LONG_DOUBLE(stackp, var, (stackp)->usedi)
+#define GENERICSTACK_PUSH_FLOAT(stackp, var)                  GENERICSTACK_SET_FLOAT(stackp, var, (stackp)->usedi)
+#define GENERICSTACK_PUSH_DOUBLE(stackp, var)                 GENERICSTACK_SET_DOUBLE(stackp, var, (stackp)->usedi)
+#define GENERICSTACK_PUSH_PTR(stackp, var)                    GENERICSTACK_SET_PTR(stackp, var, (stackp)->usedi)
+#define GENERICSTACK_PUSH_ARRAY(stackp, var)                  GENERICSTACK_SET_ARRAY(stackp, var, (stackp)->usedi)
+#define GENERICSTACK_PUSH_ARRAYP(stackp, var)                 GENERICSTACK_SET_ARRAYP(stackp, var, (stackp)->usedi)
 #if GENERICSTACK_HAVE_LONG_LONG > 0
-#  define GENERICSTACK_PUSH_LONG_LONG(stackp, var)            GENERICSTACK_SET_LONG_LONG(stackp, var, (stackp)->usedl)
+#  define GENERICSTACK_PUSH_LONG_LONG(stackp, var)            GENERICSTACK_SET_LONG_LONG(stackp, var, (stackp)->usedi)
 #endif
 #if GENERICSTACK_HAVE__BOOL > 0
-#  define GENERICSTACK_PUSH__BOOL(stackp, var)                GENERICSTACK_SET__BOOL(stackp, var, (stackp)->usedl)
+#  define GENERICSTACK_PUSH__BOOL(stackp, var)                GENERICSTACK_SET__BOOL(stackp, var, (stackp)->usedi)
 #endif
 #if GENERICSTACK_HAVE__COMPLEX > 0
-#  define GENERICSTACK_PUSH_FLOAT__COMPLEX(stackp, var)       GENERICSTACK_SET_FLOAT__COMPLEX(stackp, var, (stackp)->usedl)
-#  define GENERICSTACK_PUSH_DOUBLE__COMPLEX(stackp, var)      GENERICSTACK_SET_DOUBLE__COMPLEX(stackp, var, (stackp)->usedl)
-#  define GENERICSTACK_PUSH_LONG_DOUBLE__COMPLEX(stackp, var) GENERICSTACK_SET_LONG_DOUBLE__COMPLEX(stackp, var, (stackp)->usedl)
+#  define GENERICSTACK_PUSH_FLOAT__COMPLEX(stackp, var)       GENERICSTACK_SET_FLOAT__COMPLEX(stackp, var, (stackp)->usedi)
+#  define GENERICSTACK_PUSH_DOUBLE__COMPLEX(stackp, var)      GENERICSTACK_SET_DOUBLE__COMPLEX(stackp, var, (stackp)->usedi)
+#  define GENERICSTACK_PUSH_LONG_DOUBLE__COMPLEX(stackp, var) GENERICSTACK_SET_LONG_DOUBLE__COMPLEX(stackp, var, (stackp)->usedi)
 #endif
 #if GENERICSTACK_HAVE_CUSTOM > 0
-#  define GENERICSTACK_PUSH_CUSTOM(stackp, var)               GENERICSTACK_SET_CUSTOM(stackp, var, (stackp)->usedl)
-#  define GENERICSTACK_PUSH_CUSTOMP(stackp, var)              GENERICSTACK_SET_CUSTOMP(stackp, var, (stackp)->usedl)
+#  define GENERICSTACK_PUSH_CUSTOM(stackp, var)               GENERICSTACK_SET_CUSTOM(stackp, var, (stackp)->usedi)
+#  define GENERICSTACK_PUSH_CUSTOMP(stackp, var)              GENERICSTACK_SET_CUSTOMP(stackp, var, (stackp)->usedi)
 #endif
-#define GENERICSTACK_PUSH_NA(stackp)                          GENERICSTACK_SET_NA(stackp, (stackp)->usedl)
+#define GENERICSTACK_PUSH_NA(stackp)                          GENERICSTACK_SET_NA(stackp, (stackp)->usedi)
 
 /* ====================================================================== */
 /* POP interface: built on top GET                                        */
 /* ====================================================================== */
-#define GENERICSTACK_POP_CHAR(stackp)                         GENERICSTACK_GET_CHAR(stackp, --(stackp)->usedl)
-#define GENERICSTACK_POP_SHORT(stackp)                        GENERICSTACK_GET_SHORT(stackp, --(stackp)->usedl)
-#define GENERICSTACK_POP_INT(stackp)                          GENERICSTACK_GET_INT(stackp, --(stackp)->usedl)
-#define GENERICSTACK_POP_LONG(stackp)                         GENERICSTACK_GET_LONG(stackp, --(stackp)->usedl)
-#define GENERICSTACK_POP_LONG_DOUBLE(stackp)                  GENERICSTACK_GET_LONG_DOUBLE(stackp, --(stackp)->usedl)
-#define GENERICSTACK_POP_FLOAT(stackp)                        GENERICSTACK_GET_FLOAT(stackp, --(stackp)->usedl)
-#define GENERICSTACK_POP_DOUBLE(stackp)                       GENERICSTACK_GET_DOUBLE(stackp, --(stackp)->usedl)
-#define GENERICSTACK_POP_PTR(stackp)                          GENERICSTACK_GET_PTR(stackp, --(stackp)->usedl)
-#define GENERICSTACK_POP_ARRAY(stackp)                        GENERICSTACK_GET_ARRAY(stackp,--(stackp)->usedl)
+#define GENERICSTACK_POP_CHAR(stackp)                         GENERICSTACK_GET_CHAR(stackp, --(stackp)->usedi)
+#define GENERICSTACK_POP_SHORT(stackp)                        GENERICSTACK_GET_SHORT(stackp, --(stackp)->usedi)
+#define GENERICSTACK_POP_INT(stackp)                          GENERICSTACK_GET_INT(stackp, --(stackp)->usedi)
+#define GENERICSTACK_POP_LONG(stackp)                         GENERICSTACK_GET_LONG(stackp, --(stackp)->usedi)
+#define GENERICSTACK_POP_LONG_DOUBLE(stackp)                  GENERICSTACK_GET_LONG_DOUBLE(stackp, --(stackp)->usedi)
+#define GENERICSTACK_POP_FLOAT(stackp)                        GENERICSTACK_GET_FLOAT(stackp, --(stackp)->usedi)
+#define GENERICSTACK_POP_DOUBLE(stackp)                       GENERICSTACK_GET_DOUBLE(stackp, --(stackp)->usedi)
+#define GENERICSTACK_POP_PTR(stackp)                          GENERICSTACK_GET_PTR(stackp, --(stackp)->usedi)
+#define GENERICSTACK_POP_ARRAY(stackp)                        GENERICSTACK_GET_ARRAY(stackp,--(stackp)->usedi)
 #if GENERICSTACK_HAVE_LONG_LONG > 0
-#  define GENERICSTACK_POP_LONG_LONG(stackp)                  GENERICSTACK_GET_LONG_LONG(stackp, --(stackp)->usedl)
+#  define GENERICSTACK_POP_LONG_LONG(stackp)                  GENERICSTACK_GET_LONG_LONG(stackp, --(stackp)->usedi)
 #endif
 #if GENERICSTACK_HAVE__BOOL > 0
-#  define GENERICSTACK_POP__BOOL(stackp)                      GENERICSTACK_GET__BOOL(stackp, --(stackp)->usedl)
+#  define GENERICSTACK_POP__BOOL(stackp)                      GENERICSTACK_GET__BOOL(stackp, --(stackp)->usedi)
 #endif
 #if GENERICSTACK_HAVE__COMPLEX > 0
-#  define GENERICSTACK_POP_FLOAT__COMPLEX(stackp)             GENERICSTACK_GET_FLOAT__COMPLEX(stackp, --(stackp)->usedl)
-#  define GENERICSTACK_POP_DOUBLE__COMPLEX(stackp)            GENERICSTACK_GET_DOUBLE__COMPLEX(stackp, --(stackp)->usedl)
-#  define GENERICSTACK_POP_LONG_DOUBLE__COMPLEX(stackp)       GENERICSTACK_GET_LONG_DOUBLE__COMPLEX(stackp, --(stackp)->usedl)
+#  define GENERICSTACK_POP_FLOAT__COMPLEX(stackp)             GENERICSTACK_GET_FLOAT__COMPLEX(stackp, --(stackp)->usedi)
+#  define GENERICSTACK_POP_DOUBLE__COMPLEX(stackp)            GENERICSTACK_GET_DOUBLE__COMPLEX(stackp, --(stackp)->usedi)
+#  define GENERICSTACK_POP_LONG_DOUBLE__COMPLEX(stackp)       GENERICSTACK_GET_LONG_DOUBLE__COMPLEX(stackp, --(stackp)->usedi)
 #endif
 #if GENERICSTACK_HAVE_CUSTOM > 0
-#  define GENERICSTACK_POP_CUSTOM(stackp)                     GENERICSTACK_GET_CUSTOM(stackp, --(stackp)->usedl)
+#  define GENERICSTACK_POP_CUSTOM(stackp)                     GENERICSTACK_GET_CUSTOM(stackp, --(stackp)->usedi)
 #endif
-#define GENERICSTACK_POP_NA(stackp)                           GENERICSTACK_GET_NA(stackp, --(stackp)->usedl)
+#define GENERICSTACK_POP_NA(stackp)                           GENERICSTACK_GET_NA(stackp, --(stackp)->usedi)
 
 /* ====================================================================== */
 /* Memory release                                                         */
@@ -756,7 +757,7 @@ static GENERICSTACK_INLINE short _GENERICSTACK_SET_NA(genericStack_t *stackp, si
 /* ====================================================================== */
 /* IS interface                                                           */
 /* ====================================================================== */
-#define GENERICSTACK_EXISTS(stackp, i) (((stackp) != NULL) && ((stackp)->usedl > i))
+#define GENERICSTACK_EXISTS(stackp, i) (((stackp) != NULL) && ((stackp)->usedi > i))
 #define GENERICSTACK_IS_NA(stackp, i) (GENERICSTACK_EXISTS(stackp, i) && (GENERICSTACKITEMTYPE((stackp), (i)) == GENERICSTACKITEMTYPE_NA))
 #define GENERICSTACK_IS_CHAR(stackp, i) (GENERICSTACK_EXISTS(stackp, i) && (GENERICSTACKITEMTYPE((stackp), (i)) == GENERICSTACKITEMTYPE_CHAR))
 #define GENERICSTACK_IS_SHORT(stackp, i) (GENERICSTACK_EXISTS(stackp, i) && (GENERICSTACKITEMTYPE((stackp), (i)) == GENERICSTACKITEMTYPE_SHORT))
@@ -791,50 +792,50 @@ static GENERICSTACK_INLINE short _GENERICSTACK_SET_NA(genericStack_t *stackp, si
 #define _GENERICSTACK_DUMP_CASE_CUSTOM(stackp,indice)
 #endif
 #define GENERICSTACK_DUMP(stackp) do {                                  \
-    size_t _i_for_dump;							\
+    int _i_for_dump;							\
     fprintf(stderr, "GENERIC STACK DUMP\n");				\
     fprintf(stderr, "------------------\n");				\
     fprintf(stderr, "Items                     : %p\n", stackp->items); \
     fprintf(stderr, "Heap items                : %p\n", stackp->heapItems); \
-    fprintf(stderr, "Initial Length            : %ld\n", (unsigned long) GENERICSTACK_INITIAL_LENGTH(stackp)); \
-    fprintf(stderr, "Heap Length               : %ld\n", (unsigned long) GENERICSTACK_HEAP_LENGTH(stackp)); \
-    fprintf(stderr, "Length                    : %ld\n", (unsigned long) GENERICSTACK_LENGTH(stackp)); \
-    fprintf(stderr, "Used:                     : %ld\n", (unsigned long) GENERICSTACK_USED(stackp)); \
+    fprintf(stderr, "Initial Length            : %d\n", GENERICSTACK_INITIAL_LENGTH(stackp)); \
+    fprintf(stderr, "Heap Length               : %d\n", GENERICSTACK_HEAP_LENGTH(stackp)); \
+    fprintf(stderr, "Length                    : %d\n", GENERICSTACK_LENGTH(stackp)); \
+    fprintf(stderr, "Used:                     : %d\n", GENERICSTACK_USED(stackp)); \
     fprintf(stderr, "Error?                    : %s\n", GENERICSTACK_ERROR(stackp) ? "yes" : "no"); \
     for (_i_for_dump = 0; _i_for_dump < GENERICSTACK_USED(stackp); _i_for_dump++) { \
       switch(GENERICSTACKITEMTYPE(stackp, _i_for_dump)) {		\
       case GENERICSTACKITEMTYPE_NA:					\
-	fprintf(stderr, "Element[%3ld/%3ld] type     : NA\n", (unsigned long) _i_for_dump, (unsigned long) GENERICSTACK_USED(stackp));	\
+	fprintf(stderr, "Element[%3d/%3d] type     : NA\n", _i_for_dump, GENERICSTACK_USED(stackp));	\
 	break;								\
       case GENERICSTACKITEMTYPE_CHAR:					\
-	fprintf(stderr, "Element[%3ld/%3ld] type     : CHAR\n", (unsigned long) _i_for_dump, (unsigned long) GENERICSTACK_USED(stackp)); \
+	fprintf(stderr, "Element[%3d/%3d] type     : CHAR\n", _i_for_dump, GENERICSTACK_USED(stackp)); \
 	break;								\
       case GENERICSTACKITEMTYPE_SHORT:					\
-	fprintf(stderr, "Element[%3ld/%3ld] type     : SHORT\n", (unsigned long) _i_for_dump, (unsigned long) GENERICSTACK_USED(stackp)); \
+	fprintf(stderr, "Element[%3d/%3d] type     : SHORT\n", _i_for_dump, GENERICSTACK_USED(stackp)); \
 	break;								\
       case GENERICSTACKITEMTYPE_INT:					\
-	fprintf(stderr, "Element[%3ld/%3ld] type     : INT\n", (unsigned long) _i_for_dump, (unsigned long) GENERICSTACK_USED(stackp)); \
+	fprintf(stderr, "Element[%3d/%3d] type     : INT\n", _i_for_dump, GENERICSTACK_USED(stackp)); \
 	break;								\
       case GENERICSTACKITEMTYPE_LONG:					\
-	fprintf(stderr, "Element[%3ld/%3ld] type     : LONG\n", (unsigned long) _i_for_dump, (unsigned long) GENERICSTACK_USED(stackp)); \
+	fprintf(stderr, "Element[%3d/%3d] type     : LONG\n", _i_for_dump, GENERICSTACK_USED(stackp)); \
 	break;								\
       case GENERICSTACKITEMTYPE_FLOAT:					\
-	fprintf(stderr, "Element[%3ld/%3ld] type     : FLOAT\n", (unsigned long) _i_for_dump, (unsigned long) GENERICSTACK_USED(stackp)); \
+	fprintf(stderr, "Element[%3d/%3d] type     : FLOAT\n", _i_for_dump, GENERICSTACK_USED(stackp)); \
 	break;								\
       case GENERICSTACKITEMTYPE_DOUBLE:					\
-	fprintf(stderr, "Element[%3ld/%3ld] type     : DOUBLE\n", (unsigned long) _i_for_dump, (unsigned long) GENERICSTACK_USED(stackp)); \
+	fprintf(stderr, "Element[%3d/%3d] type     : DOUBLE\n", _i_for_dump, GENERICSTACK_USED(stackp)); \
 	break;								\
       case GENERICSTACKITEMTYPE_PTR:					\
-	fprintf(stderr, "Element[%3ld/%3ld] type     : PTR\n", (unsigned long) _i_for_dump, (unsigned long) GENERICSTACK_USED(stackp)); \
+	fprintf(stderr, "Element[%3d/%3d] type     : PTR\n", _i_for_dump, GENERICSTACK_USED(stackp)); \
 	break;								\
       case GENERICSTACKITEMTYPE_ARRAY:					\
-	fprintf(stderr, "Element[%3ld/%3ld] type     : ARRAY\n", (unsigned long) _i_for_dump, (unsigned long) GENERICSTACK_USED(stackp)); \
+	fprintf(stderr, "Element[%3d/%3d] type     : ARRAY\n", _i_for_dump, GENERICSTACK_USED(stackp)); \
 	break;								\
       case GENERICSTACKITEMTYPE_LONG_DOUBLE:                            \
-	fprintf(stderr, "Element[%3ld/%3ld] type     : LONG DOUBLE\n", (unsigned long) _i_for_dump, (unsigned long) GENERICSTACK_USED(stackp)); \
+	fprintf(stderr, "Element[%3d/%3d] type     : LONG DOUBLE\n", _i_for_dump, GENERICSTACK_USED(stackp)); \
 	break;								\
       default:								\
-	fprintf(stderr, "Element[%3ld/%3ld] type     : %d\n", (unsigned long) _i_for_dump, (unsigned long) GENERICSTACK_USED(stackp), GENERICSTACKITEMTYPE(stackp, _i_for_dump)); \
+	fprintf(stderr, "Element[%3d/%3d] type     : %d\n", _i_for_dump, GENERICSTACK_USED(stackp), GENERICSTACKITEMTYPE(stackp, _i_for_dump)); \
 	break;								\
         _GENERICSTACK_DUMP_CASE_CUSTOM(stackp,_i_for_dump)           \
       }									\
@@ -850,14 +851,14 @@ static GENERICSTACK_INLINE short _GENERICSTACK_SET_NA(genericStack_t *stackp, si
     int _genericStackSwitch_index2 = (int) (i2);                        \
                                                                         \
     if (_genericStackSwitch_index1 < 0) {                               \
-      _genericStackSwitch_index1 = (stackp)->usedl + _genericStackSwitch_index1; \
+      _genericStackSwitch_index1 = (stackp)->usedi + _genericStackSwitch_index1; \
     }                                                                   \
     if (_genericStackSwitch_index2 < 0) {                               \
-      _genericStackSwitch_index2 = (stackp)->usedl + _genericStackSwitch_index2; \
+      _genericStackSwitch_index2 = (stackp)->usedi + _genericStackSwitch_index2; \
     }                                                                   \
                                                                         \
-    if ((_genericStackSwitch_index1 < 0) || ((_genericStackSwitch_index1) >= (stackp)->usedl) || \
-        (_genericStackSwitch_index2 < 0) || ((_genericStackSwitch_index2) >= (stackp)->usedl)) { \
+    if ((_genericStackSwitch_index1 < 0) || ((_genericStackSwitch_index1) >= (stackp)->usedi) || \
+        (_genericStackSwitch_index2 < 0) || ((_genericStackSwitch_index2) >= (stackp)->usedi)) { \
       (stackp)->errori = 1;                                          \
       errno = EINVAL;                                                   \
     } else if (_genericStackSwitch_index1 != _genericStackSwitch_index2) { \
