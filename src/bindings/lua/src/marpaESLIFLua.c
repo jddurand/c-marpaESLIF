@@ -6210,8 +6210,12 @@ static int marpaESLIFLua_marpaESLIFRecognizer_symbolTryi(lua_State *L)
   marpaESLIFLuaSymbolContext_t     *marpaESLIFLuaSymbolContextp;
   int                               typei;
   short                             matchb;
-  char                             *bytep;
-  size_t                            bytel;
+  short                             rci;
+  marpaESLIFValueResultArray_t      marpaESLIFValueResultArray;
+
+  marpaESLIFValueResultArray.p        = NULL;
+  marpaESLIFValueResultArray.sizel    = 0;
+  marpaESLIFValueResultArray.shallowb = 0;
 
   if (lua_gettop(L) != 2) {
     marpaESLIFLua_luaL_error(L, "Usage: marpaESLIFRecognizer_symbol_tryb(marpaESLIFRecognizerp, marpaESLIFSymbolp)");
@@ -6236,21 +6240,29 @@ static int marpaESLIFLua_marpaESLIFRecognizer_symbolTryi(lua_State *L)
   if (! marpaESLIFLua_lua_touserdata((void **) &marpaESLIFLuaSymbolContextp, L, -1)) goto err;
   if (! marpaESLIFLua_lua_pop(L, 1)) goto err;
 
-  if (! marpaESLIFRecognizer_symbol_tryb(marpaESLIFLuaRecognizerContextp->marpaESLIFRecognizerp, marpaESLIFLuaSymbolContextp->marpaESLIFSymbolp, &matchb, &bytep, &bytel)) {
+  if (! marpaESLIFRecognizer_symbol_tryb(marpaESLIFLuaRecognizerContextp->marpaESLIFRecognizerp, marpaESLIFLuaSymbolContextp->marpaESLIFSymbolp, &matchb, &marpaESLIFValueResultArray)) {
     marpaESLIFLua_luaL_errorf(L, "marpaESLIFRecognizer_symbol_tryb failure, %s", strerror(errno));
     goto err;
   }
 
   if (matchb) {
-    if (! marpaESLIFLua_lua_pushlstring(NULL, L, (const char *) bytep, bytel)) goto err;
+    if (! marpaESLIFLua_lua_pushlstring(NULL, L, (const char *) marpaESLIFValueResultArray.p, marpaESLIFValueResultArray.sizel)) goto err;
+    marpaESLIFValueResultArray.p = NULL;
   } else {
     if (! marpaESLIFLua_lua_pushnil(L)) goto err;
   }
 
-  return 1;
+  rci = 1;
+  goto done;
 
  err:
-  return 0;
+  rci = 0;
+
+ done:
+  if ((! marpaESLIFValueResultArray.shallowb) && (marpaESLIFValueResultArray.p != NULL)) {
+    free(marpaESLIFValueResultArray.p);
+  }
+  return rci;
 }
 
 #ifdef MARPAESLIFLUA_EMBEDDED
@@ -9068,8 +9080,12 @@ static int marpaESLIFLua_marpaESLIFSymbol_tryi(lua_State *L)
   char                             *inputs;
   size_t                            inputl;
   short                             matchb;
-  char                             *bytep;
-  size_t                            bytel;
+  short                             rci;
+  marpaESLIFValueResultArray_t      marpaESLIFValueResultArray;
+
+  marpaESLIFValueResultArray.p        = NULL;
+  marpaESLIFValueResultArray.sizel    = 0;
+  marpaESLIFValueResultArray.shallowb = 0;
 
   if (! marpaESLIFLua_lua_gettop(&topi, L)) goto err;
   if (topi != 2) {
@@ -9098,21 +9114,29 @@ static int marpaESLIFLua_marpaESLIFSymbol_tryi(lua_State *L)
 
   if (! marpaESLIFLua_lua_pop(L, 2)) goto err;
 
-  if (! marpaESLIFSymbol_tryb(marpaESLIFSymbolp, inputs, inputl, &matchb, &bytep, &bytel)) {
+  if (! marpaESLIFSymbol_tryb(marpaESLIFSymbolp, inputs, inputl, &matchb, &marpaESLIFValueResultArray)) {
     marpaESLIFLua_luaL_errorf(L, "marpaESLIFSymbol_tryb failure, %s", strerror(errno));
     goto err;
   }
 
   if (matchb) {
-    if (! marpaESLIFLua_lua_pushnil(L)) goto err;
+    if (! marpaESLIFLua_lua_pushlstring(NULL, L, (const char *) marpaESLIFValueResultArray.p, marpaESLIFValueResultArray.sizel)) goto err;
+    marpaESLIFValueResultArray.p = NULL;
   } else {
-    if (! marpaESLIFLua_lua_pushlstring(NULL, L, (const char *) bytep, bytel)) goto err;
+    if (! marpaESLIFLua_lua_pushnil(L)) goto err;
   }
 
-  return 1;
+  rci = 1;
+  goto done;
 
  err:
-  return 0;
+  rci = 0;
+
+ done:
+  if ((! marpaESLIFValueResultArray.shallowb) && (marpaESLIFValueResultArray.p != NULL)) {
+    free(marpaESLIFValueResultArray.p);
+  }
+  return rci;
 }
 
 /****************************************************************************/

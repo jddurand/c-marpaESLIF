@@ -4384,7 +4384,7 @@ static short _marpaESLIF_bootstrap_G1_action_priority_ruleb(void *userDatavp, ma
 static short _marpaESLIF_bootstrap_G1_action_single_symbol_1b(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb)
 /*****************************************************************************/
 {
-  /* <single symbol> ::= symbol */
+  /* <single symbol> ::= <symbol> */
   marpaESLIF_bootstrap_single_symbol_t *singleSymbolp = NULL;
   marpaESLIF_t                         *marpaESLIFp   = marpaESLIFValuep->marpaESLIFp; /* marpaESLIFGrammar_eslifp(marpaESLIFRecognizer_grammarp(marpaESLIFValue_recognizerp(marpaESLIFValuep))); */
   marpaESLIF_bootstrap_symbol_t        *symbolp       = NULL;
@@ -4430,7 +4430,7 @@ static short _marpaESLIF_bootstrap_G1_action_single_symbol_1b(void *userDatavp, 
 static short _marpaESLIF_bootstrap_G1_action_single_symbol_2b(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb)
 /*****************************************************************************/
 {
-  /* <single symbol> ::= terminal */
+  /* <single symbol> ::= <terminal> */
   marpaESLIF_bootstrap_single_symbol_t *singleSymbolp = NULL;
   marpaESLIF_t                         *marpaESLIFp   = marpaESLIFValuep->marpaESLIFp; /* marpaESLIFGrammar_eslifp(marpaESLIFRecognizer_grammarp(marpaESLIFValue_recognizerp(marpaESLIFValuep))); */
   marpaESLIF_bootstrap_terminal_t      *terminalp     = NULL;
@@ -4582,7 +4582,7 @@ static short _marpaESLIF_bootstrap_G1_action_terminal_3b(void *userDatavp, marpa
   void                             *bytep                 = NULL;
   size_t                            bytel;
   short                             shallowb              = 0;
-  void                             *tmpp;
+  char                             *tmps;
   marpaESLIFGrammar_t               marpaESLIFGrammar; /* Fake grammar for the same reason */
   marpaESLIFValueResult_t           marpaESLIFValueResult;
   size_t                            sizel;
@@ -4605,13 +4605,14 @@ static short _marpaESLIF_bootstrap_G1_action_terminal_3b(void *userDatavp, marpa
 
   /* Duplicate bytep if it is shallow */
   if (shallowb) {
-    tmpp = malloc(bytel);
-    if (tmpp == NULL) {
+    tmps = (char *) malloc(bytel + 1);
+    if (tmps == NULL) {
       MARPAESLIF_ERRORF(marpaESLIFp, "malloc failure, %s", strerror(errno));
       goto err;
     }
-    memcpy(tmpp, bytep, bytel);
-    bytep = tmpp;
+    memcpy(tmps, bytep, bytel);
+    tmps[bytel] = '\0';
+    bytep = tmps;
     shallowb = 0;
   }
   /* Fake a recognizer. EOF flag will be set automatically in fake mode */
@@ -4643,9 +4644,6 @@ static short _marpaESLIF_bootstrap_G1_action_terminal_3b(void *userDatavp, marpa
   if (rci == MARPAESLIF_MATCH_OK) {
     /* Got modifiers. Per def this is an sequence of ASCII characters. */
     /* For a character class it is something like ":xxxxx" */
-    /* We made sure that terminal_matcherb() always returns in marpaESLIFValueResult */
-    /* an array already malloced, ending with a hiden NUL byte. So we can take this */
-    /* memory as-is. */
 #ifndef MARPAESLIF_NTRACE
     /* Paranoid test */
     if (marpaESLIFValueResult.u.a.sizel <= 0) {
@@ -4653,7 +4651,18 @@ static short _marpaESLIF_bootstrap_G1_action_terminal_3b(void *userDatavp, marpa
       goto err;
     }
 #endif
-    modifiers = (char *) marpaESLIFValueResult.u.a.p;
+    /* We want to maintain marpaESLIFValueResult lifetime, so need to unshallow the result of the INTERNAL method _marpaESLIFRecognizer_terminal_matcherb() if necessary */
+    if (marpaESLIFValueResult.u.a.shallowb) {
+      modifiers = (char *) malloc(marpaESLIFValueResult.u.a.sizel + 1);
+      if (modifiers == NULL) {
+        MARPAESLIF_ERRORF(marpaESLIFp, "malloc failure, %s", strerror(errno));
+        goto err;
+      }
+      memcpy(modifiers, marpaESLIFValueResult.u.a.p, marpaESLIFValueResult.u.a.sizel);
+      modifiers[marpaESLIFValueResult.u.a.sizel] = '\0';
+    } else {
+      modifiers = (char *) marpaESLIFValueResult.u.a.p;
+    }
     sizel = marpaESLIFValueResult.u.a.sizel;
   } else {
     /* Because we use this value just below */
@@ -6817,12 +6826,13 @@ static short _marpaESLIF_bootstrap_G1_action_namingb(void *userDatavp, marpaESLI
 
   /* Duplicate bytep if it is shallow */
   if (shallowb) {
-    namingp->bytep     = malloc(bytel);
+    namingp->bytep     = malloc(bytel + 1);
     if (namingp->bytep == NULL) {
       MARPAESLIF_ERRORF(marpaESLIFp, "malloc failure, %s", strerror(errno));
       goto err;
     }
     memcpy(namingp->bytep, bytep, bytel);
+    namingp->bytep[bytel] = '\0';
   } else {
     namingp->bytep     = bytep;
     bytep = NULL; /* Prevent free() */
@@ -7036,9 +7046,6 @@ static inline marpaESLIF_bootstrap_utf_string_t *_marpaESLIF_bootstrap_regex_to_
   if (rci == MARPAESLIF_MATCH_OK) {
     /* Got modifiers. Per def this is an sequence of ASCII characters. */
     /* For a regular expression it is something like "xxxxx" */
-    /* We made sure that terminal_matcherb() always returns in marpaESLIFValueResult */
-    /* an area already malloc, ending with a hiden NUL byte. So we can take this */
-    /* memory as-is. */
 #ifndef MARPAESLIF_NTRACE
     /* Paranoid mode */
     if (marpaESLIFValueResult.u.a.sizel <= 0) {
@@ -7046,7 +7053,18 @@ static inline marpaESLIF_bootstrap_utf_string_t *_marpaESLIF_bootstrap_regex_to_
       goto err;
     }
 #endif
-    modifiers = (char *) marpaESLIFValueResult.u.a.p;
+    /* We want to maintain marpaESLIFValueResult lifetime, so need to unshallow the result of the INTERNAL method _marpaESLIFRecognizer_terminal_matcherb() if necessary */
+    if (marpaESLIFValueResult.u.a.shallowb) {
+      modifiers = (char *) malloc(marpaESLIFValueResult.u.a.sizel + 1);
+      if (modifiers == NULL) {
+        MARPAESLIF_ERRORF(marpaESLIFp, "malloc failure, %s", strerror(errno));
+        goto err;
+      }
+      memcpy(modifiers, marpaESLIFValueResult.u.a.p, marpaESLIFValueResult.u.a.sizel);
+      modifiers[marpaESLIFValueResult.u.a.sizel] = '\0';
+    } else {
+      modifiers = (char *) marpaESLIFValueResult.u.a.p;
+    }
     sizel = marpaESLIFValueResult.u.a.sizel;
   } else {
     /* Because we use this value just below */
@@ -7116,6 +7134,7 @@ static inline marpaESLIF_bootstrap_utf_string_t *_marpaESLIF_bootstrap_character
   marpaESLIFValueResult_t            marpaESLIFValueResult;
   size_t                             sizel;
   marpaESLIF_matcher_value_t         rci;
+  char                              *tmps;
   void                              *dupp;
   size_t                             dupl;
 
@@ -7126,12 +7145,14 @@ static inline marpaESLIF_bootstrap_utf_string_t *_marpaESLIF_bootstrap_character
   }
 
   /* Duplicate bytep in any case */
-  dupp = malloc(bytel);
-  if (dupp == NULL) {
+  tmps = (char *) malloc(bytel + 1);
+  if (tmps == NULL) {
     MARPAESLIF_ERRORF(marpaESLIFp, "malloc failure, %s", strerror(errno));
     goto err;
   }
-  memcpy(dupp, bytep, bytel);
+  memcpy(tmps, bytep, bytel);
+  tmps[bytel] = '\0';
+  dupp = tmps;
   dupl = bytel;
 
   /* Extract options from it */
@@ -7170,9 +7191,6 @@ static inline marpaESLIF_bootstrap_utf_string_t *_marpaESLIF_bootstrap_character
   if (rci == MARPAESLIF_MATCH_OK) {
     /* Got modifiers. Per def this is an sequence of ASCII characters. */
     /* For a character class it is something like ":xxxxx" */
-    /* We made sure that terminal_matcherb() always returns in marpaESLIFValueResult */
-    /* an area already malloc, ending with a hiden NUL byte. So we can take this */
-    /* memory as-is. */
 #ifndef MARPAESLIF_NTRACE
     /* Paranoid mode */
     if (marpaESLIFValueResult.u.a.sizel <= 0) {
@@ -7180,7 +7198,18 @@ static inline marpaESLIF_bootstrap_utf_string_t *_marpaESLIF_bootstrap_character
       goto err;
     }
 #endif
-    modifiers = (char *) marpaESLIFValueResult.u.a.p;
+    /* We want to maintain marpaESLIFValueResult lifetime, so need to unshallow the result of the INTERNAL method _marpaESLIFRecognizer_terminal_matcherb() if necessary */
+    if (marpaESLIFValueResult.u.a.shallowb) {
+      modifiers = (char *) malloc(marpaESLIFValueResult.u.a.sizel + 1);
+      if (modifiers == NULL) {
+        MARPAESLIF_ERRORF(marpaESLIFp, "malloc failure, %s", strerror(errno));
+        goto err;
+      }
+      memcpy(modifiers, marpaESLIFValueResult.u.a.p, marpaESLIFValueResult.u.a.sizel);
+      modifiers[marpaESLIFValueResult.u.a.sizel] = '\0';
+    } else {
+      modifiers = (char *) marpaESLIFValueResult.u.a.p;
+    }
     sizel = marpaESLIFValueResult.u.a.sizel;
   } else {
     /* Because we use this value just below */
@@ -7442,12 +7471,13 @@ static short _marpaESLIF_bootstrap_G1_action_luascript_statementb(void *userData
     if (marpaESLIFGrammarp->luabytep == NULL) {
       /* First time: duplicate luabytep if it is shallow */
       if (shallowb) {
-        marpaESLIFGrammarp->luabytep = (char *) malloc(luabytel);
+        marpaESLIFGrammarp->luabytep = (char *) malloc(luabytel + 1);
         if (marpaESLIFGrammarp->luabytep == NULL) {
           MARPAESLIF_ERRORF(marpaESLIFp, "malloc failure, %s", strerror(errno));
           goto err;
         }
         memcpy(marpaESLIFGrammarp->luabytep, luabytep, luabytel);
+        marpaESLIFGrammarp->luabytep[luabytel] = '\0';
       } else {
         marpaESLIFGrammarp->luabytep = luabytep;
         marpaESLIFGrammarp->luabytel = luabytel;
@@ -7740,7 +7770,7 @@ static short _marpaESLIF_bootstrap_G1_action_defaultencodingb(void *userDatavp, 
     goto err;
   }
 
-  /* <default encoding name> is an ASCII string  */
+  /* <default encoding name> is an ASCII string, guaranteed to NUL terminated as per the doc  */
   MARPAESLIF_BOOTSTRAP_GETANDFORGET_ASCII(marpaESLIFValuep, argni, defaultEncodings, shallowb);
   /* It is a non-sense to not have no action in this case */
   if (defaultEncodings == NULL) {

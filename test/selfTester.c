@@ -317,10 +317,9 @@ int main() {
   marpaESLIFSymbol_t          *stringSymbolp = NULL;
   marpaESLIFSymbol_t          *regexSymbolp = NULL;
   marpaESLIFString_t           string;
-  char                        *bytep;
-  size_t                       bytel;
   marpaESLIFRecognizer_t      *marpaESLIFRecognizerp = NULL;
   short                        matchb;
+  marpaESLIFValueResultArray_t marpaESLIFValueResultArray;
 
   genericLoggerp = GENERICLOGGER_NEW(GENERICLOGGER_LOGLEVEL_TRACE);
 
@@ -466,36 +465,64 @@ int main() {
     goto err;
   }
 
-  if (! marpaESLIFRecognizer_symbol_tryb(marpaESLIFRecognizerp, stringSymbolp, &matchb, &bytep, &bytel)) {
+  if (! marpaESLIFRecognizer_symbol_tryb(marpaESLIFRecognizerp, stringSymbolp, &matchb, &marpaESLIFValueResultArray)) {
     goto err;
   }
   if (matchb) {
-    GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "String symbol match on: %s", bytep);
-    free(bytep);
+    if (marpaESLIFValueResultArray.p == NULL) {
+      GENERICLOGGER_INFO(marpaESLIFOption.genericLoggerp, "Recognizer's string symbol match but marpaESLIFValueResultArray.p is NULL");
+      goto err;
+    } else {
+      GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "Recognizer's string symbol match for \"%s\" on %ld bytes", STRING, (unsigned long) marpaESLIFValueResultArray.sizel);
+      if ((! marpaESLIFValueResultArray.shallowb) && (marpaESLIFValueResultArray.p != NULL)) {
+        free(marpaESLIFValueResultArray.p);
+      }
+    }
   }
 
-  if (! marpaESLIFRecognizer_symbol_tryb(marpaESLIFRecognizerp, regexSymbolp, &matchb, &bytep, &bytel)) {
+  if (! marpaESLIFRecognizer_symbol_tryb(marpaESLIFRecognizerp, regexSymbolp, &matchb, &marpaESLIFValueResultArray)) {
     goto err;
   }
   if (matchb) {
-    GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "Regex symbol match on: %s", bytep);
-    free(bytep);
+    if (marpaESLIFValueResultArray.p == NULL) {
+      GENERICLOGGER_INFO(marpaESLIFOption.genericLoggerp, "Recognizer's regex symbol match but marpaESLIFValueResultArray.p is NULL");
+      goto err;
+    } else {
+      GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "Recognizer's regex symbol match for \"%s\" on %ld bytes", REGEX, (unsigned long) marpaESLIFValueResultArray.sizel);
+      if ((! marpaESLIFValueResultArray.shallowb) && (marpaESLIFValueResultArray.p != NULL)) {
+        free(marpaESLIFValueResultArray.p);
+      }
+    }
   }
 
-  if (! marpaESLIFSymbol_tryb(stringSymbolp, STRING, strlen(STRING), &matchb, &bytep, &bytel)) {
+  if (! marpaESLIFSymbol_tryb(stringSymbolp, STRING, strlen(STRING), &matchb, &marpaESLIFValueResultArray)) {
     goto err;
   }
   if (matchb) {
-    GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "String symbol match on: %s", bytep);
-    free(bytep);
+    if (marpaESLIFValueResultArray.p == NULL) {
+      GENERICLOGGER_INFO(marpaESLIFOption.genericLoggerp, "Symbol's string match but marpaESLIFValueResultArray.p is NULL");
+      goto err;
+    } else {
+      GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "Symbol's string match for \"%s\" on %ld bytes", STRING, (unsigned long) marpaESLIFValueResultArray.sizel);
+      if ((! marpaESLIFValueResultArray.shallowb) && (marpaESLIFValueResultArray.p != NULL)) {
+        free(marpaESLIFValueResultArray.p);
+      }
+    }
   }
 
-  if (! marpaESLIFSymbol_tryb(regexSymbolp, SUBJECT, strlen(SUBJECT), &matchb, &bytep, &bytel)) {
+  if (! marpaESLIFSymbol_tryb(regexSymbolp, SUBJECT, strlen(SUBJECT), &matchb, &marpaESLIFValueResultArray)) {
     goto err;
   }
   if (matchb) {
-    GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "Regex symbol match on: %s", SUBJECT);
-    free(bytep);
+    if (marpaESLIFValueResultArray.p == NULL) {
+      GENERICLOGGER_INFO(marpaESLIFOption.genericLoggerp, "Symbol's regex match but marpaESLIFValueResultArray.p is NULL");
+      goto err;
+    } else {
+      GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "Symbol's regex match for \"%s\" on %ld bytes", REGEX, (unsigned long) marpaESLIFValueResultArray.sizel);
+      if ((! marpaESLIFValueResultArray.shallowb) && (marpaESLIFValueResultArray.p != NULL)) {
+        free(marpaESLIFValueResultArray.p);
+      }
+    }
   }
 
   exiti = 0;

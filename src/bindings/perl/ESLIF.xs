@@ -4402,15 +4402,18 @@ try(p, Perl_inputp)
   SV *p;
   SV *Perl_inputp;
 PREINIT:
-  static const char *funcs = "MarpaX::ESLIF::Symbol::try";
+  static const char           *funcs = "MarpaX::ESLIF::Symbol::try";
 CODE:
-  MarpaX_ESLIF_Symbol_t *MarpaX_ESLIF_Symbolp = marpaESLIFPerl_engine(aTHX_ p);
-  char                  *inputs;
-  size_t                 inputl;
-  short                  matchb;
-  char                  *bytep;
-  size_t                 bytel;
-  int                    typei;
+  MarpaX_ESLIF_Symbol_t       *MarpaX_ESLIF_Symbolp = marpaESLIFPerl_engine(aTHX_ p);
+  char                        *inputs;
+  size_t                       inputl;
+  short                        matchb;
+  marpaESLIFValueResultArray_t marpaESLIFValueResultArray;
+  int                          typei;
+
+  marpaESLIFValueResultArray.p        = NULL;
+  marpaESLIFValueResultArray.sizel    = 0;
+  marpaESLIFValueResultArray.shallowb = 0;
 
   typei = marpaESLIFPerl_getTypei(aTHX_ Perl_inputp);
   if ((typei & SCALAR) != SCALAR) {
@@ -4418,11 +4421,14 @@ CODE:
   }
   inputs = SvPV(Perl_inputp, inputl);
 
-  if (! marpaESLIFSymbol_tryb(MarpaX_ESLIF_Symbolp->marpaESLIFSymbolp, inputs, inputl, &matchb, &bytep, &bytel)) {
+  if (! marpaESLIFSymbol_tryb(MarpaX_ESLIF_Symbolp->marpaESLIFSymbolp, inputs, inputl, &matchb, &marpaESLIFValueResultArray)) {
     MARPAESLIFPERL_CROAKF("marpaESLIF_symbol_tryb failure, %s", strerror(errno));
   }
 
-  RETVAL = matchb ? MARPAESLIFPERL_NEWSVPVN_UTF8((const char *) bytep, (STRLEN) bytel)  : &PL_sv_undef;
+  RETVAL = matchb ? MARPAESLIFPERL_NEWSVPVN_UTF8((const char *) marpaESLIFValueResultArray.p, (STRLEN) marpaESLIFValueResultArray.sizel)  : &PL_sv_undef;
+  if ((! marpaESLIFValueResultArray.shallowb) && (marpaESLIFValueResultArray.p != NULL)) {
+    free(marpaESLIFValueResultArray.p);
+  }
 OUTPUT:
   RETVAL
 
@@ -4599,19 +4605,25 @@ symbolTry(p1, p2)
   SV *p1;
   SV *p2;
 PREINIT:
-  static const char *funcs = "MarpaX::ESLIF::Recognizer::symbolTry";
+  static const char           *funcs = "MarpaX::ESLIF::Recognizer::symbolTry";
 CODE:
-  MarpaX_ESLIF_Recognizer_t *MarpaX_ESLIF_Recognizerp = marpaESLIFPerl_engine(aTHX_ p1);
-  MarpaX_ESLIF_Symbol_t     *MarpaX_ESLIF_Symbolp     = marpaESLIFPerl_engine(aTHX_ p2);
-  short                      matchb;
-  char                      *bytep;
-  size_t                     bytel;
+  MarpaX_ESLIF_Recognizer_t   *MarpaX_ESLIF_Recognizerp = marpaESLIFPerl_engine(aTHX_ p1);
+  MarpaX_ESLIF_Symbol_t       *MarpaX_ESLIF_Symbolp     = marpaESLIFPerl_engine(aTHX_ p2);
+  short                        matchb;
+  marpaESLIFValueResultArray_t marpaESLIFValueResultArray;
 
-  if (! marpaESLIFRecognizer_symbol_tryb(MarpaX_ESLIF_Recognizerp->marpaESLIFRecognizerp, MarpaX_ESLIF_Symbolp->marpaESLIFSymbolp, &matchb, &bytep, &bytel)) {
+  marpaESLIFValueResultArray.p        = NULL;
+  marpaESLIFValueResultArray.sizel    = 0;
+  marpaESLIFValueResultArray.shallowb = 0;
+
+  if (! marpaESLIFRecognizer_symbol_tryb(MarpaX_ESLIF_Recognizerp->marpaESLIFRecognizerp, MarpaX_ESLIF_Symbolp->marpaESLIFSymbolp, &matchb, &marpaESLIFValueResultArray)) {
     MARPAESLIFPERL_CROAKF("marpaESLIFRecognizer_symbol_tryb failure, %s", strerror(errno));
   }
 
-  RETVAL = matchb ? MARPAESLIFPERL_NEWSVPVN_UTF8((const char *) bytep, (STRLEN) bytel)  : &PL_sv_undef;
+  RETVAL = matchb ? MARPAESLIFPERL_NEWSVPVN_UTF8((const char *) marpaESLIFValueResultArray.p, (STRLEN) marpaESLIFValueResultArray.sizel)  : &PL_sv_undef;
+  if ((! marpaESLIFValueResultArray.shallowb) && (marpaESLIFValueResultArray.p != NULL)) {
+    free(marpaESLIFValueResultArray.p);
+  }
 OUTPUT:
   RETVAL
 

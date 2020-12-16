@@ -3961,13 +3961,16 @@ JNIEXPORT void JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniProgressLog(JNIE
 JNIEXPORT jbyteArray JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniSymbolTry(JNIEnv *envp, jobject eslifRecognizerp, jobject eslifSymbolp)
 /*****************************************************************************/
 {
-  static const char      *funcs = "Java_org_parser_marpa_ESLIFRecognizer_jniSymbolTry";
-  marpaESLIFRecognizer_t *marpaESLIFRecognizerp;
-  marpaESLIFSymbol_t     *marpaESLIFSymbolp;
-  jbyteArray              byteArrayp = NULL;
-  short                   matchb;
-  char                   *bytep;
-  size_t                  bytel;
+  static const char           *funcs = "Java_org_parser_marpa_ESLIFRecognizer_jniSymbolTry";
+  marpaESLIFRecognizer_t      *marpaESLIFRecognizerp;
+  marpaESLIFSymbol_t          *marpaESLIFSymbolp;
+  jbyteArray                   byteArrayp = NULL;
+  short                        matchb;
+  marpaESLIFValueResultArray_t marpaESLIFValueResultArray;
+
+  marpaESLIFValueResultArray.p        = NULL;
+  marpaESLIFValueResultArray.sizel    = 0;
+  marpaESLIFValueResultArray.shallowb = 0;
 
   if (! ESLIFRecognizer_contextb(envp, eslifRecognizerp, &marpaESLIFRecognizerp, NULL /* marpaESLIFRecognizerContextpp */)) {
     goto err;
@@ -3977,16 +3980,16 @@ JNIEXPORT jbyteArray JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniSymbolTry(
     goto err;
   }
 
-  if (!  marpaESLIFRecognizer_symbol_tryb(marpaESLIFRecognizerp, marpaESLIFSymbolp, &matchb, &bytep, &bytel)) {
+  if (!  marpaESLIFRecognizer_symbol_tryb(marpaESLIFRecognizerp, marpaESLIFSymbolp, &matchb, &marpaESLIFValueResultArray)) {
     RAISEEXCEPTIONF(envp, "marpaESLIFRecognizer_symbol_tryb failure, %s", strerror(errno));
   }
 
   if (matchb) {
-    byteArrayp = (*envp)->NewByteArray(envp, (jsize) bytel);
+    byteArrayp = (*envp)->NewByteArray(envp, (jsize) marpaESLIFValueResultArray.sizel);
     if (byteArrayp == NULL) {
       goto err;
     }
-    (*envp)->SetByteArrayRegion(envp, byteArrayp, (jsize) 0, (jsize) bytel, (jbyte *) bytep);
+    (*envp)->SetByteArrayRegion(envp, byteArrayp, (jsize) 0, (jsize) marpaESLIFValueResultArray.sizel, (jbyte *) marpaESLIFValueResultArray.p);
     if (HAVEEXCEPTION(envp)) {
       goto err;
     }
@@ -4003,6 +4006,9 @@ JNIEXPORT jbyteArray JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniSymbolTry(
   byteArrayp = NULL;
 
  done:
+  if ((! marpaESLIFValueResultArray.shallowb) && (marpaESLIFValueResultArray.p != NULL)) {
+    free(marpaESLIFValueResultArray.p);
+  }
   return byteArrayp;
 }
 
@@ -7234,14 +7240,17 @@ JNIEXPORT void JNICALL Java_org_parser_marpa_ESLIFSymbol_jniFree(JNIEnv *envp, j
 JNIEXPORT jbyteArray JNICALL Java_org_parser_marpa_ESLIFSymbol_jniTest(JNIEnv *envp, jobject eslifSymbolp, jbyteArray jinputp)
 /*****************************************************************************/
 {
-  static const char  *funcs = "Java_org_parser_marpa_ESLIFSymbol_jniTest";
-  marpaESLIFSymbol_t *marpaESLIFSymbolp;
-  jbyteArray          byteArrayp = NULL;
-  jbyte              *inputp = NULL;
-  jsize               inputl;
-  short               matchb;
-  char               *bytep;
-  size_t              bytel;
+  static const char           *funcs = "Java_org_parser_marpa_ESLIFSymbol_jniTest";
+  marpaESLIFSymbol_t          *marpaESLIFSymbolp;
+  jbyteArray                   byteArrayp = NULL;
+  jbyte                       *inputp = NULL;
+  jsize                        inputl;
+  short                        matchb;
+  marpaESLIFValueResultArray_t marpaESLIFValueResultArray;
+
+  marpaESLIFValueResultArray.p        = NULL;
+  marpaESLIFValueResultArray.sizel    = 0;
+  marpaESLIFValueResultArray.shallowb = 0;
 
   if (! ESLIFSymbol_contextb(envp, eslifSymbolp, NULL /* marpaESLIFpp */, &marpaESLIFSymbolp)) {
     goto err;
@@ -7259,16 +7268,16 @@ JNIEXPORT jbyteArray JNICALL Java_org_parser_marpa_ESLIFSymbol_jniTest(JNIEnv *e
     (*envp)->GetByteArrayRegion(envp, jinputp, 0, inputl, inputp);
   }
 
-  if (! marpaESLIFSymbol_tryb(marpaESLIFSymbolp, (char *) inputp, (size_t) inputl, &matchb, &bytep, &bytel)) {
+  if (! marpaESLIFSymbol_tryb(marpaESLIFSymbolp, (char *) inputp, (size_t) inputl, &matchb, &marpaESLIFValueResultArray)) {
     RAISEEXCEPTIONF(envp, "marpaESLIFSymbol_tryb failure, %s", strerror(errno));
   }
 
   if (matchb) {
-    byteArrayp = (*envp)->NewByteArray(envp, (jsize) bytel);
+    byteArrayp = (*envp)->NewByteArray(envp, (jsize) marpaESLIFValueResultArray.sizel);
     if (byteArrayp == NULL) {
       goto err;
     }
-    (*envp)->SetByteArrayRegion(envp, byteArrayp, (jsize) 0, (jsize) bytel, (jbyte *) bytep);
+    (*envp)->SetByteArrayRegion(envp, byteArrayp, (jsize) 0, (jsize) marpaESLIFValueResultArray.sizel, (jbyte *) marpaESLIFValueResultArray.p);
     if (HAVEEXCEPTION(envp)) {
       goto err;
     }
@@ -7288,6 +7297,9 @@ JNIEXPORT jbyteArray JNICALL Java_org_parser_marpa_ESLIFSymbol_jniTest(JNIEnv *e
   byteArrayp = NULL;
 
  done:
+  if ((! marpaESLIFValueResultArray.shallowb) && (marpaESLIFValueResultArray.p != NULL)) {
+    free(marpaESLIFValueResultArray.p);
+  }
   return byteArrayp;
 }
 
