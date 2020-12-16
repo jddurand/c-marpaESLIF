@@ -2248,19 +2248,17 @@ A recognizer is allowed to perform a match try on any symbol that is a terminal,
   /* as in normal recognizer lifetime. */
   /* It can be also used outside of any grammar on a free input string */
   /* If there is match, *matchbp will contain a true value, else a false value */
-  /* When there is match bytepp will contain a copy of the match and the end-user */
-  /* is responsible to free it. Length is in *bytelp */
+  /* When there is match marpaESLIFValueResultArrayp, if set, will contain the result */
+  /* The end-user is responsible to free it when marpaESLIFValueResultArrayp->shallowb is false. */
   short                        marpaESLIFSymbol_tryb(marpaESLIFSymbol_t *marpaESLIFSymbolp,
                                                      char *inputs,
                                                      size_t inputl,
                                                      short *matchbp,
-                                                     char **bytepp,
-                                                     size_t *bytelp);
+                                                     marpaESLIFValueResultArray_t *marpaESLIFValueResultArrayp);
   short                        marpaESLIFRecognizer_symbol_tryb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp,
                                                                 marpaESLIFSymbol_t *marpaESLIFSymbolp,
                                                                 short *matchbp,
-                                                                char **bytepp,
-                                                                size_t *bytelp);
+                                                                marpaESLIFValueResultArray_t *marpaESLIFValueResultArrayp);
   void                         marpaESLIFSymbol_freev(marpaESLIFSymbol_t *marpaESLIFSymbolp);
 
 C<Out-of-grammar> symbols of type terminal, i.e. strings or regular expressions, can be created at any time, exactly as if they where present in the grammar: they a described with a C<stringp> and can contain C<modifiers>, which can be C<NULL>.
