@@ -29,9 +29,9 @@ They consist of C<bare names>, or can be enclosed in angle brackets if whitespac
 
 The grammar can contain multiple levels, the level syntax being:
 
-  ::=         # Alias for level 0
-    ~         # Alias for level 1
-  :[\d]+:=    # General form
+  ::=           # Alias for level 0
+    ~           # Alias for level 1
+  :\[[\d]+\]:=  # General form
 
 The level 0 must exist. We will use only C<::=> and/or C<~> in the rest of this document for conveniene, though we are adressing any possible level.
 
@@ -883,7 +883,7 @@ marpaESLIF BNF can be expressed in itself:
   <whitespace>                     ~ /[\s]+/
   <perl comment>                   ~ /(?:(?:#)(?:[^\n]*)(?:\n|\z))/u
   <cplusplus comment>              ~ /(?:(?:(?:\/\/)(?:[^\n]*)(?:\n|\z))|(?:(?:\/\*)(?:(?:[^\*]+|\*(?!\/))*)(?:\*\/)))/u
-  <op declare any grammar>         ~ /:\[\d+\]:=/
+  <op declare any grammar>         ~ /:\[[\d]+\]:=/
   <op declare top grammar>         ~ '::='
   <op declare lex grammar>         ~ '~'
   <op loosen>                      ~ '||'
