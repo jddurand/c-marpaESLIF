@@ -31,7 +31,8 @@
 #define G1_RULE_QUANTIFIED_RULE                  "G1_rule_quantified_rule"
 #define G1_RULE_DISCARD_RULE                     "G1_rule_discard_rule"
 #define G1_RULE_DEFAULT_RULE                     "G1_rule_default_rule"
-#define G1_RULE_LEXEME_RULE                      "G1_rule_lexeme_rule"
+#define G1_RULE_LEXEME_RULE_1                    "G1_rule_lexeme_rule_1"
+#define G1_RULE_LEXEME_RULE_2                    "G1_rule_lexeme_rule_2"
 #define G1_RULE_TERMINAL_RULE                    "G1_rule_terminal_rule"
 #define G1_RULE_COMPLETION_EVENT_DECLARATION_1   "G1_rule_completion_event_declaration_1"
 #define G1_RULE_COMPLETION_EVENT_DECLARATION_2   "G1_rule_completion_event_declaration_2"
@@ -125,6 +126,7 @@
 #define G1_RULE_RHS_ALTERNATIVE_7                "G1_rule_rhs_alternative_7"
 #define G1_RULE_RHS_PRIMARY_1                    "G1_rule_rhs_primary_1"
 #define G1_RULE_RHS_PRIMARY_2                    "G1_rule_rhs_primary_2"
+#define G1_RULE_RHS_PRIMARY_3                    "G1_rule_rhs_primary_3"
 #define G1_RULE_SINGLE_SYMBOL_1                  "G1_rule_single_symbol_1"
 #define G1_RULE_SINGLE_SYMBOL_2                  "G1_rule_single_symbol_2"
 #define G1_RULE_TERMINAL_1                       "G1_rule_terminal_1"
@@ -223,7 +225,8 @@
 #define G1_ACTION_QUANTIFIED_RULE                  "G1_action_quantified_rule"                  /* done */
 #define G1_ACTION_DISCARD_RULE                     "G1_action_discard_rule"                     /* done */
 #define G1_ACTION_DEFAULT_RULE                     "G1_action_default_rule"                     /* done */
-#define G1_ACTION_LEXEME_RULE                      "G1_action_lexeme_rule"                      /* done */
+#define G1_ACTION_LEXEME_RULE_1                    "G1_action_lexeme_rule_1"                    /* done */
+#define G1_ACTION_LEXEME_RULE_2                    "G1_action_lexeme_rule_2"                    /* done */
 #define G1_ACTION_TERMINAL_RULE                    "G1_action_terminal_rule"                    /* done */
 #define G1_ACTION_COMPLETION_EVENT_DECLARATION_1   "G1_action_completion_event_declaration_1"   /* done */
 #define G1_ACTION_COMPLETION_EVENT_DECLARATION_2   "G1_action_completion_event_declaration_2"   /* done */
@@ -316,6 +319,7 @@
 #define G1_ACTION_RHS_ALTERNATIVE_7                "G1_action_rhs_alternative_7"                /* done */
 #define G1_ACTION_RHS_PRIMARY_1                    "G1_action_rhs_primary_1"                    /* done */
 #define G1_ACTION_RHS_PRIMARY_2                    "G1_action_rhs_primary_2"                    /* done */
+#define G1_ACTION_RHS_PRIMARY_3                    "G1_action_rhs_primary_3"                    /* done */
 #define G1_ACTION_SINGLE_SYMBOL_1                  "G1_action_single_symbol_1"                  /* done */
 #define G1_ACTION_SINGLE_SYMBOL_2                  "G1_action_single_symbol_2"                  /* done */
 #define G1_ACTION_TERMINAL_1                       "G1_action_terminal_1"                       /* done */

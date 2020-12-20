@@ -53,7 +53,8 @@ enum marpaESLIF_symbol_type {
 enum marpaESLIF_terminal_type {
   MARPAESLIF_TERMINAL_TYPE_NA = 0,
   MARPAESLIF_TERMINAL_TYPE_STRING,   /* String */
-  MARPAESLIF_TERMINAL_TYPE_REGEX     /* Regular expression */
+  MARPAESLIF_TERMINAL_TYPE_REGEX,    /* Regular expression */
+  MARPAESLIF_TERMINAL_TYPE__EOF      /* Pseudo-terminal :eof */
 };
 
 /* Regex modifiers - we take JPCRE2 matching semantics, c.f. https://neurobin.org/projects/softwares/libs/jpcre2/ */

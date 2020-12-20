@@ -103,6 +103,7 @@ typedef enum bootstrap_grammar_G1_enum {
   G1_TERMINAL_EVENT_ACTION,
   G1_TERMINAL_DEFAULT_ENCODING,
   G1_TERMINAL_FALLBACK_ENCODING,
+  G1_TERMINAL__EOF,
   /* ----- Non terminals ------ */
   G1_META_STATEMENTS,
   G1_META_STATEMENT,
@@ -1062,6 +1063,14 @@ bootstrap_grammar_terminal_t bootstrap_grammar_G1_terminals[] = {
 #else
     NULL, NULL
 #endif
+  },
+  { G1_TERMINAL__EOF, MARPAESLIF_TERMINAL_TYPE_STRING, NULL,
+    "':eof'",
+#ifndef MARPAESLIF_NTRACE
+    ":eof", ":eo"
+#else
+    NULL, NULL
+#endif
   }
 };
 
@@ -1135,10 +1144,14 @@ bootstrap_grammar_rule_t bootstrap_grammar_G1_rules[] = {
   /*
     lhsi                                      descs                                           type                          nrhsl  { rhsi }                                       }  minimumi           separatori  properb hideseparatorb  actions
   */
-  { G1_META_LEXEME_RULE,                      G1_RULE_LEXEME_RULE,                            MARPAESLIF_RULE_TYPE_ALTERNATIVE, 4, { G1_TERMINAL__LEXEME,
+  { G1_META_LEXEME_RULE,                    G1_RULE_LEXEME_RULE_1,                            MARPAESLIF_RULE_TYPE_ALTERNATIVE, 4, { G1_TERMINAL__LEXEME,
                                                                                                                                      G1_META_OP_DECLARE,
                                                                                                                                      G1_META_SYMBOL,
-                                                                                                                                     G1_META_ADVERB_LIST                          }, -1,                        -1,      -1,              0, G1_ACTION_LEXEME_RULE },
+                                                                                                                                     G1_META_ADVERB_LIST                          }, -1,                        -1,      -1,              0, G1_ACTION_LEXEME_RULE_1 },
+  { G1_META_LEXEME_RULE,                    G1_RULE_LEXEME_RULE_2,                            MARPAESLIF_RULE_TYPE_ALTERNATIVE, 4, { G1_TERMINAL__LEXEME,
+                                                                                                                                     G1_META_OP_DECLARE,
+                                                                                                                                     G1_TERMINAL__EOF,
+                                                                                                                                     G1_META_ADVERB_LIST                          }, -1,                        -1,      -1,              0, G1_ACTION_LEXEME_RULE_2 },
   { G1_META_TERMINAL_RULE,                    G1_RULE_TERMINAL_RULE,                          MARPAESLIF_RULE_TYPE_ALTERNATIVE, 4, { G1_TERMINAL__TERMINAL,
                                                                                                                                      G1_META_OP_DECLARE,
                                                                                                                                      G1_META_TERMINAL,
@@ -1396,6 +1409,7 @@ bootstrap_grammar_rule_t bootstrap_grammar_G1_rules[] = {
   { G1_META_RHS_PRIMARY,                      G1_RULE_RHS_PRIMARY_2,                          MARPAESLIF_RULE_TYPE_ALTERNATIVE, 3, { G1_META_SYMBOL,
                                                                                                                                      G1_TERMINAL_AT_SIGN,
                                                                                                                                      G1_META_GRAMMAR_REFERENCE                    }, -1,                        -1,      -1,              0, G1_ACTION_RHS_PRIMARY_2 },
+  { G1_META_RHS_PRIMARY,                      G1_RULE_RHS_PRIMARY_3,                          MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_TERMINAL__EOF                             }, -1,                        -1,      -1,              0, G1_ACTION_RHS_PRIMARY_3 },
   /*
     lhsi                                      descs                                           type                          nrhsl  { rhsi }                                       }  minimumi           separatori  properb hideseparatorb  actions
   */

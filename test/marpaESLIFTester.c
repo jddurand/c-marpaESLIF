@@ -15,6 +15,8 @@ static void                            genericLoggerCallback(void *userDatavp, g
 static short                           alternativeRepresentation(void *userDatavp, marpaESLIFValueResult_t *valueResultp, char **inputcpp, size_t *inputlp, short *characterStreambp, char **encodingsp, size_t *encodinglp);
 short                                  importb(marpaESLIFValue_t *marpaESLIFValuep, void *userDatavp, marpaESLIFValueResult_t *marpaESLIFValueResultp);
 
+static const char dummy_context = '\0';
+
 typedef struct marpaESLIFTester_context {
   genericLogger_t *genericLoggerp;
   char            *inputs;
@@ -24,20 +26,25 @@ typedef struct marpaESLIFTester_context {
 } marpaESLIFTester_context_t;
 
 const static char *exceptions = "\n"
-  ":start ::= start\n"
+  ":desc :[0]:= 'G1'\n"
+  ":desc :[1]:= 'L0'\n"
+  ":start ::= start2\n"
   ":discard ::= whitespace event => :symbol\n"
   ":discard ::= arobace event => discard_arobace\n"
   "event ^start = predicted start\n"
   "event start[] = nulled start\n"
   "event start$ = completed start\n"
+  "start2 ::= start\n"
   "start ::= thisstart - startException\n"
   "\n"
   "thisstart ~ chars '!'\n"
+  ":lexeme ::= :eof pause => before event => ^eof\n"
+  ":lexeme ::= :eof pause => after event => eof$\n"
   "\n"
   "chars ~ char*\n"
   "\n"
-  ":lexeme ::= <char> pause => before event => char_before\n"
-  ":lexeme ::= <char> pause => after event => char_after\n"
+  ":lexeme ::= <char> pause => before event => ^char\n"
+  ":lexeme ::= <char> pause => after event => char$\n"
   "char ~ [a-zA-Z0-9_:]\n"
   "\n"
   "startException ~ chars ':' chars\n"
@@ -45,7 +52,8 @@ const static char *exceptions = "\n"
   "event ^whitespace = predicted whitespace\n"
   "event whitespace[] = nulled whitespace\n"
   "event whitespace$ = completed whitespace\n"
-  "whitespace ::= [\\s]\n"
+  "whitespace :[0]:= [\\s]\n"
+  "whitespace :[1]:= [\\s]\n"
   "event ^arobace = predicted arobace\n"
   "event arobace[] = nulled arobace\n"
   "event arobace$ = completed arobace\n"
@@ -81,7 +89,7 @@ int main() {
   marpaESLIFValue_t            *marpaESLIFValuep = NULL;
   short                         continueb;
   short                         exhaustedb;
-  const static char            *inputs = "abc! 123de@:@f";
+  const static char            *inputs = "abc!";
   short                         rcValueb;
   int                           eventCounti = 0;
   size_t                        nLexemel;
@@ -586,18 +594,38 @@ static short eventManagerb(int *eventCountip, marpaESLIFRecognizer_t *marpaESLIF
       if (! marpaESLIFRecognizer_inputb(marpaESLIFRecognizerp, &inputs, &inputl)) {
         goto err;
       }
-      GENERICLOGGER_INFOF(genericLoggerp, "[%3d] Event %s for symbol <%s> (character is %c (0x%lx), eofb is %d)", *eventCountip, eventArrayp[eventArrayIteratorl].events, eventArrayp[eventArrayIteratorl].symbols, *inputs, (unsigned long) *inputs, (int) eofb);
-      if (strcmp(eventArrayp[eventArrayIteratorl].events, "char_before") == 0) {
+      if (strcmp(eventArrayp[eventArrayIteratorl].events, "^char") == 0) {
+        GENERICLOGGER_INFOF(genericLoggerp, "[%3d] Event %s for symbol <%s> (character is %c (0x%lx), eofb is %d)", *eventCountip, eventArrayp[eventArrayIteratorl].events, eventArrayp[eventArrayIteratorl].symbols, *inputs, (unsigned long) *inputs, (int) eofb);
         GENERICLOGGER_INFOF(genericLoggerp, "[%3d] ... Pushing single alternative <%s>", *eventCountip, eventArrayp[eventArrayIteratorl].symbols);
         marpaESLIFAlternative.lexemes               = eventArrayp[eventArrayIteratorl].symbols;
         marpaESLIFAlternative.value.type            = MARPAESLIF_VALUE_TYPE_CHAR;
         marpaESLIFAlternative.value.u.c             = *inputs;
-        marpaESLIFAlternative.value.contextp        =  NULL; /* Not used */
+        marpaESLIFAlternative.value.contextp        =  (void *) &dummy_context; /* Not used */
         /* We push a MARPAESLIF_VALUE_TYPE_CHAR : default representation is ok */
         marpaESLIFAlternative.value.representationp = NULL;
         /* marpaESLIFAlternative.value.representationp = alternativeRepresentation; */
         marpaESLIFAlternative.grammarLengthl        = 1;
         if (! marpaESLIFRecognizer_lexeme_readb(marpaESLIFRecognizerp, &marpaESLIFAlternative, 1 /* Length in the real input */)) {
+          goto err;
+        }
+        /* Complete can generate again events! */
+        /* We have no risk because a given symbol instance can never generate two events: if it has been completed */
+        /* and it will be predicted again, then the completion event wins. */
+        if (! eventManagerb(eventCountip, marpaESLIFRecognizerp, genericLoggerp)) {
+          goto err;
+        }
+      }
+      else if (strcmp(eventArrayp[eventArrayIteratorl].events, "^eof") == 0) {
+        GENERICLOGGER_INFOF(genericLoggerp, "[%3d] Event %s for symbol <%s> (eofb is %d)", *eventCountip, eventArrayp[eventArrayIteratorl].events, eventArrayp[eventArrayIteratorl].symbols, (int) eofb);
+        GENERICLOGGER_INFOF(genericLoggerp, "[%3d] ... Pushing single alternative <%s>", *eventCountip, eventArrayp[eventArrayIteratorl].symbols);
+        marpaESLIFAlternative.lexemes               = eventArrayp[eventArrayIteratorl].symbols;
+        marpaESLIFAlternative.value.type            = MARPAESLIF_VALUE_TYPE_UNDEF;
+        marpaESLIFAlternative.value.contextp        = (void *) &dummy_context; /* Not used */
+        /* We push a MARPAESLIF_VALUE_TYPE_CHAR : default representation is ok */
+        marpaESLIFAlternative.value.representationp = NULL;
+        /* marpaESLIFAlternative.value.representationp = alternativeRepresentation; */
+        marpaESLIFAlternative.grammarLengthl        = 1;
+        if (! marpaESLIFRecognizer_lexeme_readb(marpaESLIFRecognizerp, &marpaESLIFAlternative, 0 /* Length in the real input */)) {
           goto err;
         }
         /* Complete can generate again events! */
@@ -615,7 +643,7 @@ static short eventManagerb(int *eventCountip, marpaESLIFRecognizer_t *marpaESLIF
       if (! marpaESLIFRecognizer_inputb(marpaESLIFRecognizerp, &inputs, &inputl)) {
         goto err;
       }
-      GENERICLOGGER_INFOF(genericLoggerp, "[%3d] Event %s for symbol <%s> (inputl=%ld, eofbp is %d)", *eventCountip, eventArrayp[eventArrayIteratorl].events, eventArrayp[eventArrayIteratorl].symbols, (unsigned long) inputl, (int) eofb);
+      GENERICLOGGER_INFOF(genericLoggerp, "[%3d] Event %s for symbol <%s> (inputl=%ld, eofb is %d)", *eventCountip, eventArrayp[eventArrayIteratorl].events, eventArrayp[eventArrayIteratorl].symbols, (unsigned long) inputl, (int) eofb);
       break;
     case MARPAESLIF_EVENTTYPE_EXHAUSTED:
       GENERICLOGGER_INFOF(genericLoggerp, "[%3d] >>> Exhausted event", *eventCountip);
@@ -689,6 +717,8 @@ static short alternativeRepresentation(void *userDatavp, marpaESLIFValueResult_t
   *inputcpp          = &valueResultp->u.c;
   *inputlp           = 1;
   *characterStreambp = 1;
+
+  return 1;
 }
 
 /*****************************************************************************/
