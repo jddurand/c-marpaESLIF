@@ -689,6 +689,8 @@ static short alternativeRepresentation(void *userDatavp, marpaESLIFValueResult_t
   *inputcpp          = &valueResultp->u.c;
   *inputlp           = 1;
   *characterStreambp = 1;
+
+  return 1;
 }
 
 /*****************************************************************************/
