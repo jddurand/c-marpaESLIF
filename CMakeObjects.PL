@@ -18,6 +18,21 @@ use POSIX qw/EXIT_SUCCESS strftime/;
 use Try::Tiny;
 
 #
+# ExtUtils::CBuilder custom configuration from environment:
+# Any environment variable PERL_EXTUTILS_CBUILDER_CONFIG_\w+ is
+# considered
+#
+my %EXTUTILS_BUILDER_CONFIG =
+    map {
+        my $key = $_;
+        $key =~ s/^PERL_EXTUTILS_CBUILDER_CONFIG_//;
+        $key => $ENV{$_}
+    }
+    grep {
+        $_ =~ /^PERL_EXTUTILS_CBUILDER_CONFIG_\w+/
+    } keys %ENV;
+
+#
 # Move to current dir of this script
 #
 my $okupdir = dirname($0);
@@ -26,7 +41,7 @@ chdir($okupdir) || die "Cannot move to $okupdir, $!";
 print "Working directory set to $okupdir\n";
 
 my $isc99 = 0;
-my %cbuilder_config = ExtUtils::CBuilder->new()->get_config;
+my %cbuilder_config = ExtUtils::CBuilder->new(config => \%EXTUTILS_BUILDER_CONFIG)->get_config;
 if (($cbuilder_config{cc} // 'cc') ne 'cl') {
     print "Checking if C99 is enabled by default: ";
     if (try_compile("#if !defined(__STDC_VERSION__) || __STDC_VERSION__ < 199901L\n#error \"C99 is not enabled\"\n#endif\nint main(){return 0;}")) {
@@ -273,7 +288,7 @@ AUTOCONF
   pcre2_valid_utf.c
   pcre2_xclass.c/;
   push(@pcre2_src, File::Spec->catfile(File::Spec->curdir, 'pcre2_chartables.c'));
-  my $cbuilder = ExtUtils::CBuilder->new();
+  my $cbuilder = ExtUtils::CBuilder->new(config => \%EXTUTILS_BUILDER_CONFIG);
   my @objects;
   my $obj_dir = File::Spec->catfile('output', 'obj4perl');
   make_path($obj_dir);
@@ -341,7 +356,7 @@ my @sources = File::Spec->catfile('src', 'marpaESLIF.c');
 # Generate objects
 # Our embedded lua requires some public C flags that we cannot invent
 # ----------------------------------------------------------------------------------------
-my $cbuilder = ExtUtils::CBuilder->new();
+my $cbuilder = ExtUtils::CBuilder->new(config => \%EXTUTILS_BUILDER_CONFIG);
 my $obj_dir = File::Spec->catfile('output', 'obj4perl');
 make_path($obj_dir);
 foreach my $source (@sources) {
@@ -598,7 +613,7 @@ sub try_compile {
     my $rc = 0;
 
     try {
-        my $cbuilder = ExtUtils::CBuilder->new(quiet => 1);
+        my $cbuilder = ExtUtils::CBuilder->new(config => \%EXTUTILS_BUILDER_CONFIG, quiet => 1);
         my $obj = basename($cbuilder->object_file($source));
         $cbuilder->compile(
             source               => $source,
@@ -636,7 +651,7 @@ int main() {
 }
 ";
     my $rc =  eval {
-        my $cbuilder = ExtUtils::CBuilder->new(quiet => 1);
+        my $cbuilder = ExtUtils::CBuilder->new(config => \%EXTUTILS_BUILDER_CONFIG, quiet => 1);
         my ($fh, $filename) = tempfile(SUFFIX => '.c', UNLINK => 0);
         print $fh $source;
         close($fh) || warn "Cannot close $filename, $!";
@@ -684,7 +699,7 @@ int main() {
 }
 ";
     my $rc =  eval {
-        my $cbuilder = ExtUtils::CBuilder->new(quiet => 1);
+        my $cbuilder = ExtUtils::CBuilder->new(config => \%EXTUTILS_BUILDER_CONFIG, quiet => 1);
         my ($fh, $filename) = tempfile(SUFFIX => '.c', UNLINK => 0);
         print $fh $source;
         close($fh) || warn "Cannot close $filename, $!";
