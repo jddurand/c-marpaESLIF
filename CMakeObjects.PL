@@ -121,7 +121,7 @@ find(
 # Generate objects
 # (individually- not efficient but I do not see how CBuilder mixes C and C++ source files)
 # ----------------------------------------------------------------------------------------
-my $cbuilder = ExtUtils::CBuilder->new(config -> \%EXTUTILS_BUILDER_CONFIG);
+my $cbuilder = ExtUtils::CBuilder->new(config => \%EXTUTILS_BUILDER_CONFIG);
 my @objects;
 my $obj_dir = File::Spec->catfile('output', 'obj4perl');
 
