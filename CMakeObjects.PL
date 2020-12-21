@@ -18,6 +18,21 @@ use IO::Handle;
 
 autoflush STDOUT 1;
 
+#
+# ExtUtils::CBuilder custom configuration from environment:
+# Any environment variable PERL_EXTUTILS_CBUILDER_CONFIG_\w+ is
+# considered
+#
+my %EXTUTILS_BUILDER_CONFIG =
+    map {
+        my $key = $_;
+        $key =~ s/^PERL_EXTUTILS_CBUILDER_CONFIG_//;
+        $key => $ENV{$_}
+    }
+    grep {
+        $_ =~ /^PERL_EXTUTILS_CBUILDER_CONFIG_\w+/
+    } keys %ENV;
+
 # ------------------------------------------------------------
 # Generation of objects using perl setup, for use in perl's XS
 # ------------------------------------------------------------
@@ -267,7 +282,7 @@ find(
 # Generate objects
 # (individually- not efficient but I do not see how CBuilder mixes C and C++ source files)
 # ----------------------------------------------------------------------------------------
-my $cbuilder = ExtUtils::CBuilder->new();
+my $cbuilder = ExtUtils::CBuilder->new(config => \%EXTUTILS_BUILDER_CONFIG);
 my @objects;
 my $obj_dir = File::Spec->catfile('output', 'obj4perl');
 
@@ -407,7 +422,7 @@ int main(int ac, char **av)
 }';
 
     my $rc =  eval {
-        my $cbuilder = ExtUtils::CBuilder->new();
+        my $cbuilder = ExtUtils::CBuilder->new(config => \%EXTUTILS_BUILDER_CONFIG);
         my ($fh, $filename) = tempfile(SUFFIX => '.c', UNLINK => 0);
         print $fh $source;
         close($fh) || warn "Cannot close $filename, $!";
@@ -445,7 +460,7 @@ int main(int ac, char **av)
   exit(is_bigendian() ? 0 : 1);
 }';
 
-    my $cbuilder = ExtUtils::CBuilder->new();
+    my $cbuilder = ExtUtils::CBuilder->new(config => \%EXTUTILS_BUILDER_CONFIG);
     my ($fh, $filename) = tempfile(SUFFIX => '.c', UNLINK => 0);
     print $fh $source;
     close($fh) || warn "Cannot close $filename, $!";
