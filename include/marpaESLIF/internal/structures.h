@@ -41,6 +41,7 @@ typedef struct  marpaESLIF_alternative     marpaESLIF_alternative_t;
 typedef         marpaESLIFAction_t         marpaESLIF_action_t;
 typedef         marpaESLIFActionType_t     marpaESLIF_action_type_t;
 typedef struct  marpaESLIF_stream          marpaESLIF_stream_t;
+typedef struct  marpaESLIF_stringGenerator marpaESLIF_stringGenerator_t;
 
 /* Symbol types */
 enum marpaESLIF_symbol_type {
@@ -289,6 +290,14 @@ struct marpaESLIF_meta {
   int                         *symbolArrayStartp;               /* Lexemes at the very beginning of marpaWrapperGrammarStartp */
 };
 
+struct marpaESLIF_stringGenerator {
+  marpaESLIF_t *marpaESLIFp;
+  char         *s;      /* Pointer */
+  size_t        l;      /* Used size */
+  short         okb;    /* Status */
+  size_t        allocl; /* Allocated size */
+};
+
 struct marpaESLIFValue {
   marpaESLIF_t                *marpaESLIFp;
   marpaESLIFRecognizer_t      *marpaESLIFRecognizerp;
@@ -310,6 +319,8 @@ struct marpaESLIFValue {
   genericHash_t                _afterPtrHash;
   genericHash_t               *afterPtrHashp;
   marpaESLIFRepresentation_t   proxyRepresentationp; /* Proxy representation callback, c.f. json.c for an example */
+  marpaESLIF_stringGenerator_t stringGenerator; /* Internal string generator, put here to avoid unnecessary malloc()/free() calls */
+  genericLogger_t             *stringGeneratorLoggerp; /* Internal string generator logger, put here to avoid unnecessary genericLogger_newp()/genericLogger_freev() calls */
 };
 
 struct marpaESLIF_stream {
