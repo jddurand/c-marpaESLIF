@@ -219,7 +219,7 @@ void genericLogger_logapv(genericLogger_t *genericLoggerp, genericLoggerLevel_t 
       logCallbackp(userDatavp, GENERICLOGGER_LOGLEVEL_ERROR, externals);
     }
 
-    if ((externals != msg_internalErrors) && ((genericLoggerp == NULL) || (genericLoggerp->externals != externals))) {
+    if ((externals != msg_internalErrors) && (externals != (char *) emptyMessages) && ((genericLoggerp == NULL) || (genericLoggerp->externals != externals))) {
       free(externals);
     }
   }
