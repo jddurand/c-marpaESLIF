@@ -18,6 +18,8 @@ int main() {
   localStruct_t    localStruct;
 
   /* With no logger allocated - it still work - and defaults to the WARN level */
+  GENERICLOGGER_WARN (NULL, NULL);
+  GENERICLOGGER_WARNF(NULL, NULL, NULL);
   GENERICLOGGER_WARN (NULL, "[no argument - no logger] Single message");
   GENERICLOGGER_WARNF(NULL, "[two arguments - no logger] Formatted message: %s %s", "argument1", "argument2");
 
