@@ -5,8 +5,13 @@
 /*
  * Prior to genericStack inclusion, we want to define a custom type for performance
  */
-
 #define GENERICSTACK_CUSTOM marpaESLIFValueResult_t
+
+/*
+ * genericStack performance is vital
+ */
+#define GENERICSTACK_INLINE inline
+
 
 #include <marpaWrapper.h>
 #include <genericStack.h>

@@ -14,6 +14,10 @@ static const int   MARPAESLIF_VERSION_MAJOR_STATIC = MARPAESLIF_VERSION_MAJOR;
 static const int   MARPAESLIF_VERSION_MINOR_STATIC = MARPAESLIF_VERSION_MINOR;
 static const int   MARPAESLIF_VERSION_PATCH_STATIC = MARPAESLIF_VERSION_PATCH;
 
+/* We rework the very unlikely genericStack errors */
+#define MARPAESLIF_GENERICSTACK_ERROR(stackp) MARPAESLIF_UNLIKELY(GENERICSTACK_ERROR(stackp))
+
+
 #define MARPAESLIF_ENCODING_IS_UTF8(encodings, encodingl)               \
   (                                                                     \
     /* UTF-8 */                                                         \
@@ -1992,7 +1996,7 @@ static inline marpaESLIF_grammar_t *_marpaESLIF_bootstrap_grammarp(marpaESLIFGra
     terminalp = NULL;
 
     GENERICSTACK_SET_PTR(grammarp->symbolStackp, symbolp, symbolp->idi);
-    if (GENERICSTACK_ERROR(grammarp->symbolStackp)) {
+    if (MARPAESLIF_GENERICSTACK_ERROR(grammarp->symbolStackp)) {
       MARPAESLIF_ERRORF(marpaESLIFp, "symbolStackp push failure, %s", strerror(errno));
       goto err;
     }
@@ -2051,7 +2055,7 @@ static inline marpaESLIF_grammar_t *_marpaESLIF_bootstrap_grammarp(marpaESLIFGra
     }
 
     GENERICSTACK_SET_PTR(grammarp->symbolStackp, symbolp, symbolp->idi);
-    if (GENERICSTACK_ERROR(grammarp->symbolStackp)) {
+    if (MARPAESLIF_GENERICSTACK_ERROR(grammarp->symbolStackp)) {
       MARPAESLIF_ERRORF(marpaESLIFp, "symbolStackp set failure, %s", strerror(errno));
       goto err;
     }
@@ -2087,7 +2091,7 @@ static inline marpaESLIF_grammar_t *_marpaESLIF_bootstrap_grammarp(marpaESLIFGra
       goto err;
     }
     GENERICSTACK_SET_PTR(grammarp->ruleStackp, rulep, rulep->idi);
-    if (GENERICSTACK_ERROR(grammarp->ruleStackp)) {
+    if (MARPAESLIF_GENERICSTACK_ERROR(grammarp->ruleStackp)) {
       MARPAESLIF_ERRORF(marpaESLIFp, "ruleStackp set failure, %s", strerror(errno));
       goto err;
     }
@@ -2566,7 +2570,7 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
           MARPAESLIF_TRACEF(marpaESLIFp, funcs, "Grammar level %d (%s): symbol %d (%s) marked as LHS", grammari, grammarp->descp->asciis, lhsp->idi, lhsp->descp->asciis);
           lhsb = 1;
           GENERICSTACK_PUSH_PTR(lhsRuleStackp, rulep);
-          if (GENERICSTACK_ERROR(lhsRuleStackp)) {
+          if (MARPAESLIF_GENERICSTACK_ERROR(lhsRuleStackp)) {
             MARPAESLIF_ERRORF(marpaESLIFp, "lhsRuleStackp push failure, %s", strerror(errno));
             goto err;
           }
@@ -2855,7 +2859,7 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
       }
       if ((rulep->propertyBitSet & MARPAWRAPPER_RULE_IS_NULLABLE) == MARPAWRAPPER_RULE_IS_NULLABLE) {
         GENERICSTACK_PUSH_PTR(rulep->lhsp->nullableRuleStackp, rulep);
-        if (GENERICSTACK_ERROR(rulep->lhsp->nullableRuleStackp)) {
+        if (MARPAESLIF_GENERICSTACK_ERROR(rulep->lhsp->nullableRuleStackp)) {
           MARPAESLIF_ERRORF(marpaESLIFp, "rulep->lhsp->nullableRuleStackp push failure, %s", strerror(errno));
           goto err;
         }
@@ -3267,7 +3271,7 @@ static inline marpaESLIF_grammar_t *_marpaESLIF_grammar_newp(marpaESLIFGrammar_t
 
   grammarp->symbolStackp = &(grammarp->_symbolStack);
   GENERICSTACK_INIT(grammarp->symbolStackp);
-  if (GENERICSTACK_ERROR(grammarp->symbolStackp)) {
+  if (MARPAESLIF_GENERICSTACK_ERROR(grammarp->symbolStackp)) {
     MARPAESLIF_ERRORF(marpaESLIFp, "symbolStackp initialization failure, %s", strerror(errno));
     grammarp->symbolStackp = NULL;
     goto err;
@@ -3275,7 +3279,7 @@ static inline marpaESLIF_grammar_t *_marpaESLIF_grammar_newp(marpaESLIFGrammar_t
 
   grammarp->ruleStackp = &(grammarp->_ruleStack);
   GENERICSTACK_INIT(grammarp->ruleStackp);
-  if (GENERICSTACK_ERROR(grammarp->ruleStackp)) {
+  if (MARPAESLIF_GENERICSTACK_ERROR(grammarp->ruleStackp)) {
     MARPAESLIF_ERRORF(marpaESLIFp, "ruleStackp initialization failure, %s", strerror(errno));
     grammarp->ruleStackp = NULL;
     goto err;
@@ -3590,7 +3594,7 @@ static inline marpaESLIF_rule_t *_marpaESLIF_rule_newp(marpaESLIF_t *marpaESLIFp
 
   rulep->rhsStackp = &(rulep->_rhsStack);
   GENERICSTACK_INIT(rulep->rhsStackp);
-  if (GENERICSTACK_ERROR(rulep->rhsStackp)) {
+  if (MARPAESLIF_GENERICSTACK_ERROR(rulep->rhsStackp)) {
     MARPAESLIF_ERRORF(marpaESLIFp, "rhsStackp initialization failure, %s", strerror(errno));
     rulep->rhsStackp = NULL;
     goto err;
@@ -3601,7 +3605,7 @@ static inline marpaESLIF_rule_t *_marpaESLIF_rule_newp(marpaESLIF_t *marpaESLIFp
     for (i = 0; i < nrhsl; i++) {
       MARPAESLIF_INTERNAL_GET_SYMBOL_FROM_STACK(marpaESLIFp, symbolp, symbolStackp, rhsip[i]);
       GENERICSTACK_PUSH_PTR(rulep->rhsStackp, symbolp);
-      if (GENERICSTACK_ERROR(rulep->rhsStackp)) {
+      if (MARPAESLIF_GENERICSTACK_ERROR(rulep->rhsStackp)) {
         MARPAESLIF_ERRORF(marpaESLIFp, "rhsStackp push failure, %s", strerror(errno));
         goto err;
       }
@@ -3781,7 +3785,7 @@ static inline marpaESLIF_symbol_t *_marpaESLIF_symbol_newp(marpaESLIF_t *marpaES
 
   symbolp->nullableRuleStackp = &(symbolp->_nullableRuleStack);
   GENERICSTACK_INIT(symbolp->nullableRuleStackp);
-  if (GENERICSTACK_ERROR(symbolp->nullableRuleStackp)) {
+  if (MARPAESLIF_GENERICSTACK_ERROR(symbolp->nullableRuleStackp)) {
     MARPAESLIF_ERRORF(marpaESLIFp, "symbolp->nullableRuleStackp initialization failure, %s", strerror(errno));
     symbolp->nullableRuleStackp = NULL;
     goto err;
@@ -3789,7 +3793,7 @@ static inline marpaESLIF_symbol_t *_marpaESLIF_symbol_newp(marpaESLIF_t *marpaES
 
   symbolp->lhsRuleStackp = &(symbolp->_lhsRuleStack);
   GENERICSTACK_INIT(symbolp->lhsRuleStackp);
-  if (GENERICSTACK_ERROR(symbolp->lhsRuleStackp)) {
+  if (MARPAESLIF_GENERICSTACK_ERROR(symbolp->lhsRuleStackp)) {
     MARPAESLIF_ERRORF(marpaESLIFp, "symbolp->lhsRuleStackp initialization failure, %s", strerror(errno));
     symbolp->lhsRuleStackp = NULL;
     goto err;
@@ -4202,14 +4206,14 @@ static inline marpaESLIF_t *_marpaESLIF_newp(marpaESLIFOption_t *marpaESLIFOptio
 
   marpaESLIFp->marpaESLIFGrammarp->grammarStackp = &(marpaESLIFp->marpaESLIFGrammarp->_grammarStack);
   GENERICSTACK_INIT(marpaESLIFp->marpaESLIFGrammarp->grammarStackp);
-  if (GENERICSTACK_ERROR(marpaESLIFp->marpaESLIFGrammarp->grammarStackp)) {
+  if (MARPAESLIF_GENERICSTACK_ERROR(marpaESLIFp->marpaESLIFGrammarp->grammarStackp)) {
     GENERICLOGGER_ERRORF(marpaESLIFOptionp->genericLoggerp, "marpaESLIFp->marpaESLIFGrammarp->grammarStackp initialization failure, %s", strerror(errno));
     marpaESLIFp->marpaESLIFGrammarp->grammarStackp = NULL;
     goto err;
   }
 
   GENERICSTACK_INIT(marpaESLIFp->marpaESLIFGrammarp->grammarStackp);
-  if (GENERICSTACK_ERROR(marpaESLIFp->marpaESLIFGrammarp->grammarStackp)) {
+  if (MARPAESLIF_GENERICSTACK_ERROR(marpaESLIFp->marpaESLIFGrammarp->grammarStackp)) {
     GENERICLOGGER_ERRORF(marpaESLIFOptionp->genericLoggerp, "marpaESLIFp->marpaESLIFGrammarp->grammarStackp initialization failure, %s", strerror(errno));
     marpaESLIFp->marpaESLIFGrammarp->grammarStackp = NULL;
     goto err;
@@ -4226,7 +4230,7 @@ static inline marpaESLIF_t *_marpaESLIF_newp(marpaESLIFOption_t *marpaESLIFOptio
     goto err;
   }
   GENERICSTACK_SET_PTR(marpaESLIFp->marpaESLIFGrammarp->grammarStackp, grammarp, grammarp->leveli);
-  if (GENERICSTACK_ERROR(marpaESLIFp->marpaESLIFGrammarp->grammarStackp)) {
+  if (MARPAESLIF_GENERICSTACK_ERROR(marpaESLIFp->marpaESLIFGrammarp->grammarStackp)) {
     GENERICLOGGER_ERRORF(marpaESLIFOptionp->genericLoggerp, "marpaESLIFp->marpaESLIFGrammarp->grammarStackp set failure, %s", strerror(errno));
     goto err;
   }
@@ -4238,7 +4242,7 @@ static inline marpaESLIF_t *_marpaESLIF_newp(marpaESLIFOption_t *marpaESLIFOptio
     goto err;
   }
   GENERICSTACK_SET_PTR(marpaESLIFp->marpaESLIFGrammarp->grammarStackp, grammarp, grammarp->leveli);
-  if (GENERICSTACK_ERROR(marpaESLIFp->marpaESLIFGrammarp->grammarStackp)) {
+  if (MARPAESLIF_GENERICSTACK_ERROR(marpaESLIFp->marpaESLIFGrammarp->grammarStackp)) {
     GENERICLOGGER_ERRORF(marpaESLIFOptionp->genericLoggerp, "marpaESLIFp->marpaESLIFGrammarp->grammarStackp set failure, %s", strerror(errno));
     goto err;
   }
@@ -6550,7 +6554,7 @@ static inline short _marpaESLIFRecognizer_alternativeStackSymbol_setb(marpaESLIF
 
   *p = *alternativep;
   GENERICSTACK_SET_PTR(alternativeStackSymbolp, p, indicei);
-  if (GENERICSTACK_ERROR(alternativeStackSymbolp)) {
+  if (MARPAESLIF_GENERICSTACK_ERROR(alternativeStackSymbolp)) {
     MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "alternativeStackSymbolp set failure, %s", strerror(errno));
     goto err;
   }
@@ -7528,7 +7532,7 @@ static inline short _marpaESLIFRecognizer_alternative_and_valueb(marpaESLIFRecog
     goto err;
   }
   GENERICSTACK_PUSH_PTR(commitedAlternativeStackSymbolp, symbolp);
-  if (GENERICSTACK_ERROR(commitedAlternativeStackSymbolp)) {
+  if (MARPAESLIF_GENERICSTACK_ERROR(commitedAlternativeStackSymbolp)) {
     MARPAESLIF_ERRORF(marpaESLIFp, "commitedAlternativeStackSymbolp push failure, %s", strerror(errno));
     goto err;
   }
@@ -7650,7 +7654,7 @@ static inline short _marpaESLIFRecognizer_lexeme_completeb(marpaESLIFRecognizer_
 
     set2InputStackp = marpaESLIFRecognizerp->set2InputStackp;
     GENERICSTACK_SET_ARRAY(set2InputStackp, array, latestEarleySetIdi);
-    if (GENERICSTACK_ERROR(set2InputStackp)) {
+    if (MARPAESLIF_GENERICSTACK_ERROR(set2InputStackp)) {
       MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "set2InputStackp set failure, %s", strerror(errno));
       goto err;
     }
@@ -9151,7 +9155,7 @@ static inline marpaESLIFRecognizer_t *_marpaESLIFRecognizer_newp(marpaESLIFGramm
 
   marpaESLIFRecognizerp->alternativeStackSymbolp = &(marpaESLIFRecognizerp->_alternativeStackSymbol);
   GENERICSTACK_INIT(marpaESLIFRecognizerp->alternativeStackSymbolp);
-  if (GENERICSTACK_ERROR(marpaESLIFRecognizerp->alternativeStackSymbolp)) {
+  if (MARPAESLIF_GENERICSTACK_ERROR(marpaESLIFRecognizerp->alternativeStackSymbolp)) {
     MARPAESLIF_ERRORF(marpaESLIFp, "alternativeStackSymbolp initialization failure, %s", strerror(errno));
     marpaESLIFRecognizerp->alternativeStackSymbolp = NULL;
     goto err;
@@ -9159,7 +9163,7 @@ static inline marpaESLIFRecognizer_t *_marpaESLIFRecognizer_newp(marpaESLIFGramm
 
   marpaESLIFRecognizerp->commitedAlternativeStackSymbolp = &(marpaESLIFRecognizerp->_commitedAlternativeStackSymbol);
   GENERICSTACK_INIT(marpaESLIFRecognizerp->commitedAlternativeStackSymbolp);
-  if (GENERICSTACK_ERROR(marpaESLIFRecognizerp->commitedAlternativeStackSymbolp)) {
+  if (MARPAESLIF_GENERICSTACK_ERROR(marpaESLIFRecognizerp->commitedAlternativeStackSymbolp)) {
     MARPAESLIF_ERRORF(marpaESLIFp, "commitedAlternativeStackSymbolp initialization failure, %s", strerror(errno));
     marpaESLIFRecognizerp->commitedAlternativeStackSymbolp = NULL;
     goto err;
@@ -9169,7 +9173,7 @@ static inline marpaESLIFRecognizer_t *_marpaESLIFRecognizer_newp(marpaESLIFGramm
   if (marpaESLIFRecognizerp->marpaESLIFRecognizerOption.trackb) {
     marpaESLIFRecognizerp->set2InputStackp = &(marpaESLIFRecognizerp->_set2InputStack);
     GENERICSTACK_INIT(marpaESLIFRecognizerp->set2InputStackp);
-    if (GENERICSTACK_ERROR(marpaESLIFRecognizerp->set2InputStackp)) {
+    if (MARPAESLIF_GENERICSTACK_ERROR(marpaESLIFRecognizerp->set2InputStackp)) {
       MARPAESLIF_ERRORF(marpaESLIFp, "set2InputStackp initialization failure, %s", strerror(errno));
       marpaESLIFRecognizerp->set2InputStackp = NULL;
       goto err;
@@ -9178,7 +9182,7 @@ static inline marpaESLIFRecognizer_t *_marpaESLIFRecognizer_newp(marpaESLIFGramm
 
   marpaESLIFRecognizerp->lexemeInputStackp = &(marpaESLIFRecognizerp->_lexemeInputStack);
   GENERICSTACK_INIT(marpaESLIFRecognizerp->lexemeInputStackp);
-  if (GENERICSTACK_ERROR(marpaESLIFRecognizerp->lexemeInputStackp)) {
+  if (MARPAESLIF_GENERICSTACK_ERROR(marpaESLIFRecognizerp->lexemeInputStackp)) {
     MARPAESLIF_ERRORF(marpaESLIFp, "lexemeInputStackp initialization failure, %s", strerror(errno));
     marpaESLIFRecognizerp->lexemeInputStackp = NULL;
     goto err;
@@ -9186,7 +9190,7 @@ static inline marpaESLIFRecognizer_t *_marpaESLIFRecognizer_newp(marpaESLIFGramm
 
   /* Marpa does not like the indice 0 */
   GENERICSTACK_PUSH_NA(marpaESLIFRecognizerp->lexemeInputStackp);
-  if (GENERICSTACK_ERROR(marpaESLIFRecognizerp->lexemeInputStackp)) {
+  if (MARPAESLIF_GENERICSTACK_ERROR(marpaESLIFRecognizerp->lexemeInputStackp)) {
     MARPAESLIF_ERRORF(marpaESLIFp, "lexemeInputStackp push failure, %s", strerror(errno));
     goto err;
   }
@@ -9229,7 +9233,7 @@ static inline marpaESLIFRecognizer_t *_marpaESLIFRecognizer_newp(marpaESLIFGramm
 
   marpaESLIFRecognizerp->beforePtrStackp = &(marpaESLIFRecognizerp->_beforePtrStack);
   GENERICSTACK_INIT(marpaESLIFRecognizerp->beforePtrStackp);
-  if (GENERICSTACK_ERROR(marpaESLIFRecognizerp->beforePtrStackp)) {
+  if (MARPAESLIF_GENERICSTACK_ERROR(marpaESLIFRecognizerp->beforePtrStackp)) {
     MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "marpaESLIFRecognizerp->beforePtrStackp initialization failure, %s", strerror(errno));
     marpaESLIFRecognizerp->beforePtrStackp = NULL;
     goto err;
@@ -9253,7 +9257,7 @@ static inline marpaESLIFRecognizer_t *_marpaESLIFRecognizer_newp(marpaESLIFGramm
 
   marpaESLIFRecognizerp->marpaESLIFValueResultFlattenStackp = &(marpaESLIFRecognizerp->_marpaESLIFValueResultFlattenStack);
   GENERICSTACK_INIT(marpaESLIFRecognizerp->marpaESLIFValueResultFlattenStackp);
-  if (GENERICSTACK_ERROR(marpaESLIFRecognizerp->marpaESLIFValueResultFlattenStackp)) {
+  if (MARPAESLIF_GENERICSTACK_ERROR(marpaESLIFRecognizerp->marpaESLIFValueResultFlattenStackp)) {
     MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "marpaESLIFRecognizerp->marpaESLIFValueResultFlattenStackp initialization failure, %s", strerror(errno));
     marpaESLIFRecognizerp->marpaESLIFValueResultFlattenStackp = NULL;
     goto err;
@@ -9792,7 +9796,7 @@ static inline short _marpaESLIFValue_valueb(marpaESLIFValue_t *marpaESLIFValuep,
     /* and we will manage the consequence of resetting the value at this stack indice. */
     if (marpaESLIFValueResultp != NULL) {
       GENERICSTACK_SET_NA(marpaESLIFValuep->valueResultStackp, indicei);
-      if (GENERICSTACK_ERROR(marpaESLIFValuep->valueResultStackp)) {
+      if (MARPAESLIF_GENERICSTACK_ERROR(marpaESLIFValuep->valueResultStackp)) {
         MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "marpaESLIFValuep->valueResultStackp set to NA failure at indice %d, %s", strerror(errno), indicei);
       }
       *marpaESLIFValueResultp = marpaESLIFValueResult;
@@ -13243,14 +13247,14 @@ static inline short _marpaESLIF_eslif2hostb(marpaESLIF_t *marpaESLIFp, void *nam
   }
 
   GENERICSTACK_INIT(marpaESLIFValueResultStackp);
-  if (GENERICSTACK_ERROR(marpaESLIFValueResultStackp)) {
+  if (MARPAESLIF_GENERICSTACK_ERROR(marpaESLIFValueResultStackp)) {
     MARPAESLIF_ERRORF(marpaESLIFp, "marpaESLIFValueResultStackp initialization failure, %s", strerror(errno));
     marpaESLIFValueResultStackp = NULL;
     goto err;
   }
 
   GENERICSTACK_PUSH_PTR(marpaESLIFValueResultStackp, marpaESLIFValueResultp);
-  if (GENERICSTACK_ERROR(marpaESLIFValueResultStackp)) {
+  if (MARPAESLIF_GENERICSTACK_ERROR(marpaESLIFValueResultStackp)) {
     MARPAESLIF_ERRORF(marpaESLIFp, "marpaESLIFValueResultStackp push failure, %s", strerror(errno));
     goto err;
   }
@@ -13302,13 +13306,13 @@ static inline short _marpaESLIF_eslif2hostb(marpaESLIF_t *marpaESLIFp, void *nam
       } else {
         /* Push again current element */
         GENERICSTACK_PUSH_PTR(marpaESLIFValueResultStackp, marpaESLIFValueResultWorkp);
-        if (GENERICSTACK_ERROR(marpaESLIFValueResultStackp)) {
+        if (MARPAESLIF_GENERICSTACK_ERROR(marpaESLIFValueResultStackp)) {
           MARPAESLIF_ERRORF(marpaESLIFp, "marpaESLIFValueResultStackp push failure, %s", strerror(errno));
           goto err;
         }
         /* Push lazy marker */
         GENERICSTACK_PUSH_PTR(marpaESLIFValueResultStackp, &marpaESLIFValueResultLazy);
-        if (GENERICSTACK_ERROR(marpaESLIFValueResultStackp)) {
+        if (MARPAESLIF_GENERICSTACK_ERROR(marpaESLIFValueResultStackp)) {
           MARPAESLIF_ERRORF(marpaESLIFp, "marpaESLIFValueResultStackp push failure, %s", strerror(errno));
           goto err;
         }
@@ -13318,7 +13322,7 @@ static inline short _marpaESLIF_eslif2hostb(marpaESLIF_t *marpaESLIFp, void *nam
                i < sizel;
                i++, marpaESLIFValueResultTmpp--) {
             GENERICSTACK_PUSH_PTR(marpaESLIFValueResultStackp, marpaESLIFValueResultTmpp);
-            if (GENERICSTACK_ERROR(marpaESLIFValueResultStackp)) {
+            if (MARPAESLIF_GENERICSTACK_ERROR(marpaESLIFValueResultStackp)) {
               MARPAESLIF_ERRORF(marpaESLIFp, "marpaESLIFValueResultStackp push failure, %s", strerror(errno));
               goto err;
             }
@@ -13334,13 +13338,13 @@ static inline short _marpaESLIF_eslif2hostb(marpaESLIF_t *marpaESLIFp, void *nam
       } else {
         /* Push again current element */
         GENERICSTACK_PUSH_PTR(marpaESLIFValueResultStackp, marpaESLIFValueResultWorkp);
-        if (GENERICSTACK_ERROR(marpaESLIFValueResultStackp)) {
+        if (MARPAESLIF_GENERICSTACK_ERROR(marpaESLIFValueResultStackp)) {
           MARPAESLIF_ERRORF(marpaESLIFp, "marpaESLIFValueResultStackp push failure, %s", strerror(errno));
           goto err;
         }
         /* Push lazy marker */
         GENERICSTACK_PUSH_PTR(marpaESLIFValueResultStackp, &marpaESLIFValueResultLazy);
-        if (GENERICSTACK_ERROR(marpaESLIFValueResultStackp)) {
+        if (MARPAESLIF_GENERICSTACK_ERROR(marpaESLIFValueResultStackp)) {
           MARPAESLIF_ERRORF(marpaESLIFp, "marpaESLIFValueResultStackp push failure, %s", strerror(errno));
           goto err;
         }
@@ -13351,12 +13355,12 @@ static inline short _marpaESLIF_eslif2hostb(marpaESLIF_t *marpaESLIFp, void *nam
                i < sizel;
                i++, marpaESLIFValueResultPairp--) {
             GENERICSTACK_PUSH_PTR(marpaESLIFValueResultStackp, &(marpaESLIFValueResultPairp->value));
-            if (GENERICSTACK_ERROR(marpaESLIFValueResultStackp)) {
+            if (MARPAESLIF_GENERICSTACK_ERROR(marpaESLIFValueResultStackp)) {
               MARPAESLIF_ERRORF(marpaESLIFp, "marpaESLIFValueResultStackp push failure, %s", strerror(errno));
               goto err;
             }
             GENERICSTACK_PUSH_PTR(marpaESLIFValueResultStackp, &(marpaESLIFValueResultPairp->key));
-            if (GENERICSTACK_ERROR(marpaESLIFValueResultStackp)) {
+            if (MARPAESLIF_GENERICSTACK_ERROR(marpaESLIFValueResultStackp)) {
               MARPAESLIF_ERRORF(marpaESLIFp, "marpaESLIFValueResultStackp push failure, %s", strerror(errno));
               goto err;
             }
@@ -13532,7 +13536,7 @@ static inline short _marpaESLIFRecognizer_valueStack_i_setb(marpaESLIFRecognizer
     if (indicei >= GENERICSTACK_USED(valueResultStackp)) {
       /* Replacement on something that does not yet exist - this is not illegal, we do the replacement immediately */
       GENERICSTACK_SET_CUSTOMP(valueResultStackp, marpaESLIFValueResultp, indicei);
-      if (GENERICSTACK_ERROR(valueResultStackp)) {
+      if (MARPAESLIF_GENERICSTACK_ERROR(valueResultStackp)) {
         MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "valueResultStackp set failure at indice %d, %s", indicei, strerror(errno));
         goto err;
       } else {
@@ -13544,7 +13548,7 @@ static inline short _marpaESLIFRecognizer_valueStack_i_setb(marpaESLIFRecognizer
       if (GENERICSTACK_IS_NA(valueResultStackp, indicei)) {
         /* Replacement on something that is NA - this is also not illegal, we do the replacement immediately */
         GENERICSTACK_SET_CUSTOMP(valueResultStackp, marpaESLIFValueResultp, indicei);
-        if (GENERICSTACK_ERROR(valueResultStackp)) {
+        if (MARPAESLIF_GENERICSTACK_ERROR(valueResultStackp)) {
           MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "valueResultStackp set failure at indice %d, %s", indicei, strerror(errno));
           goto err;
         } else {
@@ -13561,7 +13565,7 @@ static inline short _marpaESLIFRecognizer_valueStack_i_setb(marpaESLIFRecognizer
     /* Get original value */
     /* ------------------ */
     marpaESLIFValueResultOrigp = GENERICSTACK_GET_CUSTOMP(valueResultStackp, indicei);
-    if (GENERICSTACK_ERROR(valueResultStackp)) {
+    if (MARPAESLIF_GENERICSTACK_ERROR(valueResultStackp)) {
       MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "GENERICSTACK_GET_CUSTOMP on valueResultStackp failure, %s", strerror(errno));
       goto err;
     }
@@ -14123,7 +14127,7 @@ static inline marpaESLIFValue_t *_marpaESLIFValue_newp(marpaESLIFRecognizer_t *m
 
   marpaESLIFValuep->beforePtrStackp = &(marpaESLIFValuep->_beforePtrStack);
   GENERICSTACK_INIT(marpaESLIFValuep->beforePtrStackp);
-  if (GENERICSTACK_ERROR(marpaESLIFValuep->beforePtrStackp)) {
+  if (MARPAESLIF_GENERICSTACK_ERROR(marpaESLIFValuep->beforePtrStackp)) {
     MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "marpaESLIFValuep->beforePtrStackp initialization failure, %s", strerror(errno));
     marpaESLIFValuep->beforePtrStackp = NULL;
     goto err;
@@ -14172,7 +14176,7 @@ static inline short _marpaESLIFValue_stack_newb(marpaESLIFValue_t *marpaESLIFVal
 
   /* Initialize the stacks */
   GENERICSTACK_NEW(marpaESLIFValuep->valueResultStackp);
-  if (GENERICSTACK_ERROR(marpaESLIFValuep->valueResultStackp)) {
+  if (MARPAESLIF_GENERICSTACK_ERROR(marpaESLIFValuep->valueResultStackp)) {
     MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "marpaESLIFValuep->valueResultStackp initialization failure, %s", strerror(errno));
     goto err;
   }    
@@ -14353,7 +14357,7 @@ static short _marpaESLIFRecognizer_concat_valueResultCallbackb(void *userDatavp,
   MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "start");
 
   GENERICSTACK_INIT(todoStackp);
-  if (GENERICSTACK_ERROR(todoStackp)) {
+  if (MARPAESLIF_GENERICSTACK_ERROR(todoStackp)) {
     MARPAESLIF_ERRORF(marpaESLIFp, "todoStackp initialization failure, %s", strerror(errno));
     todoStackp = NULL;
     goto err;
@@ -14364,7 +14368,7 @@ static short _marpaESLIFRecognizer_concat_valueResultCallbackb(void *userDatavp,
 
   /* Initialize the worklist */
   GENERICSTACK_PUSH_PTR(todoStackp, marpaESLIFValueResultp);
-  if (GENERICSTACK_ERROR(todoStackp)) {
+  if (MARPAESLIF_GENERICSTACK_ERROR(todoStackp)) {
     MARPAESLIF_ERRORF(marpaESLIFp, "todoStackp push failure, %s", strerror(errno));
     goto err;
   }
@@ -14806,7 +14810,7 @@ static short _marpaESLIFRecognizer_concat_valueResultCallbackb(void *userDatavp,
       /* String default representation: concatenation of sub-members representation, in reverse order for intuitive representation -; */
       MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "ROW {%p,%ld}", marpaESLIFValueResultp->u.r.p, (unsigned long) marpaESLIFValueResultp->u.r.sizel);
       GENERICSTACK_PUSH_PTR(todoStackp, (marpaESLIFValueResult_t *) &marpaESLIFValueResultRightSquare);
-      if (GENERICSTACK_ERROR(todoStackp)) {
+      if (MARPAESLIF_GENERICSTACK_ERROR(todoStackp)) {
         MARPAESLIF_ERRORF(marpaESLIFp, "todoStackp push failure, %s", strerror(errno));
         goto err;
       }
@@ -14815,14 +14819,14 @@ static short _marpaESLIFRecognizer_concat_valueResultCallbackb(void *userDatavp,
              i < sizel;
              i++, j--, marpaESLIFValueResultTmpp--) {
           GENERICSTACK_PUSH_PTR(todoStackp, marpaESLIFValueResultTmpp);
-          if (GENERICSTACK_ERROR(todoStackp)) {
+          if (MARPAESLIF_GENERICSTACK_ERROR(todoStackp)) {
             MARPAESLIF_ERRORF(marpaESLIFp, "todoStackp push failure, %s", strerror(errno));
             goto err;
           }
           if (j > 0) {
             /* , */
             GENERICSTACK_PUSH_PTR(todoStackp, (marpaESLIFValueResult_t *) &marpaESLIFValueResultComma);
-            if (GENERICSTACK_ERROR(todoStackp)) {
+            if (MARPAESLIF_GENERICSTACK_ERROR(todoStackp)) {
               MARPAESLIF_ERRORF(marpaESLIFp, "todoStackp push failure, %s", strerror(errno));
               goto err;
             }
@@ -14830,7 +14834,7 @@ static short _marpaESLIFRecognizer_concat_valueResultCallbackb(void *userDatavp,
         }
       }
       GENERICSTACK_PUSH_PTR(todoStackp, (marpaESLIFValueResult_t *) &marpaESLIFValueResultLeftSquare);
-      if (GENERICSTACK_ERROR(todoStackp)) {
+      if (MARPAESLIF_GENERICSTACK_ERROR(todoStackp)) {
         MARPAESLIF_ERRORF(marpaESLIFp, "todoStackp push failure, %s", strerror(errno));
         goto err;
       }
@@ -14839,7 +14843,7 @@ static short _marpaESLIFRecognizer_concat_valueResultCallbackb(void *userDatavp,
       /* Nothing else but a row with an even number of elements, in reverse order for intuitive representation -; */
       MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "TABLE {%p,%ld}", marpaESLIFValueResultp->u.t.p, (unsigned long) marpaESLIFValueResultp->u.t.sizel);
       GENERICSTACK_PUSH_PTR(todoStackp, (marpaESLIFValueResult_t *) &marpaESLIFValueResultRightBracket);
-      if (GENERICSTACK_ERROR(todoStackp)) {
+      if (MARPAESLIF_GENERICSTACK_ERROR(todoStackp)) {
         MARPAESLIF_ERRORF(marpaESLIFp, "todoStackp push failure, %s", strerror(errno));
         goto err;
       }
@@ -14849,19 +14853,19 @@ static short _marpaESLIFRecognizer_concat_valueResultCallbackb(void *userDatavp,
              i++, j--, marpaESLIFValueResultPairp--) {
           /* Value */
           GENERICSTACK_PUSH_PTR(todoStackp, &(marpaESLIFValueResultPairp->value));
-          if (GENERICSTACK_ERROR(todoStackp)) {
+          if (MARPAESLIF_GENERICSTACK_ERROR(todoStackp)) {
             MARPAESLIF_ERRORF(marpaESLIFp, "todoStackp push failure, %s", strerror(errno));
             goto err;
           }
           /* : */
           GENERICSTACK_PUSH_PTR(todoStackp, (marpaESLIFValueResult_t *) &marpaESLIFValueResultColon);
-          if (GENERICSTACK_ERROR(todoStackp)) {
+          if (MARPAESLIF_GENERICSTACK_ERROR(todoStackp)) {
             MARPAESLIF_ERRORF(marpaESLIFp, "todoStackp push failure, %s", strerror(errno));
             goto err;
           }
           /* Key */
           GENERICSTACK_PUSH_PTR(todoStackp, &(marpaESLIFValueResultPairp->key));
-          if (GENERICSTACK_ERROR(todoStackp)) {
+          if (MARPAESLIF_GENERICSTACK_ERROR(todoStackp)) {
             MARPAESLIF_ERRORF(marpaESLIFp, "todoStackp push failure, %s", strerror(errno));
             goto err;
           }
@@ -14869,7 +14873,7 @@ static short _marpaESLIFRecognizer_concat_valueResultCallbackb(void *userDatavp,
             /* In JSON mode, key is always a string. We preceede the test at the beginning of the loop */
             /* by ensuring this is the case, by pushing an internal marker */
             GENERICSTACK_PUSH_PTR(todoStackp, (marpaESLIFValueResult_t *) &marpaESLIFValueResultNextValueResultMustDisplayAsJsonString);
-            if (GENERICSTACK_ERROR(todoStackp)) {
+            if (MARPAESLIF_GENERICSTACK_ERROR(todoStackp)) {
               MARPAESLIF_ERRORF(marpaESLIFp, "todoStackp push failure, %s", strerror(errno));
               goto err;
             }
@@ -14877,7 +14881,7 @@ static short _marpaESLIFRecognizer_concat_valueResultCallbackb(void *userDatavp,
           if (j > 0) {
             /* , */
             GENERICSTACK_PUSH_PTR(todoStackp, (marpaESLIFValueResult_t *) &marpaESLIFValueResultComma);
-            if (GENERICSTACK_ERROR(todoStackp)) {
+            if (MARPAESLIF_GENERICSTACK_ERROR(todoStackp)) {
               MARPAESLIF_ERRORF(marpaESLIFp, "todoStackp push failure, %s", strerror(errno));
               goto err;
             }
@@ -14885,7 +14889,7 @@ static short _marpaESLIFRecognizer_concat_valueResultCallbackb(void *userDatavp,
         }
       }
       GENERICSTACK_PUSH_PTR(todoStackp, (marpaESLIFValueResult_t *) &marpaESLIFValueResultLeftBracket);
-      if (GENERICSTACK_ERROR(todoStackp)) {
+      if (MARPAESLIF_GENERICSTACK_ERROR(todoStackp)) {
         MARPAESLIF_ERRORF(marpaESLIFp, "todoStackp push failure, %s", strerror(errno));
         goto err;
       }
@@ -16463,7 +16467,7 @@ static short _marpaESLIFRecognizer_value_validb(marpaESLIFRecognizer_t *marpaESL
   MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "start");
 
   GENERICSTACK_INIT(todoStackp);
-  if (GENERICSTACK_ERROR(todoStackp)) {
+  if (MARPAESLIF_GENERICSTACK_ERROR(todoStackp)) {
     MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "todoStackp initialization failure, %s", strerror(errno));
     todoStackp = NULL;
     goto err;
@@ -16477,7 +16481,7 @@ static short _marpaESLIFRecognizer_value_validb(marpaESLIFRecognizer_t *marpaESL
 
   /* Initialize the worklist */
   GENERICSTACK_PUSH_PTR(todoStackp, marpaESLIFValueResultp);
-  if (GENERICSTACK_ERROR(todoStackp)) {
+  if (MARPAESLIF_GENERICSTACK_ERROR(todoStackp)) {
     MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "todoStackp push failure, %s", strerror(errno));
     goto err;
   }
@@ -16569,7 +16573,7 @@ static short _marpaESLIFRecognizer_value_validb(marpaESLIFRecognizer_t *marpaESL
              i < sizel;
              i++, marpaESLIFValueResultTmpp++) {
           GENERICSTACK_PUSH_PTR(todoStackp, marpaESLIFValueResultTmpp);
-          if (GENERICSTACK_ERROR(todoStackp)) {
+          if (MARPAESLIF_GENERICSTACK_ERROR(todoStackp)) {
             MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "todoStackp push failure, %s", strerror(errno));
             goto err;
           }
@@ -16597,12 +16601,12 @@ static short _marpaESLIFRecognizer_value_validb(marpaESLIFRecognizer_t *marpaESL
              i < sizel;
              i++, marpaESLIFValueResultPairp++) {
           GENERICSTACK_PUSH_PTR(todoStackp, &(marpaESLIFValueResultPairp->key));
-          if (GENERICSTACK_ERROR(todoStackp)) {
+          if (MARPAESLIF_GENERICSTACK_ERROR(todoStackp)) {
             MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "todoStackp push failure, %s", strerror(errno));
             goto err;
           }
           GENERICSTACK_PUSH_PTR(todoStackp, &(marpaESLIFValueResultPairp->value));
-          if (GENERICSTACK_ERROR(todoStackp)) {
+          if (MARPAESLIF_GENERICSTACK_ERROR(todoStackp)) {
             MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "todoStackp push failure, %s", strerror(errno));
             goto err;
           }
@@ -16988,7 +16992,7 @@ static inline short _marpaESLIFRecognizer_putPristineToCacheb(marpaESLIFRecogniz
 #endif
     if (! findResultb) {
       GENERICSTACK_NEW(marpaESLIFRecognizerStackp);
-      if (GENERICSTACK_ERROR(marpaESLIFRecognizerStackp)) {
+      if (MARPAESLIF_GENERICSTACK_ERROR(marpaESLIFRecognizerStackp)) {
         MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "marpaESLIFRecognizerStackp initialization failure, %s", strerror(errno));
         goto err;
       }
@@ -17001,7 +17005,7 @@ static inline short _marpaESLIFRecognizer_putPristineToCacheb(marpaESLIFRecogniz
     }
     /* Here in any the entry in the hash exist and is a generic stack */
     GENERICSTACK_PUSH_PTR(marpaESLIFRecognizerStackp, marpaESLIFRecognizerp);
-    if (GENERICSTACK_ERROR(marpaESLIFRecognizerStackp)) {
+    if (MARPAESLIF_GENERICSTACK_ERROR(marpaESLIFRecognizerStackp)) {
         MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "marpaESLIFRecognizerStackp push failure, %s", strerror(errno));
         goto err;
     }
@@ -17945,7 +17949,7 @@ static inline short _marpaESLIF_flatten_pointers(marpaESLIFRecognizer_t *marpaES
   GENERICSTACK_RELAX(marpaESLIFValueResultStackp);
 
   GENERICSTACK_PUSH_PTR(marpaESLIFValueResultStackp, marpaESLIFValueResultp);
-  if (GENERICSTACK_ERROR(marpaESLIFValueResultStackp)) {
+  if (MARPAESLIF_GENERICSTACK_ERROR(marpaESLIFValueResultStackp)) {
     MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "marpaESLIFValueResultStackp push failure, %s", strerror(errno));
     goto err;
   }
@@ -18036,7 +18040,7 @@ static inline short _marpaESLIF_flatten_pointers(marpaESLIFRecognizer_t *marpaES
         marpaESLIFValueResultTmp.u.i = hashindexi;
         MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Pushing fake marpaESLIFValueResultTmp.{contextp <== marpaESLIFValueResultp,representationp <== p, u.i <== hashindexi}={%p,%p,%d}", marpaESLIFValueResultTmp.contextp, marpaESLIFValueResultTmp.representationp, marpaESLIFValueResultTmp.u.i);
         GENERICSTACK_PUSH_CUSTOM(flattenPtrStackp, marpaESLIFValueResultTmp);
-        if (GENERICSTACK_ERROR(flattenPtrStackp)) {
+        if (MARPAESLIF_GENERICSTACK_ERROR(flattenPtrStackp)) {
           MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "flattenPtrStackp push failure, %s", strerror(errno));
           goto err;
         }
@@ -18050,7 +18054,7 @@ static inline short _marpaESLIF_flatten_pointers(marpaESLIFRecognizer_t *marpaES
                i < sizel;
                i++, marpaESLIFValueResultTmp2p++) {
             GENERICSTACK_PUSH_PTR(marpaESLIFValueResultStackp, marpaESLIFValueResultTmp2p);
-            if (GENERICSTACK_ERROR(marpaESLIFValueResultStackp)) {
+            if (MARPAESLIF_GENERICSTACK_ERROR(marpaESLIFValueResultStackp)) {
               MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "marpaESLIFValueResultStackp push failure, %s", strerror(errno));
               goto err;
             }
@@ -18065,13 +18069,13 @@ static inline short _marpaESLIF_flatten_pointers(marpaESLIFRecognizer_t *marpaES
                i++, marpaESLIFValueResultPairp++) {
             /* Key */
             GENERICSTACK_PUSH_PTR(marpaESLIFValueResultStackp, &(marpaESLIFValueResultPairp->key));
-            if (GENERICSTACK_ERROR(marpaESLIFValueResultStackp)) {
+            if (MARPAESLIF_GENERICSTACK_ERROR(marpaESLIFValueResultStackp)) {
               MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "marpaESLIFValueResultStackp push failure, %s", strerror(errno));
               goto err;
             }
             /* Value */
             GENERICSTACK_PUSH_PTR(marpaESLIFValueResultStackp, &(marpaESLIFValueResultPairp->value));
-            if (GENERICSTACK_ERROR(marpaESLIFValueResultStackp)) {
+            if (MARPAESLIF_GENERICSTACK_ERROR(marpaESLIFValueResultStackp)) {
               MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "marpaESLIFValueResultStackp push failure, %s", strerror(errno));
               goto err;
             }

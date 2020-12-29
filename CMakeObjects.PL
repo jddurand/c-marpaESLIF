@@ -181,6 +181,37 @@ make_path(dirname($config_h));
         }
     }
 
+    $ac->msg_checking("for __builtin_expect()");
+    my $__builtin_expect = <<__BUILTIN_EXPECT;
+#include <stdlib.h>
+
+#define C__BUILTIN_EXPECT __builtin_expect
+#define C_LIKELY(x)    C__BUILTIN_EXPECT(!!(x), 1)
+#define C_UNLIKELY(x)  C__BUILTIN_EXPECT(!!(x), 0)
+
+/* Copied from https://kernelnewbies.org/FAQ/LikelyUnlikely */
+int main(char *argv[], int argc)
+{
+   int a;
+
+   /* Get the value from somewhere GCC can't optimize */
+   a = atoi (argv[1]);
+
+   if (C_UNLIKELY(a == 2))
+      a++;
+   else
+      a--;
+
+   return 0;
+}
+__BUILTIN_EXPECT
+    if (try_compile($__builtin_expect)) {
+        $ac->msg_result('yes');
+        $ac->define_var("C___BUILTIN_EXPECT", "__builtin_expect");
+    } else {
+        $ac->msg_result('no');
+    }
+
     $ac->check;
     write_config($MARPAESLIF_VERSION, $MARPAESLIF_VERSION_MAJOR, $MARPAESLIF_VERSION_MINOR, $MARPAESLIF_VERSION_PATCH, $config_h_in, $config_h);
 }
@@ -597,6 +628,14 @@ typedef unsigned int marpaESLIF_uint32_t;
 #    endif
 #  endif
 #endif
+
+#ifdef C___BUILTIN_EXPECT
+#  define MARPAESLIF_LIKELY(x)    C___BUILTIN_EXPECT(x, 1)
+#  define MARPAESLIF_UNLIKELY(x)  C___BUILTIN_EXPECT(x, 0)
+#else
+#  define MARPAESLIF_LIKELY(x)    x
+#  define MARPAESLIF_UNLIKELY(x)  x
+#endif /* C___BUILTIN_EXPECT */
 
 #endif /* MARPAESLIF_CONFIG_WRAPPER_H */
 CONFIG

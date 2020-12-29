@@ -106,5 +106,14 @@ typedef @MARPAESLIF_UINT32_T@ marpaESLIF_uint32_t;
 #cmakedefine C__FPCLASS_NINF @C__FPCLASS_NINF@
 #cmakedefine C__FPCLASS_PINF @C__FPCLASS_PINF@
 
+/* __builtin_expect support */
+#cmakedefine C___BUILTIN_EXPECT @C___BUILTIN_EXPECT@
+#ifdef C___BUILTIN_EXPECT
+#  define MARPAESLIF_LIKELY(x)    C___BUILTIN_EXPECT(x, 1)
+#  define MARPAESLIF_UNLIKELY(x)  C___BUILTIN_EXPECT(x, 0)
+#else
+#  define MARPAESLIF_LIKELY(x)    x
+#  define MARPAESLIF_UNLIKELY(x)  x
+#endif /* C___BUILTIN_EXPECT */
 
 #endif /* MARPAESLIF_CONFIG_H */
