@@ -9760,7 +9760,6 @@ static inline short _marpaESLIFValue_valueb(marpaESLIFValue_t *marpaESLIFValuep,
   static const int         indicei               = 0; /* By definition result is always at indice No 0 */
   marpaESLIFRecognizer_t  *marpaESLIFRecognizerp = marpaESLIFValuep->marpaESLIFRecognizerp;
   short                    rcb;
-  marpaESLIFValueResult_t  marpaESLIFValueResult;
 
   MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_INC;
   MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "start");
@@ -9792,7 +9791,6 @@ static inline short _marpaESLIFValue_valueb(marpaESLIFValue_t *marpaESLIFValuep,
       goto err;
     }
 #endif
-    marpaESLIFValueResult = GENERICSTACK_GET_CUSTOM(marpaESLIFValuep->valueResultStackp, indicei);
 
     /* Only internal calls set this variable: then we know by construction that we do not want to have an import */
     /* and we will manage the consequence of resetting the value at this stack indice. */
@@ -9801,10 +9799,10 @@ static inline short _marpaESLIFValue_valueb(marpaESLIFValue_t *marpaESLIFValuep,
       if (GENERICSTACK_ERROR(marpaESLIFValuep->valueResultStackp)) {
         MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "marpaESLIFValuep->valueResultStackp set to NA failure at indice %d, %s", strerror(errno), indicei);
       }
-      *marpaESLIFValueResultp = marpaESLIFValueResult;
+      *marpaESLIFValueResultp = GENERICSTACK_GET_CUSTOM(marpaESLIFValuep->valueResultStackp, indicei);
     } else {
       /* Call the end-user importer */
-      if (! _marpaESLIFValue_eslif2hostb(marpaESLIFValuep, &marpaESLIFValueResult, NULL /* forcedUserDatavp */, NULL /* forcedImporterp */)) {
+      if (! _marpaESLIFValue_eslif2hostb(marpaESLIFValuep, GENERICSTACK_GET_CUSTOMP(marpaESLIFValuep->valueResultStackp, indicei), NULL /* forcedUserDatavp */, NULL /* forcedImporterp */)) {
         goto err;
       }
     }
