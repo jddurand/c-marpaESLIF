@@ -336,8 +336,6 @@ struct marpaESLIF_stream {
   short                  eofb;                 /* EOF flag */
   short                  utfb;                 /* A flag to say if input is UTF-8 correct. Automatically true if charconvb is true. Can be set by regex engine as well. */
   short                  charconvb;            /* A flag to say if latest stream chunk was converted to UTF-8 */
-  char                  *lastFroms;            /* Last from encoding as per user, in user's encoding */
-  size_t                 lastFroml;            /* Last from encoding length as per user, in user's encoding */
   char                  *bytelefts;            /* Buffer when character conversion needs to reread leftover bytes */
   size_t                 byteleftl;            /* Usable length of this buffer */
   size_t                 byteleftallocl;       /* Allocated length of this buffer */
@@ -348,7 +346,6 @@ struct marpaESLIF_stream {
   short                  nextReadIsFirstReadb; /* Flag to say if next read is first read */
   short                  noAnchorIsOkb;        /* Flag to say if the "A" flag in regexp modifiers is allowed: removing PCRE2_ANCHOR is allowed ONLY is the whole stream was read once */
   char                  *encodings;            /* Current encoding. Always != NULL when charconvb is true. Always NULL when charconvb is false. */
-  marpaESLIF_terminal_t *encodingp;            /* Terminal case-insensitive version of current encoding. Always != NULL when charconvb is true. Always NULL when charconvb is false. */
   tconv_t                tconvp;               /* current converter. Always != NULL when charconvb is true. Always NULL when charconvb is false. */
   size_t                 linel;                /* Line number */
   size_t                 columnl;              /* Column number */

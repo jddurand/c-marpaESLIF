@@ -956,10 +956,10 @@ static short _marpaESLIFJSON_unicodeb(void *userDatavp, marpaESLIFValue_t *marpa
   marpaESLIFJSONContext_t *marpaESLIFJSONContextp = (marpaESLIFJSONContext_t *) userDatavp;
   unsigned char           *dstp                   = NULL;
   size_t                   dstl;
+  marpaESLIF_uint32_t     *uint32p                = NULL;
+  size_t                   uint32l;
   marpaESLIFValueResult_t *marpaESLIFValueResultp;
   marpaESLIFValueResult_t  marpaESLIFValueResult;
-  marpaESLIF_uint32_t     *uint32p;
-  size_t                   uint32l;
   marpaESLIF_uint32_t      c;
   char                    *p;
   unsigned char           *q;

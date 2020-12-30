@@ -7128,16 +7128,16 @@ static inline marpaESLIF_bootstrap_utf_string_t *_marpaESLIF_bootstrap_regex_to_
 static inline marpaESLIF_bootstrap_utf_string_t *_marpaESLIF_bootstrap_characterClass_to_stringb(marpaESLIF_t *marpaESLIFp, void *bytep, size_t bytel)
 /*****************************************************************************/
 {
-  marpaESLIF_bootstrap_utf_string_t *stringp   = NULL;
-  char                              *modifiers = NULL;
+  marpaESLIF_bootstrap_utf_string_t *stringp               = NULL;
+  char                              *modifiers             = NULL;
   marpaESLIFRecognizer_t            *marpaESLIFRecognizerp = NULL; /* Fake recognizer to use the internal regex */
+  void                              *dupp                  = NULL;
+  size_t                             dupl;
   marpaESLIFGrammar_t                marpaESLIFGrammar; /* Fake grammar for the same reason */
   marpaESLIFValueResult_t            marpaESLIFValueResult;
   size_t                             sizel;
   marpaESLIF_matcher_value_t         rci;
   char                              *tmps;
-  void                              *dupp;
-  size_t                             dupl;
 
   /* It is a non-sense to have a null lexeme */
   if ((bytep == NULL) || (bytel <= 0)) {
@@ -7447,10 +7447,10 @@ static short _marpaESLIF_bootstrap_G1_action_luascript_statementb(void *userData
   char                *luabytep           = NULL;
   size_t               luabytel;
   short                shallowb           = 0;
+  short                rcb                = 0;
   char                *tmps;
   size_t               tmpl;
   short                undefb;
-  short                rcb;
 
   /* Cannot be nullable */
   if (nullableb) {
