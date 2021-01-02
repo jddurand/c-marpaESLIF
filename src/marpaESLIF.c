@@ -18510,8 +18510,6 @@ short marpaESLIFRecognizer_symbol_tryb(marpaESLIFRecognizer_t *marpaESLIFRecogni
 {
   marpaESLIF_matcher_value_t rci;
   short                      rcb;
-  char                      *bytep;
-  size_t                     bytel;
   marpaESLIFValueResult_t    marpaESLIFValueResult;
 
   if ((marpaESLIFRecognizerp == NULL) || (marpaESLIFSymbolp == NULL)) {
