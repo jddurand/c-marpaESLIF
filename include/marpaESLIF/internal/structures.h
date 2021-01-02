@@ -10,6 +10,7 @@
 /*
  * genericStack performance is vital
  */
+#undef GENERICSTACK_INLINE
 #define GENERICSTACK_INLINE inline
 
 
