@@ -45,9 +45,19 @@ A rule consist of a left symbol, followed by the level, followed by one or more 
 
 =item Terminals
 
-There are three types of explicit terminals.
+There are four types of explicit terminals.
 
 =over
+
+=item * Pseudo terminals
+
+=over
+
+=item :eof
+
+A zero-length terminal that matches only at the of the stream.
+
+=back
 
 =item * Strings
 
@@ -824,6 +834,7 @@ marpaESLIF BNF can be expressed in itself:
   <terminal>                     ::= <character class>
                                    | <regular expression>
                                    | <quoted string>
+                                   | ':eof'
   <symbol>                       ::= <symbol name>
   <symbol name>                  ::= <bare name>
                                    | <bracketed name>

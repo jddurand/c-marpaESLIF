@@ -183,7 +183,8 @@ enum marpaESLIF_bootstrap_terminal_type {
   MARPAESLIF_BOOTSTRAP_TERMINAL_TYPE_NA = 0,
   MARPAESLIF_BOOTSTRAP_TERMINAL_TYPE_CHARACTER_CLASS,
   MARPAESLIF_BOOTSTRAP_TERMINAL_TYPE_REGULAR_EXPRESSION,
-  MARPAESLIF_BOOTSTRAP_TERMINAL_TYPE_QUOTED_STRING
+  MARPAESLIF_BOOTSTRAP_TERMINAL_TYPE_QUOTED_STRING,
+  MARPAESLIF_BOOTSTRAP_TERMINAL_TYPE__EOF
 };
 
 struct marpaESLIF_bootstrap_terminal {
@@ -191,7 +192,7 @@ struct marpaESLIF_bootstrap_terminal {
   union {
     marpaESLIF_bootstrap_utf_string_t *characterClassp;
     marpaESLIF_bootstrap_utf_string_t *regularExpressionp;
-    marpaESLIF_bootstrap_utf_string_t *quotedStringp;
+    marpaESLIF_bootstrap_utf_string_t *stringp;
   } u;
 };
 
