@@ -1,4 +1,3 @@
-#undef MARPAESLIF_NTRACE
 #include <stdlib.h>
 #include <errno.h>
 #include <string.h>
