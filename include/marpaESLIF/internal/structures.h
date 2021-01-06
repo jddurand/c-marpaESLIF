@@ -464,9 +464,6 @@ struct marpaESLIFRecognizer {
 
   /* We always maintain a shallow pointer to the top-level recognizer, to ease access to lua state */
   marpaESLIFRecognizer_t      *marpaESLIFRecognizerTopp;
-
-  /* We want to know if :eof pseudo terminal was expected at any level - only the top-level recognizer is affected by this */
-  short                        isEofPseudoTerminalExpectedb;
 };
 
 struct marpaESLIF_lexeme_data {
