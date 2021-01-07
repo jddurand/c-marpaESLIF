@@ -1109,14 +1109,16 @@ static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *mar
       } else {
         generatedasciis = strdup(content2descp->asciis);
         if (generatedasciis == NULL) {
-          MARPAESLIF_ERRORF(marpaESLIFp, "malloc failure, %s", strerror(errno));
+          MARPAESLIF_ERRORF(marpaESLIFp, "strdup failure, %s", strerror(errno));
           goto err;
         }
       }
     } else if (type == MARPAESLIF_TERMINAL_TYPE__EOF) {
-      generatedasciis = (char *) malloc(1 + utf8l);
-      strcpy(generatedasciis, utf8s);
-      terminalp->descp = _marpaESLIF_string_newp(marpaESLIFp, "ASCII", generatedasciis, strlen(generatedasciis));
+      generatedasciis = strdup(content2descp->asciis);
+      if (generatedasciis == NULL) {
+        MARPAESLIF_ERRORF(marpaESLIFp, "strdup failure, %s", strerror(errno));
+        goto err;
+      }
     } else {
       /* "/" + XXX + "/" (without escaping) */
       if (modifiers != NULL) {
