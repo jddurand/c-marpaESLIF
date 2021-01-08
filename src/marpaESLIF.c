@@ -7360,13 +7360,7 @@ static inline short _marpaESLIFRecognizer_resume_oneb(marpaESLIFRecognizer_t *ma
                             0 /* traceb */);
       }
       if (marpaESLIF_streamp->utfb && marpaESLIFRecognizerp->marpaESLIFRecognizerOption.newlineb) {
-        if (marpaESLIF_streamp->columnl > 0) {
-          /* Column is known (in terms of character count) */
-          MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "<<<<<< RECOGNIZER FAILURE AT LINE No %ld COLUMN No %ld, HERE: >>>>>>", (unsigned long) marpaESLIF_streamp->linel, (unsigned long) marpaESLIF_streamp->columnl);
-        } else {
-          /* Column is not known */
-          MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "<<<<<< RECOGNIZER FAILURE AT LINE No %ld, HERE: >>>>>>", (unsigned long) marpaESLIF_streamp->linel);
-        }
+        MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "<<<<<< RECOGNIZER FAILURE AT LINE No %ld COLUMN No %ld, HERE: >>>>>>", (unsigned long) marpaESLIF_streamp->linel, (unsigned long) marpaESLIF_streamp->columnl);
       } else {
         MARPAESLIF_ERROR(marpaESLIFRecognizerp->marpaESLIFp, "<<<<<< RECOGNIZER FAILURE HERE: >>>>>>");
       }
@@ -8993,7 +8987,7 @@ static inline short _marpaESLIF_stream_initb(marpaESLIFRecognizer_t *marpaESLIFR
   marpaESLIFRecognizerp->_marpaESLIF_stream.encodings            = NULL;
   marpaESLIFRecognizerp->_marpaESLIF_stream.tconvp               = NULL;
   marpaESLIFRecognizerp->_marpaESLIF_stream.linel                = 1;
-  marpaESLIFRecognizerp->_marpaESLIF_stream.columnl              = 0;
+  marpaESLIFRecognizerp->_marpaESLIF_stream.columnl              = 1;
   marpaESLIFRecognizerp->_marpaESLIF_stream.bomdoneb             = 0;
 
   return 1;
@@ -11921,12 +11915,14 @@ static inline short _marpaESLIFRecognizer_matchPostProcessingb(marpaESLIFRecogni
 {
   static const char          *funcs = "_marpaESLIFRecognizer_matchPostProcessingb";
   marpaESLIF_terminal_t      *newlinep;
-  marpaESLIF_terminal_t      *anycharp;
   char                       *linep;
+  char                       *linemaxp;
   size_t                      linel;
   size_t                      matchedLengthl;
   marpaESLIF_matcher_value_t  rci;
   short                       rcb;
+  int                         utf82ordi;
+  marpaESLIF_uint32_t         codepointi;
     
   MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_INC;
   MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "start");
@@ -11934,7 +11930,6 @@ static inline short _marpaESLIFRecognizer_matchPostProcessingb(marpaESLIFRecogni
   /* If newline counting is on, so do we - only at first level */
   if (marpaESLIFRecognizerp->marpaESLIFRecognizerOption.newlineb && marpaESLIF_streamp->utfb && (marpaESLIFRecognizerp->leveli == 0)) {
     newlinep = marpaESLIFRecognizerp->marpaESLIFp->newlinep;
-    anycharp = marpaESLIFRecognizerp->marpaESLIFp->anycharp;
     linep = marpaESLIF_streamp->inputs;
     linel = matchl;
 
@@ -11960,31 +11955,22 @@ static inline short _marpaESLIFRecognizer_matchPostProcessingb(marpaESLIFRecogni
       linel -= matchedLengthl;
       /* A new line, reset column count */
       marpaESLIF_streamp->linel++;
-      marpaESLIF_streamp->columnl = 0;
+      marpaESLIF_streamp->columnl = 1;
     }
 
     if (linel > 0) {
       /* Count characters */
-      while (1) {
+      linemaxp = linep + linel;
+      while (linep < linemaxp) {
         /* We count newlines only when a discard or a complete has happened. So by definition */
-        /* character sequences are complete. This is why we fake EOF to true. */
-        if (! _marpaESLIFRecognizer_terminal_matcherb(marpaESLIFRecognizerp,
-                                                      marpaESLIF_streamp,
-                                                      anycharp,
-                                                      linep,
-                                                      linel,
-                                                      1, /* eofb */
-                                                      &rci,
-                                                      NULL /* marpaESLIFValueResultp */,
-                                                      &matchedLengthl)) {
-          goto err;
-        }
-        if (rci != MARPAESLIF_MATCH_OK) {
+        /* character sequences are complete. This is why the following should never fail. */
+        utf82ordi = _marpaESLIF_utf82ordi((PCRE2_SPTR8) linep, &codepointi, (PCRE2_SPTR8) linemaxp);
+        if (utf82ordi <= 0) {
+          MARPAESLIF_WARN(marpaESLIFRecognizerp->marpaESLIFp, "Malformed UTF-8 character when processing column number");
           break;
         }
-        linep += matchedLengthl;
-        linel -= matchedLengthl;
-        /* A new character */
+
+        linep += utf82ordi;
         marpaESLIF_streamp->columnl++;
       }
     }
@@ -14828,7 +14814,7 @@ static short _marpaESLIFRecognizer_concat_valueResultCallbackb(void *userDatavp,
           maxp = p + utf8p->bytel;
           while (p < maxp) {
             lengthi = _marpaESLIF_utf82ordi((PCRE2_SPTR8) p, &codepointi, (PCRE2_SPTR8) maxp);
-            if (lengthi < 0) {
+            if (lengthi <= 0) {
               /* Well, this is a paranoid test: this should never happen since utf8p did not fail, so we do not bother to give any detail */
               MARPAESLIF_ERROR(marpaESLIFp, "Malformed UTF-8 byte");
               errno = EINVAL;
