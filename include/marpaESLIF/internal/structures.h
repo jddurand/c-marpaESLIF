@@ -282,6 +282,7 @@ struct marpaESLIFGrammar {
   size_t                     luaprecompiledl;    /* Lua script source precompiled length in byte */
   marpaESLIF_string_t       *luadescp;           /* Delayed until show is requested */
   int                        internalRuleCounti; /* Internal counter when creating internal rules (groups '(-...-)' and '(...)' */
+  short                      hasEofPseudoTerminalb; /* Is :eof anywhere in the grammar ? */
 };
 
 struct marpaESLIF_meta {

@@ -46,7 +46,6 @@ static inline marpaESLIF_symbol_t  *_marpaESLIF_bootstrap_check_terminal_by_type
 static inline marpaESLIF_symbol_t  *_marpaESLIF_bootstrap_check_terminal_builtinp(marpaESLIF_t *marpaESLIFp, marpaESLIF_grammar_t *grammarp, marpaESLIF_terminal_type_t terminalType, short createb);
 static inline marpaESLIF_symbol_t  *_marpaESLIF_bootstrap_check_quotedStringp(marpaESLIF_t *marpaESLIFp, marpaESLIF_grammar_t *grammarp, marpaESLIF_bootstrap_utf_string_t *quotedStringp, short createb);
 static inline marpaESLIF_symbol_t  *_marpaESLIF_bootstrap_check_builtinp(marpaESLIF_t *marpaESLIFp, marpaESLIF_grammar_t *grammarp, marpaESLIF_bootstrap_terminal_type_t type, short createb);
-static inline marpaESLIF_symbol_t  *_marpaESLIF_bootstrap_check__eofp(marpaESLIF_t *marpaESLIFp, marpaESLIF_grammar_t *grammarp, short createb);
 static inline marpaESLIF_symbol_t  *_marpaESLIF_bootstrap_check_regexp(marpaESLIF_t *marpaESLIFp, marpaESLIF_grammar_t *grammarp, marpaESLIF_bootstrap_utf_string_t *regexp, short createb);
 static inline marpaESLIF_symbol_t  *_marpaESLIF_bootstrap_check_singleSymbolp(marpaESLIF_t *marpaESLIFp, marpaESLIF_grammar_t *grammarp, marpaESLIF_bootstrap_single_symbol_t *singleSymbolp, short createb);
 static inline marpaESLIF_symbol_t  *_marpaESLIF_bootstrap_check_symbolp(marpaESLIF_t *marpaESLIFp, marpaESLIF_grammar_t *grammarp, marpaESLIF_bootstrap_symbol_t *symbolp, short createb);
@@ -1069,13 +1068,24 @@ static inline marpaESLIF_symbol_t *_marpaESLIF_bootstrap_check_quotedStringp(mar
 static inline marpaESLIF_symbol_t  *_marpaESLIF_bootstrap_check_builtinp(marpaESLIF_t *marpaESLIFp, marpaESLIF_grammar_t *grammarp, marpaESLIF_bootstrap_terminal_type_t type, short createb)
 /*****************************************************************************/
 {
+  marpaESLIF_symbol_t *symbolp;
+
   switch (type) {
   case MARPAESLIF_BOOTSTRAP_TERMINAL_TYPE__EOF:
-    return _marpaESLIF_bootstrap_check_terminal_by_typep(marpaESLIFp, grammarp, MARPAESLIF_TERMINAL_TYPE__EOF, NULL, createb, 1 /* builtinb */);
+    symbolp = _marpaESLIF_bootstrap_check_terminal_by_typep(marpaESLIFp, grammarp, MARPAESLIF_TERMINAL_TYPE__EOF, NULL, createb, 1 /* builtinb */);
+    if (symbolp != NULL) {
+      /* Remember that the grammar has :eof somewhere */
+      grammarp->marpaESLIFGrammarp->hasEofPseudoTerminalb = 1;
+    }
+    break;
+
   default:
     MARPAESLIF_ERRORF(marpaESLIFp, "Unsupported terminal builtin type %d", type);
-    return 0;
+    symbolp = NULL;
+    break;
   }
+
+  return symbolp;
 }
 
 /*****************************************************************************/

@@ -609,7 +609,7 @@ static inline char                  *_marpaESLIF_charconvb(marpaESLIF_t *marpaES
 static inline char                  *_marpaESLIF_utf82printableascii_newp(marpaESLIF_t *marpaESLIFp, char *descs, size_t descl);
 static inline void                   _marpaESLIF_utf82printableascii_freev(char *utf82printableasciip);
 static        short                  _marpaESLIFReader_grammarReader(void *userDatavp, char **inputsp, size_t *inputlp, short *eofbp, short *characterStreambp, char **encodingsp, size_t *encodinglp, marpaESLIFReaderDispose_t *disposeCallbackpp);
-static inline short                  _marpaESLIFRecognizer_isEofTerminalExpectedb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, short *isEofPseudoTerminalExpectedbp);
+static inline short                  _marpaESLIFRecognizer_isEofPseudoTerminalExpectedb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, short *isEofPseudoTerminalExpectedbp);
 static inline short                  _marpaESLIFRecognizer_resume_oneb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, short initialEventsb, short *canContinuebp, short *isExhaustedbp);
 static inline short                  _marpaESLIF_recognizer_start_is_completeb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, short *completebp);
 static inline short                  _marpaESLIFRecognizer_resumeb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, size_t deltaLengthl, short initialEventsb, short *continuebp, short *isExhaustedbp);
@@ -1685,15 +1685,16 @@ static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *mar
   {
     marpaESLIFGrammar_t     marpaESLIFGrammar;
 
-    marpaESLIFGrammar.marpaESLIFp        = marpaESLIFp;
-    marpaESLIFGrammar.grammarStackp      = NULL;
-    marpaESLIFGrammar.grammarp           = grammarp;
-    marpaESLIFGrammar.luabytep           = NULL;
-    marpaESLIFGrammar.luabytel           = 0;
-    marpaESLIFGrammar.luaprecompiledp    = NULL;
-    marpaESLIFGrammar.luaprecompiledl    = 0;
-    marpaESLIFGrammar.luadescp           = NULL;
-    marpaESLIFGrammar.internalRuleCounti = 0;
+    marpaESLIFGrammar.marpaESLIFp           = marpaESLIFp;
+    marpaESLIFGrammar.grammarStackp         = NULL;
+    marpaESLIFGrammar.grammarp              = grammarp;
+    marpaESLIFGrammar.luabytep              = NULL;
+    marpaESLIFGrammar.luabytel              = 0;
+    marpaESLIFGrammar.luaprecompiledp       = NULL;
+    marpaESLIFGrammar.luaprecompiledl       = 0;
+    marpaESLIFGrammar.luadescp              = NULL;
+    marpaESLIFGrammar.internalRuleCounti    = 0;
+    marpaESLIFGrammar.hasEofPseudoTerminalb = 0;
 
     /* Fake a recognizer. EOF flag will be set automatically in fake mode */
     marpaESLIFRecognizerTestp = _marpaESLIFRecognizer_newp(&marpaESLIFGrammar,
@@ -4223,6 +4224,7 @@ static inline marpaESLIF_t *_marpaESLIF_newp(marpaESLIFOption_t *marpaESLIFOptio
   marpaESLIFp->marpaESLIFGrammarp->luaprecompiledl         = 0;
   marpaESLIFp->marpaESLIFGrammarp->luadescp                = NULL;
   marpaESLIFp->marpaESLIFGrammarp->internalRuleCounti      = 0;
+  marpaESLIFp->marpaESLIFGrammarp->hasEofPseudoTerminalb   = 0;
 
   marpaESLIFp->marpaESLIFGrammarp->grammarStackp = &(marpaESLIFp->marpaESLIFGrammarp->_grammarStack);
   GENERICSTACK_INIT(marpaESLIFp->marpaESLIFGrammarp->grammarStackp);
@@ -4862,7 +4864,7 @@ static inline short _marpaESLIFRecognizer_meta_matcherb(marpaESLIFRecognizer_t *
 #endif
 
   /* A meta matcher is always using ANOTHER grammar at level symbolp->grammarLeveli (validator guaranteed that is exists) that is sent on the stack. */
-  /* Though the precomputed grammar is known to the symbol that called us, also sent on the stack. */
+  /* The precomputed grammar is known to the symbol that called us, also sent on the stack. */
 #ifndef MARPAESLIF_NTRACE
   /* Should never happen */
   if (! GENERICSTACK_IS_PTR(marpaESLIFGrammarp->grammarStackp, symbolp->lookupResolvedLeveli)) {
@@ -5539,6 +5541,7 @@ static inline marpaESLIFGrammar_t *_marpaESLIFGrammar_newp(marpaESLIF_t *marpaES
     marpaESLIFGrammarp->luaprecompiledl         = 0;
     marpaESLIFGrammarp->luadescp                = NULL;
     marpaESLIFGrammarp->internalRuleCounti      = 0;
+    marpaESLIFGrammarp->hasEofPseudoTerminalb   = 0;
   } else {
     marpaESLIFGrammarp = marpaESLIfGrammarPreviousp;
   }
@@ -6580,16 +6583,17 @@ static inline short _marpaESLIFRecognizer_alternativeStackSymbol_setb(marpaESLIF
 }
 
 /*****************************************************************************/
-static inline short _marpaESLIFRecognizer_isEofTerminalExpectedb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, short *isEofPseudoTerminalExpectedbp)
+static inline short _marpaESLIFRecognizer_isEofPseudoTerminalExpectedb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, short *isEofPseudoTerminalExpectedbp)
 /*****************************************************************************/
 {
-  static const char        *funcs                        = "_marpaESLIFRecognizer_isEofTerminalExpectedb";
+  static const char        *funcs                        = "_marpaESLIFRecognizer_isEofPseudoTerminalExpectedb";
   marpaESLIF_t             *marpaESLIFp                  = marpaESLIFRecognizerp->marpaESLIFp;
   marpaESLIFGrammar_t      *marpaESLIFGrammarp           = marpaESLIFRecognizerp->marpaESLIFGrammarp;
   marpaESLIF_grammar_t     *grammarp                     = marpaESLIFGrammarp->grammarp;
   genericStack_t           *symbolStackp                 = grammarp->symbolStackp;
   marpaWrapperRecognizer_t *marpaWrapperRecognizerp      = marpaESLIFRecognizerp->marpaWrapperRecognizerp;
   short                     isEofPseudoTerminalExpectedb = 0;
+  marpaESLIFRecognizer_t   *marpaESLIFRecognizerMetap    = NULL;
   size_t                    nSymboll;
   int                      *symbolArrayp;
   size_t                    symboll;
@@ -6600,35 +6604,68 @@ static inline short _marpaESLIFRecognizer_isEofTerminalExpectedb(marpaESLIFRecog
   MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_INC;
   MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "start");
 
-  /* Ask for expected TERMINALS */
-  if (marpaESLIFRecognizerp->pristineb) {
-    nSymboll     = marpaESLIFRecognizerp->nSymbolPristinel;
-    symbolArrayp = marpaESLIFRecognizerp->symbolArrayPristinep;
+  /* No-op if we know that :eof is nowhere in the grammar */
+  if (! marpaESLIFGrammarp->hasEofPseudoTerminalb) {
+    MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "No :eof anywhere in the grammar");
   } else {
-    if (! marpaWrapperRecognizer_expectedb(marpaWrapperRecognizerp, &nSymboll, &symbolArrayp)) {
+    /* Ask for expected TERMINALS */
+    if (marpaESLIFRecognizerp->pristineb) {
+      nSymboll     = marpaESLIFRecognizerp->nSymbolPristinel;
+      symbolArrayp = marpaESLIFRecognizerp->symbolArrayPristinep;
+    } else {
+      if (! marpaWrapperRecognizer_expectedb(marpaWrapperRecognizerp, &nSymboll, &symbolArrayp)) {
       goto err;
+      }
     }
-  }
 
-  for (symboll = 0; symboll < nSymboll; symboll++) {
-    symboli = symbolArrayp[symboll];
-    MARPAESLIF_INTERNAL_GET_SYMBOL_FROM_STACK(marpaESLIFp, symbolp, symbolStackp, symboli);
+    for (symboll = 0; symboll < nSymboll; symboll++) {
+      symboli = symbolArrayp[symboll];
+      MARPAESLIF_INTERNAL_GET_SYMBOL_FROM_STACK(marpaESLIFp, symbolp, symbolStackp, symboli);
 
-    if (symbolp->type == MARPAESLIF_SYMBOL_TYPE_TERMINAL) {
-      if (symbolp->u.terminalp->builtinb) {
-        if (symbolp->u.terminalp->type == MARPAESLIF_TERMINAL_TYPE__EOF) {
+      switch (symbolp->type) {
+      case MARPAESLIF_SYMBOL_TYPE_TERMINAL:
+        if (symbolp->u.terminalp->builtinb && (symbolp->u.terminalp->type == MARPAESLIF_TERMINAL_TYPE__EOF)) {
           /* We know this method is never called with isEofPseudoTerminalExpectedbp == NULL */
           isEofPseudoTerminalExpectedb = 1;
-          break;
         }
+        break;
+      case MARPAESLIF_SYMBOL_TYPE_META:
+        marpaESLIFRecognizerMetap = _marpaESLIFRecognizer_newp(symbolp->u.metap->marpaESLIFGrammarLexemeClonep,
+                                                               NULL, /* marpaESLIFRecognizerOptionp */
+                                                               0, /* discardb */
+                                                               1, /* noEventb */
+                                                               1, /* silentb */
+                                                               marpaESLIFRecognizerp, /* marpaESLIFRecognizerParentp */
+                                                               0, /* fakeb */
+                                                               0, /* maxStartCompletionsi */
+                                                               0, /* utfb - not used because inherited from parent*/
+                                                               0 /* grammarIsOnStackb */);
+        if (marpaESLIFRecognizerMetap == NULL) {
+          goto err;
+        }
+        /* Call ourself recursively - this should be changed to a stack free thingy... */
+        if (! _marpaESLIFRecognizer_isEofPseudoTerminalExpectedb(marpaESLIFRecognizerMetap, &isEofPseudoTerminalExpectedb)) {
+          goto err;
+        }
+        _marpaESLIFRecognizer_freev(marpaESLIFRecognizerMetap, 1 /* forceb */);
+        marpaESLIFRecognizerMetap = NULL;
+        break;
+      default:
+        MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "Unknown symbol type %d", symbolp->type);
+        goto err;
+      }
+
+      if (isEofPseudoTerminalExpectedb) {
+        break;
       }
     }
   }
 
   MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "isEofPseudoTerminalExpectedb=%d", (int) isEofPseudoTerminalExpectedb);
-  if (isEofPseudoTerminalExpectedbp != NULL) {
+  /* Dangerous to comment that, but we know what we do: this is an internal call, we guarantee that isEofPseudoTerminalExpectedbp is never NULL */
+  /* if (isEofPseudoTerminalExpectedbp != NULL) { */
     *isEofPseudoTerminalExpectedbp = isEofPseudoTerminalExpectedb;
-  }
+  /* } */
 
   rcb = 1;
   goto done;
@@ -6637,6 +6674,10 @@ static inline short _marpaESLIFRecognizer_isEofTerminalExpectedb(marpaESLIFRecog
   rcb = 0;
 
  done:
+  if(marpaESLIFRecognizerMetap != NULL) {
+    _marpaESLIFRecognizer_freev(marpaESLIFRecognizerMetap, 1 /* forceb */);
+  }
+
   MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "return %d", (int) rcb);
   MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_DEC;
   return rcb;
@@ -6691,7 +6732,6 @@ static inline short _marpaESLIFRecognizer_resume_oneb(marpaESLIFRecognizer_t *ma
   short                            isExhaustedb;
   char                            *previnputs;
   size_t                           offsetl;
-  short                            isEofPseudoTerminalExpectedb;
 
   /* This macro is to avoid the memcpy() of *grammarp which have a true cost in this method */
   /* We fake a marpaESLIFGrammar using grammar sent in the stack */
@@ -7022,23 +7062,19 @@ static inline short _marpaESLIFRecognizer_resume_oneb(marpaESLIFRecognizer_t *ma
 
     /* Discard failure - this is an error unless lexemes were read and:
        - exhaustion is on, or
-       - eof flag is true and all the data is consumed and :eof is not a predicted lexeme
+       - eof flag is true and all the data is consumed
     */
-    if (! _marpaESLIFRecognizer_isEofTerminalExpectedb(marpaESLIFRecognizerp, &isEofPseudoTerminalExpectedb)) {
-      goto err;
-    }
     MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp,
                                 funcs,
-                                "No alternative, current state is: haveLexemeb=%d, marpaESLIFRecognizerOption.exhaustedb=%d, eofb=%d, inputl=%ld, isEofPseudoTerminalExpectedb=%d",
+                                "No alternative, current state is: haveLexemeb=%d, marpaESLIFRecognizerOption.exhaustedb=%d, eofb=%d, inputl=%ld",
                                 (int) marpaESLIFRecognizerp->haveLexemeb,
                                 (int) marpaESLIFRecognizerp->marpaESLIFRecognizerOption.exhaustedb,
                                 (int) marpaESLIF_streamp->eofb,
-                                (unsigned long) marpaESLIF_streamp->inputl,
-                                (int) isEofPseudoTerminalExpectedb);
+                                (unsigned long) marpaESLIF_streamp->inputl);
     if (marpaESLIFRecognizerp->haveLexemeb && (
                                                marpaESLIFRecognizerp->marpaESLIFRecognizerOption.exhaustedb
                                                ||
-                                               (marpaESLIF_streamp->eofb && (marpaESLIF_streamp->inputl <= 0) && (! isEofPseudoTerminalExpectedb))
+                                               (marpaESLIF_streamp->eofb && (marpaESLIF_streamp->inputl <= 0))
                                                )
         ) {
       /* If exhaustion option is on, we fake an exhaustion event if grammar itself is not exhausted */
@@ -8996,7 +9032,7 @@ static inline short _marpaESLIF_stream_initb(marpaESLIFRecognizer_t *marpaESLIFR
 /*****************************************************************************/
 static inline marpaESLIFRecognizer_t *_marpaESLIFRecognizer_newp(marpaESLIFGrammar_t *marpaESLIFGrammarp, marpaESLIFRecognizerOption_t *marpaESLIFRecognizerOptionp, short discardb, short noEventb, short silentb, marpaESLIFRecognizer_t *marpaESLIFRecognizerParentp, short fakeb, int maxStartCompletionsi, short utfb, short grammarIsOnStackb)
 /*****************************************************************************/
-/* For performance reasons, when fakeb is a false value, then please arrange you code to work with a false grammmarIsOnStackb value as well */
+/* For performance reasons, when fakeb is a false value, then please arrange your code to work with a false grammmarIsOnStackb value as well */
 {
   static const char             *funcs                 = "_marpaESLIFRecognizer_newp";
   marpaESLIF_t                  *marpaESLIFp           = marpaESLIFGrammarp->marpaESLIFp;
@@ -9491,7 +9527,7 @@ static inline short _marpaESLIFRecognizer_isCanContinueb(marpaESLIFRecognizer_t 
       }
       if (eofb && (inputl <= 0)) {
         /* False unless :eof pseudo terminal is expected */
-        if (! _marpaESLIFRecognizer_isEofTerminalExpectedb(marpaESLIFRecognizerp, &isEofPseudoTerminalExpectedb)) {
+        if (! _marpaESLIFRecognizer_isEofPseudoTerminalExpectedb(marpaESLIFRecognizerp, &isEofPseudoTerminalExpectedb)) {
           goto err;
         }
         isCanContinueb = isEofPseudoTerminalExpectedb;
@@ -18576,15 +18612,16 @@ short marpaESLIFSymbol_tryb(marpaESLIFSymbol_t *marpaESLIFSymbolp, char *inputs,
     goto err;
   }
 
-  marpaESLIFGrammar.marpaESLIFp        = marpaESLIFSymbolp->marpaESLIFp;
-  marpaESLIFGrammar.grammarStackp      = NULL;
-  marpaESLIFGrammar.grammarp           = NULL;
-  marpaESLIFGrammar.luabytep           = NULL;
-  marpaESLIFGrammar.luabytel           = 0;
-  marpaESLIFGrammar.luaprecompiledp    = NULL;
-  marpaESLIFGrammar.luaprecompiledl    = 0;
-  marpaESLIFGrammar.luadescp           = NULL;
-  marpaESLIFGrammar.internalRuleCounti = 0;
+  marpaESLIFGrammar.marpaESLIFp           = marpaESLIFSymbolp->marpaESLIFp;
+  marpaESLIFGrammar.grammarStackp         = NULL;
+  marpaESLIFGrammar.grammarp              = NULL;
+  marpaESLIFGrammar.luabytep              = NULL;
+  marpaESLIFGrammar.luabytel              = 0;
+  marpaESLIFGrammar.luaprecompiledp       = NULL;
+  marpaESLIFGrammar.luaprecompiledl       = 0;
+  marpaESLIFGrammar.luadescp              = NULL;
+  marpaESLIFGrammar.internalRuleCounti    = 0;
+  marpaESLIFGrammar.hasEofPseudoTerminalb = 0;
   
   /* Fake a recognizer. EOF flag will be set automatically in fake mode */
   marpaESLIFRecognizerp = _marpaESLIFRecognizer_newp(&marpaESLIFGrammar,
