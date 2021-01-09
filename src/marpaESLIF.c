@@ -4535,8 +4535,8 @@ static inline short _marpaESLIFRecognizer_terminal_matcherb(marpaESLIFRecognizer
       break;
 
     case MARPAESLIF_TERMINAL_TYPE__EOL:
-      /* Eol is reached when linel is > 1 and columnl == 1 */
-      if ((marpaESLIF_streamp->linel > 1) && (marpaESLIF_streamp->columnl == 1)) {
+      /* Eol is reached when columnl == 1 and linel is > 1 */
+      if ((marpaESLIF_streamp->columnl == 1) && (marpaESLIF_streamp->linel > 1)) {
         rci            = MARPAESLIF_MATCH_OK;
         matchedp       = (char *) MARPAESLIF_EMPTY_STRING;
         matchedLengthl = 0;
