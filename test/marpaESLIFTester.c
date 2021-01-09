@@ -24,13 +24,13 @@ typedef struct marpaESLIFTester_context {
 } marpaESLIFTester_context_t;
 
 const static char *exceptions = "\n"
-  ":start ::= <start then eof>\n"
+  ":start ::= <start then eof then eol>\n"
   ":discard ::= whitespace event => :symbol\n"
   ":discard ::= arobace event => discard_arobace\n"
   "event ^start = predicted start\n"
   "event start[] = nulled start\n"
   "event start$ = completed start\n"
-  "<start then eof> ::= start chars :eof\n"
+  "<start then eof then eol> ::= start chars eof eol\n"
   "start ::= thisstart - startException\n"
   "\n"
   "thisstart ~ chars '!'\n"
@@ -38,6 +38,7 @@ const static char *exceptions = "\n"
   "chars ~ char*\n"
   "\n"
   "eof ~ :eof\n"
+  "eol ~ :eol\n"
   "\n"
   ":lexeme ::= <char> pause => before event => char_before\n"
   ":lexeme ::= <char> pause => after event => char_after\n"
@@ -84,7 +85,7 @@ int main() {
   marpaESLIFValue_t            *marpaESLIFValuep = NULL;
   short                         continueb;
   short                         exhaustedb;
-  const static char            *inputs = "abc! 123de@:@f";
+  const static char            *inputs = "abc! 123de@:@f\r\n";
   short                         rcValueb;
   int                           eventCounti = 0;
   size_t                        nLexemel;
@@ -312,7 +313,7 @@ int main() {
   marpaESLIFRecognizerOption.readerCallbackp   = inputReaderb;
   marpaESLIFRecognizerOption.disableThresholdb = 0;
   marpaESLIFRecognizerOption.exhaustedb        = 1;
-  marpaESLIFRecognizerOption.newlineb          = 1;
+  marpaESLIFRecognizerOption.newlineb          = 0; /* Voluntarily set to 0 to test the case when marpaESLIF enforces this flag */
   marpaESLIFRecognizerOption.trackb            = 0;
   marpaESLIFRecognizerOption.bufsizl           = 0;
   marpaESLIFRecognizerOption.buftriggerperci   = 50;
