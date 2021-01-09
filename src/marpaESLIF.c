@@ -9152,10 +9152,6 @@ static inline marpaESLIFRecognizer_t *_marpaESLIFRecognizer_newp(marpaESLIFGramm
   marpaESLIFRecognizerp->marpaESLIFp                     = marpaESLIFp;
   _marpaESLIFRecognizer_redoGrammarv(marpaESLIFRecognizerp, marpaESLIFGrammarp, fakeb, grammarIsOnStackb);
   marpaESLIFRecognizerp->marpaESLIFRecognizerOption      = *marpaESLIFRecognizerOptionp;
-  /* If the grammar has :eol anywhere, enfore newlineb option */
-  if (marpaESLIFGrammarp->hasEolPseudoTerminalb && (! marpaESLIFRecognizerp->marpaESLIFRecognizerOption.newlineb)) {
-    marpaESLIFRecognizerp->marpaESLIFRecognizerOption.newlineb = 1;
-  }
   marpaESLIFRecognizerp->marpaWrapperRecognizerp         = NULL;
   marpaESLIFRecognizerp->lexemeInputStackp               = NULL;  /* Take care, it is pointer to internal _lexemeInputstack if stack init is ok */
   marpaESLIFRecognizerp->eventArrayp                     = NULL;
@@ -9225,6 +9221,11 @@ static inline marpaESLIFRecognizer_t *_marpaESLIFRecognizer_newp(marpaESLIFGramm
   marpaWrapperRecognizerOption.exhaustionEventb          = marpaESLIFRecognizerOptionp->exhaustedb;
 
   if (! fakeb) {
+
+    /* If the grammar has :eol anywhere, enfore newlineb option */
+    if (marpaESLIFGrammarp->hasEolPseudoTerminalb && (! marpaESLIFRecognizerp->marpaESLIFRecognizerOption.newlineb)) {
+      marpaESLIFRecognizerp->marpaESLIFRecognizerOption.newlineb = 1;
+    }
 
     /* Call functions that initialize vital memory areas  */
     if ((! _marpaESLIFRecognizer_createDiscardStateb(marpaESLIFRecognizerp))
