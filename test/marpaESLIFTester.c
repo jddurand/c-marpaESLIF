@@ -24,13 +24,13 @@ typedef struct marpaESLIFTester_context {
 } marpaESLIFTester_context_t;
 
 const static char *exceptions = "\n"
-  ":start ::= <start then eof then eol>\n"
+  ":start ::= <start then eol then X then eof>\n"
   ":discard ::= whitespace event => :symbol\n"
   ":discard ::= arobace event => discard_arobace\n"
   "event ^start = predicted start\n"
   "event start[] = nulled start\n"
   "event start$ = completed start\n"
-  "<start then eof then eol> ::= start chars eof eol\n"
+  "<start then eol then X then eof> ::= start chars eol 'X' eof\n"
   "start ::= thisstart - startException\n"
   "\n"
   "thisstart ~ chars '!'\n"
@@ -85,7 +85,7 @@ int main() {
   marpaESLIFValue_t            *marpaESLIFValuep = NULL;
   short                         continueb;
   short                         exhaustedb;
-  const static char            *inputs = "abc! 123de@:@f\r\n";
+  const static char            *inputs = "abc! 123de@:@f\r\nX";
   short                         rcValueb;
   int                           eventCounti = 0;
   size_t                        nLexemel;
