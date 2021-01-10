@@ -14,6 +14,7 @@ static marpaESLIFValueRuleCallback_t        _marpaESLIFJSONValueRuleActionResolv
 static short                                _marpaESLIFJSONValueResultImportb(marpaESLIFValue_t *marpaESLIFValuep, void *userDatavp, marpaESLIFValueResult_t *marpaESLIFValueResultp);
 static short                                _marpaESLIFJSON_membersb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
 static short                                _marpaESLIFJSON_numberb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
+static short                                _marpaESLIFJSON_charsb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
 static short                                _marpaESLIFJSON_unicodeb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
 static short                                _marpaESLIFJSON_positive_infinityb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
 static short                                _marpaESLIFJSON_negative_infinityb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
@@ -98,13 +99,11 @@ static const char *marpaESLIFJSON_decode_extended_grammars =
   "# -----------\n"
   "# JSON String\n"
   "# -----------\n"
-  "string ::= (- '\"' -) chars (- '\"' -)                                              action => ::convert[UTF-8]\n"
+  "string ::= (- '\"' -) chars (- '\"' -)                                              # ::shift (default action)\n"
   "\n"
   ":terminal ::= '\"' pause => after event => :discard[switch]\n"
   "\n"
-  "chars   ::= filled\n"
-  "filled  ::= char+                                                                   action => ::concat\n"
-  "chars   ::=                                                                         action => ::u8\"\"\n"
+  "chars   ::= char*                                                                   action => chars\n"
   "char    ::= /[^\"\\\\\\x00-\\x1F]+/                                                 # ::shift (default action) - take care PCRE2 [:cntrl:] includes DEL character\n"
   "          | '\\\\' '\"'                             action => ::copy[1]             # Returns double quote, already ok in data\n"
   "          | '\\\\' '\\\\'                           action => ::copy[1]             # Returns backslash, already ok in data\n"
@@ -231,13 +230,11 @@ static const char *marpaESLIFJSON_decode_strict_grammars =
   "# -----------\n"
   "# JSON String\n"
   "# -----------\n"
-  "string ::= (- '\"' -) chars (- '\"' -)                                              action => ::convert[UTF-8]\n"
+  "string ::= (- '\"' -) chars (- '\"' -)                                              # ::shift (default action)\n"
   "\n"
   ":terminal ::= '\"' pause => after event => :discard[switch]\n"
   "\n"
-  "chars   ::= filled\n"
-  "filled  ::= char+                                                                   action => ::concat\n"
-  "chars   ::=                                                                         action => ::u8\"\"\n"
+  "chars   ::= char*                                                                   action => chars\n"
   "char    ::= /[^\"\\\\\\x00-\\x1F]+/                                                 # ::shift (default action) - take care PCRE2 [:cntrl:] includes DEL character\n"
   "          | '\\\\' '\"'                             action => ::copy[1]             # Returns double quote, already ok in data\n"
   "          | '\\\\' '\\\\'                           action => ::copy[1]             # Returns backslash, already ok in data\n"
@@ -609,9 +606,8 @@ static marpaESLIFRecognizerEventCallback_t _marpaESLIFJSONRecognizerEventActionR
 static short _marpaESLIFJSONRecognizerEventCallbackb(void *userDatavp, marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFEvent_t *eventArrayp, size_t eventArrayl, marpaESLIFValueResultBool_t *marpaESLIFValueResultBoolp)
 /*****************************************************************************/
 {
-  marpaESLIFJSONContext_t *marpaESLIFJSONContextp = (marpaESLIFJSONContext_t *) userDatavp;
-  size_t                   i;
-  short                    rcb;
+  size_t i;
+  short  rcb;
 
   for (i = 0; i < eventArrayl; i++) {
     if (eventArrayp[i].events != NULL) {
@@ -687,13 +683,14 @@ static short _marpaESLIFJSON_decb(void *userDatavp, marpaESLIFRecognizer_t *marp
 static marpaESLIFValueRuleCallback_t _marpaESLIFJSONValueRuleActionResolverp(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, char *actions)
 /*****************************************************************************/
 {
-  marpaESLIFJSONContext_t       *marpaESLIFJSONContextp = (marpaESLIFJSONContext_t *) userDatavp;
   marpaESLIFValueRuleCallback_t  rcp;
 
   if (strcmp(actions, "members") == 0) {
     rcp = _marpaESLIFJSON_membersb;
   } else if (strcmp(actions, "number") == 0) {
     rcp = _marpaESLIFJSON_numberb;
+  } else if (strcmp(actions, "chars") == 0) {
+    rcp = _marpaESLIFJSON_charsb;
   } else if (strcmp(actions, "unicode") == 0) {
     rcp = _marpaESLIFJSON_unicodeb;
   } else if (strcmp(actions, "positive_infinity") == 0) {
@@ -938,6 +935,113 @@ static short _marpaESLIFJSON_numberb(void *userDatavp, marpaESLIFValue_t *marpaE
 }
 
 /*****************************************************************************/
+static short _marpaESLIFJSON_charsb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb)
+/*****************************************************************************/
+{
+  /* We own entirely all chars, therefore we know that it is valid UTF-8: we do not need ::concat[UTF-8], but */
+  /* just to concatenate all chars. */
+  unsigned char           *p = NULL;
+  size_t                   sizel;
+  short                    shallowb;
+  int                      i;
+  marpaESLIFValueResult_t  marpaESLIFValueResult;
+  marpaESLIFValueResult_t *marpaESLIFValueResultp;
+  unsigned char           *q;
+  short                    rcb;
+
+  if (nullableb) {
+    /* This will catch the empty string case */
+    marpaESLIFValueResult.contextp           = NULL;
+    marpaESLIFValueResult.representationp    = NULL;
+    marpaESLIFValueResult.type               = MARPAESLIF_VALUE_TYPE_STRING;
+    marpaESLIFValueResult.u.s.p              = (unsigned char *) MARPAESLIF_EMPTY_STRING;
+    marpaESLIFValueResult.u.s.freeUserDatavp = NULL;
+    marpaESLIFValueResult.u.s.freeCallbackp  = NULL;
+    marpaESLIFValueResult.u.s.shallowb       = 1;
+    marpaESLIFValueResult.u.s.sizel          = 0;
+    marpaESLIFValueResult.u.s.encodingasciis = (char *) MARPAESLIF_UTF8_STRING;
+  } else {
+    /* These are all ARRAYs of size > 0 */
+    /* When arg0i == argni then the whole thing is already available in a single bloc, no need to re-allocate */
+    if (arg0i == argni) {
+      /* We just transform this marpaESLIFValueResult from string type to array type */
+      if (! marpaESLIFValue_stack_getAndForgetb(marpaESLIFValuep, arg0i, &marpaESLIFValueResult)) {
+        goto err;
+      }
+
+      p        = (unsigned char *) marpaESLIFValueResult.u.a.p;
+      sizel    = marpaESLIFValueResult.u.a.sizel;
+      shallowb = marpaESLIFValueResult.u.a.shallowb;
+
+      marpaESLIFValueResult.contextp           = NULL;
+      marpaESLIFValueResult.representationp    = NULL;
+      marpaESLIFValueResult.type               = MARPAESLIF_VALUE_TYPE_STRING;
+      marpaESLIFValueResult.u.s.p              = p;
+      marpaESLIFValueResult.u.s.freeUserDatavp = marpaESLIFValuep->marpaESLIFRecognizerp;
+      marpaESLIFValueResult.u.s.freeCallbackp  = _marpaESLIF_generic_freeCallbackv;
+      marpaESLIFValueResult.u.s.shallowb       = shallowb;
+      marpaESLIFValueResult.u.s.sizel          = sizel;
+      marpaESLIFValueResult.u.s.encodingasciis = (char *) MARPAESLIF_UTF8_STRING;
+
+    } else {
+
+      sizel = 0;
+      for (i = arg0i; i<= argni; i++) {
+        marpaESLIFValueResultp = _marpaESLIFValue_stack_getp(marpaESLIFValuep, i);
+        if (marpaESLIFValueResultp == NULL) {
+          goto err;
+        }
+        sizel += marpaESLIFValueResultp->u.a.sizel;
+      }
+
+      p = (unsigned char *) malloc(sizel + 1); /* + 1 for a hiden NUL byte */
+      if (p == NULL) {
+        MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "malloc failure, %s", strerror(errno));
+        goto err;
+      }
+
+      marpaESLIFValueResult.contextp           = NULL;
+      marpaESLIFValueResult.representationp    = NULL;
+      marpaESLIFValueResult.type               = MARPAESLIF_VALUE_TYPE_STRING;
+      marpaESLIFValueResult.u.s.p              = p;
+      marpaESLIFValueResult.u.s.freeUserDatavp = marpaESLIFValuep->marpaESLIFRecognizerp;
+      marpaESLIFValueResult.u.s.freeCallbackp  = _marpaESLIF_generic_freeCallbackv;
+      marpaESLIFValueResult.u.s.shallowb       = 0;
+      marpaESLIFValueResult.u.s.sizel          = sizel;
+      marpaESLIFValueResult.u.s.encodingasciis = (char *) MARPAESLIF_UTF8_STRING;
+
+      q = p;
+      for (i = arg0i; i<= argni; i++) {
+        marpaESLIFValueResultp = _marpaESLIFValue_stack_getp(marpaESLIFValuep, i);
+        if (marpaESLIFValueResultp == NULL) {
+          goto err;
+        }
+        sizel = marpaESLIFValueResultp->u.a.sizel;
+        memcpy(q, marpaESLIFValueResultp->u.a.p, sizel);
+        q += sizel;
+      }
+      *q = '\0'; /* The hiden NUL byte */
+    }
+  }
+
+  if (! _marpaESLIFValue_stack_setb(marpaESLIFValuep, resulti, &marpaESLIFValueResult)) {
+    goto err;
+  }
+
+  rcb = 1;
+  goto done;
+
+ err:
+  if (p != NULL) {
+    free(p);
+  }
+  rcb = 0;
+
+ done:
+  return rcb;
+}
+
+/*****************************************************************************/
 static short _marpaESLIFJSONValueResultImportb(marpaESLIFValue_t *marpaESLIFValuep, void *userDatavp, marpaESLIFValueResult_t *marpaESLIFValueResultp)
 /*****************************************************************************/
 {
@@ -1048,15 +1152,14 @@ static short _marpaESLIFJSON_unicodeb(void *userDatavp, marpaESLIFValue_t *marpa
     *q++ = 0x80 + (c & 0x3F);
   }
 
-  marpaESLIFValueResult.type               = MARPAESLIF_VALUE_TYPE_STRING;
+  marpaESLIFValueResult.type               = MARPAESLIF_VALUE_TYPE_ARRAY;
   marpaESLIFValueResult.contextp           = NULL;
   marpaESLIFValueResult.representationp    = NULL;
-  marpaESLIFValueResult.u.s.p              = dstp;
-  marpaESLIFValueResult.u.s.sizel          = q - dstp;
-  marpaESLIFValueResult.u.s.encodingasciis = (char *) MARPAESLIF_UTF8_STRING;
-  marpaESLIFValueResult.u.s.shallowb       = 0;
+  marpaESLIFValueResult.u.a.p              = (char *) dstp;
+  marpaESLIFValueResult.u.a.sizel          = q - dstp;
   marpaESLIFValueResult.u.s.freeUserDatavp = marpaESLIFValuep->marpaESLIFRecognizerp;
   marpaESLIFValueResult.u.s.freeCallbackp  = _marpaESLIF_generic_freeCallbackv;
+  marpaESLIFValueResult.u.s.shallowb       = 0;
 
   if (! _marpaESLIFValue_stack_setb(marpaESLIFValuep, resulti, &marpaESLIFValueResult)) {
     goto err;
@@ -1086,7 +1189,6 @@ static short _marpaESLIFJSON_positive_infinityb(void *userDatavp, marpaESLIFValu
 /*****************************************************************************/
 {
   marpaESLIFJSONContext_t *marpaESLIFJSONContextp = (marpaESLIFJSONContext_t *) userDatavp;
-  marpaESLIFValueOption_t *marpaESLIFValueOptionp = marpaESLIFJSONContextp->marpaESLIFValueOptionp;
   marpaESLIFValueResult_t  marpaESLIFValueResult;
   marpaESLIFValueResult_t *marpaESLIFValueResultInputp;
   short                    rcb;
@@ -1132,7 +1234,6 @@ static short _marpaESLIFJSON_negative_infinityb(void *userDatavp, marpaESLIFValu
 /*****************************************************************************/
 {
   marpaESLIFJSONContext_t *marpaESLIFJSONContextp = (marpaESLIFJSONContext_t *) userDatavp;
-  marpaESLIFValueOption_t *marpaESLIFValueOptionp = marpaESLIFJSONContextp->marpaESLIFValueOptionp;
   marpaESLIFValueResult_t  marpaESLIFValueResult;
   marpaESLIFValueResult_t *marpaESLIFValueResultInputp;
   short                    rcb;
@@ -1178,7 +1279,6 @@ static short _marpaESLIFJSON_positive_nanb(void *userDatavp, marpaESLIFValue_t *
 /*****************************************************************************/
 {
   marpaESLIFJSONContext_t *marpaESLIFJSONContextp = (marpaESLIFJSONContext_t *) userDatavp;
-  marpaESLIFValueOption_t *marpaESLIFValueOptionp = marpaESLIFJSONContextp->marpaESLIFValueOptionp;
   marpaESLIFValueResult_t  marpaESLIFValueResult;
   marpaESLIFValueResult_t *marpaESLIFValueResultInputp;
   short                    rcb;
@@ -1224,7 +1324,6 @@ static short _marpaESLIFJSON_negative_nanb(void *userDatavp, marpaESLIFValue_t *
 /*****************************************************************************/
 {
   marpaESLIFJSONContext_t *marpaESLIFJSONContextp = (marpaESLIFJSONContext_t *) userDatavp;
-  marpaESLIFValueOption_t *marpaESLIFValueOptionp = marpaESLIFJSONContextp->marpaESLIFValueOptionp;
   marpaESLIFValueResult_t  marpaESLIFValueResult;
   marpaESLIFValueResult_t *marpaESLIFValueResultInputp;
   short                    rcb;
