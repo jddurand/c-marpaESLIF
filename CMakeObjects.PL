@@ -212,6 +212,32 @@ __BUILTIN_EXPECT
         $ac->msg_result('no');
     }
 
+    foreach my $inline_keyword (qw/inline __inline__ inline__ __inline/) {
+        $ac->msg_checking("for $inline_keyword");
+        my $inline_source = <<INLINE_SOURCE;
+typedef int foo_t;
+static $inline_keyword foo_t static_foo() {
+  return 0;
+}
+foo_t foo() {
+  return 0;
+}
+int main(int argc, char *argv[]){
+  return 0;
+}
+INLINE_SOURCE
+        if (try_compile($inline_source)) {
+            $ac->msg_result('yes');
+            $ac->define_var("C_INLINE", $inline_keyword);
+            if ($inline_keyword eq 'inline') {
+                $ac->define_var("C_INLINE_IS_INLINE", $inline_keyword);
+            }
+            last;
+        } else {
+            $ac->msg_result('no');
+        }
+    }
+
     $ac->check;
     write_config($MARPAESLIF_VERSION, $MARPAESLIF_VERSION_MAJOR, $MARPAESLIF_VERSION_MINOR, $MARPAESLIF_VERSION_PATCH, $config_h_in, $config_h);
 }
