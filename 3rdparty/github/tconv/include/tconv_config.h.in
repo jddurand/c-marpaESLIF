@@ -16,7 +16,7 @@
 #  else
 #    ifndef C_INLINE_IS_INLINE
 /* Next line is never executed when inline is "inline" */
-#      define inline @C_INLINE@
+#      define inline C_INLINE
 #    endif
 #  endif
 #endif
