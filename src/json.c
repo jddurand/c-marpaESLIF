@@ -15,6 +15,7 @@ static short                                _marpaESLIFJSONValueResultImportb(ma
 static short                                _marpaESLIFJSON_membersb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
 static short                                _marpaESLIFJSON_numberb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
 static short                                _marpaESLIFJSON_charsb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
+static short                                _marpaESLIFJSON_escapedb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
 static short                                _marpaESLIFJSON_constantb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
 static short                                _marpaESLIFJSON_unicodeb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
 static short                                _marpaESLIFJSON_positive_infinityb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
@@ -35,6 +36,15 @@ typedef struct marpaESLIFJSONContext {
   marpaESLIFReaderDispose_t         readerDisposep;
   marpaESLIFRepresentationDispose_t representationDisposep;
 } marpaESLIFJSONContext_t;
+
+static const char *MARPAESLIFJSON_DQUOTE          = "\"";
+static const char *MARPAESLIFJSON_BACKSLASH       = "\\";
+static const char *MARPAESLIFJSON_SLASH           = "/";
+static const char *MARPAESLIFJSON_BACKSPACE       = "\x08";
+static const char *MARPAESLIFJSON_FORMFEED        = "\x0C";
+static const char *MARPAESLIFJSON_LINEFEED        = "\x0A";
+static const char *MARPAESLIFJSON_CARRIAGE_RETURN = "\x0D";
+static const char *MARPAESLIFJSON_HORIZONTAL_TAB  = "\x09";
 
 static const char *marpaESLIFJSON_encode_extended_grammars =
   "input ::= INPUT action => ::jsonf\n"
@@ -105,15 +115,8 @@ static const char *marpaESLIFJSON_decode_extended_grammars =
   "\n"
   "chars   ::= char*                                                                   action => chars\n"
   "char    ::= /[^\"\\\\\\x00-\\x1F]+/                                                 # ::shift (default action) - take care PCRE2 [:cntrl:] includes DEL character\n"
-  "          | '\\\\' '\"'                             action => ::copy[1]             # Returns double quote, already ok in data\n"
-  "          | '\\\\' '\\\\'                           action => ::copy[1]             # Returns backslash, already ok in data\n"
-  "          | '\\\\' '/'                              action => ::copy[1]             # Returns slash, already ok in data\n"
-  "          | '\\\\' 'b'                              action => ::u8\"\\x{08}\"\n"
-  "          | '\\\\' 'f'                              action => ::u8\"\\x{0C}\"\n"
-  "          | '\\\\' 'n'                              action => ::u8\"\\x{0A}\"\n"
-  "          | '\\\\' 'r'                              action => ::u8\"\\x{0D}\"\n"
-  "          | '\\\\' 't'                              action => ::u8\"\\x{09}\"\n"
-  "          | /(?:\\\\u[[:xdigit:]]{4})+/             action => unicode\n"
+  "          | /\\\\[\"\\\\\\/bfnrt]/                                                  action => escaped\n"
+  "          | /(?:\\\\u[[:xdigit:]]{4})+/                                             action => unicode\n"
   "\n"
   "# -------------------------\n"
   "# Unsignificant whitespaces\n"
@@ -235,15 +238,8 @@ static const char *marpaESLIFJSON_decode_strict_grammars =
   "\n"
   "chars   ::= char*                                                                   action => chars\n"
   "char    ::= /[^\"\\\\\\x00-\\x1F]+/                                                 # ::shift (default action) - take care PCRE2 [:cntrl:] includes DEL character\n"
-  "          | '\\\\' '\"'                             action => ::copy[1]             # Returns double quote, already ok in data\n"
-  "          | '\\\\' '\\\\'                           action => ::copy[1]             # Returns backslash, already ok in data\n"
-  "          | '\\\\' '/'                              action => ::copy[1]             # Returns slash, already ok in data\n"
-  "          | '\\\\' 'b'                              action => ::u8\"\\x{08}\"\n"
-  "          | '\\\\' 'f'                              action => ::u8\"\\x{0C}\"\n"
-  "          | '\\\\' 'n'                              action => ::u8\"\\x{0A}\"\n"
-  "          | '\\\\' 'r'                              action => ::u8\"\\x{0D}\"\n"
-  "          | '\\\\' 't'                              action => ::u8\"\\x{09}\"\n"
-  "          | /(?:\\\\u[[:xdigit:]]{4})+/             action => unicode\n"
+  "          | /\\\\[\"\\\\\\/bfnrt]/                                                  action => escaped\n"
+  "          | /(?:\\\\u[[:xdigit:]]{4})+/                                             action => unicode\n"
   "\n"
   "# -------------------------\n"
   "# Unsignificant whitespaces\n"
@@ -692,6 +688,8 @@ static marpaESLIFValueRuleCallback_t _marpaESLIFJSONValueRuleActionResolverp(voi
     rcp = _marpaESLIFJSON_charsb;
   } else if (strcmp(actions, "constant") == 0) {
     rcp = _marpaESLIFJSON_constantb;
+  } else if (strcmp(actions, "escaped") == 0) {
+    rcp = _marpaESLIFJSON_escapedb;
   } else if (strcmp(actions, "unicode") == 0) {
     rcp = _marpaESLIFJSON_unicodeb;
   } else if (strcmp(actions, "positive_infinity") == 0) {
@@ -939,6 +937,7 @@ static short _marpaESLIFJSON_numberb(void *userDatavp, marpaESLIFValue_t *marpaE
 static short _marpaESLIFJSON_charsb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb)
 /*****************************************************************************/
 {
+  /* chars   ::= char* */
   /* We own entirely all chars, therefore we know that it is valid UTF-8: we do not need ::concat[UTF-8], but */
   /* just to concatenate all chars. */
   unsigned char           *p = NULL;
@@ -1036,6 +1035,69 @@ static short _marpaESLIFJSON_charsb(void *userDatavp, marpaESLIFValue_t *marpaES
   if (p != NULL) {
     free(p);
   }
+  rcb = 0;
+
+ done:
+  return rcb;
+}
+
+/*****************************************************************************/
+static short _marpaESLIFJSON_escapedb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb)
+/*****************************************************************************/
+{
+  /* char ::= /\\\\[\"\\\\\\/bfnrt]/ */
+  short                    rcb;
+  marpaESLIFValueResult_t *marpaESLIFValueResultp;
+  marpaESLIFValueResult_t  marpaESLIFValueResult;
+
+  /* We know this is a lexeme of 2 bytes per definition */
+  marpaESLIFValueResultp = _marpaESLIFValue_stack_getp(marpaESLIFValuep, arg0i);
+  if (marpaESLIFValueResultp == NULL) {
+    goto err;
+  }
+
+  marpaESLIFValueResult.contextp           = NULL;
+  marpaESLIFValueResult.representationp    = NULL;
+  marpaESLIFValueResult.type               = MARPAESLIF_VALUE_TYPE_ARRAY;
+  marpaESLIFValueResult.u.a.freeUserDatavp = NULL;
+  marpaESLIFValueResult.u.a.freeCallbackp  = NULL;
+  marpaESLIFValueResult.u.a.shallowb       = 1;
+  marpaESLIFValueResult.u.a.sizel          = 1;
+
+  switch (marpaESLIFValueResultp->u.a.p[1]) {
+  case '"':
+    marpaESLIFValueResult.u.a.p            = (char *) MARPAESLIFJSON_DQUOTE;
+    break;
+  case '\\':
+    marpaESLIFValueResult.u.a.p            = (char *) MARPAESLIFJSON_BACKSLASH;
+    break;
+  case '/':
+    marpaESLIFValueResult.u.a.p            = (char *) MARPAESLIFJSON_SLASH;
+    break;
+  case 'b':
+    marpaESLIFValueResult.u.a.p            = (char *) MARPAESLIFJSON_BACKSPACE;
+    break;
+  case 'f':
+    marpaESLIFValueResult.u.a.p            = (char *) MARPAESLIFJSON_FORMFEED;
+    break;
+  case 'r':
+    marpaESLIFValueResult.u.a.p            = (char *) MARPAESLIFJSON_LINEFEED;
+    break;
+  case 'n':
+    marpaESLIFValueResult.u.a.p            = (char *) MARPAESLIFJSON_CARRIAGE_RETURN;
+    break;
+  case 't':
+    marpaESLIFValueResult.u.a.p            = (char *) MARPAESLIFJSON_HORIZONTAL_TAB;
+    break;
+  default:
+    MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "Invalid character '%c'", marpaESLIFValueResultp->u.a.p[1]);
+    goto err;
+  }
+
+  rcb = _marpaESLIFValue_stack_setb(marpaESLIFValuep, resulti, &marpaESLIFValueResult);;
+  goto done;
+
+ err:
   rcb = 0;
 
  done:
