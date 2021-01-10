@@ -519,14 +519,14 @@ static int _marpaESLIFGrammar_lua_writeri(lua_State *L, const void* p, size_t sz
   if (sz > 0) {
     if (marpaESLIFGrammarp->luaprecompiledp == NULL) {
       marpaESLIFGrammarp->luaprecompiledp = (char *) malloc(sz);
-      if (marpaESLIFGrammarp->luaprecompiledp == NULL) {
+      if (MARPAESLIF_UNLIKELY(marpaESLIFGrammarp->luaprecompiledp == NULL)) {
         MARPAESLIF_ERRORF(marpaESLIFGrammarp->marpaESLIFp, "malloc failure, %s", strerror(errno));
         goto err;
       }
       q = marpaESLIFGrammarp->luaprecompiledp;
     } else {
       q = (char *) realloc(marpaESLIFGrammarp->luaprecompiledp, marpaESLIFGrammarp->luaprecompiledl + sz);
-      if (q == NULL) {
+      if (MARPAESLIF_UNLIKELY(q == NULL)) {
         MARPAESLIF_ERRORF(marpaESLIFGrammarp->marpaESLIFp, "malloc failure, %s", strerror(errno));
         goto err;
       }

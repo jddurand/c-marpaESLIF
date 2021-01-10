@@ -1473,7 +1473,7 @@ static inline marpaESLIF_symbol_t  *_marpaESLIF_bootstrap_check_rhsPrimaryp(marp
       /* symbol must exist in the current grammar in the form symbol@delta  */
       sprintf(tmps, "%+d", referencedGrammarp->leveli - grammarp->leveli);
       referencedSymbols = (char *) malloc(strlen(rhsPrimaryp->u.symbolAndReferencep->symbolp->symbols) + 1 /* @ */ + strlen(tmps) + 1 /* NUL */);
-      if (referencedSymbols == NULL) {
+      if (MARPAESLIF_UNLIKELY(referencedSymbols == NULL)) {
         MARPAESLIF_ERRORF(marpaESLIFp, "malloc failure, %s", strerror(errno));
         goto err;
       }
@@ -1483,7 +1483,7 @@ static inline marpaESLIF_symbol_t  *_marpaESLIF_bootstrap_check_rhsPrimaryp(marp
       
       singleSymbol.type = MARPAESLIF_BOOTSTRAP_SINGLE_SYMBOL_TYPE_NA;
       singleSymbol.u.symbolp = (marpaESLIF_bootstrap_symbol_t *) malloc(sizeof(marpaESLIF_bootstrap_symbol_t));
-      if (singleSymbol.u.symbolp == NULL) {
+      if (MARPAESLIF_UNLIKELY(singleSymbol.u.symbolp == NULL)) {
         MARPAESLIF_ERRORF(marpaESLIFp, "malloc failure, %s", strerror(errno));
         goto err;
       }
@@ -1943,14 +1943,14 @@ static inline marpaESLIF_bootstrap_utf_string_t *_marpaESLIF_bootstrap_unquote_s
   }
   
   rcp = (marpaESLIF_bootstrap_utf_string_t *) malloc(sizeof(marpaESLIF_bootstrap_utf_string_t));
-  if (rcp == NULL) {
+  if (MARPAESLIF_UNLIKELY(rcp == NULL)) {
     MARPAESLIF_ERRORF(marpaESLIFp, "malloc failure, %s", strerror(errno));
     goto err;
   }
   rcp->modifiers = NULL;
   rcp->bytel = rc.bytel;
   rcp->bytep = (char *) malloc(rc.bytel + 1); /* NUL byte */
-  if (rcp->bytep == NULL) {
+  if (MARPAESLIF_UNLIKELY(rcp->bytep == NULL)) {
     MARPAESLIF_ERRORF(marpaESLIFp, "malloc failure, %s", strerror(errno));
     goto err;
   }
@@ -2121,7 +2121,7 @@ static short _marpaESLIF_bootstrap_G1_action_symbol_name_1b(void *userDatavp, ma
     goto err;
   }
   barenames = (char *) malloc(asciil + 1);
-  if (barenames == NULL) {
+  if (MARPAESLIF_UNLIKELY(barenames == NULL)) {
     MARPAESLIF_ERRORF(marpaESLIFp, "malloc failure, %s", strerror(errno));
     goto err;
   }
@@ -2172,7 +2172,7 @@ static short _marpaESLIF_bootstrap_G1_action_symbol_name_2b(void *userDatavp, ma
   }
   /* We just remove the '<' and '>' around... */
   bracketednames = (char *) malloc(asciil - 2 + 1);
-  if (bracketednames == NULL) {
+  if (MARPAESLIF_UNLIKELY(bracketednames == NULL)) {
     MARPAESLIF_ERRORF(marpaESLIFp, "malloc failure, %s", strerror(errno));
     goto err;
   }
@@ -2380,7 +2380,7 @@ static short _marpaESLIF_bootstrap_G1_action_adverb_list_itemsb(void *userDatavp
       MARPAESLIF_BOOTSTRAP_GET_CONTEXT(marpaESLIFValuep, i, contextp);
 
       adverbListItemp = (marpaESLIF_bootstrap_adverb_list_item_t *) malloc(sizeof(marpaESLIF_bootstrap_adverb_list_item_t));
-      if (adverbListItemp == NULL) {
+      if (MARPAESLIF_UNLIKELY(adverbListItemp == NULL)) {
         MARPAESLIF_ERRORF(marpaESLIFp, "malloc failure, %s", strerror(errno));
         goto err;
       }
@@ -2599,14 +2599,14 @@ static short _marpaESLIF_bootstrap_G1_action_action_1b(void *userDatavp, marpaES
       goto err;
     }
     actions = strdup(tmps);
-    if (actions == NULL) {
+    if (MARPAESLIF_UNLIKELY(actions == NULL)) {
       MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "strdup failure, %s", strerror(errno));
       goto err;
     }
     luab = 1;
   } else {
     actions = strdup(names);
-    if (actions == NULL) {
+    if (MARPAESLIF_UNLIKELY(actions == NULL)) {
       MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "strdup failure, %s", strerror(errno));
       goto err;
     }
@@ -2614,7 +2614,7 @@ static short _marpaESLIF_bootstrap_G1_action_action_1b(void *userDatavp, marpaES
   }
 
   actionp = (marpaESLIF_action_t *) malloc(sizeof(marpaESLIF_action_t));
-  if (actionp == NULL) {
+  if (MARPAESLIF_UNLIKELY(actionp == NULL)) {
     MARPAESLIF_ERRORF(marpaESLIFp, "malloc failure, %s", strerror(errno));
     goto err;
   }
@@ -2668,7 +2668,7 @@ static short _marpaESLIF_bootstrap_G1_action_action_2b(void *userDatavp, marpaES
   }
 
   actionp = (marpaESLIF_action_t *) malloc(sizeof(marpaESLIF_action_t));
-  if (actionp == NULL) {
+  if (MARPAESLIF_UNLIKELY(actionp == NULL)) {
     MARPAESLIF_ERRORF(marpaESLIFp, "malloc failure, %s", strerror(errno));
     goto err;
   }
@@ -2723,7 +2723,7 @@ static short _marpaESLIF_bootstrap_G1_action_action_3b(void *userDatavp, marpaES
   }
 
   actionp = (marpaESLIF_action_t *) malloc(sizeof(marpaESLIF_action_t));
-  if (actionp == NULL) {
+  if (MARPAESLIF_UNLIKELY(actionp == NULL)) {
     MARPAESLIF_ERRORF(marpaESLIFp, "malloc failure, %s", strerror(errno));
     goto err;
   }
@@ -2791,7 +2791,7 @@ static short _marpaESLIF_bootstrap_G1_action_string_literalb(void *userDatavp, m
     stringp = _marpaESLIF_string_newp(marpaESLIFp, (char *) MARPAESLIF_UTF8_STRING, NULL, 0); /* Will produce empty string */
   } else {
     charp = (char *) malloc(charl + 1);
-    if (charp == NULL) {
+    if (MARPAESLIF_UNLIKELY(charp == NULL)) {
       MARPAESLIF_ERRORF(marpaESLIFp, "malloc failure, %s", strerror(errno));
       goto err;
     }
@@ -2923,7 +2923,7 @@ static short _marpaESLIF_bootstrap_G1_action_string_literal_inside_2b(void *user
   }
 
   charp = (char *) malloc(charl + 1);
-  if (charp == NULL) {
+  if (MARPAESLIF_UNLIKELY(charp == NULL)) {
     MARPAESLIF_ERRORF(marpaESLIFp, "malloc failure, %s", strerror(errno));
     goto err;
   }
@@ -2977,7 +2977,7 @@ static short _marpaESLIF_bootstrap_G1_action_string_literal_inside_3b(void *user
   MARPAESLIF_BOOTSTRAP_DST_OR_VALCHAR(c, *p);
   
   charp = (char *) malloc(charl + 1);
-  if (charp == NULL) {
+  if (MARPAESLIF_UNLIKELY(charp == NULL)) {
     MARPAESLIF_ERRORF(marpaESLIFp, "malloc failure, %s", strerror(errno));
     goto err;
   }
@@ -3042,7 +3042,7 @@ static short _marpaESLIF_bootstrap_G1_action_string_literal_inside_4b(void *user
     goto err;
   }
   charp = (char *) malloc(charl + 1);
-  if (charp == NULL) {
+  if (MARPAESLIF_UNLIKELY(charp == NULL)) {
     MARPAESLIF_ERRORF(marpaESLIFp, "malloc failure, %s", strerror(errno));
     goto err;
   }
@@ -3115,7 +3115,7 @@ static short _marpaESLIF_bootstrap_G1_action_string_literal_inside_5b(void *user
     goto err;
   }
   charp = (char *) malloc(charl + 1);
-  if (charp == NULL) {
+  if (MARPAESLIF_UNLIKELY(charp == NULL)) {
     MARPAESLIF_ERRORF(marpaESLIFp, "malloc failure, %s", strerror(errno));
     goto err;
   }
@@ -3170,14 +3170,14 @@ static short _marpaESLIF_bootstrap_G1_action_symbolaction_1b(void *userDatavp, m
       goto err;
     }
     actions = strdup(tmps);
-    if (actions == NULL) {
+    if (MARPAESLIF_UNLIKELY(actions == NULL)) {
       MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "strdup failure, %s", strerror(errno));
       goto err;
     }
     luab = 1;
   } else {
     actions = strdup(names);
-    if (actions == NULL) {
+    if (MARPAESLIF_UNLIKELY(actions == NULL)) {
       MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "strdup failure, %s", strerror(errno));
       goto err;
     }
@@ -3185,7 +3185,7 @@ static short _marpaESLIF_bootstrap_G1_action_symbolaction_1b(void *userDatavp, m
   }
 
   symbolactionp = (marpaESLIF_action_t *) malloc(sizeof(marpaESLIF_action_t));
-  if (symbolactionp == NULL) {
+  if (MARPAESLIF_UNLIKELY(symbolactionp == NULL)) {
     MARPAESLIF_ERRORF(marpaESLIFp, "malloc failure, %s", strerror(errno));
     goto err;
   }
@@ -3239,7 +3239,7 @@ static short _marpaESLIF_bootstrap_G1_action_symbolaction_2b(void *userDatavp, m
   }
 
   symbolactionp = (marpaESLIF_action_t *) malloc(sizeof(marpaESLIF_action_t));
-  if (symbolactionp == NULL) {
+  if (MARPAESLIF_UNLIKELY(symbolactionp == NULL)) {
     MARPAESLIF_ERRORF(marpaESLIFp, "malloc failure, %s", strerror(errno));
     goto err;
   }
@@ -3294,7 +3294,7 @@ static short _marpaESLIF_bootstrap_G1_action_symbolaction_3b(void *userDatavp, m
   }
 
   symbolactionp = (marpaESLIF_action_t *) malloc(sizeof(marpaESLIF_action_t));
-  if (symbolactionp == NULL) {
+  if (MARPAESLIF_UNLIKELY(symbolactionp == NULL)) {
     MARPAESLIF_ERRORF(marpaESLIFp, "malloc failure, %s", strerror(errno));
     goto err;
   }
@@ -3437,7 +3437,7 @@ static short _marpaESLIF_bootstrap_G1_action_rhs_alternative_1b(void *userDatavp
 
   /* Make that an rhs alternative structure */
   rhsAlternativep = (marpaESLIF_bootstrap_rhs_alternative_t *) malloc(sizeof(marpaESLIF_bootstrap_rhs_alternative_t));
-  if (rhsAlternativep == NULL) {
+  if (MARPAESLIF_UNLIKELY(rhsAlternativep == NULL)) {
     MARPAESLIF_ERRORF(marpaESLIFp, "malloc failure, %s", strerror(errno));
     goto err;
   }
@@ -3534,7 +3534,7 @@ static short _marpaESLIF_bootstrap_G1_action_rhs_primary_1b(void *userDatavp, ma
 
   /* Make that an rhs primary structure */
   rhsPrimaryp = (marpaESLIF_bootstrap_rhs_primary_t *) malloc(sizeof(marpaESLIF_bootstrap_rhs_primary_t));
-  if (rhsPrimaryp == NULL) {
+  if (MARPAESLIF_UNLIKELY(rhsPrimaryp == NULL)) {
     MARPAESLIF_ERRORF(marpaESLIFp, "malloc failure, %s", strerror(errno));
     goto err;
   }
@@ -3593,7 +3593,7 @@ static short _marpaESLIF_bootstrap_G1_action_rhs_primary_2b(void *userDatavp, ma
 
   /* Make that an rhs primary structure */
   rhsPrimaryp = (marpaESLIF_bootstrap_rhs_primary_t *) malloc(sizeof(marpaESLIF_bootstrap_rhs_primary_t));
-  if (rhsPrimaryp == NULL) {
+  if (MARPAESLIF_UNLIKELY(rhsPrimaryp == NULL)) {
     MARPAESLIF_ERRORF(marpaESLIFp, "malloc failure, %s", strerror(errno));
     goto err;
   }
@@ -3602,7 +3602,7 @@ static short _marpaESLIF_bootstrap_G1_action_rhs_primary_2b(void *userDatavp, ma
   rhsPrimaryp->type           = MARPAESLIF_BOOTSTRAP_RHS_PRIMARY_TYPE_NA;
 
   rhsPrimaryp->u.symbolAndReferencep = (marpaESLIF_bootstrap_symbol_and_reference_t *) malloc(sizeof(marpaESLIF_bootstrap_symbol_and_reference_t));
-  if (rhsPrimaryp->u.symbolAndReferencep == NULL) {
+  if (MARPAESLIF_UNLIKELY(rhsPrimaryp->u.symbolAndReferencep == NULL)) {
     MARPAESLIF_ERRORF(marpaESLIFp, "malloc failure, %s", strerror(errno));
     goto err;
   }
@@ -3658,7 +3658,7 @@ static short _marpaESLIF_bootstrap_G1_action_alternativeb(void *userDatavp, marp
   }
 
   alternativep = (marpaESLIF_bootstrap_alternative_t *) malloc(sizeof(marpaESLIF_bootstrap_alternative_t));
-  if (alternativep == NULL) {
+  if (MARPAESLIF_UNLIKELY(alternativep == NULL)) {
     MARPAESLIF_ERRORF(marpaESLIFp, "malloc failure, %s", strerror(errno));
     goto err;
   }
@@ -3824,7 +3824,7 @@ static inline short _marpaESLIF_bootstrap_G1_action_priority_loosen_ruleb(marpaE
   /* Create a top-version of the LHS, using symbols not allowed from the external */
   /* Per-def lhsp is a meta symbol */
   topasciis = (char *) malloc(strlen(lhsp->u.metap->asciinames) + 3 /* "[0]" */ + 1 /* NUL byte */);
-  if (topasciis == NULL) {
+  if (MARPAESLIF_UNLIKELY(topasciis == NULL)) {
     MARPAESLIF_ERRORF(marpaESLIFp, "malloc failure, %s", strerror(errno));
     goto err;
   }
@@ -3895,7 +3895,7 @@ static inline short _marpaESLIF_bootstrap_G1_action_priority_loosen_ruleb(marpaE
       free(currentasciis);
     }
     currentasciis = (char *) malloc(strlen(lhsp->u.metap->asciinames) + 1 /* [ */ + strlen(tmps) + 1 /* ] */ + 1 /* NUL */);
-    if (currentasciis == NULL) {
+    if (MARPAESLIF_UNLIKELY(currentasciis == NULL)) {
       MARPAESLIF_ERRORF(marpaESLIFp, "malloc failure, %s", strerror(errno));
       goto err;
     }
@@ -3913,7 +3913,7 @@ static inline short _marpaESLIF_bootstrap_G1_action_priority_loosen_ruleb(marpaE
       free(nextasciis);
     }
     nextasciis = (char *) malloc(strlen(lhsp->u.metap->asciinames) + 1 /* [ */ + strlen(tmps) + 1 /* ] */ + 1 /* NUL */);
-    if (nextasciis == NULL) {
+    if (MARPAESLIF_UNLIKELY(nextasciis == NULL)) {
       MARPAESLIF_ERRORF(marpaESLIFp, "malloc failure, %s", strerror(errno));
       goto err;
     }
@@ -3976,7 +3976,7 @@ static inline short _marpaESLIF_bootstrap_G1_action_priority_loosen_ruleb(marpaE
       free(currentasciis);
     }
     currentasciis = (char *) malloc(strlen(lhsp->u.metap->asciinames) + 1 /* [ */ + strlen(tmps) + 1 /* ] */ + 1 /* NUL */);
-    if (currentasciis == NULL) {
+    if (MARPAESLIF_UNLIKELY(currentasciis == NULL)) {
       MARPAESLIF_ERRORF(marpaESLIFp, "malloc failure, %s", strerror(errno));
       goto err;
     }
@@ -4002,7 +4002,7 @@ static inline short _marpaESLIF_bootstrap_G1_action_priority_loosen_ruleb(marpaE
       free(nextasciis);
     }
     nextasciis = (char *) malloc(strlen(lhsp->u.metap->asciinames) + 1 /* [ */ + strlen(tmps) + 1 /* ] */ + 1 /* NUL */);
-    if (nextasciis == NULL) {
+    if (MARPAESLIF_UNLIKELY(nextasciis == NULL)) {
       MARPAESLIF_ERRORF(marpaESLIFp, "malloc failure, %s", strerror(errno));
       goto err;
     }
@@ -4039,7 +4039,7 @@ static inline short _marpaESLIF_bootstrap_G1_action_priority_loosen_ruleb(marpaE
       /* As per the grammar, it is not possible that rhsAlternativeStackp is empty */
       nrhsi = GENERICSTACK_USED(rhsAlternativeStackp);
       arityip = (int *) malloc(nrhsi * sizeof(int));
-      if (arityip == NULL) {
+      if (MARPAESLIF_UNLIKELY(arityip == NULL)) {
         MARPAESLIF_ERRORF(marpaESLIFp, "malloc failure, %s", strerror(errno));
         goto err;
       }
@@ -4124,27 +4124,27 @@ static inline short _marpaESLIF_bootstrap_G1_action_priority_loosen_ruleb(marpaE
           rhsAlternativep = (marpaESLIF_bootstrap_rhs_alternative_t *) GENERICSTACK_GET_PTR(rhsAlternativeStackp, rhsi);
           _marpaESLIF_bootstrap_rhs_alternative_freev(prioritizedRhsAlternativep);
           prioritizedRhsAlternativep = (marpaESLIF_bootstrap_rhs_alternative_t *)  malloc(sizeof(marpaESLIF_bootstrap_rhs_alternative_t));
-          if (prioritizedRhsAlternativep == NULL) {
+          if (MARPAESLIF_UNLIKELY(prioritizedRhsAlternativep == NULL)) {
             MARPAESLIF_ERRORF(marpaESLIFp, "malloc failure, %s", strerror(errno));
             goto err;
           }
           prioritizedRhsAlternativep->symbolShallowp = NULL;
           prioritizedRhsAlternativep->type           = MARPAESLIF_BOOTSTRAP_RHS_ALTERNATIVE_TYPE_RHS_PRIMARY;
           prioritizedRhsAlternativep->u.rhsPrimaryp  = (marpaESLIF_bootstrap_rhs_primary_t *) malloc(sizeof(marpaESLIF_bootstrap_rhs_primary_t));
-          if (prioritizedRhsAlternativep->u.rhsPrimaryp == NULL) {
+          if (MARPAESLIF_UNLIKELY(prioritizedRhsAlternativep->u.rhsPrimaryp == NULL)) {
             MARPAESLIF_ERRORF(marpaESLIFp, "malloc failure, %s", strerror(errno));
             goto err;
           }
           prioritizedRhsAlternativep->u.rhsPrimaryp->symbolShallowp  = NULL;
           prioritizedRhsAlternativep->u.rhsPrimaryp->type            = MARPAESLIF_BOOTSTRAP_RHS_PRIMARY_TYPE_SINGLE_SYMBOL;
           prioritizedRhsAlternativep->u.rhsPrimaryp->u.singleSymbolp = (marpaESLIF_bootstrap_single_symbol_t *) malloc(sizeof(marpaESLIF_bootstrap_single_symbol_t));
-          if (prioritizedRhsAlternativep->u.rhsPrimaryp->u.singleSymbolp == NULL) {
+          if (MARPAESLIF_UNLIKELY(prioritizedRhsAlternativep->u.rhsPrimaryp->u.singleSymbolp == NULL)) {
             MARPAESLIF_ERRORF(marpaESLIFp, "malloc failure, %s", strerror(errno));
             goto err;
           }
           prioritizedRhsAlternativep->u.rhsPrimaryp->u.singleSymbolp->type      = MARPAESLIF_BOOTSTRAP_SINGLE_SYMBOL_TYPE_SYMBOL;
           prioritizedRhsAlternativep->u.rhsPrimaryp->u.singleSymbolp->u.symbolp = (marpaESLIF_bootstrap_symbol_t *) malloc(sizeof(marpaESLIF_bootstrap_symbol_t));
-          if (prioritizedRhsAlternativep->u.rhsPrimaryp->u.singleSymbolp->u.symbolp == NULL) {
+          if (MARPAESLIF_UNLIKELY(prioritizedRhsAlternativep->u.rhsPrimaryp->u.singleSymbolp->u.symbolp == NULL)) {
             MARPAESLIF_ERRORF(marpaESLIFp, "malloc failure, %s", strerror(errno));
             goto err;
           }
@@ -4161,7 +4161,7 @@ static inline short _marpaESLIF_bootstrap_G1_action_priority_loosen_ruleb(marpaE
             goto err;
           }
 
-          if (prioritizedRhsAlternativep->u.rhsPrimaryp->u.singleSymbolp->u.symbolp->symbols == NULL) {
+          if (MARPAESLIF_UNLIKELY(prioritizedRhsAlternativep->u.rhsPrimaryp->u.singleSymbolp->u.symbolp->symbols == NULL)) {
             MARPAESLIF_ERRORF(marpaESLIFp, "strdup failure, %s", strerror(errno));
             goto err;
           }
@@ -4277,18 +4277,18 @@ static inline short _marpaESLIF_bootstrap_G1_action_priority_flat_ruleb(marpaESL
 
       nrhsi = GENERICSTACK_USED(rhsAlternativeStackp);
       rhsip = (int *) malloc(nrhsi * sizeof(int));
-      if (rhsip == NULL) {
+      if (MARPAESLIF_UNLIKELY(rhsip == NULL)) {
         MARPAESLIF_ERRORF(marpaESLIFp, "malloc failure, %s", strerror(errno));
         goto err;
       }
       rhsp = (marpaESLIF_symbol_t **) malloc(nrhsi * sizeof(marpaESLIF_symbol_t *));
-      if (rhsp == NULL) {
+      if (MARPAESLIF_UNLIKELY(rhsp == NULL)) {
         MARPAESLIF_ERRORF(marpaESLIFp, "malloc failure, %s", strerror(errno));
         goto err;
       }
 
       skipbp = (short *) malloc(nrhsi * sizeof(short));
-      if (skipbp == NULL) {
+      if (MARPAESLIF_UNLIKELY(skipbp == NULL)) {
         MARPAESLIF_ERRORF(marpaESLIFp, "malloc failure, %s", strerror(errno));
         goto err;
       }
@@ -4504,7 +4504,7 @@ static short _marpaESLIF_bootstrap_G1_action_single_symbol_1b(void *userDatavp, 
   }
 
   singleSymbolp = (marpaESLIF_bootstrap_single_symbol_t *) malloc(sizeof(marpaESLIF_bootstrap_single_symbol_t));
-  if (singleSymbolp == NULL) {
+  if (MARPAESLIF_UNLIKELY(singleSymbolp == NULL)) {
     MARPAESLIF_ERRORF(marpaESLIFp, "malloc failure, %s", strerror(errno));
     goto err;
   }
@@ -4550,7 +4550,7 @@ static short _marpaESLIF_bootstrap_G1_action_single_symbol_2b(void *userDatavp, 
   }
 
   singleSymbolp = (marpaESLIF_bootstrap_single_symbol_t *) malloc(sizeof(marpaESLIF_bootstrap_single_symbol_t));
-  if (singleSymbolp == NULL) {
+  if (MARPAESLIF_UNLIKELY(singleSymbolp == NULL)) {
     MARPAESLIF_ERRORF(marpaESLIFp, "malloc failure, %s", strerror(errno));
     goto err;
   }
@@ -4594,7 +4594,7 @@ static short _marpaESLIF_bootstrap_G1_action_terminal_1b(void *userDatavp, marpa
   MARPAESLIF_BOOTSTRAP_GETANDFORGET_ARRAY(marpaESLIFValuep, arg0i, bytep, bytel, shallowb);
 
   terminalp = (marpaESLIF_bootstrap_terminal_t *) malloc(sizeof(marpaESLIF_bootstrap_terminal_t));
-  if (terminalp == NULL) {
+  if (MARPAESLIF_UNLIKELY(terminalp == NULL)) {
     MARPAESLIF_ERRORF(marpaESLIFp, "malloc failure, %s", strerror(errno));
     goto err;
   }
@@ -4643,7 +4643,7 @@ static short _marpaESLIF_bootstrap_G1_action_terminal_2b(void *userDatavp, marpa
   MARPAESLIF_BOOTSTRAP_GETANDFORGET_ARRAY(marpaESLIFValuep, arg0i, bytep, bytel, shallowb);
 
   terminalp = (marpaESLIF_bootstrap_terminal_t *) malloc(sizeof(marpaESLIF_bootstrap_terminal_t));
-  if (terminalp == NULL) {
+  if (MARPAESLIF_UNLIKELY(terminalp == NULL)) {
     MARPAESLIF_ERRORF(marpaESLIFp, "malloc failure, %s", strerror(errno));
     goto err;
   }
@@ -4706,7 +4706,7 @@ static short _marpaESLIF_bootstrap_G1_action_terminal_3b(void *userDatavp, marpa
   /* Duplicate bytep if it is shallow */
   if (shallowb) {
     tmps = (char *) malloc(bytel + 1);
-    if (tmps == NULL) {
+    if (MARPAESLIF_UNLIKELY(tmps == NULL)) {
       MARPAESLIF_ERRORF(marpaESLIFp, "malloc failure, %s", strerror(errno));
       goto err;
     }
@@ -4754,7 +4754,7 @@ static short _marpaESLIF_bootstrap_G1_action_terminal_3b(void *userDatavp, marpa
     /* We want to maintain marpaESLIFValueResult lifetime, so need to unshallow the result of the INTERNAL method _marpaESLIFRecognizer_terminal_matcherb() if necessary */
     if (marpaESLIFValueResult.u.a.shallowb) {
       modifiers = (char *) malloc(marpaESLIFValueResult.u.a.sizel + 1);
-      if (modifiers == NULL) {
+      if (MARPAESLIF_UNLIKELY(modifiers == NULL)) {
         MARPAESLIF_ERRORF(marpaESLIFp, "malloc failure, %s", strerror(errno));
         goto err;
       }
@@ -4775,13 +4775,13 @@ static short _marpaESLIF_bootstrap_G1_action_terminal_3b(void *userDatavp, marpa
 
   /* Make that a single symbol structure */
   terminalp = (marpaESLIF_bootstrap_terminal_t *) malloc(sizeof(marpaESLIF_bootstrap_terminal_t));
-  if (terminalp == NULL) {
+  if (MARPAESLIF_UNLIKELY(terminalp == NULL)) {
     MARPAESLIF_ERRORF(marpaESLIFp, "malloc failure, %s", strerror(errno));
     goto err;
   }
   terminalp->type = MARPAESLIF_BOOTSTRAP_TERMINAL_TYPE_NA;
   terminalp->u.stringp = (marpaESLIF_bootstrap_utf_string_t *) malloc(sizeof(marpaESLIF_bootstrap_utf_string_t));
-  if (terminalp->u.stringp == NULL) {
+  if (MARPAESLIF_UNLIKELY(terminalp->u.stringp == NULL)) {
     MARPAESLIF_ERRORF(marpaESLIFp, "malloc failure, %s", strerror(errno));
     goto err;
   }
@@ -4838,7 +4838,7 @@ static inline short _marpaESLIF_bootstrap_G1_action_terminal_builtinb(void *user
   short                             rcb;
 
   terminalp = (marpaESLIF_bootstrap_terminal_t *) malloc(sizeof(marpaESLIF_bootstrap_terminal_t));
-  if (terminalp == NULL) {
+  if (MARPAESLIF_UNLIKELY(terminalp == NULL)) {
     MARPAESLIF_ERRORF(marpaESLIFp, "malloc failure, %s", strerror(errno));
     goto err;
   }
@@ -4878,7 +4878,7 @@ static short _marpaESLIF_bootstrap_G1_action_symbolb(void *userDatavp, marpaESLI
   MARPAESLIF_BOOTSTRAP_GETANDFORGET_PTR(marpaESLIFValuep, arg0i, symbols);
 
   symbolp = (marpaESLIF_bootstrap_symbol_t *) malloc(sizeof(marpaESLIF_bootstrap_symbol_t));
-  if (symbolp == NULL) {
+  if (MARPAESLIF_UNLIKELY(symbolp == NULL)) {
     MARPAESLIF_ERRORF(marpaESLIFp, "malloc failure, %s", strerror(errno));
     goto err;
   }
@@ -4927,7 +4927,7 @@ static short _marpaESLIF_bootstrap_G1_action_grammar_reference_1b(void *userData
   }
 
   grammarReferencep = (marpaESLIF_bootstrap_grammar_reference_t *) malloc(sizeof(marpaESLIF_bootstrap_grammar_reference_t));
-  if (grammarReferencep == NULL) {
+  if (MARPAESLIF_UNLIKELY(grammarReferencep == NULL)) {
     MARPAESLIF_ERRORF(marpaESLIFp, "malloc failure, %s", strerror(errno));
     goto err;
   }
@@ -4976,7 +4976,7 @@ static short _marpaESLIF_bootstrap_G1_action_grammar_reference_2b(void *userData
   }
 
   grammarReferencep = (marpaESLIF_bootstrap_grammar_reference_t *) malloc(sizeof(marpaESLIF_bootstrap_grammar_reference_t));
-  if (grammarReferencep == NULL) {
+  if (MARPAESLIF_UNLIKELY(grammarReferencep == NULL)) {
     MARPAESLIF_ERRORF(marpaESLIFp, "malloc failure, %s", strerror(errno));
     goto err;
   }
@@ -5020,7 +5020,7 @@ static short _marpaESLIF_bootstrap_G1_action_grammar_reference_3b(void *userData
   }
 
   grammarReferencep = (marpaESLIF_bootstrap_grammar_reference_t *) malloc(sizeof(marpaESLIF_bootstrap_grammar_reference_t));
-  if (grammarReferencep == NULL) {
+  if (MARPAESLIF_UNLIKELY(grammarReferencep == NULL)) {
     MARPAESLIF_ERRORF(marpaESLIFp, "malloc failure, %s", strerror(errno));
     goto err;
   }
@@ -5735,7 +5735,7 @@ static short _marpaESLIF_bootstrap_G1_action_default_ruleb(void *userDatavp, mar
   }
   if (defaultEncodings != NULL) {
     grammarp->defaultEncodings = strdup(defaultEncodings);
-    if (grammarp->defaultEncodings == NULL) {
+    if (MARPAESLIF_UNLIKELY(grammarp->defaultEncodings == NULL)) {
       MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "strdup failure, %s", strerror(errno));
       goto err;
     }
@@ -5746,7 +5746,7 @@ static short _marpaESLIF_bootstrap_G1_action_default_ruleb(void *userDatavp, mar
   }
   if (fallbackEncodings != NULL) {
     grammarp->fallbackEncodings = strdup(fallbackEncodings);
-    if (grammarp->fallbackEncodings == NULL) {
+    if (MARPAESLIF_UNLIKELY(grammarp->fallbackEncodings == NULL)) {
       MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "strdup failure, %s", strerror(errno));
       goto err;
     }
@@ -6166,12 +6166,12 @@ static short _marpaESLIF_bootstrap_G1_action_event_initializationb(void *userDat
 
   /* Make that an rhs primary structure */
   eventInitializationp = (marpaESLIF_bootstrap_event_initialization_t *) malloc(sizeof(marpaESLIF_bootstrap_event_initialization_t));
-  if (eventInitializationp == NULL) {
+  if (MARPAESLIF_UNLIKELY(eventInitializationp == NULL)) {
     MARPAESLIF_ERRORF(marpaESLIFp, "malloc failure, %s", strerror(errno));
     goto err;
   }
   eventInitializationp->eventNames  = strdup(eventNames);
-  if (eventInitializationp->eventNames == NULL) {
+  if (MARPAESLIF_UNLIKELY(eventInitializationp->eventNames == NULL)) {
     MARPAESLIF_ERRORF(marpaESLIFp, "strdup failure, %s", strerror(errno));
     goto err;
   }
@@ -6335,7 +6335,7 @@ static short _marpaESLIF_bootstrap_G1_action_lexeme_ruleb(void *userDatavp, marp
         free(symbolp->eventBefores);
       }
       symbolp->eventBefores = strdup(eventInitializationp->eventNames);
-      if (symbolp->eventBefores == NULL) {
+      if (MARPAESLIF_UNLIKELY(symbolp->eventBefores == NULL)) {
         MARPAESLIF_ERRORF(marpaESLIFp, "strdup failure, %s", strerror(errno));
         goto err;
       }
@@ -6357,7 +6357,7 @@ static short _marpaESLIF_bootstrap_G1_action_lexeme_ruleb(void *userDatavp, marp
         free(symbolp->eventAfters);
       }
       symbolp->eventAfters = strdup(eventInitializationp->eventNames);
-      if (symbolp->eventAfters == NULL) {
+      if (MARPAESLIF_UNLIKELY(symbolp->eventAfters == NULL)) {
         MARPAESLIF_ERRORF(marpaESLIFp, "strdup failure, %s", strerror(errno));
         goto err;
       }
@@ -6504,7 +6504,7 @@ static short _marpaESLIF_bootstrap_G1_action_terminal_ruleb(void *userDatavp, ma
         free(symbolp->eventBefores);
       }
       symbolp->eventBefores = strdup(eventInitializationp->eventNames);
-      if (symbolp->eventBefores == NULL) {
+      if (MARPAESLIF_UNLIKELY(symbolp->eventBefores == NULL)) {
         MARPAESLIF_ERRORF(marpaESLIFp, "strdup failure, %s", strerror(errno));
         goto err;
       }
@@ -6526,7 +6526,7 @@ static short _marpaESLIF_bootstrap_G1_action_terminal_ruleb(void *userDatavp, ma
         free(symbolp->eventAfters);
       }
       symbolp->eventAfters = strdup(eventInitializationp->eventNames);
-      if (symbolp->eventAfters == NULL) {
+      if (MARPAESLIF_UNLIKELY(symbolp->eventAfters == NULL)) {
         MARPAESLIF_ERRORF(marpaESLIFp, "strdup failure, %s", strerror(errno));
         goto err;
       }
@@ -6695,7 +6695,7 @@ static short _marpaESLIF_bootstrap_G1_action_discard_ruleb(void *userDatavp, mar
       free(rulep->discardEvents);
     }
     rulep->discardEvents = strdup(eventInitializationp->eventNames);
-    if (rulep->discardEvents == NULL) {
+    if (MARPAESLIF_UNLIKELY(rulep->discardEvents == NULL)) {
       MARPAESLIF_ERRORF(marpaESLIFp, "strdup failure, %s", strerror(errno));
       goto err;
     }
@@ -6815,7 +6815,7 @@ static inline short _marpaESLIF_bootstrap_G1_action_event_declarationb(void *use
     free(*eventsp);
   }
   *eventsp = strdup(eventInitializationp->eventNames);
-  if (*eventsp == NULL) {
+  if (MARPAESLIF_UNLIKELY(*eventsp == NULL)) {
     MARPAESLIF_ERRORF(marpaESLIFp, "strdup failure, %s", strerror(errno));
     goto err;
   }
@@ -6958,7 +6958,7 @@ static short _marpaESLIF_bootstrap_G1_action_namingb(void *userDatavp, marpaESLI
   }
 
   namingp = (marpaESLIF_bootstrap_utf_string_t *) malloc(sizeof(marpaESLIF_bootstrap_utf_string_t));
-  if (namingp == NULL) {
+  if (MARPAESLIF_UNLIKELY(namingp == NULL)) {
     MARPAESLIF_ERRORF(marpaESLIFp, "malloc failure, %s", strerror(errno));
     goto err;
   }
@@ -6969,7 +6969,7 @@ static short _marpaESLIF_bootstrap_G1_action_namingb(void *userDatavp, marpaESLI
   /* Duplicate bytep if it is shallow */
   if (shallowb) {
     namingp->bytep     = malloc(bytel + 1);
-    if (namingp->bytep == NULL) {
+    if (MARPAESLIF_UNLIKELY(namingp->bytep == NULL)) {
       MARPAESLIF_ERRORF(marpaESLIFp, "malloc failure, %s", strerror(errno));
       goto err;
     }
@@ -7198,7 +7198,7 @@ static inline marpaESLIF_bootstrap_utf_string_t *_marpaESLIF_bootstrap_regex_to_
     /* We want to maintain marpaESLIFValueResult lifetime, so need to unshallow the result of the INTERNAL method _marpaESLIFRecognizer_terminal_matcherb() if necessary */
     if (marpaESLIFValueResult.u.a.shallowb) {
       modifiers = (char *) malloc(marpaESLIFValueResult.u.a.sizel + 1);
-      if (modifiers == NULL) {
+      if (MARPAESLIF_UNLIKELY(modifiers == NULL)) {
         MARPAESLIF_ERRORF(marpaESLIFp, "malloc failure, %s", strerror(errno));
         goto err;
       }
@@ -7214,7 +7214,7 @@ static inline marpaESLIF_bootstrap_utf_string_t *_marpaESLIF_bootstrap_regex_to_
   }
 
   stringp = (marpaESLIF_bootstrap_utf_string_t *) malloc(sizeof(marpaESLIF_bootstrap_utf_string_t));
-  if (stringp == NULL) {
+  if (MARPAESLIF_UNLIKELY(stringp == NULL)) {
     MARPAESLIF_ERRORF(marpaESLIFp, "malloc failure, %s", strerror(errno));
     goto err;
   }
@@ -7237,7 +7237,7 @@ static inline marpaESLIF_bootstrap_utf_string_t *_marpaESLIF_bootstrap_regex_to_
     goto err;
   }
   newbytep = malloc(newbytel);
-  if (newbytep == NULL) {
+  if (MARPAESLIF_UNLIKELY(newbytep == NULL)) {
     MARPAESLIF_ERRORF(marpaESLIFp, "malloc failure, %s", strerror(errno));
     goto err;
   }
@@ -7288,7 +7288,7 @@ static inline marpaESLIF_bootstrap_utf_string_t *_marpaESLIF_bootstrap_character
 
   /* Duplicate bytep in any case */
   tmps = (char *) malloc(bytel + 1);
-  if (tmps == NULL) {
+  if (MARPAESLIF_UNLIKELY(tmps == NULL)) {
     MARPAESLIF_ERRORF(marpaESLIFp, "malloc failure, %s", strerror(errno));
     goto err;
   }
@@ -7343,7 +7343,7 @@ static inline marpaESLIF_bootstrap_utf_string_t *_marpaESLIF_bootstrap_character
     /* We want to maintain marpaESLIFValueResult lifetime, so need to unshallow the result of the INTERNAL method _marpaESLIFRecognizer_terminal_matcherb() if necessary */
     if (marpaESLIFValueResult.u.a.shallowb) {
       modifiers = (char *) malloc(marpaESLIFValueResult.u.a.sizel + 1);
-      if (modifiers == NULL) {
+      if (MARPAESLIF_UNLIKELY(modifiers == NULL)) {
         MARPAESLIF_ERRORF(marpaESLIFp, "malloc failure, %s", strerror(errno));
         goto err;
       }
@@ -7359,7 +7359,7 @@ static inline marpaESLIF_bootstrap_utf_string_t *_marpaESLIF_bootstrap_character
   }
 
   stringp = (marpaESLIF_bootstrap_utf_string_t *) malloc(sizeof(marpaESLIF_bootstrap_utf_string_t));
-  if (stringp == NULL) {
+  if (MARPAESLIF_UNLIKELY(stringp == NULL)) {
     MARPAESLIF_ERRORF(marpaESLIFp, "malloc failure, %s", strerror(errno));
     goto err;
   }
@@ -7437,7 +7437,7 @@ static inline short _marpaESLIF_bootstrap_G1_action_rhs_alternative_2_and_3b(voi
   }
 
   rhsAlternativep = (marpaESLIF_bootstrap_rhs_alternative_t *) malloc(sizeof(marpaESLIF_bootstrap_rhs_alternative_t));
-  if (rhsAlternativep == NULL) {
+  if (MARPAESLIF_UNLIKELY(rhsAlternativep == NULL)) {
     MARPAESLIF_ERRORF(marpaESLIFp, "malloc failure, %s", strerror(errno));
     goto err;
   }
@@ -7489,7 +7489,7 @@ static inline short _marpaESLIF_bootstrap_G1_action_rhs_alternative_4_and_5b(voi
   }
 
   rhsAlternativep = (marpaESLIF_bootstrap_rhs_alternative_t *) malloc(sizeof(marpaESLIF_bootstrap_rhs_alternative_t));
-  if (rhsAlternativep == NULL) {
+  if (MARPAESLIF_UNLIKELY(rhsAlternativep == NULL)) {
     MARPAESLIF_ERRORF(marpaESLIFp, "malloc failure, %s", strerror(errno));
     goto err;
   }
@@ -7548,7 +7548,7 @@ static inline short _marpaESLIF_bootstrap_G1_action_rhs_alternative_6_and_7b(voi
   }
 
   rhsAlternativep = (marpaESLIF_bootstrap_rhs_alternative_t *) malloc(sizeof(marpaESLIF_bootstrap_rhs_alternative_t));
-  if (rhsAlternativep == NULL) {
+  if (MARPAESLIF_UNLIKELY(rhsAlternativep == NULL)) {
     MARPAESLIF_ERRORF(marpaESLIFp, "malloc failure, %s", strerror(errno));
     goto err;
   }
@@ -7614,7 +7614,7 @@ static short _marpaESLIF_bootstrap_G1_action_luascript_statementb(void *userData
       /* First time: duplicate luabytep if it is shallow */
       if (shallowb) {
         marpaESLIFGrammarp->luabytep = (char *) malloc(luabytel + 1);
-        if (marpaESLIFGrammarp->luabytep == NULL) {
+        if (MARPAESLIF_UNLIKELY(marpaESLIFGrammarp->luabytep == NULL)) {
           MARPAESLIF_ERRORF(marpaESLIFp, "malloc failure, %s", strerror(errno));
           goto err;
         }
@@ -7635,7 +7635,7 @@ static short _marpaESLIF_bootstrap_G1_action_luascript_statementb(void *userData
         goto err;
       }
       tmps = (char *) realloc(marpaESLIFGrammarp->luabytep, tmpl + 1); /* Hiden NUL byte */
-      if (tmps == NULL) {
+      if (MARPAESLIF_UNLIKELY(tmps == NULL)) {
         MARPAESLIF_ERRORF(marpaESLIFp, "realloc failure, %s", strerror(errno));
         goto err;
       }
@@ -7695,14 +7695,14 @@ static short _marpaESLIF_bootstrap_G1_action_ifactionb(void *userDatavp, marpaES
       goto err;
     }
     actions = strdup(tmps);
-    if (actions == NULL) {
+    if (MARPAESLIF_UNLIKELY(actions == NULL)) {
       MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "strdup failure, %s", strerror(errno));
       goto err;
     }
     luab = 1;
   } else {
     actions = strdup(names);
-    if (actions == NULL) {
+    if (MARPAESLIF_UNLIKELY(actions == NULL)) {
       MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "strdup failure, %s", strerror(errno));
       goto err;
     }
@@ -7710,7 +7710,7 @@ static short _marpaESLIF_bootstrap_G1_action_ifactionb(void *userDatavp, marpaES
   }
 
   ifactionp = (marpaESLIF_action_t *) malloc(sizeof(marpaESLIF_action_t));
-  if (ifactionp == NULL) {
+  if (MARPAESLIF_UNLIKELY(ifactionp == NULL)) {
     MARPAESLIF_ERRORF(marpaESLIFp, "malloc failure, %s", strerror(errno));
     goto err;
   }
@@ -7773,14 +7773,14 @@ static short _marpaESLIF_bootstrap_G1_action_regexactionb(void *userDatavp, marp
       goto err;
     }
     actions = strdup(tmps);
-    if (actions == NULL) {
+    if (MARPAESLIF_UNLIKELY(actions == NULL)) {
       MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "strdup failure, %s", strerror(errno));
       goto err;
     }
     luab = 1;
   } else {
     actions = strdup(names);
-    if (actions == NULL) {
+    if (MARPAESLIF_UNLIKELY(actions == NULL)) {
       MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "strdup failure, %s", strerror(errno));
       goto err;
     }
@@ -7788,7 +7788,7 @@ static short _marpaESLIF_bootstrap_G1_action_regexactionb(void *userDatavp, marp
   }
 
   regexactionp = (marpaESLIF_action_t *) malloc(sizeof(marpaESLIF_action_t));
-  if (regexactionp == NULL) {
+  if (MARPAESLIF_UNLIKELY(regexactionp == NULL)) {
     MARPAESLIF_ERRORF(marpaESLIFp, "malloc failure, %s", strerror(errno));
     goto err;
   }
@@ -7851,14 +7851,14 @@ static short _marpaESLIF_bootstrap_G1_action_eventactionb(void *userDatavp, marp
       goto err;
     }
     actions = strdup(tmps);
-    if (actions == NULL) {
+    if (MARPAESLIF_UNLIKELY(actions == NULL)) {
       MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "strdup failure, %s", strerror(errno));
       goto err;
     }
     luab = 1;
   } else {
     actions = strdup(names);
-    if (actions == NULL) {
+    if (MARPAESLIF_UNLIKELY(actions == NULL)) {
       MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "strdup failure, %s", strerror(errno));
       goto err;
     }
@@ -7866,7 +7866,7 @@ static short _marpaESLIF_bootstrap_G1_action_eventactionb(void *userDatavp, marp
   }
 
   eventactionp = (marpaESLIF_action_t *) malloc(sizeof(marpaESLIF_action_t));
-  if (eventactionp == NULL) {
+  if (MARPAESLIF_UNLIKELY(eventactionp == NULL)) {
     MARPAESLIF_ERRORF(marpaESLIFp, "malloc failure, %s", strerror(errno));
     goto err;
   }
@@ -7922,7 +7922,7 @@ static short _marpaESLIF_bootstrap_G1_action_defaultencodingb(void *userDatavp, 
   /* Unshallow it if necessary */
   if (shallowb) {
     tmps = strdup(defaultEncodings);
-    if (tmps == NULL) {
+    if (MARPAESLIF_UNLIKELY(tmps == NULL)) {
       MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "strdup failure, %s", strerror(errno));
       goto err;
     }
@@ -7975,7 +7975,7 @@ static short _marpaESLIF_bootstrap_G1_action_fallbackencodingb(void *userDatavp,
   /* Unshallow it if necessary */
   if (shallowb) {
     tmps = strdup(fallbackEncodings);
-    if (tmps == NULL) {
+    if (MARPAESLIF_UNLIKELY(tmps == NULL)) {
       MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "strdup failure, %s", strerror(errno));
       goto err;
     }

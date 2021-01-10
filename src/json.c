@@ -745,7 +745,7 @@ static short _marpaESLIFJSON_membersb(void *userDatavp, marpaESLIFValue_t *marpa
   if ((! nullableb) && (argni >= arg0i)) {
     marpaESLIFValueResult.u.t.sizel = argni - arg0i + 1;
     marpaESLIFValueResult.u.t.p = (marpaESLIFValueResultPair_t *) malloc(marpaESLIFValueResult.u.t.sizel * sizeof(marpaESLIFValueResultPair_t));
-    if (marpaESLIFValueResult.u.t.p == NULL) {
+    if (MARPAESLIF_UNLIKELY(marpaESLIFValueResult.u.t.p == NULL)) {
       MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "malloc failure, %s", strerror(errno));
       goto err;
     }
@@ -995,7 +995,7 @@ static short _marpaESLIFJSON_charsb(void *userDatavp, marpaESLIFValue_t *marpaES
       }
 
       p = (unsigned char *) malloc(sizel + 1); /* + 1 for a hiden NUL byte */
-      if (p == NULL) {
+      if (MARPAESLIF_UNLIKELY(p == NULL)) {
         MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "malloc failure, %s", strerror(errno));
         goto err;
       }
@@ -1169,7 +1169,7 @@ static short _marpaESLIFJSON_unicodeb(void *userDatavp, marpaESLIFValue_t *marpa
   /* It is a sequence of '\uXXXX' by definition, i.e. 6 bytes - so there are (marpaESLIFValueResultp->u.a.sizel / 6) hex digits */
   uint32l = marpaESLIFValueResultp->u.a.sizel / 6;
   uint32p = (marpaESLIF_uint32_t *) malloc(sizeof(marpaESLIF_uint32_t) * uint32l);
-  if (uint32p == NULL) {
+  if (MARPAESLIF_UNLIKELY(uint32p == NULL)) {
     MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "malloc failure, %s", strerror(errno));
     goto err;
   }
@@ -1191,7 +1191,7 @@ static short _marpaESLIFJSON_unicodeb(void *userDatavp, marpaESLIFValue_t *marpa
   /* Worst case is four UTF-8 bytes */
   dstl = uint32l * 4;
   dstp = (unsigned char *) malloc(sizeof(unsigned char) * dstl);
-  if (dstp == NULL) {
+  if (MARPAESLIF_UNLIKELY(dstp == NULL)) {
     MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "malloc failure, %s", strerror(errno));
     goto err;
   }
