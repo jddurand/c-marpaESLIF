@@ -15,6 +15,7 @@ static short                                _marpaESLIFJSONValueResultImportb(ma
 static short                                _marpaESLIFJSON_membersb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
 static short                                _marpaESLIFJSON_numberb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
 static short                                _marpaESLIFJSON_charsb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
+static short                                _marpaESLIFJSON_constantb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
 static short                                _marpaESLIFJSON_unicodeb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
 static short                                _marpaESLIFJSON_positive_infinityb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
 static short                                _marpaESLIFJSON_negative_infinityb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
@@ -67,9 +68,8 @@ static const char *marpaESLIFJSON_decode_extended_grammars =
   "           | number\n"
   "           | object\n"
   "           | array\n"
-  "           | 'true'                                                                 action         => ::true\n"
-  "           | 'false'                                                                action         => ::false\n"
-  "           | 'null'                                                                 action         => ::undef\n"
+  "           | constant\n"
+  "constant ::= /true|false|null/                                                      action         => constant\n"
   "\n"
   "# -----------\n"
   "# JSON object\n"
@@ -198,9 +198,8 @@ static const char *marpaESLIFJSON_decode_strict_grammars =
   "           | number\n"
   "           | object\n"
   "           | array\n"
-  "           | 'true'                                                                 action         => ::true\n"
-  "           | 'false'                                                                action         => ::false\n"
-  "           | 'null'                                                                 action         => ::undef\n"
+  "           | constant\n"
+  "constant ::= /true|false|null/                                                      action         => constant\n"
   "\n"
   "# -----------\n"
   "# JSON object\n"
@@ -691,6 +690,8 @@ static marpaESLIFValueRuleCallback_t _marpaESLIFJSONValueRuleActionResolverp(voi
     rcp = _marpaESLIFJSON_numberb;
   } else if (strcmp(actions, "chars") == 0) {
     rcp = _marpaESLIFJSON_charsb;
+  } else if (strcmp(actions, "constant") == 0) {
+    rcp = _marpaESLIFJSON_constantb;
   } else if (strcmp(actions, "unicode") == 0) {
     rcp = _marpaESLIFJSON_unicodeb;
   } else if (strcmp(actions, "positive_infinity") == 0) {
@@ -1039,6 +1040,32 @@ static short _marpaESLIFJSON_charsb(void *userDatavp, marpaESLIFValue_t *marpaES
 
  done:
   return rcb;
+}
+
+/*****************************************************************************/
+static short _marpaESLIFJSON_constantb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb)
+/*****************************************************************************/
+{
+  marpaESLIFValueResult_t *marpaESLIFValueResultp;
+
+  /* We know this is an array that is either 'true', 'false' or 'null' */
+  marpaESLIFValueResultp = _marpaESLIFValue_stack_getp(marpaESLIFValuep, arg0i);
+  if (marpaESLIFValueResultp == NULL) {
+    return 0;
+  } else {
+
+    switch (marpaESLIFValueResultp->u.a.p[0]) {
+    case 't':
+      return _marpaESLIFValue_stack_setb(marpaESLIFValuep, resulti, &(marpaESLIFValuep->marpaESLIFp->marpaESLIFValueResultTrue));
+    case 'f':
+      return _marpaESLIFValue_stack_setb(marpaESLIFValuep, resulti, &(marpaESLIFValuep->marpaESLIFp->marpaESLIFValueResultFalse));
+    case 'n':
+      return _marpaESLIFValue_stack_setb(marpaESLIFValuep, resulti, (marpaESLIFValueResult_t *) &marpaESLIFValueResultUndef);
+    default:
+      MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "Invalid first character '%c'", marpaESLIFValueResultp->u.a.p[0]);
+      return 0;
+    }
+  }
 }
 
 /*****************************************************************************/
