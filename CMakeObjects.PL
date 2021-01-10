@@ -10,6 +10,7 @@ use File::Path qw/make_path/;
 use File::Copy::Recursive qw/dircopy/;
 use IPC::Run qw/run/;
 use POSIX qw/EXIT_SUCCESS/;
+use Try::Tiny;
 
 #
 # ExtUtils::CBuilder custom configuration from environment:
@@ -44,6 +45,32 @@ $ac->define_var('MARPA_LIB_MAJOR_VERSION', 'MARPA_MAJOR_VERSION');
 $ac->define_var('MARPA_LIB_MICRO_VERSION', 'MARPA_MICRO_VERSION');
 $ac->define_var('MARPA_LIB_MINOR_VERSION', 'MARPA_MINOR_VERSION');
 $ac->define_var('MARPAWRAPPER_NTRACE', 1);
+foreach my $inline_keyword (qw/inline __inline__ inline__ __inline/) {
+    $ac->msg_checking("for $inline_keyword");
+    my $inline_source = <<INLINE_SOURCE;
+typedef int foo_t;
+static $inline_keyword foo_t static_foo() {
+  return 0;
+}
+foo_t foo() {
+  return 0;
+}
+int main(int argc, char *argv[]){
+  return 0;
+}
+INLINE_SOURCE
+    if (try_compile($inline_source)) {
+        $ac->msg_result('yes');
+        $ac->define_var("C_INLINE", $inline_keyword);
+        if ($inline_keyword eq 'inline') {
+            $ac->define_var("C_INLINE_IS_INLINE", $inline_keyword);
+        }
+        last;
+    } else {
+        $ac->msg_result('no');
+    }
+}
+
 $ac->check;
 write_config($version, $config_h_in, $config_h);
 
@@ -143,6 +170,30 @@ foreach my $source (@sources) {
 # Done
 # ----
 exit(EXIT_SUCCESS);
+
+sub try_compile {
+    my ($csource, $extra_compiler_flags) = @_;
+
+    my $fh = File::Temp->new(UNLINK => 0, SUFFIX => '.c');
+    print $fh "$csource\n";
+    close($fh);
+    my $source = $fh->filename;
+    my $rc = 0;
+
+    try {
+        my $cbuilder = ExtUtils::CBuilder->new(config => \%EXTUTILS_BUILDER_CONFIG, quiet => 1);
+        my $obj = basename($cbuilder->object_file($source));
+        $cbuilder->compile(
+            source               => $source,
+            object_file          => $obj,
+            extra_compiler_flags => $extra_compiler_flags
+            );
+        $rc = 1;
+    };
+    unlink $fh->filename;
+
+    return $rc;
+}
 
 sub get_version {
     open(my $fh, '<', 'CMakeLists.txt') || die "Cannot open CMakeLists.txt, $!";
