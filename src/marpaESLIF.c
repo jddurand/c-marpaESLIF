@@ -798,7 +798,7 @@ static inline marpaESLIF_string_t *_marpaESLIF_string_newp(marpaESLIF_t *marpaES
 
   if (bytel > 0) {
     /* bytel + 1 for the hiden NUL byte */
-    if ((stringp->bytep = dstbytep = (char *) calloc(1, bytel + 1)) == NULL) {
+    if (MARPAESLIF_UNLIKELY((stringp->bytep = dstbytep = (char *) calloc(1, bytel + 1)) == NULL)) {
       /* We always add a NUL byte for convenience */
       MARPAESLIF_ERRORF(marpaESLIFp, "calloc failure, %s", strerror(errno));
       goto err;
@@ -865,7 +865,7 @@ static inline marpaESLIF_string_t *_marpaESLIF_string_clonep(marpaESLIF_t *marpa
 
   if ((rcp->bytel = stringp->bytel) > 0) {
     bytep = rcp->bytep = (char *) calloc(1, (bytel = stringp->bytel) + 1); /* We always add a NUL byte for convenience */
-    if (bytep == NULL) {
+    if (MARPAESLIF_UNLIKELY(bytep == NULL)) {
       MARPAESLIF_ERRORF(marpaESLIFp, "calloc failure, %s", strerror(errno));
       goto err;
     }
@@ -4114,7 +4114,7 @@ static inline marpaESLIF_t *_marpaESLIF_newp(marpaESLIFOption_t *marpaESLIFOptio
 
   /* Check if zero bytes (.i.e calloc'ed memory) is the same thing as NULL */
   p = calloc(1, sizeof(void *));
-  if (p == NULL) {
+  if (MARPAESLIF_UNLIKELY(p == NULL)) {
     if (marpaESLIFOptionp->genericLoggerp != NULL) {
       GENERICLOGGER_ERRORF(marpaESLIFOptionp->genericLoggerp, "calloc failure, %s", strerror(errno));
     }
@@ -12543,7 +12543,7 @@ static inline short _marpaESLIFRecognizer_createLexemeDatab(marpaESLIFRecognizer
 
     if (marpaESLIFp->NULLisZeroBytesb) {
       lexemeDatapp = (marpaESLIF_lexeme_data_t **) calloc(GENERICSTACK_USED(symbolStackp), sizeof(marpaESLIF_lexeme_data_t *));
-      if (lexemeDatapp == NULL) {
+      if (MARPAESLIF_UNLIKELY(lexemeDatapp == NULL)) {
         MARPAESLIF_ERRORF(marpaESLIFp, "calloc failure, %s", strerror(errno));
         goto err;
       }
