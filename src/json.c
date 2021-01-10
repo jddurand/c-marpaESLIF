@@ -75,12 +75,12 @@ static const char *marpaESLIFJSON_decode_extended_grammars =
   "# JSON object\n"
   "# -----------\n"
   "object   ::= '{' members '}'                                                        action         => ::copy[1]\n"
-  "members  ::= pairs*                                                                 action         => members   # Returns { @{pair1}, ..., @{pair2} }\n"
+  "members  ::= pair*                                                                  action         => members   # Returns { @{pair1}, ..., @{pair2} }\n"
   "                                                                                    separator      => commas    # ... separated by comma(s)\n"
   "                                                                                    proper         => 0         # ... with eventual trailing separator\n"
   "                                                                                    hide-separator => 1         # ... and hide separator in the action\n"
   "\n"
-  "pairs    ::= string (-':'-) value                                                   action         => ::row     # Returns [ string, value ]\n"
+  "pair     ::= string (-':'-) value                                                   action         => ::row     # Returns [ string, value ]\n"
   "\n"
   "# -----------\n"
   "# JSON Arrays\n"
@@ -99,7 +99,7 @@ static const char *marpaESLIFJSON_decode_extended_grammars =
   "# -----------\n"
   "# JSON String\n"
   "# -----------\n"
-  "string ::= (- '\"' -) chars (- '\"' -)                                              # ::shift (default action)\n"
+  "string ::= '\"' chars '\"'                                                          action => ::copy[1]\n"
   "\n"
   ":terminal ::= '\"' pause => after event => :discard[switch]\n"
   "\n"
@@ -205,12 +205,12 @@ static const char *marpaESLIFJSON_decode_strict_grammars =
   "# JSON object\n"
   "# -----------\n"
   "object   ::= '{' members '}'                                                        action         => ::copy[1]\n"
-  "members  ::= pairs*                                                                 action         => members   # Returns { @{pair1}, ..., @{pair2} }\n"
+  "members  ::= pair*                                                                  action         => members   # Returns { @{pair1}, ..., @{pair2} }\n"
   "                                                                                    separator      => comma     # ... separated by comma\n"
   "                                                                                    proper         => 1         # ... with no trailing separator\n"
   "                                                                                    hide-separator => 1         # ... and hide separator in the action\n"
   "\n"
-  "pairs    ::= string (-':'-) value                                                   action         => ::row     # Returns [ string, value ]\n"
+  "pair     ::= string (-':'-) value                                                   action         => ::row     # Returns [ string, value ]\n"
   "\n"
   "# -----------\n"
   "# JSON Arrays\n"
@@ -229,7 +229,7 @@ static const char *marpaESLIFJSON_decode_strict_grammars =
   "# -----------\n"
   "# JSON String\n"
   "# -----------\n"
-  "string ::= (- '\"' -) chars (- '\"' -)                                              # ::shift (default action)\n"
+  "string ::= '\"' chars '\"'                                                          action => ::copy[1]\n"
   "\n"
   ":terminal ::= '\"' pause => after event => :discard[switch]\n"
   "\n"
@@ -720,7 +720,7 @@ static marpaESLIFValueRuleCallback_t _marpaESLIFJSONValueRuleActionResolverp(voi
 static short _marpaESLIFJSON_membersb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb)
 /*****************************************************************************/
 {
-  /* members  ::= pairs* action => members   # Returns { @{pair1}, ..., @{pair2} } */
+  /* members  ::= pair* action => members   # Returns { @{pair1}, ..., @{pair2} } */
   marpaESLIFJSONContext_t       *marpaESLIFJSONContextp = (marpaESLIFJSONContext_t *) userDatavp;
   short                          disallowDupkeysb       = marpaESLIFJSONContextp->marpaESLIFJSONDecodeOptionp->disallowDupkeysb;
   marpaESLIFValueResult_t        marpaESLIFValueResult;
