@@ -655,14 +655,6 @@ typedef unsigned int marpaESLIF_uint32_t;
 #  endif
 #endif
 
-#ifdef C___BUILTIN_EXPECT
-#  define MARPAESLIF_LIKELY(x)    C___BUILTIN_EXPECT(x, 1)
-#  define MARPAESLIF_UNLIKELY(x)  C___BUILTIN_EXPECT(x, 0)
-#else
-#  define MARPAESLIF_LIKELY(x)    x
-#  define MARPAESLIF_UNLIKELY(x)  x
-#endif /* C___BUILTIN_EXPECT */
-
 #endif /* MARPAESLIF_CONFIG_WRAPPER_H */
 CONFIG
     close($fh) || warn "Cannot close $output, $!";
