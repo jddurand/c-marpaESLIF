@@ -341,6 +341,43 @@ short marpaWrapperRecognizer_expectedb(marpaWrapperRecognizer_t *marpaWrapperRec
 }
 
 /****************************************************************************/
+short marpaWrapperRecognizer_isExpectedb(marpaWrapperRecognizer_t *marpaWrapperRecognizerp, int symboli, short *isExpectedbp)
+/****************************************************************************/
+{
+  MARPAWRAPPER_FUNCS(marpaWrapperRecognizer_isExpectedb)
+  genericLogger_t *genericLoggerp = NULL;
+  short            isExpectedb;
+  int              isExpectedi;
+
+  if (marpaWrapperRecognizerp == NULL) {
+    errno = EINVAL;
+    goto err;
+  }
+
+  genericLoggerp = marpaWrapperRecognizerp->marpaWrapperRecognizerOption.genericLoggerp;
+
+  MARPAWRAPPER_TRACEF(genericLoggerp, funcs, "marpa_r_terminal_is_expected(%p, %d)", marpaWrapperRecognizerp->marpaRecognizerp, symboli);
+  isExpectedi = marpa_r_terminal_is_expected(marpaWrapperRecognizerp->marpaRecognizerp, symboli);
+  if (isExpectedi < 0) {
+    MARPAWRAPPER_MARPA_G_ERROR(genericLoggerp, marpaWrapperRecognizerp->marpaWrapperGrammarp->marpaGrammarp);
+    goto err;
+  }
+
+  isExpectedb = (isExpectedi > 0) ? 1 : 0;
+
+  if (isExpectedbp != NULL) {
+    *isExpectedbp = isExpectedb;
+  }
+
+  MARPAWRAPPER_TRACE(genericLoggerp, funcs, "return 1");
+  return 1;
+
+ err:
+  MARPAWRAPPER_TRACE(genericLoggerp, funcs, "return 0");
+  return 0;
+}
+
+/****************************************************************************/
 short marpaWrapperRecognizer_exhaustedb(marpaWrapperRecognizer_t *marpaWrapperRecognizerp, short *exhaustedbp)
 /****************************************************************************/
 {

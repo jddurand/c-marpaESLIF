@@ -63,6 +63,7 @@ int main(int argc, char **argv)
   int                            symbolPropertyBitSet;
   int                            symbolEventBitSet;
   int                            rulePropertyBitSet;
+  short                          isExpectedb;
   marpaWrapperRecognizerContext_t context;
   
   marpaWrapperGrammarOption_t    marpaWrapperGrammarOption    = { GENERICLOGGER_NEW(GENERICLOGGER_LOGLEVEL_TRACE),
@@ -417,6 +418,57 @@ int main(int argc, char **argv)
 	    break;
 	  }
 	}
+      }
+    }
+  }
+  if (rci == 0) {
+    /* Cross-check marpaWrapperRecognizer_expectedb with a loop on marpaWrapperRecognizer_isExpectedb */
+    for (i = 0; i < MAX_SYMBOL; i++) {
+      if (marpaWrapperRecognizer_isExpectedb(marpaWrapperRecognizerp, symbolip[i], &isExpectedb) == 0) {
+        rci = 1;
+        break;
+      } else {
+        switch (symbolip[i]) {
+	  case S:
+	    GENERICLOGGER_TRACEF(marpaWrapperRecognizerOption.genericLoggerp, "... Symbol No %d: S is %sexpected", i, isExpectedb ? "" : "not ");
+	    break;
+	  case E:
+	    GENERICLOGGER_TRACEF(marpaWrapperRecognizerOption.genericLoggerp, "... Symbol No %d: E is %sexpected", i, isExpectedb ? "" : "not ");
+	    break;
+	  case op:
+	    GENERICLOGGER_TRACEF(marpaWrapperRecognizerOption.genericLoggerp, "... Symbol No %d: op is %sexpected", i, isExpectedb ? "" : "not ");
+	    break;
+	  case number:
+	    GENERICLOGGER_TRACEF(marpaWrapperRecognizerOption.genericLoggerp, "... Symbol No %d: number is %sexpected", i, isExpectedb ? "" : "not ");
+	    break;
+	  default:
+	    GENERICLOGGER_TRACEF(marpaWrapperRecognizerOption.genericLoggerp, "... Expected symbol No %d: ????", i);
+	    break;
+	  }
+      }
+    }
+  }
+  if (rci == 0) {
+    /* Rules are also symbols, cross-check marpaWrapperRecognizer_expectedb */
+    for (i = 0; i < MAX_RULE; i++) {
+      if (marpaWrapperRecognizer_isExpectedb(marpaWrapperRecognizerp, ruleip[i], &isExpectedb) == 0) {
+        rci = 1;
+        break;
+      } else {
+        switch (ruleip[i]) {
+	  case START_RULE:
+	    GENERICLOGGER_TRACEF(marpaWrapperRecognizerOption.genericLoggerp, "... Symbol No %d: START_RULE is %sexpected", i, isExpectedb ? "" : "not ");
+	    break;
+	  case OP_RULE:
+	    GENERICLOGGER_TRACEF(marpaWrapperRecognizerOption.genericLoggerp, "... Symbol No %d: OP_RULE is %sexpected", i, isExpectedb ? "" : "not ");
+	    break;
+	  case NUMBER_RULE:
+	    GENERICLOGGER_TRACEF(marpaWrapperRecognizerOption.genericLoggerp, "... Symbol No %d: NUMBER_RULE is %sexpected", i, isExpectedb ? "" : "not ");
+	    break;
+	  default:
+	    GENERICLOGGER_TRACEF(marpaWrapperRecognizerOption.genericLoggerp, "... Expected symbol No %d: ????", i);
+	    break;
+	  }
       }
     }
   }
