@@ -2777,7 +2777,7 @@ static inline short marpaESLIFPerl_JSONDecodeNumberAction(void *userDatavp, char
   SV                       *svnumifyp;
   dTHXa(MarpaX_ESLIF_Valuep->PerlInterpreterp);
 
-  if (marpaESLIFValueResultp->type != MARPAESLIF_VALUE_TYPE_UNDEF) {
+  if (MARPAESLIF_LIKELY(marpaESLIFValueResultp->type != MARPAESLIF_VALUE_TYPE_UNDEF)) {
     /* Default is to accept marpaESLIF proposal */
     return 1;
   }
