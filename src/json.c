@@ -15,9 +15,8 @@ static short                                _marpaESLIFJSONValueResultImportb(ma
 static short                                _marpaESLIFJSON_membersb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
 static short                                _marpaESLIFJSON_numberb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
 static short                                _marpaESLIFJSON_charsb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
-static short                                _marpaESLIFJSON_escapedb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
+static short                                _marpaESLIFJSON_charb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
 static short                                _marpaESLIFJSON_constantb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
-static short                                _marpaESLIFJSON_unicodeb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
 static short                                _marpaESLIFJSON_positive_infinityb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
 static short                                _marpaESLIFJSON_negative_infinityb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
 static short                                _marpaESLIFJSON_positive_nanb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
@@ -69,7 +68,7 @@ static const char *marpaESLIFJSON_decode_extended_grammars =
   "# -------------------\n"
   "# Composite separator\n"
   "# -------------------\n"
-  "comma    ::= ','                                                                    action          => ::undef  # Never needed in any case\n"
+  "comma    ::= ','                                                                               action          => ::undef  # Never needed in any case\n"
   "\n"
   "# ----------\n"
   "# JSON value\n"
@@ -79,44 +78,42 @@ static const char *marpaESLIFJSON_decode_extended_grammars =
   "           | object\n"
   "           | array\n"
   "           | constant\n"
-  "constant ::= /true|false|null/                                                      action         => constant\n"
+  "constant ::= /true|false|null/                                                                 action         => constant\n"
   "\n"
   "# -----------\n"
   "# JSON object\n"
   "# -----------\n"
-  "object   ::= '{' members '}'                                                        action         => ::copy[1]\n"
-  "members  ::= pair*                                                                  action         => members   # Returns { @{pair1}, ..., @{pair2} }\n"
-  "                                                                                    separator      => commas    # ... separated by comma(s)\n"
-  "                                                                                    proper         => 0         # ... with eventual trailing separator\n"
-  "                                                                                    hide-separator => 1         # ... and hide separator in the action\n"
+  "object   ::= '{' members '}'                                                                   action         => ::copy[1]\n"
+  "members  ::= pair*                                                                             action         => members   # Returns { @{pair1}, ..., @{pair2} }\n"
+  "                                                                                               separator      => commas    # ... separated by comma(s)\n"
+  "                                                                                               proper         => 0         # ... with eventual trailing separator\n"
+  "                                                                                               hide-separator => 1         # ... and hide separator in the action\n"
   "\n"
-  "pair     ::= string (-':'-) value                                                   action         => ::row     # Returns [ string, value ]\n"
+  "pair     ::= string (-':'-) value                                                              action         => ::row     # Returns [ string, value ]\n"
   "\n"
   "# -----------\n"
   "# JSON Arrays\n"
   "# -----------\n"
-  "array    ::= '[' elements ']'                                                       action         => ::copy[1] # Returns elements\n"
-  "elements ::= value*                                                                 action         => ::row     # Returns [ value1, ..., valuen ]\n"
-  "                                                                                    separator      => commas    # ... separated by comma(s)\n"
-  "                                                                                    proper         => 0        # ... with eventual trailing separator\n"
-  "                                                                                    hide-separator => 1         # ... and hide separator in the action\n"
+  "array    ::= '[' elements ']'                                                                  action         => ::copy[1] # Returns elements\n"
+  "elements ::= value*                                                                            action         => ::row     # Returns [ value1, ..., valuen ]\n"
+  "                                                                                               separator      => commas    # ... separated by comma(s)\n"
+  "                                                                                               proper         => 0        # ... with eventual trailing separator\n"
+  "                                                                                               hide-separator => 1         # ... and hide separator in the action\n"
   "\n"
   "# -----------\n"
   "# JSON Number\n"
   "# -----------\n"
-  "number ::= /-?(?:0|[1-9][0-9]*)(?:\\.[0-9]+)?(?:[eE][+-]?[0-9]+)?/                  action => number\n"
+  "number ::= /-?(?:0|[1-9][0-9]*)(?:\\.[0-9]+)?(?:[eE][+-]?[0-9]+)?/                             action => number\n"
   "\n"
   "# -----------\n"
   "# JSON String\n"
   "# -----------\n"
-  "string ::= '\"' chars '\"'                                                          action => ::copy[1]\n"
+  "string ::= '\"' chars '\"'                                                                     action => ::copy[1]\n"
   "\n"
   ":terminal ::= '\"' pause => after event => :discard[switch]\n"
   "\n"
-  "chars   ::= char*                                                                   action => chars\n"
-  "char    ::= /[^\"\\\\\\x00-\\x1F]+/                                                 # ::shift (default action) - take care PCRE2 [:cntrl:] includes DEL character\n"
-  "          | /\\\\[\"\\\\\\/bfnrt]/                                                  action => escaped\n"
-  "          | /(?:\\\\u[[:xdigit:]]{4})+/                                             action => unicode\n"
+  "chars   ::= char*                                                                              action => chars\n"
+  "char    ::= /(?:[^\"\\\\\\x00-\\x1F]+)|(?:\\\\[\"\\\\\\/bfnrt])|(?:(?:\\\\u[[:xdigit:]]{4})+)/ action => char # Take care: PCRE2 [:cntrl:] includes DEL character\n"
   "\n"
   "# -------------------------\n"
   "# Unsignificant whitespaces\n"
@@ -149,19 +146,19 @@ static const char *marpaESLIFJSON_decode_extended_grammars =
   "# ----------------\n"
   "# Infinity extension\n"
   "# ----------------\n"
-  "number   ::= '-Infinity':i                                     action => negative_infinity\n"
-  "           | '-Inf':i                                          action => negative_infinity\n"
-  "           | '+Infinity':i                                     action => positive_infinity\n"
-  "           | '+Inf':i                                          action => positive_infinity\n"
-  "           | 'Infinity':i                                      action => positive_infinity\n"
-  "           | 'Inf':i                                           action => positive_infinity\n"
+  "number   ::= '-Infinity':i                                                                     action => negative_infinity\n"
+  "           | '-Inf':i                                                                          action => negative_infinity\n"
+  "           | '+Infinity':i                                                                     action => positive_infinity\n"
+  "           | '+Inf':i                                                                          action => positive_infinity\n"
+  "           | 'Infinity':i                                                                      action => positive_infinity\n"
+  "           | 'Inf':i                                                                           action => positive_infinity\n"
   "\n"
   "# ----------------\n"
   "# Nan extension\n"
   "# ----------------\n"
-  "number   ::= '-NaN':i                                          action => negative_nan\n"
-  "           | 'NaN':i                                           action => positive_nan\n"
-  "           | '+NaN':i                                          action => positive_nan\n"
+  "number   ::= '-NaN':i                                                                          action => negative_nan\n"
+  "           | 'NaN':i                                                                           action => positive_nan\n"
+  "           | '+NaN':i                                                                          action => positive_nan\n"
   "\n"
   "# -----------------\n"
   "# Control character\n"
@@ -192,7 +189,7 @@ static const char *marpaESLIFJSON_decode_strict_grammars =
   "# -------------------\n"
   "# Composite separator\n"
   "# -------------------\n"
-  "comma    ::= ','                                                                    action          => ::undef  # Never needed in any case\n"
+  "comma    ::= ','                                                                               action          => ::undef  # Never needed in any case\n"
   "\n"
   "# ----------\n"
   "# JSON value\n"
@@ -202,44 +199,42 @@ static const char *marpaESLIFJSON_decode_strict_grammars =
   "           | object\n"
   "           | array\n"
   "           | constant\n"
-  "constant ::= /true|false|null/                                                      action         => constant\n"
+  "constant ::= /true|false|null/                                                                 action         => constant\n"
   "\n"
   "# -----------\n"
   "# JSON object\n"
   "# -----------\n"
-  "object   ::= '{' members '}'                                                        action         => ::copy[1]\n"
-  "members  ::= pair*                                                                  action         => members   # Returns { @{pair1}, ..., @{pair2} }\n"
-  "                                                                                    separator      => comma     # ... separated by comma\n"
-  "                                                                                    proper         => 1         # ... with no trailing separator\n"
-  "                                                                                    hide-separator => 1         # ... and hide separator in the action\n"
+  "object   ::= '{' members '}'                                                                   action         => ::copy[1]\n"
+  "members  ::= pair*                                                                             action         => members   # Returns { @{pair1}, ..., @{pair2} }\n"
+  "                                                                                               separator      => comma     # ... separated by comma\n"
+  "                                                                                               proper         => 1         # ... with no trailing separator\n"
+  "                                                                                               hide-separator => 1         # ... and hide separator in the action\n"
   "\n"
-  "pair     ::= string (-':'-) value                                                   action         => ::row     # Returns [ string, value ]\n"
+  "pair     ::= string (-':'-) value                                                              action         => ::row     # Returns [ string, value ]\n"
   "\n"
   "# -----------\n"
   "# JSON Arrays\n"
   "# -----------\n"
-  "array    ::= '[' elements ']'                                                       action         => ::copy[1] # Returns elements\n"
-  "elements ::= value*                                                                 action         => ::row     # Returns [ value1, ..., valuen ]\n"
-  "                                                                                    separator      => comma     # ... separated by comma\n"
-  "                                                                                    proper         => 1         # ... with no trailing separator\n"
-  "                                                                                    hide-separator => 1         # ... and hide separator in the action\n"
+  "array    ::= '[' elements ']'                                                                  action         => ::copy[1] # Returns elements\n"
+  "elements ::= value*                                                                            action         => ::row     # Returns [ value1, ..., valuen ]\n"
+  "                                                                                               separator      => comma     # ... separated by comma\n"
+  "                                                                                               proper         => 1         # ... with no trailing separator\n"
+  "                                                                                               hide-separator => 1         # ... and hide separator in the action\n"
   "\n"
   "# -----------\n"
   "# JSON Number\n"
   "# -----------\n"
-  "number ::= /-?(?:0|[1-9][0-9]*)(?:\\.[0-9]+)?(?:[eE][+-]?[0-9]+)?/                  action => number\n"
+  "number ::= /-?(?:0|[1-9][0-9]*)(?:\\.[0-9]+)?(?:[eE][+-]?[0-9]+)?/                             action => number\n"
   "\n"
   "# -----------\n"
   "# JSON String\n"
   "# -----------\n"
-  "string ::= '\"' chars '\"'                                                          action => ::copy[1]\n"
+  "string ::= '\"' chars '\"'                                                                     action => ::copy[1]\n"
   "\n"
   ":terminal ::= '\"' pause => after event => :discard[switch]\n"
   "\n"
-  "chars   ::= char*                                                                   action => chars\n"
-  "char    ::= /[^\"\\\\\\x00-\\x1F]+/                                                 # ::shift (default action) - take care PCRE2 [:cntrl:] includes DEL character\n"
-  "          | /\\\\[\"\\\\\\/bfnrt]/                                                  action => escaped\n"
-  "          | /(?:\\\\u[[:xdigit:]]{4})+/                                             action => unicode\n"
+  "chars   ::= char*                                                                              action => chars\n"
+  "char    ::= /(?:[^\"\\\\\\x00-\\x1F]+)|(?:\\\\[\"\\\\\\/bfnrt])|(?:(?:\\\\u[[:xdigit:]]{4})+)/ action => char # Take care: PCRE2 [:cntrl:] includes DEL character\n"
   "\n"
   "# -------------------------\n"
   "# Unsignificant whitespaces\n"
@@ -326,7 +321,7 @@ static inline marpaESLIFGrammar_t *_marpaESLIFJSON_decode_newp(marpaESLIF_t *mar
   marpaESLIFGrammar_t       *marpaESLIFJSONp             = NULL;
   marpaESLIFGrammarOption_t  marpaESLIFGrammarOption;
 
-  if (marpaESLIFp == NULL) {
+  if (MARPAESLIF_UNLIKELY(marpaESLIFp == NULL)) {
     errno = EINVAL;
     goto err;
   }
@@ -337,7 +332,7 @@ static inline marpaESLIFGrammar_t *_marpaESLIFJSON_decode_newp(marpaESLIF_t *mar
   marpaESLIFGrammarOption.encodingl = 5; /* strlen("ASCII") */
 
   marpaESLIFJSONp = _marpaESLIFGrammar_newp(marpaESLIFp, &marpaESLIFGrammarOption, NULL /* marpaESLIfGrammarPreviousp */);
-  if (marpaESLIFJSONp == NULL) {
+  if (MARPAESLIF_UNLIKELY(marpaESLIFJSONp == NULL)) {
     goto err;
   }
 
@@ -358,7 +353,7 @@ static inline marpaESLIFGrammar_t *_marpaESLIFJSON_encode_newp(marpaESLIF_t *mar
   marpaESLIFGrammar_t       *marpaESLIFJSONp             = NULL;
   marpaESLIFGrammarOption_t  marpaESLIFGrammarOption;
 
-  if (marpaESLIFp == NULL) {
+  if (MARPAESLIF_UNLIKELY(marpaESLIFp == NULL)) {
     errno = EINVAL;
     goto err;
   }
@@ -369,7 +364,7 @@ static inline marpaESLIFGrammar_t *_marpaESLIFJSON_encode_newp(marpaESLIF_t *mar
   marpaESLIFGrammarOption.encodingl = 5; /* strlen("ASCII") */
 
   marpaESLIFJSONp = _marpaESLIFGrammar_newp(marpaESLIFp, &marpaESLIFGrammarOption, NULL /* marpaESLIFGrammarPreviousp */);
-  if (marpaESLIFJSONp == NULL) {
+  if (MARPAESLIF_UNLIKELY(marpaESLIFJSONp == NULL)) {
     goto err;
   }
 
@@ -395,7 +390,7 @@ short marpaESLIFJSON_decodeb(marpaESLIFGrammar_t *marpaESLIFGrammarJSONp, marpaE
   marpaESLIFJSONContext_t       marpaESLIFJSONContext;
   short                         continueb;
 
-  if ((marpaESLIFGrammarJSONp == NULL) || (marpaESLIFJSONDecodeOptionp == NULL) || (marpaESLIFRecognizerOptionp == NULL) || (marpaESLIFRecognizerOptionp->readerCallbackp == NULL) || (marpaESLIFValueOptionp == NULL)) {
+  if (MARPAESLIF_UNLIKELY((marpaESLIFGrammarJSONp == NULL) || (marpaESLIFJSONDecodeOptionp == NULL) || (marpaESLIFRecognizerOptionp == NULL) || (marpaESLIFRecognizerOptionp->readerCallbackp == NULL) || (marpaESLIFValueOptionp == NULL))) {
     errno = EINVAL;
     goto err;
   }
@@ -434,24 +429,24 @@ short marpaESLIFJSON_decodeb(marpaESLIFGrammar_t *marpaESLIFGrammarJSONp, marpaE
 
   /* We need to loop using a recognizer to catch the events */
   marpaESLIFRecognizerp = marpaESLIFRecognizer_newp(marpaESLIFGrammarJSONp, &marpaESLIFRecognizerOption);
-  if (marpaESLIFRecognizerp == NULL) {
+  if (MARPAESLIF_UNLIKELY(marpaESLIFRecognizerp == NULL)) {
     goto err;
   }
-  if (! marpaESLIFRecognizer_scanb(marpaESLIFRecognizerp, 1 /* initialEventsb */, &continueb, NULL /* exhaustedbp */)) {
+  if (MARPAESLIF_UNLIKELY(! marpaESLIFRecognizer_scanb(marpaESLIFRecognizerp, 1 /* initialEventsb */, &continueb, NULL /* exhaustedbp */))) {
     goto err;
   }
   while (continueb) {
-    if (! marpaESLIFRecognizer_resumeb(marpaESLIFRecognizerp, 0 /* deltaLengthl */, &continueb, NULL /* exhaustedbp */)) {
+    if (MARPAESLIF_UNLIKELY(! marpaESLIFRecognizer_resumeb(marpaESLIFRecognizerp, 0 /* deltaLengthl */, &continueb, NULL /* exhaustedbp */))) {
       goto err;
     }
   }
   marpaESLIFValuep = marpaESLIFValue_newp(marpaESLIFRecognizerp, &marpaESLIFValueOption);
-  if (marpaESLIFValuep == NULL) {
+  if (MARPAESLIF_UNLIKELY(marpaESLIFValuep == NULL)) {
     goto err;
   }
   /* Set-up proxy representation */
   marpaESLIFValuep->proxyRepresentationp = _marpaESLIFJSONRepresentationb;
-  if (! marpaESLIFValue_valueb(marpaESLIFValuep)) {
+  if (MARPAESLIF_UNLIKELY(! marpaESLIFValue_valueb(marpaESLIFValuep))) {
     goto err;
   }
 
@@ -484,7 +479,7 @@ short marpaESLIFJSON_encodeb(marpaESLIFGrammar_t *marpaESLIFGrammarJSONp, marpaE
   marpaESLIFValueOption_t       marpaESLIFValueOption;
   marpaESLIFJSONContext_t       marpaESLIFJSONContext;
 
-  if ((marpaESLIFGrammarJSONp == NULL) || (marpaESLIFValueResultp == NULL) || (marpaESLIFValueOptionp == NULL)) {
+  if (MARPAESLIF_UNLIKELY((marpaESLIFGrammarJSONp == NULL) || (marpaESLIFValueResultp == NULL) || (marpaESLIFValueOptionp == NULL))) {
     errno = EINVAL;
     goto err;
   }
@@ -509,7 +504,7 @@ short marpaESLIFJSON_encodeb(marpaESLIFGrammar_t *marpaESLIFGrammarJSONp, marpaE
   marpaESLIFValueOption.maxParsesi                = 0; /* Fixed */
 
   marpaESLIFRecognizerp = marpaESLIFRecognizer_newp(marpaESLIFGrammarJSONp, NULL);
-  if (marpaESLIFRecognizerp == NULL) {
+  if (MARPAESLIF_UNLIKELY(marpaESLIFRecognizerp == NULL)) {
     goto err;
   }
 
@@ -517,16 +512,16 @@ short marpaESLIFJSON_encodeb(marpaESLIFGrammar_t *marpaESLIFGrammarJSONp, marpaE
   marpaESLIFAlternative.lexemes        = "INPUT";
   marpaESLIFAlternative.value          = *marpaESLIFValueResultp;
   marpaESLIFAlternative.grammarLengthl = 1;
-  if (! marpaESLIFRecognizer_lexeme_readb(marpaESLIFRecognizerp, &marpaESLIFAlternative, 0 /* lengthl */)) {
+  if (MARPAESLIF_UNLIKELY(! marpaESLIFRecognizer_lexeme_readb(marpaESLIFRecognizerp, &marpaESLIFAlternative, 0 /* lengthl */))) {
     goto err;
   }
   marpaESLIFValuep = marpaESLIFValue_newp(marpaESLIFRecognizerp, &marpaESLIFValueOption);
   /* Set-up proxy representation */
   marpaESLIFValuep->proxyRepresentationp = _marpaESLIFJSONRepresentationb;
-  if (marpaESLIFValuep == NULL) {
+  if (MARPAESLIF_UNLIKELY(marpaESLIFValuep == NULL)) {
     goto err;
   }
-  if (! marpaESLIFValue_valueb(marpaESLIFValuep)) {
+  if (MARPAESLIF_UNLIKELY(! marpaESLIFValue_valueb(marpaESLIFValuep))) {
     goto err;
   }
 
@@ -581,7 +576,7 @@ static marpaESLIFRecognizerEventCallback_t _marpaESLIFJSONRecognizerEventActionR
 {
   marpaESLIFRecognizerEventCallback_t  rcp;
 
-  if (strcmp(actions, "marpaESLIFJsonEventAction") == 0) {
+  if (MARPAESLIF_LIKELY(strcmp(actions, "marpaESLIFJsonEventAction") == 0)) {
     rcp = _marpaESLIFJSONRecognizerEventCallbackb;
   } else {
     MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "Unrecognized event-action \"%s\"", actions);
@@ -607,11 +602,11 @@ static short _marpaESLIFJSONRecognizerEventCallbackb(void *userDatavp, marpaESLI
   for (i = 0; i < eventArrayl; i++) {
     if (eventArrayp[i].events != NULL) {
       if (strcmp(eventArrayp[i].events, "inc[]") == 0) {
-        if (! _marpaESLIFJSON_incb(userDatavp, marpaESLIFRecognizerp, marpaESLIFValueResultBoolp)) {
+        if (MARPAESLIF_UNLIKELY(! _marpaESLIFJSON_incb(userDatavp, marpaESLIFRecognizerp, marpaESLIFValueResultBoolp))) {
           goto err;
         }
       } else if (strcmp(eventArrayp[i].events, "dec[]") == 0) {
-        if (! _marpaESLIFJSON_decb(userDatavp, marpaESLIFRecognizerp, marpaESLIFValueResultBoolp)) {
+        if (MARPAESLIF_UNLIKELY(! _marpaESLIFJSON_decb(userDatavp, marpaESLIFRecognizerp, marpaESLIFValueResultBoolp))) {
           goto err;
         }
       } else {
@@ -684,14 +679,12 @@ static marpaESLIFValueRuleCallback_t _marpaESLIFJSONValueRuleActionResolverp(voi
     rcp = _marpaESLIFJSON_membersb;
   } else if (strcmp(actions, "number") == 0) {
     rcp = _marpaESLIFJSON_numberb;
+  } else if (strcmp(actions, "char") == 0) {
+    rcp = _marpaESLIFJSON_charb;
   } else if (strcmp(actions, "chars") == 0) {
     rcp = _marpaESLIFJSON_charsb;
   } else if (strcmp(actions, "constant") == 0) {
     rcp = _marpaESLIFJSON_constantb;
-  } else if (strcmp(actions, "escaped") == 0) {
-    rcp = _marpaESLIFJSON_escapedb;
-  } else if (strcmp(actions, "unicode") == 0) {
-    rcp = _marpaESLIFJSON_unicodeb;
   } else if (strcmp(actions, "positive_infinity") == 0) {
     rcp = _marpaESLIFJSON_positive_infinityb;
   } else if (strcmp(actions, "negative_infinity") == 0) {
@@ -752,18 +745,18 @@ static short _marpaESLIFJSON_membersb(void *userDatavp, marpaESLIFValue_t *marpa
 
     for (i = arg0i, currentTableIndicei = 0; i<= argni; i++, currentTableIndicei++) {
       marpaESLIFValueResultp = _marpaESLIFValue_stack_getp(marpaESLIFValuep, i);
-      if (marpaESLIFValueResultp == NULL) {
+      if (MARPAESLIF_UNLIKELY(marpaESLIFValueResultp == NULL)) {
         goto err;
       }
 
       /* No need to check that - this is ok per definition */
       /*
-      if (marpaESLIFValueResultp->type != MARPAESLIF_VALUE_TYPE_ROW) {
+      if (MARPAESLIF_UNLIKELY(marpaESLIFValueResultp->type != MARPAESLIF_VALUE_TYPE_ROW)) {
         MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "marpaESLIFValueResultp->type is not ROW (got %d, %s)", marpaESLIFValueResultp->type, _marpaESLIF_value_types(marpaESLIFValueResultp->type));
         goto err;
       }
 
-      if (marpaESLIFValueResultp->u.r.sizel != 2) {
+      if (MARPAESLIF_UNLIKELY(marpaESLIFValueResultp->u.r.sizel != 2)) {
         MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "row size is %ld and not 2", (unsigned long) marpaESLIFValueResultp->u.r.sizel);
         goto err;
       }
@@ -837,7 +830,7 @@ static short _marpaESLIFJSON_membersb(void *userDatavp, marpaESLIFValue_t *marpa
     }
   }
 
-  if (! _marpaESLIFValue_stack_setb(marpaESLIFValuep, resulti, &marpaESLIFValueResult)) {
+  if (MARPAESLIF_UNLIKELY(! _marpaESLIFValue_stack_setb(marpaESLIFValuep, resulti, &marpaESLIFValueResult))) {
     goto err;
   }
 
@@ -872,7 +865,7 @@ static short _marpaESLIFJSON_numberb(void *userDatavp, marpaESLIFValue_t *marpaE
 
   /* Input is of type array by definition, UTF-8 encoded */
   marpaESLIFValueResultInputp = _marpaESLIFValue_stack_getp(marpaESLIFValuep, arg0i);
-  if (marpaESLIFValueResultInputp == NULL) {
+  if (MARPAESLIF_UNLIKELY(marpaESLIFValueResultInputp == NULL)) {
     goto err;
   }
 
@@ -914,12 +907,12 @@ static short _marpaESLIFJSON_numberb(void *userDatavp, marpaESLIFValue_t *marpaE
 #endif /* C_STRTOD && MARPAESLIF_HUGE_VAL */
 
 
-  if (! _marpaESLIFJSON_proposalb(userDatavp,
-                                  marpaESLIFValuep,
-                                  marpaESLIFJSONContextp->marpaESLIFJSONDecodeOptionp->numberActionp,
-                                  marpaESLIFValueResultInputp->u.a.p,
-                                  marpaESLIFValueResultInputp->u.a.sizel,
-                                  &marpaESLIFValueResult)) {
+  if (MARPAESLIF_UNLIKELY(! _marpaESLIFJSON_proposalb(userDatavp,
+                                                      marpaESLIFValuep,
+                                                      marpaESLIFJSONContextp->marpaESLIFJSONDecodeOptionp->numberActionp,
+                                                      marpaESLIFValueResultInputp->u.a.p,
+                                                      marpaESLIFValueResultInputp->u.a.sizel,
+                                                      &marpaESLIFValueResult))) {
     goto err;
   }
 
@@ -930,6 +923,230 @@ static short _marpaESLIFJSON_numberb(void *userDatavp, marpaESLIFValue_t *marpaE
   rcb = 0;
 
  done:
+  return rcb;
+}
+
+/*****************************************************************************/
+static short _marpaESLIFJSON_charb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb)
+/*****************************************************************************/
+{
+  /* char    ::= /(?:[^\"\\\\\\x00-\\x1F]+)|(?:\\\\[\"\\\\\\/bfnrt])/ */
+
+  /* It is guaranteed to be an ARRAY with size > 0.                   */
+  /* Cases are:                                                       */
+  /* - First character is     '\': this is an escaped character       */
+  /* - First character is not '\': the whole match is ASCII chars     */
+  marpaESLIF_uint32_t     *uint32p = NULL;
+  size_t                   uint32l;
+  unsigned char           *dstp = NULL;
+  size_t                   dstl;
+  marpaESLIFJSONContext_t *marpaESLIFJSONContextp = (marpaESLIFJSONContext_t *) userDatavp;
+  marpaESLIFValueResult_t *marpaESLIFValueResultp;
+  marpaESLIFValueResult_t  marpaESLIFValueResult;
+  marpaESLIF_uint32_t      c;
+  char                    *p;
+  unsigned char           *q;
+  size_t                   i;
+  size_t                   j;
+  short                    rcb;
+
+  marpaESLIFValueResultp = _marpaESLIFValue_stack_getp(marpaESLIFValuep, arg0i);
+  if (MARPAESLIF_UNLIKELY(marpaESLIFValueResultp == NULL)) {
+    goto err;
+  }
+
+  /* We re-process marpaESLIFValueResultp only when this is an escaped character */
+  if (marpaESLIFValueResultp->u.a.p[0] == '\\') {
+    switch (marpaESLIFValueResultp->u.a.p[1]) {
+    case '"':
+      marpaESLIFValueResult.contextp           = NULL;
+      marpaESLIFValueResult.representationp    = NULL;
+      marpaESLIFValueResult.type               = MARPAESLIF_VALUE_TYPE_ARRAY;
+      marpaESLIFValueResult.u.a.freeUserDatavp = NULL;
+      marpaESLIFValueResult.u.a.freeCallbackp  = NULL;
+      marpaESLIFValueResult.u.a.shallowb       = 1;
+      marpaESLIFValueResult.u.a.sizel          = 1;
+      marpaESLIFValueResult.u.a.p              = (char *) MARPAESLIFJSON_DQUOTE;
+      break;
+    case '\\':
+      marpaESLIFValueResult.contextp           = NULL;
+      marpaESLIFValueResult.representationp    = NULL;
+      marpaESLIFValueResult.type               = MARPAESLIF_VALUE_TYPE_ARRAY;
+      marpaESLIFValueResult.u.a.freeUserDatavp = NULL;
+      marpaESLIFValueResult.u.a.freeCallbackp  = NULL;
+      marpaESLIFValueResult.u.a.shallowb       = 1;
+      marpaESLIFValueResult.u.a.sizel          = 1;
+      marpaESLIFValueResult.u.a.p              = (char *) MARPAESLIFJSON_BACKSLASH;
+      break;
+    case '/':
+      marpaESLIFValueResult.contextp           = NULL;
+      marpaESLIFValueResult.representationp    = NULL;
+      marpaESLIFValueResult.type               = MARPAESLIF_VALUE_TYPE_ARRAY;
+      marpaESLIFValueResult.u.a.freeUserDatavp = NULL;
+      marpaESLIFValueResult.u.a.freeCallbackp  = NULL;
+      marpaESLIFValueResult.u.a.shallowb       = 1;
+      marpaESLIFValueResult.u.a.sizel          = 1;
+      marpaESLIFValueResult.u.a.p              = (char *) MARPAESLIFJSON_SLASH;
+      break;
+    case 'b':
+      marpaESLIFValueResult.contextp           = NULL;
+      marpaESLIFValueResult.representationp    = NULL;
+      marpaESLIFValueResult.type               = MARPAESLIF_VALUE_TYPE_ARRAY;
+      marpaESLIFValueResult.u.a.freeUserDatavp = NULL;
+      marpaESLIFValueResult.u.a.freeCallbackp  = NULL;
+      marpaESLIFValueResult.u.a.shallowb       = 1;
+      marpaESLIFValueResult.u.a.sizel          = 1;
+      marpaESLIFValueResult.u.a.p              = (char *) MARPAESLIFJSON_BACKSPACE;
+      break;
+    case 'f':
+      marpaESLIFValueResult.contextp           = NULL;
+      marpaESLIFValueResult.representationp    = NULL;
+      marpaESLIFValueResult.type               = MARPAESLIF_VALUE_TYPE_ARRAY;
+      marpaESLIFValueResult.u.a.freeUserDatavp = NULL;
+      marpaESLIFValueResult.u.a.freeCallbackp  = NULL;
+      marpaESLIFValueResult.u.a.shallowb       = 1;
+      marpaESLIFValueResult.u.a.sizel          = 1;
+      marpaESLIFValueResult.u.a.p              = (char *) MARPAESLIFJSON_FORMFEED;
+      break;
+    case 'r':
+      marpaESLIFValueResult.contextp           = NULL;
+      marpaESLIFValueResult.representationp    = NULL;
+      marpaESLIFValueResult.type               = MARPAESLIF_VALUE_TYPE_ARRAY;
+      marpaESLIFValueResult.u.a.freeUserDatavp = NULL;
+      marpaESLIFValueResult.u.a.freeCallbackp  = NULL;
+      marpaESLIFValueResult.u.a.shallowb       = 1;
+      marpaESLIFValueResult.u.a.sizel          = 1;
+      marpaESLIFValueResult.u.a.p              = (char *) MARPAESLIFJSON_LINEFEED;
+      break;
+    case 'n':
+      marpaESLIFValueResult.contextp           = NULL;
+      marpaESLIFValueResult.representationp    = NULL;
+      marpaESLIFValueResult.type               = MARPAESLIF_VALUE_TYPE_ARRAY;
+      marpaESLIFValueResult.u.a.freeUserDatavp = NULL;
+      marpaESLIFValueResult.u.a.freeCallbackp  = NULL;
+      marpaESLIFValueResult.u.a.shallowb       = 1;
+      marpaESLIFValueResult.u.a.sizel          = 1;
+      marpaESLIFValueResult.u.a.p              = (char *) MARPAESLIFJSON_CARRIAGE_RETURN;
+      break;
+    case 't':
+      marpaESLIFValueResult.contextp           = NULL;
+      marpaESLIFValueResult.representationp    = NULL;
+      marpaESLIFValueResult.type               = MARPAESLIF_VALUE_TYPE_ARRAY;
+      marpaESLIFValueResult.u.a.freeUserDatavp = NULL;
+      marpaESLIFValueResult.u.a.freeCallbackp  = NULL;
+      marpaESLIFValueResult.u.a.shallowb       = 1;
+      marpaESLIFValueResult.u.a.sizel          = 1;
+      marpaESLIFValueResult.u.a.p              = (char *) MARPAESLIFJSON_HORIZONTAL_TAB;
+      break;
+    default:
+      /* It is a sequence of '\uXXXX' by definition, i.e. 6 bytes - so there are (marpaESLIFValueResultp->u.a.sizel / 6) hex digits */
+      uint32l = marpaESLIFValueResultp->u.a.sizel / 6;
+      uint32p = (marpaESLIF_uint32_t *) malloc(sizeof(marpaESLIF_uint32_t) * uint32l);
+      if (MARPAESLIF_UNLIKELY(uint32p == NULL)) {
+        MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "malloc failure, %s", strerror(errno));
+        goto err;
+      }
+
+      for (i = 0, p = marpaESLIFValueResultp->u.a.p + 2; i < uint32l; i++, p += 2) {
+        c = 0;
+
+        MARPAESLIFJSON_DST_OR_VALCHAR(c, *p++);
+        c <<= 4;
+        MARPAESLIFJSON_DST_OR_VALCHAR(c, *p++);
+        c <<= 4;
+        MARPAESLIFJSON_DST_OR_VALCHAR(c, *p++);
+        c <<= 4;
+        MARPAESLIFJSON_DST_OR_VALCHAR(c, *p++);
+
+        uint32p[i] = c;
+      }
+
+      /* Worst case is four UTF-8 bytes */
+      dstl = uint32l * 4;
+      dstp = (unsigned char *) malloc(sizeof(unsigned char) * dstl);
+      if (MARPAESLIF_UNLIKELY(dstp == NULL)) {
+        MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "malloc failure, %s", strerror(errno));
+        goto err;
+      }
+
+      /* Based on efi_utf16_to_utf8 from Linux kernel */
+      q = dstp;
+      for (i = 0, j = 1; i < uint32l; i++, j++) {
+        c = uint32p[i];
+
+        if ((j < uint32l) && (c >= 0xD800) && (c <= 0xDBFF) && (uint32p[j] >= 0xDC00) && (uint32p[j] <= 0xDFFF)) {
+          /* Surrogate UTF-16 pair */
+          c = 0x10000 + ((c & 0x3FF) << 10) + (uint32p[j] & 0x3FF);
+          ++i;
+          ++j;
+        }
+
+        if ((c >= 0xD800) && (c <= 0xDFFFF)) {
+          if (marpaESLIFJSONContextp->marpaESLIFJSONDecodeOptionp->noReplacementCharacterb) {
+            MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "Invalid UTF-16 character \\%c%c%c%c%c", marpaESLIFValueResultp->u.a.p[(i * 6) + 1], marpaESLIFValueResultp->u.a.p[(i * 6) + 2], marpaESLIFValueResultp->u.a.p[(i * 6) + 3], marpaESLIFValueResultp->u.a.p[(i * 6) + 4], marpaESLIFValueResultp->u.a.p[(i * 6) + 5]);
+            goto err;
+          } else {
+            MARPAESLIF_TRACEF(marpaESLIFValuep->marpaESLIFp, funcs, "Invalid UTF-16 character \\%c%c%c%c%c replaced by 0xFFFD", marpaESLIFValueResultp->u.a.p[(i * 6) + 1], marpaESLIFValueResultp->u.a.p[(i * 6) + 2], marpaESLIFValueResultp->u.a.p[(i * 6) + 3], marpaESLIFValueResultp->u.a.p[(i * 6) + 4], marpaESLIFValueResultp->u.a.p[(i * 6) + 5]);
+            c = 0xFFFD; /* Replacement character */
+          }
+        }
+
+        if (c < 0x80) {
+          *q++ = c;
+          continue;
+        }
+
+        if (c < 0x800) {
+          *q++ = 0xC0 + (c >> 6);
+          goto t1;
+        }
+
+        if (c < 0x10000) {
+          *q++ = 0xE0 + (c >> 12);
+          goto t2;
+        }
+
+        *q++ = 0xF0 + (c >> 18);
+        *q++ = 0x80 + ((c >> 12) & 0x3F);
+      t2:
+        *q++ = 0x80 + ((c >> 6) & 0x3F);
+      t1:
+        *q++ = 0x80 + (c & 0x3F);
+      }
+
+      marpaESLIFValueResult.type               = MARPAESLIF_VALUE_TYPE_ARRAY;
+      marpaESLIFValueResult.contextp           = NULL;
+      marpaESLIFValueResult.representationp    = NULL;
+      marpaESLIFValueResult.u.a.p              = (char *) dstp;
+      marpaESLIFValueResult.u.a.sizel          = q - dstp;
+      marpaESLIFValueResult.u.s.freeUserDatavp = marpaESLIFValuep->marpaESLIFRecognizerp;
+      marpaESLIFValueResult.u.s.freeCallbackp  = _marpaESLIF_generic_freeCallbackv;
+      marpaESLIFValueResult.u.s.shallowb       = 0;
+    }
+
+    marpaESLIFValueResultp = &marpaESLIFValueResult;
+  }
+
+  if (MARPAESLIF_UNLIKELY(! _marpaESLIFValue_stack_setb(marpaESLIFValuep, resulti, marpaESLIFValueResultp))) {
+    goto err;
+  }
+
+  /* dstp, if allocated, is now managed by ESLIF */
+  dstp = NULL;
+
+  rcb = 1;
+  goto done;
+
+ err:
+  rcb = 0;
+
+ done:
+  if (uint32p != NULL) {
+    free(uint32p);
+  }
+  if (dstp != NULL) {
+    free(dstp);
+  }
   return rcb;
 }
 
@@ -965,7 +1182,7 @@ static short _marpaESLIFJSON_charsb(void *userDatavp, marpaESLIFValue_t *marpaES
     /* When arg0i == argni then the whole thing is already available in a single bloc, no need to re-allocate */
     if (arg0i == argni) {
       /* We just transform this marpaESLIFValueResult from string type to array type */
-      if (! marpaESLIFValue_stack_getAndForgetb(marpaESLIFValuep, arg0i, &marpaESLIFValueResult)) {
+      if (MARPAESLIF_UNLIKELY(! _marpaESLIFValue_stack_getAndForgetb(marpaESLIFValuep, arg0i, &marpaESLIFValueResult))) {
         goto err;
       }
 
@@ -988,7 +1205,7 @@ static short _marpaESLIFJSON_charsb(void *userDatavp, marpaESLIFValue_t *marpaES
       sizel = 0;
       for (i = arg0i; i<= argni; i++) {
         marpaESLIFValueResultp = _marpaESLIFValue_stack_getp(marpaESLIFValuep, i);
-        if (marpaESLIFValueResultp == NULL) {
+        if (MARPAESLIF_UNLIKELY(marpaESLIFValueResultp == NULL)) {
           goto err;
         }
         sizel += marpaESLIFValueResultp->u.a.sizel;
@@ -1013,7 +1230,7 @@ static short _marpaESLIFJSON_charsb(void *userDatavp, marpaESLIFValue_t *marpaES
       q = p;
       for (i = arg0i; i<= argni; i++) {
         marpaESLIFValueResultp = _marpaESLIFValue_stack_getp(marpaESLIFValuep, i);
-        if (marpaESLIFValueResultp == NULL) {
+        if (MARPAESLIF_UNLIKELY(marpaESLIFValueResultp == NULL)) {
           goto err;
         }
         sizel = marpaESLIFValueResultp->u.a.sizel;
@@ -1024,7 +1241,7 @@ static short _marpaESLIFJSON_charsb(void *userDatavp, marpaESLIFValue_t *marpaES
     }
   }
 
-  if (! _marpaESLIFValue_stack_setb(marpaESLIFValuep, resulti, &marpaESLIFValueResult)) {
+  if (MARPAESLIF_UNLIKELY(! _marpaESLIFValue_stack_setb(marpaESLIFValuep, resulti, &marpaESLIFValueResult))) {
     goto err;
   }
 
@@ -1035,69 +1252,6 @@ static short _marpaESLIFJSON_charsb(void *userDatavp, marpaESLIFValue_t *marpaES
   if (p != NULL) {
     free(p);
   }
-  rcb = 0;
-
- done:
-  return rcb;
-}
-
-/*****************************************************************************/
-static short _marpaESLIFJSON_escapedb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb)
-/*****************************************************************************/
-{
-  /* char ::= /\\\\[\"\\\\\\/bfnrt]/ */
-  short                    rcb;
-  marpaESLIFValueResult_t *marpaESLIFValueResultp;
-  marpaESLIFValueResult_t  marpaESLIFValueResult;
-
-  /* We know this is a lexeme of 2 bytes per definition */
-  marpaESLIFValueResultp = _marpaESLIFValue_stack_getp(marpaESLIFValuep, arg0i);
-  if (marpaESLIFValueResultp == NULL) {
-    goto err;
-  }
-
-  marpaESLIFValueResult.contextp           = NULL;
-  marpaESLIFValueResult.representationp    = NULL;
-  marpaESLIFValueResult.type               = MARPAESLIF_VALUE_TYPE_ARRAY;
-  marpaESLIFValueResult.u.a.freeUserDatavp = NULL;
-  marpaESLIFValueResult.u.a.freeCallbackp  = NULL;
-  marpaESLIFValueResult.u.a.shallowb       = 1;
-  marpaESLIFValueResult.u.a.sizel          = 1;
-
-  switch (marpaESLIFValueResultp->u.a.p[1]) {
-  case '"':
-    marpaESLIFValueResult.u.a.p            = (char *) MARPAESLIFJSON_DQUOTE;
-    break;
-  case '\\':
-    marpaESLIFValueResult.u.a.p            = (char *) MARPAESLIFJSON_BACKSLASH;
-    break;
-  case '/':
-    marpaESLIFValueResult.u.a.p            = (char *) MARPAESLIFJSON_SLASH;
-    break;
-  case 'b':
-    marpaESLIFValueResult.u.a.p            = (char *) MARPAESLIFJSON_BACKSPACE;
-    break;
-  case 'f':
-    marpaESLIFValueResult.u.a.p            = (char *) MARPAESLIFJSON_FORMFEED;
-    break;
-  case 'r':
-    marpaESLIFValueResult.u.a.p            = (char *) MARPAESLIFJSON_LINEFEED;
-    break;
-  case 'n':
-    marpaESLIFValueResult.u.a.p            = (char *) MARPAESLIFJSON_CARRIAGE_RETURN;
-    break;
-  case 't':
-    marpaESLIFValueResult.u.a.p            = (char *) MARPAESLIFJSON_HORIZONTAL_TAB;
-    break;
-  default:
-    MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "Invalid character '%c'", marpaESLIFValueResultp->u.a.p[1]);
-    goto err;
-  }
-
-  rcb = _marpaESLIFValue_stack_setb(marpaESLIFValuep, resulti, &marpaESLIFValueResult);;
-  goto done;
-
- err:
   rcb = 0;
 
  done:
@@ -1141,139 +1295,6 @@ static short _marpaESLIFJSONValueResultImportb(marpaESLIFValue_t *marpaESLIFValu
 }
 
 /*****************************************************************************/
-static short _marpaESLIFJSON_unicodeb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb)
-/*****************************************************************************/
-{
-  /* char ::= /(?:\\u[[:xdigit:]]{4})+/ action => unicode\n" */
-  static const char       *funcs                  = "_marpaESLIFJSON_unicodeb";
-  marpaESLIFJSONContext_t *marpaESLIFJSONContextp = (marpaESLIFJSONContext_t *) userDatavp;
-  unsigned char           *dstp                   = NULL;
-  size_t                   dstl;
-  marpaESLIF_uint32_t     *uint32p                = NULL;
-  size_t                   uint32l;
-  marpaESLIFValueResult_t *marpaESLIFValueResultp;
-  marpaESLIFValueResult_t  marpaESLIFValueResult;
-  marpaESLIF_uint32_t      c;
-  char                    *p;
-  unsigned char           *q;
-  size_t                   i;
-  size_t                   j;
-  short                    rcb;
-
-  /* Input is of type array by definition, UTF-8 encoded, containing only ASCII characters */
-  marpaESLIFValueResultp = _marpaESLIFValue_stack_getp(marpaESLIFValuep, arg0i);
-  if (marpaESLIFValueResultp == NULL) {
-    goto err;
-  }
-
-  /* It is a sequence of '\uXXXX' by definition, i.e. 6 bytes - so there are (marpaESLIFValueResultp->u.a.sizel / 6) hex digits */
-  uint32l = marpaESLIFValueResultp->u.a.sizel / 6;
-  uint32p = (marpaESLIF_uint32_t *) malloc(sizeof(marpaESLIF_uint32_t) * uint32l);
-  if (MARPAESLIF_UNLIKELY(uint32p == NULL)) {
-    MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "malloc failure, %s", strerror(errno));
-    goto err;
-  }
-
-  for (i = 0, p = marpaESLIFValueResultp->u.a.p + 2; i < uint32l; i++, p += 2) {
-    c = 0;
-
-    MARPAESLIFJSON_DST_OR_VALCHAR(c, *p++);
-    c <<= 4;
-    MARPAESLIFJSON_DST_OR_VALCHAR(c, *p++);
-    c <<= 4;
-    MARPAESLIFJSON_DST_OR_VALCHAR(c, *p++);
-    c <<= 4;
-    MARPAESLIFJSON_DST_OR_VALCHAR(c, *p++);
-
-    uint32p[i] = c;
-  }
-
-  /* Worst case is four UTF-8 bytes */
-  dstl = uint32l * 4;
-  dstp = (unsigned char *) malloc(sizeof(unsigned char) * dstl);
-  if (MARPAESLIF_UNLIKELY(dstp == NULL)) {
-    MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "malloc failure, %s", strerror(errno));
-    goto err;
-  }
-
-  /* Based on efi_utf16_to_utf8 from Linux kernel */
-  q = dstp;
-  for (i = 0, j = 1; i < uint32l; i++, j++) {
-    c = uint32p[i];
-
-    if ((j < uint32l) && (c >= 0xD800) && (c <= 0xDBFF) && (uint32p[j] >= 0xDC00) && (uint32p[j] <= 0xDFFF)) {
-      /* Surrogate UTF-16 pair */
-      c = 0x10000 + ((c & 0x3FF) << 10) + (uint32p[j] & 0x3FF);
-      ++i;
-      ++j;
-    }
-
-    if ((c >= 0xD800) && (c <= 0xDFFFF)) {
-      if (marpaESLIFJSONContextp->marpaESLIFJSONDecodeOptionp->noReplacementCharacterb) {
-        MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "Invalid UTF-16 character \\%c%c%c%c%c", marpaESLIFValueResultp->u.a.p[(i * 6) + 1], marpaESLIFValueResultp->u.a.p[(i * 6) + 2], marpaESLIFValueResultp->u.a.p[(i * 6) + 3], marpaESLIFValueResultp->u.a.p[(i * 6) + 4], marpaESLIFValueResultp->u.a.p[(i * 6) + 5]);
-        goto err;
-      } else {
-        MARPAESLIF_TRACEF(marpaESLIFValuep->marpaESLIFp, funcs, "Invalid UTF-16 character \\%c%c%c%c%c replaced by 0xFFFD", marpaESLIFValueResultp->u.a.p[(i * 6) + 1], marpaESLIFValueResultp->u.a.p[(i * 6) + 2], marpaESLIFValueResultp->u.a.p[(i * 6) + 3], marpaESLIFValueResultp->u.a.p[(i * 6) + 4], marpaESLIFValueResultp->u.a.p[(i * 6) + 5]);
-        c = 0xFFFD; /* Replacement character */
-      }
-    }
-
-    if (c < 0x80) {
-      *q++ = c;
-      continue;
-    }
-
-    if (c < 0x800) {
-      *q++ = 0xC0 + (c >> 6);
-      goto t1;
-    }
-
-    if (c < 0x10000) {
-      *q++ = 0xE0 + (c >> 12);
-      goto t2;
-    }
-
-    *q++ = 0xF0 + (c >> 18);
-    *q++ = 0x80 + ((c >> 12) & 0x3F);
-  t2:
-    *q++ = 0x80 + ((c >> 6) & 0x3F);
-  t1:
-    *q++ = 0x80 + (c & 0x3F);
-  }
-
-  marpaESLIFValueResult.type               = MARPAESLIF_VALUE_TYPE_ARRAY;
-  marpaESLIFValueResult.contextp           = NULL;
-  marpaESLIFValueResult.representationp    = NULL;
-  marpaESLIFValueResult.u.a.p              = (char *) dstp;
-  marpaESLIFValueResult.u.a.sizel          = q - dstp;
-  marpaESLIFValueResult.u.s.freeUserDatavp = marpaESLIFValuep->marpaESLIFRecognizerp;
-  marpaESLIFValueResult.u.s.freeCallbackp  = _marpaESLIF_generic_freeCallbackv;
-  marpaESLIFValueResult.u.s.shallowb       = 0;
-
-  if (! _marpaESLIFValue_stack_setb(marpaESLIFValuep, resulti, &marpaESLIFValueResult)) {
-    goto err;
-  }
-
-  /* dstp is now managed by ESLIF */
-  dstp = NULL;
-
-  rcb = 1;
-  goto done;
-
- err:
-  rcb = 0;
-
- done:
-  if (uint32p != NULL) {
-    free(uint32p);
-  }
-  if (dstp != NULL) {
-    free(dstp);
-  }
-  return rcb;
-}
-
-/*****************************************************************************/
 static short _marpaESLIFJSON_positive_infinityb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb)
 /*****************************************************************************/
 {
@@ -1284,7 +1305,7 @@ static short _marpaESLIFJSON_positive_infinityb(void *userDatavp, marpaESLIFValu
 
   /* Input is of type array by definition, UTF-8 encoded */
   marpaESLIFValueResultInputp = _marpaESLIFValue_stack_getp(marpaESLIFValuep, arg0i);
-  if (marpaESLIFValueResultInputp == NULL) {
+  if (MARPAESLIF_UNLIKELY(marpaESLIFValueResultInputp == NULL)) {
     goto err;
   }
 
@@ -1299,12 +1320,12 @@ static short _marpaESLIFJSON_positive_infinityb(void *userDatavp, marpaESLIFValu
   marpaESLIFValueResult.type            = MARPAESLIF_VALUE_TYPE_UNDEF;
 #endif
 
-  if (! _marpaESLIFJSON_proposalb(userDatavp,
-                                  marpaESLIFValuep,
-                                  marpaESLIFJSONContextp->marpaESLIFJSONDecodeOptionp->positiveInfinityActionp,
-                                  marpaESLIFValueResultInputp->u.a.p,
-                                  marpaESLIFValueResultInputp->u.a.sizel,
-                                  &marpaESLIFValueResult)) {
+  if (MARPAESLIF_UNLIKELY(! _marpaESLIFJSON_proposalb(userDatavp,
+                                                      marpaESLIFValuep,
+                                                      marpaESLIFJSONContextp->marpaESLIFJSONDecodeOptionp->positiveInfinityActionp,
+                                                      marpaESLIFValueResultInputp->u.a.p,
+                                                      marpaESLIFValueResultInputp->u.a.sizel,
+                                                      &marpaESLIFValueResult))) {
     goto err;
   }
 
@@ -1329,7 +1350,7 @@ static short _marpaESLIFJSON_negative_infinityb(void *userDatavp, marpaESLIFValu
 
   /* Input is of type array by definition, UTF-8 encoded */
   marpaESLIFValueResultInputp = _marpaESLIFValue_stack_getp(marpaESLIFValuep, arg0i);
-  if (marpaESLIFValueResultInputp == NULL) {
+  if (MARPAESLIF_UNLIKELY(marpaESLIFValueResultInputp == NULL)) {
     goto err;
   }
 
@@ -1344,12 +1365,12 @@ static short _marpaESLIFJSON_negative_infinityb(void *userDatavp, marpaESLIFValu
   marpaESLIFValueResult.type            = MARPAESLIF_VALUE_TYPE_UNDEF;
 #endif
 
-  if (! _marpaESLIFJSON_proposalb(userDatavp,
-                                  marpaESLIFValuep,
-                                  marpaESLIFJSONContextp->marpaESLIFJSONDecodeOptionp->negativeInfinityActionp,
-                                  marpaESLIFValueResultInputp->u.a.p,
-                                  marpaESLIFValueResultInputp->u.a.sizel,
-                                  &marpaESLIFValueResult)) {
+  if (MARPAESLIF_UNLIKELY(! _marpaESLIFJSON_proposalb(userDatavp,
+                                                      marpaESLIFValuep,
+                                                      marpaESLIFJSONContextp->marpaESLIFJSONDecodeOptionp->negativeInfinityActionp,
+                                                      marpaESLIFValueResultInputp->u.a.p,
+                                                      marpaESLIFValueResultInputp->u.a.sizel,
+                                                      &marpaESLIFValueResult))) {
     goto err;
   }
 
@@ -1374,7 +1395,7 @@ static short _marpaESLIFJSON_positive_nanb(void *userDatavp, marpaESLIFValue_t *
 
   /* Input is of type array by definition, UTF-8 encoded */
   marpaESLIFValueResultInputp = _marpaESLIFValue_stack_getp(marpaESLIFValuep, arg0i);
-  if (marpaESLIFValueResultInputp == NULL) {
+  if (MARPAESLIF_UNLIKELY(marpaESLIFValueResultInputp == NULL)) {
     goto err;
   }
 
@@ -1389,12 +1410,12 @@ static short _marpaESLIFJSON_positive_nanb(void *userDatavp, marpaESLIFValue_t *
   marpaESLIFValueResult.type            = MARPAESLIF_VALUE_TYPE_UNDEF;
 #endif
 
-  if (! _marpaESLIFJSON_proposalb(userDatavp,
-                                  marpaESLIFValuep,
-                                  marpaESLIFJSONContextp->marpaESLIFJSONDecodeOptionp->positiveNanActionp,
-                                  marpaESLIFValueResultInputp->u.a.p,
-                                  marpaESLIFValueResultInputp->u.a.sizel,
-                                  &marpaESLIFValueResult)) {
+  if (MARPAESLIF_UNLIKELY(! _marpaESLIFJSON_proposalb(userDatavp,
+                                                      marpaESLIFValuep,
+                                                      marpaESLIFJSONContextp->marpaESLIFJSONDecodeOptionp->positiveNanActionp,
+                                                      marpaESLIFValueResultInputp->u.a.p,
+                                                      marpaESLIFValueResultInputp->u.a.sizel,
+                                                      &marpaESLIFValueResult))) {
     goto err;
   }
 
@@ -1419,7 +1440,7 @@ static short _marpaESLIFJSON_negative_nanb(void *userDatavp, marpaESLIFValue_t *
 
   /* Input is of type array by definition, UTF-8 encoded */
   marpaESLIFValueResultInputp = _marpaESLIFValue_stack_getp(marpaESLIFValuep, arg0i);
-  if (marpaESLIFValueResultInputp == NULL) {
+  if (MARPAESLIF_UNLIKELY(marpaESLIFValueResultInputp == NULL)) {
     goto err;
   }
 
@@ -1434,12 +1455,12 @@ static short _marpaESLIFJSON_negative_nanb(void *userDatavp, marpaESLIFValue_t *
   marpaESLIFValueResult.type            = MARPAESLIF_VALUE_TYPE_UNDEF;
 #endif
 
-  if (! _marpaESLIFJSON_proposalb(userDatavp,
-                                  marpaESLIFValuep,
-                                  marpaESLIFJSONContextp->marpaESLIFJSONDecodeOptionp->negativeNanActionp,
-                                  marpaESLIFValueResultInputp->u.a.p,
-                                  marpaESLIFValueResultInputp->u.a.sizel,
-                                  &marpaESLIFValueResult)) {
+  if (MARPAESLIF_UNLIKELY(! _marpaESLIFJSON_proposalb(userDatavp,
+                                                      marpaESLIFValuep,
+                                                      marpaESLIFJSONContextp->marpaESLIFJSONDecodeOptionp->negativeNanActionp,
+                                                      marpaESLIFValueResultInputp->u.a.p,
+                                                      marpaESLIFValueResultInputp->u.a.sizel,
+                                                      &marpaESLIFValueResult))) {
     goto err;
   }
 
@@ -1494,7 +1515,7 @@ static short _marpaESLIFJSON_proposalb(void *userDatavp, marpaESLIFValue_t *marp
     marpaESLIFJSONContextp = (marpaESLIFJSONContext_t *) userDatavp;
     marpaESLIFValueOptionp = marpaESLIFJSONContextp->marpaESLIFValueOptionp;
 
-    if (! proposalp(marpaESLIFValueOptionp->userDatavp, strings, stringl, marpaESLIFValueResultp)) {
+    if (MARPAESLIF_UNLIKELY(! proposalp(marpaESLIFValueOptionp->userDatavp, strings, stringl, marpaESLIFValueResultp))) {
       MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "%s: Callback failure", strings);
       goto err;
     }
