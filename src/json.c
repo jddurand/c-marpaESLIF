@@ -1122,6 +1122,7 @@ static short _marpaESLIFJSON_charb(void *userDatavp, marpaESLIFValue_t *marpaESL
       marpaESLIFValueResult.u.s.freeUserDatavp = marpaESLIFValuep->marpaESLIFRecognizerp;
       marpaESLIFValueResult.u.s.freeCallbackp  = _marpaESLIF_generic_freeCallbackv;
       marpaESLIFValueResult.u.s.shallowb       = 0;
+      break;
     }
 
     marpaESLIFValueResultp = &marpaESLIFValueResult;
