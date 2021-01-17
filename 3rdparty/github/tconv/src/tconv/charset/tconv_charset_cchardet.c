@@ -33,7 +33,7 @@ void *tconv_charset_cchardet_new(tconv_t tconvp, void *voidp)
 
   TCONV_TRACE(tconvp, "%s - malloc(%lld)", funcs, (unsigned long long) sizeof(tconv_charset_cchardet_context_t));
   contextp = (tconv_charset_cchardet_context_t *) malloc(sizeof(tconv_charset_cchardet_context_t));
-  if (contextp == NULL) {
+  if (TCONV_UNLIKELY(contextp == NULL)) {
     TCONV_TRACE(tconvp, "%s - malloc(%lld) failure, %s", funcs, (unsigned long long) sizeof(tconv_charset_cchardet_context_t), strerror(errno));
     goto err;
   }

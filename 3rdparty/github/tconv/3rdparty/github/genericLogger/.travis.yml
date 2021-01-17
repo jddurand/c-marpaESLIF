@@ -4,7 +4,7 @@ before_script:
 # We want to try perl standalone first
   - sudo apt-get update
   - sudo apt-get install cpanminus nsis
-  - sudo cpanm --notest Config::AutoConf::INI ExtUtils::CBuilder File::Basename File::Find File::Path
+  - sudo cpanm --notest Config::AutoConf::INI ExtUtils::CBuilder File::Basename File::Find File::Path Try::Tiny
   - perl CMakeObjects.PL
   - rm -rf output
   - cmake .

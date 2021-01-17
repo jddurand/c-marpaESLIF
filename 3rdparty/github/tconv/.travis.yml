@@ -3,7 +3,7 @@ before_script:
 # We want to try perl standalone first
   - sudo apt-get update
   - sudo apt-get install cpanminus nsis valgrind gdb
-  - sudo cpanm --notest Archive::Tar Config::AutoConf::INI ExtUtils::CBuilder File::chdir File::Basename File::Find File::Path File::Copy::Recursive File::Temp IPC::Run Perl::OSType
+  - sudo cpanm --notest Archive::Tar Config::AutoConf::INI ExtUtils::CBuilder File::chdir File::Basename File::Find File::Path File::Copy::Recursive File::Temp IPC::Run Perl::OSType Try::Tiny
   - sh ./install-c-genericLogger.sh
 script:
 # Enable unlimited core file size
