@@ -49,6 +49,38 @@ make_path(dirname($config_h));
 
 my $ac = Config::AutoConf::INI->new(logfile => 'config.log');
 $ac->define_var('TCONV_NTRACE', 1);
+
+$ac->msg_checking("for __builtin_expect()");
+my $__builtin_expect = <<__BUILTIN_EXPECT;
+#include <stdlib.h>
+
+#define C__BUILTIN_EXPECT __builtin_expect
+#define C_LIKELY(x)    C__BUILTIN_EXPECT(!!(x), 1)
+#define C_UNLIKELY(x)  C__BUILTIN_EXPECT(!!(x), 0)
+
+/* Copied from https://kernelnewbies.org/FAQ/LikelyUnlikely */
+int main(char *argv[], int argc)
+{
+   int a;
+
+   /* Get the value from somewhere GCC can't optimize */
+   a = atoi (argv[1]);
+
+   if (C_UNLIKELY(a == 2))
+      a++;
+   else
+      a--;
+
+   return 0;
+}
+__BUILTIN_EXPECT
+if (try_compile($__builtin_expect)) {
+    $ac->msg_result('yes');
+    $ac->define_var("C___BUILTIN_EXPECT", "__builtin_expect");
+} else {
+    $ac->msg_result('no');
+}
+
 foreach my $inline_keyword (qw/inline __inline__ inline__ __inline/) {
     $ac->msg_checking("for $inline_keyword");
     my $inline_source = <<INLINE_SOURCE;

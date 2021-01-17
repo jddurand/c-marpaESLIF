@@ -21,6 +21,16 @@
 #  endif
 #endif
 
+/* __builtin_expect support */
+#cmakedefine C___BUILTIN_EXPECT @C___BUILTIN_EXPECT@
+#ifdef C___BUILTIN_EXPECT
+#  define TCONV_LIKELY(x)    C___BUILTIN_EXPECT(x, 1)
+#  define TCONV_UNLIKELY(x)  C___BUILTIN_EXPECT(x, 0)
+#else
+#  define TCONV_LIKELY(x)    x
+#  define TCONV_UNLIKELY(x)  x
+#endif /* C___BUILTIN_EXPECT */
+
 /* Convenience macro */
 #ifndef TCONV_NTRACE
 #define TCONV_TRACE(tconvp, fmts, ...) tconv_trace(tconvp, fmts, __VA_ARGS__)

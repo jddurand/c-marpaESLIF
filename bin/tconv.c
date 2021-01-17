@@ -17,6 +17,7 @@
 #else
 #  include <io.h>
 #endif
+#include "tconv_config.h"
 
 #ifndef EXIT_FAILURE
 #  define EXIT_FAILURE 1
@@ -437,7 +438,7 @@ static void fileconvert(int outputFd, char *filenames,
   tconv_helper_context_t  context;
 
   inbufp = (char *) malloc(bufsizel);
-  if (inbufp == NULL) {
+  if (TCONV_UNLIKELY(inbufp == NULL)) {
     GENERICLOGGER_ERRORF(NULL, "malloc: %s", strerror(errno));
     goto end;
   }
