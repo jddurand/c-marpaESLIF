@@ -23,4 +23,14 @@
 #define size_t unsigned int
 #endif
 
+/* __builtin_expect support */
+#cmakedefine C___BUILTIN_EXPECT @C___BUILTIN_EXPECT@
+#ifdef C___BUILTIN_EXPECT
+#  define MARPAWRAPPER_LIKELY(x)    C___BUILTIN_EXPECT(x, 1)
+#  define MARPAWRAPPER_UNLIKELY(x)  C___BUILTIN_EXPECT(x, 0)
+#else
+#  define MARPAWRAPPER_LIKELY(x)    x
+#  define MARPAWRAPPER_UNLIKELY(x)  x
+#endif /* C___BUILTIN_EXPECT */
+
 #endif /* MARPAWRAPPER_CONFIG_H */
