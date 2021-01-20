@@ -49,6 +49,18 @@
 #endif
 
 /* ====================================================================== */
+/* gcc family has the __builtin_expect that optimizes branch prediction.  */
+/* This is off by default, but you can set the macros                     */
+/* GENERICSTACK_LIKELY and GENERICSTACK_UNLIKELY to handle that.          */
+/* ====================================================================== */
+#ifndef GENERICSTACK_LIKELY
+#  define GENERICSTACK_LIKELY(x) x
+#endif
+#ifndef GENERICSTACK_UNLIKELY
+#  define GENERICSTACK_UNLIKELY(x) x
+#endif
+
+/* ====================================================================== */
 /* In theory we should check for int turnaround. In practice this is      */
 /* instructions for nothing, this is a so improbable case. Nevertheless   */
 /* if you insist, set the variable GENERICSTACK_PARANOID.                 */
@@ -202,7 +214,7 @@ static GENERICSTACK_INLINE short _GENERICSTACK_CREATE_HEAP(genericStack_t *stack
   short rcb;
 
   stackp->heapItems = (genericStackItem_t *) malloc(heapi * sizeof(genericStackItem_t));
-  if (stackp->heapItems == NULL) {
+  if (GENERICSTACK_UNLIKELY(stackp->heapItems == NULL)) {
     stackp->errori = 1;
     rcb = 0;
   } else {
@@ -221,7 +233,7 @@ static GENERICSTACK_INLINE short _GENERICSTACK_CREATE_HEAP(genericStack_t *stack
   short rcb;
 
   stackp->heapItems = (genericStackItem_t *) malloc(heapi * sizeof(genericStackItem_t));
-  if (stackp->heapItems == NULL) {
+  if (GENERICSTACK_UNLIKELY(stackp->heapItems == NULL)) {
     stackp->errori = 1;
     rcb = 0;
   } else {
@@ -243,7 +255,7 @@ static GENERICSTACK_INLINE short _GENERICSTACK_CREATE_HEAP(genericStack_t *stack
 
   /* No need to calloc: GENERICSTACK_NA_MEMSET() does the job when needed, and in practice this almost never happens */
   stackp->heapItems = (genericStackItem_t *) malloc(heapi * sizeof(genericStackItem_t));
-  if (stackp->heapItems == NULL) {
+  if (GENERICSTACK_UNLIKELY(stackp->heapItems == NULL)) {
     stackp->errori = 1;
     rcb = 0;
   } else {
@@ -263,7 +275,7 @@ static GENERICSTACK_INLINE short _GENERICSTACK_CREATE_HEAP(genericStack_t *stack
   short rcb;
 
   stackp->heapItems = (genericStackItem_t *) malloc(heapi * sizeof(genericStackItem_t));
-  if (stackp->heapItems == NULL) {
+  if (GENERICSTACK_UNLIKELY(stackp->heapItems == NULL)) {
     stackp->errori = 1;
     rcb = 0;
   } else {
@@ -281,7 +293,8 @@ static GENERICSTACK_INLINE short _GENERICSTACK_EXTEND_HEAP(genericStack_t *stack
   short rcb;
 
   /* We are already on the heap, so previous value is in items */
-  if ((stackp->heapItems = (genericStackItem_t *) realloc(stackp->items, heapi * sizeof(genericStackItem_t))) == NULL) {
+  stackp->heapItems = (genericStackItem_t *) realloc(stackp->items, heapi * sizeof(genericStackItem_t));
+  if (GENERICSTACK_UNLIKELY(stackp->heapItems == NULL)) {
     stackp->errori = 1;
     stackp->heapItems = stackp->items;
     rcb = 0;
@@ -336,7 +349,7 @@ static GENERICSTACK_INLINE short _GENERICSTACK_EXTEND(genericStack_t *stackp, in
         }
       }
 
-      if (heapi == 0) {
+      if (GENERICSTACK_UNLIKELY(heapi == 0)) {
         stackp->errori = 1;
         errno = EINVAL;
         rcb = 0;
@@ -375,7 +388,7 @@ static GENERICSTACK_INLINE short _GENERICSTACK_INIT_SIZED(genericStack_t *stackp
   /* Note that _GENERICSTACK_INIT() never alters stackp->errori */
   _GENERICSTACK_INIT(stackp);
   rcb = _GENERICSTACK_EXTEND(stackp, lengthi, 0);
-  if (rcb) {
+  if (GENERICSTACK_LIKELY(rcb)) {
     stackp->initialLengthi = lengthi;
   }
 
@@ -404,7 +417,7 @@ static GENERICSTACK_INLINE void _GENERICSTACK_FREE(genericStack_t *stackp) {
 static GENERICSTACK_INLINE genericStack_t *_GENERICSTACK_NEW() {
     genericStack_t *stackp = (genericStack_t *) malloc(sizeof(genericStack_t));
 
-    if (stackp != NULL) {
+    if (GENERICSTACK_LIKELY(stackp != NULL)) {
       _GENERICSTACK_INIT(stackp);
     }
 
@@ -414,10 +427,10 @@ static GENERICSTACK_INLINE genericStack_t *_GENERICSTACK_NEW() {
 static GENERICSTACK_INLINE genericStack_t *_GENERICSTACK_NEW_SIZED(int lengthi) {
   genericStack_t *stackp = (genericStack_t *) malloc(sizeof(genericStack_t));
 
-  if (stackp != NULL) {
+  if (GENERICSTACK_LIKELY(stackp != NULL)) {
     /* Note that _GENERICSTACK_INIT() never alters stackp->errori */
     _GENERICSTACK_INIT(stackp);
-    if (! _GENERICSTACK_EXTEND(stackp, lengthi, 0)) {
+    if (GENERICSTACK_UNLIKELY(! _GENERICSTACK_EXTEND(stackp, lengthi, 0))) {
       _GENERICSTACK_FREE(stackp);
       stackp = NULL;
     }
@@ -439,11 +452,11 @@ static GENERICSTACK_INLINE void _GENERICSTACK_RELAX(genericStack_t *stackp) {
     int lengthi = indexi + 1;                                           \
                                                                         \
     /* Turnaround */                                                    \
-    if (lengthi < indexi) {                                             \
+    if (GENERICSTACK_UNLIKELY(lengthi < indexi)) {                      \
       stackp->errori = 1;                                               \
       rcb = 0;                                                          \
     } else {                                                            \
-      if (! _GENERICSTACK_EXTEND(stackp, lengthi, indexi)) {            \
+      if (GENERICSTACK_UNLIKELY(! _GENERICSTACK_EXTEND(stackp, lengthi, indexi))) { \
         rcb = 0;                                                        \
       } else {                                                          \
         if (stackp->usedi < lengthi) {                                  \
@@ -463,7 +476,7 @@ static GENERICSTACK_INLINE void _GENERICSTACK_RELAX(genericStack_t *stackp) {
     short rcb;                                                          \
     int lengthi = indexi + 1;                                           \
                                                                         \
-    if (! _GENERICSTACK_EXTEND(stackp, lengthi, indexi)) {              \
+    if (GENERICSTACK_UNLIKELY(! _GENERICSTACK_EXTEND(stackp, lengthi, indexi))) { \
       rcb = 0;                                                          \
     } else {                                                            \
       if (stackp->usedi < lengthi) {                                    \
@@ -485,11 +498,11 @@ static GENERICSTACK_INLINE void _GENERICSTACK_RELAX(genericStack_t *stackp) {
     int lengthi = indexi + 1;                                           \
                                                                         \
     /* Turnaround */                                                    \
-    if (lengthi < indexi) {                                             \
+    if (GENERICSTACK_UNLIKELY(lengthi < indexi)) {                      \
       stackp->errori = 1;                                               \
       rcb = 0;                                                          \
     } else {                                                            \
-      if (! _GENERICSTACK_EXTEND(stackp, lengthi, indexi)) {            \
+      if (GENERICSTACK_UNLIKELY(! _GENERICSTACK_EXTEND(stackp, lengthi, indexi))) { \
         rcb = 0;                                                        \
       } else {                                                          \
         if (stackp->usedi < lengthi) {                                  \
@@ -509,7 +522,7 @@ static GENERICSTACK_INLINE void _GENERICSTACK_RELAX(genericStack_t *stackp) {
     short rcb;                                                          \
     int lengthi = indexi + 1;                                           \
                                                                         \
-    if (! _GENERICSTACK_EXTEND(stackp, lengthi, indexi)) {              \
+    if (GENERICSTACK_UNLIKELY(! _GENERICSTACK_EXTEND(stackp, lengthi, indexi))) { \
       rcb = 0;                                                          \
     } else {                                                            \
       if (stackp->usedi < lengthi) {                                    \
@@ -556,12 +569,12 @@ static GENERICSTACK_INLINE short _GENERICSTACK_SET_NA(genericStack_t *stackp, in
 
 #ifdef GENERICSTACK_PARANOID
   /* Turnaround */
-  if (lengthi < indexi) {
+  if (GENERICSTACK_UNLIKELY(lengthi < indexi)) {
     stackp->errori = 1;
     rcb = 0;
   } else {
 #endif
-    if (! _GENERICSTACK_EXTEND(stackp, lengthi, indexi)) {
+    if (GENERICSTACK_UNLIKELY(! _GENERICSTACK_EXTEND(stackp, lengthi, indexi))) {
       rcb = 0;
     } else {
       if (stackp->usedi < lengthi) {
@@ -857,8 +870,8 @@ static GENERICSTACK_INLINE short _GENERICSTACK_SET_NA(genericStack_t *stackp, in
       _genericStackSwitch_index2 = (stackp)->usedi + _genericStackSwitch_index2; \
     }                                                                   \
                                                                         \
-    if ((_genericStackSwitch_index1 < 0) || ((_genericStackSwitch_index1) >= (stackp)->usedi) || \
-        (_genericStackSwitch_index2 < 0) || ((_genericStackSwitch_index2) >= (stackp)->usedi)) { \
+    if (GENERICSTACK_UNLIKELY((_genericStackSwitch_index1 < 0) || ((_genericStackSwitch_index1) >= (stackp)->usedi) || \
+                              (_genericStackSwitch_index2 < 0) || ((_genericStackSwitch_index2) >= (stackp)->usedi))) { \
       (stackp)->errori = 1;                                          \
       errno = EINVAL;                                                   \
     } else if (_genericStackSwitch_index1 != _genericStackSwitch_index2) { \
