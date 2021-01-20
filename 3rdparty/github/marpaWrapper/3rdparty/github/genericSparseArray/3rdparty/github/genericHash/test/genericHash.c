@@ -2,6 +2,8 @@
 #include <string.h>
 /* For the internal stacks to use heap memory */
 #define GENERICSTACK_DEFAULT_LENGTH 0
+/* This will define the use of __builtin_expect() or not on genericStack.h */
+#include "config.h"
 #include "genericHash.h"
 #include <genericLogger.h>
 
@@ -20,12 +22,14 @@ static void   myHashDump(myContext_t *myContextp, genericHash_t *myHashp);
 
 int main(int argc, char **argv) {
   if (myHashTest(0) == 0) {
-    return 1;
+    exit(1);
   }
+  
   if (myHashTest(1) == 0) {
-    return 1;
+    exit(1);
   }
-  return 0;
+
+  exit(0);
 }
 
 static int myHashTest(short withAllocb) {
