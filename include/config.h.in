@@ -33,4 +33,9 @@
 #  define MARPAWRAPPER_UNLIKELY(x)  x
 #endif /* C___BUILTIN_EXPECT */
 
+/* We want genericStack to use inline and __builtin_expect() if they exist */
+#define GENERICSTACK_INLINE inline
+#define GENERICSTACK_LIKELY(x) MARPAWRAPPER_LIKELY(x)
+#define GENERICSTACK_UNLIKELY(x) MARPAWRAPPER_UNLIKELY(x)
+
 #endif /* MARPAWRAPPER_CONFIG_H */

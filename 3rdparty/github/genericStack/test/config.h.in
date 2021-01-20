@@ -1,0 +1,25 @@
+#ifndef GENERICSTACK_TEST_CONFIG_H
+#define GENERICSTACK_TEST_CONFIG_H
+
+#cmakedefine C_INLINE @C_INLINE@
+#ifdef __cplusplus
+#  define GENERICSTACK_INLINE inline
+#else
+#  ifndef C_INLINE
+#    define GENERICSTACK_INLINE
+#  else
+#    define GENERICSTACK_INLINE C_INLINE
+#  endif
+#endif
+
+/* __builtin_expect support */
+#cmakedefine C___BUILTIN_EXPECT @C___BUILTIN_EXPECT@
+#ifdef C___BUILTIN_EXPECT
+#  define GENERICSTACK_LIKELY(x)    C___BUILTIN_EXPECT(x, 1)
+#  define GENERICSTACK_UNLIKELY(x)  C___BUILTIN_EXPECT(x, 0)
+#else
+#  define GENERICSTACK_LIKELY(x)    x
+#  define GENERICSTACK_UNLIKELY(x)  x
+#endif /* C___BUILTIN_EXPECT */
+
+#endif /* GENERICSTACK_TEST_CONFIG_H */

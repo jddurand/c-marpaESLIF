@@ -31,10 +31,10 @@ struct genericLogger {
 static const char *dates_internalErrors  = "Internal error when building date";
 static const char *msg_internalErrors = "Internal error when building message";
 
-static C_INLINE void  _genericLogger_defaultCallbackp(void *userDatavp, genericLoggerLevel_t logLeveli, const char *msgs);
-static C_INLINE char *_genericLogger_dateBuilders(genericLogger_t *genericLoggerp, const char *fmts);
-static C_INLINE char *_genericLogger_messageBuilders(genericLogger_t *genericLoggerp, short internalb, const char *fmts, ...);
-static C_INLINE char *_genericLogger_messageBuilder_aps(genericLogger_t *genericLoggerp, short internalb, const char *fmts, va_list ap);
+static inline void  _genericLogger_defaultCallbackp(void *userDatavp, genericLoggerLevel_t logLeveli, const char *msgs);
+static inline char *_genericLogger_dateBuilders(genericLogger_t *genericLoggerp, const char *fmts);
+static inline char *_genericLogger_messageBuilders(genericLogger_t *genericLoggerp, short internalb, const char *fmts, ...);
+static inline char *_genericLogger_messageBuilder_aps(genericLogger_t *genericLoggerp, short internalb, const char *fmts, va_list ap);
 
 /**********************/
 /* genericLogger_newp */
@@ -42,7 +42,7 @@ static C_INLINE char *_genericLogger_messageBuilder_aps(genericLogger_t *generic
 genericLogger_t *genericLogger_newp(genericLoggerCallback_t logCallbackp, void *userDatavp, genericLoggerLevel_t genericLoggerLeveli) {
   genericLogger_t *genericLoggerp = malloc(sizeof(genericLogger_t));
 
-  if (genericLoggerp == NULL) {
+  if (GENERICLOGGER_UNLIKELY(genericLoggerp == NULL)) {
     /* Well, shall we log about this - a priori no: the caller wanted to set up a particular */
     /* logging system, and not use our default */
     return NULL;
@@ -59,7 +59,7 @@ genericLogger_t *genericLogger_newp(genericLoggerCallback_t logCallbackp, void *
 /* genericLogger_clonep */
 /************************/
 genericLogger_t *genericLogger_clonep(genericLogger_t *genericLoggerp) {
-  if (genericLoggerp == NULL) {
+  if (GENERICLOGGER_UNLIKELY(genericLoggerp == NULL)) {
     return NULL;
   }
 
@@ -129,7 +129,7 @@ void genericLogger_freev(genericLogger_t **genericLoggerpp)
 /*************************************/
 /* _genericLogger_defaultCallbackp */
 /*************************************/
-static C_INLINE void _genericLogger_defaultCallbackp(void *userDatavp, genericLoggerLevel_t logLeveli, const char *msgs) {
+static inline void _genericLogger_defaultCallbackp(void *userDatavp, genericLoggerLevel_t logLeveli, const char *msgs) {
   /* We are NOT going to do a general log4c mechanism (this can come later), using genericLogger in fact */
   /* I.e. we are fixing the default output to be: DD/MM/YYYY hh::mm::ss PREFIX MESSAGE */
   const char   *prefixs =
@@ -156,10 +156,10 @@ static C_INLINE void _genericLogger_defaultCallbackp(void *userDatavp, genericLo
     bytesWritenl += C_WRITE(filenoStderri, s+bytesWritenl, countl-bytesWritenl);
   }
 
-  if ((dates != dates_internalErrors) && ((genericLoggerp == NULL) || (genericLoggerp->dates != dates))) {
+  if (GENERICLOGGER_LIKELY(dates != dates_internalErrors) && ((genericLoggerp == NULL) || (genericLoggerp->dates != dates))) {
     free(dates);
   }
-  if ((internals != msg_internalErrors) && ((genericLoggerp == NULL) || (genericLoggerp->internals != internals))) {
+  if (GENERICLOGGER_LIKELY(internals != msg_internalErrors) && ((genericLoggerp == NULL) || (genericLoggerp->internals != internals))) {
     free(internals);
   }
 }
@@ -213,13 +213,13 @@ void genericLogger_logapv(genericLogger_t *genericLoggerp, genericLoggerLevel_t 
     va_end(ap2);
 #endif
 
-    if (externals != msg_internalErrors) {
+    if (GENERICLOGGER_LIKELY(externals != msg_internalErrors)) {
       logCallbackp(userDatavp, genericLoggerLeveli, externals);
     } else {
       logCallbackp(userDatavp, GENERICLOGGER_LOGLEVEL_ERROR, externals);
     }
 
-    if ((externals != msg_internalErrors) && (externals != (char *) emptyMessages) && ((genericLoggerp == NULL) || (genericLoggerp->externals != externals))) {
+    if (GENERICLOGGER_LIKELY(externals != msg_internalErrors) && (externals != (char *) emptyMessages) && ((genericLoggerp == NULL) || (genericLoggerp->externals != externals))) {
       free(externals);
     }
   }
@@ -228,7 +228,7 @@ void genericLogger_logapv(genericLogger_t *genericLoggerp, genericLoggerLevel_t 
 /********************************************************************************************************************************************************/
 /* _genericLogger_dateBuilders: it always return either an allocated area, either dates_internalErrors, i.e. it never returns NULL  */
 /********************************************************************************************************************************************************/
-static C_INLINE char *_genericLogger_dateBuilders(genericLogger_t *genericLoggerp, const char *fmts) {
+static inline char *_genericLogger_dateBuilders(genericLogger_t *genericLoggerp, const char *fmts) {
   char      *dates;
   time_t     tl;
 #ifdef C_LOCALTIME_R
@@ -243,7 +243,7 @@ static C_INLINE char *_genericLogger_dateBuilders(genericLogger_t *genericLogger
   } else {
     /* We assume that a date should never exceed GENERICLOGGER_DATE_MAX_LENGTH bytes */
     dates = (char *) malloc(GENERICLOGGER_DATE_MAX_LENGTH);
-    if (dates == NULL) {
+    if (GENERICLOGGER_UNLIKELY(dates == NULL)) {
       return (char *) dates_internalErrors;
     }
     freeb = 1;
@@ -255,13 +255,13 @@ static C_INLINE char *_genericLogger_dateBuilders(genericLogger_t *genericLogger
 #else
   tmp = localtime(&tl);
 #endif
-  if (tmp == NULL) {
+  if (GENERICLOGGER_UNLIKELY(tmp == NULL)) {
     if (freeb) {
       free(dates);
     }
     return (char *) dates_internalErrors;
   }
-  if (strftime(dates, GENERICLOGGER_DATE_MAX_LENGTH, fmts, tmp) == 0) {
+  if (GENERICLOGGER_UNLIKELY(strftime(dates, GENERICLOGGER_DATE_MAX_LENGTH, fmts, tmp) == 0)) {
     if (freeb) {
       free(dates);
     }
@@ -274,7 +274,7 @@ static C_INLINE char *_genericLogger_dateBuilders(genericLogger_t *genericLogger
 /**********************************/
 /* _genericLogger_messageBuilders */
 /**********************************/
-static C_INLINE char *_genericLogger_messageBuilders(genericLogger_t *genericLoggerp, short internalb, const char *fmts, ...) {
+static inline char *_genericLogger_messageBuilders(genericLogger_t *genericLoggerp, short internalb, const char *fmts, ...) {
   va_list ap;
   char   *msgs;
 
@@ -288,7 +288,7 @@ static C_INLINE char *_genericLogger_messageBuilders(genericLogger_t *genericLog
 /*****************************************************************************************************************************************************************/
 /* _genericLogger_messageBuilder_aps: it always return either an allocated area, either msg_internalErrors, i.e. it never returns NULL  */
 /*****************************************************************************************************************************************************************/
-static C_INLINE char *_genericLogger_messageBuilder_aps(genericLogger_t *genericLoggerp, short internalb, const char *fmts, va_list ap) {
+static inline char *_genericLogger_messageBuilder_aps(genericLogger_t *genericLoggerp, short internalb, const char *fmts, va_list ap) {
   int     n;
   size_t  sizel = GENERICLOGGER_MSG_DEFAULT_LENGTH; /* Guess we need no more than GENERICLOGGER_MSG_DEFAULT_LENGTH bytes */
   char   *p, *np;
@@ -314,10 +314,10 @@ static C_INLINE char *_genericLogger_messageBuilder_aps(genericLogger_t *generic
     freeb = 0;
   } else {
     p = malloc(sizel); /* + 1 for a hiden NUL byte, who knows */
-    if (p != NULL) {
-      freeb    = 1;
-    } else {
+    if (GENERICLOGGER_UNLIKELY(p == NULL)) {
       return (char *) msg_internalErrors;
+    } else {
+      freeb = 1;
     }
   }
 
@@ -337,7 +337,7 @@ static C_INLINE char *_genericLogger_messageBuilder_aps(genericLogger_t *generic
     /* Check error code */
 #ifndef _WIN32
     /* On not-windows, if output is negative an output error is encountered */
-    if (n < 0) {
+    if (GENERICLOGGER_UNLIKELY(n < 0)) {
       if (freeb) {
         free(p);
       }
@@ -368,13 +368,13 @@ static C_INLINE char *_genericLogger_messageBuilder_aps(genericLogger_t *generic
     if (freeb == 0) {
       /* Initial p value is the one in genericLoggerp */
       np = (char *) malloc(sizel);
-      if (np == NULL) {
+      if (GENERICLOGGER_UNLIKELY(np == NULL)) {
         return (char *) msg_internalErrors;
       }
       freeb = 1;
     } else {
       np = (char *) realloc(p, sizel);
-      if (np == NULL) {
+      if (GENERICLOGGER_UNLIKELY(np == NULL)) {
         free(p);
         return (char *) msg_internalErrors;
       }
@@ -383,10 +383,10 @@ static C_INLINE char *_genericLogger_messageBuilder_aps(genericLogger_t *generic
     p = np;
   }
 
-  /* Should never happen */
-  if (freeb == 0) {
+  if (freeb) {
     free(p);
   }
+  /* Should never happen */
   return (char *) msg_internalErrors;
 }
 
