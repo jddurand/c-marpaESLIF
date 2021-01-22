@@ -47,7 +47,7 @@ script:
 # We want to try perl standalone first
   - cmake --version
   - perl CMakeObjects.PL
-  - rm -rf output
+  - git clean -ffdx
 # ALL_IN_ONE
   - cmake --version
   - cmake . -DALL_IN_ONE=ON
@@ -55,7 +55,7 @@ script:
   - make pack VERBOSE=1
   - cpack -G NSIS
   - make install DESTDIR=/tmp VERBOSE=1
-  - rm -rf output CMakeCache.txt CMakeFiles pcre2
+  - git clean -ffdx
 # Not ALL_IN_ONE
   - cmake --version
   - cmake .
