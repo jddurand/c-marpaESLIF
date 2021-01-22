@@ -2,17 +2,11 @@
 #define MARPAESLIF_INTERNAL_STRUCTURES_H
 
 #include <marpaESLIF.h>
+#include "config.h"
 /*
  * Prior to genericStack inclusion, we want to define a custom type for performance
  */
 #define GENERICSTACK_CUSTOM marpaESLIFValueResult_t
-
-/*
- * genericStack performance is vital
- */
-#undef GENERICSTACK_INLINE
-#define GENERICSTACK_INLINE inline
-
 
 #include <marpaWrapper.h>
 #include <genericStack.h>
@@ -215,6 +209,8 @@ struct marpaESLIF_grammar {
   short                  latmb;                              /* Longest acceptable token match mode */
   marpaWrapperGrammar_t *marpaWrapperGrammarStartp;          /* Grammar implementation at :start */
   marpaWrapperGrammar_t *marpaWrapperGrammarStartNoEventp;   /* Grammar implementation at :start forcing no event */
+  size_t                 nTerminall;                         /* Total number of grammar terminals */
+  int                   *terminalArrayp;                     /* Total grammar terminals */
   size_t                 nSymbolStartl;                      /* Number of lexemes at the very beginning of marpaWrapperGrammarStartp */
   int                   *symbolArrayStartp;                  /* Lexemes at the very beginning of marpaWrapperGrammarStartp */
   marpaWrapperGrammar_t *marpaWrapperGrammarDiscardp;        /* Grammar implementation at :discard */
@@ -297,6 +293,8 @@ struct marpaESLIF_meta {
   marpaESLIFGrammar_t         _marpaESLIFGrammarLexemeClone;    /* Cloned ESLIF grammar in lexeme search mode (no event): allocated when meta is allocated */
   marpaESLIF_grammar_t        _grammar;
   marpaESLIFGrammar_t         *marpaESLIFGrammarLexemeClonep;   /* Cloned ESLIF grammar in lexeme search mode (no event) */
+  size_t                       nTerminall;                      /* Total number of grammar terminals */
+  int                         *terminalArrayShallowp;           /* Total grammar terminals */
   size_t                       nSymbolStartl;                   /* Number of lexemes at the very beginning of marpaWrapperGrammarStartp */
   int                         *symbolArrayStartp;               /* Lexemes at the very beginning of marpaWrapperGrammarStartp */
 };
@@ -467,6 +465,10 @@ struct marpaESLIFRecognizer {
 
   /* We always maintain a shallow pointer to the top-level recognizer, to ease access to lua state */
   marpaESLIFRecognizer_t      *marpaESLIFRecognizerTopp;
+
+  /* At every recognizer pass, we use this array whose size is equal to the total number of marpa grammar terminals */
+  /* and we set here the number of expected grammar terminals */
+  int                         *expectedTerminalArrayp;   /* Total list of expected terminals */
 };
 
 struct marpaESLIF_lexeme_data {

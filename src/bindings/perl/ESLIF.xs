@@ -14,6 +14,10 @@
 #include "XSUB.h"
 #define NEED_newSVpvn_flags
 #include "ppport.h"
+
+/* We use the internal configuration of ESLIF to benefit for discovery of __builtin_expect() and inline */
+#include "marpaESLIF/internal/config.h"
+
 #include <marpaESLIF.h>
 #include <genericLogger.h>
 #include <genericStack.h>
@@ -24,15 +28,6 @@
 #include <float.h>
 #include <limits.h>
 /* #include <valgrind/callgrind.h> */
-
-/* We use the internal configuration of ESLIF to benefit for discovery of __builtin_expect() and inline */
-#include "marpaESLIF/internal/config.h"
-
-/*
- * genericStack performance
- */
-#undef GENERICSTACK_INLINE
-#define GENERICSTACK_INLINE inline
 
 #define MARPAESLIFPERL_CHUNKED_SIZE_UPPER(size, chunk) ((size) < (chunk)) ? (chunk) : ((1 + ((size) / (chunk))) * (chunk))
 

@@ -116,4 +116,11 @@ typedef @MARPAESLIF_UINT32_T@ marpaESLIF_uint32_t;
 #  define MARPAESLIF_UNLIKELY(x)  x
 #endif /* C___BUILTIN_EXPECT */
 
+/*
+ * genericStack performance is vital
+ */
+#define GENERICSTACK_INLINE inline
+#define GENERICSTACK_LIKELY(x) MARPAESLIF_LIKELY(x)
+#define GENERICSTACK_UNLIKELY(x) MARPAESLIF_UNLIKELY(x)
+
 #endif /* MARPAESLIF_CONFIG_H */
