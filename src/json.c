@@ -930,6 +930,7 @@ static short _marpaESLIFJSON_numberb(void *userDatavp, marpaESLIFValue_t *marpaE
 static short _marpaESLIFJSON_charb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb)
 /*****************************************************************************/
 {
+  static const char *funcs       = "_marpaESLIFJSON_charb";
   /* char    ::= /(?:[^\"\\\\\\x00-\\x1F]+)|(?:\\\\[\"\\\\\\/bfnrt])/ */
 
   /* It is guaranteed to be an ARRAY with size > 0.                   */
