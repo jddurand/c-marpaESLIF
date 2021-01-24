@@ -116,11 +116,22 @@ typedef @MARPAESLIF_UINT32_T@ marpaESLIF_uint32_t;
 #  define MARPAESLIF_UNLIKELY(x)  x
 #endif /* C___BUILTIN_EXPECT */
 
+/* forceinline support */
+#cmakedefine C_FORCEINLINE @C_FORCEINLINE@
+#ifdef C_FORCEINLINE
+#  define forceinline C_FORCEINLINE
+#else /* Fallback to inline */
+#  define forceinline inline
+#endif
+
 /*
  * genericStack performance is vital
  */
-#define GENERICSTACK_INLINE inline
+#define GENERICSTACK_INLINE forceinline
 #define GENERICSTACK_LIKELY(x) MARPAESLIF_LIKELY(x)
 #define GENERICSTACK_UNLIKELY(x) MARPAESLIF_UNLIKELY(x)
+
+/* Just to make things clear in the code */
+#define noinline
 
 #endif /* MARPAESLIF_CONFIG_H */
