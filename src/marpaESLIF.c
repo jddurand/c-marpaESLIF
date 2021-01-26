@@ -2189,7 +2189,6 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
   size_t                            tmpl;
   size_t                            symboll;
   size_t                            subSymboll;
-  marpaESLIF_symbol_t              *subSubSymbolp;
 
   marpaESLIF_cloneContext.marpaESLIFp = marpaESLIFp;
   marpaESLIF_cloneContext.grammarp = NULL;
@@ -2774,8 +2773,8 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
         metap->symbolStartAreESLIFTerminalsb = 1;
         for (subSymboll = 0; subSymboll < nSymboll; subSymboll++) {
           subSymboli = metap->symbolArrayStartp[subSymboll];
-          MARPAESLIF_INTERNAL_GET_SYMBOL_FROM_STACK(marpaESLIFp, subSubSymbolp, subgrammarp->symbolStackp, subSymboli);
-          if (! MARPAESLIF_IS_TERMINAL(subSubSymbolp)) {
+          MARPAESLIF_INTERNAL_GET_SYMBOL_FROM_STACK(marpaESLIFp, subSymbolp, subgrammarp->symbolStackp, subSymboli);
+          if (! MARPAESLIF_IS_TERMINAL(subSymbolp)) {
             metap->symbolStartAreESLIFTerminalsb = 0;
             break;
           }
@@ -7577,8 +7576,6 @@ static inline short _marpaESLIFRecognizer_resume_oneb(marpaESLIFRecognizer_t *ma
           }
         }
       }
-    } else {
-      MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "start grammar has not reached completion");
     }
   }
   rcb = 1;
@@ -9921,7 +9918,7 @@ static inline short _marpaESLIFGrammar_parseb(marpaESLIFGrammar_t *marpaESLIFGra
     for (symboll = 0; symboll < nSymbolFirstl; symboll++) {
       symboli = symbolFirstArrayp[symboll];
       MARPAESLIF_INTERNAL_GET_SYMBOL_FROM_STACK(marpaESLIFp, symbolp, symbolStackp, symboli);
-      MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerParentp, funcs, "Pre-try expected ESLIF terminal: %s", symbolp->descp->asciis);
+      MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Pre-try expected ESLIF terminal: %s", symbolp->descp->asciis);
 
       /* It is important to call _marpaESLIFRecognizer_symbol_matcherb() and not _marpaESLIFRecognizer_terminal_matcherb() */
       /* directly, because the later do not update the stream if needed.                                                   */
@@ -9946,7 +9943,7 @@ static inline short _marpaESLIFGrammar_parseb(marpaESLIFGrammar_t *marpaESLIFGra
     }
 
     if (! pretryb) {
-      MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerParentp, funcs, "No pre-try expected ESLIF terminal match");
+      MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "No Pre-try expected ESLIF terminal match");
       goto err;
     }
   }
