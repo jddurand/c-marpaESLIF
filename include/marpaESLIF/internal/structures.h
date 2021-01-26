@@ -213,12 +213,10 @@ struct marpaESLIF_grammar {
   int                   *terminalArrayp;                     /* Total grammar terminals */
   size_t                 nSymbolStartl;                      /* Number of lexemes at the very beginning of marpaWrapperGrammarStartp */
   int                   *symbolArrayStartp;                  /* Lexemes at the very beginning of marpaWrapperGrammarStartp */
-  short                  symbolStartAreESLIFTerminalsb;      /* An optimization is done when symbol start only with ESLIF terminals */
   marpaWrapperGrammar_t *marpaWrapperGrammarDiscardp;        /* Grammar implementation at :discard */
   marpaWrapperGrammar_t *marpaWrapperGrammarDiscardNoEventp; /* Grammar implementation at :discard forcing no event */
   size_t                 nSymbolDiscardl;                    /* Number of lexemes at the very beginning of marpaWrapperGrammarDiscardp */
   int                   *symbolArrayDiscardp;                /* Lexemes at the very beginning of marpaWrapperGrammarStartp */
-  short                  discardStartAreESLIFTerminalsb;     /* An optimization is done when discard start only with ESLIF terminals */
   marpaESLIF_symbol_t   *discardp;                           /* Discard symbol, used at grammar validation */
   genericStack_t         _symbolStack;                       /* Stack of symbols */
   genericStack_t        *symbolStackp;                       /* Pointer to stack of symbols */
@@ -299,7 +297,6 @@ struct marpaESLIF_meta {
   int                         *terminalArrayShallowp;           /* Total grammar terminals */
   size_t                       nSymbolStartl;                   /* Number of lexemes at the very beginning of marpaWrapperGrammarStartp */
   int                         *symbolArrayStartp;               /* Lexemes at the very beginning of marpaWrapperGrammarStartp */
-  short                        symbolStartAreESLIFTerminalsb;   /* An optimization is done when meta symbol start only with ESLIF terminals */
 };
 
 struct marpaESLIF_stringGenerator {
@@ -472,10 +469,6 @@ struct marpaESLIFRecognizer {
   /* At every recognizer pass, we use this array whose size is equal to the total number of marpa grammar terminals */
   /* and we set here the number of expected grammar terminals */
   int                         *expectedTerminalArrayp;   /* Total list of expected terminals */
-
-  size_t                       nSymbolDiscardl;                    /* Number of lexemes at the very beginning of marpaWrapperGrammarDiscardp */
-  int                         *symbolArrayDiscardShallowp;         /* Lexemes at the very beginning of marpaWrapperGrammarStartp */
-  short                        discardStartAreESLIFTerminalsb;     /* An optimization is done when discard start only with ESLIF terminals */
 };
 
 struct marpaESLIF_lexeme_data {

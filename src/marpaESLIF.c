@@ -588,7 +588,7 @@ static inline marpaESLIF_grammar_t  *_marpaESLIF_bootstrap_grammarp(marpaESLIFGr
                                                                     char *fallbackEncodings);
 static inline short                  _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIFGrammarp);
 static inline short                  _marpaESLIFGrammar_haveLexemeb(marpaESLIFGrammar_t *marpaESLIFGrammarp, int grammari, marpaWrapperGrammar_t *marpaWrapperGrammarp, short *haveLexemebp);
-static inline marpaESLIFGrammar_t   *_marpaESLIFGrammar_newp(marpaESLIF_t *marpaESLIFp, marpaESLIFGrammarOption_t *marpaESLIFGrammarOptionp);
+static inline marpaESLIFGrammar_t   *_marpaESLIFGrammar_newp(marpaESLIF_t *marpaESLIFp, marpaESLIFGrammarOption_t *marpaESLIFGrammarOptionp, marpaESLIFGrammar_t *marpaESLIfGrammarPreviousp);
 
 static inline short                  _marpaESLIFRecognizer_terminal_matcherb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIF_stream_t *marpaESLIF_streamp, marpaESLIF_terminal_t *terminalp, char *inputs, size_t inputl, short eofb, marpaESLIF_matcher_value_t *rcip, marpaESLIFValueResult_t *marpaESLIFValueResultp, size_t *matchedLengthlp);
 static inline short                  _marpaESLIFRecognizer_meta_matcherb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIF_symbol_t *symbolp, marpaESLIF_matcher_value_t *rcip, marpaESLIFValueResult_t *marpaESLIFValueResultp, short *isExhaustedbp, int maxStartCompletionsi, size_t *lastSizeBeforeCompletionlp, int *numberOfStartCompletionsip);
@@ -637,7 +637,7 @@ static inline short                  _marpaESLIF_stream_initb(marpaESLIFRecogniz
 static inline void                   _marpaESLIF_stream_disposev(marpaESLIFRecognizer_t *marpaESLIFRecognizerp);
 static inline marpaESLIFRecognizer_t *_marpaESLIFRecognizer_newp(marpaESLIFGrammar_t *marpaESLIFGrammarp, marpaESLIFRecognizerOption_t *marpaESLIFRecognizerOptionp, short discardb, short noEventb, short silentb, marpaESLIFRecognizer_t *marpaESLIFRecognizerParentp, short fakeb, int maxStartCompletionsi, short utfb, short grammmarIsOnStackb);
 static inline short                  _marpaESLIFRecognizer_shareb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFRecognizer_t *marpaESLIFRecognizerSharedp);
-static inline short                  _marpaESLIFGrammar_parseb(marpaESLIFGrammar_t *marpaESLIFGrammarp, marpaESLIFRecognizerOption_t *marpaESLIFRecognizerOptionp, marpaESLIFValueOption_t *marpaESLIFValueOptionp, short discardb, short noEventb, short silentb, marpaESLIFRecognizer_t *marpaESLIFRecognizerParentp, short *isExhaustedbp, marpaESLIFValueResult_t *marpaESLIFValueResultp, int maxStartCompletionsi, size_t *lastSizeBeforeCompletionlp, int *numberOfStartCompletionsip, short grammarIsOnStackb, size_t nSymbolFirstl, int *symbolFirstArrayp, short symbolFirstAreESLIFTerminalsb);
+static inline short                  _marpaESLIFGrammar_parseb(marpaESLIFGrammar_t *marpaESLIFGrammarp, marpaESLIFRecognizerOption_t *marpaESLIFRecognizerOptionp, marpaESLIFValueOption_t *marpaESLIFValueOptionp, short discardb, short noEventb, short silentb, marpaESLIFRecognizer_t *marpaESLIFRecognizerParentp, short *isExhaustedbp, marpaESLIFValueResult_t *marpaESLIFValueResultp, int maxStartCompletionsi, size_t *lastSizeBeforeCompletionlp, int *numberOfStartCompletionsip, short grammarIsOnStackb);
 static        void                   _marpaESLIF_generateStringWithLoggerCallback(void *userDatavp, genericLoggerLevel_t logLeveli, const char *msgs);
 static        void                   _marpaESLIF_generateSeparatedStringWithLoggerCallback(void *userDatavp, genericLoggerLevel_t logLeveli, const char *msgs);
 static        void                   _marpaESLIF_traceLoggerCallbackv(void *userDatavp, genericLoggerLevel_t logLeveli, const char *msgs);
@@ -666,7 +666,6 @@ static inline short                  _marpaESLIF_eslif2hostb(marpaESLIF_t *marpa
 
 static inline short                  _marpaESLIFValue_valueb(marpaESLIFValue_t *marpaESLIFValuep, marpaESLIFValueResult_t *marpaESLIFValueResultp);
 
-static inline void                   _marpaESLIFValue_freev(marpaESLIFValue_t *marpaESLIFValuep);
 static inline void                   _marpaESLIFGrammar_freev(marpaESLIFGrammar_t *marpaESLIFGrammarp, short onStackb);
 static inline void                   _marpaESLIFGrammar_grammarStack_freev(marpaESLIFGrammar_t *marpaESLIFGrammarp, genericStack_t *grammarStackp);
 static        char                  *_marpaESLIFGrammar_symbolDescriptionCallback(void *userDatavp, int symboli);
@@ -1456,7 +1455,7 @@ static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *mar
       /* character classes containing codepoints in the form \x{}, but then PCRE2 will yell on its own. */
       /* This does not work when we build internal marpaESLIF regex itself -; */
       if (marpaESLIFRecognizerp != NULL) {
-        _marpaESLIFRecognizer_freev(marpaESLIFRecognizerp, 0 /* forceb */);
+        marpaESLIFRecognizer_freev(marpaESLIFRecognizerp);
         marpaESLIFRecognizerp = NULL;
       }
 
@@ -1786,13 +1785,9 @@ static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *mar
   }
   _marpaESLIF_string_freev(content2descp, 0 /* onStackb */);
 #ifndef MARPAESLIF_NTRACE
-  if (marpaESLIFRecognizerTestp != NULL) {
-    _marpaESLIFRecognizer_freev(marpaESLIFRecognizerTestp, 0 /* forceb */);
-  }
+  marpaESLIFRecognizer_freev(marpaESLIFRecognizerTestp);
 #endif
-  if (marpaESLIFRecognizerp != NULL) {
-    _marpaESLIFRecognizer_freev(marpaESLIFRecognizerp, 0 /* forceb */);
-  }
+  marpaESLIFRecognizer_freev(marpaESLIFRecognizerp);
   /* MARPAESLIF_TRACEF(marpaESLIFp, funcs, "return %p", terminalp); */
   return terminalp;
 }
@@ -1829,11 +1824,10 @@ static inline marpaESLIF_meta_t *_marpaESLIF_meta_newp(marpaESLIF_t *marpaESLIFp
   metap->lexemeIdi                       = -1;   /* Ditto */
   metap->prioritizedb                    = 0;    /* Internal flag to prevent a prioritized symbol to appear more than once as an LHS */
   metap->marpaESLIFGrammarLexemeClonep   = NULL; /* Eventually changed when validating the grammar */
-  metap->nTerminall                      = 0;    /* Total number of marpa terminals */
-  metap->terminalArrayShallowp           = NULL; /* Marpa terminals */
   metap->nSymbolStartl                   = 0;    /* Number of lexemes at the very beginning of marpaWrapperGrammarStartp */
   metap->symbolArrayStartp               = NULL; /* Lexemes at the very beginning of marpaWrapperGrammarStartp */
-  metap->symbolStartAreESLIFTerminalsb   = 0;    /* When meta's :start start only with terminals */
+  metap->nTerminall                      = 0;    /* Total number of marpa terminals */
+  metap->terminalArrayShallowp           = NULL; /* Marpa terminals */
 
   marpaWrapperGrammarSymbolOption.terminalb = 0;
   marpaWrapperGrammarSymbolOption.startb    = 0;
@@ -2163,7 +2157,6 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
   int                               grammarj;
   marpaESLIF_symbol_t              *symbolp;
   marpaESLIF_symbol_t              *subSymbolp;
-  int                               subSymboli;
   int                               symboli;
   marpaESLIF_rule_t                *rulep;
   marpaESLIF_rule_t                *ruletmpp;
@@ -2187,8 +2180,6 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
   size_t                            nSymboll;
   int                              *symbolArrayp;
   size_t                            tmpl;
-  size_t                            symboll;
-  size_t                            subSymboll;
 
   marpaESLIF_cloneContext.marpaESLIFp = marpaESLIFp;
   marpaESLIF_cloneContext.grammarp = NULL;
@@ -2459,24 +2450,6 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
       grammarp->nSymbolStartl = nSymboll;
       memcpy(grammarp->symbolArrayStartp, symbolArrayp, tmpl);
       marpaWrapperRecognizer_freev(marpaWrapperRecognizerp);
-
-      /* We optimize the recognizer when :start start only with ESLIF terminals */
-      grammarp->symbolStartAreESLIFTerminalsb = 1;
-      for (symboll = 0; symboll < nSymboll; symboll++) {
-        symboli = grammarp->symbolArrayStartp[symboll];
-        MARPAESLIF_INTERNAL_GET_SYMBOL_FROM_STACK(marpaESLIFp, symbolp, symbolStackp, symboli);
-        if (! MARPAESLIF_IS_TERMINAL(symbolp)) {
-          grammarp->symbolStartAreESLIFTerminalsb = 0;
-          break;
-        }
-      }
-#ifndef MARPAESLIF_NTRACE
-      if (grammarp->symbolStartAreESLIFTerminalsb) {
-        MARPAESLIF_TRACEF(marpaESLIFp, funcs, ":start at grammar level %d (%s) start with ESLIF terminals only", grammari, grammarp->descp->asciis);
-      } else {
-        MARPAESLIF_TRACEF(marpaESLIFp, funcs, ":start at grammar level %d (%s) do not start with ESLIF terminals only", grammari, grammarp->descp->asciis);
-      }
-#endif
     }
 
     MARPAESLIF_TRACEF(marpaESLIFp, funcs, "Getting all grammar terminals in grammar level %d (%s)", grammari, grammarp->descp->asciis);
@@ -2612,24 +2585,6 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
 	grammarp->nSymbolDiscardl = nSymboll;
 	memcpy(grammarp->symbolArrayDiscardp, symbolArrayp, tmpl);
 	marpaWrapperRecognizer_freev(marpaWrapperRecognizerp);
-
-        /* We optimize the recognizer when :discard start only with ESLIF terminals */
-        grammarp->discardStartAreESLIFTerminalsb = 1;
-        for (symboll = 0; symboll < nSymboll; symboll++) {
-          symboli = grammarp->symbolArrayDiscardp[symboll];
-          MARPAESLIF_INTERNAL_GET_SYMBOL_FROM_STACK(marpaESLIFp, symbolp, symbolStackp, symboli);
-          if (! MARPAESLIF_IS_TERMINAL(symbolp)) {
-            grammarp->discardStartAreESLIFTerminalsb = 0;
-            break;
-          }
-        }
-#ifndef MARPAESLIF_NTRACE
-        if (grammarp->discardStartAreESLIFTerminalsb) {
-          MARPAESLIF_TRACEF(marpaESLIFp, funcs, ":discard at grammar level %d (%s) start with ESLIF terminals only", grammari, grammarp->descp->asciis);
-        } else {
-          MARPAESLIF_TRACEF(marpaESLIFp, funcs, ":discard at grammar level %d (%s) do not start with ESLIF terminals only", grammari, grammarp->descp->asciis);
-        }
-#endif
       }
     }
   }
@@ -2768,24 +2723,6 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
 	metap->nSymbolStartl = nSymboll;
 	memcpy(metap->symbolArrayStartp, symbolArrayp, tmpl);
 	marpaWrapperRecognizer_freev(marpaWrapperRecognizerp);
-
-        /* We optimize the recognizer when meta's :start start only with ESLIF terminals */
-        metap->symbolStartAreESLIFTerminalsb = 1;
-        for (subSymboll = 0; subSymboll < nSymboll; subSymboll++) {
-          subSymboli = metap->symbolArrayStartp[subSymboll];
-          MARPAESLIF_INTERNAL_GET_SYMBOL_FROM_STACK(marpaESLIFp, subSymbolp, subgrammarp->symbolStackp, subSymboli);
-          if (! MARPAESLIF_IS_TERMINAL(subSymbolp)) {
-            metap->symbolStartAreESLIFTerminalsb = 0;
-            break;
-          }
-        }
-#ifndef MARPAESLIF_NTRACE
-        if (grammarp->symbolStartAreESLIFTerminalsb) {
-          MARPAESLIF_TRACEF(marpaESLIFp, funcs, "Getting start first lexemes in grammar level %d (%s) at symbol %d <%s> start with ESLIF terminals only", subgrammarp->leveli, subgrammarp->descp->asciis, subSymbolp->idi, subSymbolp->descp->asciis);
-        } else {
-          MARPAESLIF_TRACEF(marpaESLIFp, funcs, "Getting start first lexemes in grammar level %d (%s) at symbol %d <%s> do not start with ESLIF terminals only", subgrammarp->leveli, subgrammarp->descp->asciis, subSymbolp->idi, subSymbolp->descp->asciis);
-        }
-#endif
       }
 
       metap->nTerminall = subgrammarp->nTerminall;
@@ -2811,7 +2748,6 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
       /* This is a safe measure, although this will NEVER be used: when trying to match a meta symbol, discard never happens */
       metap->_grammar.nSymbolDiscardl                  = 0;
       metap->_grammar.symbolArrayDiscardp              = NULL;
-      metap->_grammar.discardStartAreESLIFTerminalsb   = 0;
       metap->_marpaESLIFGrammarLexemeClone             = *marpaESLIFGrammarp;
       metap->_marpaESLIFGrammarLexemeClone.grammarp    = &(metap->_grammar);
       metap->marpaESLIFGrammarLexemeClonep             = &(metap->_marpaESLIFGrammarLexemeClone);
@@ -3331,13 +3267,10 @@ static inline marpaESLIF_grammar_t *_marpaESLIF_grammar_newp(marpaESLIFGrammar_t
   grammarp->terminalArrayp                     = NULL;
   grammarp->nSymbolStartl                      = 0;
   grammarp->symbolArrayStartp                  = NULL;
-  grammarp->symbolStartAreESLIFTerminalsb      = 0;
   grammarp->marpaWrapperGrammarDiscardp        = NULL;
   grammarp->marpaWrapperGrammarDiscardNoEventp = NULL;
   grammarp->nSymbolDiscardl                    = 0;
   grammarp->symbolArrayDiscardp                = NULL;
-  grammarp->symbolArrayDiscardp                = NULL;
-  grammarp->discardStartAreESLIFTerminalsb     = 0;
   grammarp->discardp                           = NULL;
   grammarp->symbolStackp                       = NULL; /* Take care, pointer to a stack inside grammar structure */
   grammarp->ruleStackp                         = NULL; /* Take care, pointer to a stack inside grammar structure */
@@ -4916,10 +4849,7 @@ static inline short _marpaESLIFRecognizer_meta_matcherb(marpaESLIFRecognizer_t *
                                                       maxStartCompletionsi,
                                                       lastSizeBeforeCompletionlp,
                                                       numberOfStartCompletionsip,
-                                                      0, /* grammarIsOnStackb */
-                                                      metap->nSymbolStartl,
-                                                      metap->symbolArrayStartp,
-                                                      metap->symbolStartAreESLIFTerminalsb))) {
+                                                      0 /* grammarIsOnStackb */))) {
     goto err;
   }
 
@@ -5525,7 +5455,7 @@ marpaESLIFGrammar_t *marpaESLIFGrammar_newp(marpaESLIF_t *marpaESLIFp, marpaESLI
     goto err;
   }
   
-  marpaESLIFGrammarp = _marpaESLIFGrammar_newp(marpaESLIFp, marpaESLIFGrammarOptionp);
+  marpaESLIFGrammarp = _marpaESLIFGrammar_newp(marpaESLIFp, marpaESLIFGrammarOptionp, NULL /* marpaESLIfGrammarPreviousp */);
   goto done;
 
  err:
@@ -5536,7 +5466,7 @@ marpaESLIFGrammar_t *marpaESLIFGrammar_newp(marpaESLIF_t *marpaESLIFp, marpaESLI
 }
 
 /*****************************************************************************/
-static inline marpaESLIFGrammar_t *_marpaESLIFGrammar_newp(marpaESLIF_t *marpaESLIFp, marpaESLIFGrammarOption_t *marpaESLIFGrammarOptionp)
+static inline marpaESLIFGrammar_t *_marpaESLIFGrammar_newp(marpaESLIF_t *marpaESLIFp, marpaESLIFGrammarOption_t *marpaESLIFGrammarOptionp, marpaESLIFGrammar_t *marpaESLIfGrammarPreviousp)
 /*****************************************************************************/
 {
   static const char                *funcs                      = "_marpaESLIFGrammar_newp";
@@ -5561,26 +5491,30 @@ static inline marpaESLIFGrammar_t *_marpaESLIFGrammar_newp(marpaESLIF_t *marpaES
     goto err;
   }
 
-  marpaESLIFGrammarp = (marpaESLIFGrammar_t *) malloc(sizeof(marpaESLIFGrammar_t));
-  if (MARPAESLIF_UNLIKELY(marpaESLIFGrammarp == NULL)) {
-    MARPAESLIF_ERRORF(marpaESLIFp, "malloc failure, %s", strerror(errno));
-    goto err;
+  if (marpaESLIfGrammarPreviousp == NULL) {
+    marpaESLIFGrammarp = (marpaESLIFGrammar_t *) malloc(sizeof(marpaESLIFGrammar_t));
+    if (MARPAESLIF_UNLIKELY(marpaESLIFGrammarp == NULL)) {
+      MARPAESLIF_ERRORF(marpaESLIFp, "malloc failure, %s", strerror(errno));
+      goto err;
+    }
+    marpaESLIFGrammarp->marpaESLIFp             = marpaESLIFp;
+    marpaESLIFGrammarp->marpaESLIFGrammarOption = *marpaESLIFGrammarOptionp;
+    marpaESLIFGrammarp->grammarStackp           = NULL;
+    marpaESLIFGrammarp->grammarp                = NULL;
+    marpaESLIFGrammarp->warningIsErrorb         = 0;
+    marpaESLIFGrammarp->warningIsIgnoredb       = 0;
+    marpaESLIFGrammarp->autorankb               = 0;
+    marpaESLIFGrammarp->luabytep                = NULL;
+    marpaESLIFGrammarp->luabytel                = 0;
+    marpaESLIFGrammarp->luaprecompiledp         = NULL;
+    marpaESLIFGrammarp->luaprecompiledl         = 0;
+    marpaESLIFGrammarp->luadescp                = NULL;
+    marpaESLIFGrammarp->internalRuleCounti      = 0;
+    marpaESLIFGrammarp->hasEofPseudoTerminalb   = 0;
+    marpaESLIFGrammarp->hasEolPseudoTerminalb   = 0;
+  } else {
+    marpaESLIFGrammarp = marpaESLIfGrammarPreviousp;
   }
-  marpaESLIFGrammarp->marpaESLIFp             = marpaESLIFp;
-  marpaESLIFGrammarp->marpaESLIFGrammarOption = *marpaESLIFGrammarOptionp;
-  marpaESLIFGrammarp->grammarStackp           = NULL;
-  marpaESLIFGrammarp->grammarp                = NULL;
-  marpaESLIFGrammarp->warningIsErrorb         = 0;
-  marpaESLIFGrammarp->warningIsIgnoredb       = 0;
-  marpaESLIFGrammarp->autorankb               = 0;
-  marpaESLIFGrammarp->luabytep                = NULL;
-  marpaESLIFGrammarp->luabytel                = 0;
-  marpaESLIFGrammarp->luaprecompiledp         = NULL;
-  marpaESLIFGrammarp->luaprecompiledl         = 0;
-  marpaESLIFGrammarp->luadescp                = NULL;
-  marpaESLIFGrammarp->internalRuleCounti      = 0;
-  marpaESLIFGrammarp->hasEofPseudoTerminalb   = 0;
-  marpaESLIFGrammarp->hasEolPseudoTerminalb   = 0;
 
   /* Our internal grammar reader callback */
   marpaESLIF_readerContext.marpaESLIFp              = marpaESLIFp;
@@ -5611,10 +5545,7 @@ static inline marpaESLIFGrammar_t *_marpaESLIFGrammar_newp(marpaESLIF_t *marpaES
                                                       0, /* maxStartCompletionsi */
                                                       NULL, /* lastSizeBeforeCompletionlp */
                                                       NULL /* numberOfStartCompletionsip */,
-                                                      0, /* grammarIsOnStackb */
-                                                      0, /* nSymbolFirstl */
-                                                      NULL, /* symbolFirstArrayp */
-                                                      0 /* symbolFirstAreESLIFTerminalsb */))) {
+                                                      0 /* grammarIsOnStackb */))) {
     goto err;
   }
 
@@ -5657,7 +5588,10 @@ static inline marpaESLIFGrammar_t *_marpaESLIFGrammar_newp(marpaESLIF_t *marpaES
   goto done;
 
  err:
-  marpaESLIFGrammar_freev(marpaESLIFGrammarp);
+  /* We do not want to free it, if it was injected: parent should take care of that */
+  if (marpaESLIfGrammarPreviousp == NULL) {
+    marpaESLIFGrammar_freev(marpaESLIFGrammarp);
+  }
   marpaESLIFGrammarp = NULL;
 
  done:
@@ -6860,7 +6794,7 @@ static inline short _marpaESLIFRecognizer_isPseudoTerminalExpectedb(marpaESLIFRe
   rcb = 0;
 
  done:
-  if (marpaESLIFRecognizerMetap != NULL) {
+  if(marpaESLIFRecognizerMetap != NULL) {
     _marpaESLIFRecognizer_freev(marpaESLIFRecognizerMetap, 1 /* forceb */);
   }
 
@@ -6989,9 +6923,6 @@ static inline short _marpaESLIFRecognizer_resume_oneb(marpaESLIFRecognizer_t *ma
       marpaESLIFRecognizerp->marpaESLIFRecognizerOptionDiscard.trackb            = 0; \
       marpaESLIFRecognizerp->marpaESLIFValueOptionDiscard                        = marpaESLIFValueOption_default_template; \
       marpaESLIFRecognizerp->marpaESLIFValueOptionDiscard.userDatavp             = (void *) marpaESLIFRecognizerp; \
-      marpaESLIFRecognizerp->nSymbolDiscardl                                     = grammarp->nSymbolDiscardl; \
-      marpaESLIFRecognizerp->symbolArrayDiscardShallowp                          = grammarp->symbolArrayDiscardp; \
-      marpaESLIFRecognizerp->discardStartAreESLIFTerminalsb                      = grammarp->discardStartAreESLIFTerminalsb; \
       marpaESLIFRecognizerp->grammarDiscardInitializedb                          = 1; \
     }                                                                   \
   } while (0)
@@ -7260,10 +7191,7 @@ static inline short _marpaESLIFRecognizer_resume_oneb(marpaESLIFRecognizer_t *ma
                                     0, /* maxStartCompletionsi */
                                     NULL, /* lastSizeBeforeCompletionlp */
                                     NULL /* numberOfStartCompletionsip */,
-                                    0, /* grammarIsOnStackb - because marpaESLIFRecognizerp itself is not on the stack */
-                                    marpaESLIFRecognizerp->nSymbolDiscardl,
-                                    marpaESLIFRecognizerp->symbolArrayDiscardShallowp,
-                                    marpaESLIFRecognizerp->discardStartAreESLIFTerminalsb)) {
+                                    0 /* grammarIsOnStackb - because marpaESLIFRecognizerp itself is not on the stack */)) {
         /* New line processing, etc... */
         if (MARPAESLIF_UNLIKELY(! _marpaESLIFRecognizer_matchPostProcessingb(marpaESLIFRecognizerp, marpaESLIF_streamp, marpaESLIFValueResult.u.a.sizel))) {
           goto err;
@@ -7441,10 +7369,7 @@ static inline short _marpaESLIFRecognizer_resume_oneb(marpaESLIFRecognizer_t *ma
                                   0, /* maxStartCompletionsi */
                                   NULL, /* lastSizeBeforeCompletionlp */
                                   NULL /* numberOfStartCompletionsip */,
-                                  0, /* grammarIsOnStackb - because marpaESLIFRecognizerp itself is not on the stack */
-                                  marpaESLIFRecognizerp->nSymbolDiscardl,
-                                  marpaESLIFRecognizerp->symbolArrayDiscardShallowp,
-                                  marpaESLIFRecognizerp->discardStartAreESLIFTerminalsb)) {
+                                  0 /* grammarIsOnStackb - because marpaESLIFRecognizerp itself is not on the stack */)) {
       if (marpaESLIFValueResult.u.a.sizel > maxMatchedl) {
         /* New line processing, etc... */
         if (MARPAESLIF_UNLIKELY(! _marpaESLIFRecognizer_matchPostProcessingb(marpaESLIFRecognizerp, marpaESLIF_streamp, marpaESLIFValueResult.u.a.sizel))) {
@@ -8168,10 +8093,7 @@ static inline short _marpaESLIFRecognizer_discard_tryb(marpaESLIFRecognizer_t *m
                                      0, /* maxStartCompletionsi */
                                      NULL, /* lastSizeBeforeCompletionlp */
                                      NULL /* numberOfStartCompletionsip */,
-                                     1, /* grammarIsOnStackb */
-                                     grammarDiscard.nSymbolDiscardl,
-                                     grammarDiscard.symbolArrayDiscardp,
-                                     grammarDiscard.discardStartAreESLIFTerminalsb);
+                                     1 /* grammarIsOnStackb */);
   if (matchb) {
     /* Remember the data, NULL or not - per def a lexeme coming our from the recognizer is always an array -; */
     valuep = marpaESLIFValueResult.u.a.p;
@@ -8569,10 +8491,7 @@ short marpaESLIFGrammar_parse_by_levelb(marpaESLIFGrammar_t *marpaESLIFGrammarp,
                                                       0, /* maxStartCompletionsi */
                                                       NULL, /* lastSizeBeforeCompletionlp */
                                                       NULL /* numberOfStartCompletionsip */,
-                                                      1, /* grammarIsOnStackb */
-                                                      0, /* nSymbolFirstl */
-                                                      NULL, /* symbolFirstArrayp */
-                                                      0 /* symbolFirstAreESLIFTerminalsb */))) {
+                                                      1 /* grammarIsOnStackb */))) {
     goto err;
   }
 
@@ -9153,10 +9072,7 @@ static inline short _marpaESLIFRecognizer_push_grammar_eventsb(marpaESLIFRecogni
                                       0, /* maxStartCompletionsi */
                                       NULL, /* lastSizeBeforeCompletionlp */
                                       NULL /* numberOfStartCompletionsip */,
-                                      1, /* grammarIsOnStackb */
-                                      grammarDiscard.nSymbolDiscardl,
-                                      grammarDiscard.symbolArrayDiscardp,
-                                      grammarDiscard.discardStartAreESLIFTerminalsb)) {
+                                      1 /* grammarIsOnStackb */)) {
           /* New line processing, etc... */
           if (MARPAESLIF_UNLIKELY(! _marpaESLIFRecognizer_matchPostProcessingb(marpaESLIFRecognizerp, marpaESLIF_streamp, marpaESLIFValueResult.u.a.sizel))) {
             goto err;
@@ -9641,10 +9557,8 @@ static inline marpaESLIFRecognizer_t *_marpaESLIFRecognizer_newp(marpaESLIFGramm
   goto done;
 
  err:
-  if (marpaESLIFRecognizerp != NULL) {
-    _marpaESLIFRecognizer_freev(marpaESLIFRecognizerp, 0 /* forceb */);
-    marpaESLIFRecognizerp = NULL;
-  }
+  marpaESLIFRecognizer_freev(marpaESLIFRecognizerp);
+  marpaESLIFRecognizerp = NULL;
 
  done:
 #ifndef MARPAESLIF_NTRACE
@@ -9692,7 +9606,7 @@ marpaESLIFRecognizer_t *marpaESLIFRecognizer_newFromp(marpaESLIFGrammar_t *marpa
   }
 
   if (! marpaESLIFRecognizer_shareb(marpaESLIFRecognizerp, marpaESLIFRecognizerSharedp)) {
-    _marpaESLIFRecognizer_freev(marpaESLIFRecognizerp, 0 /* forceb */);
+    marpaESLIFRecognizer_freev(marpaESLIFRecognizerp);
     return NULL;
   }
 
@@ -9882,7 +9796,7 @@ short marpaESLIFRecognizer_isExhaustedb(marpaESLIFRecognizer_t *marpaESLIFRecogn
 }
 
 /*****************************************************************************/
-static inline short _marpaESLIFGrammar_parseb(marpaESLIFGrammar_t *marpaESLIFGrammarp, marpaESLIFRecognizerOption_t *marpaESLIFRecognizerOptionp, marpaESLIFValueOption_t *marpaESLIFValueOptionp, short discardb, short noEventb, short silentb, marpaESLIFRecognizer_t *marpaESLIFRecognizerParentp, short *isExhaustedbp, marpaESLIFValueResult_t *marpaESLIFValueResultp, int maxStartCompletionsi, size_t *lastSizeBeforeCompletionlp, int *numberOfStartCompletionsip, short grammarIsOnStackb, size_t nSymbolFirstl, int *symbolFirstArrayp, short symbolFirstAreESLIFTerminalsb)
+static inline short _marpaESLIFGrammar_parseb(marpaESLIFGrammar_t *marpaESLIFGrammarp, marpaESLIFRecognizerOption_t *marpaESLIFRecognizerOptionp, marpaESLIFValueOption_t *marpaESLIFValueOptionp, short discardb, short noEventb, short silentb, marpaESLIFRecognizer_t *marpaESLIFRecognizerParentp, short *isExhaustedbp, marpaESLIFValueResult_t *marpaESLIFValueResultp, int maxStartCompletionsi, size_t *lastSizeBeforeCompletionlp, int *numberOfStartCompletionsip, short grammarIsOnStackb)
 /*****************************************************************************/
 {
   static const char      *funcs                 = "_marpaESLIFGrammar_parseb";
@@ -9890,63 +9804,11 @@ static inline short _marpaESLIFGrammar_parseb(marpaESLIFGrammar_t *marpaESLIFGra
   marpaESLIF_t           *marpaESLIFp           = marpaESLIFGrammarp->marpaESLIFp;
 #endif
   marpaESLIFRecognizer_t *marpaESLIFRecognizerp = NULL;
+  marpaESLIFValueOption_t marpaESLIFValueOption = (marpaESLIFValueOptionp != NULL) ? *marpaESLIFValueOptionp : marpaESLIFValueOption_default_template;
   marpaESLIFValue_t      *marpaESLIFValuep      = NULL;
-  marpaESLIFValueOption_t marpaESLIFValueOption;
   short                   isExhaustedb;
   short                   canContinueb;
-  marpaESLIF_grammar_t   *grammarp;
-  genericStack_t         *symbolStackp;
-  size_t                  symboll;
-  int                     symboli;
-  marpaESLIF_symbol_t    *symbolp;
-  short                   pretryb;
-  short                   rcMatcherb;
-  int                     rci;
   short                   rcb;
-
-  /* Note that when symbolFirstAreESLIFTerminalsb is set, caller guarantees that */
-  /* marpaESLIFRecognizerParentp is also set.                                    */
-  if (symbolFirstAreESLIFTerminalsb) {
-    /* sub-grammar start with ESLIF terminals only: instead of entering into the */
-    /* big loop, do a pre-match in the context of the parent. Exceptions are     */
-    /* not affected because per definition an exception is not a terminal but a  */
-    /* lexeme.                                                                   */
-    grammarp = marpaESLIFGrammarp->grammarp;
-    symbolStackp = grammarp->symbolStackp;
-
-    pretryb = 0;
-    for (symboll = 0; symboll < nSymbolFirstl; symboll++) {
-      symboli = symbolFirstArrayp[symboll];
-      MARPAESLIF_INTERNAL_GET_SYMBOL_FROM_STACK(marpaESLIFp, symbolp, symbolStackp, symboli);
-      MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Pre-try expected ESLIF terminal: %s", symbolp->descp->asciis);
-
-      /* It is important to call _marpaESLIFRecognizer_symbol_matcherb() and not _marpaESLIFRecognizer_terminal_matcherb() */
-      /* directly, because the later do not update the stream if needed.                                                   */
-      rcMatcherb = _marpaESLIFRecognizer_symbol_matcherb(marpaESLIFRecognizerParentp,
-                                                         marpaESLIFRecognizerParentp->marpaESLIF_streamp,
-                                                         symbolp,
-                                                         &rci,
-                                                         NULL,
-                                                         0, /* maxStartCompletionsi */
-                                                         NULL, /* lastSizeBeforeCompletionlp */
-                                                         NULL /* numberOfStartCompletionsip */);
-      if (MARPAESLIF_UNLIKELY(rcMatcherb < 0)) {
-        goto err;
-      }
-      if (! rcMatcherb) {
-        continue;
-      }
-      if (rci == MARPAESLIF_MATCH_OK) {
-        pretryb = 1;
-        break;
-      }
-    }
-
-    if (! pretryb) {
-      MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "No Pre-try expected ESLIF terminal match");
-      goto err;
-    }
-  }
 
   marpaESLIFRecognizerp = _marpaESLIFRecognizer_newp(marpaESLIFGrammarp,
                                                      marpaESLIFRecognizerOptionp,
@@ -9977,7 +9839,6 @@ static inline short _marpaESLIFGrammar_parseb(marpaESLIFGrammar_t *marpaESLIFGra
   }
 
   /* Force unambiguity */
-  marpaESLIFValueOption = (marpaESLIFValueOptionp != NULL) ? *marpaESLIFValueOptionp : marpaESLIFValueOption_default_template;
   marpaESLIFValueOption.ambiguousb = 0;
   marpaESLIFValuep = _marpaESLIFValue_newp(marpaESLIFRecognizerp, &marpaESLIFValueOption, silentb, 0 /* fakeb */);
   if (MARPAESLIF_UNLIKELY(marpaESLIFValuep == NULL)) {
@@ -10005,9 +9866,7 @@ static inline short _marpaESLIFGrammar_parseb(marpaESLIFGrammar_t *marpaESLIFGra
   rcb = 0;
 
  done:
-  if (marpaESLIFValuep != NULL) {
-    _marpaESLIFValue_freev(marpaESLIFValuep);
-  }
+  marpaESLIFValue_freev(marpaESLIFValuep);
 #ifndef MARPAESLIF_NTRACE
   if (marpaESLIFRecognizerp != NULL) {
     MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "return %d", (int) rcb);
@@ -10015,9 +9874,7 @@ static inline short _marpaESLIFGrammar_parseb(marpaESLIFGrammar_t *marpaESLIFGra
     MARPAESLIF_TRACEF(marpaESLIFp, funcs, "return %d", (int) rcb);
   }
 #endif
-  if (marpaESLIFRecognizerp != NULL) {
-    _marpaESLIFRecognizer_freev(marpaESLIFRecognizerp, 0 /* forceb */);
-  }
+  marpaESLIFRecognizer_freev(marpaESLIFRecognizerp);
 
   return rcb;
 }
@@ -10310,52 +10167,46 @@ short marpaESLIFValue_valueb(marpaESLIFValue_t *marpaESLIFValuep)
 }
 
 /*****************************************************************************/
-static inline void _marpaESLIFValue_freev(marpaESLIFValue_t *marpaESLIFValuep)
-/*****************************************************************************/
-{
-  static const char      *funcs                 = "_marpaESLIFValue_freev";
-  /* Take care: last value is under the USER's responsibility */
-  marpaESLIFRecognizer_t *marpaESLIFRecognizerp = marpaESLIFValuep->marpaESLIFRecognizerp;
-  marpaWrapperValue_t    *marpaWrapperValuep    = marpaESLIFValuep->marpaWrapperValuep;
-
-  MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_INC;
-  MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "start");
-
-  if (marpaWrapperValuep != NULL) {
-    marpaWrapperValue_freev(marpaWrapperValuep);
-  }
-  /* The stacks should never be something different than NULL at this stage. */
-  /* The methods to use them are protected so that it is impossible */
-  /* to use them outside of valuation mode. */
-  /*
-    GENERICSTACK_FREE(marpaESLIFValuep->valueResultStackp);
-  */
-
-  MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "return");
-  MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_DEC;
-
-  if (marpaESLIFValuep->afterPtrHashp != NULL) {
-    GENERICHASH_RESET(marpaESLIFValuep->afterPtrHashp, NULL);
-  }
-  if (marpaESLIFValuep->beforePtrStackp != NULL) {
-    GENERICSTACK_RESET(marpaESLIFValuep->beforePtrStackp);
-  }
-
-  /* Dispose lua if needed */
-  _marpaESLIFValue_lua_freev(marpaESLIFValuep);
-
-  _marpaESLIF_stringGeneratorFreev(&(marpaESLIFValuep->stringGenerator), 0 /* onStackb */);
-  GENERICLOGGER_FREE(marpaESLIFValuep->stringGeneratorLoggerp);
-
-  free(marpaESLIFValuep);
-}
-
-/*****************************************************************************/
 void marpaESLIFValue_freev(marpaESLIFValue_t *marpaESLIFValuep)
 /*****************************************************************************/
 {
+  static const char *funcs = "marpaESLIFValue_freev";
+
   if (marpaESLIFValuep != NULL) {
-    _marpaESLIFValue_freev(marpaESLIFValuep);
+    /* Take care: last value is under the USER's responsibility */
+    marpaESLIFRecognizer_t *marpaESLIFRecognizerp = marpaESLIFValuep->marpaESLIFRecognizerp;
+    marpaWrapperValue_t    *marpaWrapperValuep    = marpaESLIFValuep->marpaWrapperValuep;
+
+    MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_INC;
+    MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "start");
+
+    if (marpaWrapperValuep != NULL) {
+      marpaWrapperValue_freev(marpaWrapperValuep);
+    }
+    /* The stacks should never be something different than NULL at this stage. */
+    /* The methods to use them are protected so that it is impossible */
+    /* to use them outside of valuation mode. */
+    /*
+    GENERICSTACK_FREE(marpaESLIFValuep->valueResultStackp);
+    */
+
+    MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "return");
+    MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_DEC;
+
+    if (marpaESLIFValuep->afterPtrHashp != NULL) {
+      GENERICHASH_RESET(marpaESLIFValuep->afterPtrHashp, NULL);
+    }
+    if (marpaESLIFValuep->beforePtrStackp != NULL) {
+      GENERICSTACK_RESET(marpaESLIFValuep->beforePtrStackp);
+    }
+
+    /* Dispose lua if needed */
+    _marpaESLIFValue_lua_freev(marpaESLIFValuep);
+
+    _marpaESLIF_stringGeneratorFreev(&(marpaESLIFValuep->stringGenerator), 0 /* onStackb */);
+    GENERICLOGGER_FREE(marpaESLIFValuep->stringGeneratorLoggerp);
+
+    free(marpaESLIFValuep);
   }
 }
 
@@ -14503,10 +14354,8 @@ static inline marpaESLIFValue_t *_marpaESLIFValue_newp(marpaESLIFRecognizer_t *m
   goto done;
 
  err:
-  if (marpaESLIFValuep != NULL) {
-    _marpaESLIFValue_freev(marpaESLIFValuep);
-    marpaESLIFValuep = NULL;
-  }
+  marpaESLIFValue_freev(marpaESLIFValuep);
+  marpaESLIFValuep = NULL;
 
  done:
   /* MARPAESLIF_TRACEF(marpaESLIFp, funcs, "return %p", marpaESLIFValuep); */
