@@ -124,6 +124,14 @@ typedef @MARPAESLIF_UINT32_T@ marpaESLIF_uint32_t;
 #  define forceinline inline
 #endif
 
+/* restrict support */
+#cmakedefine C_RESTRICT @C_RESTRICT@
+#ifdef C_RESTRICT
+#  define restrict C_RESTRICT
+#else
+#  define restrict
+#endif
+
 /*
  * genericStack performance is vital
  */
