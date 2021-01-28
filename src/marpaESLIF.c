@@ -378,6 +378,25 @@ static marpaESLIFValueResult_t marpaESLIFValueResultLazy = {
     marpaESLIFValueResult.type               = MARPAESLIF_VALUE_TYPE_UNDEF; \
   } while (0)
 
+  /* This macro is to avoid the memcpy() of *grammarp which have a true cost in this method */
+#undef MARPAESLIFRECOGNIZER_GRAMMARDISCARD_INITIALIZER
+#define MARPAESLIFRECOGNIZER_GRAMMARDISCARD_INITIALIZER() do {          \
+    if (! marpaESLIFRecognizerp->grammarDiscardInitializedb) {          \
+      marpaESLIFRecognizerp->marpaESLIFGrammarDiscard                            = *marpaESLIFGrammarp; \
+      marpaESLIFRecognizerp->grammarDiscard                                      = *grammarp; \
+      marpaESLIFRecognizerp->grammarDiscard.starti                               = marpaESLIFRecognizerp->grammarDiscard.discardi; \
+      marpaESLIFRecognizerp->marpaESLIFGrammarDiscard.grammarp                   = &(marpaESLIFRecognizerp->grammarDiscard); \
+      marpaESLIFRecognizerp->marpaESLIFRecognizerOptionDiscard                   = marpaESLIFRecognizerp->marpaESLIFRecognizerOption; \
+      marpaESLIFRecognizerp->marpaESLIFRecognizerOptionDiscard.disableThresholdb = 1; \
+      marpaESLIFRecognizerp->marpaESLIFRecognizerOptionDiscard.exhaustedb        = 1; \
+      marpaESLIFRecognizerp->marpaESLIFRecognizerOptionDiscard.newlineb          = 0; \
+      marpaESLIFRecognizerp->marpaESLIFRecognizerOptionDiscard.trackb            = 0; \
+      marpaESLIFRecognizerp->marpaESLIFValueOptionDiscard                        = marpaESLIFValueOption_default_template; \
+      marpaESLIFRecognizerp->marpaESLIFValueOptionDiscard.userDatavp             = (void *) marpaESLIFRecognizerp; \
+      marpaESLIFRecognizerp->grammarDiscardInitializedb                          = 1; \
+    }                                                                   \
+  } while (0)
+
 typedef short (*_marpaESLIFRecognizer_valueResultCallback_t)(void *userDatavp, marpaESLIFValueResult_t *marpaESLIFValueResultp);
 typedef struct marpaESLIF_concat_valueResultContext {
   void                         *userDatavp;
@@ -6907,26 +6926,6 @@ static inline short _marpaESLIFRecognizer_resume_oneb(marpaESLIFRecognizer_t *ma
   char                            *previnputs;
   size_t                           offsetl;
 
-  /* This macro is to avoid the memcpy() of *grammarp which have a true cost in this method */
-  /* We fake a marpaESLIFGrammar using grammar sent in the stack */
-#undef MARPAESLIFRECOGNIZER_GRAMMARDISCARD_INITIALIZER
-#define MARPAESLIFRECOGNIZER_GRAMMARDISCARD_INITIALIZER() do {          \
-    if (! marpaESLIFRecognizerp->grammarDiscardInitializedb) {          \
-      marpaESLIFRecognizerp->marpaESLIFGrammarDiscard                            = *marpaESLIFGrammarp; \
-      marpaESLIFRecognizerp->grammarDiscard                                      = *grammarp; \
-      marpaESLIFRecognizerp->grammarDiscard.starti                               = marpaESLIFRecognizerp->grammarDiscard.discardi; \
-      marpaESLIFRecognizerp->marpaESLIFGrammarDiscard.grammarp                   = &(marpaESLIFRecognizerp->grammarDiscard); \
-      marpaESLIFRecognizerp->marpaESLIFRecognizerOptionDiscard                   = marpaESLIFRecognizerp->marpaESLIFRecognizerOption; \
-      marpaESLIFRecognizerp->marpaESLIFRecognizerOptionDiscard.disableThresholdb = 1; \
-      marpaESLIFRecognizerp->marpaESLIFRecognizerOptionDiscard.exhaustedb        = 1; \
-      marpaESLIFRecognizerp->marpaESLIFRecognizerOptionDiscard.newlineb          = 0; \
-      marpaESLIFRecognizerp->marpaESLIFRecognizerOptionDiscard.trackb            = 0; \
-      marpaESLIFRecognizerp->marpaESLIFValueOptionDiscard                        = marpaESLIFValueOption_default_template; \
-      marpaESLIFRecognizerp->marpaESLIFValueOptionDiscard.userDatavp             = (void *) marpaESLIFRecognizerp; \
-      marpaESLIFRecognizerp->grammarDiscardInitializedb                          = 1; \
-    }                                                                   \
-  } while (0)
-
   MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_INC;
   MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "start, maxStartCompletionsi=%d", maxStartCompletionsi);
 
@@ -8932,10 +8931,6 @@ static inline short _marpaESLIFRecognizer_push_grammar_eventsb(marpaESLIFRecogni
   char                         *events;
   size_t                        i;
   marpaESLIFEventType_t         type;
-  /* These variables are used for the eventual last discard */
-  marpaESLIFGrammar_t           marpaESLIFGrammarDiscard;
-  marpaESLIF_grammar_t          grammarDiscard;
-  marpaESLIFRecognizerOption_t  marpaESLIFRecognizerOptionDiscard;
   marpaESLIFValueResult_t       marpaESLIFValueResult;
   short                         continue_last_discard_loopb;
 
@@ -9044,25 +9039,14 @@ static inline short _marpaESLIFRecognizer_push_grammar_eventsb(marpaESLIFRecogni
       /* This is the end the parsing (we are called when parsing is exhausted) - we try to discard as much as possible */
       /* to avoid the eventual error message "Grammar is exhausted but lexeme remains" */
 
-      /* We can set these variables once */
-      marpaESLIFGrammarDiscard                            = *marpaESLIFGrammarp; /* Fake marpaESLIFGrammar with the grammar sent in the stack */
-      grammarDiscard                                      = *grammarp;
-      grammarDiscard.starti                               = grammarDiscard.discardi;
-      marpaESLIFGrammarDiscard.grammarp                   = &grammarDiscard;
-
-      marpaESLIFRecognizerOptionDiscard                   = marpaESLIFRecognizerp->marpaESLIFRecognizerOption; /* Things overwriten, see below */
-      marpaESLIFRecognizerOptionDiscard.disableThresholdb = 1; /* If discard, prepare the option to disable threshold */
-      marpaESLIFRecognizerOptionDiscard.exhaustedb        = 1; /* ... and have the exhausted event */
-      marpaESLIFRecognizerOptionDiscard.newlineb          = 0; /* ... do not count line/column numbers */
-      marpaESLIFRecognizerOptionDiscard.trackb            = 0; /* ... do not count track absolute position */
-
       do {
         /* Always reset this shallow pointer */
         marpaESLIFRecognizerp->discardEvents  = NULL;
         marpaESLIFRecognizerp->discardSymbolp = NULL;
-        if (_marpaESLIFGrammar_parseb(&marpaESLIFGrammarDiscard,
-                                      &marpaESLIFRecognizerOptionDiscard,
-                                      (marpaESLIFValueOption_t *) &marpaESLIFValueOption_default_template, /* &marpaESLIFValueOptionDiscard */
+        MARPAESLIFRECOGNIZER_GRAMMARDISCARD_INITIALIZER();
+        if (_marpaESLIFGrammar_parseb(&(marpaESLIFRecognizerp->marpaESLIFGrammarDiscard),
+                                      &(marpaESLIFRecognizerp->marpaESLIFRecognizerOptionDiscard),
+                                      &(marpaESLIFRecognizerp->marpaESLIFValueOptionDiscard),
                                       1, /* discardb */
                                       marpaESLIFRecognizerp->noEventb, /* This will select marpaWrapperGrammarDiscardNoEventp or marpaWrapperGrammarDiscardp */
                                       1, /* silentb */
