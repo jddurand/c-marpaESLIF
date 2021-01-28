@@ -12193,7 +12193,7 @@ static inline short _marpaESLIFRecognizer_matchPostProcessingb(marpaESLIFRecogni
   MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "start");
 
   /* If newline counting is on, so do we - only at first level */
-  if (marpaESLIFRecognizerp->marpaESLIFRecognizerOption.newlineb && marpaESLIF_streamp->utfb && (marpaESLIFRecognizerp->leveli == 0)) {
+  if ((marpaESLIFRecognizerp->leveli == 0) && marpaESLIFRecognizerp->marpaESLIFRecognizerOption.newlineb && marpaESLIF_streamp->utfb) {
     newlinep = marpaESLIFRecognizerp->marpaESLIFp->newlinep;
     linep = marpaESLIF_streamp->inputs;
     linel = matchl;
