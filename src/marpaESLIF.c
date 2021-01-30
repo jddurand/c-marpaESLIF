@@ -6886,6 +6886,7 @@ static inline short _marpaESLIFRecognizer_isDiscardExpectedb(marpaESLIFRecognize
 /* Note that by construction isDiscardExpectedbp is never NULL. Not tested.  */
 /*****************************************************************************/
 {
+  static const char          *funcs = "_marpaESLIFRecognizer_isDiscardExpectedb";
   short                       isDiscardExpectedb;
   marpaESLIF_t               *marpaESLIFp;
   marpaESLIF_stream_t        *marpaESLIF_streamp;
@@ -6900,6 +6901,9 @@ static inline short _marpaESLIFRecognizer_isDiscardExpectedb(marpaESLIFRecognize
   marpaESLIF_matcher_value_t  rci;
   short                       rcMatcherb;
   short                       rcb;
+
+  MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_INC;
+  MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "start");
 
   if (marpaESLIFRecognizerp->discardb) {
     /* We are already inside :discard */
@@ -6974,6 +6978,8 @@ static inline short _marpaESLIFRecognizer_isDiscardExpectedb(marpaESLIFRecognize
   rcb = 0;
 
  done:
+  MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "return %d", (int) rcb);
+  MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_DEC;
   return rcb;
 }
 
