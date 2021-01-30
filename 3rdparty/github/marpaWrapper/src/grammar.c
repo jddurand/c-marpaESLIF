@@ -161,10 +161,12 @@ marpaWrapperGrammar_t *marpaWrapperGrammar_clonep(marpaWrapperGrammar_t *marpaWr
   marpaWrapperGrammarSymbolOption_t marpaWrapperGrammarSymbolOption;
   marpaWrapperGrammarRuleOption_t   marpaWrapperGrammarRuleOption;
 
+#ifndef NDEBUG
   if (marpaWrapperGrammarOriginp == NULL) {
     errno = EINVAL;
     return NULL;
   }
+#endif
 
   if (marpaWrapperGrammarCloneOptionp == NULL) {
     marpaWrapperGrammarCloneOptionp = &marpaWrapperGrammarCloneOptionDefault;
@@ -321,10 +323,12 @@ int marpaWrapperGrammar_newSymboli(marpaWrapperGrammar_t *marpaWrapperGrammarp, 
   marpaWrapperGrammarSymbol_t      *marpaWrapperSymbolp;
   marpaWrapperGrammarSymbolOption_t marpaWrapperGrammarSymbolOption;
 
+#ifndef NDEBUG
   if (MARPAWRAPPER_UNLIKELY(marpaWrapperGrammarp == NULL)) {
     errno = EINVAL;
     goto err;
   }
+#endif
 
   genericLoggerp = marpaWrapperGrammarp->marpaWrapperGrammarOption.genericLoggerp;
 
@@ -440,10 +444,12 @@ int marpaWrapperGrammar_newRulei(marpaWrapperGrammar_t *marpaWrapperGrammarp, ma
   Marpa_Symbol_ID                 marpaLhsIdi;
   marpaWrapperGrammarRuleOption_t marpaWrapperGrammarRuleOption;
 
+#ifndef NDEBUG
   if (MARPAWRAPPER_UNLIKELY(marpaWrapperGrammarp == NULL)) {
     errno = EINVAL;
     goto err;
   }
+#endif
 
   genericLoggerp = marpaWrapperGrammarp->marpaWrapperGrammarOption.genericLoggerp;
 
@@ -574,10 +580,12 @@ int marpaWrapperGrammar_newRuleExti(marpaWrapperGrammar_t *marpaWrapperGrammarp,
   int                             rulei;
   va_list                         ap;
   
+#ifndef NDEBUG
   if (MARPAWRAPPER_UNLIKELY(marpaWrapperGrammarp == NULL)) {
     errno = EINVAL;
     goto err;
   }
+#endif
 
   genericLoggerp = marpaWrapperGrammarp->marpaWrapperGrammarOption.genericLoggerp;
 
@@ -665,10 +673,12 @@ static inline short _marpaWrapperGrammar_precomputeb(marpaWrapperGrammar_t *marp
   genericLogger_t            *genericLoggerp = NULL;
   int                         starti;
 
+#ifndef NDEBUG
   if (MARPAWRAPPER_UNLIKELY(marpaWrapperGrammarp == NULL)) {
     errno = EINVAL;
     goto err;
   }
+#endif
 
   genericLoggerp = marpaWrapperGrammarp->marpaWrapperGrammarOption.genericLoggerp;
 
@@ -736,10 +746,12 @@ short marpaWrapperGrammar_eventb(marpaWrapperGrammar_t *marpaWrapperGrammarp, si
   Marpa_Event                       event;
   int                               eventValuei;
 
+#ifndef NDEBUG
   if (MARPAWRAPPER_UNLIKELY(marpaWrapperGrammarp == NULL)) {
     errno = EINVAL;
     goto err;
   }
+#endif
 
   genericLoggerp = marpaWrapperGrammarp->marpaWrapperGrammarOption.genericLoggerp;
 
@@ -903,10 +915,12 @@ short marpaWrapperGrammar_symbolPropertyb(marpaWrapperGrammar_t *marpaWrapperGra
   int                               terminali;
   int                               marpaWrapperSymbolPropertyBitSet;
 
+#ifndef NDEBUG
   if (MARPAWRAPPER_UNLIKELY(marpaWrapperGrammarp == NULL)) {
     errno = EINVAL;
     goto err;
   }
+#endif
 
   genericLoggerp = marpaWrapperGrammarp->marpaWrapperGrammarOption.genericLoggerp;
   marpaGrammarp  = marpaWrapperGrammarp->marpaGrammarp;
@@ -984,10 +998,12 @@ short marpaWrapperGrammar_symbolEventb(marpaWrapperGrammar_t *marpaWrapperGramma
   int                               predictioni;
   int                               marpaWrapperSymbolEventBitSet;
 
+#ifndef NDEBUG
   if (MARPAWRAPPER_UNLIKELY(marpaWrapperGrammarp == NULL)) {
     errno = EINVAL;
     goto err;
   }
+#endif
 
   genericLoggerp = marpaWrapperGrammarp->marpaWrapperGrammarOption.genericLoggerp;
   marpaGrammarp  = marpaWrapperGrammarp->marpaGrammarp;
@@ -1043,10 +1059,12 @@ short marpaWrapperGrammar_rulePropertyb(marpaWrapperGrammar_t *marpaWrapperGramm
   int                               productivei;
   int                               marpaWrapperRulePropertyBitSet;
 
+#ifndef NDEBUG
   if (MARPAWRAPPER_UNLIKELY(marpaWrapperGrammarp == NULL)) {
     errno = EINVAL;
     goto err;
   }
+#endif
 
   genericLoggerp = marpaWrapperGrammarp->marpaWrapperGrammarOption.genericLoggerp;
   marpaGrammarp  = marpaWrapperGrammarp->marpaGrammarp;
