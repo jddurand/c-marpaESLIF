@@ -13857,6 +13857,7 @@ static inline short _marpaESLIFRecognizer_valueStack_i_setb(marpaESLIFRecognizer
   int                       i;
   short                     rcBeforeb;
   short                     rcAfterb;
+  genericStackItemType_t    itemType;
 
   MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_INC;
   MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "start");
@@ -13874,22 +13875,25 @@ static inline short _marpaESLIFRecognizer_valueStack_i_setb(marpaESLIFRecognizer
         rcb = 1;
         goto done;
       }
-    } else if (! GENERICSTACK_IS_CUSTOM(valueResultStackp, indicei)) {
-      /* Then it is must be NA */
-      if (MARPAESLIF_LIKELY(GENERICSTACK_IS_NA(valueResultStackp, indicei))) {
-        /* Replacement on something that is NA - this is also not illegal, we do the replacement immediately */
-        GENERICSTACK_SET_CUSTOMP(valueResultStackp, marpaESLIFValueResultp, indicei);
-        if (MARPAESLIF_UNLIKELY(GENERICSTACK_ERROR(valueResultStackp))) {
-          MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "valueResultStackp set failure at indice %d, %s", indicei, strerror(errno));
-          goto err;
+    } else {
+      itemType = GENERICSTACKITEMTYPE(valueResultStackp, indicei);
+      if (itemType != GENERICSTACKITEMTYPE_CUSTOM) {
+        /* Then it is must be NA */
+        if (MARPAESLIF_LIKELY(itemType == GENERICSTACKITEMTYPE_NA)) {
+          /* Replacement on something that is NA - this is also not illegal, we do the replacement immediately */
+          GENERICSTACK_SET_CUSTOMP(valueResultStackp, marpaESLIFValueResultp, indicei);
+          if (MARPAESLIF_UNLIKELY(GENERICSTACK_ERROR(valueResultStackp))) {
+            MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "valueResultStackp set failure at indice %d, %s", indicei, strerror(errno));
+            goto err;
+          } else {
+            rcb = 1;
+            goto done;
+          }
         } else {
-          rcb = 1;
-          goto done;
+          /* At indicei, this must be a CUSTOM or a NA value */
+          MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "valueResultStackp at indice %d is not CUSTOM nor NA (got %s, value %d)", indicei, _marpaESLIF_genericStack_i_types(valueResultStackp, indicei), GENERICSTACKITEMTYPE(valueResultStackp, indicei));
+          goto err;
         }
-      } else {
-        /* At indicei, this is must be a CUSTOM or a NA value */
-        MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "valueResultStackp at indice %d is not CUSTOM nor NA (got %s, value %d)", indicei, _marpaESLIF_genericStack_i_types(valueResultStackp, indicei), GENERICSTACKITEMTYPE(valueResultStackp, indicei));
-        goto err;
       }
     }
 
