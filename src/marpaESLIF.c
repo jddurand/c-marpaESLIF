@@ -2200,6 +2200,7 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
   size_t                            nSymboll;
   int                              *symbolArrayp;
   size_t                            tmpl;
+  short                             fastDiscardb;
 
   marpaESLIF_cloneContext.marpaESLIFp = marpaESLIFp;
   marpaESLIF_cloneContext.grammarp = NULL;
@@ -2526,6 +2527,9 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
         MARPAESLIF_ERRORF(marpaESLIFp, ":discard symbol at grammar level %d (%s) must have no event", grammari, grammarp->descp->asciis);
         goto err;
       }
+      /* If not all :discard rules are in the form :discard ::= terminal then we switch off the fastDiscardb flag */
+      fastDiscardb = 1;
+
       /* Per def a :discard rule has only one RHS, we mark its discardRhsb flag and copy the rule's discard settings */
       /* (Note that saying :discard :[x]:= RHS event => EVENT twice will overwrite first setting) */
       for (rulei = 0; rulei < GENERICSTACK_USED(ruleStackp); rulei++) {
@@ -2541,7 +2545,15 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
         symbolp->discardRhsb = 1;
         symbolp->discardEvents = rulep->discardEvents;
         symbolp->discardEventb = rulep->discardEventb;
+
+        if (! MARPAESLIF_IS_TERMINAL(symbolp)) {
+          fastDiscardb = 0;
+        }
       }
+
+      MARPAESLIF_ERRORF(marpaESLIFp, "Precomputing grammar level %d (%s) at discard symbol %d <%s> sets fast discard mode to %s", grammari, grammarp->descp->asciis, discardp->idi, discardp->descp->asciis, fastDiscardb ? "true" : "false");
+      grammarp->fastDiscardb = fastDiscardb;
+
       MARPAESLIF_TRACEF(marpaESLIFp, funcs, "Precomputing grammar level %d (%s) at discard symbol %d <%s>", grammari, grammarp->descp->asciis, discardp->idi, discardp->descp->asciis);
       marpaESLIF_cloneContext.grammarp = grammarp;
       /* Clone for the discard mode at grammar level */
@@ -2605,6 +2617,9 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
 	grammarp->nSymbolDiscardl = nSymboll;
 	memcpy(grammarp->symbolArrayDiscardp, symbolArrayp, tmpl);
 	marpaWrapperRecognizer_freev(marpaWrapperRecognizerp);
+
+        /* nSymbolDiscardl and symbolArrayDiscardp contains the first terminals that every pristine */
+        /* recognizer would try when executing :discard as a complete parse.                        */
       }
     }
   }
@@ -3309,6 +3324,7 @@ static inline marpaESLIF_grammar_t *_marpaESLIF_grammar_newp(marpaESLIFGrammar_t
   grammarp->discardi                           = -1;   /* Eventually filled to a value >= 0 during grammar validation */
   grammarp->defaultEncodings                   = NULL;
   grammarp->fallbackEncodings                  = NULL;
+  grammarp->fastDiscardb                       = 0;    /* Filled by grammar validation */
 
   grammarp->marpaWrapperGrammarStartp = marpaWrapperGrammar_newp(marpaWrapperGrammarOptionp);
   if (MARPAESLIF_UNLIKELY(grammarp->marpaWrapperGrammarStartp == NULL)) {
@@ -6881,9 +6897,13 @@ static inline short _marpaESLIFRecognizer_isEolPseudoTerminalExpectedb(marpaESLI
 static inline short _marpaESLIFRecognizer_isDiscardExpectedb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, short *isDiscardExpectedbp)
 /*****************************************************************************/
 /* This method allows to prevent a cyle on :discard, this is important       */
-/* because it prevents a cycle during the resume.                            */
-/* It is executed in the context of the current recognizer.                  */
-/* Note that by construction isDiscardExpectedbp is never NULL. Not tested.  */
+/* because a cycle is consuming: this is a whole new parse.                  */
+/* It is executed in the context of the current recognizer: when this method */
+/* is called it means that the caller wants to discard if possible.          */
+/* If the discard is possible and can be executed in the context of the      */
+/* caller, this method will take care or that.                               */
+/*                                                                           */
+/* Note that by construction isDiscardExpectedbp is never NULL.         */
 /*****************************************************************************/
 {
   static const char          *funcs = "_marpaESLIFRecognizer_isDiscardExpectedb";
