@@ -110,7 +110,7 @@ struct marpaESLIF_terminal {
   short                       memcmpb;             /* Flag saying that memcmp is possible */
   char                       *bytes;               /* Original UTF-8 bytes, used for memcmp() when possible */
   size_t                      bytel;               /* i.e. when this is a string terminal without modifier */
-  short                       builtinb;            /* Builtin terminal */
+  short                       pseudob;             /* Pseudo terminal */
 };
 
 /* Matcher return values */
@@ -248,6 +248,7 @@ struct marpaESLIF {
   marpaESLIFOption_t      marpaESLIFOption;
   marpaESLIF_terminal_t  *anycharp;                    /* internal regex for match any character */
   marpaESLIF_terminal_t  *newlinep;                    /* Internal regex for match newline */
+  marpaESLIFSymbol_t     *newlineSymbolp;              /* Internal symbol for match newline */
   marpaESLIF_terminal_t  *stringModifiersp;            /* Internal regex for match string modifiers */
   marpaESLIF_terminal_t  *characterClassModifiersp;    /* Internal regex for match character class modifiers */
   marpaESLIF_terminal_t  *regexModifiersp;             /* Internal regex for match regex modifiers */
@@ -280,8 +281,9 @@ struct marpaESLIFGrammar {
   size_t                     luaprecompiledl;    /* Lua script source precompiled length in byte */
   marpaESLIF_string_t       *luadescp;           /* Delayed until show is requested */
   int                        internalRuleCounti; /* Internal counter when creating internal rules (groups '(-...-)' and '(...)' */
-  short                      hasEofPseudoTerminalb; /* Is :eof anywhere in the grammar ? */
-  short                      hasEolPseudoTerminalb; /* Is :eol anywhere in the grammar ? */
+  short                      hasPseudoTerminalb; /* Any pseudo terminal in the grammar ? */
+  short                      hasEofPseudoTerminalb; /* Any :eof terminal in the grammar ? */
+  short                      hasEolPseudoTerminalb; /* Any :eol terminal in the grammar ? */
 };
 
 struct marpaESLIF_meta {

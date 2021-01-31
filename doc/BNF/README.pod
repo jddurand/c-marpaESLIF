@@ -343,7 +343,15 @@ The C<:discard> symbol, despite belonging to a given grammar, is not accessible 
   :discard ::= symbolname1 event => discard_symbolname1$
   :discard ::= symbolname2 event => discard_symbolname2$
 
-Note than when an event is set, this will be triggered only on the C<:discard>'s RHS completion, therefore the RHS of the C<:discard> must be an LHS in the same grammar when there is an event setting.
+Note than when an event is set, this will be triggered only on the C<:discard>'s RHS completion, therefore the RHS of the C<:discard> must be an LHS in the same grammar when there is an event setting and when C<:discard> refers to a symbol.
+
+An explicit terminal can also be set directly, e.g.:
+
+  :discard ::= /[\s]+/                                                                        event => whitespace$
+  :discard ::= /(?:(?:#)(?:[^\n]*)(?:\n|\z))/u                                                event => perl_comment$
+  :discard ::= /(?:(?:(?://)(?:[^\n]*)(?:\n|\z))|(?:(?:/\*)(?:(?:[^\*]+|\*(?!/))*)(?:\*/)))/u event => cplusplus_comment$
+
+this form is highly recommended, because ESLIF recognizes the case where C<:discard> consist only of explicit terminals, and applies an optimization that prevent the intanciation of an internal parse.
 
 =item Events
 
@@ -841,6 +849,7 @@ marpaESLIF BNF can be expressed in itself:
                                    | <regular expression>
                                    | <quoted string>
                                    | ':eof'
+                                   | ':eol'
   <symbol>                       ::= <symbol name>
   <symbol name>                  ::= <bare name>
                                    | <bracketed name>

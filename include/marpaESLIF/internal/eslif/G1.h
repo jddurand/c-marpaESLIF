@@ -105,6 +105,9 @@ typedef enum bootstrap_grammar_G1_enum {
   G1_TERMINAL_FALLBACK_ENCODING,
   G1_TERMINAL__EOF,
   G1_TERMINAL__EOL,
+  G1_TERMINAL_WHITESPACE,
+  G1_TERMINAL_PERL_COMMENT,
+  G1_TERMINAL_CPLUSPLUS_COMMENT,
   /* ----- Non terminals ------ */
   G1_META_STATEMENTS,
   G1_META_STATEMENT,
@@ -205,9 +208,6 @@ typedef enum bootstrap_grammar_G1_enum {
   G1_META_BRACKETED_NAME,
   G1_META_RESTRICTED_ASCII_GRAPH_NAME,
   G1_META_LUA_ACTION_NAME,
-  G1_META_WHITESPACE,
-  G1_META_PERL_COMMENT,
-  G1_META_CPLUSPLUS_COMMENT,
   G1_META_GRAPH_ASCII_NAME
 } bootstrap_grammar_G1_enum_t;
 
@@ -313,9 +313,6 @@ bootstrap_grammar_meta_t bootstrap_grammar_G1_metas[] = {
   { G1_META_BRACKETED_NAME,                   L0_JOIN_G1_META_BRACKETED_NAME,              0,       0,           0,            0 },
   { G1_META_RESTRICTED_ASCII_GRAPH_NAME,      L0_JOIN_G1_META_RESTRICTED_ASCII_GRAPH_NAME, 0,       0,           0,            0 },
   { G1_META_LUA_ACTION_NAME,                  L0_JOIN_G1_META_LUA_ACTION_NAME,             0,       0,           0,            0 },
-  { G1_META_WHITESPACE,                       L0_JOIN_G1_META_WHITESPACE,                  0,       0,           0,            0 },
-  { G1_META_PERL_COMMENT,                     L0_JOIN_G1_META_PERL_COMMENT,                0,       0,           0,            0 },
-  { G1_META_CPLUSPLUS_COMMENT,                L0_JOIN_G1_META_CPLUSPLUS_COMMENT,           0,       0,           0,            0 },
   { G1_META_GRAPH_ASCII_NAME,                 L0_JOIN_G1_META_GRAPH_ASCII_NAME,            0,       0,           0,            0 }
 };
 
@@ -1080,6 +1077,38 @@ bootstrap_grammar_terminal_t bootstrap_grammar_G1_terminals[] = {
 #else
     NULL, NULL
 #endif
+  },
+  { G1_TERMINAL_WHITESPACE, MARPAESLIF_TERMINAL_TYPE_REGEX, NULL,
+    "[\\s]+",
+#ifndef MARPAESLIF_NTRACE
+    "\x09\x20xxx", "\x09\x20"
+#else
+    NULL, NULL
+#endif
+  },
+  /* --------------------------------------------------------------------------------------------------------------------------------- */
+  /* Taken from Regexp::Common::comment, $RE{comment}{Perl} */
+  /* Perl stringified version is: (?:(?:#)(?:[^\n]*)(?:\n)) */
+  /* \z added to match the end of the buffer (ESLIF will ask more data if this is not EOF as well) */
+  { G1_TERMINAL_PERL_COMMENT, MARPAESLIF_TERMINAL_TYPE_REGEX, "u",
+    "(?:(?:#)(?:[^\\n]*)(?:\\n|\\z))",
+#ifndef MARPAESLIF_NTRACE
+    "# Comment up to the end of the buffer", "# Again a comment"
+#else
+    NULL, NULL
+#endif
+  },
+  /* --------------------------------------------------------------------------------------------------------------------------------- */
+  /* Taken from Regexp::Common::comment, $RE{comment}{'C++'}, which includes the C language comment */
+  /* Perl stringified version is: (?:(?:(?://)(?:[^\n]*)(?:\n))|(?:(?:\/\*)(?:(?:[^\*]+|\*(?!\/))*)(?:\*\/))) */
+  /* \z added to match the end of the buffer in the // mode (ESLIF will ask more data if this is not EOF as well) */
+  { G1_TERMINAL_CPLUSPLUS_COMMENT, MARPAESLIF_TERMINAL_TYPE_REGEX, "u",
+    "(?:(?:(?://)(?:[^\\n]*)(?:\\n|\\z))|(?:(?:/\\*)(?:(?:[^\\*]+|\\*(?!/))*)(?:\\*/)))",
+#ifndef MARPAESLIF_NTRACE
+    "// Comment up to the end of the buffer", "// Again a comment"
+#else
+    NULL, NULL
+#endif
   }
 };
 
@@ -1474,9 +1503,9 @@ bootstrap_grammar_rule_t bootstrap_grammar_G1_rules[] = {
   /*
     lhsi                                      descs                                           type                          nrhsl  { rhsi }                                       }  minimumi           separatori  properb hideseparatorb  actions
   */
-  { G1_META_DISCARD,                          G1_RULE_DISCARD_1,                              MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_WHITESPACE                           }, -1,                        -1,      -1,              0, NULL },
-  { G1_META_DISCARD,                          G1_RULE_DISCARD_2,                              MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_PERL_COMMENT                         }, -1,                        -1,      -1,              0, NULL },
-  { G1_META_DISCARD,                          G1_RULE_DISCARD_3,                              MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_CPLUSPLUS_COMMENT                    }, -1,                        -1,      -1,              0, NULL },
+  { G1_META_DISCARD,                          G1_RULE_DISCARD_1,                              MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_TERMINAL_WHITESPACE                       }, -1,                        -1,      -1,              0, NULL },
+  { G1_META_DISCARD,                          G1_RULE_DISCARD_2,                              MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_TERMINAL_PERL_COMMENT                     }, -1,                        -1,      -1,              0, NULL },
+  { G1_META_DISCARD,                          G1_RULE_DISCARD_3,                              MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_TERMINAL_CPLUSPLUS_COMMENT                }, -1,                        -1,      -1,              0, NULL },
 
   /*
     lhsi                                      descs                                           type                          nrhsl  { rhsi }                                       }  minimumi           separatori  properb hideseparatorb  actions
