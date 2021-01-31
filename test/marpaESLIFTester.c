@@ -556,8 +556,6 @@ static short eventManagerb(int *eventCountip, marpaESLIFRecognizer_t *marpaESLIF
   short                   eofb;
   marpaESLIFAlternative_t marpaESLIFAlternative;
   short                   discardMatchb;
-  char                   *currentInputs;
-  size_t                  currentInputl;
 
   (*eventCountip)++;
 
@@ -569,10 +567,7 @@ static short eventManagerb(int *eventCountip, marpaESLIFRecognizer_t *marpaESLIF
   if (! marpaESLIFRecognizer_discard_tryb(marpaESLIFRecognizerp, &discardMatchb)) {
     goto err;
   }
-  if (! marpaESLIFRecognizer_inputb(marpaESLIFRecognizerp, &currentInputs, &currentInputl)) {
-    goto err;
-  }
-  GENERICLOGGER_INFOF(genericLoggerp, "Discard try returned %s, current input is: \"%s\"", discardMatchb ? "true" : "false", currentInputs);
+  GENERICLOGGER_INFOF(genericLoggerp, "Discard try returned %s", discardMatchb ? "true" : "false");
 
   for (eventArrayIteratorl = 0; eventArrayIteratorl < eventArrayl; eventArrayIteratorl++) {
     switch (eventArrayp[eventArrayIteratorl].type) {
