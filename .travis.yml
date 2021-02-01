@@ -22,7 +22,7 @@ before_script:
   - ulimit -c unlimited -S       # enable core dumps
   - cmake --version
   - sudo apt-get update -qq --allow-unauthenticated
-  - sudo apt-get install gdb
+  - sudo apt-get install gdb valgrind
   - sudo apt-get install cpanminus nsis
 # Standard Dist::Zilla, this will install a bunch of prereqs, speeding up the upgrade
   - sudo apt-get install libdist-zilla-perl
@@ -44,6 +44,10 @@ before_script:
   - sh ./install-c-tconv.sh
   - sh ./install-c-luaunpanic.sh
 script:
+  - echo JDD
+  - cmake . -DALL_IN_ONE=ON
+  - valgrind ./output/lib/marpaESLIFTester
+  - echo JDD
 # We want to try perl standalone first
   - cmake --version
   - perl CMakeObjects.PL
