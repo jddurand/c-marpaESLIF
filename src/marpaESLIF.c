@@ -380,7 +380,7 @@ static marpaESLIFValueResult_t marpaESLIFValueResultLazy = {
 
   /* This macro is to avoid the memcpy() of *grammarp which have a true cost in this method */
 #undef MARPAESLIFRECOGNIZER_GRAMMARDISCARD_INITIALIZER
-#define MARPAESLIFRECOGNIZER_GRAMMARDISCARD_INITIALIZER(marpaESLIFRecognizerp) do { \
+#define MARPAESLIFRECOGNIZER_GRAMMARDISCARD_INITIALIZER(marpaESLIFRecognizerp, marpaESLIFGrammarp, grammarp) do { \
     if (! marpaESLIFRecognizerp->grammarDiscardInitializedb) {          \
       marpaESLIFRecognizerp->marpaESLIFGrammarDiscard                            = *marpaESLIFGrammarp; \
       marpaESLIFRecognizerp->grammarDiscard                                      = *grammarp; \
@@ -7010,12 +7010,6 @@ static inline short _marpaESLIFRecognizer_isDiscardExpectedb(marpaESLIFRecognize
     }   
   }
 
-  if (isDiscardExpectedb) {
-    /* Caller asked if :discard is possible, by definition it is will try it. */
-    /* So we initialize internal members of marpaESLIFRecognizerp now.        */
-    MARPAESLIFRECOGNIZER_GRAMMARDISCARD_INITIALIZER(marpaESLIFRecognizerp);
-  }
-
  fast_done:
   *isDiscardExpectedbp = isDiscardExpectedb;
   *fastDiscardlp       = fastDiscardl;
@@ -9530,10 +9524,10 @@ static inline marpaESLIFRecognizer_t *_marpaESLIFRecognizer_newp(marpaESLIFGramm
   /* are filled. */
   marpaESLIFRecognizerp->grammarDiscardInitializedb         = 0;
   /*
-  marpaESLIFRecognizerp->marpaESLIFGrammarDiscard           = c.f. MARPAESLIFRECOGNIZER_GRAMMARDISCARD_INITIALIZER(marpaESLIFRecognizerp) macro
-  marpaESLIFRecognizerp->grammarDiscard                     = c.f. MARPAESLIFRECOGNIZER_GRAMMARDISCARD_INITIALIZER(marpaESLIFRecognizerp) macro
-  marpaESLIFRecognizerp->marpaESLIFRecognizerOptionDiscard  = c.f. MARPAESLIFRECOGNIZER_GRAMMARDISCARD_INITIALIZER(marpaESLIFRecognizerp) macro
-  marpaESLIFRecognizerp->marpaESLIFValueOptionDiscard       = c.f. MARPAESLIFRECOGNIZER_GRAMMARDISCARD_INITIALIZER(marpaESLIFRecognizerp) macro
+  marpaESLIFRecognizerp->marpaESLIFGrammarDiscard           = c.f. MARPAESLIFRECOGNIZER_GRAMMARDISCARD_INITIALIZER() macro
+  marpaESLIFRecognizerp->grammarDiscard                     = c.f. MARPAESLIFRECOGNIZER_GRAMMARDISCARD_INITIALIZER() macro
+  marpaESLIFRecognizerp->marpaESLIFRecognizerOptionDiscard  = c.f. MARPAESLIFRECOGNIZER_GRAMMARDISCARD_INITIALIZER() macro
+  marpaESLIFRecognizerp->marpaESLIFValueOptionDiscard       = c.f. MARPAESLIFRECOGNIZER_GRAMMARDISCARD_INITIALIZER() macro
   */
 
   marpaESLIFRecognizerp->beforePtrStackp = &(marpaESLIFRecognizerp->_beforePtrStack);
@@ -9816,6 +9810,8 @@ static inline short _marpaESLIFRecognizer_discardParseb(marpaESLIFRecognizer_t *
   size_t                   fastDiscardl;
   marpaESLIF_symbol_t     *fastDiscardSymbolp;
   short                    parseb;
+  marpaESLIFGrammar_t     *marpaESLIFGrammarp;
+  marpaESLIF_grammar_t    *grammarp;
   short                    rcb;
 
   if (MARPAESLIF_UNLIKELY(! _marpaESLIFRecognizer_isDiscardExpectedb(marpaESLIFRecognizerp, &isDiscardExpectedb, &fastDiscardl, &fastDiscardSymbolp))) {
@@ -9844,6 +9840,11 @@ static inline short _marpaESLIFRecognizer_discardParseb(marpaESLIFRecognizer_t *
       }
       MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Fast discard on %ld bytes", (unsigned long) discardl);
     } else {
+      marpaESLIFGrammarp = marpaESLIFRecognizerp->marpaESLIFGrammarp;
+      grammarp           = marpaESLIFGrammarp->grammarp;
+
+      MARPAESLIFRECOGNIZER_GRAMMARDISCARD_INITIALIZER(marpaESLIFRecognizerp, marpaESLIFGrammarp, grammarp);
+
       parseb = _marpaESLIFGrammar_parseb(&(marpaESLIFRecognizerp->marpaESLIFGrammarDiscard),
                                          &(marpaESLIFRecognizerp->marpaESLIFRecognizerOptionDiscard),
                                          &(marpaESLIFRecognizerp->marpaESLIFValueOptionDiscard),
@@ -17292,10 +17293,10 @@ static inline marpaESLIFRecognizer_t *_marpaESLIFRecognizer_getPristineFromCache
         /* marpaESLIFRecognizerp->pristineb                       = 1; */
         marpaESLIFRecognizerp->grammarDiscardInitializedb         = 0;
         /*
-          marpaESLIFRecognizerp->marpaESLIFGrammarDiscard           = c.f. MARPAESLIFRECOGNIZER_GRAMMARDISCARD_INITIALIZER(marpaESLIFRecognizerp) macro
-          marpaESLIFRecognizerp->grammarDiscard                     = c.f. MARPAESLIFRECOGNIZER_GRAMMARDISCARD_INITIALIZER(marpaESLIFRecognizerp) macro
-          marpaESLIFRecognizerp->marpaESLIFRecognizerOptionDiscard  = c.f. MARPAESLIFRECOGNIZER_GRAMMARDISCARD_INITIALIZER(marpaESLIFRecognizerp) macro
-          marpaESLIFRecognizerp->marpaESLIFValueOptionDiscard       = c.f. MARPAESLIFRECOGNIZER_GRAMMARDISCARD_INITIALIZER(marpaESLIFRecognizerp) macro
+          marpaESLIFRecognizerp->marpaESLIFGrammarDiscard           = c.f. MARPAESLIFRECOGNIZER_GRAMMARDISCARD_INITIALIZER() macro
+          marpaESLIFRecognizerp->grammarDiscard                     = c.f. MARPAESLIFRECOGNIZER_GRAMMARDISCARD_INITIALIZER() macro
+          marpaESLIFRecognizerp->marpaESLIFRecognizerOptionDiscard  = c.f. MARPAESLIFRECOGNIZER_GRAMMARDISCARD_INITIALIZER() macro
+          marpaESLIFRecognizerp->marpaESLIFValueOptionDiscard       = c.f. MARPAESLIFRECOGNIZER_GRAMMARDISCARD_INITIALIZER() macro
           marpaESLIFRecognizerp->L                                 = NULL;
         */
         marpaESLIFRecognizerp->marpaESLIFRecognizerTopp            = marpaESLIFRecognizerParentp->marpaESLIFRecognizerTopp;
