@@ -46,6 +46,7 @@ before_script:
 script:
   - echo JDD
   - cmake . -DALL_IN_ONE=ON
+  - make marpaESLIFTester
   - valgrind ./output/lib/marpaESLIFTester
   - echo JDD
 # We want to try perl standalone first

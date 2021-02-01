@@ -9812,7 +9812,7 @@ static inline short _marpaESLIFRecognizer_discardParseb(marpaESLIFRecognizer_t *
   short                    noEventb;
   marpaESLIF_stream_t     *marpaESLIF_streamp;
   size_t                   discardl;
-  marpaESLIFValueResult_t  marpaESLIFValueResult;
+  marpaESLIFValueResult_t  marpaESLIFValueResult = marpaESLIFValueResultUndef;
   size_t                   fastDiscardl;
   marpaESLIF_symbol_t     *fastDiscardSymbolp;
   short                    parseb;
@@ -9858,9 +9858,6 @@ static inline short _marpaESLIFRecognizer_discardParseb(marpaESLIFRecognizer_t *
                                          NULL /* numberOfStartCompletionsip */,
                                          0 /* grammarIsOnStackb - because marpaESLIFRecognizerp itself is not on the stack */);
       discardl = marpaESLIFValueResult.u.a.sizel;
-      if ((! marpaESLIFValueResult.u.a.shallowb) && (marpaESLIFValueResult.u.a.p != NULL)) {
-        free(marpaESLIFValueResult.u.a.p);
-      }
     }
 
     if (parseb) {
@@ -9906,6 +9903,9 @@ static inline short _marpaESLIFRecognizer_discardParseb(marpaESLIFRecognizer_t *
   rcb = 0;
 
  done:
+  if ((marpaESLIFValueResult.type == MARPAESLIF_VALUE_TYPE_ARRAY) && (! marpaESLIFValueResult.u.a.shallowb) && (marpaESLIFValueResult.u.a.p != NULL)) {
+    free(marpaESLIFValueResult.u.a.p);
+  }
   return rcb;
 }
 
