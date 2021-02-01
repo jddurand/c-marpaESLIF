@@ -44,11 +44,6 @@ before_script:
   - sh ./install-c-tconv.sh
   - sh ./install-c-luaunpanic.sh
 script:
-  - echo JDD
-  - cmake . -DALL_IN_ONE=ON
-  - make marpaESLIFTester
-  - valgrind ./output/lib/marpaESLIFTester
-  - echo JDD
 # We want to try perl standalone first
   - cmake --version
   - perl CMakeObjects.PL
