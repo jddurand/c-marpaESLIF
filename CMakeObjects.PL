@@ -238,29 +238,6 @@ INLINE_SOURCE
         }
     }
 
-    foreach my $forceinline_keyword ("inline __attribute__((always_inline))", "__forceinline") {
-        $ac->msg_checking("for forceinline");
-        my $forceinline_source = <<FORCEINLINE_SOURCE;
-typedef int foo_t;
-static $forceinline_keyword foo_t static_foo() {
-  return 0;
-}
-foo_t foo() {
-  return 0;
-}
-int main(int argc, char *argv[]){
-  return 0;
-}
-FORCEINLINE_SOURCE
-        if (try_compile($forceinline_source)) {
-            $ac->msg_result('yes');
-            $ac->define_var("C_FORCEINLINE", $forceinline_keyword);
-            last;
-        } else {
-            $ac->msg_result('no');
-        }
-    }
-
     $ac->check;
     write_config($MARPAESLIF_VERSION, $MARPAESLIF_VERSION_MAJOR, $MARPAESLIF_VERSION_MINOR, $MARPAESLIF_VERSION_PATCH, $config_h_in, $config_h);
 }
