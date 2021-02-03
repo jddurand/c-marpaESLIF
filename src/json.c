@@ -1487,12 +1487,12 @@ static short _marpaESLIFJSON_negative_nanb(void *userDatavp, marpaESLIFValue_t *
 static void _marpaESLIFJSONRepresentationDisposev(void *userDatavp, char *inputcp, size_t inputl, char *encodingasciis)
 /*****************************************************************************/
 {
-  marpaESLIFJSONContext_t      *marpaESLIFJSONContextp      = (marpaESLIFJSONContext_t *) userDatavp;
-  marpaESLIFRecognizerOption_t *marpaESLIFRecognizerOptionp = marpaESLIFJSONContextp->marpaESLIFRecognizerOptionp;
+  marpaESLIFJSONContext_t *marpaESLIFJSONContextp = (marpaESLIFJSONContext_t *) userDatavp;
+  marpaESLIFValueOption_t *marpaESLIFValueOptionp = marpaESLIFJSONContextp->marpaESLIFValueOptionp;
 
   /* Proxy to caller's representation disposer */
   if (marpaESLIFJSONContextp->representationDisposep != NULL) {
-    marpaESLIFJSONContextp->representationDisposep(marpaESLIFRecognizerOptionp->userDatavp, inputcp, inputl, encodingasciis);
+    marpaESLIFJSONContextp->representationDisposep(marpaESLIFValueOptionp->userDatavp, inputcp, inputl, encodingasciis);
   }
 }
 
