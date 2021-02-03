@@ -2772,10 +2772,12 @@ static inline short marpaESLIFPerl_JSONDecodeNumberAction(void *userDatavp, char
   SV                       *svnumifyp;
   dTHXa(MarpaX_ESLIF_Valuep->PerlInterpreterp);
 
+  /* Default is to accept marpaESLIF proposal ? Always give priority to perl's vision of number */
+  /*
   if (MARPAESLIF_LIKELY(marpaESLIFValueResultp->type != MARPAESLIF_VALUE_TYPE_UNDEF)) {
-    /* Default is to accept marpaESLIF proposal */
     return 1;
   }
+  */
 
   listp = newAV();
   av_push(listp, newSVpvn((const char *) strings, (STRLEN) stringl)); /* Ref count of string is transfered to listp */
