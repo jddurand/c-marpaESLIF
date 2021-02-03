@@ -269,11 +269,11 @@ if (is_os_type('Windows')) {
     #
     # This depend on psapi, and perl's cflags always include that by default
     #
-    push(@additional_srcdir, File::Spec->catdir('output', '3rdparty', 'dlfcn-win32', 'dlfcn.c'));
+    push(@additional_srcdir, File::Spec->catdir('output', '3rdparty', 'dlfcn-win32', 'src', 'dlfcn.c'));
     #
-    # Well, dlfcn.h is at dlfcn-win32 level
+    # Well, dlfcn.h is at dlfcn-win32/src level
     #
-    push(@additional_includes, File::Spec->catdir('output', '3rdparty', 'dlfcn-win32'));
+    push(@additional_includes, File::Spec->catdir('output', '3rdparty', 'dlfcn-win32', 'src'));
     #
 }
 
