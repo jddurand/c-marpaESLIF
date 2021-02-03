@@ -14719,8 +14719,8 @@ static short _marpaESLIFRecognizer_concat_valueResultCallbackb(void *userDatavp,
       }
     }
 
-    /* User representation is used if we are not in json mode (because in json representation is fixed) */
-    if ((! jsonb) && (representationp != NULL)) {
+    /* User representation is used, if any. Then finally the marpaESLIFValueResult is either STRING or ARRAY */
+    if (representationp != NULL) {
       srcs = NULL;
       srcl = 0;
       encodingasciis = NULL;
