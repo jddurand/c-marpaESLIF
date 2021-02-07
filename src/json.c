@@ -1323,7 +1323,7 @@ static short _marpaESLIFJSON_numberb(void *userDatavp, marpaESLIFValue_t *marpaE
 #if defined(MARPAESLIF_HAVE_LONG_LONG) && defined(C_STRTOLL)
   endptrp = NULL;
   errno = 0;    /* To distinguish success/failure after call */
-  valuell = strtoll(marpaESLIFJSONContextp->integers, &endptrp, 10);
+  valuell = C_STRTOLL(marpaESLIFJSONContextp->integers, &endptrp, 10);
   /* Note that the exponent in a JSON number always have at least one digit */
   if ((endptrp != endptrendp) || (errno != 0)) {
     MARPAESLIF_TRACEF(marpaESLIFValuep->marpaESLIFp, funcs, "%s: %s parsing failure, %s", numbers, marpaESLIFJSONContextp->integers, errno != 0 ? strerror(errno) : "bad final pointer");
