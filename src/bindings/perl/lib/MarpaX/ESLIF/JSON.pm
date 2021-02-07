@@ -43,6 +43,10 @@ This is strict grammar extended with:
 
 =item Unicode's control characters (range C<[\x00-\x1F]>).
 
+=item Number with non significant zeroes on the left.
+
+=item Number with a leading C<+> sign.
+
 =back
 
 =back
