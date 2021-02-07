@@ -54,10 +54,6 @@ typedef struct MarpaX_ESLIF_constants {
   short nvtype_is___float128;
   SV *MarpaX__ESLIF__true_svp;
   SV *MarpaX__ESLIF__false_svp;
-  SV *Math__BigFloat__UV_MIN_svp;
-  SV *Math__BigFloat__UV_MAX_svp;
-  SV *Math__BigFloat__IV_MIN_svp;
-  SV *Math__BigFloat__IV_MAX_svp;
   SV *MarpaX__ESLIF__Grammar__Properties_svp;
   SV *MarpaX__ESLIF__Grammar__Rule__Properties_svp;
   SV *MarpaX__ESLIF__Grammar__Symbol__Properties_svp;
@@ -2784,63 +2780,6 @@ static inline short marpaESLIFPerl_JSONDecodeNumberAction(void *userDatavp, char
   svp = marpaESLIFPerl_call_actionp(aTHX_ constantsp->MarpaX__ESLIF__Math__BigFloat_svp, "new", listp, NULL /* MarpaX_ESLIF_Valuep */, 0 /* evalb */, 0 /* evalSilentb */);
   av_undef(listp);
 
-  svisintp = marpaESLIFPerl_call_actionp(aTHX_ svp, "is_int", NULL /* listp */, NULL /* MarpaX_ESLIF_Valuep */, 0 /* evalb */, 0 /* evalSilentb */);
-  isintb = SvTRUE(svisintp) ? 1 : 0;
-  MARPAESLIFPERL_REFCNT_DEC(svisintp);
-  if (isintb) {
-    /* It is an integer - is it signed ? */
-    svnegp = marpaESLIFPerl_call_actionp(aTHX_ svp, "is_neg", NULL /* listp */, NULL /* MarpaX_ESLIF_Valuep */, 0 /* evalb */, 0 /* evalSilentb */);
-    isnegb = SvTRUE(svnegp) ? 1 : 0;
-    MARPAESLIFPERL_REFCNT_DEC(svnegp);
-    if (isnegb) {
-      /* Negative integer number */
-      listp = newAV();
-      av_push(listp, newSVsv(constantsp->Math__BigFloat__IV_MIN_svp));
-      svgep = marpaESLIFPerl_call_actionp(aTHX_ svp, "bcmp", listp, NULL /* MarpaX_ESLIF_Valuep */, 0 /* evalb */, 0 /* evalSilentb */);
-      av_undef(listp);
-      isgeb = (SvIV(svgep) >= 0) ? 1 : 0;
-      MARPAESLIFPERL_REFCNT_DEC(svgep);
-      if (isgeb) {
-        /* IV_MIN <= x */
-        listp = newAV();
-        av_push(listp, newSVsv(constantsp->Math__BigFloat__IV_MAX_svp));
-        svlep = marpaESLIFPerl_call_actionp(aTHX_ svp, "bcmp", listp, NULL /* MarpaX_ESLIF_Valuep */, 0 /* evalb */, 0 /* evalSilentb */);
-        av_undef(listp);
-	isleb = (SvIV(svlep) <= 0) ? 1 : 0;
-	MARPAESLIFPERL_REFCNT_DEC(svlep);
-      }
-    } else {
-      /* Positive integer number */
-      listp = newAV();
-      av_push(listp, newSVsv(constantsp->Math__BigFloat__UV_MIN_svp));
-      svgep = marpaESLIFPerl_call_actionp(aTHX_ svp, "bcmp", listp, NULL /* MarpaX_ESLIF_Valuep */, 0 /* evalb */, 0 /* evalSilentb */);
-      av_undef(listp);
-      isgeb = (SvIV(svgep) >= 0) ? 1 : 0;
-      MARPAESLIFPERL_REFCNT_DEC(svgep);
-      if (isgeb) {
-        /* UV_MIN <= x */
-        listp = newAV();
-        av_push(listp, newSVsv(constantsp->Math__BigFloat__UV_MAX_svp));
-        svlep = marpaESLIFPerl_call_actionp(aTHX_ svp, "bcmp", listp, NULL /* MarpaX_ESLIF_Valuep */, 0 /* evalb */, 0 /* evalSilentb */);
-        av_undef(listp);
-	isleb = (SvIV(svlep) <= 0) ? 1 : 0;
-	MARPAESLIFPERL_REFCNT_DEC(svlep);
-      }
-    }
-  }
-
-  if (isgeb && isleb) {
-    /* We can safely numify */
-    listp = newAV();
-    av_push(listp, newSVsv(svp));
-    svnumifyp = marpaESLIFPerl_call_actionp(aTHX_ constantsp->MarpaX__ESLIF__Math__BigFloat_svp, "numify", listp, NULL /* MarpaX_ESLIF_Valuep */, 0 /* evalb */, 0 /* evalSilentb */);
-    av_undef(listp);
-
-    MARPAESLIFPERL_REFCNT_DEC(svp);
-    svp = svnumifyp;
-  }
-
-  /* If number is an int we try to fit in in an IV or an UV */
   marpaESLIFValueResultp->type               = MARPAESLIF_VALUE_TYPE_PTR;
   marpaESLIFValueResultp->contextp           = MARPAESLIFPERL_CONTEXT;
   marpaESLIFValueResultp->representationp    = marpaESLIFPerl_representationb;
@@ -2995,27 +2934,6 @@ static inline void marpaESLIFPerl_constants_initv(pTHX_ MarpaX_ESLIF_constants_t
   constantsp->MarpaX__ESLIF__Grammar__Properties_svp = newSVpvn("MarpaX::ESLIF::Grammar::Properties", strlen("MarpaX::ESLIF::Grammar::Properties"));
   constantsp->MarpaX__ESLIF__Grammar__Rule__Properties_svp    = newSVpvn("MarpaX::ESLIF::Grammar::Rule::Properties", strlen("MarpaX::ESLIF::Grammar::Rule::Properties"));
   constantsp->MarpaX__ESLIF__Grammar__Symbol__Properties_svp  = newSVpvn("MarpaX::ESLIF::Grammar::Symbol::Properties", strlen("MarpaX::ESLIF::Grammar::Symbol::Properties"));
-  {
-    AV *avp = newAV();
-    av_push(avp, newSVuv(UV_MIN));
-    constantsp->Math__BigFloat__UV_MIN_svp = marpaESLIFPerl_call_actionp(aTHX_ constantsp->MarpaX__ESLIF__Math__BigFloat_svp, "new", avp, NULL /* MarpaX_ESLIF_Valuep */, 0 /* evalb */, 0 /* evalSilentb */);
-    av_undef(avp);
-
-    avp = newAV();
-    av_push(avp, newSVuv(UV_MAX));
-    constantsp->Math__BigFloat__UV_MAX_svp = marpaESLIFPerl_call_actionp(aTHX_ constantsp->MarpaX__ESLIF__Math__BigFloat_svp, "new", avp, NULL /* MarpaX_ESLIF_Valuep */, 0 /* evalb */, 0 /* evalSilentb */);
-    av_undef(avp);
-
-    avp = newAV();
-    av_push(avp, newSVuv(IV_MIN));
-    constantsp->Math__BigFloat__IV_MIN_svp = marpaESLIFPerl_call_actionp(aTHX_ constantsp->MarpaX__ESLIF__Math__BigFloat_svp, "new", avp, NULL /* MarpaX_ESLIF_Valuep */, 0 /* evalb */, 0 /* evalSilentb */);
-    av_undef(avp);
-
-    avp = newAV();
-    av_push(avp, newSVuv(IV_MAX));
-    constantsp->Math__BigFloat__IV_MAX_svp = marpaESLIFPerl_call_actionp(aTHX_ constantsp->MarpaX__ESLIF__Math__BigFloat_svp, "new", avp, NULL /* MarpaX_ESLIF_Valuep */, 0 /* evalb */, 0 /* evalSilentb */);
-    av_undef(avp);
-  }
 }
 
 /*****************************************************************************/
@@ -3033,10 +2951,6 @@ static inline void marpaESLIFPerl_constants_disposev(pTHX_ MarpaX_ESLIF_constant
   */
   MARPAESLIFPERL_REFCNT_DEC(constantsp->MarpaX__ESLIF__true_svp);
   MARPAESLIFPERL_REFCNT_DEC(constantsp->MarpaX__ESLIF__false_svp);
-  MARPAESLIFPERL_REFCNT_DEC(constantsp->Math__BigFloat__UV_MIN_svp);
-  MARPAESLIFPERL_REFCNT_DEC(constantsp->Math__BigFloat__UV_MAX_svp);
-  MARPAESLIFPERL_REFCNT_DEC(constantsp->Math__BigFloat__IV_MIN_svp);
-  MARPAESLIFPERL_REFCNT_DEC(constantsp->Math__BigFloat__IV_MAX_svp);
   MARPAESLIFPERL_REFCNT_DEC(constantsp->MarpaX__ESLIF__Grammar__Properties_svp);
   MARPAESLIFPERL_REFCNT_DEC(constantsp->MarpaX__ESLIF__Grammar__Rule__Properties_svp);
   MARPAESLIFPERL_REFCNT_DEC(constantsp->MarpaX__ESLIF__Grammar__Symbol__Properties_svp);
