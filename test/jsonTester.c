@@ -44,7 +44,7 @@ int main(int argc, char **argv) {
     goto err;
   }
 
-  marpaESLIFGrammarJsonp = marpaESLIFJSON_decode_newp(marpaESLIFp, 1 /* strictb */);
+  marpaESLIFGrammarJsonp = marpaESLIFJSON_decode_newp(marpaESLIFp, MARPAESLIF_JSONTESTER_STRICT);
   if (marpaESLIFGrammarJsonp == NULL) {
     goto err;
   }
