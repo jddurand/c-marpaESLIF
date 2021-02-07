@@ -1831,6 +1831,72 @@ Returns a true value on success, a false value on failure.
 
 The destructor of a marpaESLIFRecognizer instance C<marpaESLIFRecognizerp> instance. No-op if C<marpaESLIFRecognizerp> is C<NULL>.
 
+=head3 C<marpaESLIFJSON_encode_newp>
+
+  marpaESLIFGrammar_t *marpaESLIFJSON_encode_newp(marpaESLIF_t *marpaESLIFp, short strictb);
+
+ESLIF embeds a JSON grammar encoder, where C<strictb> says it is strictly the grammar as per L<JSON Specification|http://json.org>. The non strict mode enables:
+
+=over
+
+=item Infinity and NaN
+
+=back
+
+=head3 C<marpaESLIFJSON_encodeb>
+
+  short  marpaESLIFJSON_encodeb(marpaESLIFGrammar_t *marpaESLIFGrammarJSONp, marpaESLIFValueResult_t *marpaESLIFValueResultp, marpaESLIFValueOption_t *marpaESLIFValueOptionp);
+
+=head3 C<marpaESLIFJSON_decode_newp>
+
+  marpaESLIFGrammar_t *marpaESLIFJSON_decode_newp(marpaESLIF_t *marpaESLIFp, short strictb);
+
+ESLIF embeds a JSON grammar decoder, where C<strictb> says it is strictly the grammar as per L<JSON Specification|http://json.org>. The non strict mode enables:
+
+=over
+
+=item extras comma separators
+
+=item Perl and C++ comments
+
+=item Infinity and NaN
+
+=item Leading zeroes in number
+
+=back
+
+=head3 C<marpaESLIFJSON_decodeb>
+
+  typedef short (*marpaESLIFJSONProposalAction_t)(void *userDatavp, char *strings, size_t stringl, marpaESLIFValueResult_t *marpaESLIFValueResultp);
+
+  typedef struct marpaESLIFJSONDecodeOption {
+    short                                        disallowDupkeysb;                /* Do not allow duplicate key in an object */
+    size_t                                       maxDepthl;                       /* Maximum depth - 0 if no maximum */
+    short                                        noReplacementCharacterb;         /* No replacement character for invalid UTF-16 surrogates */
+    marpaESLIFJSONProposalAction_t               positiveInfinityActionp;         /* +Infinity action */
+    marpaESLIFJSONProposalAction_t               negativeInfinityActionp;         /* -Infinity action */
+    marpaESLIFJSONProposalAction_t               positiveNanActionp;              /* +Nan action */
+    marpaESLIFJSONProposalAction_t               negativeNanActionp;              /* -Nan action */
+    marpaESLIFJSONProposalAction_t               numberActionp;                   /* Number action */
+  } marpaESLIFJSONDecodeOption_t;
+
+  short marpaESLIFJSON_decodeb(marpaESLIFGrammar_t *marpaESLIFGrammarJSONp,
+                               marpaESLIFJSONDecodeOption_t *marpaESLIFJSONDecodeOptionp,
+                               marpaESLIFRecognizerOption_t *marpaESLIFRecognizerOptionp,
+                                marpaESLIFValueOption_t *marpaESLIFValueOptionp);
+
+If set, the proposal callbacks will be called with a proposal, that the caller can safely modify on the stack. The proposal may be of type C<MARPAESLIF_VALUE_TYPE_UNDEF> only when the underlying system do not support or failed to parse:
+
+=over
+
+=item Infinity
+
+=item Nan
+
+=item Number
+
+=back
+
 =head2 ESLIFValue
 
 At any point in the parsing lifetime it is possible to call for parse tree values. Traditionnaly this is happening when all data has been scanned, or when the parsing has exhausted.
