@@ -455,16 +455,12 @@ typedef struct marpaESLIFSymbolProperty {
   marpaESLIFAction_t          *ifActionp;              /* Symbol recognizer if action */
 } marpaESLIFSymbolProperty_t;
 
-/* For any JSON number (including +/-Infinity, +/-Nan):
-   - If marpaESLIF fails to support this floating point value, it will default to the UNDEF type
-   - If a corresponding callback is set, this will be called with:
-   * the input string (pointer and size)
-   * the proposal (can be the UNDEF type) that the user can overwrite
-
-   For a finite number, marpaESLIF will try ONLY with the DOUBLE type if it can handle correctly overflow or underflow.
-   For +/-Infinity, if marpaESLIF has support for them, it will use it in a FLOAT type.
-   For +/-NaN, if marpaESLIF has NaN support, it will use it in a FLOAT type. Signed NaN is not explicitely supported.
-*/
+/* Whenever marpaESLIF fails to parse exactly a JSON number it will call the proposal callback if defined. */
+/* It will always propose either UNDEF or a LONG DOUBLE if available, else a DOUBLE.                       */
+/* The user can safely overwrite the proposal that is in the stack.                                        */
+/* Note that a signed integer number is always explicitly converted to a signe double 0 with no proposal.  */
+/*           +/-Infinity and +/-NaN always goes to a FLOAT with no proposal.                               */
+/*           marpaESLIF tries hard to use a non-floating number, calls the proposal in any other case.     */
 typedef short (*marpaESLIFJSONProposalAction_t)(void *userDatavp, char *strings, size_t stringl, marpaESLIFValueResult_t *marpaESLIFValueResultp);
 
 typedef struct marpaESLIFJSONDecodeOption {
