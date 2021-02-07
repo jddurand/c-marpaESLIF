@@ -9047,7 +9047,6 @@ static inline short _marpaESLIFRecognizer_push_grammar_eventsb(marpaESLIFRecogni
   char                         *events;
   size_t                        i;
   marpaESLIFEventType_t         type;
-  marpaESLIFValueResult_t       marpaESLIFValueResult;
   short                         continue_last_discard_loopb;
   size_t                        discardl;
 
@@ -9744,9 +9743,7 @@ static inline short _marpaESLIFRecognizer_isCanContinueb(marpaESLIFRecognizer_t 
   short                eofb           = -1; /* To detect if it was fetched */
   short                isCanContinueb;
   size_t               inputl;
-  short                canContinueb;
   short                isPseudoTerminalExpectedb;
-  marpaESLIF_stream_t *marpaESLIF_streamp;
   short                rcb;
 
   MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_INC;
