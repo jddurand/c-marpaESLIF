@@ -10,6 +10,10 @@
 /* ===================================== */
 /* long long detection using only macros */
 /* ===================================== */
+/* It is recommended to use the macro    */
+/* MARPAESLIF_LONG_LONG if               */
+/* MARPAESLIF_HAVE_LONG_LONG is defined. */
+/* ===================================== */
 #if defined(LLONG_MAX) && defined(LLONG_MIN)
 #  define MARPAESLIF_HAVE_LONG_LONG
 #  define MARPAESLIF_LONG_LONG long long

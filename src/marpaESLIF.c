@@ -15040,7 +15040,7 @@ static short _marpaESLIFRecognizer_concat_valueResultCallbackb(void *userDatavp,
             VALUERESULTCALLBACK_TRACEF(genericLoggerp, marpaESLIF_stringGeneratorp, "\"%ld\"", (long) marpaESLIFValueResultp->u.p.p);
 #    else
 #      ifdef MARPAESLIF_HAVE_LONG_LONG
-            VALUERESULTCALLBACK_TRACEF(genericLoggerp, marpaESLIF_stringGeneratorp, "\"" MARPAESLIF_LONG_LONG_FMT "\"", (unsigned long long) marpaESLIFValueResultp->u.p.p);
+            VALUERESULTCALLBACK_TRACEF(genericLoggerp, marpaESLIF_stringGeneratorp, "\"" MARPAESLIF_LONG_LONG_FMT "\"", (unsigned MARPAESLIF_LONG_LONG) marpaESLIFValueResultp->u.p.p);
 #      else
             /* This may generate a warning */
             VALUERESULTCALLBACK_TRACEF(genericLoggerp, marpaESLIF_stringGeneratorp, "\"%ld\"", (long) marpaESLIFValueResultp->u.p.p);
@@ -15059,7 +15059,7 @@ static short _marpaESLIFRecognizer_concat_valueResultCallbackb(void *userDatavp,
             VALUERESULTCALLBACK_TRACEF(genericLoggerp, marpaESLIF_stringGeneratorp, "%ld", (long) marpaESLIFValueResultp->u.p.p);
 #    else
 #      ifdef MARPAESLIF_HAVE_LONG_LONG
-            VALUERESULTCALLBACK_TRACEF(genericLoggerp, marpaESLIF_stringGeneratorp, MARPAESLIF_LONG_LONG_FMT, (unsigned long long) marpaESLIFValueResultp->u.p.p);
+            VALUERESULTCALLBACK_TRACEF(genericLoggerp, marpaESLIF_stringGeneratorp, MARPAESLIF_LONG_LONG_FMT, (unsigned MARPAESLIF_LONG_LONG) marpaESLIFValueResultp->u.p.p);
 #      else
             /* This may generate a warning */
             VALUERESULTCALLBACK_TRACEF(genericLoggerp, marpaESLIF_stringGeneratorp, "%ld", (long) marpaESLIFValueResultp->u.p.p);

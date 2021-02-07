@@ -921,7 +921,7 @@ static short _marpaESLIFJSON_numberb(void *userDatavp, marpaESLIFValue_t *marpaE
   char                               *arrayp;
   size_t                              arrayl;
 #if defined(MARPAESLIF_HAVE_LONG_LONG) && defined(C_STRTOLL)
-  long long                           valuell;
+  MARPAESLIF_LONG_LONG                valuell;
 #else
   long                                valuel;
 #endif
