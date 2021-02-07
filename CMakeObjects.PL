@@ -657,6 +657,30 @@ typedef unsigned int marpaESLIF_uint32_t;
 
 #ifdef HAVE_STRTOLL
 #  define C_STRTOLL strtoll
+#else
+#  ifdef HAVE__STRTOLL
+#    define C_STRTOLL _strtoll
+#  else
+#    ifdef HAVE___STRTOLL
+#      define C_STRTOLL __strtoll
+#    else
+#      ifdef HAVE_STRTOI64
+#        define C_STRTOLL strtoi64
+#      else
+#        ifdef HAVE__STRTOI64
+#          define C_STRTOLL _strtoi64
+#        else
+#          ifdef HAVE___STRTOI64
+#            define C_STRTOLL __strtoi64
+#          endif
+#        endif
+#      endif
+#    endif
+#  endif
+#endif
+
+#ifdef HAVE_STRTOLL
+#  define C_STRTOLL strtoll
 #endif
 
 #endif /* MARPAESLIF_CONFIG_WRAPPER_H */
