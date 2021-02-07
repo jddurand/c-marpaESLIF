@@ -1192,6 +1192,8 @@ static short _marpaESLIFJSON_numberb(void *userDatavp, marpaESLIFValue_t *marpaE
       isFloatb = 1;
     } else {
       /* decimall is > 0, exponentl is > 0 and unsigned automatic conversion will not change its value */
+      /* I may change to a temporary variable of another type or use compiler's #pragma because        */
+      /* sometimes there is a warning.                                                                 */
       if (exponentl < decimall) {
         isFloatb = 1;
       } else {
@@ -1290,6 +1292,9 @@ static short _marpaESLIFJSON_numberb(void *userDatavp, marpaESLIFValue_t *marpaE
       l = exponentp - numbers;
       memcpy(p, numbers, l);
       q = p + l;
+      /* exponentl is positive by definition here.                                                     */
+      /* I may change to a temporary variable of another type or use compiler's #pragma because        */
+      /* sometimes there is a warning.                                                                 */
       for (l = 0; l < exponentl; l++, q++) {
         *q = '0';
       }
