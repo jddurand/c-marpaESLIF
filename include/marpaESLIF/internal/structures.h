@@ -264,6 +264,13 @@ struct marpaESLIF {
   struct lconv           *lconvp;
 #endif
   const uint8_t          *tablesp;                     /* Output of pcre2_maketables */
+#ifdef MARPAESLIF_HAVE_LONG_LONG
+  size_t                  llongmincharsl;              /* Number of digits of LLONG_MIN */
+  size_t                  llongmaxcharsl;              /* Number of digits of LLONG_MAX */
+#else
+  size_t                  longmincharsl;               /* Number of digits of LONG_MIN */
+  size_t                  longmaxcharsl;               /* Number of digits of LONG_MAX */
+#endif
 };
 
 struct marpaESLIFGrammar {
@@ -284,6 +291,7 @@ struct marpaESLIFGrammar {
   short                      hasPseudoTerminalb; /* Any pseudo terminal in the grammar ? */
   short                      hasEofPseudoTerminalb; /* Any :eof terminal in the grammar ? */
   short                      hasEolPseudoTerminalb; /* Any :eol terminal in the grammar ? */
+  short                      jsonStrictb;        /* For embedded JSON grammar, remember if this is strict JSON or not */
 };
 
 struct marpaESLIF_meta {
