@@ -655,6 +655,10 @@ typedef unsigned int marpaESLIF_uint32_t;
 #  endif
 #endif
 
+#ifdef HAVE_STRTOLL
+#  define C_STRTOLL strtoll
+#endif
+
 #endif /* MARPAESLIF_CONFIG_WRAPPER_H */
 CONFIG
     close($fh) || warn "Cannot close $output, $!";
