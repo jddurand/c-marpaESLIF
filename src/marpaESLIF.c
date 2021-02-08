@@ -16965,12 +16965,14 @@ static short _marpaESLIFRecognizer_value_validb(marpaESLIFRecognizer_t *marpaESL
           errno = EINVAL;
           goto err;
         }
-        if (marpaESLIFValueResultWorkp->u.r.sizel <= 0) {
+        if (MARPAESLIF_UNLIKELY(marpaESLIFValueResultWorkp->u.r.sizel <= 0)) {
           MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "MARPAESLIF_VALUE_TYPE_ROW: pointer is set but size is %ld", (unsigned long) marpaESLIFValueResultWorkp->u.r.sizel);
+          goto err;
         }
       } else {
-        if (marpaESLIFValueResultWorkp->u.r.sizel > 0) {
+        if (MARPAESLIF_UNLIKELY(marpaESLIFValueResultWorkp->u.r.sizel > 0)) {
           MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "MARPAESLIF_VALUE_TYPE_ROW: pointer is not set but size is %ld", (unsigned long) marpaESLIFValueResultWorkp->u.r.sizel);
+          goto err;
         }
       }
 
@@ -16993,12 +16995,14 @@ static short _marpaESLIFRecognizer_value_validb(marpaESLIFRecognizer_t *marpaESL
           errno = EINVAL;
           goto err;
         }
-        if (marpaESLIFValueResultWorkp->u.t.sizel <= 0) {
+        if (MARPAESLIF_UNLIKELY(marpaESLIFValueResultWorkp->u.t.sizel <= 0)) {
           MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "MARPAESLIF_VALUE_TYPE_TABLE: pointer is set but size is %ld", (unsigned long) marpaESLIFValueResultWorkp->u.t.sizel);
+          goto err;
         }
       } else {
-        if (marpaESLIFValueResultWorkp->u.t.sizel > 0) {
+        if (MARPAESLIF_UNLIKELY(marpaESLIFValueResultWorkp->u.t.sizel > 0)) {
           MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "MARPAESLIF_VALUE_TYPE_TABLE: pointer is not set but size is %ld", (unsigned long) marpaESLIFValueResultWorkp->u.t.sizel);
+          goto err;
         }
       }
 
