@@ -465,7 +465,7 @@ typedef struct marpaESLIFSymbolProperty {
 /* Note that a signed integer number is always explicitly converted to a signe double 0 with no proposal.  */
 /*           +/-Infinity and +/-NaN always goes to a FLOAT with no proposal.                               */
 /*           marpaESLIF tries hard to use a non-floating number, calls the proposal in any other case.     */
-typedef short (*marpaESLIFJSONProposalAction_t)(void *userDatavp, char *strings, size_t stringl, marpaESLIFValueResult_t *marpaESLIFValueResultp);
+typedef short (*marpaESLIFJSONProposalAction_t)(void *userDatavp, char *strings, size_t stringl, marpaESLIFValueResult_t *marpaESLIFValueResultp, short confidenceb);
 
 typedef struct marpaESLIFJSONDecodeOption {
   short                                        disallowDupkeysb;                /* Do not allow duplicate key in an object */

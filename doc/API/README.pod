@@ -1867,7 +1867,7 @@ ESLIF embeds a JSON grammar decoder, where C<strictb> says it is strictly the gr
 
 =head3 C<marpaESLIFJSON_decodeb>
 
-  typedef short (*marpaESLIFJSONProposalAction_t)(void *userDatavp, char *strings, size_t stringl, marpaESLIFValueResult_t *marpaESLIFValueResultp);
+  typedef short (*marpaESLIFJSONProposalAction_t)(void *userDatavp, char *strings, size_t stringl, marpaESLIFValueResult_t *marpaESLIFValueResultp, short confidenceb);
 
   typedef struct marpaESLIFJSONDecodeOption {
     short                                        disallowDupkeysb;                /* Do not allow duplicate key in an object */
@@ -1885,7 +1885,21 @@ ESLIF embeds a JSON grammar decoder, where C<strictb> says it is strictly the gr
                                marpaESLIFRecognizerOption_t *marpaESLIFRecognizerOptionp,
                                 marpaESLIFValueOption_t *marpaESLIFValueOptionp);
 
-If set, the proposal callbacks will be called with a proposal, that the caller can safely modify on the stack. The proposal may be of type C<MARPAESLIF_VALUE_TYPE_UNDEF> only when the underlying system do not support or failed to parse:
+Concerning numbers, since every host might want to have its own representation, every proposal callback that is not C<NULL> will be called. The proposal will be in the C<marpaESLIFValueResultp> pointer, guaranteed to not be C<NULL>, and the caller can safely modify it. The C<confidenceb> will be a true value if ESLIF is sure it represents correctly the number, a false value otherwise.
+
+For infinity and NaN callbacks, when C<confidenceb> is a true value, C<marpaESLIFValueResultp> type is always C<MARPAESLIF_VALUE_TYPE_FLOAT>, else it is C<MARPAESLIF_VALUE_TYPE_UNDEF>.
+
+For other numbers, C<confidenceb> is a true value C<marpaESLIFValueResultp> type is an integer type, or the double type and when the double value is exactly 0. Else this will be a double type, or C<MARPAESLIF_VALUE_TYPE_UNDEF>.
+
+In general it is safe to leave untouched the C<marpaESLIFValueResultp> if C<confidenceb> is a true value, else it is recommended to change it.
+
+=over
+
+=item FLOAT
+
+The float representation of
+
+=back
 
 =over
 

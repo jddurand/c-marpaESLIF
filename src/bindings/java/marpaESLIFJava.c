@@ -1168,7 +1168,7 @@ static jstring marpaESLIFJava_marpaESLIFStringToJavap(JNIEnv *envp, marpaESLIFSt
 static jstring marpaESLIFJava_marpaESLIFASCIIToJavap(JNIEnv *envp, char *asciis);
 static jstring marpaESLIFJava_marpaESLIFActionToJavap(JNIEnv *envp, marpaESLIFAction_t *actionp);
 static short marpaESLIFJava_stack_setb(JNIEnv *envp, marpaESLIFValue_t *marpaESLIFValuep, short resulti, jobject objectp, marpaESLIFValueResult_t *marpaESLIFValueResultOutputp);
-static short marpaESLIFJava_JSONDecodeNumberActionb(void *userDatavp, char *strings, size_t stringl, marpaESLIFValueResult_t *marpaESLIFValueResultp);
+static short marpaESLIFJava_JSONDecodeNumberActionb(void *userDatavp, char *strings, size_t stringl, marpaESLIFValueResult_t *marpaESLIFValueResultp, short confidenceb);
 static void  marpaESLIFJava_JSONDecodeFreeCallbackv(void *userDatavp, marpaESLIFValueResult_t *marpaESLIFValueResultp);
 
 /* --------------- */
@@ -7071,7 +7071,7 @@ JNIEXPORT void JNICALL Java_org_parser_marpa_ESLIFJSONDecoder_jniFree(JNIEnv *en
 }
 
 /*****************************************************************************/
-static short marpaESLIFJava_JSONDecodeNumberActionb(void *userDatavp, char *strings, size_t stringl, marpaESLIFValueResult_t *marpaESLIFValueResultp)
+static short marpaESLIFJava_JSONDecodeNumberActionb(void *userDatavp, char *strings, size_t stringl, marpaESLIFValueResult_t *marpaESLIFValueResultp, short confidenceb)
 /*****************************************************************************/
 {
   /* We always use Math::BigFloat->new(strings) */
@@ -7081,6 +7081,10 @@ static short marpaESLIFJava_JSONDecodeNumberActionb(void *userDatavp, char *stri
   jstring                   numberp;
   jobject                   objectp;
   short                     rcb;
+
+  if (confidenceb) {
+    return 1;
+  }
 
   numberp = (*envp)->NewStringUTF(envp, (const char *) strings);
   if (numberp == NULL) {

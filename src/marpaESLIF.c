@@ -4214,9 +4214,11 @@ static inline marpaESLIF_t *_marpaESLIF_newp(marpaESLIFOption_t *marpaESLIFOptio
   if ((signbit(nanf) == 0) && (signbit(-nanf) != 0)) {
     marpaESLIFp->positivenanf                             = nanf;
     marpaESLIFp->negativenanf                             = -nanf;
+    marpaESLIFp->nanconfidenceb                           = 1;
   } else if ((signbit(-nanf) == 0) && (signbit(+nanf) != 0)) {
     marpaESLIFp->positivenanf                             = -nanf;
     marpaESLIFp->negativenanf                             = nanf;
+    marpaESLIFp->nanconfidenceb                           = 1;
   } else {
     /* I believe this case should never happen, but who knows */
     _marpaESLIF_guessNanv(marpaESLIFp);
@@ -19113,10 +19115,12 @@ static inline void _marpaESLIF_guessNanv(marpaESLIF_t *marpaESLIFp)
 #ifdef C_COPYSIGNF
   marpaESLIFp->positivenanf                               = copysignf(nanf, positivef);
   marpaESLIFp->negativenanf                               = copysignf(nanf, negativef);
+  marpaESLIFp->nanconfidenceb                             = 1;
 #else /* C_COPYSIGNF */
 #  ifdef C_COPYSIGN
   marpaESLIFp->positivenanf                               = (float) copysign(nand, positived);
   marpaESLIFp->negativenanf                               = (float) copysign(nanf, negatived);
+  marpaESLIFp->nanconfidenceb                             = 1;
 #  else /* C_COPYSIGN */
   /* Bad luck. We can only cross fingers.                                                    */
 #    ifdef __GNUC__
@@ -19128,6 +19132,7 @@ static inline void _marpaESLIF_guessNanv(marpaESLIF_t *marpaESLIFp)
 #    endif
   marpaESLIFp->positivenanf                               = MARPAESLIF_NAN;
   marpaESLIFp->negativenanf                               = -MARPAESLIF_NAN;
+  marpaESLIFp->nanconfidenceb                             = 0;
 #  endif /* C_COPYSIGN */
 #endif /* C_COPYSIGNF */
 }

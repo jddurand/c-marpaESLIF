@@ -278,6 +278,7 @@ struct marpaESLIF {
 #ifdef MARPAESLIF_NAN
   float                   positivenanf;                /* +NaN */
   float                   negativenanf;                /* -NaN */
+  short                   nanconfidenceb;              /* 1 when ESLIF think that NaN representation is correct */
 #endif
 };
 
