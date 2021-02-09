@@ -4,5 +4,19 @@ IF (NOT MYPACKAGEBOOTSTRAP_DONE)
 ENDIF ()
 #
 # SET (MYPACKAGE_DEBUG TRUE)
-MYPACKAGESTART (cmake-utils 1 0 0)
+#
+MYPACKAGESTART (cmake_utils 1 0 0)
+
+#
+# Add a fake library that uses math
+#
+MYPACKAGELIBRARY(
+  ${CMAKE_CURRENT_SOURCE_DIR}/include/config.h.in
+  ${INCLUDE_OUTPUT_PATH}/test/internal/config.h
+  src/test.c)
+
+MYPACKAGEEXECUTABLE(executable bin/executable.c)
+
+MYPACKAGETESTEXECUTABLE(test_executable bin/executable.c)
+
 MYPACKAGEPRINTSETUP()
