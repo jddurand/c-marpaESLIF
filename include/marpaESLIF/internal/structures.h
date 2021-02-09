@@ -271,6 +271,14 @@ struct marpaESLIF {
   size_t                  longmincharsl;               /* Number of digits of LONG_MIN */
   size_t                  longmaxcharsl;               /* Number of digits of LONG_MAX */
 #endif
+#ifdef MARPAESLIF_INFINITY
+  float                   positiveinfinityf;           /* +Inf */
+  float                   negativeinfinityf;           /* -Inf */
+#endif
+#ifdef MARPAESLIF_NAN
+  float                   positivenanf;                /* +NaN */
+  float                   negativenanf;                /* -NaN */
+#endif
 };
 
 struct marpaESLIFGrammar {

@@ -1874,7 +1874,7 @@ static short _marpaESLIFJSON_positive_infinityb(void *userDatavp, marpaESLIFValu
   marpaESLIFValueResult.contextp        = NULL;
   marpaESLIFValueResult.representationp = NULL;
   marpaESLIFValueResult.type            = MARPAESLIF_VALUE_TYPE_FLOAT;
-  marpaESLIFValueResult.u.f             = MARPAESLIF_INFINITY;
+  marpaESLIFValueResult.u.f             = marpaESLIFValuep->marpaESLIFp->positiveinfinityf;
 #else
   marpaESLIFValueResult.contextp        = NULL;
   marpaESLIFValueResult.representationp = NULL;
@@ -1919,7 +1919,7 @@ static short _marpaESLIFJSON_negative_infinityb(void *userDatavp, marpaESLIFValu
   marpaESLIFValueResult.contextp        = NULL;
   marpaESLIFValueResult.representationp = NULL;
   marpaESLIFValueResult.type            = MARPAESLIF_VALUE_TYPE_FLOAT;
-  marpaESLIFValueResult.u.f             = -MARPAESLIF_INFINITY;
+  marpaESLIFValueResult.u.f             = marpaESLIFValuep->marpaESLIFp->negativeinfinityf;
 #else
   marpaESLIFValueResult.contextp        = NULL;
   marpaESLIFValueResult.representationp = NULL;
@@ -1964,7 +1964,7 @@ static short _marpaESLIFJSON_positive_nanb(void *userDatavp, marpaESLIFValue_t *
   marpaESLIFValueResult.contextp        = NULL;
   marpaESLIFValueResult.representationp = NULL;
   marpaESLIFValueResult.type            = MARPAESLIF_VALUE_TYPE_FLOAT;
-  marpaESLIFValueResult.u.f             = MARPAESLIF_NAN;
+  marpaESLIFValueResult.u.f             = marpaESLIFValuep->marpaESLIFp->positivenanf;
 #else
   marpaESLIFValueResult.contextp        = NULL;
   marpaESLIFValueResult.representationp = NULL;
@@ -2009,7 +2009,7 @@ static short _marpaESLIFJSON_negative_nanb(void *userDatavp, marpaESLIFValue_t *
   marpaESLIFValueResult.contextp        = NULL;
   marpaESLIFValueResult.representationp = NULL;
   marpaESLIFValueResult.type            = MARPAESLIF_VALUE_TYPE_FLOAT;
-  marpaESLIFValueResult.u.f             = MARPAESLIF_NAN;
+  marpaESLIFValueResult.u.f             = marpaESLIFValuep->marpaESLIFp->negativenanf;
 #else
   marpaESLIFValueResult.contextp        = NULL;
   marpaESLIFValueResult.representationp = NULL;
