@@ -16,16 +16,42 @@ static const int   MARPAESLIF_VERSION_MAJOR_STATIC = MARPAESLIF_VERSION_MAJOR;
 static const int   MARPAESLIF_VERSION_MINOR_STATIC = MARPAESLIF_VERSION_MINOR;
 static const int   MARPAESLIF_VERSION_PATCH_STATIC = MARPAESLIF_VERSION_PATCH;
 
-/* Let's emit a general warning about bad support of signed NaN */
 #ifndef C_SIGNBIT
+/* Based on npymath/_signbit.c */
 #  ifdef __GNUC__
-#    warning Import of signed NaN is not possible
+#    warning Simulating missing signbit()
 #  else
 #    ifdef _MSC_VER
-#      pragma message("Import of signed NaN is not possible")
-#    endif
+#      pragma message("Simulating missing signbit()")
+#   endif
 #  endif
-#endif
+#  define C_SIGNBIT _marpaESLIF_signbit_d
+static inline int _marpaESLIF_signbit_d(double x)
+{
+  union
+  {
+    double d;
+    short s[4];
+    int i[2];
+  } u;
+
+  u.d = x;
+
+#  if SIZEOF_INT == 4
+#    ifdef WORDS_BIGENDIAN
+  return u.i[0] < 0;
+#    else
+  return u.i[1] < 0;
+#    endif
+#  else  /* SIZEOF_INT */
+#    ifdef WORDS_BIGENDIAN
+  return u.s[0] < 0;
+#    else
+  return u.s[3] < 0;
+#    endif
+#  endif  /* SIZEOF_INT */
+}
+#endif /* C_SIGNBIT */
 
 #define MARPAESLIF_ENCODING_IS_UTF8(encodings, encodingl)               \
   (                                                                     \
@@ -4133,9 +4159,7 @@ static inline marpaESLIF_t *_marpaESLIF_newp(marpaESLIFOption_t *marpaESLIFOptio
   void                         *p                      = NULL;
   genericLogger_t              *genericLoggerInternalp = NULL;
 #ifdef MARPAESLIF_NAN
-#  ifdef C_SIGNBIT
   float                         nanf                   = MARPAESLIF_NAN;
-#  endif /*  C_SIGNBIT */
 #endif /*  MARPAESLIF_NAN */
   genericLogger_t              *genericLoggerp;
   genericLoggerLevel_t          genericLoggerLeveli;
@@ -4209,8 +4233,7 @@ static inline marpaESLIF_t *_marpaESLIF_newp(marpaESLIFOption_t *marpaESLIFOptio
   /* NaN is much more problematic than Inf: Inf is a truely signed thing, every math library */
   /* have to honour its sign. But NaN sign depends. On some system (0.0 / 0.0) for example   */
   /* will produce -NaN.                                                                      */
-  #ifdef C_SIGNBIT
-  /* Our preferred method.                                                                   */
+  /* Note that C_SIGNBIT is always defined, c.f. at the top of this file for the worst case. */
   if ((signbit(nanf) == 0) && (signbit(-nanf) != 0)) {
     marpaESLIFp->positivenanf                             = nanf;
     marpaESLIFp->negativenanf                             = -nanf;
@@ -4223,9 +4246,6 @@ static inline marpaESLIF_t *_marpaESLIF_newp(marpaESLIFOption_t *marpaESLIFOptio
     /* I believe this case should never happen, but who knows */
     _marpaESLIF_guessNanv(marpaESLIFp);
   }
-  #else /* C_SIGNBIT */
-    _marpaESLIF_guessNanv(marpaESLIFp);
-  #endif /* C_SIGNBIT */
 #endif /* MARPAESLIF_NAN */
 
   _marpaESLIF_stringGeneratorInitv(marpaESLIFp, &marpaESLIF_stringGenerator);
@@ -19123,13 +19143,6 @@ static inline void _marpaESLIF_guessNanv(marpaESLIF_t *marpaESLIFp)
   marpaESLIFp->nanconfidenceb                             = 1;
 #  else /* C_COPYSIGN */
   /* Bad luck. We can only cross fingers.                                                    */
-#    ifdef __GNUC__
-#      warning NaN sign is not guaranteed to be correct
-#    else
-#      ifdef _MSC_VER
-#        pragma message("NaN sign is not guaranteed to be correct")
-#      endif
-#    endif
   marpaESLIFp->positivenanf                               = MARPAESLIF_NAN;
   marpaESLIFp->negativenanf                               = -MARPAESLIF_NAN;
   marpaESLIFp->nanconfidenceb                             = 0;

@@ -258,5 +258,4 @@ static inline float __port_nan(void)
 #  endif
 #endif
 
-
 #endif /* MARPAESLIF_INTERNAL_MATH_H */

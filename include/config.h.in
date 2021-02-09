@@ -106,6 +106,7 @@ typedef @MARPAESLIF_UINT32_T@ marpaESLIF_uint32_t;
 #cmakedefine C__FPCLASS_NINF @C__FPCLASS_NINF@
 #cmakedefine C__FPCLASS_PINF @C__FPCLASS_PINF@
 
+#cmakedefine WORDS_BIGENDIAN @WORDS_BIGENDIAN@
 #cmakedefine C_SIGNBIT @C_SIGNBIT@
 #cmakedefine C_COPYSIGN @C_COPYSIGN@
 #cmakedefine C_COPYSIGNF @C_COPYSIGNF@
