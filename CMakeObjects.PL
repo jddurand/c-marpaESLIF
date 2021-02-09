@@ -679,8 +679,52 @@ typedef unsigned int marpaESLIF_uint32_t;
 #  endif
 #endif
 
-#ifdef HAVE_STRTOLL
-#  define C_STRTOLL strtoll
+#ifdef HAVE_SIGNBIT
+#  define C_SIGNBIT signbit
+#else
+#  ifdef HAVE__SIGNBIT
+#    define C_SIGNBIT _signbit
+#  else
+#    ifdef HAVE___SIGNBIT
+#      define C_SIGNBIT __signbit
+#    endif
+#  endif
+#endif
+
+#ifdef HAVE_COPYSIGN
+#  define C_COPYSIGN copysign
+#else
+#  ifdef HAVE__COPYSIGN
+#    define C_COPYSIGN _copysign
+#  else
+#    ifdef HAVE___COPYSIGN
+#      define C_COPYSIGN __copysign
+#    endif
+#  endif
+#endif
+
+#ifdef HAVE_COPYSIGNF
+#  define C_COPYSIGNF copysignf
+#else
+#  ifdef HAVE__COPYSIGNF
+#    define C_COPYSIGNF _copysignf
+#  else
+#    ifdef HAVE___COPYSIGNF
+#      define C_COPYSIGNF __copysignf
+#    endif
+#  endif
+#endif
+
+#ifdef HAVE_COPYSIGNL
+#  define C_COPYSIGNL copysignl
+#else
+#  ifdef HAVE__COPYSIGNL
+#    define C_COPYSIGNL _copysignl
+#  else
+#    ifdef HAVE___COPYSIGNL
+#      define C_COPYSIGNL __copysignl
+#    endif
+#  endif
 #endif
 
 #endif /* MARPAESLIF_CONFIG_WRAPPER_H */
