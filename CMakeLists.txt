@@ -45,6 +45,15 @@ MYPACKAGELIBRARY(
   src/marpaESLIF.c)
 
 #
+# m dependency
+#
+IF (CMAKE_MATH_LIBS)
+  FOREACH (_target ${PROJECT_NAME} ${PROJECT_NAME}_static)
+    TARGET_LINK_LIBRARIES(${_target} PUBLIC ${CMAKE_MATH_LIBS})
+  ENDFOREACH ()
+ENDIF ()
+
+#
 # Since we embed marpaESLIFLua with a #include directive, we have to propagate the
 # emebeded lua binding version, that are #define's usually generated with MYPACKAGELIBRARY()
 #
