@@ -4234,11 +4234,11 @@ static inline marpaESLIF_t *_marpaESLIF_newp(marpaESLIFOption_t *marpaESLIFOptio
   /* have to honour its sign. But NaN sign depends. On some system (0.0 / 0.0) for example   */
   /* will produce -NaN.                                                                      */
   /* Note that C_SIGNBIT is always defined, c.f. at the top of this file for the worst case. */
-  if ((signbit(nanf) == 0) && (signbit(-nanf) != 0)) {
+  if ((C_SIGNBIT(nanf) == 0) && (C_SIGNBIT(-nanf) != 0)) {
     marpaESLIFp->positivenanf                             = nanf;
     marpaESLIFp->negativenanf                             = -nanf;
     marpaESLIFp->nanconfidenceb                           = 1;
-  } else if ((signbit(-nanf) == 0) && (signbit(+nanf) != 0)) {
+  } else if ((C_SIGNBIT(-nanf) == 0) && (C_SIGNBIT(+nanf) != 0)) {
     marpaESLIFp->positivenanf                             = -nanf;
     marpaESLIFp->negativenanf                             = nanf;
     marpaESLIFp->nanconfidenceb                           = 1;
@@ -15013,7 +15013,7 @@ static short _marpaESLIFRecognizer_concat_valueResultCallbackb(void *userDatavp,
           } else if (MARPAESLIF_ISNAN(marpaESLIFValueResultp->u.f)) {
             if (displayNextAsJsonStringb) {
 #ifdef C_SIGNBIT
-              if (signbit(marpaESLIFValueResultp->u.f) == 0) {
+              if (C_SIGNBIT(marpaESLIFValueResultp->u.f) == 0) {
                 VALUERESULTCALLBACK_TRACE(genericLoggerp, marpaESLIF_stringGeneratorp, "\"+NaN\"");
               } else {
                 VALUERESULTCALLBACK_TRACE(genericLoggerp, marpaESLIF_stringGeneratorp, "\"-NaN\"");
@@ -15024,7 +15024,7 @@ static short _marpaESLIFRecognizer_concat_valueResultCallbackb(void *userDatavp,
 #endif
             } else {
 #ifdef C_SIGNBIT
-              if (signbit(marpaESLIFValueResultp->u.f) == 0) {
+              if (C_SIGNBIT(marpaESLIFValueResultp->u.f) == 0) {
                 VALUERESULTCALLBACK_TRACE(genericLoggerp, marpaESLIF_stringGeneratorp, "+NaN");
               } else {
                 VALUERESULTCALLBACK_TRACE(genericLoggerp, marpaESLIF_stringGeneratorp, "-NaN");
@@ -15076,7 +15076,7 @@ static short _marpaESLIFRecognizer_concat_valueResultCallbackb(void *userDatavp,
           } else if (MARPAESLIF_ISNAN(marpaESLIFValueResultp->u.d)) {
             if (displayNextAsJsonStringb) {
 #ifdef C_SIGNBIT
-              if (signbit(marpaESLIFValueResultp->u.d) == 0) {
+              if (C_SIGNBIT(marpaESLIFValueResultp->u.d) == 0) {
                 VALUERESULTCALLBACK_TRACE(genericLoggerp, marpaESLIF_stringGeneratorp, "\"+NaN\"");
               } else {
                 VALUERESULTCALLBACK_TRACE(genericLoggerp, marpaESLIF_stringGeneratorp, "\"-NaN\"");
@@ -15087,7 +15087,7 @@ static short _marpaESLIFRecognizer_concat_valueResultCallbackb(void *userDatavp,
 #endif
             } else {
 #ifdef C_SIGNBIT
-              if (signbit(marpaESLIFValueResultp->u.d) == 0) {
+              if (C_SIGNBIT(marpaESLIFValueResultp->u.d) == 0) {
                 VALUERESULTCALLBACK_TRACE(genericLoggerp, marpaESLIF_stringGeneratorp, "+NaN");
               } else {
                 VALUERESULTCALLBACK_TRACE(genericLoggerp, marpaESLIF_stringGeneratorp, "-NaN");
@@ -15385,7 +15385,7 @@ static short _marpaESLIFRecognizer_concat_valueResultCallbackb(void *userDatavp,
           } else if (MARPAESLIF_ISNAN(marpaESLIFValueResultp->u.ld)) {
             if (displayNextAsJsonStringb) {
 #ifdef C_SIGNBIT
-              if (signbit(marpaESLIFValueResultp->u.ld) == 0) {
+              if (C_SIGNBIT(marpaESLIFValueResultp->u.ld) == 0) {
                 VALUERESULTCALLBACK_TRACE(genericLoggerp, marpaESLIF_stringGeneratorp, "\"+NaN\"");
               } else {
                 VALUERESULTCALLBACK_TRACE(genericLoggerp, marpaESLIF_stringGeneratorp, "\"-NaN\"");
@@ -15396,7 +15396,7 @@ static short _marpaESLIFRecognizer_concat_valueResultCallbackb(void *userDatavp,
 #endif
             } else {
 #ifdef C_SIGNBIT
-              if (signbit(marpaESLIFValueResultp->u.ld) == 0) {
+              if (C_SIGNBIT(marpaESLIFValueResultp->u.ld) == 0) {
                 VALUERESULTCALLBACK_TRACE(genericLoggerp, marpaESLIF_stringGeneratorp, "+NaN");
               } else {
                 VALUERESULTCALLBACK_TRACE(genericLoggerp, marpaESLIF_stringGeneratorp, "-NaN");
@@ -19133,13 +19133,13 @@ static inline void _marpaESLIF_guessNanv(marpaESLIF_t *marpaESLIFp)
   double negatived              = -1.0;
 
 #ifdef C_COPYSIGNF
-  marpaESLIFp->positivenanf                               = copysignf(nanf, positivef);
-  marpaESLIFp->negativenanf                               = copysignf(nanf, negativef);
+  marpaESLIFp->positivenanf                               = C_COPYSIGNF(nanf, positivef);
+  marpaESLIFp->negativenanf                               = C_COPYSIGNF(nanf, negativef);
   marpaESLIFp->nanconfidenceb                             = 1;
 #else /* C_COPYSIGNF */
 #  ifdef C_COPYSIGN
-  marpaESLIFp->positivenanf                               = (float) copysign(nand, positived);
-  marpaESLIFp->negativenanf                               = (float) copysign(nanf, negatived);
+  marpaESLIFp->positivenanf                               = (float) C_COPYSIGN(nand, positived);
+  marpaESLIFp->negativenanf                               = (float) C_COPYSIGN(nanf, negatived);
   marpaESLIFp->nanconfidenceb                             = 1;
 #  else /* C_COPYSIGN */
   /* Bad luck. We can only cross fingers.                                                    */
