@@ -6496,6 +6496,14 @@ static short _marpaESLIF_bootstrap_G1_action_terminal_ruleb(void *userDatavp, ma
     }
   }
 
+  if (ifactionp != NULL) {
+    _marpaESLIF_action_freev(symbolp->ifActionp);
+    symbolp->ifActionp = _marpaESLIF_action_clonep(marpaESLIFp, ifactionp);
+    if (MARPAESLIF_UNLIKELY(symbolp->ifActionp == NULL)) {
+      goto err;
+    }
+  }
+
   if (eventInitializationp != NULL) {
     /* It is a non-sense to have an event initialization without pause information */
     if (MARPAESLIF_UNLIKELY(eventInitializationp->eventNames == NULL)) {
