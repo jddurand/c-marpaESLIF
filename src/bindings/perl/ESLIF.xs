@@ -20,7 +20,6 @@
 
 #include <marpaESLIF.h>
 #include <genericLogger.h>
-#include <genericStack.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <errno.h>
@@ -28,6 +27,73 @@
 #include <float.h>
 #include <limits.h>
 /* #include <valgrind/callgrind.h> */
+
+/* Perl wrapper around malloc, free, etc... are just painful for genericStack, which is */
+/* is implemented using header files, not a library... */
+#ifdef malloc
+#define current_malloc malloc
+#endif
+#ifdef calloc
+#define current_calloc calloc
+#endif
+#ifdef realloc
+#define current_realloc realloc
+#endif
+#ifdef free
+#define current_free free
+#endif
+#ifdef memset
+#define current_memset memset
+#endif
+#ifdef memcpy
+#define current_memcpy memcpy
+#endif
+#ifdef memmove
+#define current_memmove memmove
+#endif
+
+#undef malloc
+#undef calloc
+#undef realloc
+#undef free
+#undef memset
+#undef memcpy
+#undef memmove
+
+#include <genericStack.h>
+
+static inline void   marpaESLIFPerl_SYSTEM_FREE(void *p)                                         { free(p);                                      }
+static inline void   marpaESLIFPerl_GENERICSTACK_INIT(genericStack_t *stackp)                    { GENERICSTACK_INIT(stackp);                    }
+static inline void   marpaESLIFPerl_GENERICSTACK_RESET(genericStack_t *stackp)                   { GENERICSTACK_RESET(stackp);                   }
+static inline void   marpaESLIFPerl_GENERICSTACK_FREE(genericStack_t *stackp)                    { GENERICSTACK_FREE(stackp);                    }
+static inline void  *marpaESLIFPerl_GENERICSTACK_GET_PTR(genericStack_t *stackp, int indicei)    { return GENERICSTACK_GET_PTR(stackp, indicei); }
+static inline void  *marpaESLIFPerl_GENERICSTACK_POP_PTR(genericStack_t *stackp)                 { return GENERICSTACK_POP_PTR(stackp);          }
+static inline short  marpaESLIFPerl_GENERICSTACK_IS_PTR(genericStack_t *stackp, int indicei)     { return GENERICSTACK_IS_PTR(stackp, indicei);  }
+static inline void   marpaESLIFPerl_GENERICSTACK_PUSH_PTR(genericStack_t *stackp, void *p)       { GENERICSTACK_PUSH_PTR(stackp, p);             }
+static inline void   marpaESLIFPerl_GENERICSTACK_SET_PTR(genericStack_t *stackp, void *p, int i) { GENERICSTACK_SET_PTR(stackp, p, i);           }
+static inline void   marpaESLIFPerl_GENERICSTACK_SET_NA(genericStack_t *stackp, int indicei)     { GENERICSTACK_SET_NA(stackp, indicei);         }
+static inline short  marpaESLIFPerl_GENERICSTACK_ERROR(genericStack_t *stackp)                   { return GENERICSTACK_ERROR(stackp);            }
+static inline int    marpaESLIFPerl_GENERICSTACK_USED(genericStack_t *stackp)                    { return GENERICSTACK_USED(stackp);             }
+static inline int    marpaESLIFPerl_GENERICSTACK_SET_USED(genericStack_t *stackp, int usedi)     { return GENERICSTACK_USED(stackp) = usedi;     }
+
+#ifdef current_malloc
+#define malloc current_malloc
+#endif
+#ifdef current_calloc
+#define calloc current_calloc
+#endif
+#ifdef current_free
+#define free current_free
+#endif
+#ifdef current_memset
+#define memset current_memset
+#endif
+#ifdef current_memcpy
+#define memcpy current_memcpy
+#endif
+#ifdef current_memmove
+#define memmove current_memmove
+#endif
 
 #define MARPAESLIFPERL_CHUNKED_SIZE_UPPER(size, chunk) ((size) < (chunk)) ? (chunk) : ((1 + ((size) / (chunk))) * (chunk))
 
@@ -161,123 +227,6 @@ typedef struct marpaESLIFPerl_importContext {
 #  define MARPAESLIFPERL_SvREFCNT_inc(svp) SvREFCNT_inc_simple(svp)
 #else
 #  define MARPAESLIFPERL_SvREFCNT_inc(svp) SvREFCNT_inc(svp)
-#endif
-
-/* Perl wrapper around malloc, free, etc... are just painful for genericstack, which is */
-/* is implemented using header files, not a library... */
-#ifdef malloc
-#define current_malloc malloc
-#endif
-#ifdef calloc
-#define current_calloc calloc
-#endif
-#ifdef realloc
-#define current_realloc realloc
-#endif
-#ifdef free
-#define current_free free
-#endif
-#ifdef memset
-#define current_memset memset
-#endif
-#ifdef memcpy
-#define current_memcpy memcpy
-#endif
-#ifdef memmove
-#define current_memmove memmove
-#endif
-
-#undef malloc
-#undef calloc
-#undef realloc
-#undef free
-#undef memset
-#undef memcpy
-#undef memmove
-
-static inline void *marpaESLIFPerl_GENERICSTACK_NEW() {
-  genericStack_t *stackp;
-
-  GENERICSTACK_NEW(stackp);
-  if (MARPAESLIF_UNLIKELY(GENERICSTACK_ERROR(stackp))) {
-    croak("GENERICSTACK_NEW failure, %s", strerror(errno));
-  }
-
-  return stackp;
-}
-
-static inline void marpaESLIFPerl_SYSTEM_FREE(void *p) {
-  free(p);
-}
-
-static inline void marpaESLIFPerl_GENERICSTACK_INIT(genericStack_t *stackp) {
-  GENERICSTACK_INIT(stackp);
-  if (MARPAESLIF_UNLIKELY(GENERICSTACK_ERROR(stackp))) {
-    croak("GENERICSTACK_INIT failure, %s", strerror(errno));
-  }
-}
-
-static inline void marpaESLIFPerl_GENERICSTACK_RESET(genericStack_t *stackp) {
-  GENERICSTACK_RESET(stackp);
-}
-
-static inline void marpaESLIFPerl_GENERICSTACK_FREE(genericStack_t *stackp) {
-  GENERICSTACK_FREE(stackp);
-}
-
-static inline void *marpaESLIFPerl_GENERICSTACK_GET_PTR(genericStack_t *stackp, int indicei) {
-  return GENERICSTACK_GET_PTR(stackp, indicei);
-}
-
-static inline void *marpaESLIFPerl_GENERICSTACK_POP_PTR(genericStack_t *stackp) {
-  return GENERICSTACK_POP_PTR(stackp);
-}
-
-static inline short marpaESLIFPerl_GENERICSTACK_IS_PTR(genericStack_t *stackp, int indicei) {
-  return GENERICSTACK_IS_PTR(stackp, indicei);
-}
-
-static inline void marpaESLIFPerl_GENERICSTACK_PUSH_PTR(genericStack_t *stackp, void *p) {
-  GENERICSTACK_PUSH_PTR(stackp, p);
-}
-
-static inline void marpaESLIFPerl_GENERICSTACK_SET_PTR(genericStack_t *stackp, void *p, int i) {
-  GENERICSTACK_SET_PTR(stackp, p, i);
-}
-
-static inline void marpaESLIFPerl_GENERICSTACK_SET_NA(genericStack_t *stackp, int indicei) {
-  GENERICSTACK_SET_NA(stackp, indicei);
-}
-
-static inline short marpaESLIFPerl_GENERICSTACK_ERROR(genericStack_t *stackp) {
-  return GENERICSTACK_ERROR(stackp);
-}
-
-static inline int marpaESLIFPerl_GENERICSTACK_USED(genericStack_t *stackp) {
-  return GENERICSTACK_USED(stackp);
-}
-
-static inline int marpaESLIFPerl_GENERICSTACK_SET_USED(genericStack_t *stackp, int usedi) {
-  return GENERICSTACK_USED(stackp) = usedi;
-}
-
-#ifdef current_malloc
-#define malloc current_malloc
-#endif
-#ifdef current_calloc
-#define calloc current_calloc
-#endif
-#ifdef current_free
-#define free current_free
-#endif
-#ifdef current_memset
-#define memset current_memset
-#endif
-#ifdef current_memcpy
-#define memcpy current_memcpy
-#endif
-#ifdef current_memmove
-#define memmove current_memmove
 #endif
 
 /* ESLIF context */
@@ -2624,7 +2573,16 @@ static inline void marpaESLIFPerl_stack_setv(pTHX_ marpaESLIF_t *marpaESLIFp, ma
 
   /* We maintain in parallel a marpaESLIFValueResult and an SV stacks */
   marpaESLIFPerl_GENERICSTACK_INIT(marpaESLIFValueResultStackp);
+  if (MARPAESLIF_UNLIKELY(marpaESLIFPerl_GENERICSTACK_ERROR(marpaESLIFValueResultStackp))) {
+    int save_errno = errno;
+    MARPAESLIFPERL_CROAKF("GENERICSTACK_INIT() failure, %s", strerror(save_errno));
+  }
+
   marpaESLIFPerl_GENERICSTACK_INIT(svStackp);
+  if (MARPAESLIF_UNLIKELY(marpaESLIFPerl_GENERICSTACK_ERROR(svStackp))) {
+    int save_errno = errno;
+    MARPAESLIFPERL_CROAKF("GENERICSTACK_INIT() failure, %s", strerror(save_errno));
+  }
 
   marpaESLIFPerl_GENERICSTACK_PUSH_PTR(marpaESLIFValueResultStackp, &marpaESLIFValueResult);
   if (MARPAESLIF_UNLIKELY(marpaESLIFPerl_GENERICSTACK_ERROR(marpaESLIFValueResultStackp))) {
