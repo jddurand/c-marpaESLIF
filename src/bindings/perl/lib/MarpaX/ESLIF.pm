@@ -68,6 +68,7 @@ BEGIN {
     # Modules that we depent on bootstrap
     use Math::BigFloat qw//;
     use Math::BigInt qw//;
+    use Encode qw//;
     XSLoader::load(__PACKAGE__, $VERSION);
 }
 
