@@ -114,12 +114,12 @@ typedef struct MarpaX_ESLIF_constants {
   SV *MarpaX__ESLIF_svp;
   SV *MarpaX__ESLIF__is_bool_svp;
   SV *MarpaX__ESLIF__UTF_8_svp;
-  SV *MarpaX__ESLIF__Math__BigFloat_svp;
-  SV *MarpaX__ESLIF__Math__BigFloat__new_svp;
-  SV *MarpaX__ESLIF__Math__BigInt_svp;
-  SV *MarpaX__ESLIF__Math__BigInt__new_svp;
-  SV *MarpaX__ESLIF__Math__BigInt__binf_svp;
-  SV *MarpaX__ESLIF__Math__BigInt__bnan_svp;
+  SV *Math__BigFloat_svp;
+  SV *Math__BigFloat__new_svp;
+  SV *Math__BigInt_svp;
+  SV *Math__BigInt__new_svp;
+  SV *Math__BigInt__binf_svp;
+  SV *Math__BigInt__bnan_svp;
   short nvtype_is_long_doubleb;
   short nvtype_is___float128;
   SV *MarpaX__ESLIF__true_svp;
@@ -2006,7 +2006,7 @@ static inline short marpaESLIFPerl_importb(pTHX_ marpaESLIFPerl_importContext_t 
       /* Representation is in stringp. Call Math::BigInt->new(stringp). */
       listp = newAV();
       av_push(listp, stringp); /* Ref count of stringp is transfered to av -; */
-      svp = marpaESLIFPerl_call_actionp(aTHX_ constantsp->MarpaX__ESLIF__Math__BigInt_svp, "new", listp, NULL /* MarpaX_ESLIF_Valuep */, 0 /* evalb */, 0 /* evalSilentb */, constantsp->MarpaX__ESLIF__Math__BigInt__new_svp);
+      svp = marpaESLIFPerl_call_actionp(aTHX_ constantsp->Math__BigInt_svp, "new", listp, NULL /* MarpaX_ESLIF_Valuep */, 0 /* evalb */, 0 /* evalSilentb */, constantsp->Math__BigInt__new_svp);
       av_undef(listp);
     }
     marpaESLIFPerl_GENERICSTACK_PUSH_PTR(importStackp, svp);
@@ -2044,7 +2044,7 @@ static inline short marpaESLIFPerl_importb(pTHX_ marpaESLIFPerl_importContext_t 
       /* Representation is in stringp. Call Math::BigInt->new(stringp). */
       listp = newAV();
       av_push(listp, stringp); /* Ref count of stringp is transfered to av -; */
-      svp = marpaESLIFPerl_call_actionp(aTHX_ constantsp->MarpaX__ESLIF__Math__BigInt_svp, "new", listp, NULL /* MarpaX_ESLIF_Valuep */, 0 /* evalb */, 0 /* evalSilentb */, constantsp->MarpaX__ESLIF__Math__BigInt__new_svp);
+      svp = marpaESLIFPerl_call_actionp(aTHX_ constantsp->Math__BigInt_svp, "new", listp, NULL /* MarpaX_ESLIF_Valuep */, 0 /* evalb */, 0 /* evalSilentb */, constantsp->Math__BigInt__new_svp);
       av_undef(listp);
     }
     marpaESLIFPerl_GENERICSTACK_PUSH_PTR(importStackp, svp);
@@ -2082,7 +2082,7 @@ static inline short marpaESLIFPerl_importb(pTHX_ marpaESLIFPerl_importContext_t 
       /* Representation is in stringp. Call Math::BigInt->new(stringp). */
       listp = newAV();
       av_push(listp, stringp); /* Ref count of stringp is transfered to av -; */
-      svp = marpaESLIFPerl_call_actionp(aTHX_ constantsp->MarpaX__ESLIF__Math__BigInt_svp, "new", listp, NULL /* MarpaX_ESLIF_Valuep */, 0 /* evalb */, 0 /* evalSilentb */, constantsp->MarpaX__ESLIF__Math__BigInt__new_svp);
+      svp = marpaESLIFPerl_call_actionp(aTHX_ constantsp->Math__BigInt_svp, "new", listp, NULL /* MarpaX_ESLIF_Valuep */, 0 /* evalb */, 0 /* evalSilentb */, constantsp->Math__BigInt__new_svp);
       av_undef(listp);
     }
     marpaESLIFPerl_GENERICSTACK_PUSH_PTR(importStackp, svp);
@@ -2261,7 +2261,7 @@ static inline short marpaESLIFPerl_importb(pTHX_ marpaESLIFPerl_importContext_t 
       /* Representation is in stringp. Call Math::BigFloat->new(stringp). */
       listp = newAV();
       av_push(listp, stringp); /* Ref count of stringp is transfered to av -; */
-      svp = marpaESLIFPerl_call_actionp(aTHX_ constantsp->MarpaX__ESLIF__Math__BigFloat_svp, "new", listp, NULL /* MarpaX_ESLIF_Valuep */, 0 /* evalb */, 0 /* evalSilentb */, constantsp->MarpaX__ESLIF__Math__BigFloat__new_svp);
+      svp = marpaESLIFPerl_call_actionp(aTHX_ constantsp->Math__BigFloat_svp, "new", listp, NULL /* MarpaX_ESLIF_Valuep */, 0 /* evalb */, 0 /* evalSilentb */, constantsp->Math__BigFloat__new_svp);
       av_undef(listp);
 
     } else {
@@ -2304,7 +2304,7 @@ static inline short marpaESLIFPerl_importb(pTHX_ marpaESLIFPerl_importContext_t 
       /* Representation is in stringp. Call Math::BigInt->new(stringp). */
       listp = newAV();
       av_push(listp, stringp); /* Ref count of stringp is transfered to av -; */
-      svp = marpaESLIFPerl_call_actionp(aTHX_ constantsp->MarpaX__ESLIF__Math__BigInt_svp, "new", listp, NULL /* MarpaX_ESLIF_Valuep */, 0 /* evalb */, 0 /* evalSilentb */, constantsp->MarpaX__ESLIF__Math__BigInt__new_svp);
+      svp = marpaESLIFPerl_call_actionp(aTHX_ constantsp->Math__BigInt_svp, "new", listp, NULL /* MarpaX_ESLIF_Valuep */, 0 /* evalb */, 0 /* evalSilentb */, constantsp->Math__BigInt__new_svp);
       av_undef(listp);
     }
     marpaESLIFPerl_GENERICSTACK_PUSH_PTR(importStackp, svp);
@@ -2830,7 +2830,7 @@ static inline short marpaESLIFPerl_JSONDecodeNumberAction(void *userDatavp, char
 
   listp = newAV();
   av_push(listp, newSVpvn((const char *) strings, (STRLEN) stringl)); /* Ref count of string is transfered to listp */
-  svp = marpaESLIFPerl_call_actionp(aTHX_ constantsp->MarpaX__ESLIF__Math__BigFloat_svp, "new", listp, NULL /* MarpaX_ESLIF_Valuep */, 0 /* evalb */, 0 /* evalSilentb */, constantsp->MarpaX__ESLIF__Math__BigFloat__new_svp);
+  svp = marpaESLIFPerl_call_actionp(aTHX_ constantsp->Math__BigFloat_svp, "new", listp, NULL /* MarpaX_ESLIF_Valuep */, 0 /* evalb */, 0 /* evalSilentb */, constantsp->Math__BigFloat__new_svp);
   av_undef(listp);
 
   marpaESLIFValueResultp->type               = MARPAESLIF_VALUE_TYPE_PTR;
@@ -2859,7 +2859,7 @@ static inline short marpaESLIFPerl_JSONDecodePositiveInfinityAction(void *userDa
     return 1;
   }
 
-  svp = marpaESLIFPerl_call_actionp(aTHX_ constantsp->MarpaX__ESLIF__Math__BigInt_svp, "binf", NULL /* svp */, NULL /* MarpaX_ESLIF_Valuep */, 0 /* evalb */, 0 /* evalSilentb */, constantsp->MarpaX__ESLIF__Math__BigInt__binf_svp);
+  svp = marpaESLIFPerl_call_actionp(aTHX_ constantsp->Math__BigInt_svp, "binf", NULL /* svp */, NULL /* MarpaX_ESLIF_Valuep */, 0 /* evalb */, 0 /* evalSilentb */, constantsp->Math__BigInt__binf_svp);
 
   marpaESLIFValueResultp->type               = MARPAESLIF_VALUE_TYPE_PTR;
   marpaESLIFValueResultp->contextp           = MARPAESLIFPERL_CONTEXT;
@@ -2890,7 +2890,7 @@ static inline short marpaESLIFPerl_JSONDecodeNegativeInfinityAction(void *userDa
 
   listp = newAV();
   av_push(listp, newSVpvn((const char *) "-", (STRLEN) 1)); /* Ref count of string is transfered to listp */
-  svp = marpaESLIFPerl_call_actionp(aTHX_ constantsp->MarpaX__ESLIF__Math__BigInt_svp, "binf", listp, NULL /* MarpaX_ESLIF_Valuep */, 0 /* evalb */, 0 /* evalSilentb */, constantsp->MarpaX__ESLIF__Math__BigInt__binf_svp);
+  svp = marpaESLIFPerl_call_actionp(aTHX_ constantsp->Math__BigInt_svp, "binf", listp, NULL /* MarpaX_ESLIF_Valuep */, 0 /* evalb */, 0 /* evalSilentb */, constantsp->Math__BigInt__binf_svp);
   av_undef(listp);
 
   marpaESLIFValueResultp->type               = MARPAESLIF_VALUE_TYPE_PTR;
@@ -2919,7 +2919,7 @@ static inline short marpaESLIFPerl_JSONDecodePositiveNanAction(void *userDatavp,
     return 1;
   }
 
-  svp = marpaESLIFPerl_call_actionp(aTHX_ constantsp->MarpaX__ESLIF__Math__BigInt_svp, "bnan", NULL /* svp */, NULL /* MarpaX_ESLIF_Valuep */, 0 /* evalb */, 0 /* evalSilentb */, constantsp->MarpaX__ESLIF__Math__BigInt__bnan_svp);
+  svp = marpaESLIFPerl_call_actionp(aTHX_ constantsp->Math__BigInt_svp, "bnan", NULL /* svp */, NULL /* MarpaX_ESLIF_Valuep */, 0 /* evalb */, 0 /* evalSilentb */, constantsp->Math__BigInt__bnan_svp);
 
   marpaESLIFValueResultp->type               = MARPAESLIF_VALUE_TYPE_PTR;
   marpaESLIFValueResultp->contextp           = MARPAESLIFPERL_CONTEXT;
@@ -2951,7 +2951,7 @@ static inline short marpaESLIFPerl_JSONDecodeNegativeNanAction(void *userDatavp,
   marpaESLIFPerl_genericLoggerCallbackv(MarpaX_ESLIF_Valuep->MarpaX_ESLIFp, GENERICLOGGER_LOGLEVEL_WARNING, "Negative NaN converted to Math::BigInt->bnan()");
 
   /* Take care! Math::BigInt do not have a notion of negative nan */
-  svp = marpaESLIFPerl_call_actionp(aTHX_ constantsp->MarpaX__ESLIF__Math__BigInt_svp, "bnan", NULL /* svp */, NULL /* MarpaX_ESLIF_Valuep */, 0 /* evalb */, 0 /* evalSilentb */, constantsp->MarpaX__ESLIF__Math__BigInt__bnan_svp);
+  svp = marpaESLIFPerl_call_actionp(aTHX_ constantsp->Math__BigInt_svp, "bnan", NULL /* svp */, NULL /* MarpaX_ESLIF_Valuep */, 0 /* evalb */, 0 /* evalSilentb */, constantsp->Math__BigInt__bnan_svp);
 
   marpaESLIFValueResultp->type               = MARPAESLIF_VALUE_TYPE_PTR;
   marpaESLIFValueResultp->contextp           = MARPAESLIFPERL_CONTEXT;
@@ -2998,18 +2998,18 @@ static inline void marpaESLIFPerl_constants_initv(pTHX_ MarpaX_ESLIF_constants_t
     MARPAESLIFPERL_CROAK("MarpaX::ESLIF must do \"is_bool\"");
   }
   constantsp->MarpaX__ESLIF__UTF_8_svp  = newSVpvn("UTF-8", strlen("UTF-8"));
-  constantsp->MarpaX__ESLIF__Math__BigFloat_svp = newSVpvn("Math::BigFloat", strlen("Math::BigFloat"));
-  if (! marpaESLIFPerl_canb(aTHX_ constantsp->MarpaX__ESLIF__Math__BigFloat_svp, "new", &(constantsp->MarpaX__ESLIF__Math__BigFloat__new_svp))) {
+  constantsp->Math__BigFloat_svp = newSVpvn("Math::BigFloat", strlen("Math::BigFloat"));
+  if (! marpaESLIFPerl_canb(aTHX_ constantsp->Math__BigFloat_svp, "new", &(constantsp->Math__BigFloat__new_svp))) {
     MARPAESLIFPERL_CROAK("Math::BigFloat must do \"new\"");
   }
-  constantsp->MarpaX__ESLIF__Math__BigInt_svp = newSVpvn("Math::BigInt", strlen("Math::BigInt"));
-  if (! marpaESLIFPerl_canb(aTHX_ constantsp->MarpaX__ESLIF__Math__BigInt_svp, "new", &(constantsp->MarpaX__ESLIF__Math__BigInt__new_svp))) {
+  constantsp->Math__BigInt_svp = newSVpvn("Math::BigInt", strlen("Math::BigInt"));
+  if (! marpaESLIFPerl_canb(aTHX_ constantsp->Math__BigInt_svp, "new", &(constantsp->Math__BigInt__new_svp))) {
     MARPAESLIFPERL_CROAK("Math::BigInt must do \"new\"");
   }
-  if (! marpaESLIFPerl_canb(aTHX_ constantsp->MarpaX__ESLIF__Math__BigInt_svp, "binf", &(constantsp->MarpaX__ESLIF__Math__BigInt__binf_svp))) {
+  if (! marpaESLIFPerl_canb(aTHX_ constantsp->Math__BigInt_svp, "binf", &(constantsp->Math__BigInt__binf_svp))) {
     MARPAESLIFPERL_CROAK("Math::BigInt must do \"binf\"");
   }
-  if (! marpaESLIFPerl_canb(aTHX_ constantsp->MarpaX__ESLIF__Math__BigInt_svp, "bnan", &(constantsp->MarpaX__ESLIF__Math__BigInt__bnan_svp))) {
+  if (! marpaESLIFPerl_canb(aTHX_ constantsp->Math__BigInt_svp, "bnan", &(constantsp->Math__BigInt__bnan_svp))) {
     MARPAESLIFPERL_CROAK("Math::BigInt must do \"bnan\"");
   }
   constantsp->nvtype_is_long_doubleb = marpaESLIFPerl_call_methodb(aTHX_ constantsp->MarpaX__ESLIF_svp, "_nvtype_is_long_double", NULL /* subSvp */);
@@ -3043,12 +3043,12 @@ static inline void marpaESLIFPerl_constants_disposev(pTHX_ MarpaX_ESLIF_constant
   MARPAESLIFPERL_REFCNT_DEC(constantsp->MarpaX__ESLIF_svp);
   MARPAESLIFPERL_REFCNT_DEC(constantsp->MarpaX__ESLIF__is_bool_svp);
   MARPAESLIFPERL_REFCNT_DEC(constantsp->MarpaX__ESLIF__UTF_8_svp);
-  MARPAESLIFPERL_REFCNT_DEC(constantsp->MarpaX__ESLIF__Math__BigFloat_svp);
-  MARPAESLIFPERL_REFCNT_DEC(constantsp->MarpaX__ESLIF__Math__BigFloat__new_svp);
-  MARPAESLIFPERL_REFCNT_DEC(constantsp->MarpaX__ESLIF__Math__BigInt_svp);
-  MARPAESLIFPERL_REFCNT_DEC(constantsp->MarpaX__ESLIF__Math__BigInt__new_svp);
-  MARPAESLIFPERL_REFCNT_DEC(constantsp->MarpaX__ESLIF__Math__BigInt__binf_svp);
-  MARPAESLIFPERL_REFCNT_DEC(constantsp->MarpaX__ESLIF__Math__BigInt__bnan_svp);
+  MARPAESLIFPERL_REFCNT_DEC(constantsp->Math__BigFloat_svp);
+  MARPAESLIFPERL_REFCNT_DEC(constantsp->Math__BigFloat__new_svp);
+  MARPAESLIFPERL_REFCNT_DEC(constantsp->Math__BigInt_svp);
+  MARPAESLIFPERL_REFCNT_DEC(constantsp->Math__BigInt__new_svp);
+  MARPAESLIFPERL_REFCNT_DEC(constantsp->Math__BigInt__binf_svp);
+  MARPAESLIFPERL_REFCNT_DEC(constantsp->Math__BigInt__bnan_svp);
   /*
   constantsp->nvtype_is_long_doubleb = 0;
   constantsp->nvtype_is___float128 = 0;
