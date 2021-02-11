@@ -1,28 +1,21 @@
 use strict;
 use warnings FATAL => 'all';
 
-package MarpaX::ESLIF::String;
-    
 #
 # Based on BSON::String v1.10.2
 #
+package MarpaX::ESLIF::String;
+use Carp qw/croak/;
 
 # ABSTRACT: ESLIF String is any string value with encoding attribute
 
 # AUTHORITY
 
+# VERSION
+
 =head1 DESCRIPTION
 
 MarpaX::ESLIF::String is a string type wrapper that associates an encoding information to the string value. Without this wrapper, only valid perl string having the utf8 flag will be able to transport encoding information to MarpaX::ESLIF.
-
-=cut
-
-use namespace::sweep;
-use Encode qw//;
-use Carp qw/croak/;
-use Moo;
-
-# VERSION
 
 =head1 METHODS
 
@@ -40,19 +33,13 @@ C<$s> overloads by default as if it was C<$string>.
 
 Returns the string value.
 
-=cut
-
-has 'value' => ( is => 'ro' );
-
 =head2 $s->encoding
 
 Returns the associated encoding.
 
 =cut
 
-has 'encoding' => ( is => 'ro' );
-
-sub BUILDARGS {
+sub new {
     my ($class, $value, $encoding) = @_;
 
     croak 'Undefined value' unless defined($value);
@@ -69,7 +56,17 @@ sub BUILDARGS {
         utf8::upgrade($value)
     }
 
-    return {value => $value, encoding => $encoding}
+    return bless {value => $value, encoding => $encoding}, $class
+}
+
+sub encoding {
+    # my ($self) = @_;
+    return $_[0]->{encoding} # For performance
+}
+
+sub value {
+    # my ($self) = @_;
+    return $_[0]->{value} # For performance
 }
 
 use overload (
@@ -100,7 +97,7 @@ use overload (
 
 =head1 SEE ALSO
 
-L<MarpaX::ESLIF>, L<Encode>
+L<MarpaX::ESLIF>
 
 =cut
 
