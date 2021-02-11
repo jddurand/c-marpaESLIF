@@ -168,7 +168,7 @@ static marpaESLIFValueResult_t marpaESLIFValueResultLazy = {
         goto err;                                                       \
       } else if (marpaESLIFValueResult.u.a.sizel <= 0) {                \
         /* This is an error unless symbol is :eof */                    \
-        if (MARPAESLIF_UNLIKELY(! MARPAESLIF_SYMBOL_IS_PSEUDO_TERMINAL)) { \
+        if (MARPAESLIF_UNLIKELY(! MARPAESLIF_SYMBOL_IS_PSEUDO_TERMINAL(symbolp))) { \
           MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Match ok for pseudo-terminal %s", symbolp->descp->asciis); \
           goto err;                                                     \
         }                                                               \
@@ -2595,7 +2595,7 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
         }
       }
 
-      MARPAESLIF_TRACEF(marpaESLIFp, "Precomputing grammar level %d (%s) at discard symbol %d <%s> sets fast discard mode to %s", grammari, grammarp->descp->asciis, discardp->idi, discardp->descp->asciis, fastDiscardb ? "true" : "false");
+      MARPAESLIF_TRACEF(marpaESLIFp, funcs, "Precomputing grammar level %d (%s) at discard symbol %d <%s> sets fast discard mode to %s", grammari, grammarp->descp->asciis, discardp->idi, discardp->descp->asciis, fastDiscardb ? "true" : "false");
       grammarp->fastDiscardb = fastDiscardb;
 
       MARPAESLIF_TRACEF(marpaESLIFp, funcs, "Precomputing grammar level %d (%s) at discard symbol %d <%s>", grammari, grammarp->descp->asciis, discardp->idi, discardp->descp->asciis);
@@ -6975,7 +6975,7 @@ static inline short __marpaESLIFRecognizer_isPseudoTerminalExpectedb(marpaESLIFR
     }
   }
 
-  MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "type=%d, isPseudoTerminalExpectedb=%d", (int) type, (int) isPseudoTerminalExpectedb);
+  MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "isPseudoTerminalExpectedb=%d", (int) isPseudoTerminalExpectedb);
   /* Dangerous to comment that, but we know what we do: this is an internal call, we guarantee that isPseudoTerminalExpectedbp is never NULL */
   /* if (isPseudoTerminalExpectedbp != NULL) */
   *isPseudoTerminalExpectedbp = isPseudoTerminalExpectedb;
