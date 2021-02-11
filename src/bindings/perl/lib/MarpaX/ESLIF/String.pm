@@ -17,7 +17,7 @@ MarpaX::ESLIF::String is a string type wrapper that associates an encoding infor
 
 =cut
 
-use namespace::autoclean;
+use namespace::sweep;
 use Encode qw//;
 use Carp qw/croak/;
 use Moo;
