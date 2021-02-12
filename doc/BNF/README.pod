@@ -699,9 +699,9 @@ marpaESLIF BNF can be expressed in itself:
    */
   :start                         ::= statements
   :desc                          ::= 'G1'
-  :discard                       ::= <whitespace>
-  :discard                       ::= <perl comment>
-  :discard                       ::= <cplusplus comment>
+  :discard ::= /[\s]+/           # whitespace
+  :discard ::= /(?:(?:#)(?:[^\n]*)(?:\n|\z))/u # perl comment
+  :discard ::= /(?:(?:(?://)(?:[^\n]*)(?:\n|\z))|(?:(?:/\*)(?:(?:[^\*]+|\*(?!/))*)(?:\*/)))/u # C++ comment
   
   /*
    * ***************
@@ -906,9 +906,6 @@ marpaESLIF BNF can be expressed in itself:
   <lua script statement>         ::= '<luascript>' <discard off> <lua script source> '</luascript>' <discard on>
   <lua script source>            ::= /[\s\S]/*
   
-  <whitespace>                     ~ /[\s]+/
-  <perl comment>                   ~ /(?:(?:#)(?:[^\n]*)(?:\n|\z))/u
-  <cplusplus comment>              ~ /(?:(?:(?:\/\/)(?:[^\n]*)(?:\n|\z))|(?:(?:\/\*)(?:(?:[^\*]+|\*(?!\/))*)(?:\*\/)))/u
   <op declare any grammar>         ~ /:\[[\d]+\]:=/
   <op declare top grammar>         ~ '::='
   <op declare lex grammar>         ~ '~'
