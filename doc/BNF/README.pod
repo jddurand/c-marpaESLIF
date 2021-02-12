@@ -699,9 +699,12 @@ marpaESLIF BNF can be expressed in itself:
    */
   :start                         ::= statements
   :desc                          ::= 'G1'
-  :discard ::= /[\s]+/           # whitespace
-  :discard ::= /(?:(?:#)(?:[^\n]*)(?:\n|\z))/u # perl comment
-  :discard ::= /(?:(?:(?://)(?:[^\n]*)(?:\n|\z))|(?:(?:/\*)(?:(?:[^\*]+|\*(?!/))*)(?:\*/)))/u # C++ comment
+   # whitespace
+  :discard                       ::= /[\s]+/
+   # perl comment
+  :discard                       ::= /(?:(?:#)(?:[^\n]*)(?:\n|\z))/u
+   # C++ comment
+  :discard                       ::= /(?:(?:(?:\/\/)(?:[^\n]*)(?:\n|\z))|(?:(?:\/\*)(?:(?:[^\*]+|\*(?!\/))*)(?:\*\/)))/u
   
   /*
    * ***************
