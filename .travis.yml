@@ -23,50 +23,45 @@ before_script:
   - cmake --version
   - sudo apt-get update -qq --allow-unauthenticated
   - sudo apt-get install gdb valgrind
-#  - sudo apt-get install cpanminus nsis
+  - sudo apt-get install cpanminus nsis
 # Standard Dist::Zilla, this will install a bunch of prereqs, speeding up the upgrade
-#  - sudo apt-get install libdist-zilla-perl
+  - sudo apt-get install libdist-zilla-perl
 # Upgrade Dist::Zilla, Path::Tiny (I dislike its github issue 144 -;)
 # - sudo cpanm --notest Dist::Zilla Path::Tiny
-#  - sudo cpanm --notest Path::Tiny
+  - sudo cpanm --notest Path::Tiny
 # This is not in the prereqs it seems, but the latest MooseX::Role::Parameterized is highly recommended -; let's do it for Moo and Moose as well
-#  - sudo cpanm --notest Moo Moose MooseX::Role::Parameterized
+  - sudo cpanm --notest Moo Moose MooseX::Role::Parameterized
 # For my scripts, prefered over dzil --listdeps that is too long
-#  - sudo cpanm --notest Archive::Tar Class::Tiny Config::AutoConf::INI ExtUtils::CBuilder ExtUtils::CppGuess ExtUtils::MakeMaker File::Basename File::chdir File::Copy File::Copy::Recursive File::Find File::Path File::Spec File::Temp IPC::Open3 IPC::Run Params::Validate Perl::OSType Role::Tiny Scalar::Util Test::More Test::More::UTF8 Log::Log4perl Log::Any Log::Any::Adapter Log::Any::Adapter::Log4perl Test::EOL Test::Kwalitee Test::NoTabs Test::Pod::Coverage namespace::clean JSON::MaybeXS
-#  - sudo cpanm --notest Dist::Zilla::PluginBundle::RJBS
-#  - pushd src/bindings/perl && dzil authordeps --missing | xargs sudo cpanm --notest && popd
+  - sudo cpanm --notest Archive::Tar Class::Tiny Config::AutoConf::INI ExtUtils::CBuilder ExtUtils::CppGuess ExtUtils::MakeMaker File::Basename File::chdir File::Copy File::Copy::Recursive File::Find File::Path File::Spec File::Temp IPC::Open3 IPC::Run Params::Validate Perl::OSType Role::Tiny Scalar::Util Test::More Test::More::UTF8 Log::Log4perl Log::Any Log::Any::Adapter Log::Any::Adapter::Log4perl Test::EOL Test::Kwalitee Test::NoTabs Test::Pod::Coverage namespace::clean JSON::MaybeXS
+  - sudo cpanm --notest Dist::Zilla::PluginBundle::RJBS
+  - pushd src/bindings/perl && dzil authordeps --missing | xargs sudo cpanm --notest && popd
 # Dependencies
-#  - sh ./install-c-genericLogger.sh
-#  - sh ./install-c-genericStack.sh
-#  - sh ./install-c-genericHash.sh
-#  - sh ./install-c-genericSparseArray.sh
-#  - sh ./install-c-marpaWrapper.sh
-#  - sh ./install-c-tconv.sh
-#  - sh ./install-c-luaunpanic.sh
+  - sh ./install-c-genericLogger.sh
+  - sh ./install-c-genericStack.sh
+  - sh ./install-c-genericHash.sh
+  - sh ./install-c-genericSparseArray.sh
+  - sh ./install-c-marpaWrapper.sh
+  - sh ./install-c-tconv.sh
+  - sh ./install-c-luaunpanic.sh
 script:
-# DEBUG
-  - cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo . -DALL_IN_ONE=ON
-  - make marpaESLIFJavaTest_jar
-#  - pushd src/bindings/java && valgrind java -Djava.compiler=NONE -XX:UseSSE=0 -Djava.library.path=`pwd`/output/lib -cp `pwd`/marpaESLIF-5.0.5.jar:`pwd`/marpaESLIFJavaTest.jar org.parser.marpa.AppParse
-#  - pushd src/bindings/java && java -Djava.library.path=`pwd`/output/lib -cp `pwd`/marpaESLIF-5.0.5.jar:`pwd`/marpaESLIFJavaTest.jar org.parser.marpa.AppParse
-  - pushd src/bindings/java && make test
 # We want to try perl standalone first
-#  - cmake --version
-#  - perl CMakeObjects.PL
-#  - git clean -ffdx
+  - cmake --version
+  - perl CMakeObjects.PL
 # ALL_IN_ONE
-#  - cmake --version
-#  - cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo . -DALL_IN_ONE=ON
-#  - make check VERBOSE=1
-#  - make pack VERBOSE=1
-#  - cpack -G NSIS
-#  - make install DESTDIR=/tmp VERBOSE=1
-#  - git clean -ffdx
+  - git clean -ffdx
+  - cmake --version
+  - CFLAGS+="-g -fsanitize=address -fsanitize-recover=address -U_FORTIFY_SOURCE -fno-omit-frame-pointer -fno-common" CXXFLAGS+="-fsanitize=address -fsanitize-recover=address -U_FORTIFY_SOURCE -fno-omit-frame-pointer -fno-common" LDFLAGS+="-fsanitize=address" cmake . -DALL_IN_ONE=ON
+  - make check VERBOSE=1
+  - make pack VERBOSE=1
+  - cpack -G NSIS
+  - make install DESTDIR=/tmp VERBOSE=1
+  - git clean -ffdx
 # Not ALL_IN_ONE
-#  - cmake --version
-#  - cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo .
-#  - make VERBOSE=1
-#  - make check VERBOSE=1
-#  - make pack VERBOSE=1
-#  - cpack -G NSIS
-#  - sudo make install VERBOSE=1
+  - git clean -ffdx
+  - cmake --version
+  - CFLAGS+="-g -fsanitize=address -fsanitize-recover=address -U_FORTIFY_SOURCE -fno-omit-frame-pointer -fno-common" CXXFLAGS+="-fsanitize=address -fsanitize-recover=address -U_FORTIFY_SOURCE -fno-omit-frame-pointer -fno-common" LDFLAGS+="-fsanitize=address" cmake .
+  - make VERBOSE=1
+  - make check VERBOSE=1
+  - make pack VERBOSE=1
+  - cpack -G NSIS
+  - sudo make install VERBOSE=1
