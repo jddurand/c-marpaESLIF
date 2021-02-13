@@ -616,6 +616,8 @@ extern "C" {
   marpaESLIF_EXPORT short                         marpaESLIFValue_importb(marpaESLIFValue_t *marpaESLIFValuep, marpaESLIFValueResult_t *marpaESLIFValueResultp);
   /* marpaESLIFRecognizer_importb call the end-user importerp() function callback. */
   marpaESLIF_EXPORT short                         marpaESLIFRecognizer_importb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFValueResult_t *marpaESLIFValueResultp);
+  /* Helper function that tells if a string could be parsed to a number supported by ESLIF */
+  marpaESLIF_EXPORT short                         marpaESLIFRecognizer_numberb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, char *bytep, size_t bytel, marpaESLIFValueResult_t *marpaESLIFValueResultp, short *confidencebp);
 
   /* Helper routine to guess the encoding of a byte array. If it returns a non-NULL value it is the responsibility of the caller to free it */
   marpaESLIF_EXPORT char                         *marpaESLIF_encodings(marpaESLIF_t *marpaESLIFp, char *bytep, size_t bytel);

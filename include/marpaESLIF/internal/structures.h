@@ -263,6 +263,7 @@ struct marpaESLIF {
 #ifdef HAVE_LOCALE_H
   struct lconv           *lconvp;
 #endif
+  char                    decimalPointc;
   const uint8_t          *tablesp;                     /* Output of pcre2_maketables */
 #ifdef MARPAESLIF_HAVE_LONG_LONG
   size_t                  llongmincharsl;              /* Number of digits of LLONG_MIN */
@@ -489,6 +490,12 @@ struct marpaESLIFRecognizer {
   /* At every recognizer pass, we use this array whose size is equal to the total number of marpa grammar terminals */
   /* and we set here the number of expected grammar terminals */
   int                         *expectedTerminalArrayp;   /* Total list of expected terminals */
+
+  /* For JSON number helper */
+  char                        *numbers;
+  size_t                       numberallocl;
+  char                        *integers;
+  size_t                       integerallocl;
 };
 
 struct marpaESLIF_lexeme_data {

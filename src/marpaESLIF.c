@@ -267,12 +267,6 @@ static marpaESLIFValueResult_t marpaESLIFValueResultLazy = {
     }                                                                   \
   } while (0)
 
-#ifdef HAVE_LOCALE_H
-#  define MARPAESLIF_DECIMAL_POINT(marpaESLIFp) ((marpaESLIFp->lconvp != NULL) && (marpaESLIFp->lconvp->decimal_point != NULL) && (*(marpaESLIFp->lconvp->decimal_point) != '\0')) ? *(marpaESLIFp->lconvp->decimal_point) : '.'
-#else
-#  define MARPAESLIF_DECIMAL_POINT(marpaESLIFp) '.'
-#endif
-
 /* -------------------------------------------------------------------- */
 /* _marpaESLIFRecognizer_concat_valueResultCallbackb helpers            */
 /* -------------------------------------------------------------------- */
@@ -754,6 +748,7 @@ static inline short                  _marpaESLIFRecognizer_inputb(marpaESLIFReco
 static inline short                  _marpaESLIFRecognizer_scanb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, short initialEventsb, short *continuebp, short *isExhaustedbp);
 static inline short                  _marpaESLIFRecognizer_hook_discardb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, short discardOnOffb);
 static inline short                  _marpaESLIFRecognizer_hook_discard_switchb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp);
+static inline short                  _marpaESLIFRecognizer_numberb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, char *bytep, size_t bytel, short jsonStrictModeb, marpaESLIFValueResult_t *marpaESLIFValueResultp, short *confidencebp);
 #if MARPAESLIF_VALUEERRORPROGRESSREPORT
 static inline void                   _marpaESLIFValueErrorProgressReportv(marpaESLIFValue_t *marpaESLIFValuep);
 #endif
@@ -4213,7 +4208,10 @@ static inline marpaESLIF_t *_marpaESLIF_newp(marpaESLIFOption_t *marpaESLIFOptio
   marpaESLIFp->marpaESLIFValueResultFalse.u.y             = MARPAESLIFVALUERESULTBOOL_FALSE;
 
 #ifdef HAVE_LOCALE_H
-  marpaESLIFp->lconvp = localeconv(); /* Always succeed as per the doc */
+  marpaESLIFp->lconvp                                     = localeconv(); /* Always succeed as per the doc */
+  marpaESLIFp->decimalPointc                              = ((marpaESLIFp->lconvp != NULL) && (marpaESLIFp->lconvp->decimal_point != NULL) && (*(marpaESLIFp->lconvp->decimal_point) != '\0')) ? *(marpaESLIFp->lconvp->decimal_point) : '.';
+#else
+  marpaESLIFp->decimalPointc                              = '.';
 #endif
 
   marpaESLIFp->tablesp = NULL;
@@ -9433,6 +9431,10 @@ static inline marpaESLIFRecognizer_t *_marpaESLIFRecognizer_newp(marpaESLIFGramm
   marpaESLIFRecognizerp->marpaESLIFValueResultFlattenStackp = NULL;
   marpaESLIFRecognizerp->marpaESLIFCalloutBlockp            = NULL;
   marpaESLIFRecognizerp->expectedTerminalArrayp             = NULL;
+  marpaESLIFRecognizerp->numbers                            = NULL;
+  marpaESLIFRecognizerp->numberallocl                       = 0;
+  marpaESLIFRecognizerp->integers                           = NULL;
+  marpaESLIFRecognizerp->integerallocl                      = 0;
 
   marpaWrapperRecognizerOption.genericLoggerp            = silentb ? NULL : marpaESLIFp->marpaESLIFOption.genericLoggerp;
   marpaWrapperRecognizerOption.disableThresholdb         = marpaESLIFRecognizerOptionp->disableThresholdb;
@@ -14000,6 +14002,18 @@ short marpaESLIFRecognizer_importb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp
 }
 
 /*****************************************************************************/
+short marpaESLIFRecognizer_numberb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, char *bytep, size_t bytel, marpaESLIFValueResult_t *marpaESLIFValueResultp, short *confidencebp)
+/*****************************************************************************/
+{
+  if ((marpaESLIFRecognizerp == NULL) || (bytep == NULL) || (bytel <= 0)) {
+    errno = EINVAL;
+    return 0;
+  }
+
+  return _marpaESLIFRecognizer_numberb(marpaESLIFRecognizerp, bytep, bytel, 0 /* jsonStrictModeb */, marpaESLIFValueResultp, confidencebp);
+}
+
+/*****************************************************************************/
 static inline marpaESLIFValueResult_t *_marpaESLIFValue_stack_getp(marpaESLIFValue_t *marpaESLIFValuep, int indicei)
 /*****************************************************************************/
 {
@@ -14759,7 +14773,7 @@ static short _marpaESLIFRecognizer_concat_valueResultCallbackb(void *userDatavp,
   marpaESLIF_t                           *marpaESLIFp                 = marpaESLIFValuep->marpaESLIFp;
   marpaESLIF_stringGenerator_t           *marpaESLIF_stringGeneratorp = &(marpaESLIFValuep->stringGenerator);
   marpaESLIFRecognizer_t                 *marpaESLIFRecognizerp       = marpaESLIFValuep->marpaESLIFRecognizerp;
-  char                                    decimalPointc               = MARPAESLIF_DECIMAL_POINT(marpaESLIFp);
+  char                                    decimalPointc               = marpaESLIFp->decimalPointc;
   marpaESLIF_string_t                    *utf8p                       = NULL;
   genericLogger_t                        *genericLoggerp              = marpaESLIFValuep->stringGeneratorLoggerp;
   short                                   displayNextAsJsonStringb    = 0;
@@ -16957,6 +16971,592 @@ static inline short _marpaESLIFRecognizer_hook_discard_switchb(marpaESLIFRecogni
 }
 
 /*****************************************************************************/
+static inline short _marpaESLIFRecognizer_numberb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, char *bytep, size_t bytel, short jsonStrictModeb, marpaESLIFValueResult_t *marpaESLIFValueResultp, short *confidencebp)
+/*****************************************************************************/
+{
+  static const char                  *funcs       = "_marpaESLIFRecognizer_numberb";
+  marpaESLIF_t                       *marpaESLIFp = marpaESLIFRecognizerp->marpaESLIFp;
+  short                               confidenceb = 1; /* Set to 0 only when we got through the double case */
+  char                               *tmps;
+  char                               *endptrendp;
+  char                               *p;
+  char                               *q;
+  char                               *pmin;
+  char                               *pmax;
+  char                                dotc;
+  char                                exponentc;
+  char                               *exponentp;
+  long                                exponentl;
+  char                               *dotp;
+  size_t                              numberOfUnsignificantDigitl;
+  char                               *endptrp;
+  char                               *numbers;
+  size_t                              numberl;
+  size_t                              decimall;
+  short                               isFloatb;
+  short                               isNegb;
+  size_t                              charsl;
+  size_t                              prevCharsl;
+  size_t                              l;
+  size_t                              shiftl;
+#if defined(MARPAESLIF_HAVE_LONG_LONG) && defined(C_STRTOLL)
+  MARPAESLIF_LONG_LONG                valuell;
+#else
+  long                                valuel;
+#endif
+#if (defined(C_STRTOLD) && defined(MARPAESLIF_HUGE_VALL)) || (defined(C_STRTOD) && defined(MARPAESLIF_HUGE_VAL))
+  short                               decimalPointb;
+  char                               *decimalPoints;
+#  if defined(C_STRTOLD) && defined(MARPAESLIF_HUGE_VALL)
+  long double                         valueld;
+#  else
+  double                              valued;
+#  endif
+#endif
+  marpaESLIFValueResult_t             marpaESLIFValueResult;
+  short                               rcb;
+
+  if ((marpaESLIFRecognizerp == NULL) || (bytep == NULL) || (bytel <= 0)) {
+    errno = EINVAL;
+    goto err;
+  }
+
+  if (bytep[0] == '+') {
+    MARPAESLIF_TRACE(marpaESLIFp, funcs, "Removing leading '+' sign");
+    ++bytep;
+    --bytel;
+  }
+
+  /* We want to know if this can be expressed as a non-floating pointer number */
+  if (marpaESLIFRecognizerp->numbers == NULL) {
+    marpaESLIFRecognizerp->numbers = (char *) malloc(bytel + 1); /* + 1 for the NUL byte */
+    if (marpaESLIFRecognizerp->numbers == NULL) {
+        MARPAESLIF_ERRORF(marpaESLIFp, "malloc failure, %s", strerror(errno));
+        goto err;
+    }
+    numbers = marpaESLIFRecognizerp->numbers;
+    marpaESLIFRecognizerp->numberallocl = bytel;
+  } else if (marpaESLIFRecognizerp->numberallocl < bytel) {
+    tmps = (char *) realloc(marpaESLIFRecognizerp->numbers, bytel + 1); /* + 1 for the NUL byte */
+    if (tmps == NULL) {
+        MARPAESLIF_ERRORF(marpaESLIFp, "realloc failure, %s", strerror(errno));
+        goto err;
+    }
+    numbers = marpaESLIFRecognizerp->numbers = tmps;
+    marpaESLIFRecognizerp->numberallocl = bytel;
+  } else {
+    numbers = marpaESLIFRecognizerp->numbers;
+  }
+
+  numberl = bytel;
+  memcpy(numbers, bytep, numberl);
+  numbers[numberl] = '\0';
+
+  /* From now on the work area is numbers, with numberl ASCII characters, ending with a '\0' at indice numberl */
+  endptrendp = numbers + numberl;
+
+  MARPAESLIF_TRACEF(marpaESLIFp, funcs, "%s: %ld bytes", numbers, (unsigned long) numberl);
+
+  /* Look for the eventual exponent */
+  exponentp = NULL;
+  for (p = endptrendp - 1; p >= numbers; p--) {
+    exponentc = *p;
+    if ((exponentc == 'e') || (exponentc == 'E')) {
+      exponentp = p;
+      break;
+    }
+  }
+
+  /* Look for the eventual dot */
+  dotp = NULL;
+  for (p = numbers; p < endptrendp; p++) {
+    dotc = *p;
+    if (dotc == '.') {
+      dotp = p;
+      break;
+    }
+  }
+
+  /* Remove non significant digits on the left, not possible with the strict grammar */
+  if (! jsonStrictModeb) {
+
+    /* Locate where the scanning will start */
+    pmin = numbers;
+    if (*pmin == '-') {
+      pmin++;
+    }
+
+    /* Locate where the scanning will stop */
+    if (dotp != NULL) {
+      /* Dot character is present */
+      pmax = dotp;
+    } else if (exponentp != NULL) {
+      /* No dot character but there is the exponent character */
+      pmax = exponentp;
+    } else {
+      /* The string is made only with digits */
+      pmax = endptrendp;
+    }
+
+    numberOfUnsignificantDigitl = 0;
+    for (p = pmin; p < pmax; p++) {
+      if (*p != '0') {
+        break;
+      }
+      numberOfUnsignificantDigitl++;
+    }
+
+    if ((numberOfUnsignificantDigitl > 0) && (p == pmax)) {
+      /* We want to retain at least one digit before the dot, e.g. we do not want to remove everything */
+
+      /* If we match:  */
+      /* 000000.456000 */
+      /* ^pmin         */
+      /*       ^pmax   */
+      /*       ^p      */
+      /*               */
+      /* we change to: */
+      /* 000000.456000 */
+      /* ^pmin         */
+      /*       ^pmax   */
+      /*      ^p       */
+      if (--numberOfUnsignificantDigitl > 0) {
+        --p;
+      }
+    }
+
+    if (numberOfUnsignificantDigitl > 0) {
+      /* Note that is guaranteed that p < pmax */
+
+      /* 000123.456000 */
+      /* ^pmin         */
+      /*       ^pmax   */
+      /*    ^p         */
+
+      MARPAESLIF_TRACEF(marpaESLIFp, funcs, "%s: Removing %ld non significant left digits", numbers, (unsigned long) numberOfUnsignificantDigitl);
+      memmove(pmin, p, endptrendp - p + 1); /* + 1 for the NUL byte */
+
+      /* Impact of the memmove() */
+      numberl -= numberOfUnsignificantDigitl;
+      endptrendp -= numberOfUnsignificantDigitl;
+      if (dotp != NULL) {
+        dotp -= numberOfUnsignificantDigitl;
+      }
+      if (exponentp != NULL) {
+        exponentp -= numberOfUnsignificantDigitl;
+      }
+
+      MARPAESLIF_TRACEF(marpaESLIFp, funcs, "%s: Now %ld bytes", numbers, (unsigned long) numberl);
+    }
+  }
+
+  /* Remove non significant digits after the dot character. */
+  if (dotp != NULL) {
+    pmin = dotp + 1;
+    if (exponentp != NULL) {
+      pmax = exponentp;
+    } else {
+      pmax = endptrendp;
+    }
+
+    numberOfUnsignificantDigitl = 0;
+    /* We voluntarily say p > pmin so that */
+    /* we always retain at least one digit */
+    /* after the dot.                      */
+    for (p = pmax - 1; p > pmin; p--) {
+      if (*p != '0') {
+        break;
+      }
+      numberOfUnsignificantDigitl++;
+    }
+
+    if ((numberOfUnsignificantDigitl > 0) || ((p == pmin) && (*p == '0'))) {
+      /* It is guaranteed that numberOfUnsignificantDigitl is < total number of digits after the dot. */
+
+      if ((p == pmin) && (*p == '0')) {
+        /* Special case of (p == pmin) && (*p == '0'), then it means that it something like e.g.; */
+        /* 123.000000      */
+        /*    ^dotp        */
+        /*     ^pmin       */
+        /*           ^pmax */
+        /*     ^p          */
+        numberOfUnsignificantDigitl += 2;
+        MARPAESLIF_TRACEF(marpaESLIFp, funcs, "%s: Removing the dot part", numbers, (unsigned long) numberOfUnsignificantDigitl);
+        memmove(dotp, pmax, endptrendp - pmax + 1); /* + 1 for the NUL byte */
+        dotp = NULL;
+      } else {
+        /* 123.456000      */
+        /*     ^pmin       */
+        /*           ^pmax */
+        /*       ^p        */
+        MARPAESLIF_TRACEF(marpaESLIFp, funcs, "%s: Removing %ld non significant right digits", numbers, (unsigned long) numberOfUnsignificantDigitl);
+        ++p;
+        memmove(p, pmax, endptrendp - pmax + 1); /* + 1 for the NUL byte */
+      }
+
+      /* Impact of the memmove() */
+      numberl -= numberOfUnsignificantDigitl;
+      endptrendp -= numberOfUnsignificantDigitl;
+      if (exponentp != NULL) {
+        exponentp -= numberOfUnsignificantDigitl;
+      }
+
+      MARPAESLIF_TRACEF(marpaESLIFp, funcs, "%s: Now %ld bytes", numbers, (unsigned long) numberl);
+    }
+  }
+
+  /* We now have a number with no unsignificant digit. We want to know if this is a true floating point number. */
+
+  /* If there is an exponent, take its value - we assume that using a long is fair enough. */
+  if (exponentp == NULL) {
+    exponentl = 0;
+  } else {
+    endptrp = NULL;
+    errno = 0;    /* To distinguish success/failure after call */
+    exponentl = strtol(exponentp + 1, &endptrp, 10);
+    /* Note that the exponent in a JSON number always have at least one digit */
+    if ((endptrp != endptrendp) || (errno != 0)) {
+      MARPAESLIF_TRACEF(marpaESLIFp, funcs, "%s: Exponent parsing failure", numbers, errno != 0 ? strerror(errno) : "bad final pointer");
+      goto parsing_to_double;
+    }
+  }
+
+  if (dotp == NULL) {
+    decimall = 0;
+  } else {
+    pmin = dotp + 1;
+    if (exponentp != NULL) {
+      pmax = exponentp;
+    } else {
+      pmax = endptrendp;
+    }
+    decimall = pmax - pmin;
+  }
+
+  /* Check the eventual signedness */
+  isNegb = (numbers[0] == '-') ? 1 : 0;
+
+  /* Count the total number of digits needed to represent this non-floating number.                              */
+  /* Take care: decimall is unsigned; exponentl is signed and will be converted to unsigned if we do comparison. */
+  /* The value of charsl is guaranteed to be set only if isFloatb == 0.                                          */
+  if (decimall == 0) {
+    if (exponentl < 0) {
+      isFloatb = 1;
+    } else {
+      isFloatb = 0;
+      if (exponentp != NULL) {
+        /* [-]123E[+]789 */
+        charsl = exponentp - numbers;
+        prevCharsl = charsl;
+        charsl += exponentl;
+        if (MARPAESLIF_UNLIKELY(charsl < prevCharsl)) { /* Turnaround */
+          goto parsing_to_double;
+        }
+      } else {
+        /* [-]123 */
+        charsl = numberl;
+      }
+    }
+  } else {
+    /* Per def decimall here is > 0 */
+    if (exponentl <= 0) {
+      isFloatb = 1;
+    } else {
+      /* decimall is > 0, exponentl is > 0 and unsigned automatic conversion will not change its value */
+      /* I may change to a temporary variable of another type or use compiler's #pragma because        */
+      /* sometimes there is a warning.                                                                 */
+      if (exponentl < decimall) {
+        isFloatb = 1;
+      } else {
+        /* [-]123.456E[+]789 */
+        isFloatb = 0;
+        charsl = dotp - numbers;
+        prevCharsl = charsl;
+        charsl += exponentl;
+        if (MARPAESLIF_UNLIKELY(charsl < prevCharsl)) { /* Turnaround */
+          goto parsing_to_double;
+        }
+      }
+    }
+  }
+
+  MARPAESLIF_TRACEF(marpaESLIFp, funcs, "%s: %ld decimals, exponent value is %ld => %sa true floating point number", numbers, (unsigned long) decimall, (long) exponentl, isFloatb ? "" : "not ");
+
+  if (isFloatb) {
+    /* A floating point number always trigger the proposal */
+    goto parsing_to_double;
+  }
+
+  /* We have a special case in our algorithm: the representation -0 or -0Exx where xx >= 0  */
+  /* Since the sign of zero can only be handled by a floating point number, and since zero  */
+  /* is always exactly represented by the later, this special case is moved to the proposal */
+  /* where we use floating pointer.                                                         */
+  if ((numbers[0] == '-') && (numbers[1] == '0')) {
+    /* It is a signed zero. This test is enough because we removed all non significant digits on */
+    /* the left side, keeping at most one digit. If this digit is '0' we are done.               */
+    MARPAESLIF_TRACEF(marpaESLIFp, funcs, "%s: signed zero detected, forcing true floating point number", numbers);
+    marpaESLIFValueResult.contextp        = NULL;
+    marpaESLIFValueResult.representationp = NULL;
+    marpaESLIFValueResult.type            = MARPAESLIF_VALUE_TYPE_DOUBLE;
+    marpaESLIFValueResult.u.d             = -0.;
+    goto proposal;
+  }
+
+  MARPAESLIF_TRACEF(marpaESLIFp, funcs, "%s: %ld characters are needed to completely represent this non-floating pointer number", numbers, (unsigned long) charsl);
+
+  /* Is it too long for the largest non-floating pointer integer that we have */
+  if (isNegb) {
+#ifdef MARPAESLIF_HAVE_LONG_LONG
+    if (charsl > marpaESLIFp->llongmincharsl) {
+      MARPAESLIF_TRACEF(marpaESLIFp, funcs, "%s: charsl is %ld > %ld (LLONG_MIN) : go to proposal", numbers, (unsigned long) charsl, (unsigned long) marpaESLIFp->llongmincharsl);
+      goto parsing_to_double;
+    }
+#else
+    if (charsl > marpaESLIFp->longmincharsl) {
+      MARPAESLIF_TRACEF(marpaESLIFp, funcs, "%s: charsl is %ld > %ld (LONG_MIN) : go to proposal", numbers, (unsigned long) charsl, (unsigned long) marpaESLIFp->longmincharsl);
+      goto parsing_to_double;
+    }
+#endif
+  } else {
+#ifdef MARPAESLIF_HAVE_LONG_LONG
+    if (charsl > marpaESLIFp->llongmaxcharsl) {
+      MARPAESLIF_TRACEF(marpaESLIFp, funcs, "%s: charsl is %ld > %ld (LLONG_MAX) : go to proposal", numbers, (unsigned long) charsl, (unsigned long) marpaESLIFp->llongmaxcharsl);
+      goto parsing_to_double;
+    }
+#else
+    if (charsl > marpaESLIFp->longmaxcharsl) {
+      MARPAESLIF_TRACEF(marpaESLIFp, funcs, "%s: charsl is %ld > %ld (LONG_MAX) : go to proposal", numbers, (unsigned long) charsl, (unsigned long) marpaESLIFp->longmaxcharsl);
+      goto parsing_to_double
+    }
+#endif
+  }
+
+  /* No need to check on turnaround on charsl here: no system ever set a number of supported digits to such max size_t value */  
+  if (marpaESLIFRecognizerp->integers == NULL) {
+    marpaESLIFRecognizerp->integers = (char *) malloc(charsl + 1);
+    if (marpaESLIFRecognizerp->integers == NULL) {
+      MARPAESLIF_ERRORF(marpaESLIFp, "malloc failure, %s", strerror(errno));
+      goto err;
+    }
+    marpaESLIFRecognizerp->integerallocl = charsl;
+  } else if (marpaESLIFRecognizerp->integerallocl < charsl) {
+    tmps = (char *) realloc(marpaESLIFRecognizerp->integers, charsl + 1);
+    if (tmps == NULL) {
+      MARPAESLIF_ERRORF(marpaESLIFp, "realloc failure, %s", strerror(errno));
+      goto err;
+    }
+    marpaESLIFRecognizerp->integers = tmps;
+    marpaESLIFRecognizerp->integerallocl = charsl;
+  }
+
+  /* The only possibities are: */
+  /* [-]123                    */
+  /* [-]123E[+]789             */
+  /* [-]123.456E[+]789         */
+  p = marpaESLIFRecognizerp->integers;
+  if (dotp == NULL) {
+    if (exponentp == NULL) {
+      /* [-]123                */
+      memcpy(p, numbers, numberl);
+    } else {
+      /* [-]123E[+]789        */
+      l = exponentp - numbers;
+      memcpy(p, numbers, l);
+      q = p + l;
+      /* exponentl is positive by definition here.                                                     */
+      /* I may change to a temporary variable of another type or use compiler's #pragma because        */
+      /* sometimes there is a warning.                                                                 */
+      for (l = 0; l < exponentl; l++, q++) {
+        *q = '0';
+      }
+    }
+  } else {
+    /* By definition decimall and exponentl are positive */
+    /* [-]123.456E[+]789      */
+    l = dotp - numbers;
+    memcpy(p, numbers, l);
+    q = p + l;
+
+    l = exponentp - dotp - 1;
+    memcpy(q, dotp + 1, l);
+    q += l;
+
+    shiftl = exponentl - decimall;
+    for (l = 0; l < shiftl; l++, q++) {
+      *q = '0';
+    }
+  }
+
+  marpaESLIFRecognizerp->integers[charsl] = '\0';
+  MARPAESLIF_TRACEF(marpaESLIFp, funcs, "%s: Transformed for parsing to %s", numbers, marpaESLIFRecognizerp->integers);
+  endptrendp = marpaESLIFRecognizerp->integers + charsl;
+
+#if defined(MARPAESLIF_HAVE_LONG_LONG) && defined(C_STRTOLL)
+  endptrp = NULL;
+  errno = 0;    /* To distinguish success/failure after call */
+  valuell = C_STRTOLL(marpaESLIFRecognizerp->integers, &endptrp, 10);
+  /* Note that the exponent in a JSON number always have at least one digit */
+  if ((endptrp != endptrendp) || (errno != 0)) {
+    MARPAESLIF_TRACEF(marpaESLIFp, funcs, "%s: %s parsing failure, %s", numbers, marpaESLIFRecognizerp->integers, errno != 0 ? strerror(errno) : "bad final pointer");
+    goto parsing_to_double;
+  }
+  MARPAESLIF_TRACEF(marpaESLIFp, funcs, "%s: %s parsing success", numbers, marpaESLIFRecognizerp->integers);
+  /* Can we promote it to a less higher thingy ? */
+  if ((SHRT_MIN <= valuell) && (valuell <= SHRT_MAX)) {
+    MARPAESLIF_TRACEF(marpaESLIFp, funcs, "%s: %d fits in a SHORT", numbers, (int) valuell);
+    marpaESLIFValueResult.contextp        = NULL;
+    marpaESLIFValueResult.representationp = NULL;
+    marpaESLIFValueResult.type            = MARPAESLIF_VALUE_TYPE_SHORT;
+    marpaESLIFValueResult.u.b             = (short) valuell;
+  } else if ((INT_MIN <= valuell) && (valuell <= INT_MAX)) {
+    MARPAESLIF_TRACEF(marpaESLIFp, funcs, "%s: %d fits in an INT", numbers, (int) valuell);
+    marpaESLIFValueResult.contextp        = NULL;
+    marpaESLIFValueResult.representationp = NULL;
+    marpaESLIFValueResult.type            = MARPAESLIF_VALUE_TYPE_INT;
+    marpaESLIFValueResult.u.i             = (int) valuell;
+  } else if ((LONG_MIN <= valuell) && (valuell <= LONG_MAX)) {
+    MARPAESLIF_TRACEF(marpaESLIFp, funcs, "%s: %ld fits in a LONG", numbers, (long) valuell);
+    marpaESLIFValueResult.contextp        = NULL;
+    marpaESLIFValueResult.representationp = NULL;
+    marpaESLIFValueResult.type            = MARPAESLIF_VALUE_TYPE_LONG;
+    marpaESLIFValueResult.u.l             = (long) valuell;
+  } else {
+    MARPAESLIF_TRACEF(marpaESLIFp, funcs, "%s: " MARPAESLIF_LONG_LONG_FMT " remains a LONG LONG", numbers, valuell);
+    marpaESLIFValueResult.contextp        = NULL;
+    marpaESLIFValueResult.representationp = NULL;
+    marpaESLIFValueResult.type            = MARPAESLIF_VALUE_TYPE_LONG_LONG;
+    marpaESLIFValueResult.u.ll            = valuell;
+  }
+#else
+  endptrp = NULL;
+  errno = 0;    /* To distinguish success/failure after call */
+  valuel = strtol(marpaESLIFRecognizerp->integers, &endptrp, 10);
+  /* Note that the exponent in a JSON number always have at least one digit */
+  if ((endptrp != endptrendp) || (errno != 0)) {
+    MARPAESLIF_TRACEF(marpaESLIFp, funcs, "%s: %s parsing failure, %s", numbers, marpaESLIFRecognizerp->integers, errno != 0 ? strerror(errno) : "bad final pointer");
+    goto parsing_to_double;
+  }
+  MARPAESLIF_TRACEF(marpaESLIFp, funcs, "%s: %s parsing success", numbers, marpaESLIFRecognizerp->integers);
+  /* Can we promote it to a less higher thingy ? */
+  if ((SHRT_MIN <= valuel) && (valuel <= SHRT_MAX)) {
+    MARPAESLIF_TRACEF(marpaESLIFp, funcs, "%s: %d fits in a SHORT", numbers, (int) valuel);
+    marpaESLIFValueResult.contextp        = NULL;
+    marpaESLIFValueResult.representationp = NULL;
+    marpaESLIFValueResult.type            = MARPAESLIF_VALUE_TYPE_SHORT;
+    marpaESLIFValueResult.u.b             = (short) valuel;
+  } else if ((INT_MIN <= valuel) && (valuel <= INT_MAX)) {
+    MARPAESLIF_TRACEF(marpaESLIFp, funcs, "%s: %d fits in an INT", numbers, (int) valuel);
+    marpaESLIFValueResult.contextp        = NULL;
+    marpaESLIFValueResult.representationp = NULL;
+    marpaESLIFValueResult.type            = MARPAESLIF_VALUE_TYPE_INT;
+    marpaESLIFValueResult.u.i             = (int) valuel;
+  } else if ((LONG_MIN <= valuel) && (valuel <= LONG_MAX)) {
+    MARPAESLIF_TRACEF(marpaESLIFp, funcs, "%s: %ld remains a LONG", numbers, valuel);
+    marpaESLIFValueResult.contextp        = NULL;
+    marpaESLIFValueResult.representationp = NULL;
+    marpaESLIFValueResult.type            = MARPAESLIF_VALUE_TYPE_LONG;
+    marpaESLIFValueResult.u.l             = valuel;
+  }
+#endif
+
+  goto proposal;
+
+ parsing_to_double:
+  confidenceb = 0;
+  /* In the proposal we go back to the original string, as if nothing has happened. Only the eventual leading '+' */
+  /* remains removed. It is never needed.                                                                         */
+#if defined(C_STRTOLD) && defined(MARPAESLIF_HUGE_VALL)
+  endptrendp = numbers + numberl;
+  /* Do we have to change the decimal point representation ? */
+  decimalPoints = strchr(numbers, '.');
+  decimalPointb = ((decimalPoints != NULL) && (*decimalPoints != marpaESLIFp->decimalPointc)) ? 1 : 0;
+  if (decimalPointb) {
+    *decimalPoints = marpaESLIFp->decimalPointc;
+  }
+
+  endptrp = NULL;
+  errno = 0;    /* To distinguish success/failure after call */
+  valueld = C_STRTOLD(numbers, &endptrp);
+  if (! ((endptrp != endptrendp) /* Parsing error */
+         ||
+         ((errno == ERANGE) && ((valueld == MARPAESLIF_HUGE_VALL) || (valueld == -MARPAESLIF_HUGE_VALL))) /* Overflow */
+         ||
+         ((valueld == 0.) && (errno != 0)) /* Underflow */
+         )) {
+    MARPAESLIF_TRACEF(marpaESLIFp, funcs, "%s: long double parsing success", numbers);
+    marpaESLIFValueResult.contextp        = NULL;
+    marpaESLIFValueResult.representationp = NULL;
+    marpaESLIFValueResult.type            = MARPAESLIF_VALUE_TYPE_LONG_DOUBLE;
+    marpaESLIFValueResult.u.ld            = valueld;
+  } else {
+    MARPAESLIF_TRACEF(marpaESLIFp, funcs, "%s: long double parsing failure, %s", numbers, errno != 0 ? strerror(errno) : "bad final pointer");
+    marpaESLIFValueResult.contextp        = NULL;
+    marpaESLIFValueResult.representationp = NULL;
+    marpaESLIFValueResult.type            = MARPAESLIF_VALUE_TYPE_UNDEF;
+  }
+  if (decimalPointb) {
+    *decimalPoints = '.';
+  }
+#else /* C_STRTOLD && MARPAESLIF_HUGE_VALL */
+#  if defined(C_STRTOD) && defined(MARPAESLIF_HUGE_VAL)
+  endptrendp = numbers + numberl;
+  /* Do we have to change the decimal point representation ? */
+  decimalPoints = strchr(numbers, '.');
+  decimalPointb = ((decimalPoints != NULL) && (*decimalPoints != marpaESLIFp->decimalPointc)) ? 1 : 0;
+  if (decimalPointb) {
+    *decimalPoints = marpaESLIFp->decimalPointc;
+  }
+
+  endptrp = NULL;
+  errno = 0;    /* To distinguish success/failure after call */
+  valued = C_STRTOD(numbers, &endptrp);
+  if (! ((endptrp != endptrendp) /* Parsing error */
+         ||
+         ((errno == ERANGE) && ((valued == MARPAESLIF_HUGE_VAL) || (valued == -MARPAESLIF_HUGE_VAL))) /* Overflow */
+         ||
+         ((valued == 0.) && (errno != 0)) /* Underflow */
+         )) {
+    MARPAESLIF_TRACEF(marpaESLIFp, funcs, "%s: double parsing success", numbers);
+    marpaESLIFValueResult.contextp        = NULL;
+    marpaESLIFValueResult.representationp = NULL;
+    marpaESLIFValueResult.type            = MARPAESLIF_VALUE_TYPE_DOUBLE;
+    marpaESLIFValueResult.u.d             = valued;
+  } else {
+    MARPAESLIF_TRACEF(marpaESLIFp, funcs, "%s: double parsing failure, %s", numbers, errno != 0 ? strerror(errno) : "bad final pointer");
+    marpaESLIFValueResult.contextp        = NULL;
+    marpaESLIFValueResult.representationp = NULL;
+    marpaESLIFValueResult.type            = MARPAESLIF_VALUE_TYPE_UNDEF;
+  }
+  if (decimalPointb) {
+    *decimalPoints = '.';
+  }
+#  else /* C_STRTOD && MARPAESLIF_HUGE_VAL */
+  MARPAESLIF_TRACEF(marpaESLIFp, funcs, "%s: No lib call available for parsing", numbers);
+  marpaESLIFValueResult.contextp        = NULL;
+  marpaESLIFValueResult.representationp = NULL;
+  marpaESLIFValueResult.type            = MARPAESLIF_VALUE_TYPE_UNDEF;
+#  endif  /* C_STRTOD && MARPAESLIF_HUGE_VAL */
+#endif /* C_STRTOLD && MARPAESLIF_HUGE_VALL */
+
+ proposal:
+  if (confidencebp != NULL) {
+    *confidencebp = confidenceb;
+  }
+  if (marpaESLIFValueResultp != NULL) {
+    *marpaESLIFValueResultp = marpaESLIFValueResult;
+  }
+
+  rcb = 1;
+  goto done;
+
+ err:
+  rcb = 0;
+
+ done:
+  return rcb;
+}
+
+/*****************************************************************************/
 static short _marpaESLIFRecognizer_value_validb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFValueResult_t *marpaESLIFValueResultp, void *userDatavp, _marpaESLIFRecognizer_valueResultCallback_t callbackp)
 /*****************************************************************************/
 {
@@ -17343,6 +17943,14 @@ static inline void _marpaESLIFRecognizer_freev(marpaESLIFRecognizer_t *marpaESLI
 
   if (marpaESLIFRecognizerp->expectedTerminalArrayp != NULL) {
     free(marpaESLIFRecognizerp->expectedTerminalArrayp);
+  }
+
+  if (marpaESLIFRecognizerp->numbers != NULL) {
+    free(marpaESLIFRecognizerp->numbers);
+  }
+
+  if (marpaESLIFRecognizerp->integers != NULL) {
+    free(marpaESLIFRecognizerp->integers);
   }
 
   MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "return");
