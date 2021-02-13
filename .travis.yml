@@ -47,7 +47,7 @@ script:
 # DEBUG
   - cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo . -DALL_IN_ONE=ON
   - make marpaESLIFJavaTest_jar
-  - pushd src/bindings/java && valgrind java -Djava.compiler=NONE -XX:UseSSE=0 -Djava.library.path=. -cp `pwd`/marpaESLIF-5.0.5.jar:`pwd`/marpaESLIFJavaTest.jar org.parser.marpa.AppParse
+  - pushd src/bindings/java && valgrind java -Djava.compiler=NONE -XX:UseSSE=0 -Djava.library.path=`pwd`/output/lib -cp `pwd`/marpaESLIF-5.0.5.jar:`pwd`/marpaESLIFJavaTest.jar org.parser.marpa.AppParse
 # We want to try perl standalone first
 #  - cmake --version
 #  - perl CMakeObjects.PL
