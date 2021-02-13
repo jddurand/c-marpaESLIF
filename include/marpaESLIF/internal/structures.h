@@ -301,7 +301,6 @@ struct marpaESLIFGrammar {
   short                      hasPseudoTerminalb; /* Any pseudo terminal in the grammar ? */
   short                      hasEofPseudoTerminalb; /* Any :eof terminal in the grammar ? */
   short                      hasEolPseudoTerminalb; /* Any :eol terminal in the grammar ? */
-  short                      jsonStrictb;        /* For embedded JSON grammar, remember if this is strict JSON or not */
 };
 
 struct marpaESLIF_meta {
@@ -490,12 +489,6 @@ struct marpaESLIFRecognizer {
   /* At every recognizer pass, we use this array whose size is equal to the total number of marpa grammar terminals */
   /* and we set here the number of expected grammar terminals */
   int                         *expectedTerminalArrayp;   /* Total list of expected terminals */
-
-  /* For JSON number helper */
-  char                        *numbers;
-  size_t                       numberallocl;
-  char                        *integers;
-  size_t                       integerallocl;
 };
 
 struct marpaESLIF_lexeme_data {

@@ -33,6 +33,8 @@ typedef struct marpaESLIFJSONContext {
   marpaESLIFReaderDispose_t         readerDisposep;
   marpaESLIFRepresentationDispose_t representationDisposep;
   short                             strictb;
+  char                             *numbers;
+  size_t                            numberallocl;
 } marpaESLIFJSONContext_t;
 
 static const char *MARPAESLIFJSON_DQUOTE          = "\"";
@@ -343,8 +345,6 @@ static inline marpaESLIFGrammar_t *_marpaESLIFJSON_decode_newp(marpaESLIF_t *mar
     goto err;
   }
 
-  /* Remember if this is strict JSON grammar */
-  marpaESLIFJSONp->jsonStrictb = strictb;
   goto done;
 
  err:
@@ -377,8 +377,6 @@ static inline marpaESLIFGrammar_t *_marpaESLIFJSON_encode_newp(marpaESLIF_t *mar
     goto err;
   }
 
-  /* Remember if this is strict JSON grammar */
-  marpaESLIFJSONp->jsonStrictb = strictb;
   goto done;
 
  err:
@@ -408,7 +406,8 @@ short marpaESLIFJSON_decodeb(marpaESLIFGrammar_t *marpaESLIFGrammarJSONp, marpaE
   marpaESLIFJSONContext.marpaESLIFValueOptionp      = marpaESLIFValueOptionp;
   marpaESLIFJSONContext.readerDisposep              = NULL;
   marpaESLIFJSONContext.representationDisposep      = NULL;
-  marpaESLIFJSONContext.strictb                     = marpaESLIFGrammarJSONp->jsonStrictb;
+  marpaESLIFJSONContext.numbers                     = NULL;
+  marpaESLIFJSONContext.numberallocl                = 0;
 
   if (MARPAESLIF_UNLIKELY((marpaESLIFGrammarJSONp == NULL) || (marpaESLIFJSONDecodeOptionp == NULL) || (marpaESLIFRecognizerOptionp == NULL) || (marpaESLIFRecognizerOptionp->readerCallbackp == NULL) || (marpaESLIFValueOptionp == NULL))) {
     errno = EINVAL;
@@ -476,6 +475,9 @@ short marpaESLIFJSON_decodeb(marpaESLIFGrammar_t *marpaESLIFGrammarJSONp, marpaE
   if (marpaESLIFRecognizerp != NULL) {
     marpaESLIFRecognizer_freev(marpaESLIFRecognizerp);
   }
+  if (marpaESLIFJSONContext.numbers != NULL) {
+    free(marpaESLIFJSONContext.numbers);
+  }
   return rcb;
 }
 
@@ -498,7 +500,8 @@ short marpaESLIFJSON_encodeb(marpaESLIFGrammar_t *marpaESLIFGrammarJSONp, marpaE
   marpaESLIFJSONContext.marpaESLIFValueOptionp      = marpaESLIFValueOptionp;
   marpaESLIFJSONContext.readerDisposep              = NULL;
   marpaESLIFJSONContext.representationDisposep      = NULL;
-  marpaESLIFJSONContext.strictb                     = marpaESLIFGrammarJSONp->jsonStrictb;
+  marpaESLIFJSONContext.numbers                     = NULL;
+  marpaESLIFJSONContext.numberallocl                = 0;
 
   if (MARPAESLIF_UNLIKELY((marpaESLIFGrammarJSONp == NULL) || (marpaESLIFValueResultp == NULL) || (marpaESLIFValueOptionp == NULL))) {
     errno = EINVAL;
@@ -550,6 +553,9 @@ short marpaESLIFJSON_encodeb(marpaESLIFGrammar_t *marpaESLIFGrammarJSONp, marpaE
   }
   if (marpaESLIFRecognizerp != NULL) {
     marpaESLIFRecognizer_freev(marpaESLIFRecognizerp);
+  }
+  if (marpaESLIFJSONContext.numbers != NULL) {
+    free(marpaESLIFJSONContext.numbers);
   }
   return rcb;
 }
@@ -869,6 +875,10 @@ static short _marpaESLIFJSON_numberb(void *userDatavp, marpaESLIFValue_t *marpaE
   short                               confidenceb            = 1; /* Set to 0 only when we got through the double case */
   marpaESLIFValueResult_t             marpaESLIFValueResult;
   marpaESLIFValueResult_t            *marpaESLIFValueResultInputp;
+  char                               *arrayp;
+  size_t                              arrayl;
+  char                               *numbers;
+  char                               *tmps;
   short                               rcb;
 
   /* Input is of type array by definition, UTF-8 encoded */
@@ -877,12 +887,36 @@ static short _marpaESLIFJSON_numberb(void *userDatavp, marpaESLIFValue_t *marpaE
     goto err;
   }
 
-  if (! _marpaESLIFRecognizer_numberb(marpaESLIFValuep->marpaESLIFRecognizerp,
-                                      marpaESLIFValueResultInputp->u.a.p,
-                                      marpaESLIFValueResultInputp->u.a.sizel,
-                                      marpaESLIFJSONContextp->strictb,
-                                      &marpaESLIFValueResult,
-                                      &confidenceb)) {
+  arrayp = marpaESLIFValueResultInputp->u.a.p;
+  arrayl = marpaESLIFValueResultInputp->u.a.sizel;
+
+  if (marpaESLIFJSONContextp->numbers == NULL) {
+    marpaESLIFJSONContextp->numbers = (char *) malloc(arrayl + 1); /* + 1 for the NUL byte */
+    if (marpaESLIFJSONContextp->numbers == NULL) {
+        MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "malloc failure, %s", strerror(errno));
+        goto err;
+    }
+    numbers = marpaESLIFJSONContextp->numbers;
+    marpaESLIFJSONContextp->numberallocl = arrayl;
+  } else if (marpaESLIFJSONContextp->numberallocl < arrayl) {
+    numbers = (char *) realloc(marpaESLIFJSONContextp->numbers, arrayl + 1); /* + 1 for the NUL byte */
+    if (tmps == NULL) {
+        MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "realloc failure, %s", strerror(errno));
+        goto err;
+    }
+    numbers = marpaESLIFJSONContextp->numbers = tmps;
+    marpaESLIFJSONContextp->numberallocl = arrayl;
+  } else {
+    numbers = marpaESLIFJSONContextp->numbers;
+  }
+
+  /* Note that the grammar made sure that the number respect the strict mode or not, therefore parsing */
+  /* the string use the non-strict mode used by _marpaESLIF_numberb() will work regardless of the      */
+  /* strict mode.                                                                                      */
+  if (! _marpaESLIF_numberb(marpaESLIFValuep->marpaESLIFp,
+                            numbers,
+                            &marpaESLIFValueResult,
+                            &confidenceb)) {
     goto err;
   }
 

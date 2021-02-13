@@ -6105,13 +6105,13 @@ static short marpaESLIFJava_importb(JNIEnv *envp, marpaESLIF_t *marpaESLIFp, gen
   case MARPAESLIF_VALUE_TYPE_FLOAT:
     /* If value is +/-Infinity or NaN this will be handle natively via jfloat */
     /* fprintf(stderr, "==> %s: MARPAESLIF_VALUE_TYPE_FLOAT: %f\n", funcs, (double) marpaESLIFValueResultp->u.f); fflush(stdout); fflush(stderr); */
-    if (marpaESLIFValueResult_isinfb(marpaESLIFValueResultp)) {
+    if (marpaESLIFValueResult_isinfb(marpaESLIFp, marpaESLIFValueResultp)) {
       if (marpaESLIFValueResultp->u.f >= 0) {
         MARPAESLIFJAVA_IMPORT_POSITIVE_INFINITY(marpaESLIFp, envp, objectp);
       } else {
         MARPAESLIFJAVA_IMPORT_NEGATIVE_INFINITY(marpaESLIFp, envp, objectp);
       }
-    } else if (marpaESLIFValueResult_isnanb(marpaESLIFValueResultp)) {
+    } else if (marpaESLIFValueResult_isnanb(marpaESLIFp, marpaESLIFValueResultp)) {
       MARPAESLIFJAVA_IMPORT_NAN(marpaESLIFp, envp, objectp);
     } else {
       MARPAESLIFJAVA_IMPORT_NUMBER_DECIMAL(marpaESLIFp, envp, objectp, double, marpaESLIFValueResultp->u.f, marpaESLIF_ftos);
@@ -6121,13 +6121,13 @@ static short marpaESLIFJava_importb(JNIEnv *envp, marpaESLIF_t *marpaESLIFp, gen
   case MARPAESLIF_VALUE_TYPE_DOUBLE:
     /* If value is +/-Infinity or NaN this will be handle natively via jdouble */
     /* fprintf(stderr, "==> %s: MARPAESLIF_VALUE_TYPE_DOUBLE: %f\n", funcs, (double) marpaESLIFValueResultp->u.d); fflush(stdout); fflush(stderr); */
-    if (marpaESLIFValueResult_isinfb(marpaESLIFValueResultp)) {
+    if (marpaESLIFValueResult_isinfb(marpaESLIFp, marpaESLIFValueResultp)) {
       if (marpaESLIFValueResultp->u.d >= 0) {
         MARPAESLIFJAVA_IMPORT_POSITIVE_INFINITY(marpaESLIFp, envp, objectp);
       } else {
         MARPAESLIFJAVA_IMPORT_NEGATIVE_INFINITY(marpaESLIFp, envp, objectp);
       }
-    } else if (marpaESLIFValueResult_isnanb(marpaESLIFValueResultp)) {
+    } else if (marpaESLIFValueResult_isnanb(marpaESLIFp, marpaESLIFValueResultp)) {
       MARPAESLIFJAVA_IMPORT_NAN(marpaESLIFp, envp, objectp);
     } else {
       MARPAESLIFJAVA_IMPORT_NUMBER_DECIMAL(marpaESLIFp, envp, objectp, double, marpaESLIFValueResultp->u.d, marpaESLIF_dtos);
@@ -6243,13 +6243,13 @@ static short marpaESLIFJava_importb(JNIEnv *envp, marpaESLIF_t *marpaESLIFp, gen
     MARPAESLIFJAVA_PUSH_PTR(objectStackp, objectHashMapp);
     break;
   case MARPAESLIF_VALUE_TYPE_LONG_DOUBLE:
-    if (marpaESLIFValueResult_isinfb(marpaESLIFValueResultp)) {
+    if (marpaESLIFValueResult_isinfb(marpaESLIFp, marpaESLIFValueResultp)) {
       if (marpaESLIFValueResultp->u.ld >= 0) {
         MARPAESLIFJAVA_IMPORT_POSITIVE_INFINITY(marpaESLIFp, envp, objectp);
       } else {
         MARPAESLIFJAVA_IMPORT_NEGATIVE_INFINITY(marpaESLIFp, envp, objectp);
       }
-    } else if (marpaESLIFValueResult_isnanb(marpaESLIFValueResultp)) {
+    } else if (marpaESLIFValueResult_isnanb(marpaESLIFp, marpaESLIFValueResultp)) {
       MARPAESLIFJAVA_IMPORT_NAN(marpaESLIFp, envp, objectp);
     } else {
       MARPAESLIFJAVA_IMPORT_NUMBER_DECIMAL(marpaESLIFp, envp, objectp, long double, marpaESLIFValueResultp->u.ld, marpaESLIF_ldtos);

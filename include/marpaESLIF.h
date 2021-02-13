@@ -503,6 +503,10 @@ extern "C" {
   marpaESLIF_EXPORT short                         marpaESLIF_versionPatchb(marpaESLIF_t *marpaESLIFp, int *versionPatchip);
   marpaESLIF_EXPORT marpaESLIFOption_t           *marpaESLIF_optionp(marpaESLIF_t *marpaESLIFp);
   marpaESLIF_EXPORT marpaESLIFGrammar_t          *marpaESLIF_grammarp(marpaESLIF_t *marpaESLIFp);
+  /* Helper function that tells if a string could be parsed to a number using the non-strict ESLIF's JSON number formalism */
+  /* restricted to not special numbers, i.e. /[+-]?(?:[0-9]+)(?:\\.[0-9]+)?(?:[eE][+-]?[0-9]+)?/.                          */
+  /* This does NOT handle Infinity nor Nans, see the specific functions later that check on the explicit value.            */
+  marpaESLIF_EXPORT short                         marpaESLIF_numberb(marpaESLIF_t *marpaESLIFp, char *s, marpaESLIFValueResult_t *marpaESLIFValueResultp, short *confidencebp);
 
   marpaESLIF_EXPORT marpaESLIFGrammar_t          *marpaESLIFGrammar_newp(marpaESLIF_t *marpaESLIFp, marpaESLIFGrammarOption_t *marpaESLIFGrammarOptionp);
   marpaESLIF_EXPORT marpaESLIF_t                 *marpaESLIFGrammar_eslifp(marpaESLIFGrammar_t *marpaESLIFGrammarp);
@@ -616,8 +620,6 @@ extern "C" {
   marpaESLIF_EXPORT short                         marpaESLIFValue_importb(marpaESLIFValue_t *marpaESLIFValuep, marpaESLIFValueResult_t *marpaESLIFValueResultp);
   /* marpaESLIFRecognizer_importb call the end-user importerp() function callback. */
   marpaESLIF_EXPORT short                         marpaESLIFRecognizer_importb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFValueResult_t *marpaESLIFValueResultp);
-  /* Helper function that tells if a string could be parsed to a number supported by ESLIF */
-  marpaESLIF_EXPORT short                         marpaESLIFRecognizer_numberb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, char *bytep, size_t bytel, marpaESLIFValueResult_t *marpaESLIFValueResultp, short *confidencebp);
 
   /* Helper routine to guess the encoding of a byte array. If it returns a non-NULL value it is the responsibility of the caller to free it */
   marpaESLIF_EXPORT char                         *marpaESLIF_encodings(marpaESLIF_t *marpaESLIFp, char *bytep, size_t bytel);
@@ -646,8 +648,11 @@ extern "C" {
   /* Value result helpers                  */
   /* ------------------------------------- */
   /* These mathods return a true value if the underlying float, double or long double hosts an infinity or NaN value. */
-  marpaESLIF_EXPORT short                         marpaESLIFValueResult_isinfb(marpaESLIFValueResult_t *marpaESLIFValueResultp);
-  marpaESLIF_EXPORT short                         marpaESLIFValueResult_isnanb(marpaESLIFValueResult_t *marpaESLIFValueResultp);
+  marpaESLIF_EXPORT short                         marpaESLIFValueResult_isinfb(marpaESLIF_t *marpaESLIFp, marpaESLIFValueResult_t *marpaESLIFValueResultp);
+  marpaESLIF_EXPORT short                         marpaESLIFValueResult_isnanb(marpaESLIF_t *marpaESLIFp, marpaESLIFValueResult_t *marpaESLIFValueResultp);
+  /* Not all systems represent correctly +/-Nan, *confidencebp will be a true value if marpaESLIF is sure */
+  marpaESLIF_EXPORT short                         marpaESLIFValueResult_is_positive_nanb(marpaESLIF_t *marpaESLIFp, marpaESLIFValueResult_t *marpaESLIFValueResultp, short *confidencebp);
+  marpaESLIF_EXPORT short                         marpaESLIFValueResult_is_negative_nanb(marpaESLIF_t *marpaESLIFp, marpaESLIFValueResult_t *marpaESLIFValueResultp, short *confidencebp);
 
   /* ------------------------------------- */
   /* Floating point method helpers         */

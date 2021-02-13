@@ -369,8 +369,6 @@ static inline short                           marpaESLIFPerl_recognizerImportb(m
 static inline short                           marpaESLIFPerl_importb(pTHX_ marpaESLIFPerl_importContext_t *importContextp, marpaESLIFValueResult_t *marpaESLIFValueResultp);
 static inline void                            marpaESLIFPerl_generateStringWithLoggerCallback(void *userDatavp, genericLoggerLevel_t logLeveli, const char *msgs);
 static inline short                           marpaESLIFPerl_appendOpaqueDataToStringGenerator(marpaESLIFPerl_stringGeneratorContext_t *marpaESLIFPerl_stringGeneratorContextp, char *p, size_t sizel);
-static inline short                           marpaESLIFPerl_is_scalar_integer_only(pTHX_ SV *svp, int typei);
-static inline short                           marpaESLIFPerl_is_scalar_float_only(pTHX_ SV *svp, int typei);
 static inline short                           marpaESLIFPerl_is_scalar_string_only(pTHX_ SV *svp, int typei);
 static inline short                           marpaESLIFPerl_is_undef(pTHX_ SV *svp, int typei);
 static inline short                           marpaESLIFPerl_is_arrayref(pTHX_ SV *svp, int typei);
@@ -1562,8 +1560,7 @@ static inline void marpaESLIFPerl_valueContextInitv(pTHX_ SV *Perl_MarpaX_ESLIF_
 
   marpaESLIFPerl_GENERICSTACK_INIT(internalStackp);
   if (MARPAESLIF_UNLIKELY(marpaESLIFPerl_GENERICSTACK_ERROR(internalStackp))) {
-    int save_errno = errno;
-    MARPAESLIFPERL_CROAKF("GENERICSTACK_INIT() failure, %s", strerror(save_errno));
+    MARPAESLIFPERL_CROAKF("GENERICSTACK_INIT() failure, %s", strerror(errno));
   }
 
   /* All SVs are SvRV's */
@@ -2245,7 +2242,10 @@ static inline short marpaESLIFPerl_importb(pTHX_ marpaESLIFPerl_importContext_t 
     break;
   case MARPAESLIF_VALUE_TYPE_LONG_DOUBLE:
     /* Note that typecast ld to f is always ok because for +/-Infinity or NaN, because they remains +/-Infinity or NaN */
-    if ((! constantsp->nvtype_is_long_doubleb) && (! constantsp->nvtype_is___float128) && (! marpaESLIFValueResult_isinfb(marpaESLIFValueResultp)) && (! marpaESLIFValueResult_isnanb(marpaESLIFValueResultp))) {
+    if ((! constantsp->nvtype_is_long_doubleb) &&
+        (! constantsp->nvtype_is___float128) &&
+        (! marpaESLIFValueResult_isinfb(importContextp->marpaESLIFp, marpaESLIFValueResultp)) &&
+        (! marpaESLIFValueResult_isnanb(importContextp->marpaESLIFp, marpaESLIFValueResultp))) {
       /* Switch to Math::BigFloat - we must first generate a string representation of this long double. */
 #ifdef PERL_IMPLICIT_CONTEXT
       marpaESLIFPerl_stringGeneratorContext.PerlInterpreterp = importContextp->PerlInterpreterp;
@@ -2444,24 +2444,11 @@ static inline short marpaESLIFPerl_appendOpaqueDataToStringGenerator(marpaESLIFP
 }
 
 /*****************************************************************************/
-static inline short marpaESLIFPerl_is_scalar_integer_only(pTHX_ SV *svp, int typei)
-/*****************************************************************************/
-{
-  return (typei == SCALAR) && SvIOK(svp) && (! SvNOK(svp)) && (! SvPOK(svp));
-}
-
-/*****************************************************************************/
-static inline short marpaESLIFPerl_is_scalar_float_only(pTHX_ SV *svp, int typei)
-/*****************************************************************************/
-{
-  return (typei == SCALAR) && (! SvIOK(svp)) && SvNOK(svp) && (! SvPOK(svp));
-}
-
-/*****************************************************************************/
 static inline short marpaESLIFPerl_is_scalar_string_only(pTHX_ SV *svp, int typei)
 /*****************************************************************************/
 {
-  return (typei == SCALAR) && (! SvIOK(svp)) && (! SvNOK(svp)) && SvPOK(svp);
+  /* It must have been created as a PV or coerced to it at least once */
+  return (typei == SCALAR) && SvPOK(svp);
 }
 
 /*****************************************************************************/
@@ -2574,14 +2561,12 @@ static inline void marpaESLIFPerl_stack_setv(pTHX_ marpaESLIF_t *marpaESLIFp, ma
   /* We maintain in parallel a marpaESLIFValueResult and an SV stacks */
   marpaESLIFPerl_GENERICSTACK_INIT(marpaESLIFValueResultStackp);
   if (MARPAESLIF_UNLIKELY(marpaESLIFPerl_GENERICSTACK_ERROR(marpaESLIFValueResultStackp))) {
-    int save_errno = errno;
-    MARPAESLIFPERL_CROAKF("GENERICSTACK_INIT() failure, %s", strerror(save_errno));
+    MARPAESLIFPERL_CROAKF("GENERICSTACK_INIT() failure, %s", strerror(errno));
   }
 
   marpaESLIFPerl_GENERICSTACK_INIT(svStackp);
   if (MARPAESLIF_UNLIKELY(marpaESLIFPerl_GENERICSTACK_ERROR(svStackp))) {
-    int save_errno = errno;
-    MARPAESLIFPERL_CROAKF("GENERICSTACK_INIT() failure, %s", strerror(save_errno));
+    MARPAESLIFPERL_CROAKF("GENERICSTACK_INIT() failure, %s", strerror(errno));
   }
 
   marpaESLIFPerl_GENERICSTACK_PUSH_PTR(marpaESLIFValueResultStackp, &marpaESLIFValueResult);
@@ -2692,8 +2677,24 @@ static inline void marpaESLIFPerl_stack_setv(pTHX_ marpaESLIF_t *marpaESLIFp, ma
       SvGETMAGIC(svp);
       marpaESLIFValueResultp->u.y             = SvTRUE(svp) ? MARPAESLIFVALUERESULTBOOL_TRUE : MARPAESLIFVALUERESULTBOOL_FALSE;
       eslifb = 1;
-    } else if (marpaESLIFPerl_is_scalar_integer_only(aTHX_ svp, typei)) {
-      /* Note that we use SvIVX because the upper case made sure we have an IV */
+    } else if ((typei == SCALAR) && SvNOK(svp)) {
+      nv = SvNVX(svp);
+      if (constantsp->nvtype_is_long_doubleb) {
+        /* NVTYPE is long double -; */
+        marpaESLIFValueResultp->type            = MARPAESLIF_VALUE_TYPE_LONG_DOUBLE;
+        marpaESLIFValueResultp->contextp        = MARPAESLIFPERL_CONTEXT;
+        marpaESLIFValueResultp->representationp = NULL;
+        marpaESLIFValueResultp->u.ld            = (long double) nv;
+        eslifb = 1;
+      } else if (! constantsp->nvtype_is___float128) {
+        /* NVTYPE is double -; */
+        marpaESLIFValueResultp->type            = MARPAESLIF_VALUE_TYPE_DOUBLE;
+        marpaESLIFValueResultp->contextp        = MARPAESLIFPERL_CONTEXT;
+        marpaESLIFValueResultp->representationp = NULL;
+        marpaESLIFValueResultp->u.d             = (double) nv;
+        eslifb = 1;
+      }
+    } else if ((typei == SCALAR) && SvIOK(svp)) {
       iv = SvIVX(svp);
       if ((iv >= SHRT_MIN) && (iv <= SHRT_MAX)) {
         /* Ok if it fits into [SHRT_MIN,SHRT_MAX] */
@@ -2725,26 +2726,6 @@ static inline void marpaESLIFPerl_stack_setv(pTHX_ marpaESLIF_t *marpaESLIFp, ma
         marpaESLIFValueResultp->u.ll            = (MARPAESLIF_LONG_LONG) iv;
         eslifb = 1;
 #endif
-      }
-    } else if (marpaESLIFPerl_is_scalar_float_only(aTHX_ svp, typei)) {
-      /* Note that we use SvNVX because the upper case made sure we have an NV */
-       nv = SvNVX(svp);
-      if (sv_cmp(svp, sv_2mortal(newSVnv(nv))) == 0) {
-        if (constantsp->nvtype_is_long_doubleb) {
-          /* NVTYPE is long double -; */
-          marpaESLIFValueResultp->type            = MARPAESLIF_VALUE_TYPE_LONG_DOUBLE;
-          marpaESLIFValueResultp->contextp        = MARPAESLIFPERL_CONTEXT;
-          marpaESLIFValueResultp->representationp = NULL;
-          marpaESLIFValueResultp->u.ld            = (long double) nv;
-          eslifb = 1;
-        } else if (! constantsp->nvtype_is___float128) {
-          /* NVTYPE is double -; */
-          marpaESLIFValueResultp->type            = MARPAESLIF_VALUE_TYPE_DOUBLE;
-          marpaESLIFValueResultp->contextp        = MARPAESLIFPERL_CONTEXT;
-          marpaESLIFValueResultp->representationp = NULL;
-          marpaESLIFValueResultp->u.d             = (double) nv;
-          eslifb = 1;
-        }
       }
     } else if ((marpaESLIFStringb = marpaESLIFPerl_is_MarpaX__ESLIF__String(aTHX_ svp, typei)) /* Must be first because of marpaESLIFStringb */ || marpaESLIFPerl_is_scalar_string_only(aTHX_ svp, typei)) {
 
@@ -2945,6 +2926,8 @@ static inline short marpaESLIFPerl_JSONDecodeNegativeNanAction(void *userDatavp,
   dTHXa(MarpaX_ESLIF_Valuep->PerlInterpreterp);
 
   if (confidenceb) {
+    /* This will be injected as a float for sure. Take care Perl may very represent it a "NaN" */
+    /* instead of "-NaN" though.                                                               */
     return 1;
   }
 
@@ -3205,8 +3188,7 @@ CODE:
 
   marpaESLIFGrammarp = marpaESLIFJSON_encode_newp(marpaESLIFp, strictb);
   if (MARPAESLIF_UNLIKELY(marpaESLIFGrammarp == NULL)) {
-    int save_errno = errno;
-    MARPAESLIFPERL_CROAKF("marpaESLIFJSON_encode_newp failure, %s", strerror(save_errno));
+    MARPAESLIFPERL_CROAKF("marpaESLIFJSON_encode_newp failure, %s", strerror(errno));
   }
   MarpaX_ESLIF_JSON_Encoderp->marpaESLIFGrammarp = marpaESLIFGrammarp;
 
@@ -3295,8 +3277,7 @@ CODE:
 
   marpaESLIFGrammarp = marpaESLIFJSON_decode_newp(marpaESLIFp, strictb);
   if (MARPAESLIF_UNLIKELY(marpaESLIFGrammarp == NULL)) {
-    int save_errno = errno;
-    MARPAESLIFPERL_CROAKF("marpaESLIFJSON_decode_newp failure, %s", strerror(save_errno));
+    MARPAESLIFPERL_CROAKF("marpaESLIFJSON_decode_newp failure, %s", strerror(errno));
   }
   MarpaX_ESLIF_JSON_Decoderp->marpaESLIFGrammarp = marpaESLIFGrammarp;
 
@@ -3328,7 +3309,6 @@ CODE:
   marpaESLIFRecognizerOption_t  marpaESLIFRecognizerOption;
   SV                           *svp;
   int                           typei;
-  IV                            iv;
   size_t                        maxDepthl = 0;
 
   /*
@@ -3341,13 +3321,13 @@ CODE:
 
   /* maxDepth option verification */
   typei = marpaESLIFPerl_getTypei(aTHX_ Perl_maxDepthp);
-  if (! marpaESLIFPerl_is_scalar_integer_only(aTHX_ Perl_maxDepthp, typei)) {
+  if ((typei != SCALAR) || (!SvIOK(svp))) {
     /* This is an error unless it is undef */
     if (! marpaESLIFPerl_is_undef(aTHX_ Perl_maxDepthp, typei)) {
       MARPAESLIFPERL_CROAK("maxDepth option must be an integer scalar or undef");
     }
   } else {
-    maxDepthl = (size_t) SvIVX(Perl_maxDepthp);
+    maxDepthl = (size_t) SvIVX(svp);
   }
   marpaESLIFJSONDecodeOption.disallowDupkeysb                = SvTRUE(Perl_disallowDupkeysp) ? 1 : 0;
   marpaESLIFJSONDecodeOption.maxDepthl                       = maxDepthl;
