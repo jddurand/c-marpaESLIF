@@ -50,7 +50,7 @@ script:
 # ALL_IN_ONE
   - git clean -ffdx
   - cmake --version
-  - CFLAGS+="-g -fsanitize=address -fsanitize-recover=address -U_FORTIFY_SOURCE -fno-omit-frame-pointer -fno-common" CXXFLAGS+="-fsanitize=address -fsanitize-recover=address -U_FORTIFY_SOURCE -fno-omit-frame-pointer -fno-common" LDFLAGS+="-fsanitize=address" cmake . -DALL_IN_ONE=ON
+  - cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo . -DALL_IN_ONE=ON
   - make check VERBOSE=1
   - make pack VERBOSE=1
   - cpack -G NSIS
@@ -59,7 +59,7 @@ script:
 # Not ALL_IN_ONE
   - git clean -ffdx
   - cmake --version
-  - CFLAGS+="-g -fsanitize=address -fsanitize-recover=address -U_FORTIFY_SOURCE -fno-omit-frame-pointer -fno-common" CXXFLAGS+="-fsanitize=address -fsanitize-recover=address -U_FORTIFY_SOURCE -fno-omit-frame-pointer -fno-common" LDFLAGS+="-fsanitize=address" cmake .
+  - cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo .
   - make VERBOSE=1
   - make check VERBOSE=1
   - make pack VERBOSE=1
