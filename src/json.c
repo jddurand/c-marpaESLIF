@@ -899,7 +899,7 @@ static short _marpaESLIFJSON_numberb(void *userDatavp, marpaESLIFValue_t *marpaE
     numbers = marpaESLIFJSONContextp->numbers;
     marpaESLIFJSONContextp->numberallocl = arrayl;
   } else if (marpaESLIFJSONContextp->numberallocl < arrayl) {
-    numbers = (char *) realloc(marpaESLIFJSONContextp->numbers, arrayl + 1); /* + 1 for the NUL byte */
+    tmps = (char *) realloc(marpaESLIFJSONContextp->numbers, arrayl + 1); /* + 1 for the NUL byte */
     if (tmps == NULL) {
         MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "realloc failure, %s", strerror(errno));
         goto err;
