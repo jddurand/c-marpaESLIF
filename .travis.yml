@@ -44,23 +44,26 @@ before_script:
   - sh ./install-c-tconv.sh
   - sh ./install-c-luaunpanic.sh
 script:
-# We want to try perl standalone first
-  - cmake --version
-  - perl CMakeObjects.PL
-  - git clean -ffdx
-# ALL_IN_ONE
-  - cmake --version
+# DEBUG
   - cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo . -DALL_IN_ONE=ON
-  - make check VERBOSE=1
-  - make pack VERBOSE=1
-  - cpack -G NSIS
-  - make install DESTDIR=/tmp VERBOSE=1
-  - git clean -ffdx
+  - cd src/bindings/java && valgrind java -Djava.compiler=NONE -XX:UseSSE=0 -Djava.library.path=. -cp `pwd`/marpaESLIF-5.0.5.jar:`pwd`/marpaESLIFJavaTest.jar org.parser.marpa.AppParse >& /tmp/jdd.txt
+# We want to try perl standalone first
+#  - cmake --version
+#  - perl CMakeObjects.PL
+#  - git clean -ffdx
+# ALL_IN_ONE
+#  - cmake --version
+#  - cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo . -DALL_IN_ONE=ON
+#  - make check VERBOSE=1
+#  - make pack VERBOSE=1
+#  - cpack -G NSIS
+#  - make install DESTDIR=/tmp VERBOSE=1
+#  - git clean -ffdx
 # Not ALL_IN_ONE
-  - cmake --version
-  - cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo .
-  - make VERBOSE=1
-  - make check VERBOSE=1
-  - make pack VERBOSE=1
-  - cpack -G NSIS
-  - sudo make install VERBOSE=1
+#  - cmake --version
+#  - cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo .
+#  - make VERBOSE=1
+#  - make check VERBOSE=1
+#  - make pack VERBOSE=1
+#  - cpack -G NSIS
+#  - sudo make install VERBOSE=1
