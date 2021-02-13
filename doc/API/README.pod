@@ -147,6 +147,44 @@ will add C<%[]>, C<%{}> etc... built-in action names, that will I<not> be manage
 
 Returns the options used to create the C<marpaESLIFp> instance, or C<NULL> if failure. The returned pointer must I<never> be freed.
 
+=head3 C<marpaESLIF_grammarp>
+
+  marpaESLIFGrammar_t *marpaESLIF_grammarp(marpaESLIF_t *marpaESLIFp);
+
+Returns the ESLIF grammar itself, or C<NULL> if failure. The returned pointer must I<never> be freed.
+
+=head3 C<marpaESLIF_numberb>
+
+  marpaESLIF_EXPORT short marpaESLIF_numberb(marpaESLIF_t *marpaESLIFp, char *s, marpaESLIFValueResult_t *marpaESLIFValueResultp, short *confidencebp);
+
+Tries to parse the C<NUL> terminated string pointed by C<s> as a JSON relaxed number, i.e. with possible leading C<+> and zeroes. Returns in C<marpaESLIFValueResultp>, when not C<NULL>, the result, and in C<confidencebp>, when not C<NULL>, a true number if ESLIF is sure.
+
+Returns a true value on success, a false value otherwise.
+
+=head3 C<marpaESLIFValueResult_isinfb>
+
+  short marpaESLIFValueResult_isinfb(marpaESLIF_t *marpaESLIFp, marpaESLIFValueResult_t *marpaESLIFValueResultp);
+
+Returns a true value if C<marpaESLIFp> and C<marpaESLIFValueResultp> arguments are correct and if C<marpaESLIFValueResultp> hosts an infinity number.
+
+=head3 C<marpaESLIFValueResult_isnanb>
+
+  short marpaESLIFValueResult_isnanb(marpaESLIF_t *marpaESLIFp, marpaESLIFValueResult_t *marpaESLIFValueResultp);
+
+Returns a true value if C<marpaESLIFp> and C<marpaESLIFValueResultp> arguments are correct and if C<marpaESLIFValueResultp> hosts a NaN.
+
+=head3 C<marpaESLIFValueResult_is_positive_nanb>
+
+  short marpaESLIFValueResult_is_positive_nanb(marpaESLIF_t *marpaESLIFp, marpaESLIFValueResult_t *marpaESLIFValueResultp, short *confidencebp);
+
+Returns a true value if C<marpaESLIFp> and C<marpaESLIFValueResultp> arguments are correct and if C<marpaESLIFValueResultp> hosts a positive NaN number. ESLIF returns a true value in C<confidenceb> when it is sure, a false otherwise. The false value happens when getting the C<NaN> is not sure about the sign.
+
+=head3 C<marpaESLIFValueResult_is_negative_nanb>
+
+  short marpaESLIFValueResult_is_negative_nanb(marpaESLIF_t *marpaESLIFp, marpaESLIFValueResult_t *marpaESLIFValueResultp, short *confidencebp);
+
+Returns a true value if C<marpaESLIFp> and C<marpaESLIFValueResultp> arguments are correct and if C<marpaESLIFValueResultp> hosts a negative NaN number. ESLIF returns a true value in C<confidenceb> when it is sure, a false otherwise. The false value happens when getting the C<NaN> is not sure about the sign.
+
 =head3 C<marpaESLIF_freev>
 
   void marpaESLIF_freev(marpaESLIF_t *marpaESLIFp);
