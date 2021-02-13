@@ -203,7 +203,7 @@ Most of the APIs in this section have two forms, one for the I<current> grammar,
 The default current grammar is always at level C<0>, that must exist. Level <0> is naturally considered like the I<top level> grammar. Nevertheless it is possible to instanciate a parsing at a I<different> level, then the I<current grammar> in derived namespaces like the recognizer or the valuation is I<the level you asked for>. For example:
 
   A :[0]:= X          # Could have been A ::= X, '::=' is an alias for ':[0]:'
-  X :[1]:= Y@+2       # Could have been X ~ Y@+2, '~' is an alias for ':[1]:'
+  X :[1]:= Y@+2       # Could have been X ~ Y@+1, '~' is an alias for ':[1]:'
   Y :[3]:= 'Z'
 
 declares grammars at level C<0>, C<1> and C<3>. Grammar at level C<2> is undefined.
