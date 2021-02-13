@@ -910,6 +910,9 @@ static short _marpaESLIFJSON_numberb(void *userDatavp, marpaESLIFValue_t *marpaE
     numbers = marpaESLIFJSONContextp->numbers;
   }
 
+  memcpy(numbers, arrayp, arrayl);
+  numbers[arrayl] = '\0';
+
   /* Note that the grammar made sure that the number respect the strict mode or not, therefore parsing */
   /* the string use the non-strict mode used by _marpaESLIF_numberb() will work regardless of the      */
   /* strict mode.                                                                                      */
@@ -923,8 +926,8 @@ static short _marpaESLIFJSON_numberb(void *userDatavp, marpaESLIFValue_t *marpaE
   if (MARPAESLIF_UNLIKELY(! _marpaESLIFJSON_proposalb(userDatavp,
                                                       marpaESLIFValuep,
                                                       marpaESLIFJSONContextp->marpaESLIFJSONDecodeOptionp->numberActionp,
-                                                      marpaESLIFValueResultInputp->u.a.p,
-                                                      marpaESLIFValueResultInputp->u.a.sizel,
+                                                      arrayp,
+                                                      arrayl,
                                                       &marpaESLIFValueResult,
                                                       confidenceb))) {
     goto err;
