@@ -25,6 +25,7 @@ static short                                _marpaESLIFJSON_proposalb(void *user
 static void                                 _marpaESLIFJSONRepresentationDisposev(void *userDatavp, char *inputcp, size_t inputl, char *encodingasciis);
 static short                                _marpaESLIFJSONRepresentationb(void *userDatavp, marpaESLIFValueResult_t *marpaESLIFValueResultp, char **inputcpp, size_t *inputlp, char **encodingasciisp, marpaESLIFRepresentationDispose_t *disposeCallbackpp);
 
+#define MARPAESLIFJSON_ARRAYL_IN_STRUCTURE 1024
 typedef struct marpaESLIFJSONContext {
   size_t                             currentDepthl;
   marpaESLIFJSONDecodeOption_t      *marpaESLIFJSONDecodeOptionp;
@@ -33,6 +34,7 @@ typedef struct marpaESLIFJSONContext {
   marpaESLIFReaderDispose_t         readerDisposep;
   marpaESLIFRepresentationDispose_t representationDisposep;
   short                             strictb;
+  char                             _numbers[MARPAESLIFJSON_ARRAYL_IN_STRUCTURE + 1]; /* To avoid allocation for the vast majority of cases in my opinion -; */
   char                             *numbers;
   size_t                            numberallocl;
 } marpaESLIFJSONContext_t;
@@ -890,24 +892,28 @@ static short _marpaESLIFJSON_numberb(void *userDatavp, marpaESLIFValue_t *marpaE
   arrayp = marpaESLIFValueResultInputp->u.a.p;
   arrayl = marpaESLIFValueResultInputp->u.a.sizel;
 
-  if (marpaESLIFJSONContextp->numbers == NULL) {
-    marpaESLIFJSONContextp->numbers = (char *) malloc(arrayl + 1); /* + 1 for the NUL byte */
+  if (arrayl <= MARPAESLIFJSON_ARRAYL_IN_STRUCTURE) {
+    numbers = marpaESLIFJSONContextp->_numbers;
+  } else {
     if (marpaESLIFJSONContextp->numbers == NULL) {
+      marpaESLIFJSONContextp->numbers = (char *) malloc(arrayl + 1); /* + 1 for the NUL byte */
+      if (marpaESLIFJSONContextp->numbers == NULL) {
         MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "malloc failure, %s", strerror(errno));
         goto err;
-    }
-    numbers = marpaESLIFJSONContextp->numbers;
-    marpaESLIFJSONContextp->numberallocl = arrayl;
-  } else if (marpaESLIFJSONContextp->numberallocl < arrayl) {
-    tmps = (char *) realloc(marpaESLIFJSONContextp->numbers, arrayl + 1); /* + 1 for the NUL byte */
-    if (tmps == NULL) {
+      }
+      numbers = marpaESLIFJSONContextp->numbers;
+      marpaESLIFJSONContextp->numberallocl = arrayl;
+    } else if (marpaESLIFJSONContextp->numberallocl < arrayl) {
+      tmps = (char *) realloc(marpaESLIFJSONContextp->numbers, arrayl + 1); /* + 1 for the NUL byte */
+      if (tmps == NULL) {
         MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "realloc failure, %s", strerror(errno));
         goto err;
+      }
+      numbers = marpaESLIFJSONContextp->numbers = tmps;
+      marpaESLIFJSONContextp->numberallocl = arrayl;
+    } else {
+      numbers = marpaESLIFJSONContextp->numbers;
     }
-    numbers = marpaESLIFJSONContextp->numbers = tmps;
-    marpaESLIFJSONContextp->numberallocl = arrayl;
-  } else {
-    numbers = marpaESLIFJSONContextp->numbers;
   }
 
   memcpy(numbers, arrayp, arrayl);
