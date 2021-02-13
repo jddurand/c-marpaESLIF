@@ -50,7 +50,7 @@ script:
 # ALL_IN_ONE
   - git clean -ffdx
   - cmake --version
-  - cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo . -DALL_IN_ONE=ON
+  - cmake -DCMAKE_BUILD_TYPE=Release . -DALL_IN_ONE=ON
   - make check VERBOSE=1
   - make pack VERBOSE=1
   - cpack -G NSIS
@@ -59,7 +59,7 @@ script:
 # Not ALL_IN_ONE
   - git clean -ffdx
   - cmake --version
-  - cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo .
+  - cmake -DCMAKE_BUILD_TYPE=Release .
   - make VERBOSE=1
   - make check VERBOSE=1
   - make pack VERBOSE=1
