@@ -439,9 +439,9 @@ Completion, predicted or nulled events are supported, targetting a symbol name. 
 
 For example:
 
-  event a     = completed  symbolname
-  event b=off = nulled     symbolname
-  event c=on  = predicted ^symbolname
+  event symbolname$      = completed symbolname
+  event symbolname[]=off = nulled    symbolname
+  event ^symbolname=on   = predicted symbolname
 
 =item Generic event callback
 
