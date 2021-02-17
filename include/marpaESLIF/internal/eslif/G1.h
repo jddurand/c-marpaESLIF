@@ -105,6 +105,7 @@ typedef enum bootstrap_grammar_G1_enum {
   G1_TERMINAL_FALLBACK_ENCODING,
   G1_TERMINAL__EOF,
   G1_TERMINAL__EOL,
+  G1_TERMINAL__SOL,
   G1_TERMINAL_WHITESPACE,
   G1_TERMINAL_PERL_COMMENT,
   G1_TERMINAL_CPLUSPLUS_COMMENT,
@@ -1078,6 +1079,14 @@ bootstrap_grammar_terminal_t bootstrap_grammar_G1_terminals[] = {
     NULL, NULL
 #endif
   },
+  { G1_TERMINAL__SOL, MARPAESLIF_TERMINAL_TYPE_STRING, NULL,
+    "':sol'",
+#ifndef MARPAESLIF_NTRACE
+    ":sol", ":so"
+#else
+    NULL, NULL
+#endif
+  },
   { G1_TERMINAL_WHITESPACE, MARPAESLIF_TERMINAL_TYPE_REGEX, NULL,
     "[\\s]+",
 #ifndef MARPAESLIF_NTRACE
@@ -1453,6 +1462,7 @@ bootstrap_grammar_rule_t bootstrap_grammar_G1_rules[] = {
   { G1_META_TERMINAL,                         G1_RULE_TERMINAL_3,                             MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_QUOTED_STRING                        }, -1,                        -1,      -1,              0, G1_ACTION_TERMINAL_3 },
   { G1_META_TERMINAL,                         G1_RULE_TERMINAL_4,                             MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_TERMINAL__EOF                             }, -1,                        -1,      -1,              0, G1_ACTION_TERMINAL_4 },
   { G1_META_TERMINAL,                         G1_RULE_TERMINAL_5,                             MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_TERMINAL__EOL                             }, -1,                        -1,      -1,              0, G1_ACTION_TERMINAL_5 },
+  { G1_META_TERMINAL,                         G1_RULE_TERMINAL_6,                             MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_TERMINAL__SOL                             }, -1,                        -1,      -1,              0, G1_ACTION_TERMINAL_6 },
   { G1_META_SYMBOL,                           G1_RULE_SYMBOL,                                 MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_SYMBOL_NAME                          }, -1,                        -1,      -1,              0, G1_ACTION_SYMBOL },
   /*
     lhsi                                      descs                                           type                          nrhsl  { rhsi }                                       }  minimumi           separatori  properb hideseparatorb  actions

@@ -493,6 +493,7 @@ static const marpaESLIF_uint32_t pcre2_option_partial_default = PCRE2_NOTEMPTY|P
 
 static const char *MARPAESLIF_TERMINAL__EOF = ":eof";
 static const char *MARPAESLIF_TERMINAL__EOL = ":eol";
+static const char *MARPAESLIF_TERMINAL__SOL = ":sol";
 
 /* For reset of values in the stack, it is okay to not care about the union -; */
 static const marpaESLIFValueResult_t marpaESLIFValueResultUndef = {
@@ -1093,6 +1094,10 @@ static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *mar
       utf8s = (char *) MARPAESLIF_TERMINAL__EOL;
       utf8l = strlen(MARPAESLIF_TERMINAL__EOL);
       break;
+    case MARPAESLIF_TERMINAL_TYPE__SOL:
+      utf8s = (char *) MARPAESLIF_TERMINAL__SOL;
+      utf8l = strlen(MARPAESLIF_TERMINAL__SOL);
+      break;
     default:
       MARPAESLIF_ERRORF(marpaESLIFp, "Invalid builtin terminal type %d", type);
       errno = EINVAL;
@@ -1191,6 +1196,12 @@ static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *mar
         MARPAESLIF_ERRORF(marpaESLIFp, "strdup failure, %s", strerror(errno));
         goto err;
       }
+    } else if (type == MARPAESLIF_TERMINAL_TYPE__SOL) {
+      generatedasciis = strdup(content2descp->asciis);
+      if (MARPAESLIF_UNLIKELY(generatedasciis == NULL)) {
+        MARPAESLIF_ERRORF(marpaESLIFp, "strdup failure, %s", strerror(errno));
+        goto err;
+      }
     } else {
       /* "/" + XXX + "/" (without escaping) */
       if (modifiers != NULL) {
@@ -1226,6 +1237,10 @@ static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *mar
     break;
 
   case MARPAESLIF_TERMINAL_TYPE__EOL:
+    /* No op */
+    break;
+
+  case MARPAESLIF_TERMINAL_TYPE__SOL:
     /* No op */
     break;
 
@@ -1773,6 +1788,7 @@ static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *mar
     marpaESLIFGrammar.hasPseudoTerminalb    = 0;
     marpaESLIFGrammar.hasEofPseudoTerminalb = 0;
     marpaESLIFGrammar.hasEolPseudoTerminalb = 0;
+    marpaESLIFGrammar.hasSolPseudoTerminalb = 0;
 
     /* Fake a recognizer. EOF flag will be set automatically in fake mode */
     marpaESLIFRecognizerTestp = _marpaESLIFRecognizer_newp(&marpaESLIFGrammar,
@@ -4973,6 +4989,7 @@ static inline marpaESLIF_t *_marpaESLIF_newp(marpaESLIFOption_t *marpaESLIFOptio
   marpaESLIFp->marpaESLIFGrammarp->hasPseudoTerminalb      = 0;
   marpaESLIFp->marpaESLIFGrammarp->hasEofPseudoTerminalb   = 0;
   marpaESLIFp->marpaESLIFGrammarp->hasEolPseudoTerminalb   = 0;
+  marpaESLIFp->marpaESLIFGrammarp->hasSolPseudoTerminalb   = 0;
 
   marpaESLIFp->marpaESLIFGrammarp->grammarStackp = &(marpaESLIFp->marpaESLIFGrammarp->_grammarStack);
   GENERICSTACK_INIT(marpaESLIFp->marpaESLIFGrammarp->grammarStackp);
@@ -5194,6 +5211,17 @@ static inline short _marpaESLIFRecognizer_terminal_matcherb(marpaESLIFRecognizer
           matchedp       = (char *) MARPAESLIF_EMPTY_STRING;
           matchedLengthl = 0;
         }
+      }
+      break;
+
+    case MARPAESLIF_TERMINAL_TYPE__SOL:
+      /* Remember that :sol enforced newlineb option - therefore columnl is always accurate */
+      /* even in the presence of :discard.                                                  */
+      if (marpaESLIF_streamp->columnl == 1) {
+        MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, ":sol match");
+        rci            = MARPAESLIF_MATCH_OK;
+        matchedp       = (char *) MARPAESLIF_EMPTY_STRING;
+        matchedLengthl = 0;
       }
       break;
 
@@ -6236,6 +6264,7 @@ static inline marpaESLIFGrammar_t *_marpaESLIFGrammar_newp(marpaESLIF_t *marpaES
     marpaESLIFGrammarp->hasPseudoTerminalb      = 0;
     marpaESLIFGrammarp->hasEofPseudoTerminalb   = 0;
     marpaESLIFGrammarp->hasEolPseudoTerminalb   = 0;
+    marpaESLIFGrammarp->hasSolPseudoTerminalb   = 0;
   } else {
     marpaESLIFGrammarp = marpaESLIfGrammarPreviousp;
   }
@@ -9970,8 +9999,8 @@ static inline marpaESLIFRecognizer_t *_marpaESLIFRecognizer_newp(marpaESLIFGramm
 
   if (! fakeb) {
 
-    /* If the grammar has :eol anywhere, enforce newlineb option */
-    if (marpaESLIFGrammarp->hasEolPseudoTerminalb && (! marpaESLIFRecognizerp->marpaESLIFRecognizerOption.newlineb)) {
+    /* If the grammar has :sol anywhere, enforce newlineb option */
+    if (marpaESLIFGrammarp->hasSolPseudoTerminalb) {
       marpaESLIFRecognizerp->marpaESLIFRecognizerOption.newlineb = 1;
     }
 
@@ -10367,7 +10396,7 @@ static inline short _marpaESLIFRecognizer_isCanContinueb(marpaESLIFRecognizer_t 
         goto err;
       }
       if (eofb && (inputl <= 0)) {
-        /* False unless :eof pseudo terminal is expected */
+        /* False unless a pseudo terminal is expected */
         if (MARPAESLIF_UNLIKELY(! _marpaESLIFRecognizer_isPseudoTerminalExpectedb(marpaESLIFRecognizerp, &isPseudoTerminalExpectedb))) {
           goto err;
         }
@@ -12667,7 +12696,8 @@ static inline void _marpaESLIF_grammar_createshowv(marpaESLIFGrammar_t *marpaESL
         switch (symbolp->u.terminalp->type) {
         case MARPAESLIF_TERMINAL_TYPE__EOF:
         case MARPAESLIF_TERMINAL_TYPE__EOL:
-          /* We know we made a 100% ASCII compatible pattern that is the builtin lexeme itself when the original type is _EOF or _EOL */
+        case MARPAESLIF_TERMINAL_TYPE__SOL:
+          /* We know we made a 100% ASCII compatible pattern that is the builtin lexeme itself when the original type is _EOF, _EOL or _SOL */
           MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, " ");
           MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, symbolp->u.terminalp->patterns);
           MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "\n");
@@ -19617,6 +19647,7 @@ short marpaESLIFSymbol_tryb(marpaESLIFSymbol_t *marpaESLIFSymbolp, char *inputs,
   marpaESLIFGrammar.hasPseudoTerminalb    = 0;
   marpaESLIFGrammar.hasEofPseudoTerminalb = 0;
   marpaESLIFGrammar.hasEolPseudoTerminalb = 0;
+  marpaESLIFGrammar.hasSolPseudoTerminalb = 0;
   
   /* Fake a recognizer. EOF flag will be set automatically in fake mode */
   marpaESLIFRecognizerp = _marpaESLIFRecognizer_newp(&marpaESLIFGrammar,

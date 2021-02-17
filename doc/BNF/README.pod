@@ -59,9 +59,15 @@ A zero-length terminal that matches only at the of the stream.
 
 =item :eol
 
+A zero-length terminal that matches only before a newline.
+
+=item :sol
+
 A zero-length terminal that matches only after a newline.
 
-Note that the newline is hardcoded to be any unicode newline, i.e. C<(*BSR_UNICODE)\R> in PCRE2 terminology. The presence of :eol pseudo-terminal anywhere in the grammar enforces the C<newlineb> flag in recognizers.
+Note that the newline is hardcoded to be any unicode newline, i.e. C<(*BSR_UNICODE)\R> in PCRE2 terminology.
+
+The presence of :sol pseudo-terminal anywhere in the grammar enforces the C<newlineb> flag in recognizers, because a C<:discard> rule can contain C<(*BSR_UNICODE)\R> characters, and then only newline count can safely indicate the beginning of a line. On the contrary C<:eof> and C<:eol> work regardless of recognizer's C<newlineb> flag. In particular C<:eol> is doing a positive look-forward of C<(*BSR_UNICODE)\R> in the stream.
 
 =back
 

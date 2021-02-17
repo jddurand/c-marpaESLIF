@@ -57,6 +57,7 @@ enum marpaESLIF_terminal_type {
   MARPAESLIF_TERMINAL_TYPE_REGEX,    /* Regular expression */
   MARPAESLIF_TERMINAL_TYPE__EOF,     /* :eof */
   MARPAESLIF_TERMINAL_TYPE__EOL,     /* :eol */
+  MARPAESLIF_TERMINAL_TYPE__SOL      /* :sol */
 };
 
 /* Regex modifiers - we take JPCRE2 matching semantics, c.f. https://neurobin.org/projects/softwares/libs/jpcre2/ */
@@ -301,6 +302,7 @@ struct marpaESLIFGrammar {
   short                      hasPseudoTerminalb; /* Any pseudo terminal in the grammar ? */
   short                      hasEofPseudoTerminalb; /* Any :eof terminal in the grammar ? */
   short                      hasEolPseudoTerminalb; /* Any :eol terminal in the grammar ? */
+  short                      hasSolPseudoTerminalb; /* Any :sol terminal in the grammar ? */
 };
 
 struct marpaESLIF_meta {
