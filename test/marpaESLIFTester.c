@@ -656,7 +656,7 @@ static short eventManagerb(int *eventCountip, marpaESLIFRecognizer_t *marpaESLIF
   rcb = 0;
 
  done:
-  if (tmps == NULL) {
+  if (tmps != NULL) {
     free(tmps);
   }
   return rcb;
