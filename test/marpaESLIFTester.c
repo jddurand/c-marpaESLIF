@@ -12,7 +12,7 @@ static short                           default_lexeme_actionb(void *userDatavp, 
 static short                           inputReaderb(void *userDatavp, char **inputsp, size_t *inputlp, short *eofbp, short *characterStreambp, char **encodingsp, size_t *encodinglp, marpaESLIFReaderDispose_t *disposeCallbackpp);
 static short                           eventManagerb(int *eventCountip, marpaESLIFRecognizer_t *marpaESLIFRecognizerp, genericLogger_t *genericLoggerp);
 static void                            genericLoggerCallback(void *userDatavp, genericLoggerLevel_t logLeveli, const char *msgs);
-static short                           alternativeRepresentation(void *userDatavp, marpaESLIFValueResult_t *valueResultp, char **inputcpp, size_t *inputlp, short *characterStreambp, char **encodingsp, size_t *encodinglp);
+static short                           alternativeRepresentation(void *userDatavp, marpaESLIFValueResult_t *marpaESLIFValueResultp, char **inputcpp, size_t *inputlp, char **encodingasciisp, marpaESLIFRepresentationDispose_t *disposeCallbackpp, short *stringbp);
 short                                  importb(marpaESLIFValue_t *marpaESLIFValuep, void *userDatavp, marpaESLIFValueResult_t *marpaESLIFValueResultp);
 
 typedef struct marpaESLIFTester_context {
@@ -22,6 +22,8 @@ typedef struct marpaESLIFTester_context {
   char            *values;
   size_t           valuel;
 } marpaESLIFTester_context_t;
+
+const static char *charEncodings = "ASCII";
 
 const static char *exceptions = "\n"
   ":start ::= <start2>\n"
@@ -610,9 +612,7 @@ static short eventManagerb(int *eventCountip, marpaESLIFRecognizer_t *marpaESLIF
         marpaESLIFAlternative.value.type            = MARPAESLIF_VALUE_TYPE_CHAR;
         marpaESLIFAlternative.value.u.c             = *inputs;
         marpaESLIFAlternative.value.contextp        =  NULL; /* Not used */
-        /* We push a MARPAESLIF_VALUE_TYPE_CHAR : default representation is ok */
-        marpaESLIFAlternative.value.representationp = NULL;
-        /* marpaESLIFAlternative.value.representationp = alternativeRepresentation; */
+        marpaESLIFAlternative.value.representationp = alternativeRepresentation;
         marpaESLIFAlternative.grammarLengthl        = 1;
         if (! marpaESLIFRecognizer_lexeme_readb(marpaESLIFRecognizerp, &marpaESLIFAlternative, 1 /* Length in the real input */)) {
           goto err;
@@ -701,14 +701,15 @@ static void genericLoggerCallback(void *userDatavp, genericLoggerLevel_t logLeve
 }
 
 /*****************************************************************************/
-static short alternativeRepresentation(void *userDatavp, marpaESLIFValueResult_t *valueResultp, char **inputcpp, size_t *inputlp, short *characterStreambp, char **encodingsp, size_t *encodinglp)
+static short alternativeRepresentation(void *userDatavp, marpaESLIFValueResult_t *marpaESLIFValueResultp, char **inputcpp, size_t *inputlp, char **encodingasciisp, marpaESLIFRepresentationDispose_t *disposeCallbackpp, short *stringbp)
 /*****************************************************************************/
 {
   /* We know that we are pushing a CHAR */
-
-  *inputcpp          = &valueResultp->u.c;
+  *inputcpp          = &(marpaESLIFValueResultp->u.c);
   *inputlp           = 1;
-  *characterStreambp = 1;
+  *encodingasciisp   = (char *) charEncodings;
+  *disposeCallbackpp = NULL;
+  /* *stringbp untouched */
 
   return 1;
 }

@@ -1155,7 +1155,7 @@ static void marpaESLIFJava_recognizerContextFreev(JNIEnv *envp, marpaESLIFRecogn
 static short marpaESLIFJava_valueContextInitb(JNIEnv *envp, jobject eslifValueInterfacep, jobject eslifGrammarp, marpaESLIFValueContext_t *marpaESLIFValueContextp);
 static short marpaESLIFJava_recognizerContextInitb(JNIEnv *envp, jobject eslifRecognizerInterfacep, marpaESLIFRecognizerContext_t *marpaESLIFRecognizerContextp, short haveLexemeStackb);
 static void marpaESLIFJava_representationCallbackDisposev(void *userDatavp, char *inputcp, size_t inputl, char *encodingasciis);
-static short marpaESLIFJava_representationCallbackb(void *userDatavp, marpaESLIFValueResult_t *marpaESLIFValueResultp, char **inputcpp, size_t *inputlp, char **encodingasciisp, marpaESLIFRepresentationDispose_t *disposeCallbackpp);
+static short marpaESLIFJava_representationCallbackb(void *userDatavp, marpaESLIFValueResult_t *marpaESLIFValueResultp, char **inputcpp, size_t *inputlp, char **encodingasciisp, marpaESLIFRepresentationDispose_t *disposeCallbackpp, short *stringbp);
 static jobject marpaESLIFJava_grammarPropertiesp(JNIEnv *envp, marpaESLIFGrammarProperty_t *grammarPropertyp);
 static jobject marpaESLIFJava_rulePropertiesp(JNIEnv *envp, marpaESLIFRuleProperty_t *rulePropertyp);
 static jobject marpaESLIFJava_symbolPropertiesp(JNIEnv *envp, marpaESLIFSymbolProperty_t *symbolPropertyp);
@@ -5485,7 +5485,7 @@ static void marpaESLIFJava_representationCallbackDisposev(void *userDatavp, char
 }
 
 /*****************************************************************************/
-static short marpaESLIFJava_representationCallbackb(void *userDatavp, marpaESLIFValueResult_t *marpaESLIFValueResultp, char **inputcpp, size_t *inputlp, char **encodingasciisp, marpaESLIFRepresentationDispose_t *disposeCallbackpp)
+static short marpaESLIFJava_representationCallbackb(void *userDatavp, marpaESLIFValueResult_t *marpaESLIFValueResultp, char **inputcpp, size_t *inputlp, char **encodingasciisp, marpaESLIFRepresentationDispose_t *disposeCallbackpp, short *stringbp)
 /*****************************************************************************/
 {
   static const char        *funcs = "marpaESLIFJava_representationCallbackb";
@@ -5581,6 +5581,11 @@ static short marpaESLIFJava_representationCallbackb(void *userDatavp, marpaESLIF
   *inputlp           = utf8l;
   *encodingasciisp   = (char *) marpaESLIFJava_UTF8s;
   *disposeCallbackpp = marpaESLIFJava_representationCallbackDisposev;
+
+  /* We overwrite the string context only when we know we derive from Math::BigDecimal */
+  if ((*envp)->IsInstanceOf(envp, objectp, JAVA_MATH_BIGDECIMAL_CLASSP) == JNI_TRUE) {
+    *stringbp = 0;
+  }
 
   rcb = 1;
   goto done;
@@ -6450,6 +6455,7 @@ static short marpaESLIFJava_stack_setb(JNIEnv *envp, marpaESLIFValue_t *marpaESL
   jmethodID                getValueMethodp;
   jclass                   nextclassp;
   marpaESLIFRepresentationDispose_t disposeCallbackp;
+  short                    stringb;
 
   /*
     Java Type                        marpaESLIFType
@@ -6578,7 +6584,8 @@ static short marpaESLIFJava_stack_setb(JNIEnv *envp, marpaESLIFValue_t *marpaESL
                                                      (char **) &(marpaESLIFValueResultp->u.s.p),
                                                      &(marpaESLIFValueResultp->u.s.sizel),
                                                      &(marpaESLIFValueResultp->u.s.encodingasciis),
-						     &disposeCallbackp)) {
+                                                     &disposeCallbackp,
+                                                     &stringb)) {
           goto err;
         }
 	/* Note that disposeCallbackp value is ignored because we push the result in marpaESLIFValueResultp that has */

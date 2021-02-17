@@ -362,7 +362,7 @@ static inline void                            marpaESLIFPerl_paramIsGrammarv(pTH
 static inline void                            marpaESLIFPerl_paramIsEncodingv(pTHX_ SV *sv);
 static inline short                           marpaESLIFPerl_paramIsLoggerInterfaceOrUndefb(pTHX_ SV *sv);
 static inline void                            marpaESLIFPerl_representationDisposev(void *userDatavp, char *inputcp, size_t inputl, char *encodingasciis);
-static inline short                           marpaESLIFPerl_representationb(void *userDatavp, marpaESLIFValueResult_t *marpaESLIFValueResultp, char **inputcpp, size_t *inputlp, char **encodingasciisp, marpaESLIFRepresentationDispose_t *disposeCallbackpp);
+static inline short                           marpaESLIFPerl_representationb(void *userDatavp, marpaESLIFValueResult_t *marpaESLIFValueResultp, char **inputcpp, size_t *inputlp, char **encodingasciisp, marpaESLIFRepresentationDispose_t *disposeCallbackpp, short *stringbp);
 static inline char                           *marpaESLIFPerl_sv2byte(pTHX_ marpaESLIF_t *marpaESLIFp, SV *svp, char **bytepp, size_t *bytelp, short encodingInformationb, short *characterStreambp, char **encodingsp, size_t *encodinglp, short warnIsFatalb, short marpaESLIFStringb, MarpaX_ESLIF_constants_t *constantsp);
 static inline short                           marpaESLIFPerl_valueImportb(marpaESLIFValue_t *marpaESLIFValuep, void *userDatavp, marpaESLIFValueResult_t *marpaESLIFValueResultp);
 static inline short                           marpaESLIFPerl_recognizerImportb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, void *userDatavp, marpaESLIFValueResult_t *marpaESLIFValueResultp);
@@ -1703,12 +1703,14 @@ static inline void marpaESLIFPerl_representationDisposev(void *userDatavp, char 
 }
 
 /*****************************************************************************/
-static inline short marpaESLIFPerl_representationb(void *userDatavp, marpaESLIFValueResult_t *marpaESLIFValueResultp, char **inputcpp, size_t *inputlp, char **encodingasciisp, marpaESLIFRepresentationDispose_t *disposeCallbackpp)
+static inline short marpaESLIFPerl_representationb(void *userDatavp, marpaESLIFValueResult_t *marpaESLIFValueResultp, char **inputcpp, size_t *inputlp, char **encodingasciisp, marpaESLIFRepresentationDispose_t *disposeCallbackpp, short *stringbp)
 /*****************************************************************************/
 {
   static const char    *funcs               = "marpaESLIFPerl_representationb";
   MarpaX_ESLIF_Value_t *MarpaX_ESLIF_Valuep = (MarpaX_ESLIF_Value_t *) userDatavp;
   marpaESLIF_t         *marpaESLIFp;
+  SV                   *svp;
+  int                   typei;
   dTHXa(MarpaX_ESLIF_Valuep->PerlInterpreterp);
 
   /* We always push a PTR */
@@ -1720,7 +1722,15 @@ static inline short marpaESLIFPerl_representationb(void *userDatavp, marpaESLIFV
     MARPAESLIFPERL_CROAKF("User-defined value context is not MARPAESLIFPERL_CONTEXT but %p", marpaESLIFValueResultp->contextp);
   }
   marpaESLIFp = marpaESLIFGrammar_eslifp(marpaESLIFRecognizer_grammarp(marpaESLIFValue_recognizerp(MarpaX_ESLIF_Valuep->marpaESLIFValuep)));
-  marpaESLIFPerl_sv2byte(aTHX_ marpaESLIFp, (SV *) marpaESLIFValueResultp->u.p.p, inputcpp, inputlp, 1 /* encodingInformationb */, NULL /* characterStreambp */, encodingasciisp, NULL /* encodinglp */, 0 /* warnIsFatalb */, 0 /* marpaESLIFStringb */, MarpaX_ESLIF_Valuep->constantsp);
+  svp = (SV *) marpaESLIFValueResultp->u.p.p;
+  marpaESLIFPerl_sv2byte(aTHX_ marpaESLIFp, svp, inputcpp, inputlp, 1 /* encodingInformationb */, NULL /* characterStreambp */, encodingasciisp, NULL /* encodinglp */, 0 /* warnIsFatalb */, 0 /* marpaESLIFStringb */, MarpaX_ESLIF_Valuep->constantsp);
+
+  /* We overwrite *stringbp only when we are sure that the context is truely a number. This can happen only on */
+  /* SVs that derive from Math::BigInt or Math::BigFloat, that we explicitly inject as PTR in ESLIF.           */
+  typei = marpaESLIFPerl_getTypei(aTHX_ svp);
+  if (marpaESLIFPerl_is_Math__BigInt(aTHX_ svp, typei) || marpaESLIFPerl_is_Math__BigFloat(aTHX_ svp, typei)) {
+    *stringbp = 0;
+  }
 
   *disposeCallbackpp = marpaESLIFPerl_representationDisposev;
 

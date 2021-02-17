@@ -15336,10 +15336,10 @@ static short _marpaESLIFRecognizer_concat_valueResultCallbackb(void *userDatavp,
   genericLogger_t                        *genericLoggerp              = marpaESLIFValuep->stringGeneratorLoggerp;
   short                                   displayNextAsJsonStringb    = 0;
   char                                   *encodingasciitofrees        = NULL;
-  short                                   stringb                     = contextp->stringb;
   short                                   jsonb                       = contextp->jsonb || contextp->jsonfb; /* Note that jsonb implies UTF-8's stringb by construction */
   marpaESLIFRepresentationDispose_t       disposeCallbackp            = NULL;
   short                                   disposeCallbackb            = 0; /* To know if we have to call disposer */
+  short                                   stringb;
   char                                   *srcs;
   size_t                                  srcl;
   genericStack_t                          todoStack;
@@ -15358,6 +15358,7 @@ static short _marpaESLIFRecognizer_concat_valueResultCallbackb(void *userDatavp,
   char                                   *encodingasciis;
   marpaESLIFValueResult_t                *marpaESLIFValueResultTmpp;
   marpaESLIFValueResultPair_t            *marpaESLIFValueResultPairp;
+  short                                   isTrueStringb;
   size_t                                  sizel;
 
   MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_INC;
@@ -15405,6 +15406,9 @@ static short _marpaESLIFRecognizer_concat_valueResultCallbackb(void *userDatavp,
       }
     }
 
+    /* stringb is the default coming from the context */
+    stringb = contextp->stringb;
+
     /* User representation is used, if any. Then finally the marpaESLIFValueResult is either STRING or ARRAY */
     if (representationp != NULL) {
       srcs = NULL;
@@ -15417,7 +15421,8 @@ static short _marpaESLIFRecognizer_concat_valueResultCallbackb(void *userDatavp,
 	}
 	disposeCallbackb = 0;
       }
-      if (MARPAESLIF_UNLIKELY(! representationp(representationUserDatavp, marpaESLIFValueResultp, &srcs, &srcl, &encodingasciis, &disposeCallbackp))) {
+      isTrueStringb = 1; /* Default value is always the safe value: caller's representation is truely a string */
+      if (MARPAESLIF_UNLIKELY(! representationp(representationUserDatavp, marpaESLIFValueResultp, &srcs, &srcl, &encodingasciis, &disposeCallbackp, &isTrueStringb))) {
         goto err;
       }
       disposeCallbackb = (disposeCallbackp != NULL) ? 1 : 0;
@@ -15443,6 +15448,11 @@ static short _marpaESLIFRecognizer_concat_valueResultCallbackb(void *userDatavp,
           _marpaESLIFValueResultRepresentation.u.a.shallowb       = 1;
           _marpaESLIFValueResultRepresentation.u.a.freeUserDatavp = NULL;
           _marpaESLIFValueResultRepresentation.u.a.freeCallbackp  = NULL;
+        }
+
+        /* We take into account isTrueStringb only when the original is opaque, i.e. PTR */
+        if (marpaESLIFValueResultp->type == MARPAESLIF_VALUE_TYPE_PTR) {
+          stringb = isTrueStringb;
         }
         marpaESLIFValueResultp = &_marpaESLIFValueResultRepresentation;
       }

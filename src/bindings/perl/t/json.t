@@ -104,6 +104,11 @@ my @inputs = (
      }",
     "{\"+Inf\":+Inf, \"-Inf\":-Inf, \"+NaN\":+NaN, \"-NaN\":-NaN}",
     );
+{
+  use POSIX qw(setlocale);
+  setlocale(&POSIX::LC_ALL, "fr_FR.utf-8");
+  push(@inputs, "{\"invalid\": 123.45e-17}");
+}
 
 my $eslif = MarpaX::ESLIF->new($log);
 isa_ok($eslif, 'MarpaX::ESLIF');
