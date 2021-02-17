@@ -218,20 +218,16 @@ typedef marpaESLIFValueSymbolCallback_t (*marpaESLIFValueSymbolActionResolver_t)
 /* by an external call, and usually represents something that the end-user wants to remain       */
 /* opaque to ESLIF. In such a case, if there is a representation callback, the end-user can      */
 /* inform ESLIF if he wanted to use marpaESLIFValueResultp as a string or not.                   */
-/* This has an impact on how ESLIF will represent *inputcp: if *stringbp is true, ESLIF will     */
-/* automatically surround the representation with double quotes, else this will be printed as-is */
-/* with the risk to produce something invalid depending on serialization context (e.g. the       */
-/* :json action).                                                                                */
-/* The default value of *stringbp is always the safe thing, i.e. a true value: the external      */
-/* representation is assumed to representation a string in the caller's context.                 */
+/* This has an impact on how ESLIF will represent *inputcp depending on serialization context    */
+/* (e.g. the :json action).                                                                      */
+/* The default value of *stringbp is always the safe thing, i.e. a true value.                   */
 /* The eventual overwrite of *stringbp is ignored when marpaESLIFValueResultp->type is not       */
 /* MARPAESLIF_VALUE_TYPE_PTR.                                                                    */
 /* Typical usages are:                                                                           */
-/* - Host variables that depend on the language context, e.g. in Perl.                           */
+/* - Host variables whose type depend on the language context, e.g. in Perl.                     */
 /* - Host languages that took over number representations, e.g. Math::BigDecimal in              */
 /*   Java, Math::BigFloat and Math::BigInt in Perl.                                              */
-/* the Perl language where a variable type depend on the context. It is strongly advised to      */
-/* overwrite *stringb to 0 /only/ when the intended usage is a number.                           */
+/* It is strongly advised to overwrite *stringb to 0 /ONLY/ when the intended usage is a number. */
 /* --------------------------------------------------------------------------------------------- */
 typedef void (*marpaESLIFRepresentationDispose_t)(void *userDatavp, char *inputcp, size_t inputl, char *encodingasciis);
 typedef short (*marpaESLIFRepresentation_t)(void *userDatavp, marpaESLIFValueResult_t *marpaESLIFValueResultp, char **inputcpp, size_t *inputlp, char **encodingasciisp, marpaESLIFRepresentationDispose_t *disposeCallbackpp, short *stringbp);

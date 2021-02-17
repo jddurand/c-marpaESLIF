@@ -1015,7 +1015,8 @@ A Value result is of type C<marpaESLIFValueResult_t> with more meta data:
                                               char **inputcpp,
                                               size_t *inputlp,
                                               char **encodingasciisp,
-                                              marpaESLIFRepresentationDispose_t *disposeCallbackpp);
+                                              marpaESLIFRepresentationDispose_t *disposeCallbackpp,
+                                              short *stringbp);
   typedef struct marpaESLIFValueResult {
     void                      *contextp;          /* Free value meaningful only to the user */
     marpaESLIFRepresentation_t representationp;   /* How a user-land alternative is represented if it was in the input */
