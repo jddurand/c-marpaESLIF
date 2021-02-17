@@ -975,7 +975,7 @@ static inline short _marpaESLIF_bootstrap_search_terminal_pseudob(marpaESLIF_t *
     if (symbol_i_p->type != MARPAESLIF_SYMBOL_TYPE_TERMINAL) {
       continue;
     }
-    if (symbol_i_p->u.terminalp->pseudob) {
+    if (! symbol_i_p->u.terminalp->pseudob) {
       continue;
     }
     if (symbol_i_p->u.terminalp->type != terminalType) {
