@@ -24,13 +24,13 @@ typedef struct marpaESLIFTester_context {
 } marpaESLIFTester_context_t;
 
 const static char *exceptions = "\n"
-  ":start ::= <start then eol then X then eof>\n"
+  ":start ::= <start2>\n"
   ":discard ::= /[\\s]+/ event => :symbol\n"
   ":discard ::= \xE2\x80\x9C@\\\xE2\x80\x9D\xE2\x80\x9D event => discard_arobace\n"
   "event ^start = predicted start\n"
   "event start[] = nulled start\n"
   "event start$ = completed start\n"
-  "<start then eol then X then eof> ::= start chars :eol 'X' eof :eol :eof :eof :eol :eol\n"
+  "<start2> ::= start chars :eol 'X' eof :eol :eof :eof :eol :eol\n"
   "start ::= thisstart - startException\n"
   "\n"
   "thisstart ~ chars '!'\n"
@@ -547,6 +547,7 @@ static short inputReaderb(void *userDatavp, char **inputsp, size_t *inputlp, sho
 static short eventManagerb(int *eventCountip, marpaESLIFRecognizer_t *marpaESLIFRecognizerp, genericLogger_t *genericLoggerp)
 /*****************************************************************************/
 {
+  char                   *tmps = NULL;
   marpaESLIFEvent_t      *eventArrayp;
   size_t                  eventArrayl;
   size_t                  eventArrayIteratorl;
@@ -559,6 +560,22 @@ static short eventManagerb(int *eventCountip, marpaESLIFRecognizer_t *marpaESLIF
 
   (*eventCountip)++;
 
+  if (! marpaESLIFRecognizer_inputb(marpaESLIFRecognizerp, &inputs, &inputl)) {
+    goto err;
+  }
+
+  /* Add a NUL byte */
+  tmps = (char *) malloc(inputl + 1);
+  if (tmps == NULL) {
+    GENERICLOGGER_ERRORF(genericLoggerp, "malloc error %s", strerror(errno));
+    goto err;
+  }
+  memcpy(tmps, inputs, inputl);
+  inputs = tmps;
+  inputs[inputl] = '\0';
+
+  GENERICLOGGER_INFOF(genericLoggerp, "[%3d] Events at <%s>", *eventCountip, inputs);
+
   if (! marpaESLIFRecognizer_eventb(marpaESLIFRecognizerp, &eventArrayl, &eventArrayp)) {
     goto err;
   }
@@ -567,7 +584,7 @@ static short eventManagerb(int *eventCountip, marpaESLIFRecognizer_t *marpaESLIF
   if (! marpaESLIFRecognizer_discard_tryb(marpaESLIFRecognizerp, &discardMatchb)) {
     goto err;
   }
-  GENERICLOGGER_INFOF(genericLoggerp, "Discard try returned %s", discardMatchb ? "true" : "false");
+  GENERICLOGGER_INFOF(genericLoggerp, "[%3d] Discard try returned %s", *eventCountip, discardMatchb ? "true" : "false");
 
   for (eventArrayIteratorl = 0; eventArrayIteratorl < eventArrayl; eventArrayIteratorl++) {
     switch (eventArrayp[eventArrayIteratorl].type) {
@@ -582,9 +599,6 @@ static short eventManagerb(int *eventCountip, marpaESLIFRecognizer_t *marpaESLIF
       break;
     case MARPAESLIF_EVENTTYPE_BEFORE:
       if (! marpaESLIFRecognizer_isEofb(marpaESLIFRecognizerp, &eofb)) {
-        goto err;
-      }
-      if (! marpaESLIFRecognizer_inputb(marpaESLIFRecognizerp, &inputs, &inputl)) {
         goto err;
       }
       GENERICLOGGER_INFOF(genericLoggerp, "[%3d] Event %s for symbol %s (character is %c (0x%lx), eofb is %d)", *eventCountip, eventArrayp[eventArrayIteratorl].events, eventArrayp[eventArrayIteratorl].symbols, *inputs, (unsigned long) *inputs, (int) eofb);
@@ -640,6 +654,9 @@ static short eventManagerb(int *eventCountip, marpaESLIFRecognizer_t *marpaESLIF
   rcb = 0;
 
  done:
+  if (tmps == NULL) {
+    free(tmps);
+  }
   return rcb;
 }
 
