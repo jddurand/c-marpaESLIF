@@ -835,6 +835,8 @@ static inline char                  *_marpaESLIF_charset_canonicals(marpaESLIF_t
 #ifdef MARPAESLIF_NAN
 static inline void                   _marpaESLIF_guessNanv(marpaESLIF_t *marpaESLIFp);
 #endif
+static inline short                  _marpaESLIFRecognizer_context_setb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFRecognizerContext_t marpaESLIFRecognizerContext);
+static inline short                  _marpaESLIFRecognizer_context_getb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, int earleySetIdi, marpaESLIFRecognizerContext_t *marpaESLIFRecognizerContextp);
 
 /*****************************************************************************/
 static inline marpaESLIF_string_t *_marpaESLIF_string_newp(marpaESLIF_t *marpaESLIFp, char *encodingasciis, char *bytep, size_t bytel)
@@ -8654,7 +8656,7 @@ static inline short _marpaESLIFRecognizer_lexeme_completeb(marpaESLIFRecognizer_
   /* set latest earleme set id mapping if trackb is true */
   if (marpaESLIFRecognizerp->marpaESLIFRecognizerOption.trackb) {
     /* Get latest earleme set id */
-    if (MARPAESLIF_UNLIKELY(!  marpaWrapperRecognizer_latestb(marpaESLIFRecognizerp->marpaWrapperRecognizerp, &latestEarleySetIdi))) {
+    if (MARPAESLIF_UNLIKELY(! marpaWrapperRecognizer_latestb(marpaESLIFRecognizerp->marpaWrapperRecognizerp, &latestEarleySetIdi))) {
       goto err;
     }
 
@@ -19790,6 +19792,83 @@ static inline void _marpaESLIF_guessNanv(marpaESLIF_t *marpaESLIFp)
 #endif /* C_COPYSIGNF */
 }
 #endif /* MARPAESLIF_NAN */
+
+/*****************************************************************************/
+static inline short _marpaESLIFRecognizer_context_setb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFRecognizerContext_t marpaESLIFRecognizerContext)
+/*****************************************************************************/
+{
+  marpaWrapperRecognizerContext_t marpaWrapperRecognizerContext;
+
+  marpaWrapperRecognizerContext.valuei = marpaESLIFRecognizerContext.contexti;
+  marpaWrapperRecognizerContext.valuep = marpaESLIFRecognizerContext.contextp;
+
+  return marpaWrapperRecognizer_contextSetb(marpaESLIFRecognizerp->marpaWrapperRecognizerp, marpaWrapperRecognizerContext);
+}
+
+/*****************************************************************************/
+static inline short _marpaESLIFRecognizer_context_getb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, int earleySetIdi, marpaESLIFRecognizerContext_t *marpaESLIFRecognizerContextp)
+/*****************************************************************************/
+{
+  marpaWrapperRecognizerContext_t marpaWrapperRecognizerContext;
+
+  if (! marpaWrapperRecognizer_contextGetb(marpaESLIFRecognizerp->marpaWrapperRecognizerp, earleySetIdi, &marpaWrapperRecognizerContext)) {
+    return 0;
+  }
+
+  marpaESLIFRecognizerContextp->contexti = marpaWrapperRecognizerContext.valuei;
+  marpaESLIFRecognizerContextp->contextp = marpaWrapperRecognizerContext.valuep;
+
+  return 1;
+}
+
+/*****************************************************************************/
+short marpaESLIFRecognizer_context_setb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFRecognizerContext_t marpaESLIFRecognizerContext)
+/*****************************************************************************/
+{
+  short rcb;
+
+  if (MARPAESLIF_UNLIKELY(marpaESLIFRecognizerp == NULL)) {
+    errno = EINVAL;
+    goto err;
+  }
+
+  rcb = _marpaESLIFRecognizer_context_setb(marpaESLIFRecognizerp, marpaESLIFRecognizerContext);
+  goto done;
+
+ err:
+  rcb = 0;
+
+ done:
+  return rcb;
+}
+
+/*****************************************************************************/
+short marpaESLIFRecognizer_context_getb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, int earleySetIdi, marpaESLIFRecognizerContext_t *marpaESLIFRecognizerContextp)
+/*****************************************************************************/
+{
+  short                         rcb;
+  marpaESLIFRecognizerContext_t marpaESLIFRecognizerContext;
+
+  if (MARPAESLIF_UNLIKELY(marpaESLIFRecognizerp == NULL)) {
+    errno = EINVAL;
+    goto err;
+  }
+
+  rcb = _marpaESLIFRecognizer_context_getb(marpaESLIFRecognizerp, earleySetIdi, &marpaESLIFRecognizerContext);
+  goto done;
+
+ err:
+  rcb = 0;
+
+ done:
+  if (rcb) {
+    if (marpaESLIFRecognizerContextp != NULL) {
+      *marpaESLIFRecognizerContextp = marpaESLIFRecognizerContext;
+    }
+  }
+
+  return rcb;
+}
 
 #include "bootstrap.c"
 #include "lua.c"
