@@ -114,7 +114,8 @@
 #define G1_RULE_EVENT_NAME_3                     "G1_rule_event_name_3"
 #define G1_RULE_EVENT_NAME_4                     "G1_rule_event_name_4"
 #define G1_RULE_EVENT_NAME_5                     "G1_rule_event_name_4"
-#define G1_RULE_LHS                              "G1_rule_lhs"
+#define G1_RULE_LHS_1                            "G1_rule_lhs_1"
+#define G1_RULE_LHS_2                            "G1_rule_lhs_2"
 #define G1_RULE_RHS                              "G1_rule_rhs"
 #define G1_RULE_RHS_ALTERNATIVE_1                "G1_rule_rhs_alternative_1"
 #define G1_RULE_RHS_ALTERNATIVE_2                "G1_rule_rhs_alternative_2"
@@ -125,6 +126,7 @@
 #define G1_RULE_RHS_ALTERNATIVE_7                "G1_rule_rhs_alternative_7"
 #define G1_RULE_RHS_PRIMARY_1                    "G1_rule_rhs_primary_1"
 #define G1_RULE_RHS_PRIMARY_2                    "G1_rule_rhs_primary_2"
+#define G1_RULE_RHS_PRIMARY_3                    "G1_rule_rhs_primary_3"
 #define G1_RULE_SINGLE_SYMBOL_1                  "G1_rule_single_symbol_1"
 #define G1_RULE_SINGLE_SYMBOL_2                  "G1_rule_single_symbol_2"
 #define G1_RULE_TERMINAL_1                       "G1_rule_terminal_1"
@@ -195,6 +197,13 @@
 #define G1_RULE_DEFAULTENCODING_NAME             "G1_rule_defaultencoding_name"
 #define G1_RULE_FALLBACK_ENCODING                "G1_rule_fallback_encoding"
 #define G1_RULE_FALLBACKENCODING_NAME            "G1_rule_fallbackencoding_name"
+#define G1_RULE_PARAMETERS_DECLARATION           "G1_rule_parameters_declaration"
+#define G1_RULE_PARAMETERS                       "G1_rule_parameters"
+#define G1_RULE_PARAMETER                        "G1_rule_parameter"
+#define G1_RULE_ARGUMENTS_DECLARATION            "G1_rule_arguments_declaration"
+#define G1_RULE_ARGUMENTS                        "G1_rule_arguments"
+#define G1_RULE_ARGUMENT_1                       "G1_rule_argument_1"
+#define G1_RULE_ARGUMENT_2                       "G1_rule_argument_2"
 
 #define G1_ACTION_STATEMENTS                       "::undef"
 #define G1_ACTION_STATEMENT_01                     "::undef"
@@ -308,7 +317,8 @@
 #define G1_ACTION_EVENT_NAME_3                     "::ascii" /* <event name> ::= ':discard[on]' */
 #define G1_ACTION_EVENT_NAME_4                     "::ascii" /* <event name> ::= ':discard[off]' */
 #define G1_ACTION_EVENT_NAME_5                     "::ascii" /* <event name> ::= ':discard[switch]' */
-#define G1_ACTION_LHS                              "::shift" /* lhs ::= <symbol name> */
+#define G1_ACTION_LHS_1                            "::shift" /* lhs ::= <symbol name> */
+#define G1_ACTION_LHS_2                            "::copy[0]" // "G1_action_lhs_2" /* lhs ::= lhs <parameters declaration> */ /* TO DO */
 #define G1_ACTION_RHS                              "G1_action_rhs"                              /* done */
 #define G1_ACTION_RHS_ALTERNATIVE_1                "G1_action_rhs_alternative_1"                /* done */
 #define G1_ACTION_RHS_ALTERNATIVE_2                "G1_action_rhs_alternative_2"                /* done */
@@ -319,6 +329,7 @@
 #define G1_ACTION_RHS_ALTERNATIVE_7                "G1_action_rhs_alternative_7"                /* done */
 #define G1_ACTION_RHS_PRIMARY_1                    "G1_action_rhs_primary_1"                    /* done */
 #define G1_ACTION_RHS_PRIMARY_2                    "G1_action_rhs_primary_2"                    /* done */
+#define G1_ACTION_RHS_PRIMARY_3                    "::copy[0]" // "G1_action_rhs_primary_3" /* <rhs primary> ::= <rhs primary> <arguments declaration>  */ /* TO DO */
 #define G1_ACTION_SINGLE_SYMBOL_1                  "G1_action_single_symbol_1"                  /* done */
 #define G1_ACTION_SINGLE_SYMBOL_2                  "G1_action_single_symbol_2"                  /* done */
 #define G1_ACTION_TERMINAL_1                       "G1_action_terminal_1"                       /* done */
@@ -386,6 +397,13 @@
 #define G1_ACTION_DEFAULTENCODING_NAME             "::ascii" /* <default encoding name> ::= <ascii graph name> */
 #define G1_ACTION_FALLBACKENCODING                 "G1_action_fallbackencoding"                   /* done */
 #define G1_ACTION_FALLBACKENCODING_NAME            "::ascii" /* <fallback encoding name> ::= <ascii graph name> */
+#define G1_ACTION_PARAMETERS_DECLARATION           "::undef" // "G1_action_parameters_declaration" /* TO DO */
+#define G1_ACTION_PARAMETERS                       "::undef" // "G1_action_parameters" /* TO DO */
+#define G1_ACTION_PARAMETER                        "::undef" // "G1_action_parameter" /* TO DO */
+#define G1_ACTION_ARGUMENTS_DECLARATION            "::undef" // "G1_action_arguments_declaration" /* TO DO */
+#define G1_ACTION_ARGUMENTS                        "::undef" // "G1_action_arguments" /* TO DO */
+#define G1_ACTION_ARGUMENT_1                       "::undef" // "G1_action_argument_1" /* TO DO */
+#define G1_ACTION_ARGUMENT_2                       "::undef" // "G1_action_argument_2" /* TO DO */
 
 typedef struct bootstrap_grammar_terminal {
   int                        idi;                 /* Identifier */

@@ -60,6 +60,9 @@ const static char *exceptions = "\n"
   "event arobace[] = nulled arobace\n"
   "event arobace$ = completed arobace\n"
   "arobace ::= \xE2\x80\x9C@\\\xE2\x80\x9D\xE2\x80\x9D\n"
+  "\n"
+  "lhs(X,Y) ::= Z->($X)\n"
+  "Z(X,Y) ::= 'Z'\n"
   ;
 
 int main() {

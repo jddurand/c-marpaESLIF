@@ -695,7 +695,7 @@ extern "C" {
   marpaESLIF_EXPORT char                         *marpaESLIF_ldtos(marpaESLIF_t *marpaESLIFp, long double ld);
 
   /* -------------------------------------- */
-  /* Terminals not not bound to any grammar */
+  /* Symbols not not bound to any grammar   */
   /* -------------------------------------- */
   marpaESLIF_EXPORT marpaESLIFSymbol_t           *marpaESLIFSymbol_string_newp(marpaESLIF_t *marpaESLIFp, marpaESLIFString_t *stringp, char *modifiers);
   marpaESLIF_EXPORT marpaESLIFSymbol_t           *marpaESLIFSymbol_regex_newp(marpaESLIF_t *marpaESLIFp, marpaESLIFString_t *stringp, char *modifiers);
