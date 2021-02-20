@@ -1643,7 +1643,7 @@ bootstrap_grammar_rule_t bootstrap_grammar_G1_rules[] = {
   { G1_META_PARAMETERS_DECLARATION,           G1_RULE_PARAMETERS_DECLARATION,                 MARPAESLIF_RULE_TYPE_ALTERNATIVE, 3, { G1_TERMINAL_PARAMETERS_START,
                                                                                                                                      G1_META_PARAMETERS,
                                                                                                                                      G1_TERMINAL_PARAMETERS_END                    }, -1,                        -1,      -1,              0, G1_ACTION_PARAMETERS_DECLARATION },
-  { G1_META_PARAMETERS,                       G1_RULE_PARAMETERS,                             MARPAESLIF_RULE_TYPE_SEQUENCE,    1, { G1_META_PARAMETER                             },  0,         G1_TERMINAL_COMMA,       1,              0, G1_ACTION_PARAMETERS },
+  { G1_META_PARAMETERS,                       G1_RULE_PARAMETERS,                             MARPAESLIF_RULE_TYPE_SEQUENCE,    1, { G1_META_PARAMETER                             },  0,         G1_TERMINAL_COMMA,       1,              1, G1_ACTION_PARAMETERS },
   { G1_META_PARAMETER,                        G1_RULE_PARAMETER,                              MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_TERMINAL_IDENTIFIER                        }, -1,                        -1,      -1,              0, G1_ACTION_PARAMETER },
   { G1_META_ARGUMENTS_DECLARATION,            G1_RULE_ARGUMENTS_DECLARATION,                  MARPAESLIF_RULE_TYPE_ALTERNATIVE, 3, { G1_TERMINAL_ARGUMENTS_START,
                                                                                                                                      G1_META_ARGUMENTS,

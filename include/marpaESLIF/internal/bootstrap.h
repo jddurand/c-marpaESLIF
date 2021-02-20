@@ -175,10 +175,6 @@ struct marpaESLIF_bootstrap_symbol {
   char *symbols;
 };
 
-struct marpaESLIF_bootstrap_lhs {
-  char *symbols;
-};
-
 enum marpaESLIF_bootstrap_terminal_type {
   MARPAESLIF_BOOTSTRAP_TERMINAL_TYPE_NA = 0,
   MARPAESLIF_BOOTSTRAP_TERMINAL_TYPE_CHARACTER_CLASS,
@@ -341,6 +337,12 @@ struct marpaESLIF_bootstrap_event_initialization {
 };
 
 static marpaESLIFValueRuleCallback_t _marpaESLIF_bootstrap_ruleActionResolver(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, char *actions);
+
+struct marpaESLIF_bootstrap_lhs {
+  char    *symbols;
+  size_t   parameterArrayl;
+  char   **parameterArrayp;
+};
 
 #endif /* MARPAESLIF_INTERNAL_BOOTSTRAP_H */
 

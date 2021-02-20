@@ -317,8 +317,8 @@
 #define G1_ACTION_EVENT_NAME_3                     "::ascii" /* <event name> ::= ':discard[on]' */
 #define G1_ACTION_EVENT_NAME_4                     "::ascii" /* <event name> ::= ':discard[off]' */
 #define G1_ACTION_EVENT_NAME_5                     "::ascii" /* <event name> ::= ':discard[switch]' */
-#define G1_ACTION_LHS_1                            "::shift" /* lhs ::= <symbol name> */
-#define G1_ACTION_LHS_2                            "::copy[0]" // "G1_action_lhs_2" /* lhs ::= lhs <parameters declaration> */ /* TO DO */
+#define G1_ACTION_LHS_1                            "G1_action_lhs_1" /* lhs ::= <symbol name> */
+#define G1_ACTION_LHS_2                            "G1_action_lhs_2" /* lhs ::= lhs <parameters declaration> */
 #define G1_ACTION_RHS                              "G1_action_rhs"                              /* done */
 #define G1_ACTION_RHS_ALTERNATIVE_1                "G1_action_rhs_alternative_1"                /* done */
 #define G1_ACTION_RHS_ALTERNATIVE_2                "G1_action_rhs_alternative_2"                /* done */
@@ -397,9 +397,9 @@
 #define G1_ACTION_DEFAULTENCODING_NAME             "::ascii" /* <default encoding name> ::= <ascii graph name> */
 #define G1_ACTION_FALLBACKENCODING                 "G1_action_fallbackencoding"                   /* done */
 #define G1_ACTION_FALLBACKENCODING_NAME            "::ascii" /* <fallback encoding name> ::= <ascii graph name> */
-#define G1_ACTION_PARAMETERS_DECLARATION           "::undef" // "G1_action_parameters_declaration" /* TO DO */
-#define G1_ACTION_PARAMETERS                       "::undef" // "G1_action_parameters" /* TO DO */
-#define G1_ACTION_PARAMETER                        "::undef" // "G1_action_parameter" /* TO DO */
+#define G1_ACTION_PARAMETERS_DECLARATION           "::copy[1]" /* <parameters declaration> ::= '(' <parameters> ')' */
+#define G1_ACTION_PARAMETERS                       "::row" /* <parameters> ::= <parameter>* */
+#define G1_ACTION_PARAMETER                        "::ascii" /* <parameter> ::= /[a-zA-Z_][a-zA-Z0-9_] */
 #define G1_ACTION_ARGUMENTS_DECLARATION            "::undef" // "G1_action_arguments_declaration" /* TO DO */
 #define G1_ACTION_ARGUMENTS                        "::undef" // "G1_action_arguments" /* TO DO */
 #define G1_ACTION_ARGUMENT_1                       "::undef" // "G1_action_argument_1" /* TO DO */

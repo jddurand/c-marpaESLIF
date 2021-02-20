@@ -516,7 +516,7 @@ struct marpaESLIF_alternative {
 /* Definition of internal contexts */
 /* ------------------------------- */
 
-/* Internal reader context when parsing a grammar. Everything is in utf8s so the reader can say ok to any stream callback */
+/* Internal reader context when parsing a grammar. */
 struct marpaESLIF_readerContext {
   marpaESLIF_t              *marpaESLIFp;
   marpaESLIFGrammarOption_t *marpaESLIFGrammarOptionp;
