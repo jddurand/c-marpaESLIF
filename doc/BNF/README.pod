@@ -842,6 +842,7 @@ marpaESLIF BNF can be expressed in itself:
                                    | ':discard[off]'
                                    | ':discard[switch]'
   <lhs>                          ::= <symbol name>
+                                   | <lhs> <parameters declaration>
   <rhs>                          ::= <rhs alternative>+
   <rhs alternative>              ::= <rhs primary>
                                    | '(-' <priorities> '-)'
@@ -852,6 +853,7 @@ marpaESLIF BNF can be expressed in itself:
                                    | '(' <rhs primary> <quantifier> <adverb list> ')'
   <rhs primary>                  ::= <single symbol>
                                    | <symbol> '@' <grammar reference>
+                                   | <rhs primary> <arguments declaration>
   <single symbol>                ::= <symbol>
                                    | <terminal>
   <terminal>                     ::= <character class>
@@ -914,6 +916,13 @@ marpaESLIF BNF can be expressed in itself:
                                    | '\\' /U\{[a-fA-F0-9]{8}\}/
   <lua script statement>         ::= '<luascript>' <discard off> <lua script source> '</luascript>' <discard on>
   <lua script source>            ::= /[\s\S]/*
+  <parameters declaration>       ::= '(' <parameters> ')'
+  <parameters>                   ::= <parameter>* separator => ',' proper => 1 hide-separator => 1
+  <parameter>                    ::= /[a-zA-Z_][a-zA-Z0-9_]*/
+  <arguments declaration>        ::= '->(' <arguments> ')'
+  <arguments>                    ::= <argument>* separator => ',' proper => 1 hide-separator => 1
+  <argument>                     ::= '$' /[a-zA-Z_][a-zA-Z0-9_]*/
+  <argument>                     ::= <rhs primary>
   
   <op declare any grammar>         ~ /:\[[\d]+\]:=/
   <op declare top grammar>         ~ '::='
