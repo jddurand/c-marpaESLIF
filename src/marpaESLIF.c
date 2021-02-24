@@ -9994,6 +9994,8 @@ static inline marpaESLIFRecognizer_t *_marpaESLIFRecognizer_newp(marpaESLIFGramm
   marpaESLIFRecognizerp->marpaESLIFValueResultFlattenStackp = NULL;
   marpaESLIFRecognizerp->marpaESLIFCalloutBlockp            = NULL;
   marpaESLIFRecognizerp->expectedTerminalArrayp             = NULL;
+  marpaESLIFRecognizerp->progressallocl                     = 0;
+  marpaESLIFRecognizerp->progressp                          = NULL;
 
   marpaWrapperRecognizerOption.genericLoggerp            = silentb ? NULL : marpaESLIFp->marpaESLIFOption.genericLoggerp;
   marpaWrapperRecognizerOption.disableThresholdb         = marpaESLIFRecognizerOptionp->disableThresholdb;
@@ -17929,6 +17931,10 @@ static inline void _marpaESLIFRecognizer_freev(marpaESLIFRecognizer_t *marpaESLI
     free(marpaESLIFRecognizerp->expectedTerminalArrayp);
   }
 
+  if (marpaESLIFRecognizerp->progressp != NULL) {
+    free(marpaESLIFRecognizerp->progressp);
+  }
+
   MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "return");
   MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_DEC;
 
@@ -19867,6 +19873,83 @@ short marpaESLIFRecognizer_context_getb(marpaESLIFRecognizer_t *marpaESLIFRecogn
     }
   }
 
+  return rcb;
+}
+
+/*****************************************************************************/
+short marpaESLIFRecognizer_progressb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, int starti, int endi, size_t *progresslp, marpaESLIFRecognizerProgress_t **progresspp)
+/*****************************************************************************/
+{
+  short                             rcb;
+  marpaESLIF_t                     *marpaESLIFp;
+  marpaWrapperRecognizer_t         *marpaWrapperRecognizerp;
+  size_t                            marpaWrapperRecognizerProgressl;
+  marpaWrapperRecognizerProgress_t *marpaWrapperRecognizerProgressp;
+  size_t                            marpaESLIFRecognizerProgressl;
+  marpaESLIFRecognizerProgress_t   *marpaESLIFRecognizerProgressp;
+  size_t                            progressl;
+
+  if (MARPAESLIF_UNLIKELY(marpaESLIFRecognizerp == NULL)) {
+    errno = EINVAL;
+    goto err;
+  }
+
+  marpaESLIFp             = marpaESLIFRecognizerp->marpaESLIFp;
+  marpaWrapperRecognizerp = marpaESLIFRecognizerp->marpaWrapperRecognizerp;
+
+  if (MARPAESLIF_UNLIKELY(! marpaWrapperRecognizer_progressb(marpaWrapperRecognizerp, starti, endi, &marpaWrapperRecognizerProgressl, &marpaWrapperRecognizerProgressp))) {
+    goto err;
+  }
+
+  marpaESLIFRecognizerProgressl = marpaWrapperRecognizerProgressl;
+
+  if (marpaESLIFRecognizerProgressl > 0) {
+    /* Make sure we have enough storage */
+    if (marpaESLIFRecognizerp->progressallocl == 0) {
+      marpaESLIFRecognizerProgressp = (marpaESLIFRecognizerProgress_t *) malloc(sizeof(marpaESLIFRecognizerProgress_t) * marpaESLIFRecognizerProgressl);
+      if (marpaESLIFRecognizerProgressp == NULL) {
+        MARPAESLIF_ERRORF(marpaESLIFp, "malloc failure, %s", strerror(errno));
+        goto err;
+      }
+      marpaESLIFRecognizerp->progressallocl = marpaESLIFRecognizerProgressl;
+      marpaESLIFRecognizerp->progressp      = marpaESLIFRecognizerProgressp;
+    } else if (marpaESLIFRecognizerProgressl > marpaESLIFRecognizerp->progressallocl) {
+      marpaESLIFRecognizerProgressp = (marpaESLIFRecognizerProgress_t *) realloc(marpaESLIFRecognizerp->progressp, sizeof(marpaESLIFRecognizerProgress_t) * marpaESLIFRecognizerProgressl);
+      if (marpaESLIFRecognizerProgressp == NULL) {
+        MARPAESLIF_ERRORF(marpaESLIFp, "realloc failure, %s", strerror(errno));
+        goto err;
+      }
+      marpaESLIFRecognizerp->progressallocl = marpaESLIFRecognizerProgressl;
+      marpaESLIFRecognizerp->progressp      = marpaESLIFRecognizerProgressp;
+    } else {
+      marpaESLIFRecognizerProgressp = marpaESLIFRecognizerp->progressp;
+    }
+
+    /* Although the structures are the same, it is safer (less performant clearly) to copy element by element, */
+    /* for the (quite improbable case) where marpaESLIF would be compiled with different alignment than        */
+    /* marpaWrapper.                                                                                           */
+    for (progressl = 0; progressl < marpaESLIFRecognizerProgressl; progressl++) {
+      marpaESLIFRecognizerProgressp[progressl].earleySetIdi     = marpaWrapperRecognizerProgressp[progressl].earleySetIdi;
+      marpaESLIFRecognizerProgressp[progressl].earleySetOrigIdi = marpaWrapperRecognizerProgressp[progressl].earleySetOrigIdi;
+      marpaESLIFRecognizerProgressp[progressl].rulei            = marpaWrapperRecognizerProgressp[progressl].rulei;
+      marpaESLIFRecognizerProgressp[progressl].positioni        = marpaWrapperRecognizerProgressp[progressl].positioni;
+    }
+  }
+
+  if (progresslp != NULL) {
+    *progresslp = marpaESLIFRecognizerProgressl;
+  }
+  if (progresspp != NULL) {
+    *progresspp = marpaESLIFRecognizerProgressp;
+  }
+
+  rcb = 1;
+  goto done;
+
+ err:
+  rcb = 0;
+
+ done:
   return rcb;
 }
 
