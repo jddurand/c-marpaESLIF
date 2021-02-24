@@ -256,6 +256,68 @@ Asks to get a logging representation of the current parse progress. The format i
 
 Nothing is returned.
 
+=head2 $eslifRecognizer->progress($start, $end)
+
+Asks to get the internal progress in terms of Earley parsing. The C<$start> and C<$end> parameters follow the perl convention of indices, i.e. when they are negative, start that far from the end. For example, -1 mean the last Earley Set Id, -2 mean one before the last Earley Set Id, etc...
+
+Returns a reference to an array of hash references, eventually empty if there is none. Each array element is a reference to a hash containing these keys:
+
+=over
+
+=item earleySetId
+
+The Earley Set Id.
+
+=item earleySetOrigId
+
+The origin Earley Set Id.
+
+=item rule
+
+The rule number.
+
+=item position
+
+The position in the rule, where a negative number or a number bigger than the length of the rule means the rule is completed, C<0> means the rule is predicted, else the rule is being run.
+
+=item earleme
+
+The Earleme Id corresponding to the Earley Set Id.
+
+=item earlemeOrig
+
+The origin Earleme Id corresponding to the origin Earley Set Id.
+
+=back
+
+=head2 $eslifRecognizer->eventOnOff($symbol, $eventTypes, $onOff)
+
+Events can be switched on or off. For performance reasons, if you know that you do not need an event, it can be a good idea to switch if off. Required parameters are:
+
+=over
+
+=item C<$symbol>
+
+The symbol name to which the event is associated.
+
+=item C<$symbol>
+
+The symbol name to which the event is associated.
+
+=item C<$eventTypes>
+
+A reference to an array of event types, as per L<MarpaX::ESLIF::Event::Type>.
+
+=item C<$onOff>
+
+A flag that set the event on or off.
+
+=back
+
+Note that trying to change the state of an event that was not pre-declared in the grammar is a no-op.
+
+Returns a reference to an array of hash references, eventually empty if there is none. Each array element is a reference to a hash containing these keys:
+
 =head2 $eslifRecognizer->lastCompletedOffset($name)
 
 The recognizer is tentatively keeping an absolute offset every time a lexeme is complete. We say tentatively in the sense that no overflow checking is done, thus this number is not reliable in case the user data spanned over a very large number of bytes. In addition, the unit is in bytes. C<$name> can be any symbol in the grammar.

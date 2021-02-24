@@ -5300,6 +5300,67 @@ CODE:
 
 =for comment
   /* ----------------------------------------------------------------------- */
+  /* MarpaX::ESLIF::Recognizer::progress                                     */
+  /* ----------------------------------------------------------------------- */
+=cut
+
+SV *
+progress(p, start, end)
+  SV  *p;
+  int  start;
+  int  end;
+PREINIT:
+  static const char *funcs = "MarpaX::ESLIF::Recognizer::progress";
+CODE:
+  MarpaX_ESLIF_Recognizer_t      *MarpaX_ESLIF_Recognizerp = marpaESLIFPerl_engine(aTHX_ p);
+  size_t                          progressl;
+  marpaESLIFRecognizerProgress_t *progressp;
+  size_t                          i;
+  AV                             *list;
+  HV                             *hv;
+
+  if (MARPAESLIF_UNLIKELY(! marpaESLIFRecognizer_progressb(MarpaX_ESLIF_Recognizerp->marpaESLIFRecognizerp, start, end, &progressl, &progressp))) {
+    MARPAESLIFPERL_CROAKF("marpaESLIFRecognizer_progressb failure, %s", strerror(errno));
+  }
+
+  /* We return an array of hashes */
+  list = newAV();
+  for (i = 0; i < progressl; i++) {
+    hv = (HV *)sv_2mortal((SV *)newHV());
+
+    if (MARPAESLIF_UNLIKELY(hv_store(hv, "earleySetId", strlen("earleySetId"), newSViv(progressp[i].earleySetIdi), 0) == NULL)) {
+      MARPAESLIFPERL_CROAKF("hv_store failure for earleySetId => %d", progressp[i].earleySetIdi);
+    }
+
+    if (MARPAESLIF_UNLIKELY(hv_store(hv, "earleySetOrigId", strlen("earleySetOrigId"), newSViv(progressp[i].earleySetOrigIdi), 0) == NULL)) {
+      MARPAESLIFPERL_CROAKF("hv_store failure for earleySetOrigId => %d", progressp[i].earleySetOrigIdi);
+    }
+
+    if (MARPAESLIF_UNLIKELY(hv_store(hv, "rule", strlen("rule"), newSViv(progressp[i].rulei), 0) == NULL)) {
+      MARPAESLIFPERL_CROAKF("hv_store failure for rule => %d", progressp[i].rulei);
+    }
+
+    if (MARPAESLIF_UNLIKELY(hv_store(hv, "position", strlen("position"), newSViv(progressp[i].positioni), 0) == NULL)) {
+      MARPAESLIFPERL_CROAKF("hv_store failure for position => %d", progressp[i].positioni);
+    }
+
+    if (MARPAESLIF_UNLIKELY(hv_store(hv, "earleme", strlen("earleme"), newSViv(progressp[i].earlemei), 0) == NULL)) {
+      MARPAESLIFPERL_CROAKF("hv_store failure for earleme => %d", progressp[i].earlemei);
+    }
+
+    if (MARPAESLIF_UNLIKELY(hv_store(hv, "earlemeOrig", strlen("earlemeOrig"), newSViv(progressp[i].earlemeOrigi), 0) == NULL)) {
+      MARPAESLIFPERL_CROAKF("hv_store failure for earlemeOrig => %d", progressp[i].earlemeOrigi);
+    }
+
+    av_push(list, newRV((SV *)hv));
+  }
+
+  RETVAL = newRV_noinc((SV *)list);
+OUTPUT:
+  RETVAL
+
+=for comment
+  /* ----------------------------------------------------------------------- */
   /* MarpaX::ESLIF::Recognizer::lastCompletedOffset                          */
   /* ----------------------------------------------------------------------- */
 =cut

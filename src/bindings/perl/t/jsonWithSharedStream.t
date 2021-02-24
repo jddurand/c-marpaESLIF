@@ -244,6 +244,8 @@ sub doparse {
     my $ok = $marpaESLIFRecognizer->scan(1); # Initial events
     while ($ok && $marpaESLIFRecognizer->isCanContinue()) {
         my $events = $marpaESLIFRecognizer->events();
+        my $progress = $marpaESLIFRecognizer->progress(-1, -1);
+        $log->infof('Progress: %s', $progress);
         for (my $k = 0; $k < scalar(@{$events}); $k++) {
             my $event = $events->[$k];
             next unless defined($event);
