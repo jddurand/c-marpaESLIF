@@ -201,11 +201,17 @@ public class AppThread implements Runnable {
 						}
 						showRecognizerInput("after read", eslifLogger, eslifRecognizer);
 					}
-					if (i == 0) {
-						eslifRecognizer.progressLog(-1, -1, ESLIFLoggerLevel.get(ESLIFLoggerLevel.NOTICE.getCode()));
-					}
 					int j = 0;
 					while (eslifRecognizer.isCanContinue()) {
+						eslifRecognizer.progressLog(-1, -1, ESLIFLoggerLevel.get(ESLIFLoggerLevel.NOTICE.getCode()));
+						ESLIFProgress[] progress = eslifRecognizer.progress(-1, -1);
+						for (int k = 0; k < progress.length; k++) {
+							eslifLogger.notice("Progress[" + k + "]: " + progress[k]);
+						}
+						int latestEarleySetId = eslifRecognizer.latestEarleySetId();
+						eslifLogger.notice("Latest Earley Set: " + latestEarleySetId);
+						int earleme = eslifRecognizer.earleme(latestEarleySetId);
+						eslifLogger.notice("Earleme: " + earleme);
 						if (! doResume(eslifLogger, eslifRecognizer, 0)) {
 							break;
 						}

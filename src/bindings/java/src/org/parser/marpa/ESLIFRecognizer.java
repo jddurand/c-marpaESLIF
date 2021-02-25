@@ -44,6 +44,9 @@ public class ESLIFRecognizer {
 	private native boolean			 jniScan(boolean initialEvents) throws ESLIFException;
 	private native boolean 			 jniResume(int deltaLength) throws ESLIFException;
 	private native ESLIFEvent[]      jniEvent() throws ESLIFException;
+	private native ESLIFProgress[]   jniProgress(int start, int end) throws ESLIFException;
+	private native int               jniLatestEarleySetId() throws ESLIFException;
+	private native int               jniEarleme(int earleySetId) throws ESLIFException;
 	private native void              jniEventOnOff(String symbol, ESLIFEventType[] eventTypes, boolean onOff) throws ESLIFException;
 	private native void              jniHookDiscard(boolean onOff) throws ESLIFException;
 	private native void              jniHookDiscardSwitch() throws ESLIFException;
@@ -185,6 +188,42 @@ public class ESLIFRecognizer {
 	 */
 	public synchronized ESLIFEvent[] events() throws ESLIFException {
 		return jniEvent();
+	}
+
+	/**
+	 * Asks to get the current parse progress.
+	 * The <code>start</code> and <code>end</code> parameters follow the perl convention of indices, i.e. when they are negative,
+	 * start that far from the end. For example, -1 mean the last indice, -2 mean one before the last indice, etc...
+	 * 
+	 * @param start start indice
+	 * @param end end indice
+	 * 
+	 * @return the array of progress, eventually empty if there is none
+	 * @throws ESLIFException if the interface failed
+	 */
+	public synchronized ESLIFProgress[] progress(int start, int end) throws ESLIFException {
+		return jniProgress(start, end);
+	}
+
+	/**
+	 * Asks to get the latest Earley Set Id.
+	 * 
+	 * @return the latest Earley Set Id
+	 * @throws ESLIFException if the interface failed
+	 */
+	public synchronized int latestEarleySetId() throws ESLIFException {
+		return jniLatestEarleySetId();
+	}
+
+	/**
+	 * Asks to get the earleme of an Earley Set Id.
+	 * 
+	 * @param earleySetId the Earley Set Id
+	 * @return the earleme Id
+	 * @throws ESLIFException if the interface failed
+	 */
+	public synchronized int earleme(int earleySetId) throws ESLIFException {
+		return jniEarleme(earleySetId);
 	}
 
 	/**

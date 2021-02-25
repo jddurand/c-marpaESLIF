@@ -80,6 +80,7 @@ JNIEXPORT jbyteArray   JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniLexemeLa
 JNIEXPORT jbyteArray   JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniDiscardLastTry         (JNIEnv *envp, jobject eslifRecognizerp);
 JNIEXPORT jbyteArray   JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniDiscardLast            (JNIEnv *envp, jobject eslifRecognizerp);
 JNIEXPORT jobjectArray JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniEvent                  (JNIEnv *envp, jobject eslifRecognizerp);
+JNIEXPORT jobjectArray JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniProgress               (JNIEnv *envp, jobject eslifRecognizerp, jint starti, jint endi);
 JNIEXPORT jlong        JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniLastCompletedOffset    (JNIEnv *envp, jobject eslifRecognizerp, jstring namep);
 JNIEXPORT jlong        JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniLastCompletedLength    (JNIEnv *envp, jobject eslifRecognizerp, jstring namep);
 JNIEXPORT jlong        JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniLine                   (JNIEnv *envp, jobject eslifRecognizerp);
@@ -87,8 +88,10 @@ JNIEXPORT jlong        JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniColumn  
 JNIEXPORT void         JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniEventOnOff             (JNIEnv *envp, jobject eslifRecognizerp, jstring symbolp, jobjectArray eventTypesp, jboolean onOff);
 JNIEXPORT void         JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniHookDiscard            (JNIEnv *envp, jobject eslifRecognizerp, jboolean onOff);
 JNIEXPORT void         JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniHookDiscardSwitch      (JNIEnv *envp, jobject eslifRecognizerp);
-JNIEXPORT void         JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniProgressLog            (JNIEnv *envp, jobject eslifRecognizerp, int starti, int endi, jobject levelp);
+JNIEXPORT void         JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniProgressLog            (JNIEnv *envp, jobject eslifRecognizerp, jint starti, jint endi, jobject levelp);
 JNIEXPORT jbyteArray   JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniSymbolTry              (JNIEnv *envp, jobject eslifRecognizerp, jobject eslifSymbolp);
+JNIEXPORT jint         JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniLatestEarleySetId      (JNIEnv *envp, jobject eslifRecognizerp);
+JNIEXPORT jint         JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniEarleme                (JNIEnv *envp, jobject eslifRecognizerp, jint earleySetId);
 JNIEXPORT void         JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniFree                   (JNIEnv *envp, jobject eslifRecognizerp);
 JNIEXPORT void         JNICALL Java_org_parser_marpa_ESLIFValue_jniNew                         (JNIEnv *envp, jobject eslifValuep, jobject eslifRecognizerp);
 JNIEXPORT jboolean     JNICALL Java_org_parser_marpa_ESLIFValue_jniValue                       (JNIEnv *envp, jobject eslifValuep);
@@ -194,6 +197,7 @@ static char _MARPAESLIF_JNI_CONTEXT;
 #define MARPAESLIF_ESLIFRULEPROPERTYBITSET_CLASS      "org/parser/marpa/ESLIFRulePropertyBitSet"
 #define MARPAESLIF_ESLIFSYMBOLPROPERTYBITSET_CLASS    "org/parser/marpa/ESLIFSymbolPropertyBitSet"
 #define MARPAESLIF_ESLIFSYMBOLTYPE_CLASS              "org/parser/marpa/ESLIFSymbolType"
+#define MARPAESLIF_ESLIFPROGRESS_CLASS                "org/parser/marpa/ESLIFProgress"
 #define JAVA_LANG_OBJECT_CLASS                        "java/lang/Object"
 #define JAVA_LANG_CLASS_CLASS                         "java/lang/Class"
 #define JAVA_LANG_STRING_CLASS                        "java/lang/String"
@@ -403,6 +407,10 @@ static marpaESLIFJavaClassCache_t marpaESLIFJavaClassCacheArrayp[] = {
   #define MARPAESLIF_ESLIFSYMBOL_CLASSCACHE              marpaESLIFJavaClassCacheArrayp[40]
   #define MARPAESLIF_ESLIFSYMBOL_CLASSP                  marpaESLIFJavaClassCacheArrayp[40].classp
   {       MARPAESLIF_ESLIFSYMBOL_CLASS,                  NULL, 1 /* requiredb */ },
+
+  #define MARPAESLIF_ESLIFPROGRESS_CLASSCACHE            marpaESLIFJavaClassCacheArrayp[41]
+  #define MARPAESLIF_ESLIFPROGRESS_CLASSP                marpaESLIFJavaClassCacheArrayp[41].classp
+  {       MARPAESLIF_ESLIFPROGRESS_CLASS,                NULL, 1 /* requiredb */ },
 
   { NULL }
 };
@@ -749,6 +757,9 @@ static marpaESLIFJavaMethodCache_t marpaESLIFJavaMethodCacheArrayp[] = {
 
   #define MARPAESLIF_ESLIFSYMBOL_CLASS_getEslif_METHODP                             marpaESLIFJavaMethodCacheArrayp[113].methodp
   {      &MARPAESLIF_ESLIFSYMBOL_CLASSCACHE, "getEslif",                            "()Lorg/parser/marpa/ESLIF;", 0 /* staticb */, NULL, 1 /* requiredb */ },
+
+  #define MARPAESLIF_ESLIFPROGRESS_CLASS_init_METHODP                               marpaESLIFJavaMethodCacheArrayp[114].methodp
+  {      &MARPAESLIF_ESLIFPROGRESS_CLASSCACHE, "<init>",                            "(IIII)V", 0 /* staticb */, NULL, 1 /* requiredb */ },
 
   { NULL }
 };
@@ -3802,6 +3813,69 @@ JNIEXPORT jobjectArray JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniEvent(JN
 }
 
 /*****************************************************************************/
+JNIEXPORT jobjectArray JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniProgress(JNIEnv *envp, jobject eslifRecognizerp, jint starti, jint endi)
+/*****************************************************************************/
+{
+  static const char              *funcs = "Java_org_parser_marpa_ESLIFRecognizer_jniProgress";
+  marpaESLIFRecognizer_t         *marpaESLIFRecognizerp;
+  size_t                          progressl;
+  marpaESLIFRecognizerProgress_t *progressp;
+  jobjectArray                    objectArray = NULL;
+  jobject                         object      = NULL;
+  jint                            earleySetId;
+  jint                            earleySetOrigId;
+  jint                            rule;
+  jint                            position;
+  size_t                          i;
+
+  if (! ESLIFRecognizer_contextb(envp, eslifRecognizerp, &marpaESLIFRecognizerp, NULL /* marpaESLIFJavaRecognizerContextpp */)) {
+    goto err;
+  }
+
+  if (! marpaESLIFRecognizer_progressb(marpaESLIFRecognizerp, (int) starti, (int) endi, &progressl, &progressp)) {
+    RAISEEXCEPTIONF(envp, "marpaESLIFRecognizer_progressb failure, %s", strerror(errno));
+  }
+
+  objectArray = (*envp)->NewObjectArray(envp, (jsize) progressl, MARPAESLIF_ESLIFPROGRESS_CLASSP, NULL /* initialElement */);
+  if (objectArray == NULL) {
+    RAISEEXCEPTION(envp, "NewObjectArray failure");
+  }
+
+  for (i = 0; i < progressl; i++) {
+    earleySetId      = (jint) progressp[i].earleySetIdi;
+    earleySetOrigId  = (jint) progressp[i].earleySetOrigIdi;
+    rule             = (jint) progressp[i].rulei;
+    position         = (jint) progressp[i].positioni;
+
+    object = (*envp)->NewObject(envp, MARPAESLIF_ESLIFPROGRESS_CLASSP, MARPAESLIF_ESLIFPROGRESS_CLASS_init_METHODP, earleySetId, earleySetOrigId, rule, position);
+    if (object == NULL) {
+      RAISEEXCEPTION(envp, "NewObject failure");
+    }
+
+    (*envp)->SetObjectArrayElement(envp, objectArray, (jsize) i, object);
+    if (HAVEEXCEPTION(envp)) {
+      goto err;
+    }
+  }
+
+  goto done;
+
+ err:
+  if (envp != NULL) {
+    if (objectArray != NULL) {
+      (*envp)->DeleteLocalRef(envp, objectArray);
+    }
+    if (object != NULL) {
+      (*envp)->DeleteLocalRef(envp, object);
+    }
+  }
+  objectArray = NULL;
+
+ done:
+  return objectArray;
+}
+
+/*****************************************************************************/
 JNIEXPORT void JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniEventOnOff(JNIEnv *envp, jobject eslifRecognizerp, jstring symbolp, jobjectArray eventTypesp, jboolean onOff)
 /*****************************************************************************/
 {
@@ -3917,7 +3991,47 @@ JNIEXPORT void JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniHookDiscardSwitc
 }
 
 /*****************************************************************************/
-JNIEXPORT void JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniProgressLog(JNIEnv *envp, jobject eslifRecognizerp, int starti, int endi, jobject levelp)
+JNIEXPORT jint JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniLatestEarleySetId(JNIEnv *envp, jobject eslifRecognizerp)
+/*****************************************************************************/
+{
+  static const char      *funcs = "Java_org_parser_marpa_ESLIFRecognizer_jniLatestEarleySetId";
+  marpaESLIFRecognizer_t *marpaESLIFRecognizerp;
+  int                     latestEarleySetIdi;
+
+  if (! ESLIFRecognizer_contextb(envp, eslifRecognizerp, &marpaESLIFRecognizerp, NULL /* marpaESLIFJavaRecognizerContextpp */)) {
+    goto err;
+  }
+
+  if (!  marpaESLIFRecognizer_latestEarleySetIdb(marpaESLIFRecognizerp, &latestEarleySetIdi)) {
+    RAISEEXCEPTION(envp, "marpaESLIFRecognizer_latestEarleySetIdb failure");
+  }
+
+ err: /* err and done share the same code */
+  return (jint) latestEarleySetIdi;
+}
+
+/*****************************************************************************/
+JNIEXPORT jint JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniEarleme(JNIEnv *envp, jobject eslifRecognizerp, jint earleySetId)
+/*****************************************************************************/
+{
+  static const char      *funcs = "Java_org_parser_marpa_ESLIFRecognizer_jniEarleme";
+  marpaESLIFRecognizer_t *marpaESLIFRecognizerp;
+  int                     earlemei;
+
+  if (! ESLIFRecognizer_contextb(envp, eslifRecognizerp, &marpaESLIFRecognizerp, NULL /* marpaESLIFJavaRecognizerContextpp */)) {
+    goto err;
+  }
+
+  if (!  marpaESLIFRecognizer_earlemeb(marpaESLIFRecognizerp, (int) earleySetId, &earlemei)) {
+    RAISEEXCEPTION(envp, "marpaESLIFRecognizer_earlemeb failure");
+  }
+
+ err: /* err and done share the same code */
+  return (jint) earlemei;
+}
+
+/*****************************************************************************/
+JNIEXPORT void JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniProgressLog(JNIEnv *envp, jobject eslifRecognizerp, jint starti, jint endi, jobject levelp)
 /*****************************************************************************/
 {
   static const char      *funcs = "Java_org_parser_marpa_ESLIFRecognizer_jniProgressLog";

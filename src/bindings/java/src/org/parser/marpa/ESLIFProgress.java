@@ -86,24 +86,10 @@ public class ESLIFProgress {
 	}
 
 	/**
-	 * @param earleySetId the earleySetId to set
-	 */
-	public void setearleySetId(int earleySetId) {
-		this.earleySetId = earleySetId;
-	}
-
-	/**
 	 * @return the earleySetOrigId
 	 */
 	public int getearleySetOrigId() {
 		return earleySetOrigId;
-	}
-
-	/**
-	 * @param earleySetOrigId the earleySetOrigId to set
-	 */
-	public void setearleySetOrigId(int earleySetOrigId) {
-		this.earleySetOrigId = earleySetOrigId;
 	}
 
 	/**
@@ -114,23 +100,9 @@ public class ESLIFProgress {
 	}
 
 	/**
-	 * @param rule the rule to set
-	 */
-	public void setrule(int rule) {
-		this.rule = rule;
-	}
-
-	/**
 	 * @return the position
 	 */
 	public int getposition() {
 		return position;
-	}
-
-	/**
-	 * @param position the position to set
-	 */
-	public void setposition(int position) {
-		this.position = position;
 	}
 }
