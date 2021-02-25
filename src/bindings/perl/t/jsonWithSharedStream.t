@@ -246,6 +246,10 @@ sub doparse {
         my $events = $marpaESLIFRecognizer->events();
         my $progress = $marpaESLIFRecognizer->progress(-1, -1);
         $log->infof('Progress: %s', $progress);
+        my $latestEarleySetId = $marpaESLIFRecognizer->latestEarleySetId();
+        $log->infof('Latest Earley Set Id: %d', $latestEarleySetId);
+        my $earleme = $marpaESLIFRecognizer->earleme($latestEarleySetId);
+        $log->infof('Earleme: %d', $earleme);
         for (my $k = 0; $k < scalar(@{$events}); $k++) {
             my $event = $events->[$k];
             next unless defined($event);

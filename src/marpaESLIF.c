@@ -19957,6 +19957,66 @@ short marpaESLIFRecognizer_progressb(marpaESLIFRecognizer_t *marpaESLIFRecognize
   return rcb;
 }
 
+/*****************************************************************************/
+short marpaESLIFRecognizer_latestEarleySetIdb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, int *latestEarleySetIdip)
+/*****************************************************************************/
+{
+  int   latestEarleySetIdi;
+  short rcb;
+
+  if (MARPAESLIF_UNLIKELY(marpaESLIFRecognizerp == NULL)) {
+    errno = EINVAL;
+    goto err;
+  }
+
+  if (MARPAESLIF_UNLIKELY(! marpaWrapperRecognizer_latestb(marpaESLIFRecognizerp->marpaWrapperRecognizerp, &latestEarleySetIdi))) {
+    goto err;
+  }
+
+  if (latestEarleySetIdip != NULL) {
+    *latestEarleySetIdip = latestEarleySetIdi;
+  }
+
+  rcb = 1;
+  goto done;
+
+ err:
+  rcb = 0;
+
+ done:
+  return rcb;
+}
+
+/*****************************************************************************/
+short marpaESLIFRecognizer_earlemeb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, int earleySetIdi, int *earlemeip)
+/*****************************************************************************/
+{
+  int   earlemei;
+  short rcb;
+
+  if (MARPAESLIF_UNLIKELY(marpaESLIFRecognizerp == NULL)) {
+    errno = EINVAL;
+    goto err;
+  }
+
+  if (MARPAESLIF_UNLIKELY(! marpaWrapperRecognizer_earlemeb(marpaESLIFRecognizerp->marpaWrapperRecognizerp, earleySetIdi, &earlemei))) {
+    goto err;
+  }
+
+  if (earlemeip != NULL) {
+    *earlemeip = earlemei;
+  }
+
+  rcb = 1;
+  goto done;
+
+ err:
+  rcb = 0;
+
+ done:
+  return rcb;
+}
+
 #include "bootstrap.c"
 #include "lua.c"
 #include "json.c"

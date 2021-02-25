@@ -318,6 +318,14 @@ Note that trying to change the state of an event that was not pre-declared in th
 
 Returns a reference to an array of hash references, eventually empty if there is none. Each array element is a reference to a hash containing these keys:
 
+=head2 $eslifRecognizer->latestEarleySetId()
+
+Returns the latest Earley Set Id.
+
+=head2 $eslifRecognizer->earleme($earleySetId)
+
+Returns the earleme corresponding C<$earleySetId>.
+
 =head2 $eslifRecognizer->lastCompletedOffset($name)
 
 The recognizer is tentatively keeping an absolute offset every time a lexeme is complete. We say tentatively in the sense that no overflow checking is done, thus this number is not reliable in case the user data spanned over a very large number of bytes. In addition, the unit is in bytes. C<$name> can be any symbol in the grammar.
