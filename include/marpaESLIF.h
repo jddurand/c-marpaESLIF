@@ -341,8 +341,6 @@ typedef struct marpaESLIFRecognizerProgress {
   int earleySetOrigIdi;
   int rulei;
   int positioni;
-  int earlemei;
-  int earlemeOrigi;
 } marpaESLIFRecognizerProgress_t;
 
 typedef enum marpaESLIFActionType {

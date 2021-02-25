@@ -254,6 +254,9 @@ static int                                marpaESLIFLua_marpaESLIFRecognizer_hoo
 static int                                marpaESLIFLua_marpaESLIFRecognizer_hookDiscardSwitchi(lua_State *L);
 static int                                marpaESLIFLua_marpaESLIFValue_newi(lua_State *L);
 static int                                marpaESLIFLua_marpaESLIFRecognizer_symbolTryi(lua_State *L);
+static int                                marpaESLIFLua_marpaESLIFRecognizer_progressi(lua_State *L);
+static int                                marpaESLIFLua_marpaESLIFRecognizer_latestEarleySetIdi(lua_State *L);
+static int                                marpaESLIFLua_marpaESLIFRecognizer_earlemei(lua_State *L);
 #ifdef MARPAESLIFLUA_EMBEDDED
 static int                                marpaESLIFLua_marpaESLIFValue_newFromUnmanagedi(lua_State *L, marpaESLIFValue_t *marpaESLIFValueUnmanagedp);
 #endif
@@ -808,6 +811,9 @@ static short marpaESLIFLua_lua_isinteger(int *rcip, lua_State *L, int idx);
   MARPAESLIFLUA_STORE_FUNCTION(L, "hookDiscardSwitch",               marpaESLIFLua_marpaESLIFRecognizer_hookDiscardSwitchi); \
   MARPAESLIFLUA_STORE_FUNCTION(L, "marpaESLIFValue_new",             marpaESLIFLua_marpaESLIFValue_newi); \
   MARPAESLIFLUA_STORE_FUNCTION(L, "symbolTry",                       marpaESLIFLua_marpaESLIFRecognizer_symbolTryi); \
+  MARPAESLIFLUA_STORE_FUNCTION(L, "progress",                        marpaESLIFLua_marpaESLIFRecognizer_progressi); \
+  MARPAESLIFLUA_STORE_FUNCTION(L, "latestEarleySetId",               marpaESLIFLua_marpaESLIFRecognizer_latestEarleySetIdi); \
+  MARPAESLIFLUA_STORE_FUNCTION(L, "earleme",                         marpaESLIFLua_marpaESLIFRecognizer_earlemei); \
   if (! marpaESLIFLua_lua_setfield(L, -2, "__index")) goto err;         \
   if (! marpaESLIFLua_lua_setmetatable(L, -2)) goto err;                \
   } while (0)
@@ -4893,6 +4899,195 @@ static int marpaESLIFLua_marpaESLIFRecognizer_eventsi(lua_State *L)
     MARPAESLIFLUA_STORE_ASCIISTRING(L, "event", eventArrayp[i].events);   /* Stack: {}, {"type" => type, "symbol" => symbol, "event" => event} */
     if (! marpaESLIFLua_lua_seti(L, -2, (lua_Integer) i)) goto err;       /* Stack: {i => {"type" => type, "symbol" => symbol, "event" => event}} */
   }
+
+  rci = 1;
+  goto done;
+
+ err:
+  rci = 0;
+
+ done:
+  return rci;
+}
+
+/*****************************************************************************/
+static int marpaESLIFLua_marpaESLIFRecognizer_progressi(lua_State *L)
+/*****************************************************************************/
+{
+  static const char                *funcs = "marpaESLIFLua_marpaESLIFRecognizer_progressi";
+  marpaESLIFLuaRecognizerContext_t *marpaESLIFLuaRecognizerContextp;
+  size_t                            i;
+  size_t                            progressl;
+  marpaESLIFRecognizerProgress_t   *progressp;
+  int                               rci;
+  int                               starti;
+  int                               endi;
+  int                               isNumi;
+  int                               typei;
+  lua_Integer                       tmpi;
+  int                               topi;
+
+  if (! marpaESLIFLua_lua_gettop(&topi, L)) goto err;
+  if (topi != 3) {
+    marpaESLIFLua_luaL_error(L, "Usage: marpaESLIFRecognizer_progress(marpaESLIFRecognizerp, start, end)");
+    goto err;
+  }
+
+  if (! marpaESLIFLua_lua_type(&typei, L, 1)) goto err;
+  if (typei != LUA_TTABLE) {
+    marpaESLIFLua_luaL_error(L, "marpaESLIFRecognizerp must be a table");
+    goto err;
+  }
+  if (! marpaESLIFLua_lua_getfield(NULL,L, 1, "marpaESLIFLuaRecognizerContextp")) goto err;
+  if (! marpaESLIFLua_lua_touserdata((void **) &marpaESLIFLuaRecognizerContextp, L, -1)) goto err;
+  if (! marpaESLIFLua_lua_pop(L, 1)) goto err;
+
+  if (! marpaESLIFLua_lua_type(&typei, L, 2)) goto err;
+  if (typei != LUA_TNUMBER) {
+    marpaESLIFLua_luaL_error(L, "start must be a number");
+    goto err;
+  }
+  if (! marpaESLIFLua_lua_tointegerx(&tmpi, L, 2, &isNumi)) goto err;
+  if (! isNumi) {
+    marpaESLIFLua_luaL_error(L, "Failed to convert start to an integer");
+    goto err;
+  }
+  starti = (int) tmpi;
+
+  if (! marpaESLIFLua_lua_type(&typei, L, 3)) goto err;
+  if (typei != LUA_TNUMBER) {
+    marpaESLIFLua_luaL_error(L, "end must be a number");
+    goto err;
+  }
+  if (! marpaESLIFLua_lua_tointegerx(&tmpi, L, 3, &isNumi)) goto err;
+  if (! isNumi) {
+    marpaESLIFLua_luaL_error(L, "Failed to convert end to an integer");
+    goto err;
+  }
+  endi = (int) tmpi;
+
+  /* Clear the stack */
+  if (! marpaESLIFLua_lua_settop(L, 0)) goto err;
+
+  if (! marpaESLIFRecognizer_progressb(marpaESLIFLuaRecognizerContextp->marpaESLIFRecognizerp, starti, endi, &progressl, &progressp)) {
+    marpaESLIFLua_luaL_errorf(L, "marpaESLIFRecognizer_progressb failure, %s", strerror(errno));
+    goto err;
+  }
+
+  if (! marpaESLIFLua_lua_newtable(L)) goto err;                              /* Stack: {} */
+  for (i = 0; i < progressl; i++) {
+    if (! marpaESLIFLua_lua_newtable(L)) goto err;                            /* Stack: {}, {} */
+    MARPAESLIFLUA_STORE_INTEGER(L, "earleySetId", progressp[i].earleySetIdi); /* Stack: {}, {"earleySetId" => earleySetIdi} and so on */
+    MARPAESLIFLUA_STORE_INTEGER(L, "earleySetOrigId", progressp[i].earleySetOrigIdi);
+    MARPAESLIFLUA_STORE_INTEGER(L, "rule", progressp[i].rulei);
+    MARPAESLIFLUA_STORE_INTEGER(L, "position", progressp[i].positioni);
+    if (! marpaESLIFLua_lua_seti(L, -2, (lua_Integer) i)) goto err;           /* Stack: {i => {"type" => type, and so on }} */
+  }
+
+  rci = 1;
+  goto done;
+
+ err:
+  rci = 0;
+
+ done:
+  return rci;
+}
+
+/*****************************************************************************/
+static int marpaESLIFLua_marpaESLIFRecognizer_latestEarleySetIdi(lua_State *L)
+/*****************************************************************************/
+{
+  static const char                *funcs = "marpaESLIFLua_marpaESLIFRecognizer_latestEarleySetIdi";
+  marpaESLIFLuaRecognizerContext_t *marpaESLIFLuaRecognizerContextp;
+  int                               latestEarleySetIdi;
+  int                               rci;
+  int                               typei;
+
+  if (lua_gettop(L) != 1) {
+    marpaESLIFLua_luaL_error(L, "Usage: marpaESLIFRecognizer_latestEarleySetId(marpaESLIFRecognizerp)");
+    goto err;
+  }
+
+  if (! marpaESLIFLua_lua_type(&typei, L, 1)) goto err;
+  if (typei != LUA_TTABLE) {
+    marpaESLIFLua_luaL_error(L, "marpaESLIFRecognizerp must be a table");
+    goto err;
+  }
+  if (! marpaESLIFLua_lua_getfield(NULL,L, 1, "marpaESLIFLuaRecognizerContextp")) goto err;
+  if (! marpaESLIFLua_lua_touserdata((void **) &marpaESLIFLuaRecognizerContextp, L, -1)) goto err;
+  if (! marpaESLIFLua_lua_pop(L, 1)) goto err;
+
+  /* Clear the stack */
+  if (! marpaESLIFLua_lua_settop(L, 0)) goto err;
+
+  if (! marpaESLIFRecognizer_latestEarleySetIdb(marpaESLIFLuaRecognizerContextp->marpaESLIFRecognizerp, &latestEarleySetIdi)) {
+    marpaESLIFLua_luaL_errorf(L, "marpaESLIFRecognizer_latestEarleySetIdb failure, %s", strerror(errno));
+    goto err;
+  }
+
+  if (! marpaESLIFLua_lua_pushinteger(L, (lua_Integer) latestEarleySetIdi)) goto err;
+
+  rci = 1;
+  goto done;
+
+ err:
+  rci = 0;
+
+ done:
+  return rci;
+}
+
+/*****************************************************************************/
+static int marpaESLIFLua_marpaESLIFRecognizer_earlemei(lua_State *L)
+/*****************************************************************************/
+{
+  static const char                *funcs = "marpaESLIFLua_marpaESLIFRecognizer_earlemei";
+  marpaESLIFLuaRecognizerContext_t *marpaESLIFLuaRecognizerContextp;
+  int                               earlemei;
+  int                               earleySetIdi;
+  int                               rci;
+  int                               typei;
+  int                               topi;
+  int                               isNumi;
+  lua_Integer                       tmpi;
+
+  if (! marpaESLIFLua_lua_gettop(&topi, L)) goto err;
+  if (topi != 2) {
+    marpaESLIFLua_luaL_error(L, "Usage: marpaESLIFRecognizer_earleme(marpaESLIFRecognizerp, earleySetId)");
+    goto err;
+  }
+
+  if (! marpaESLIFLua_lua_type(&typei, L, 1)) goto err;
+  if (typei != LUA_TTABLE) {
+    marpaESLIFLua_luaL_error(L, "marpaESLIFRecognizerp must be a table");
+    goto err;
+  }
+  if (! marpaESLIFLua_lua_getfield(NULL,L, 1, "marpaESLIFLuaRecognizerContextp")) goto err;
+  if (! marpaESLIFLua_lua_touserdata((void **) &marpaESLIFLuaRecognizerContextp, L, -1)) goto err;
+  if (! marpaESLIFLua_lua_pop(L, 1)) goto err;
+
+  if (! marpaESLIFLua_lua_type(&typei, L, 2)) goto err;
+  if (typei != LUA_TNUMBER) {
+    marpaESLIFLua_luaL_error(L, "earleySetId must be a number");
+    goto err;
+  }
+  if (! marpaESLIFLua_lua_tointegerx(&tmpi, L, 2, &isNumi)) goto err;
+  if (! isNumi) {
+    marpaESLIFLua_luaL_error(L, "Failed to convert earleySetId to an integer");
+    goto err;
+  }
+  earleySetIdi = (int) tmpi;
+
+  /* Clear the stack */
+  if (! marpaESLIFLua_lua_settop(L, 0)) goto err;
+
+  if (! marpaESLIFRecognizer_earlemeb(marpaESLIFLuaRecognizerContextp->marpaESLIFRecognizerp, earleySetIdi, &earlemei)) {
+    marpaESLIFLua_luaL_errorf(L, "marpaESLIFRecognizer_earlemeb failure, %s", strerror(errno));
+    goto err;
+  }
+
+  if (! marpaESLIFLua_lua_pushinteger(L, (lua_Integer) earlemei)) goto err;
 
   rci = 1;
   goto done;

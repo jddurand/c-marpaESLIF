@@ -5344,14 +5344,6 @@ CODE:
       MARPAESLIFPERL_CROAKF("hv_store failure for position => %d", progressp[i].positioni);
     }
 
-    if (MARPAESLIF_UNLIKELY(hv_store(hv, "earleme", strlen("earleme"), newSViv(progressp[i].earlemei), 0) == NULL)) {
-      MARPAESLIFPERL_CROAKF("hv_store failure for earleme => %d", progressp[i].earlemei);
-    }
-
-    if (MARPAESLIF_UNLIKELY(hv_store(hv, "earlemeOrig", strlen("earlemeOrig"), newSViv(progressp[i].earlemeOrigi), 0) == NULL)) {
-      MARPAESLIFPERL_CROAKF("hv_store failure for earlemeOrig => %d", progressp[i].earlemeOrigi);
-    }
-
     av_push(list, newRV((SV *)hv));
   }
 

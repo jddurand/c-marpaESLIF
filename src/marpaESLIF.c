@@ -19930,13 +19930,6 @@ short marpaESLIFRecognizer_progressb(marpaESLIFRecognizer_t *marpaESLIFRecognize
       marpaESLIFRecognizerProgressp[progressl].earleySetOrigIdi = marpaWrapperRecognizerProgressp[progressl].earleySetOrigIdi;
       marpaESLIFRecognizerProgressp[progressl].rulei            = marpaWrapperRecognizerProgressp[progressl].rulei;
       marpaESLIFRecognizerProgressp[progressl].positioni        = marpaWrapperRecognizerProgressp[progressl].positioni;
-      /* Get Earleme Id from Earley Set Id */
-      if (! marpaWrapperRecognizer_earlemeb(marpaWrapperRecognizerp, marpaESLIFRecognizerProgressp[progressl].earleySetIdi, &(marpaESLIFRecognizerProgressp[progressl].earlemei))) {
-        goto err;
-      }
-      if (! marpaWrapperRecognizer_earlemeb(marpaWrapperRecognizerp, marpaESLIFRecognizerProgressp[progressl].earleySetOrigIdi, &(marpaESLIFRecognizerProgressp[progressl].earlemeOrigi))) {
-        goto err;
-      }
     }
   }
 

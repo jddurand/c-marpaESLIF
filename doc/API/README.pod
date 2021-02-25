@@ -1779,14 +1779,6 @@ The rule number.
 
 The position in the rule, where a negative number or a number bigger than the length of the rule means the rule is completed, C<0> means the rule is predicted, else the rule is being run.
 
-=item earleme
-
-The Earleme Id corresponding to the Earley Set Id.
-
-=item earlemeOrig
-
-The origin Earleme Id corresponding to the origin Earley Set Id.
-
 =back
 
 Returns a true value on success, a false value otherwise.
