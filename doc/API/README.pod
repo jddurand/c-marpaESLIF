@@ -2427,7 +2427,17 @@ Tries to convert accurately C<ld> to a string. Result a C<NUL> terminated ASCII 
   marpaESLIFSymbol_t          *marpaESLIFSymbol_regex_newp(marpaESLIF_t *marpaESLIFp,
                                                            marpaESLIFString_t *stringp,
                                                            char *modifiers,
-                                                            marpaESLIFSymbolOption_t *marpaESLIFSymbolOptionp);
+                                                           marpaESLIFSymbolOption_t *marpaESLIFSymbolOptionp);
+
+  /* For meta external symbol, the start symbol of the given grammar duplicated */
+  marpaESLIFSymbol_t          *marpaESLIFSymbol_meta_newp(marpaESLIF_t *marpaESLIFp,
+                                                          marpaESLIFGrammar_t *marpaESLIFGrammarp,
+                                                          marpaESLIFSymbolOption_t *marpaESLIFSymbolOptionp);
+  marpaESLIFSymbol_t          *marpaESLIFSymbol_meta_new_by_levelp(marpaESLIF_t *marpaESLIFp,
+                                                                   marpaESLIFGrammar_t *marpaESLIFGrammarp,
+                                                                   int leveli,
+                                                                   marpaESLIFString_t *descp,
+                                                                   marpaESLIFSymbolOption_t *marpaESLIFSymbolOptionp);
 
   /* An external symbol can be used directly inside the recognizer phase in the current input stream. The later will automatically expand if needed */
   /* as in normal recognizer lifetime. */
