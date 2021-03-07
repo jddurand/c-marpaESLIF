@@ -6,6 +6,7 @@
 #include <marpaESLIF.h>
 
 static short inputReaderb(void *userDatavp, char **inputsp, size_t *inputlp, short *eofbp, short *characterStreambp, char **encodingsp, size_t *encodinglp, marpaESLIFReaderDispose_t *disposeCallbackpp);
+static short symbolImportb(marpaESLIFSymbol_t *marpaESLIFSymbolp, void *userDatavp, marpaESLIFValueResult_t *marpaESLIFValueResultp);
 
 #define UTF_8_STRING "UTF-8"
 #define SUBJECT "::anything"
@@ -318,7 +319,7 @@ int main() {
   marpaESLIFString_t           string;
   marpaESLIFRecognizer_t      *marpaESLIFRecognizerp = NULL;
   short                        matchb;
-  marpaESLIFValueResultArray_t marpaESLIFValueResultArray;
+  marpaESLIFSymbolOption_t     marpaESLIFSymbolOption;
 
   genericLoggerp = GENERICLOGGER_NEW(GENERICLOGGER_LOGLEVEL_TRACE);
 
@@ -439,12 +440,15 @@ int main() {
   }
 
   /* Play with terminal outside of any grammar */
+  marpaESLIFSymbolOption.userDatavp = &marpaESLIFTester_context;
+  marpaESLIFSymbolOption.importerp  = symbolImportb;
+
   string.bytep          = "'" STRING "'";
   string.bytel          = strlen("'" STRING "'");
   string.encodingasciis = "ASCII";
   string.asciis         = NULL;
 
-  stringSymbolp = marpaESLIFSymbol_string_newp(marpaESLIFp, &string, NULL /* modifiers */);
+  stringSymbolp = marpaESLIFSymbol_string_newp(marpaESLIFp, &string, NULL /* modifiers */, &marpaESLIFSymbolOption);
   if (stringSymbolp == NULL) {
     goto err;
   }
@@ -454,7 +458,7 @@ int main() {
   string.encodingasciis = "ASCII";
   string.asciis         = NULL;
 
-  regexSymbolp = marpaESLIFSymbol_regex_newp(marpaESLIFp, &string, "A" /* Remove anchoring */);
+  regexSymbolp = marpaESLIFSymbol_regex_newp(marpaESLIFp, &string, "A" /* Remove anchoring */, &marpaESLIFSymbolOption);
   if (regexSymbolp == NULL) {
     goto err;
   }
@@ -464,64 +468,20 @@ int main() {
     goto err;
   }
 
-  if (! marpaESLIFRecognizer_symbol_tryb(marpaESLIFRecognizerp, stringSymbolp, &matchb, &marpaESLIFValueResultArray)) {
+  if (! marpaESLIFRecognizer_symbol_tryb(marpaESLIFRecognizerp, stringSymbolp, &matchb)) {
     goto err;
-  }
-  if (matchb) {
-    if (marpaESLIFValueResultArray.p == NULL) {
-      GENERICLOGGER_INFO(marpaESLIFOption.genericLoggerp, "Recognizer's string symbol match but marpaESLIFValueResultArray.p is NULL");
-      goto err;
-    } else {
-      GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "Recognizer's string symbol match for \"%s\" on %ld bytes", STRING, (unsigned long) marpaESLIFValueResultArray.sizel);
-      if ((! marpaESLIFValueResultArray.shallowb) && (marpaESLIFValueResultArray.p != NULL)) {
-        free(marpaESLIFValueResultArray.p);
-      }
-    }
   }
 
-  if (! marpaESLIFRecognizer_symbol_tryb(marpaESLIFRecognizerp, regexSymbolp, &matchb, &marpaESLIFValueResultArray)) {
+  if (! marpaESLIFRecognizer_symbol_tryb(marpaESLIFRecognizerp, regexSymbolp, &matchb)) {
     goto err;
-  }
-  if (matchb) {
-    if (marpaESLIFValueResultArray.p == NULL) {
-      GENERICLOGGER_INFO(marpaESLIFOption.genericLoggerp, "Recognizer's regex symbol match but marpaESLIFValueResultArray.p is NULL");
-      goto err;
-    } else {
-      GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "Recognizer's regex symbol match for \"%s\" on %ld bytes", REGEX, (unsigned long) marpaESLIFValueResultArray.sizel);
-      if ((! marpaESLIFValueResultArray.shallowb) && (marpaESLIFValueResultArray.p != NULL)) {
-        free(marpaESLIFValueResultArray.p);
-      }
-    }
   }
 
-  if (! marpaESLIFSymbol_tryb(stringSymbolp, STRING, strlen(STRING), &matchb, &marpaESLIFValueResultArray)) {
+  if (! marpaESLIFSymbol_tryb(stringSymbolp, STRING, strlen(STRING), &matchb)) {
     goto err;
-  }
-  if (matchb) {
-    if (marpaESLIFValueResultArray.p == NULL) {
-      GENERICLOGGER_INFO(marpaESLIFOption.genericLoggerp, "Symbol's string match but marpaESLIFValueResultArray.p is NULL");
-      goto err;
-    } else {
-      GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "Symbol's string match for \"%s\" on %ld bytes", STRING, (unsigned long) marpaESLIFValueResultArray.sizel);
-      if ((! marpaESLIFValueResultArray.shallowb) && (marpaESLIFValueResultArray.p != NULL)) {
-        free(marpaESLIFValueResultArray.p);
-      }
-    }
   }
 
-  if (! marpaESLIFSymbol_tryb(regexSymbolp, SUBJECT, strlen(SUBJECT), &matchb, &marpaESLIFValueResultArray)) {
+  if (! marpaESLIFSymbol_tryb(regexSymbolp, SUBJECT, strlen(SUBJECT), &matchb)) {
     goto err;
-  }
-  if (matchb) {
-    if (marpaESLIFValueResultArray.p == NULL) {
-      GENERICLOGGER_INFO(marpaESLIFOption.genericLoggerp, "Symbol's regex match but marpaESLIFValueResultArray.p is NULL");
-      goto err;
-    } else {
-      GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "Symbol's regex match for \"%s\" on %ld bytes", REGEX, (unsigned long) marpaESLIFValueResultArray.sizel);
-      if ((! marpaESLIFValueResultArray.shallowb) && (marpaESLIFValueResultArray.p != NULL)) {
-        free(marpaESLIFValueResultArray.p);
-      }
-    }
   }
 
   exiti = 0;
@@ -563,4 +523,31 @@ static short inputReaderb(void *userDatavp, char **inputsp, size_t *inputlp, sho
   *disposeCallbackpp    = NULL;
 
   return 1;
+}
+
+/*****************************************************************************/
+static short symbolImportb(marpaESLIFSymbol_t *marpaESLIFSymbolp, void *userDatavp, marpaESLIFValueResult_t *marpaESLIFValueResultp)
+/*****************************************************************************/
+{
+  marpaESLIFTester_context_t *marpaESLIFTester_contextp = (marpaESLIFTester_context_t *) userDatavp;
+  short                       rcb;
+
+  GENERICLOGGER_INFOF(marpaESLIFTester_contextp->genericLoggerp, "Match of type %d", marpaESLIFValueResultp->type);
+  if (marpaESLIFValueResultp->type == MARPAESLIF_VALUE_TYPE_ARRAY) {
+    if (marpaESLIFValueResultp->u.a.p == NULL) {
+      GENERICLOGGER_ERROR(marpaESLIFTester_contextp->genericLoggerp, "Match of type ARRAY but p is NULL");
+      goto err;
+    }
+
+    GENERICLOGGER_INFOF(marpaESLIFTester_contextp->genericLoggerp, "Match of type ARRAY on %ld bytes", (unsigned long) marpaESLIFValueResultp->u.a.sizel);
+  }
+
+  rcb = 1;
+  goto done;
+
+ err:
+  rcb = 0;
+
+ done:
+  return rcb;
 }
