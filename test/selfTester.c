@@ -466,7 +466,7 @@ int main() {
     goto err;
   }
 
-  GENERICLOGGER_INFO(marpaESLIFOption.genericLoggerp, "Creating meta symbol for our grammar at <start rule>");
+  GENERICLOGGER_INFO(marpaESLIFOption.genericLoggerp, "Creating meta symbol for our grammar at its :start rule");
   metaSymbolp = marpaESLIFSymbol_meta_newp(marpaESLIFp, marpaESLIFGrammarp, &marpaESLIFSymbolOption);
   if (metaSymbolp == NULL) {
     goto err;
