@@ -172,6 +172,9 @@ struct marpaESLIFSymbol {
   marpaESLIF_symbol_t         *exceptionp;             /* Pointer to an exception itself, the one after the '-' character */
   marpaESLIFAction_t          *symbolActionp;          /* Custom symbol, only for terminals or lexemes */
   marpaESLIFAction_t          *ifActionp;              /* if semantic, only for meta symbols that are lexemes or terminals */
+  marpaESLIFSymbolOption_t     marpaESLIFSymbolOption;
+  /* Embedded lua - c.f. src/bindings/src/marpaESLIFLua.c */
+  void                        *marpaESLIFLuaSymbolContextp;
 };
 
 /* A rule */
@@ -559,6 +562,11 @@ marpaESLIFRecognizerOption_t marpaESLIFRecognizerOption_default_template = {
   NULL,              /* ifActionResolverp */
   NULL,              /* eventActionResolverp */
   NULL,              /* regexActionResolverp */
+  NULL               /* importerp */
+};
+
+marpaESLIFSymbolOption_t marpaESLIFSymbolOption_default_template = {
+  NULL,              /* userDatavp */
   NULL               /* importerp */
 };
 

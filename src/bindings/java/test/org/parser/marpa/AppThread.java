@@ -141,16 +141,18 @@ public class AppThread implements Runnable {
 				AppValue eslifAppValue = new AppValue();
 				eslifLogger.info("Testing parse() on " + string);
 				try {
-					byte[] eslifSymbolMatchBytes;
-					eslifSymbolMatchBytes = eslifSymbolRegex.test(string.getBytes(StandardCharsets.UTF_8));
-					if (eslifSymbolMatchBytes != null) {
-						eslifLogger.info("Direct Regex \"[\\d]+\": match: " + new String(eslifSymbolMatchBytes, StandardCharsets.UTF_8));
+					Object eslifSymbolMatch;
+					eslifSymbolMatch = eslifSymbolRegex.test(string.getBytes(StandardCharsets.UTF_8));
+					if (eslifSymbolMatch != null) {
+						Describe d = new Describe();
+						eslifLogger.info("Direct Regex \"[\\d]+\": match: " + d.describe(eslifSymbolMatch));
 					} else {
 						eslifLogger.info("Direct Regex \"[\\d]+\": no match");
 					}
-					eslifSymbolMatchBytes = eslifSymbolString.test(string.getBytes(StandardCharsets.UTF_8));
-					if (eslifSymbolMatchBytes != null) {
-						eslifLogger.info("Direct String \"'('\": match: " + new String(eslifSymbolMatchBytes, StandardCharsets.UTF_8));
+					eslifSymbolMatch = eslifSymbolString.test(string.getBytes(StandardCharsets.UTF_8));
+					if (eslifSymbolMatch != null) {
+						Describe d = new Describe();
+						eslifLogger.info("Direct String \"'('\": match: " + d.describe(eslifSymbolMatch));
 					} else {
 						eslifLogger.info("Direct String \"'('\": no match");
 					}
@@ -180,16 +182,18 @@ public class AppThread implements Runnable {
 				eslifLogger.info("Testing scan()/resume() on " + string);
 				eslifLogger.info("***********************************************************");
 				eslifLogger.info("");
-				byte[] eslifSymbolMatchBytes;
-				eslifSymbolMatchBytes = eslifRecognizer.symbolTry(eslifSymbolRegex);
-				if (eslifSymbolMatchBytes != null) {
-					eslifLogger.info("Indirect Regex \"[\\d]+\": match: " + new String(eslifSymbolMatchBytes, StandardCharsets.UTF_8));
+				Object eslifSymbolMatch;
+				eslifSymbolMatch = eslifRecognizer.symbolTry(eslifSymbolRegex);
+				if (eslifSymbolMatch != null) {
+					Describe d = new Describe();
+					eslifLogger.info("Indirect Regex \"[\\d]+\": match: " + d.describe(eslifSymbolMatch));
 				} else {
 					eslifLogger.info("Indirect Regex \"[\\d]+\": no match");
 				}
-				eslifSymbolMatchBytes = eslifRecognizer.symbolTry(eslifSymbolString);
-				if (eslifSymbolMatchBytes != null) {
-					eslifLogger.info("Indirect String \"'('\": match: " + new String(eslifSymbolMatchBytes, StandardCharsets.UTF_8));
+				eslifSymbolMatch = eslifRecognizer.symbolTry(eslifSymbolString);
+				if (eslifSymbolMatch != null) {
+					Describe d = new Describe();
+					eslifLogger.info("Indirect String \"'('\": match: " + d.describe(eslifSymbolMatch));
 				} else {
 					eslifLogger.info("Indirect String \"'('\": no match");
 				}

@@ -37,10 +37,10 @@ import java.nio.ByteBuffer;
  * </ul>
  */
 public class ESLIFValue {
-	private ESLIFRecognizer      eslifRecognizer         = null;
-	private ByteBuffer           marpaESLIFValuep        = null;
+	private ESLIFRecognizer      eslifRecognizer;
+	private ByteBuffer           marpaESLIFValuep = null;
 	private ByteBuffer           marpaESLIFValueContextp = null;
-	private ESLIFValueInterface  eslifValueInterface     = null;
+	private ESLIFValueInterface  eslifValueInterface;
 	private native void          jniNew(ESLIFRecognizer recognizer) throws ESLIFException;
 	private native void          jniFree() throws ESLIFException;
 	private native boolean       jniValue() throws ESLIFException;

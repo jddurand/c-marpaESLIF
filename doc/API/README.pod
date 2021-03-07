@@ -2415,29 +2415,32 @@ Tries to convert accurately C<ld> to a string. Result a C<NUL> terminated ASCII 
 
 =head2 External symbols
 
-A recognizer is allowed to perform a match try on any symbol that is a terminal, including those that are not part of the current grammar:
+  typedef struct marpaESLIFSymbolOption {
+    void                     *userDatavp;          /* User specific context */
+    marpaESLIFSymbolImport_t  importerp;           /* If end-user want to import a marpaESLIFValueResult */
+  } marpaESLIFSymbolOption_t;
 
   marpaESLIFSymbol_t          *marpaESLIFSymbol_string_newp(marpaESLIF_t *marpaESLIFp,
                                                             marpaESLIFString_t *stringp,
-                                                            char *modifiers);
+                                                            char *modifiers,
+                                                            marpaESLIFSymbolOption_t *marpaESLIFSymbolOptionp);
   marpaESLIFSymbol_t          *marpaESLIFSymbol_regex_newp(marpaESLIF_t *marpaESLIFp,
                                                            marpaESLIFString_t *stringp,
-                                                           char *modifiers);
+                                                           char *modifiers,
+                                                            marpaESLIFSymbolOption_t *marpaESLIFSymbolOptionp);
+
   /* An external symbol can be used directly inside the recognizer phase in the current input stream. The later will automatically expand if needed */
   /* as in normal recognizer lifetime. */
   /* It can be also used outside of any grammar on a free input string */
   /* If there is match, *matchbp will contain a true value, else a false value */
-  /* When there is match marpaESLIFValueResultArrayp, if set, will contain the result */
-  /* The end-user is responsible to free it when marpaESLIFValueResultArrayp->shallowb is false. */
+  /* If there is match and importer is set, the later is called */
   short                        marpaESLIFSymbol_tryb(marpaESLIFSymbol_t *marpaESLIFSymbolp,
                                                      char *inputs,
                                                      size_t inputl,
-                                                     short *matchbp,
-                                                     marpaESLIFValueResultArray_t *marpaESLIFValueResultArrayp);
+                                                     short *matchbp);
   short                        marpaESLIFRecognizer_symbol_tryb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp,
                                                                 marpaESLIFSymbol_t *marpaESLIFSymbolp,
-                                                                short *matchbp,
-                                                                marpaESLIFValueResultArray_t *marpaESLIFValueResultArrayp);
+                                                                short *matchbp);
   void                         marpaESLIFSymbol_freev(marpaESLIFSymbol_t *marpaESLIFSymbolp);
 
 C<Out-of-grammar> symbols of type terminal, i.e. strings or regular expressions, can be created at any time, exactly as if they where present in the grammar: they a described with a C<stringp> and can contain C<modifiers>, which can be C<NULL>.
@@ -2455,10 +2458,6 @@ Only C<c> or C<i> modifiers are allowed
 Only C<e>, C<i>, C<j>, C<m>, C<n>, C<s>, C<x>, C<D>, C<J>, C<U>, C<a>, C<N>, C<u>, C<b>, C<c> or C<A> modifiers are allowed
 
 =back
-
-At recognition phase, there is a C<marpaESLIFRecognizerp> pointer available, and it can be instructed to try to match external symbols. The end-user is responsible to free eventual C<*bytepp> if it is not C<NULL>.
-
-Outside of recognition phase, you can use C<marpaESLIFp> on a free input, identifier by its pointer C<inputs> and length <inputl>.
 
 =head1 NOTES
 

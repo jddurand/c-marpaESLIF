@@ -4,7 +4,7 @@ import java.io.UnsupportedEncodingException;
 import java.nio.ByteBuffer;
 
 /**
- * ESLIFSymbol is a symbol external to grammars that can be used with a recognizer or on any raw input.
+ * ESLIFSymbol is a symbol external to grammars that can be used on any raw input or running recognizer.
  * There are two types of external symbol: regex and string. Both have to follow ESLIF grammar semantic.
  *
  * <pre>
@@ -19,9 +19,10 @@ import java.nio.ByteBuffer;
 public class ESLIFSymbol {
 	private ESLIF          eslif             = null;
 	private ByteBuffer     marpaESLIFSymbolp = null;
+	private ByteBuffer     marpaESLIFSymbolContextp = null;
 	private native void    jniNew(String type, byte[] utf8, String modifiers) throws ESLIFException;
 	private native void    jniFree() throws ESLIFException;
-	private native byte[]  jniTest(byte[] bytes) throws ESLIFException;
+	private native Object  jniTest(byte[] bytes) throws ESLIFException;
 	/*
 	 * ********************************************
 	 * Public methods
@@ -89,7 +90,7 @@ public class ESLIFSymbol {
 	 * 
 	 * @return null if no match, else the matched bytes
 	 */
-	public synchronized byte[] test(byte[] bytes) throws ESLIFException {
+	public synchronized Object test(byte[] bytes) throws ESLIFException {
 		return jniTest(bytes);
 	}
 	/*
@@ -112,5 +113,10 @@ public class ESLIFSymbol {
 	protected void setMarpaESLIFSymbolp(ByteBuffer marpaESLIFSymbolp) {
 		this.marpaESLIFSymbolp = marpaESLIFSymbolp;
 	}
-
+	private ByteBuffer getMarpaESLIFSymbolContextp() {
+		return marpaESLIFSymbolContextp;
+	}
+	private void setMarpaESLIFSymbolContextp(ByteBuffer marpaESLIFSymbolContextp) {
+		this.marpaESLIFSymbolContextp = marpaESLIFSymbolContextp;
+	}
 }

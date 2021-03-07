@@ -73,7 +73,7 @@ public class ESLIFRecognizer {
 	private native long              jniColumn() throws ESLIFException;
 	private native void              jniShare(ESLIFRecognizer eslifRecognizerShared) throws ESLIFException;
 	private native void              jniUnshare() throws ESLIFException;
-	private native byte[]            jniSymbolTry(ESLIFSymbol eslifSymbol) throws ESLIFException;
+	private native Object            jniSymbolTry(ESLIFSymbol eslifSymbol) throws ESLIFException;
 
 	/**
 	 * 
@@ -518,7 +518,7 @@ public class ESLIFRecognizer {
 	 * 
 	 * @return null if no match, else the matched bytes
 	 */
-	public synchronized byte[] symbolTry(ESLIFSymbol eslifSymbol) throws ESLIFException {
+	public synchronized Object symbolTry(ESLIFSymbol eslifSymbol) throws ESLIFException {
 		if (eslifSymbol == null) {
 			throw new IllegalArgumentException("eslifSymbol must not be null");
 		}

@@ -522,6 +522,14 @@ typedef struct marpaESLIFRecognizerContext {
   void *contextp;
 } marpaESLIFRecognizerContext_t;
 
+/* Ask the host system to import a marpaESLIFValueResult in the symbol namespace */
+typedef short (*marpaESLIFSymbolImport_t)(marpaESLIFSymbol_t *marpaESLIFSymbolp, void *userDatavp, marpaESLIFValueResult_t *marpaESLIFValueResultp);
+
+typedef struct marpaESLIFSymbolOption {
+  void                     *userDatavp;          /* User specific context */
+  marpaESLIFSymbolImport_t  importerp;           /* If end-user want to import a marpaESLIFValueResult */
+} marpaESLIFSymbolOption_t;
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -700,16 +708,16 @@ extern "C" {
   /* -------------------------------------- */
   /* Terminals not not bound to any grammar */
   /* -------------------------------------- */
-  marpaESLIF_EXPORT marpaESLIFSymbol_t           *marpaESLIFSymbol_string_newp(marpaESLIF_t *marpaESLIFp, marpaESLIFString_t *stringp, char *modifiers);
-  marpaESLIF_EXPORT marpaESLIFSymbol_t           *marpaESLIFSymbol_regex_newp(marpaESLIF_t *marpaESLIFp, marpaESLIFString_t *stringp, char *modifiers);
+  marpaESLIF_EXPORT marpaESLIFSymbol_t           *marpaESLIFSymbol_string_newp(marpaESLIF_t *marpaESLIFp, marpaESLIFString_t *stringp, char *modifiers, marpaESLIFSymbolOption_t *marpaESLIFSymbolOptionp);
+  marpaESLIF_EXPORT marpaESLIFSymbol_t           *marpaESLIFSymbol_regex_newp(marpaESLIF_t *marpaESLIFp, marpaESLIFString_t *stringp, char *modifiers, marpaESLIFSymbolOption_t *marpaESLIFSymbolOptionp);
   marpaESLIF_EXPORT marpaESLIF_t                 *marpaESLIFSymbol_eslifp(marpaESLIFSymbol_t *marpaESLIFSymbolp);
   /* An external symbol can be used directly inside the recognizer phase in the current input stream. The later will automatically expand if needed */
   /* as in normal recognizer lifetime. */
   /* It can be also used outside of any grammar on a free input string */
   /* If there is match, *matchbp will contain a true value, else a false value */
-  /* When there is match marpaESLIFValueResultArrayp will contain the result. The caller is responsible to free it it is not shallow */
-  marpaESLIF_EXPORT short                        marpaESLIFSymbol_tryb(marpaESLIFSymbol_t *marpaESLIFSymbolp, char *inputs, size_t inputl, short *matchbp, marpaESLIFValueResultArray_t *marpaESLIFValueResultArrayp);
-  marpaESLIF_EXPORT short                        marpaESLIFRecognizer_symbol_tryb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFSymbol_t *marpaESLIFSymbolp, short *matchbp, marpaESLIFValueResultArray_t *marpaESLIFValueResultArrayp);
+  /* If there is match and importer is set, the later is called */
+  marpaESLIF_EXPORT short                        marpaESLIFSymbol_tryb(marpaESLIFSymbol_t *marpaESLIFSymbolp, char *inputs, size_t inputl, short *matchbp);
+  marpaESLIF_EXPORT short                        marpaESLIFRecognizer_symbol_tryb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFSymbol_t *marpaESLIFSymbolp, short *matchbp);
   marpaESLIF_EXPORT void                         marpaESLIFSymbol_freev(marpaESLIFSymbol_t *marpaESLIFSymbolp);
 #ifdef __cplusplus
 }
