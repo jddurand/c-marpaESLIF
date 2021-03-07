@@ -448,6 +448,7 @@ int main() {
   string.encodingasciis = "ASCII";
   string.asciis         = NULL;
 
+  GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "Creating string symbol for: %s, no modifier", STRING);
   stringSymbolp = marpaESLIFSymbol_string_newp(marpaESLIFp, &string, NULL /* modifiers */, &marpaESLIFSymbolOption);
   if (stringSymbolp == NULL) {
     goto err;
@@ -458,6 +459,7 @@ int main() {
   string.encodingasciis = "ASCII";
   string.asciis         = NULL;
 
+  GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "Creating regex symbol for: %s, modifiers: %s", REGEX, "A");
   regexSymbolp = marpaESLIFSymbol_regex_newp(marpaESLIFp, &string, "A" /* Remove anchoring */, &marpaESLIFSymbolOption);
   if (regexSymbolp == NULL) {
     goto err;
@@ -468,18 +470,22 @@ int main() {
     goto err;
   }
 
+  GENERICLOGGER_INFO(marpaESLIFOption.genericLoggerp, "Trying external string symbol match on recognizer");
   if (! marpaESLIFRecognizer_symbol_tryb(marpaESLIFRecognizerp, stringSymbolp, &matchb)) {
     goto err;
   }
 
+  GENERICLOGGER_INFO(marpaESLIFOption.genericLoggerp, "Trying external regex symbol match on recognizer");
   if (! marpaESLIFRecognizer_symbol_tryb(marpaESLIFRecognizerp, regexSymbolp, &matchb)) {
     goto err;
   }
 
+  GENERICLOGGER_INFO(marpaESLIFOption.genericLoggerp, "Trying external string symbol match on itself");
   if (! marpaESLIFSymbol_tryb(stringSymbolp, STRING, strlen(STRING), &matchb)) {
     goto err;
   }
 
+  GENERICLOGGER_INFO(marpaESLIFOption.genericLoggerp, "Trying external regex symbol match on itself");
   if (! marpaESLIFSymbol_tryb(regexSymbolp, SUBJECT, strlen(SUBJECT), &matchb)) {
     goto err;
   }
@@ -531,8 +537,8 @@ static short symbolImportb(marpaESLIFSymbol_t *marpaESLIFSymbolp, void *userData
 {
   marpaESLIFTester_context_t *marpaESLIFTester_contextp = (marpaESLIFTester_context_t *) userDatavp;
   short                       rcb;
+  char                       *tmps;
 
-  GENERICLOGGER_INFOF(marpaESLIFTester_contextp->genericLoggerp, "Match of type %d", marpaESLIFValueResultp->type);
   if (marpaESLIFValueResultp->type == MARPAESLIF_VALUE_TYPE_ARRAY) {
     if (marpaESLIFValueResultp->u.a.p == NULL) {
       GENERICLOGGER_ERROR(marpaESLIFTester_contextp->genericLoggerp, "Match of type ARRAY but p is NULL");
@@ -540,6 +546,20 @@ static short symbolImportb(marpaESLIFSymbol_t *marpaESLIFSymbolp, void *userData
     }
 
     GENERICLOGGER_INFOF(marpaESLIFTester_contextp->genericLoggerp, "Match of type ARRAY on %ld bytes", (unsigned long) marpaESLIFValueResultp->u.a.sizel);
+    tmps = (char *) malloc(marpaESLIFValueResultp->u.a.sizel + 1);
+    if (tmps == NULL) {
+      GENERICLOGGER_ERRORF(marpaESLIFTester_contextp->genericLoggerp, "malloc failure, %s", strerror(errno));
+      goto err;
+    }
+    if (marpaESLIFValueResultp->u.a.sizel > 0) {
+      memcpy(tmps, marpaESLIFValueResultp->u.a.p, marpaESLIFValueResultp->u.a.sizel);
+    }
+    tmps[marpaESLIFValueResultp->u.a.sizel] = '\0';
+    GENERICLOGGER_INFOF(marpaESLIFTester_contextp->genericLoggerp, "Match is: %s", tmps);
+    free(tmps);
+  } else {
+    GENERICLOGGER_ERRORF(marpaESLIFTester_contextp->genericLoggerp, "Match of type %d ?", marpaESLIFValueResultp->type);
+    goto err;
   }
 
   rcb = 1;
