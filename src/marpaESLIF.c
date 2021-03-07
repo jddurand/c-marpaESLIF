@@ -830,7 +830,8 @@ static int                           _marpaESLIF_pcre2_callouti(pcre2_callout_bl
 static int                           _marpaESLIF_pcre2_callout_enumeratei(pcre2_callout_enumerate_block *blockp, void *userDatavp);
 static inline void                   _marpaESLIFCalloutBlock_initb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp);
 static inline void                   _marpaESLIFCalloutBlock_disposev(marpaESLIFRecognizer_t *marpaESLIFRecognizerp);
-static inline marpaESLIFSymbol_t    *_marpaESLIFSymbol_newp(marpaESLIF_t *marpaESLIFp, marpaESLIF_terminal_type_t terminalType, marpaESLIFString_t *stringp, char *modifiers, marpaESLIFSymbolOption_t *marpaESLIFSymbolOptionp);
+static inline marpaESLIFSymbol_t    *_marpaESLIFSymbol_terminal_newp(marpaESLIF_t *marpaESLIFp, marpaESLIF_terminal_type_t terminalType, marpaESLIFString_t *stringp, char *modifiers, marpaESLIFSymbolOption_t *marpaESLIFSymbolOptionp);
+static inline marpaESLIFSymbol_t    *_marpaESLIFSymbol_meta_newp(marpaESLIF_t *marpaESLIFp, marpaESLIFGrammar_t *marpaESLIFGrammarp, int leveli, marpaESLIFString_t *descp, marpaESLIFSymbolOption_t *marpaESLIFSymbolOptionp);
 static inline unsigned int           _marpaESLIF_charset_toupperi(marpaESLIF_t *marpaESLIFp, const char c);
 static inline short                  _marpaESLIF_charset_eqb(marpaESLIF_t *marpaESLIFp, const char *s, const char *p, size_t sizel);
 static inline char                  *_marpaESLIF_charset_canonicals(marpaESLIF_t *marpaESLIFp, const char *s, const size_t sizel);
@@ -4499,6 +4500,7 @@ static inline marpaESLIF_symbol_t *_marpaESLIF_symbol_newp(marpaESLIF_t *marpaES
   symbolp->symbolActionp          = NULL;
   symbolp->ifActionp              = NULL;
   symbolp->marpaESLIFSymbolOption = marpaESLIFSymbolOptionp != NULL ? *marpaESLIFSymbolOptionp : marpaESLIFSymbolOption_default_template;
+  symbolp->contentIsShallowb      = 0;
 
   symbolp->nullableRuleStackp = &(symbolp->_nullableRuleStack);
   GENERICSTACK_INIT(symbolp->nullableRuleStackp);
@@ -4532,37 +4534,39 @@ static inline void _marpaESLIF_symbol_freev(marpaESLIF_symbol_t *symbolp)
 /*****************************************************************************/
 {
   if (symbolp != NULL) {
-    /* All pointers are the top level of this structure are shallow pointers */
-    switch (symbolp->type) {
-    case MARPAESLIF_SYMBOL_TYPE_TERMINAL:
-      _marpaESLIF_terminal_freev(symbolp->u.terminalp);
-      break;
-    case MARPAESLIF_SYMBOL_TYPE_META:
-      _marpaESLIF_meta_freev(symbolp->u.metap);
-      break;
-    default:
-      break;
-    }
-    if (symbolp->eventBefores != NULL) {
-      free(symbolp->eventBefores);
-    }
-    if (symbolp->eventAfters != NULL) {
-      free(symbolp->eventAfters);
-    }
-    if (symbolp->eventPredicteds) {
-      free(symbolp->eventPredicteds);
-    }
-    if (symbolp->eventNulleds) {
-      free(symbolp->eventNulleds);
-    }
-    if (symbolp->eventCompleteds) {
-      free(symbolp->eventCompleteds);
-    }
-    _marpaESLIF_action_freev(symbolp->symbolActionp);
-    _marpaESLIF_action_freev(symbolp->ifActionp);
+    if (! symbolp->contentIsShallowb) {
+      /* All pointers are the top level of this structure are shallow pointers */
+      switch (symbolp->type) {
+      case MARPAESLIF_SYMBOL_TYPE_TERMINAL:
+        _marpaESLIF_terminal_freev(symbolp->u.terminalp);
+        break;
+      case MARPAESLIF_SYMBOL_TYPE_META:
+        _marpaESLIF_meta_freev(symbolp->u.metap);
+        break;
+      default:
+        break;
+      }
+      if (symbolp->eventBefores != NULL) {
+        free(symbolp->eventBefores);
+      }
+      if (symbolp->eventAfters != NULL) {
+        free(symbolp->eventAfters);
+      }
+      if (symbolp->eventPredicteds) {
+        free(symbolp->eventPredicteds);
+      }
+      if (symbolp->eventNulleds) {
+        free(symbolp->eventNulleds);
+      }
+      if (symbolp->eventCompleteds) {
+        free(symbolp->eventCompleteds);
+      }
+      _marpaESLIF_action_freev(symbolp->symbolActionp);
+      _marpaESLIF_action_freev(symbolp->ifActionp);
 
-    GENERICSTACK_RESET(symbolp->nullableRuleStackp); /* Take care, this is a pointer to stack internal to symbol structure */
-    GENERICSTACK_RESET(symbolp->lhsRuleStackp); /* Take care, this is a pointer to stack internal to symbol structure */
+      GENERICSTACK_RESET(symbolp->nullableRuleStackp); /* Take care, this is a pointer to stack internal to symbol structure */
+      GENERICSTACK_RESET(symbolp->lhsRuleStackp); /* Take care, this is a pointer to stack internal to symbol structure */
+    } /* contentIsShallowb */
 
     free(symbolp);
   }
@@ -4903,11 +4907,11 @@ static inline marpaESLIF_t *_marpaESLIF_newp(marpaESLIFOption_t *marpaESLIFOptio
   newlineString.bytel          = strlen(INTERNAL_NEWLINE_PATTERN);
   newlineString.encodingasciis = (char *) MARPAESLIF_UTF8_STRING;
   newlineString.asciis         = (char *) INTERNAL_NEWLINE_PATTERN;
-  marpaESLIFp->newlineSymbolp = _marpaESLIFSymbol_newp(marpaESLIFp,
-                                                       MARPAESLIF_TERMINAL_TYPE_REGEX,
-                                                       &newlineString,
-                                                       NULL, /* modifiers */
-                                                       NULL /* marpaESLIFSymbolOptionp */);
+  marpaESLIFp->newlineSymbolp = _marpaESLIFSymbol_terminal_newp(marpaESLIFp,
+                                                                MARPAESLIF_TERMINAL_TYPE_REGEX,
+                                                                &newlineString,
+                                                                NULL, /* modifiers */
+                                                                NULL /* marpaESLIFSymbolOptionp */);
   if (MARPAESLIF_UNLIKELY(marpaESLIFp->newlineSymbolp == NULL)) {
     goto err;
   }
@@ -19555,17 +19559,12 @@ static inline void  _marpaESLIFCalloutBlock_disposev(marpaESLIFRecognizer_t *mar
 }
 
 /*****************************************************************************/
-static inline marpaESLIFSymbol_t *_marpaESLIFSymbol_newp(marpaESLIF_t *marpaESLIFp, marpaESLIF_terminal_type_t terminalType, marpaESLIFString_t *stringp, char *modifiers, marpaESLIFSymbolOption_t *marpaESLIFSymbolOptionp)
+static inline marpaESLIFSymbol_t *_marpaESLIFSymbol_terminal_newp(marpaESLIF_t *marpaESLIFp, marpaESLIF_terminal_type_t terminalType, marpaESLIFString_t *stringp, char *modifiers, marpaESLIFSymbolOption_t *marpaESLIFSymbolOptionp)
 /*****************************************************************************/
 {
   marpaESLIF_string_t   *utf8p     = NULL;
   marpaESLIFSymbol_t    *symbolp   = NULL;
   marpaESLIF_terminal_t *terminalp = NULL;
-
-  if (marpaESLIFp == NULL) {
-    errno = EINVAL;
-    return NULL;
-  }
 
   utf8p = _marpaESLIF_string2utf8p(marpaESLIFp, stringp, 0 /* tconvsilentb */);
   if (MARPAESLIF_UNLIKELY(utf8p == NULL)) {
@@ -19612,17 +19611,90 @@ static inline marpaESLIFSymbol_t *_marpaESLIFSymbol_newp(marpaESLIF_t *marpaESLI
 }
 
 /*****************************************************************************/
+static inline marpaESLIFSymbol_t *_marpaESLIFSymbol_meta_newp(marpaESLIF_t *marpaESLIFp, marpaESLIFGrammar_t *marpaESLIFGrammarp, int leveli, marpaESLIFString_t *descp, marpaESLIFSymbolOption_t *marpaESLIFSymbolOptionp)
+/*****************************************************************************/
+{
+  marpaESLIFSymbol_t   *symbolp   = NULL;
+  marpaESLIF_grammar_t *grammarp;
+  marpaESLIF_symbol_t  *startp;
+
+  grammarp = _marpaESLIFGrammar_grammar_findp(marpaESLIFGrammarp, leveli, descp);
+  if (MARPAESLIF_UNLIKELY(grammarp == NULL)) {
+    errno = EINVAL;
+    goto err;
+  }
+
+  /* We look for the start symbol */
+  startp = _marpaESLIF_symbol_findp(marpaESLIFGrammarp->marpaESLIFp, grammarp, NULL /* asciis */, grammarp->starti, NULL /* symbolip */);
+  if (MARPAESLIF_UNLIKELY(startp == NULL)) {
+    errno = EINVAL;
+    goto err;
+  }
+
+  /* We just duplicate symbol and mark it as a duplicate of another - this is used in _marpaESLIF_symbol_freev() */
+  symbolp = (marpaESLIF_symbol_t *) malloc(sizeof(marpaESLIF_symbol_t));
+  if (MARPAESLIF_UNLIKELY(symbolp == NULL)) {
+    goto err;
+  }
+  *symbolp = *startp;
+  symbolp->contentIsShallowb = 1;
+
+  goto done;
+
+ err:
+  marpaESLIFSymbol_freev(symbolp);
+  symbolp = NULL;
+
+ done:
+  return symbolp;
+}
+
+/*****************************************************************************/
 marpaESLIFSymbol_t *marpaESLIFSymbol_string_newp(marpaESLIF_t *marpaESLIFp, marpaESLIFString_t *stringp, char *modifiers, marpaESLIFSymbolOption_t *marpaESLIFSymbolOptionp)
 /*****************************************************************************/
 {
-  return _marpaESLIFSymbol_newp(marpaESLIFp, MARPAESLIF_TERMINAL_TYPE_STRING, stringp, modifiers, marpaESLIFSymbolOptionp);
+  if (MARPAESLIF_UNLIKELY((marpaESLIFp == NULL) || (stringp == NULL))) {
+    errno = EINVAL;
+    return NULL;
+  }
+
+  return _marpaESLIFSymbol_terminal_newp(marpaESLIFp, MARPAESLIF_TERMINAL_TYPE_STRING, stringp, modifiers, marpaESLIFSymbolOptionp);
 }
 
 /*****************************************************************************/
 marpaESLIFSymbol_t *marpaESLIFSymbol_regex_newp(marpaESLIF_t *marpaESLIFp, marpaESLIFString_t *stringp, char *modifiers, marpaESLIFSymbolOption_t *marpaESLIFSymbolOptionp)
 /*****************************************************************************/
 {
-  return _marpaESLIFSymbol_newp(marpaESLIFp, MARPAESLIF_TERMINAL_TYPE_REGEX, stringp, modifiers, marpaESLIFSymbolOptionp);
+  if (MARPAESLIF_UNLIKELY((marpaESLIFp == NULL) || (stringp == NULL))) {
+    errno = EINVAL;
+    return NULL;
+  }
+
+  return _marpaESLIFSymbol_terminal_newp(marpaESLIFp, MARPAESLIF_TERMINAL_TYPE_REGEX, stringp, modifiers, marpaESLIFSymbolOptionp);
+}
+
+/*****************************************************************************/
+marpaESLIFSymbol_t *marpaESLIFSymbol_meta_newp(marpaESLIF_t *marpaESLIFp, marpaESLIFGrammar_t *marpaESLIFGrammarp, marpaESLIFSymbolOption_t *marpaESLIFSymbolOptionp)
+/*****************************************************************************/
+{
+  if (MARPAESLIF_UNLIKELY((marpaESLIFp == NULL) || (marpaESLIFGrammarp == NULL))) {
+    errno = EINVAL;
+    return NULL;
+  }
+
+  return _marpaESLIFSymbol_meta_newp(marpaESLIFp, marpaESLIFGrammarp, 0 /* leveli */, NULL /* descp */, marpaESLIFSymbolOptionp);
+}
+
+/*****************************************************************************/
+marpaESLIFSymbol_t *marpaESLIFSymbol_meta_new_by_levelp(marpaESLIF_t *marpaESLIFp, marpaESLIFGrammar_t *marpaESLIFGrammarp, int leveli, marpaESLIFString_t *descp, marpaESLIFSymbolOption_t *marpaESLIFSymbolOptionp)
+/*****************************************************************************/
+{
+  if (MARPAESLIF_UNLIKELY((marpaESLIFp == NULL) || (marpaESLIFGrammarp == NULL))) {
+    errno = EINVAL;
+    return NULL;
+  }
+
+  return _marpaESLIFSymbol_meta_newp(marpaESLIFp, marpaESLIFGrammarp, leveli, descp, marpaESLIFSymbolOptionp);
 }
 
 /*****************************************************************************/

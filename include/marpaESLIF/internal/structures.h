@@ -175,6 +175,8 @@ struct marpaESLIFSymbol {
   marpaESLIFSymbolOption_t     marpaESLIFSymbolOption;
   /* Embedded lua - c.f. src/bindings/src/marpaESLIFLua.c */
   void                        *marpaESLIFLuaSymbolContextp;
+  /* When an external meta symbol is created, it duplicates a symbol content */
+  short                        contentIsShallowb;
 };
 
 /* A rule */

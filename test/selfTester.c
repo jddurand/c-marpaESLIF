@@ -316,6 +316,7 @@ int main() {
   char                        *grammarscripts;
   marpaESLIFSymbol_t          *stringSymbolp = NULL;
   marpaESLIFSymbol_t          *regexSymbolp = NULL;
+  marpaESLIFSymbol_t          *metaSymbolp = NULL;
   marpaESLIFString_t           string;
   marpaESLIFRecognizer_t      *marpaESLIFRecognizerp = NULL;
   short                        matchb;
@@ -465,6 +466,12 @@ int main() {
     goto err;
   }
 
+  GENERICLOGGER_INFO(marpaESLIFOption.genericLoggerp, "Creating meta symbol for our grammar at <start rule>");
+  metaSymbolp = marpaESLIFSymbol_meta_newp(marpaESLIFp, marpaESLIFGrammarp, &marpaESLIFSymbolOption);
+  if (metaSymbolp == NULL) {
+    goto err;
+  }
+
   marpaESLIFRecognizerp = marpaESLIFRecognizer_newp(marpaESLIFGrammarp, &marpaESLIFRecognizerOption);
   if (marpaESLIFRecognizerp == NULL) {
     goto err;
@@ -505,6 +512,9 @@ int main() {
   }
   if (regexSymbolp != NULL) {
     marpaESLIFSymbol_freev(regexSymbolp);
+  }
+  if (metaSymbolp != NULL) {
+    marpaESLIFSymbol_freev(metaSymbolp);
   }
   GENERICLOGGER_LEVEL_SET(marpaESLIFOption.genericLoggerp, GENERICLOGGER_LOGLEVEL_INFO);
   marpaESLIFGrammar_freev(marpaESLIFGrammarp);
