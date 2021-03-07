@@ -466,8 +466,8 @@ int main() {
     goto err;
   }
 
-  GENERICLOGGER_INFO(marpaESLIFOption.genericLoggerp, "Creating meta symbol for our grammar at its :start rule");
-  metaSymbolp = marpaESLIFSymbol_meta_newp(marpaESLIFp, marpaESLIFGrammarp, &marpaESLIFSymbolOption);
+  GENERICLOGGER_INFO(marpaESLIFOption.genericLoggerp, "Creating meta symbol at \"restricted ascii graph name\" in our grammar");
+  metaSymbolp = marpaESLIFSymbol_meta_newp(marpaESLIFp, marpaESLIFGrammarp, "restricted ascii graph name", &marpaESLIFSymbolOption);
   if (metaSymbolp == NULL) {
     goto err;
   }
@@ -487,6 +487,11 @@ int main() {
     goto err;
   }
 
+  GENERICLOGGER_INFO(marpaESLIFOption.genericLoggerp, "Trying external meta symbol match on recognizer");
+  if (! marpaESLIFRecognizer_symbol_tryb(marpaESLIFRecognizerp, metaSymbolp, &matchb)) {
+    goto err;
+  }
+
   GENERICLOGGER_INFO(marpaESLIFOption.genericLoggerp, "Trying external string symbol match on itself");
   if (! marpaESLIFSymbol_tryb(stringSymbolp, STRING, strlen(STRING), &matchb)) {
     goto err;
@@ -494,6 +499,11 @@ int main() {
 
   GENERICLOGGER_INFO(marpaESLIFOption.genericLoggerp, "Trying external regex symbol match on itself");
   if (! marpaESLIFSymbol_tryb(regexSymbolp, SUBJECT, strlen(SUBJECT), &matchb)) {
+    goto err;
+  }
+
+  GENERICLOGGER_INFO(marpaESLIFOption.genericLoggerp, "Trying external meta symbol match on our grammar");
+  if (! marpaESLIFSymbol_tryb(metaSymbolp, (char *) selfs, strlen(selfs), &matchb)) {
     goto err;
   }
 
