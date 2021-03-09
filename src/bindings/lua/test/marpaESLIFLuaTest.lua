@@ -393,7 +393,7 @@ recognizerInterface = {
    ["read"] = function(self)
       self._data = self._magiclinesFunction()
       if (self._data == nil) then
-         logger:errorf("read failure")
+         logger:warningf("read failure")
       else
          logger:tracef("read => %s", self._data)
       end
@@ -469,7 +469,21 @@ recognizerInterface = {
 --
 -- Test the parse interface
 --
+local regexPattern = "[\\d]+"
+local stringPattern = "'('"
+marpaESLIFSymbolRegexp = marpaESLIFp:marpaESLIFSymbol_new('regex', regexPattern)
+marpaESLIFSymbolStringp = marpaESLIFp:marpaESLIFSymbol_new('string', stringPattern)
+
 for _, localstring in pairs(strings) do
+   logger:noticef('Testing regex symbol %s on %s', regexPattern, localstring)
+   local regexMatch = marpaESLIFSymbolRegexp:try(localstring)
+   logger:noticef('... Regex symbol %s on %s result: %s', regexPattern, localstring, regexMatch)
+
+   logger:noticef('Testing string symbol %s on %s', stringPattern, localstring)
+   local stringMatch = marpaESLIFSymbolStringp:try(localstring)
+   logger:noticef('... String symbol %s on %s result: %s', stringPattern, localstring, stringMatch)
+
+   local stringMatch = marpaESLIFSymbolStringp:try(localstring)
    logger:noticef('Testing parse on %s', localstring)
    recognizerInterface:init(localstring)
    local parseb = marpaESLIFGrammarp:parse(recognizerInterface, valueInterface)
