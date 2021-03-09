@@ -9185,10 +9185,10 @@ static int marpaESLIFLua_marpaESLIFSymbol_newi(lua_State *L)
   switch (topi) {
   case 5:
     if (! marpaESLIFLua_luaL_checklstring((const char **) &encodings, L, 3, &encodingl)) goto err;
-    /* Intentionaly break berak */
+    /* Intentionaly no break */
   case 4:
     if (! marpaESLIFLua_luaL_checklstring((const char **) &modifiers, L, 3, &modifierl)) goto err;
-    /* Intentionaly break berak */
+    /* Intentionaly no break */
   case 3:
     if (! marpaESLIFLua_luaL_checklstring((const char **) &patterns, L, 3, &patternl)) goto err;
     if (! marpaESLIFLua_luaL_checklstring((const char **) &types, L, 2, &typel)) goto err;
