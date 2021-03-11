@@ -16,7 +16,8 @@ static short symbolImportb(marpaESLIFSymbol_t *marpaESLIFSymbolp, void *userData
   " * Meta-grammar settings:\n"                 \
   " * **********************\n"                 \
   " *"
-#define REGEX "(*MARK:MarkName)::\\w+"
+#define STRING2 ":start"
+#define REGEX "(*MARK:MarkName):+\\w+"
 
 typedef struct marpaESLIFTester_context {
   genericLogger_t *genericLoggerp;
@@ -41,9 +42,9 @@ const static char *selfs = "# Self grammar\n"
   ":desc                          ::= 'G1'\n"
   ":desc                            ~ \xE2\x80\x9CL0\xE2\x80\x9D\n"
   ":desc                          :[2]:= 'Sub Grammar 2'\n"
-  ":discard                       ::= /[\\s]+/\n"
-  ":discard                       ::= /(?:(?:#)(?:[^\\n]*)(?:\\n|\\z))/u\n"
-  ":discard                       ::= /(?:(?:(?:\\/\\/)(?:[^\\n]*)(?:\\n|\\z))|(?:(?:\\/\\*)(?:(?:[^\\*]+|\\*(?!\\/))*)(?:\\*\\/)))/u\n"
+  ":discard                       ::= /[\\s]+/ event => whitespace$\n"
+  ":discard                       ::= /(?:(?:#)(?:[^\\n]*)(?:\\n|\\z))/u event => perl_comment$\n"
+  ":discard                       ::= /(?:(?:(?:\\/\\/)(?:[^\\n]*)(?:\\n|\\z))|(?:(?:\\/\\*)(?:(?:[^\\*]+|\\*(?!\\/))*)(?:\\*\\/)))/u event => cplusplus_comment$\n"
   "\n"
   "/*\n"
   " * ***************\n"
@@ -315,12 +316,16 @@ int main() {
   marpaESLIFGrammarDefaults_t  marpaESLIFGrammarDefaults;
   char                        *grammarscripts;
   marpaESLIFSymbol_t          *stringSymbolp = NULL;
+  marpaESLIFSymbol_t          *stringSymbol2p = NULL;
   marpaESLIFSymbol_t          *regexSymbolp = NULL;
   marpaESLIFSymbol_t          *metaSymbolp = NULL;
   marpaESLIFString_t           string;
   marpaESLIFRecognizer_t      *marpaESLIFRecognizerp = NULL;
   short                        matchb;
   marpaESLIFSymbolOption_t     marpaESLIFSymbolOption;
+  size_t                       discardl;
+  char                        *discardLasts;
+  size_t                       discardLastl;
 
   genericLoggerp = GENERICLOGGER_NEW(GENERICLOGGER_LOGLEVEL_TRACE);
 
@@ -423,7 +428,7 @@ int main() {
   marpaESLIFRecognizerOption.exhaustedb        = 0; /* Exhaustion event. Default: 0 */
   marpaESLIFRecognizerOption.newlineb          = 1; /* Count line/column numbers. Default: 0 */
   marpaESLIFRecognizerOption.trackb            = 1; /* Absolute position tracking. Default: 0 */
-  marpaESLIFRecognizerOption.bufsizl           = 0; /* Minimum stream buffer size: Recommended: 0 (internally, a system default will apply) */
+  marpaESLIFRecognizerOption.bufsizl           = 10; /* Minimum stream buffer size: Recommended: 0 (internally, a system default will apply) */
   marpaESLIFRecognizerOption.buftriggerperci   = 50; /* Excess number of bytes, in percentage of bufsizl, where stream buffer size is reduced. Recommended: 50 */
   marpaESLIFRecognizerOption.bufaddperci       = 50; /* Policy of minimum of bytes for increase, in percentage of current allocated size, when stream buffer size need to augment. Recommended: 50 */
   marpaESLIFRecognizerOption.ifActionResolverp = NULL;
@@ -455,13 +460,24 @@ int main() {
     goto err;
   }
 
+  string.bytep          = "'" STRING2 "'";
+  string.bytel          = strlen("'" STRING2 "'");
+  string.encodingasciis = "ASCII";
+  string.asciis         = NULL;
+
+  GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "Creating string symbol for: %s, no modifier", STRING2);
+  stringSymbol2p = marpaESLIFSymbol_string_newp(marpaESLIFp, &string, NULL /* modifiers */, &marpaESLIFSymbolOption);
+  if (stringSymbol2p == NULL) {
+    goto err;
+  }
+
   string.bytep          = REGEX;
   string.bytel          = strlen(REGEX);
   string.encodingasciis = "ASCII";
   string.asciis         = NULL;
 
-  GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "Creating regex symbol for: %s, modifiers: %s", REGEX, "A");
-  regexSymbolp = marpaESLIFSymbol_regex_newp(marpaESLIFp, &string, "A" /* Remove anchoring */, &marpaESLIFSymbolOption);
+  GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "Creating regex symbol for: %s, no modifier", REGEX);
+  regexSymbolp = marpaESLIFSymbol_regex_newp(marpaESLIFp, &string, NULL, &marpaESLIFSymbolOption);
   if (regexSymbolp == NULL) {
     goto err;
   }
@@ -472,15 +488,49 @@ int main() {
     goto err;
   }
 
+  /* Reset the context for the new recognizer */
+  marpaESLIFTester_context.inputs         = (char *) selfs;
+  marpaESLIFTester_context.inputl         = strlen(selfs);
+
   marpaESLIFRecognizerp = marpaESLIFRecognizer_newp(marpaESLIFGrammarp, &marpaESLIFRecognizerOption);
   if (marpaESLIFRecognizerp == NULL) {
     goto err;
   }
 
-  GENERICLOGGER_INFO(marpaESLIFOption.genericLoggerp, "Trying external string symbol match on recognizer");
-  if (! marpaESLIFRecognizer_symbol_tryb(marpaESLIFRecognizerp, stringSymbolp, &matchb)) {
+  /* Discard ourself the noise */
+  do {
+    GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "Trying to discard data - inputs=%p, inputl=%04ld", marpaESLIFTester_context.inputs, (unsigned long) marpaESLIFTester_context.inputl);
+    if (! marpaESLIFRecognizer_discardb(marpaESLIFRecognizerp, &discardl)) {
+      goto err;
+    }
+    if (discardl) {
+      GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, ":discard was successful on %ld bytes as per marpaESLIFRecognizer_discardb", (unsigned long) discardl);
+      if (! marpaESLIFRecognizer_discard_lastb(marpaESLIFRecognizerp, &discardLasts, &discardLastl)) {
+        goto err;
+      }
+      GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, ":discard was successful on %ld bytes as per marpaESLIFRecognizer_discard_lastb: %s", (unsigned long) discardLastl, discardLasts);
+    }
+  } while (discardl > 0);
+
+  GENERICLOGGER_INFO(marpaESLIFOption.genericLoggerp, "Trying external string2 symbol match on recognizer");
+  if (! marpaESLIFRecognizer_symbol_tryb(marpaESLIFRecognizerp, stringSymbol2p, &matchb)) {
     goto err;
   }
+
+  /* Discard ourself the noise */
+  do {
+    GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "Trying to discard data - inputs=%p, inputl=%04ld", marpaESLIFTester_context.inputs, (unsigned long) marpaESLIFTester_context.inputl);
+    if (! marpaESLIFRecognizer_discardb(marpaESLIFRecognizerp, &discardl)) {
+      goto err;
+    }
+    if (discardl) {
+      GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, ":discard was successful on %ld bytes as per marpaESLIFRecognizer_discardb", (unsigned long) discardl);
+      if (! marpaESLIFRecognizer_discard_lastb(marpaESLIFRecognizerp, &discardLasts, &discardLastl)) {
+        goto err;
+      }
+      GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, ":discard was successful on %ld bytes as per marpaESLIFRecognizer_discard_lastb: %s", (unsigned long) discardLastl, discardLasts);
+    }
+  } while (discardl > 0);
 
   GENERICLOGGER_INFO(marpaESLIFOption.genericLoggerp, "Trying external regex symbol match on recognizer");
   if (! marpaESLIFRecognizer_symbol_tryb(marpaESLIFRecognizerp, regexSymbolp, &matchb)) {
@@ -520,6 +570,9 @@ int main() {
   if (stringSymbolp != NULL) {
     marpaESLIFSymbol_freev(stringSymbolp);
   }
+  if (stringSymbol2p != NULL) {
+    marpaESLIFSymbol_freev(stringSymbol2p);
+  }
   if (regexSymbolp != NULL) {
     marpaESLIFSymbol_freev(regexSymbolp);
   }
@@ -539,14 +592,26 @@ static short inputReaderb(void *userDatavp, char **inputsp, size_t *inputlp, sho
 /*****************************************************************************/
 {
   marpaESLIFTester_context_t *marpaESLIFTester_contextp = (marpaESLIFTester_context_t *) userDatavp;
+  size_t                      sendl;
 
+  GENERICLOGGER_INFOF(marpaESLIFTester_contextp->genericLoggerp, "inputReaderb: before: inputs=%p, inputl=%04ld", marpaESLIFTester_contextp->inputs, (unsigned long) marpaESLIFTester_contextp->inputl);
+
+  sendl = (marpaESLIFTester_contextp->inputl >= 4) ? 4 : marpaESLIFTester_contextp->inputl;
+
+  /* For a correct BOM check we always want to send at least 4 bytes */
   *inputsp              = marpaESLIFTester_contextp->inputs;
-  *inputlp              = marpaESLIFTester_contextp->inputl;
-  *eofbp                = 1;
+  *inputlp              = sendl;
   *characterStreambp    = 0; /* We say this is not a stream of characters - regexp will adapt and to UTF correctness if needed */
   *encodingsp           = NULL;
   *encodinglp           = 0;
   *disposeCallbackpp    = NULL;
+
+  marpaESLIFTester_contextp->inputs += sendl;
+  marpaESLIFTester_contextp->inputl -= sendl;
+
+  *eofbp = marpaESLIFTester_contextp->inputl <= 0 ? 1 : 0;
+
+  GENERICLOGGER_INFOF(marpaESLIFTester_contextp->genericLoggerp, "inputReaderb: after : inputs=%p, inputl=%04ld, *eofbp=%d", marpaESLIFTester_contextp->inputs, (unsigned long) marpaESLIFTester_contextp->inputl, (int) *eofbp);
 
   return 1;
 }

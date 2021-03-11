@@ -670,7 +670,7 @@ static inline void                   _marpaESLIF_utf82printableascii_freev(char 
 static        short                  _marpaESLIFReader_grammarReader(void *userDatavp, char **inputsp, size_t *inputlp, short *eofbp, short *characterStreambp, char **encodingsp, size_t *encodinglp, marpaESLIFReaderDispose_t *disposeCallbackpp);
 static inline short                  _marpaESLIFRecognizer_isPseudoTerminalExpectedb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, short *isPseudoTerminalExpectedbp);
 static inline short                 __marpaESLIFRecognizer_isPseudoTerminalExpectedb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, short *isPseudoTerminalExpectedbp);
-static inline short                  _marpaESLIFRecognizer_isDiscardExpectedb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, short *isDiscardExpectedbp, size_t *fastDiscardlp, marpaESLIF_symbol_t **fastDiscardSymbolpp);
+static inline short                  _marpaESLIFRecognizer_isDiscardExpectedb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, short *isDiscardExpectedbp, size_t *fastDiscardlp, marpaESLIF_symbol_t **fastDiscardSymbolpp, marpaESLIFValueResult_t *marpaESLIFValueResultp);
 static inline short                  _marpaESLIFRecognizer_resume_oneb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, short initialEventsb, short *canContinuebp, short *isExhaustedbp);
 static inline short                  _marpaESLIF_recognizer_start_is_completeb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, short *completebp);
 static inline short                  _marpaESLIFRecognizer_resumeb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, size_t deltaLengthl, short initialEventsb, short *continuebp, short *isExhaustedbp);
@@ -702,7 +702,7 @@ static inline short                  _marpaESLIF_stream_initb(marpaESLIFRecogniz
 static inline void                   _marpaESLIF_stream_disposev(marpaESLIFRecognizer_t *marpaESLIFRecognizerp);
 static inline marpaESLIFRecognizer_t *_marpaESLIFRecognizer_newp(marpaESLIFGrammar_t *marpaESLIFGrammarp, marpaESLIFRecognizerOption_t *marpaESLIFRecognizerOptionp, short discardb, short noEventb, short silentb, marpaESLIFRecognizer_t *marpaESLIFRecognizerParentp, short fakeb, int maxStartCompletionsi, short utfb, short grammmarIsOnStackb);
 static inline short                  _marpaESLIFRecognizer_shareb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFRecognizer_t *marpaESLIFRecognizerSharedp);
-static inline short                  _marpaESLIFRecognizer_discardParseb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, short internalb, size_t minl, size_t *discardlp);
+static inline short                  _marpaESLIFRecognizer_discardParseb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, size_t minl, size_t *discardlp);
 static inline short                  _marpaESLIFGrammar_parseb(marpaESLIFGrammar_t *marpaESLIFGrammarp, marpaESLIFRecognizerOption_t *marpaESLIFRecognizerOptionp, marpaESLIFValueOption_t *marpaESLIFValueOptionp, short discardb, short noEventb, short silentb, marpaESLIFRecognizer_t *marpaESLIFRecognizerParentp, short *isExhaustedbp, marpaESLIFValueResult_t *marpaESLIFValueResultp, int maxStartCompletionsi, size_t *lastSizeBeforeCompletionlp, int *numberOfStartCompletionsip, short grammarIsOnStackb);
 static        void                   _marpaESLIF_generateStringWithLoggerCallback(void *userDatavp, genericLoggerLevel_t logLeveli, const char *msgs);
 static        void                   _marpaESLIF_generateSeparatedStringWithLoggerCallback(void *userDatavp, genericLoggerLevel_t logLeveli, const char *msgs);
@@ -5216,7 +5216,7 @@ static inline short _marpaESLIFRecognizer_terminal_matcherb(marpaESLIFRecognizer
         if (MARPAESLIF_UNLIKELY(rcMatcherb < 0)) {
           goto err;
         }
-        if (rci == MARPAESLIF_MATCH_OK) {
+        if (rci == MARPAESLIF_MATCH_OK) { /* C.f. rci default value that is MARPAESLIF_MATCH_FAILURE */
           MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, ":eol match");
           matchedp       = (char *) MARPAESLIF_EMPTY_STRING;
           matchedLengthl = 0;
@@ -7593,7 +7593,7 @@ static inline short _marpaESLIFRecognizer_isPseudoTerminalExpectedb(marpaESLIFRe
 }
 
 /*****************************************************************************/
-static inline short _marpaESLIFRecognizer_isDiscardExpectedb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, short *isDiscardExpectedbp, size_t *fastDiscardlp, marpaESLIF_symbol_t **fastDiscardSymbolpp)
+static inline short _marpaESLIFRecognizer_isDiscardExpectedb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, short *isDiscardExpectedbp, size_t *fastDiscardlp, marpaESLIF_symbol_t **fastDiscardSymbolpp, marpaESLIFValueResult_t *marpaESLIFValueResultp)
 /*****************************************************************************/
 /* This method allows to prevent a cyle on :discard, this is important       */
 /* because a cycle is consuming: this is a whole new parse.                  */
@@ -7677,8 +7677,12 @@ static inline short _marpaESLIFRecognizer_isDiscardExpectedb(marpaESLIFRecognize
     }
     if (rci == MARPAESLIF_MATCH_OK) {
       discardl = marpaESLIFValueResult.u.a.sizel;
-      if ((! marpaESLIFValueResult.u.a.shallowb) && (marpaESLIFValueResult.u.a.p != NULL)) {
-        free(marpaESLIFValueResult.u.a.p);
+      if (marpaESLIFValueResultp != NULL) {
+        *marpaESLIFValueResultp = marpaESLIFValueResult;
+      } else {
+        if ((! marpaESLIFValueResult.u.a.shallowb) && (marpaESLIFValueResult.u.a.p != NULL)) {
+          free(marpaESLIFValueResult.u.a.p);
+        }
       }
 
       isDiscardExpectedb = 1;
@@ -8017,7 +8021,7 @@ static inline short _marpaESLIFRecognizer_resume_oneb(marpaESLIFRecognizer_t *ma
   }
   
   if (alternativeStackSymboli <= 0) {
-    if (! _marpaESLIFRecognizer_discardParseb(marpaESLIFRecognizerp, 1 /* internalb */, 0, &discardl)) {
+    if (! _marpaESLIFRecognizer_discardParseb(marpaESLIFRecognizerp, 0, &discardl)) {
       goto err;
     }
     if (discardl > 0) {
@@ -8154,7 +8158,7 @@ static inline short _marpaESLIFRecognizer_resume_oneb(marpaESLIFRecognizer_t *ma
   /* In this case, :discard have precedence. The exception is a match on pseudo-terminal, that is valid */
   /* despite the fact the it matched zero bytes */
   if (! isPseudoTerminalMatchb) {
-    if (! _marpaESLIFRecognizer_discardParseb(marpaESLIFRecognizerp, 1 /* internalb */, maxMatchedl, &discardl)) {
+    if (! _marpaESLIFRecognizer_discardParseb(marpaESLIFRecognizerp, maxMatchedl, &discardl)) {
       goto err;
     }
     if (discardl > 0) {
@@ -8934,6 +8938,35 @@ short marpaESLIFRecognizer_lexeme_tryb(marpaESLIFRecognizer_t *marpaESLIFRecogni
 }
 
 /*****************************************************************************/
+short marpaESLIFRecognizer_discardb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, size_t *discardlp)
+/*****************************************************************************/
+{
+  size_t discardl;
+  short  rcb;
+
+  if (MARPAESLIF_UNLIKELY(marpaESLIFRecognizerp == NULL)) {
+    errno = EINVAL;
+    return 0;
+  }
+
+  if (! _marpaESLIFRecognizer_discardParseb(marpaESLIFRecognizerp, 0 /* minl */, &discardl)) {
+    goto err;
+  }
+
+  if (discardlp != NULL) {
+    *discardlp = discardl;
+  }
+  rcb = 1;
+  goto done;
+
+ err:
+  rcb = 0;
+
+ done:
+  return rcb;
+}
+
+/*****************************************************************************/
 short marpaESLIFRecognizer_discard_tryb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, short *matchbp)
 /*****************************************************************************/
 {
@@ -8942,10 +8975,11 @@ short marpaESLIFRecognizer_discard_tryb(marpaESLIFRecognizer_t *marpaESLIFRecogn
   marpaESLIF_grammar_t    *grammarp;
   short                    rcb;
 
-  if (marpaESLIFRecognizerp == NULL) {
+  if (MARPAESLIF_UNLIKELY(marpaESLIFRecognizerp == NULL)) {
     errno = EINVAL;
     return 0;
   }
+
   marpaESLIFp        = marpaESLIFRecognizerp->marpaESLIFp;
   marpaESLIFGrammarp = marpaESLIFRecognizerp->marpaESLIFGrammarp;
   grammarp           = marpaESLIFGrammarp->grammarp;
@@ -9786,7 +9820,7 @@ static inline short _marpaESLIFRecognizer_push_grammar_eventsb(marpaESLIFRecogni
       /* to avoid the eventual error message "Grammar is exhausted but lexeme remains" */
 
       do {
-        if (! _marpaESLIFRecognizer_discardParseb(marpaESLIFRecognizerp, 1 /* internalb */, 0 /* minl */, &discardl)) {
+        if (! _marpaESLIFRecognizer_discardParseb(marpaESLIFRecognizerp, 0 /* minl */, &discardl)) {
           goto err;
         }
         if (discardl > 0) {
@@ -10523,7 +10557,7 @@ short marpaESLIFRecognizer_isExhaustedb(marpaESLIFRecognizer_t *marpaESLIFRecogn
 }
 
 /*****************************************************************************/
-static inline short _marpaESLIFRecognizer_discardParseb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, short internalb, size_t minl, size_t *discardlp)
+static inline short _marpaESLIFRecognizer_discardParseb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, size_t minl, size_t *discardlp)
 /*****************************************************************************/
 /* Note that we made sure that discardlp is never NULL in any caller.        */
 /*****************************************************************************/
@@ -10541,7 +10575,7 @@ static inline short _marpaESLIFRecognizer_discardParseb(marpaESLIFRecognizer_t *
   marpaESLIF_grammar_t    *grammarp;
   short                    rcb;
 
-  if (MARPAESLIF_UNLIKELY(! _marpaESLIFRecognizer_isDiscardExpectedb(marpaESLIFRecognizerp, &isDiscardExpectedb, &fastDiscardl, &fastDiscardSymbolp))) {
+  if (MARPAESLIF_UNLIKELY(! _marpaESLIFRecognizer_isDiscardExpectedb(marpaESLIFRecognizerp, &isDiscardExpectedb, &fastDiscardl, &fastDiscardSymbolp, &marpaESLIFValueResult))) {
     goto err;
   }
 
@@ -10592,17 +10626,15 @@ static inline short _marpaESLIFRecognizer_discardParseb(marpaESLIFRecognizer_t *
       if (discardl > minl) {
         MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Discard successful on %ld bytes", (unsigned long) discardl);
 
-        if (internalb) {
-          /* New line processing, etc... */
-          if (MARPAESLIF_UNLIKELY(! _marpaESLIFRecognizer_matchPostProcessingb(marpaESLIFRecognizerp, marpaESLIF_streamp, discardl))) {
-            goto err;
-          }
-
-          /* Move stream */
-          MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Advancing stream internal position %p by %ld bytes", marpaESLIF_streamp->inputs, (unsigned long) discardl);
-          marpaESLIF_streamp->inputs += discardl;
-          marpaESLIF_streamp->inputl -= discardl;
+        /* New line processing, etc... */
+        if (MARPAESLIF_UNLIKELY(! _marpaESLIFRecognizer_matchPostProcessingb(marpaESLIFRecognizerp, marpaESLIF_streamp, discardl))) {
+          goto err;
         }
+
+        /* Move stream */
+        MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Advancing stream internal position %p by %ld bytes", marpaESLIF_streamp->inputs, (unsigned long) discardl);
+        marpaESLIF_streamp->inputs += discardl;
+        marpaESLIF_streamp->inputl -= discardl;
 
         if (! noEventb) {
           /* We want to do as if we would have done a lexeme complete before */
@@ -13207,6 +13239,18 @@ static inline short _marpaESLIFRecognizer_appendDatab(marpaESLIFRecognizer_t *ma
   char                *tmps;
   short                rcb;
 
+  /* The stream is decomposed like this:                   */
+  /*                                                       */
+  /* ----------------------------------------------------- */
+  /* ^                          ^                          */
+  /* |                          |                          */
+  /* buffers                    |                          */
+  /*                            inputs                     */
+  /*                                                       */
+  /* <--------------------- bufferl -------------------- > */
+  /* <-------- deltal --------->< ------- inputl ------- > */
+  /* ----------------------------------------------------- */
+
   MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_INC;
   MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "start (datas=%p, datal=%ld)", datas, (unsigned long) datal);
 
@@ -13227,29 +13271,26 @@ static inline short _marpaESLIFRecognizer_appendDatab(marpaESLIFRecognizer_t *ma
         &&                                    /* and */
         (inputl < bufsizl)                    /* there is less remaining bytes to process than minimum buffer size */
         ) {
-      if ((marpaESLIF_streamp->tconvp == NULL) || marpaESLIF_streamp->bomdoneb) {
-        /* ... then we can realloc to minimum buffer size */
+      /* ... then we can realloc to minimum buffer size */
 
-        /* Before reallocating, we need to move the remaining bytes at the beginning */
-        memmove(buffers, marpaESLIF_streamp->inputs, inputl);
-        /* Try to realloc */
-        wantedl = bufsizl;
-        MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Resizing internal buffer size from %ld bytes to %ld bytes", (unsigned long) bufferallocl, (unsigned long) wantedl);
-        tmps = realloc(buffers, wantedl + 1); /* We always add a hiden NUL byte for convenience */
-        if (MARPAESLIF_UNLIKELY(tmps == NULL)) {
-          /* We COULD continue, this is not truely fatal - but we are in a bad shape anyway -; */
-          MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "realloc failure, %s", strerror(errno));
-          goto err;
-        }
-        buffers       = marpaESLIF_streamp->buffers      = tmps;        /* Buffer pointer */
-        bufferallocl  = marpaESLIF_streamp->bufferallocl = wantedl;     /* Allocated size */
-        bufferl       = marpaESLIF_streamp->bufferl      = inputl;      /* Number of valid bytes */
-        globalOffsetp += inputl;                                        /* We "forget" inputl bytes: increase global offset (size_t turnaround not checked) */
-        marpaESLIF_streamp->globalOffsetp = globalOffsetp;
-        /* Pointer inside internal buffer is back to the beginning */
-        marpaESLIF_streamp->inputs = buffers;
-        tmps[wantedl] = '\0';
+      /* Before reallocating, we need to move the remaining bytes at the beginning */
+      memmove(buffers, marpaESLIF_streamp->inputs, inputl + 1);       /* + 1 for internal NUL byte */
+      /* Try to realloc */
+      wantedl = bufsizl;
+      MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Resizing internal buffer size from %ld bytes to %ld bytes", (unsigned long) bufferallocl, (unsigned long) wantedl);
+      tmps = realloc(buffers, wantedl + 1); /* We always add a hiden NUL byte for convenience */
+      if (MARPAESLIF_UNLIKELY(tmps == NULL)) {
+        /* We COULD continue, this is not truely fatal - but we are in a bad shape anyway -; */
+        MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "realloc failure, %s", strerror(errno));
+        goto err;
       }
+      buffers       = marpaESLIF_streamp->buffers      = tmps;        /* Buffer pointer */
+      bufferallocl  = marpaESLIF_streamp->bufferallocl = wantedl;     /* Allocated size */
+      bufferl       = marpaESLIF_streamp->bufferl      = inputl;      /* Number of valid bytes */
+      deltal        = 0;                                              /* Delta between inputs and buffers */
+      globalOffsetp += inputl;                                        /* We "forget" inputl bytes: increase global offset (size_t turnaround not checked) */
+      marpaESLIF_streamp->globalOffsetp = globalOffsetp;
+      marpaESLIF_streamp->inputs = buffers;
     }
   }
 
@@ -13266,19 +13307,18 @@ static inline short _marpaESLIFRecognizer_appendDatab(marpaESLIFRecognizer_t *ma
     buffers      = marpaESLIF_streamp->buffers      = tmps;        /* Buffer pointer */
     bufferallocl = marpaESLIF_streamp->bufferallocl = wantedl;     /* Allocated size */
     bufferl      = marpaESLIF_streamp->bufferl      = 0;           /* Number of valid bytes (increased below) */
-    buffers[bufferl] = '\0';
-    /* Pointer inside internal buffer is at the beginning */
-    marpaESLIF_streamp->inputs = buffers;
+    marpaESLIF_streamp->inputs = buffers;                          /* Pointer inside internal buffer is at the beginning */
   } else {
     wantedl = bufferl + datal;
     if (wantedl > bufferallocl) {
       /* We need more bytes than what has been allocated. Apply augment policy */
-      minwantedl = (bufferallocl * (1 + bufaddperci)) / 100;
+      minwantedl = (bufferallocl * (100 + bufaddperci)) / 100;
+      /* minwantedl is guaranteed to be >= bufferallocl (modulo turnaround, that we do not consider here) */
       if (wantedl < minwantedl) {
         wantedl = minwantedl;
       }
       MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Resizing an internal buffer from %ld bytes to %ld bytes", (unsigned long) bufferl, (unsigned long) wantedl);
-      tmps = realloc(buffers, wantedl + 1); /* We always add a NUL byte for convenience */
+      tmps = (char *) realloc(buffers, wantedl + 1); /* We always add a NUL byte for convenience */
       if (MARPAESLIF_UNLIKELY(tmps == NULL)) {
         MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "realloc failure, %s", strerror(errno));
         goto err;
@@ -13287,7 +13327,6 @@ static inline short _marpaESLIFRecognizer_appendDatab(marpaESLIFRecognizer_t *ma
       bufferallocl = marpaESLIF_streamp->bufferallocl = wantedl;     /* Allocated size */
       /* Pointer inside internal buffer is moving */
       marpaESLIF_streamp->inputs = buffers + deltal;
-      buffers[bufferl] = '\0';
     }
   }
 
@@ -13297,6 +13336,9 @@ static inline short _marpaESLIFRecognizer_appendDatab(marpaESLIFRecognizer_t *ma
   /* Commit number of valid bytes, and number of remaining bytes to process */
   marpaESLIF_streamp->bufferl += datal;
   marpaESLIF_streamp->inputl  += datal;
+
+  /* Add a convenient NUL byte after valid data */
+  buffers[marpaESLIF_streamp->bufferl] = '\0';
 
   /* In character mode, process BOM if not already done - we test marpaESLIF_streamp->tconvp instead of marpaESLIF_streamp->charconvb because */
   /* the later is set to true only after append data is done */
@@ -19784,38 +19826,51 @@ short marpaESLIFRecognizer_symbol_tryb(marpaESLIFRecognizer_t *marpaESLIFRecogni
   marpaESLIF_matcher_value_t rci;
   short                      rcb;
   marpaESLIFValueResult_t    marpaESLIFValueResult = marpaESLIFValueResultUndef;
+  short                      rcMatcherb;
 
   if (MARPAESLIF_UNLIKELY((marpaESLIFRecognizerp == NULL) || (marpaESLIFSymbolp == NULL))) {
     errno = EINVAL;
     goto err;
   }
 
-  rcb = _marpaESLIFRecognizer_symbol_matcherb(marpaESLIFRecognizerp,
-                                              marpaESLIFRecognizerp->marpaESLIF_streamp,
-                                              marpaESLIFSymbolp,
-                                              &rci,
-                                              &marpaESLIFValueResult,
-                                              0, /* maxStartCompletionsi */
-                                              NULL, /* lastSizeBeforeCompletionlp */
-                                              NULL /* numberOfStartCompletionsip */);
-  switch (rci) {
-  case MARPAESLIF_MATCH_FAILURE:
+  rcMatcherb = _marpaESLIFRecognizer_symbol_matcherb(marpaESLIFRecognizerp,
+                                                     marpaESLIFRecognizerp->marpaESLIF_streamp,
+                                                     marpaESLIFSymbolp,
+                                                     &rci,
+                                                     &marpaESLIFValueResult,
+                                                     0, /* maxStartCompletionsi */
+                                                     NULL, /* lastSizeBeforeCompletionlp */
+                                                     NULL /* numberOfStartCompletionsip */);
+
+  if (rcMatcherb < 0) {
+    /* Fatal error */
+    goto err;
+  }
+
+  if (! rcMatcherb) {
     if (matchbp != NULL) {
       *matchbp = 0;
     }
-    break;
-  case MARPAESLIF_MATCH_OK:
-    if (matchbp != NULL) {
-      *matchbp = 1;
-    }
-    /* Import, eventually */
-    if (! _marpaESLIFSymbol_eslif2hostb(marpaESLIFSymbolp, &marpaESLIFValueResult, NULL /* forcedUserDatavp */, NULL /* forcedImporterp */)) {
+  } else {
+    switch (rci) {
+    case MARPAESLIF_MATCH_FAILURE:
+      if (matchbp != NULL) {
+        *matchbp = 0;
+      }
+      break;
+    case MARPAESLIF_MATCH_OK:
+      if (matchbp != NULL) {
+        *matchbp = 1;
+      }
+      /* Import, eventually */
+      if (! _marpaESLIFSymbol_eslif2hostb(marpaESLIFSymbolp, &marpaESLIFValueResult, NULL /* forcedUserDatavp */, NULL /* forcedImporterp */)) {
+        goto err;
+      }
+      break;
+    default:
+      /* This is handling MARPAESLIF_MATCH_AGAIN that is a fatal error because _marpaESLIFRecognizer_symbol_matcherb() tried to handle that */
       goto err;
     }
-    break;
-  default:
-    /* This is handling MARPAESLIF_MATCH_AGAIN that is a fatal error because _marpaESLIFRecognizer_symbol_matcherb() tried to handle that */
-    goto err;
   }
 
   rcb = 1;

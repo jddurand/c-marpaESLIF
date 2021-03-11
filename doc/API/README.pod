@@ -1368,6 +1368,7 @@ In order to prevent internal buffer to grow indefinitely, C<buftriggerperci> is 
 
 To prevent too many memory allocations, when marpaESLIF need to increase its internal buffer, it will do so by requesting C<bufaddperci> percent of current allocated size more bytes. Recommended value: C<50>.
 
+
 =item C<ifActionResolverp>
 
 If a lexeme or a terminal is a candidate for automatic parsing (I<scan> or I<parse> modes), this callback must not be C<NULL> and return a function pointer. The later will be be called with a C<marpaESLIFValueResultLexemep> argument that is guaranteed to be of type C<ARRAY>, and must return in C<marpaESLIFValueResultBoolp>, guaranteed to not be C<NULL>, a boolean value saying of the lexeme or terminal can be taken in account in the parse tree.
@@ -1585,6 +1586,21 @@ Returns a true value on success, a false value on failure.
 Try to match the lexeme with name C<lexemes> that must be non-C<NULL> against the input seen by the recognizer. Returns in C<matchbp>, when not C<NULL>, a true value if there is a match, a false value otherwise. This method generates no event.
 
 This function should never fail, a false value indicates something fatal happened or the arguments are not correct.
+
+=head3 C<marpaESLIFRecognizer_discardb>
+
+  short marpaESLIFRecognizer_discardb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, size_t *discardlp);
+
+Applies :discard on the stream, returning in C<discardlp>, when not C<NULL>, a value that is > 0 if discard was successful.
+
+The discarded data itself can be retreived only if the an associated completion event, e.g.:
+
+  :discard                       ::= /[\\s]+/\n event => whitespace$
+  :discard                       ::= /(?:(?:#)(?:[^\\n]*)(?:\\n|\\z))/u event => perl_comment$
+  :discard                       ::= /(?:(?:(?:\\/\\/)(?:[^\\n]*)(?:\\n|\\z))|(?:(?:\\/\\*)(?:(?:[^\\*]+|\\*(?!\\/))*)(?:\\*\\/)))/u event => cplusplus_comment$
+
+
+Returns a true value on success, a false value otherwise.
 
 =head3 C<marpaESLIFRecognizer_discard_tryb>
 
