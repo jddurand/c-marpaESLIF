@@ -1,3 +1,5 @@
+#undef MARPAESLIF_NDEBUG
+
 #include <stdlib.h>
 #include <errno.h>
 #include <string.h>
@@ -702,6 +704,7 @@ static inline short                  _marpaESLIF_stream_initb(marpaESLIFRecogniz
 static inline void                   _marpaESLIF_stream_disposev(marpaESLIFRecognizer_t *marpaESLIFRecognizerp);
 static inline marpaESLIFRecognizer_t *_marpaESLIFRecognizer_newp(marpaESLIFGrammar_t *marpaESLIFGrammarp, marpaESLIFRecognizerOption_t *marpaESLIFRecognizerOptionp, short discardb, short noEventb, short silentb, marpaESLIFRecognizer_t *marpaESLIFRecognizerParentp, short fakeb, int maxStartCompletionsi, short utfb, short grammmarIsOnStackb);
 static inline short                  _marpaESLIFRecognizer_shareb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFRecognizer_t *marpaESLIFRecognizerSharedp);
+static inline short                  _marpaESLIFRecognizer_peekb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFRecognizer_t *marpaESLIFRecognizerPeekedp);
 static inline short                  _marpaESLIFRecognizer_discardParseb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, size_t minl, size_t *discardlp);
 static inline short                  _marpaESLIFGrammar_parseb(marpaESLIFGrammar_t *marpaESLIFGrammarp, marpaESLIFRecognizerOption_t *marpaESLIFRecognizerOptionp, marpaESLIFValueOption_t *marpaESLIFValueOptionp, short discardb, short noEventb, short silentb, marpaESLIFRecognizer_t *marpaESLIFRecognizerParentp, short *isExhaustedbp, marpaESLIFValueResult_t *marpaESLIFValueResultp, int maxStartCompletionsi, size_t *lastSizeBeforeCompletionlp, int *numberOfStartCompletionsip, short grammarIsOnStackb);
 static        void                   _marpaESLIF_generateStringWithLoggerCallback(void *userDatavp, genericLoggerLevel_t logLeveli, const char *msgs);
@@ -7217,7 +7220,33 @@ short marpaESLIFRecognizer_shareb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp,
     goto err;
   }
 
+  if (MARPAESLIF_UNLIKELY(marpaESLIFRecognizerp == marpaESLIFRecognizerSharedp)) {
+    errno = EINVAL;
+    goto err;
+  }
+
   rcb = _marpaESLIFRecognizer_shareb(marpaESLIFRecognizerp, marpaESLIFRecognizerSharedp);
+  goto done;
+
+ err:
+  rcb = 0;
+
+ done:
+  return rcb;
+}
+
+/*****************************************************************************/
+short marpaESLIFRecognizer_peekb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFRecognizer_t *marpaESLIFRecognizerPeekedp)
+/*****************************************************************************/
+{
+  short rcb;
+
+  if (MARPAESLIF_UNLIKELY(marpaESLIFRecognizerp == NULL)) {
+    errno = EINVAL;
+    goto err;
+  }
+
+  rcb = _marpaESLIFRecognizer_peekb(marpaESLIFRecognizerp, marpaESLIFRecognizerPeekedp);
   goto done;
 
  err:
@@ -9967,6 +9996,7 @@ static inline short _marpaESLIF_stream_initb(marpaESLIFRecognizer_t *marpaESLIFR
   marpaESLIFRecognizerp->_marpaESLIF_stream.linel                = 1;
   marpaESLIFRecognizerp->_marpaESLIF_stream.columnl              = 1;
   marpaESLIFRecognizerp->_marpaESLIF_stream.bomdoneb             = 0;
+  marpaESLIFRecognizerp->_marpaESLIF_stream.peeki                = 0;
 
   return 1;
 }
@@ -10365,6 +10395,38 @@ static inline short _marpaESLIFRecognizer_shareb(marpaESLIFRecognizer_t *marpaES
 
   /* This function never fails */
   return 1;
+}
+
+/*****************************************************************************/
+static inline short _marpaESLIFRecognizer_peekb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFRecognizer_t *marpaESLIFRecognizerPeekedp)
+/*****************************************************************************/
+{
+  unsigned int peeki = marpaESLIFRecognizerp->marpaESLIF_streamp->peeki; /* To check for turnarounds */
+  short        rcb;
+
+  if (marpaESLIFRecognizerPeekedp == NULL) {
+    if (--peeki > marpaESLIFRecognizerp->marpaESLIF_streamp->peeki) {
+      MARPAESLIF_WARN(marpaESLIFRecognizerp->marpaESLIFp, "Too many stream unpeeks");
+      goto err;
+    }
+    marpaESLIFRecognizerp->marpaESLIF_streamp = &(marpaESLIFRecognizerp->_marpaESLIF_stream);
+  } else {
+    if (++peeki < marpaESLIFRecognizerp->marpaESLIF_streamp->peeki) {
+      MARPAESLIF_WARN(marpaESLIFRecognizerp->marpaESLIFp, "Too many stream peeks");
+      goto err;
+    }
+    marpaESLIFRecognizerp->marpaESLIF_streamp = marpaESLIFRecognizerPeekedp->marpaESLIF_streamp;
+  }
+
+  marpaESLIFRecognizerp->marpaESLIF_streamp->peeki = peeki;
+  rcb = 1;
+  goto done;
+
+ err:
+  rcb = 0;
+
+ done:
+  return rcb;
 }
 
 /*****************************************************************************/
@@ -13260,7 +13322,10 @@ static inline short _marpaESLIFRecognizer_appendDatab(marpaESLIFRecognizer_t *ma
     goto done;
   }
 
-  if (marpaESLIFRecognizerp->marpaESLIFRecognizerParentp == NULL) {
+  if ((marpaESLIFRecognizerp->marpaESLIFRecognizerParentp == NULL) /* Lexeme mode ? */
+      &&
+      (marpaESLIF_streamp->peeki == 0)                             /* Peeked ? */
+      ) {
     /* We can crunch data at any time unless blocked because of a pending BOM check. */
 
     if (((marpaESLIF_streamp->tconvp == NULL) || marpaESLIF_streamp->bomdoneb) /* BOM check done or not needed ? */
@@ -13369,6 +13434,7 @@ static inline short _marpaESLIFRecognizer_appendDatab(marpaESLIFRecognizer_t *ma
   /* never got control back until we are finished. I.e. until all the free methods of */
   /* all the children are executed -; */
 
+  /* MARPAESLIF_NOTICEF(marpaESLIFRecognizerp->marpaESLIFp, "%s: buffers=%p, bufferl=%04ld, inputs=%p, inputl=%4ld", funcs, marpaESLIF_streamp->buffers, (unsigned long) marpaESLIF_streamp->bufferl, marpaESLIF_streamp->inputs, (unsigned long) marpaESLIF_streamp->inputl); */
   rcb = 1;
   goto done;
 

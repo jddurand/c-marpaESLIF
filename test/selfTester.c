@@ -20,6 +20,7 @@ static short symbolImportb(marpaESLIFSymbol_t *marpaESLIFSymbolp, void *userData
 #define REGEX "(*MARK:MarkName):+\\w+"
 
 typedef struct marpaESLIFTester_context {
+  short            firstb;
   genericLogger_t *genericLoggerp;
   char            *inputs;
   size_t           inputl;
@@ -261,7 +262,7 @@ const static char *selfs = "# Self grammar\n"
   "<word character>                 ~ /[\\w]/\n"
   "<one or more word characters>    ~ <word character>+ proper => 1 name => 'Alternative name using single quotes'\n"
   "<zero or more word characters>   ~ <word character>* proper => 1 name => \"Alternative name using double quotes\"\n"
-  "<restricted ascii graph name>    ~ /[!#$%&*+.\\/;?\\[\\\\\\]^_`~A-Za-z0-9][!#$%&*+.\\/;?\\[\\\\\\]^_`~A-Za-z0-9]*/ name => \xE2\x80\x9C" "Alternative name using UTF-8 quotes\xE2\x80\x9D\n"
+  "<restricted ascii graph name>    ~ /[!#$%&*+.\\/;?\\[\\\\\\]^_`~A-Za-z0-9]+/ name => \xE2\x80\x9C" "Alternative name using UTF-8 quotes\xE2\x80\x9D\n"
   "<graph ascii name>               ~ /[[:graph:]]+/\n"
   "<lua action name>                ~ /::lua->[a-zA-Z_][a-zA-Z0-9_]*/\n"
   "<bare name>                      ~ <word character>+ proper => 1\n"
@@ -418,6 +419,7 @@ int main() {
   GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "-------------------------\n%s", grammarscripts);
 
   /* So in theory we must be able to reparse ESLIF using itself -; */
+  marpaESLIFTester_context.firstb         = 1;
   marpaESLIFTester_context.genericLoggerp = genericLoggerp;
   marpaESLIFTester_context.inputs         = (char *) selfs;
   marpaESLIFTester_context.inputl         = strlen(selfs);
@@ -489,6 +491,7 @@ int main() {
   }
 
   /* Reset the context for the new recognizer */
+  marpaESLIFTester_context.firstb         = 1;
   marpaESLIFTester_context.inputs         = (char *) selfs;
   marpaESLIFTester_context.inputl         = strlen(selfs);
 
@@ -516,21 +519,6 @@ int main() {
   if (! marpaESLIFRecognizer_symbol_tryb(marpaESLIFRecognizerp, stringSymbol2p, &matchb)) {
     goto err;
   }
-
-  /* Discard ourself the noise */
-  do {
-    GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "Trying to discard data - inputs=%p, inputl=%04ld", marpaESLIFTester_context.inputs, (unsigned long) marpaESLIFTester_context.inputl);
-    if (! marpaESLIFRecognizer_discardb(marpaESLIFRecognizerp, &discardl)) {
-      goto err;
-    }
-    if (discardl) {
-      GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, ":discard was successful on %ld bytes as per marpaESLIFRecognizer_discardb", (unsigned long) discardl);
-      if (! marpaESLIFRecognizer_discard_lastb(marpaESLIFRecognizerp, &discardLasts, &discardLastl)) {
-        goto err;
-      }
-      GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, ":discard was successful on %ld bytes as per marpaESLIFRecognizer_discard_lastb: %s", (unsigned long) discardLastl, discardLasts);
-    }
-  } while (discardl > 0);
 
   GENERICLOGGER_INFO(marpaESLIFOption.genericLoggerp, "Trying external regex symbol match on recognizer");
   if (! marpaESLIFRecognizer_symbol_tryb(marpaESLIFRecognizerp, regexSymbolp, &matchb)) {
@@ -596,9 +584,19 @@ static short inputReaderb(void *userDatavp, char **inputsp, size_t *inputlp, sho
 
   GENERICLOGGER_INFOF(marpaESLIFTester_contextp->genericLoggerp, "inputReaderb: before: inputs=%p, inputl=%04ld", marpaESLIFTester_contextp->inputs, (unsigned long) marpaESLIFTester_contextp->inputl);
 
-  sendl = (marpaESLIFTester_contextp->inputl >= 4) ? 4 : marpaESLIFTester_contextp->inputl;
+  if (marpaESLIFTester_contextp->firstb) {
+    /* For a correct BOM check we always want to send at least 4 bytes at the very beginning */
+    sendl = 4;
+    marpaESLIFTester_contextp->firstb = 0;
+  } else {
+    /* Else send 100 bytes if possible */
+    sendl = 100;
+  }
 
-  /* For a correct BOM check we always want to send at least 4 bytes */
+  if (sendl > marpaESLIFTester_contextp->inputl) {
+    sendl = marpaESLIFTester_contextp->inputl;
+  }
+
   *inputsp              = marpaESLIFTester_contextp->inputs;
   *inputlp              = sendl;
   *characterStreambp    = 0; /* We say this is not a stream of characters - regexp will adapt and to UTF correctness if needed */

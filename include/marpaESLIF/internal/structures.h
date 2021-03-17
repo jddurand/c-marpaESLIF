@@ -381,6 +381,7 @@ struct marpaESLIF_stream {
   size_t                 linel;                /* Line number */
   size_t                 columnl;              /* Column number */
   short                  bomdoneb;             /* In char mode, flag indicating if BOM was processed successfully (BOM existence or not) */
+  unsigned int           peeki;                /* Number of peeked sharing */
 };
 
 struct marpaESLIFRecognizer {

@@ -1435,7 +1435,22 @@ A recognizer can be instructed to share the stream with another C<marpaESLIFReco
 
 It is the application responsibility to make sure that the lifetime of C<marpaESLIFRecognizerSharedp> is <greater> than C<marpaESLIFRecognizerp>.
 
-The input stream callback is still using C<marpaESLIFRecognizerp>, but streaming positions of both C<marpaESLIFRecognizerp> are affected.
+Any C<marpaESLIFReader_t> callback output will after the stream of both recognizers, as if they were both owning the internal buffers attached to the stream. In particular the input position of both recognizers are affected: they will I<move> in parallel. If you want C<marpaESLIFRecognizerSharedp> to not be affected, then you must use the C<marpaESLIFRecognizer_peekb> method.
+
+It is illegal to have C<marpaESLIFRecognizerp> equal to C<marpaESLIFRecognizerSharedp>.
+
+This method returns a true value in case of success, a false value otherwise.
+
+=head3 C<marpaESLIFRecognizer_peekb>
+
+  short marpaESLIFRecognizer_peekb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp,
+                                   marpaESLIFRecognizer_t *marpaESLIFRecognizerPeekedp);
+
+The recognizer C<marpaESLIFRecognizerp> is instructed to share the stream with C<marpaESLIFRecognizerPeekedp>, though it is guaranteed that the internal stream buffer can only grow until it is unpeeked. This guarantees that C<marpaESLIFRecognizerPeekedp> is not affected by any C<marpaESLIFRecognizerp>'s reader callback. When C<marpaESLIFRecognizerPeekedp> is C<NULL>, peek is stopped. 
+
+It is legal to have C<marpaESLIFRecognizerp> equal to C<marpaESLIFRecognizerPeekedp>, this mean that the user wants to "freeze" the stream, allowing only the internal buffers to grow.
+
+It is the application responsibility to make sure that the lifetime of C<marpaESLIFRecognizerPeekedp> is <greater> than C<marpaESLIFRecognizerp>.
 
 This method returns a true value in case of success, a false value otherwise.
 
@@ -2471,7 +2486,7 @@ Tries to convert accurately C<ld> to a string. Result a C<NUL> terminated ASCII 
 
 C<Out-of-grammar> symbols of type terminal, i.e. strings or regular expressions, can be created at any time, exactly as if they where present in the grammar: they a described with a C<stringp> and can contain C<modifiers>, which can be C<NULL>.
 
-The C<modifiers>, if any, must be compliant with the grammar specification for strings and regular expressions, i.e.:
+For strings and regular expressions, the C<modifiers>, when not C<NULL>, must be compliant with the grammar specification for strings and regular expressions, i.e.:
 
 =over
 
@@ -2484,6 +2499,8 @@ Only C<c> or C<i> modifiers are allowed
 Only C<e>, C<i>, C<j>, C<m>, C<n>, C<s>, C<x>, C<D>, C<J>, C<U>, C<a>, C<N>, C<u>, C<b>, C<c> or C<A> modifiers are allowed
 
 =back
+
+For meta symbols, also they can belong to any C<marpaESLIFGrammarp>, only the lexemes (i.e. those that are defined in a sub-grammar) can be tried with C<marpaESLIFSymbol_tryb> and C<marpaESLIFRecognizer_symbol_tryb>.
 
 =head1 NOTES
 
