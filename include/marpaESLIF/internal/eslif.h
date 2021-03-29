@@ -114,7 +114,8 @@
 #define G1_RULE_EVENT_NAME_3                     "G1_rule_event_name_3"
 #define G1_RULE_EVENT_NAME_4                     "G1_rule_event_name_4"
 #define G1_RULE_EVENT_NAME_5                     "G1_rule_event_name_4"
-#define G1_RULE_LHS                              "G1_rule_lhs"
+#define G1_RULE_LHS_1                            "G1_rule_lhs_1"
+#define G1_RULE_LHS_2                            "G1_rule_lhs_2"
 #define G1_RULE_RHS                              "G1_rule_rhs"
 #define G1_RULE_RHS_ALTERNATIVE_1                "G1_rule_rhs_alternative_1"
 #define G1_RULE_RHS_ALTERNATIVE_2                "G1_rule_rhs_alternative_2"
@@ -125,6 +126,9 @@
 #define G1_RULE_RHS_ALTERNATIVE_7                "G1_rule_rhs_alternative_7"
 #define G1_RULE_RHS_PRIMARY_1                    "G1_rule_rhs_primary_1"
 #define G1_RULE_RHS_PRIMARY_2                    "G1_rule_rhs_primary_2"
+#define G1_RULE_RHS_PRIMARY_3                    "G1_rule_rhs_primary_3"
+#define G1_RULE_PARAMETERIZED_RHS_PRIMARY_1      "G1_rule_parameterized_rhs_primary_1"
+#define G1_RULE_PARAMETERIZED_RHS_PRIMARY_2      "G1_rule_parameterized_rhs_primary_2"
 #define G1_RULE_SINGLE_SYMBOL_1                  "G1_rule_single_symbol_1"
 #define G1_RULE_SINGLE_SYMBOL_2                  "G1_rule_single_symbol_2"
 #define G1_RULE_TERMINAL_1                       "G1_rule_terminal_1"
@@ -195,6 +199,118 @@
 #define G1_RULE_DEFAULTENCODING_NAME             "G1_rule_defaultencoding_name"
 #define G1_RULE_FALLBACK_ENCODING                "G1_rule_fallback_encoding"
 #define G1_RULE_FALLBACKENCODING_NAME            "G1_rule_fallbackencoding_name"
+#define G1_RULE_IDENTIFIERS                      "G1_rule_identifiers"
+#define G1_RULE_IDENTIFIER                       "G1_rule_identifier"
+#define G1_RULE_ARGUMENTS                        "G1_rule_arguments"
+#define G1_RULE_LUA_CHUNK                        "G1_rule_lua_chunk"
+#define G1_RULE_LUA_BLOCK                        "G1_rule_lua_block"
+#define G1_RULE_LUA_STAT_1                       "G1_rule_lua_stat_1"
+#define G1_RULE_LUA_STAT_2                       "G1_rule_lua_stat_2"
+#define G1_RULE_LUA_STAT_3                       "G1_rule_lua_stat_3"
+#define G1_RULE_LUA_STAT_4                       "G1_rule_lua_stat_4"
+#define G1_RULE_LUA_STAT_5                       "G1_rule_lua_stat_5"
+#define G1_RULE_LUA_STAT_6                       "G1_rule_lua_stat_6"
+#define G1_RULE_LUA_STAT_7                       "G1_rule_lua_stat_7"
+#define G1_RULE_LUA_STAT_8                       "G1_rule_lua_stat_8"
+#define G1_RULE_LUA_STAT_9                       "G1_rule_lua_stat_9"
+#define G1_RULE_LUA_STAT_10                      "G1_rule_lua_stat_10"
+#define G1_RULE_LUA_STAT_11                      "G1_rule_lua_stat_11"
+#define G1_RULE_LUA_STAT_12                      "G1_rule_lua_stat_12"
+#define G1_RULE_LUA_STAT_13                      "G1_rule_lua_stat_13"
+#define G1_RULE_LUA_STAT_14                      "G1_rule_lua_stat_14"
+#define G1_RULE_LUA_STAT_15                      "G1_rule_lua_stat_15"
+#define G1_RULE_LUA_RETSTAT                      "G1_rule_lua_retstat"
+#define G1_RULE_LUA_LABEL                        "G1_rule_lua_label"
+#define G1_RULE_LUA_FUNCNAME                     "G1_rule_lua_funcname"
+#define G1_RULE_LUA_VARLIST                      "G1_rule_lua_varlist"
+#define G1_RULE_LUA_VAR_1                        "G1_rule_lua_var_1"
+#define G1_RULE_LUA_VAR_2                        "G1_rule_lua_var_2"
+#define G1_RULE_LUA_VAR_3                        "G1_rule_lua_var_3"
+#define G1_RULE_LUA_NAMELIST                     "G1_rule_lua_namelist"
+#define G1_RULE_LUA_EXPLIST                      "G1_rule_lua_explist"
+#define G1_RULE_LUA_EXP_1                        "G1_rule_lua_exp_1"
+#define G1_RULE_LUA_EXP_2                        "G1_rule_lua_exp_2"
+#define G1_RULE_LUA_EXP_3                        "G1_rule_lua_exp_3"
+#define G1_RULE_LUA_EXP_4                        "G1_rule_lua_exp_4"
+#define G1_RULE_LUA_EXP_5                        "G1_rule_lua_exp_5"
+#define G1_RULE_LUA_EXP_6                        "G1_rule_lua_exp_6"
+#define G1_RULE_LUA_EXP_7                        "G1_rule_lua_exp_7"
+#define G1_RULE_LUA_EXP_8                        "G1_rule_lua_exp_8"
+#define G1_RULE_LUA_EXP_9                        "G1_rule_lua_exp_9"
+#define G1_RULE_LUA_EXP_10                       "G1_rule_lua_exp_10"
+#define G1_RULE_LUA_EXP_11                       "G1_rule_lua_exp_11"
+#define G1_RULE_LUA_PREFIXEXP_1                  "G1_rule_lua_prefixexp_1"
+#define G1_RULE_LUA_PREFIXEXP_2                  "G1_rule_lua_prefixexp_2"
+#define G1_RULE_LUA_PREFIXEXP_3                  "G1_rule_lua_prefixexp_3"
+#define G1_RULE_LUA_FUNCTIONCALL_1               "G1_rule_lua_functioncall_1"
+#define G1_RULE_LUA_FUNCTIONCALL_2               "G1_rule_lua_functioncall_2"
+#define G1_RULE_LUA_FUNCTIONCALL_3               "G1_rule_lua_functioncall_3"
+#define G1_RULE_LUA_ARGS_1                       "G1_rule_lua_args_1"
+#define G1_RULE_LUA_ARGS_2                       "G1_rule_lua_args_2"
+#define G1_RULE_LUA_ARGS_3                       "G1_rule_lua_args_3"
+#define G1_RULE_LUA_FUNCTIONDEF                  "G1_rule_lua_functiondef"
+#define G1_RULE_LUA_FUNCBODY                     "G1_rule_lua_funcbody"
+#define G1_RULE_LUA_PARLIST_1                    "G1_rule_lua_parlist_1"
+#define G1_RULE_LUA_PARLIST_2                    "G1_rule_lua_parlist_2"
+#define G1_RULE_LUA_TABLECONSTRUCTOR             "G1_rule_lua_tableconstructor"
+#define G1_RULE_LUA_FIELDLIST                    "G1_rule_lua_fieldlist"
+#define G1_RULE_LUA_FIELD_1                      "G1_rule_lua_field_1"
+#define G1_RULE_LUA_FIELD_2                      "G1_rule_lua_field_2"
+#define G1_RULE_LUA_FIELD_3                      "G1_rule_lua_field_3"
+#define G1_RULE_LUA_FIELDSEP_1                   "G1_rule_lua_fieldsep_1"
+#define G1_RULE_LUA_FIELDSEP_2                   "G1_rule_lua_fieldsep_2"
+#define G1_RULE_LUA_BINOP_1                      "G1_rule_lua_binop_1"
+#define G1_RULE_LUA_BINOP_2                      "G1_rule_lua_binop_2"
+#define G1_RULE_LUA_BINOP_3                      "G1_rule_lua_binop_3"
+#define G1_RULE_LUA_BINOP_4                      "G1_rule_lua_binop_4"
+#define G1_RULE_LUA_BINOP_5                      "G1_rule_lua_binop_5"
+#define G1_RULE_LUA_BINOP_6                      "G1_rule_lua_binop_6"
+#define G1_RULE_LUA_BINOP_7                      "G1_rule_lua_binop_7"
+#define G1_RULE_LUA_BINOP_8                      "G1_rule_lua_binop_8"
+#define G1_RULE_LUA_BINOP_9                      "G1_rule_lua_binop_9"
+#define G1_RULE_LUA_BINOP_10                     "G1_rule_lua_binop_10"
+#define G1_RULE_LUA_BINOP_11                     "G1_rule_lua_binop_11"
+#define G1_RULE_LUA_BINOP_12                     "G1_rule_lua_binop_12"
+#define G1_RULE_LUA_BINOP_13                     "G1_rule_lua_binop_13"
+#define G1_RULE_LUA_BINOP_14                     "G1_rule_lua_binop_14"
+#define G1_RULE_LUA_BINOP_15                     "G1_rule_lua_binop_15"
+#define G1_RULE_LUA_BINOP_16                     "G1_rule_lua_binop_16"
+#define G1_RULE_LUA_BINOP_17                     "G1_rule_lua_binop_17"
+#define G1_RULE_LUA_BINOP_18                     "G1_rule_lua_binop_18"
+#define G1_RULE_LUA_BINOP_19                     "G1_rule_lua_binop_19"
+#define G1_RULE_LUA_BINOP_20                     "G1_rule_lua_binop_20"
+#define G1_RULE_LUA_BINOP_21                     "G1_rule_lua_binop_21"
+#define G1_RULE_LUA_UNOP_1                       "G1_rule_lua_unop_1"
+#define G1_RULE_LUA_UNOP_2                       "G1_rule_lua_unop_2"
+#define G1_RULE_LUA_UNOP_3                       "G1_rule_lua_unop_3"
+#define G1_RULE_LUA_UNOP_4                       "G1_rule_lua_unop_4"
+#define G1_RULE_LUA_STAT_ANY                     "G1_rule_lua_stat_any"
+#define G1_RULE_LUA_COMMA_EXP_MAYBE_1            "G1_rule_lua_comma_exp_maybe_1"
+#define G1_RULE_LUA_COMMA_EXP_MAYBE_2            "G1_rule_lua_comma_exp_maybe_2"
+#define G1_RULE_LUA_RETSTAT_MAYBE_1              "G1_rule_lua_restat_maybe_1"
+#define G1_RULE_LUA_RETSTAT_MAYBE_2              "G1_rule_lua_restat_maybe_2"
+#define G1_RULE_LUA_ELSEIF_EXP_THEN_BLOCK_ANY    "G1_rule_lua_elseif_exp_then_block_any"
+#define G1_RULE_LUA_ELSEIF_EXP_THEN_BLOCK        "G1_rule_lua_elseif_exp_then_block"
+#define G1_RULE_LUA_ELSE_BLOCK_MAYBE_1           "G1_rule_lua_else_block_maybe_1"
+#define G1_RULE_LUA_ELSE_BLOCK_MAYBE_2           "G1_rule_lua_else_block_maybe_2"
+#define G1_RULE_LUA_EXPLIST_MAYBE_1              "G1_rule_lua_explist_maybe_1"
+#define G1_RULE_LUA_EXPLIST_MAYBE_2              "G1_rule_lua_explist_maybe_2"
+#define G1_RULE_LUA_SEMICOLON_MAYBE_1            "G1_rule_lua_semicolon_maybe_1"
+#define G1_RULE_LUA_SEMICOLON_MAYBE_2            "G1_rule_lua_semicolon_maybe_2"
+#define G1_RULE_LUA_DOT_NAME_ANY                 "G1_rule_lua_dot_name_any"
+#define G1_RULE_LUA_DOT_NAME                     "G1_rule_lua_dot_name"
+#define G1_RULE_LUA_COLON_NAME_MAYBE_1           "G1_rule_lua_colon_name_maybe_1"
+#define G1_RULE_LUA_COLON_NAME_MAYBE_2           "G1_rule_lua_colon_name_maybe_2"
+#define G1_RULE_LUA_COLON_NAME                   "G1_rule_lua_colon_name"
+#define G1_RULE_LUA_PARLIST_MAYBE_1              "G1_rule_lua_parlist_maybe_1"
+#define G1_RULE_LUA_PARLIST_MAYBE_2              "G1_rule_lua_parlist_maybe_2"
+#define G1_RULE_LUA_COMMA_VARARGS_MAYBE_1        "G1_rule_lua_comma_varargs_maybe_1"
+#define G1_RULE_LUA_COMMA_VARARGS_MAYBE_2        "G1_rule_lua_comma_varargs_maybe_2"
+#define G1_RULE_LUA_FIELDLIST_MAYBE_1            "G1_rule_lua_fieldlist_maybe_1"
+#define G1_RULE_LUA_FIELDLIST_MAYBE_2            "G1_rule_lua_fieldlist_maybe_2"
+#define G1_RULE_LUA_NAME                         "G1_rule_lua_name"
+#define G1_RULE_LUA_NUMERAL                      "G1_rule_lua_numeral"
+#define G1_RULE_LUA_LITERALSTRING                "G1_rule_lua_literalstring"
 
 #define G1_ACTION_STATEMENTS                       "::undef"
 #define G1_ACTION_STATEMENT_01                     "::undef"
@@ -308,7 +424,8 @@
 #define G1_ACTION_EVENT_NAME_3                     "::ascii" /* <event name> ::= ':discard[on]' */
 #define G1_ACTION_EVENT_NAME_4                     "::ascii" /* <event name> ::= ':discard[off]' */
 #define G1_ACTION_EVENT_NAME_5                     "::ascii" /* <event name> ::= ':discard[switch]' */
-#define G1_ACTION_LHS                              "::shift" /* lhs ::= <symbol name> */
+#define G1_ACTION_LHS_1                            "G1_action_lhs_1" /* <lhs> ::= <symbol name> */
+#define G1_ACTION_LHS_2                            "G1_action_lhs_2" /* <lhs> ::= <symbol name> '(' <lua identifiers> ') */
 #define G1_ACTION_RHS                              "G1_action_rhs"                              /* done */
 #define G1_ACTION_RHS_ALTERNATIVE_1                "G1_action_rhs_alternative_1"                /* done */
 #define G1_ACTION_RHS_ALTERNATIVE_2                "G1_action_rhs_alternative_2"                /* done */
@@ -319,6 +436,9 @@
 #define G1_ACTION_RHS_ALTERNATIVE_7                "G1_action_rhs_alternative_7"                /* done */
 #define G1_ACTION_RHS_PRIMARY_1                    "G1_action_rhs_primary_1"                    /* done */
 #define G1_ACTION_RHS_PRIMARY_2                    "G1_action_rhs_primary_2"                    /* done */
+#define G1_ACTION_RHS_PRIMARY_3                    "::shift" /* <rhs primary> ::= <parameterized rhs primary> */
+#define G1_ACTION_PARAMETERIZED_RHS_PRIMARY_1      "G1_action_parameterized_rhs_primary_1"      /* done */
+#define G1_ACTION_PARAMETERIZED_RHS_PRIMARY_2      "G1_action_parameterized_rhs_primary_2"      /* done */
 #define G1_ACTION_SINGLE_SYMBOL_1                  "G1_action_single_symbol_1"                  /* done */
 #define G1_ACTION_SINGLE_SYMBOL_2                  "G1_action_single_symbol_2"                  /* done */
 #define G1_ACTION_TERMINAL_1                       "G1_action_terminal_1"                       /* done */
@@ -386,6 +506,118 @@
 #define G1_ACTION_DEFAULTENCODING_NAME             "::ascii" /* <default encoding name> ::= <ascii graph name> */
 #define G1_ACTION_FALLBACKENCODING                 "G1_action_fallbackencoding"                   /* done */
 #define G1_ACTION_FALLBACKENCODING_NAME            "::ascii" /* <fallback encoding name> ::= <ascii graph name> */
+#define G1_ACTION_IDENTIFIERS                      "::row" /* <identifiers> ::= <identifier>* */
+#define G1_ACTION_IDENTIFIER                       "::ascii" /* <identifier> ::= #[a-zA-Z_][a-zA-Z0-9_]*# */
+#define G1_ACTION_ARGUMENTS                        "::copy[1]" /* <arguments> ::= '(' <lua explist maybe> ')' */
+#define G1_ACTION_LUA_CHUNK                        "::row" /* <lua chunk> ::= <lua block> */
+#define G1_ACTION_LUA_BLOCK                        "::row" /* <lua block> ::= <lua stat any> <lua retstat maybe> */
+#define G1_ACTION_LUA_STAT_1                       "::row" /* <lua stat> ::= ';' */
+#define G1_ACTION_LUA_STAT_2                       "::row" /* <lua stat> ::= <lua varlist> '=' <lua explist> */
+#define G1_ACTION_LUA_STAT_3                       "::row" /* <lua stat> ::= <lua function call> */
+#define G1_ACTION_LUA_STAT_4                       "::row" /* <lua stat> ::= <lua label> */
+#define G1_ACTION_LUA_STAT_5                       "::row" /* <lua stat> ::= 'break' */
+#define G1_ACTION_LUA_STAT_6                       "::row" /* <lua stat> ::= 'goto' <lua name> */
+#define G1_ACTION_LUA_STAT_7                       "::row" /* <lua stat> ::= 'do' <lua block> 'end' */
+#define G1_ACTION_LUA_STAT_8                       "::row" /* <lua stat> ::= 'while' <lua exp> 'do' <lua block> 'end' */
+#define G1_ACTION_LUA_STAT_9                       "::row" /* <lua stat> ::= 'repeat' <lua block> 'until' <lua exp> */
+#define G1_ACTION_LUA_STAT_10                      "::row" /* <lua stat> ::= 'if' <lua exp> 'then' <lua block> <lua elseif exp then block any> <lua else block maybe> 'end' */
+#define G1_ACTION_LUA_STAT_11                      "::row" /* <lua stat> ::= 'for' <lua name> '=' <lua exp> ',' <lua exp> <lua comma exp maybe> 'do' <lua block> 'end' */
+#define G1_ACTION_LUA_STAT_12                      "::row" /* <lua stat> ::= 'for' <lua namelist> 'in' <lua explist> 'do' <lua block> 'end' */
+#define G1_ACTION_LUA_STAT_13                      "::row" /* <lua stat> ::= 'function' <lua funcname> <lua funcbody> */
+#define G1_ACTION_LUA_STAT_14                      "::row" /* <lua stat> ::= 'local' 'function' <lua name> <lua funcbody> */
+#define G1_ACTION_LUA_STAT_15                      "::row" /* <lua stat> ::= 'local' <lua namelist> '=' <lua explist> */
+#define G1_ACTION_LUA_RETSTAT                      "::row" /* <lua retstat> ::= 'return' <lua explist maybe> <lua semicolon maybe> */
+#define G1_ACTION_LUA_LABEL                        "::row" /* <lua label> ::= '::' <lua name> '::' */
+#define G1_ACTION_LUA_FUNCNAME                     "::row" /* <lua funcname> ::= <lua name> <lua dot name any> */
+#define G1_ACTION_LUA_VARLIST                      "::row" /* <lua varlist> ::= <lua var>+ separator => ',' proper => 1 */
+#define G1_ACTION_LUA_VAR_1                        "::row" /* <lua var> ::= <lua name> */
+#define G1_ACTION_LUA_VAR_2                        "::row" /* <lua var> ::= <lua prefixexp> '[' <lua exp> ']' */
+#define G1_ACTION_LUA_VAR_3                        "::row" /* <lua var> ::= <lua prefixexp> '.' <lua name> */
+#define G1_ACTION_LUA_NAMELIST                     "::row" /* <lua namelist> ::= <lua name>+ separator => ',' proper => 1 */
+#define G1_ACTION_LUA_EXPLIST                      "::row" /* <lua explist> ::= <lua exp>+ separator => ',' proper => 1 hide-separator => 1 */
+#define G1_ACTION_LUA_EXP_1                        "::row" /* <lua exp> ::= 'nil' */
+#define G1_ACTION_LUA_EXP_2                        "::row" /* <lua exp> ::= 'false' */
+#define G1_ACTION_LUA_EXP_3                        "::row" /* <lua exp> ::= 'true' */
+#define G1_ACTION_LUA_EXP_4                        "::row" /* <lua exp> ::= <lua numeral> */
+#define G1_ACTION_LUA_EXP_5                        "::row" /* <lua exp> ::= <lua literalstring> */
+#define G1_ACTION_LUA_EXP_6                        "::row" /* <lua exp> ::= '...' */
+#define G1_ACTION_LUA_EXP_7                        "::row" /* <lua exp> ::= <lua functiondef> */
+#define G1_ACTION_LUA_EXP_8                        "::row" /* <lua exp> ::= <lua prefixexp> */
+#define G1_ACTION_LUA_EXP_9                        "::row" /* <lua exp> ::= <lua tableconstructor> */
+#define G1_ACTION_LUA_EXP_10                       "::row" /* <lua exp> ::= <lua exp> <lua binop> <lua exp> */
+#define G1_ACTION_LUA_EXP_11                       "::row" /* <lua exp> ::= <lua unop> <lua exp> */
+#define G1_ACTION_LUA_PREFIXEXP_1                  "::row" /* <lua prefixexp> ::= <lua var> */
+#define G1_ACTION_LUA_PREFIXEXP_2                  "::row" /* <lua prefixexp> ::= <lua function call> */
+#define G1_ACTION_LUA_PREFIXEXP_3                  "::row" /* <lua prefixexp> ::= '(' <lua exp> ')' */
+#define G1_ACTION_LUA_FUNCTIONCALL_1               "::row" /* <lua function call> ::= <lua prefixexp> <lua args> */
+#define G1_ACTION_LUA_FUNCTIONCALL_2               "::row" /* <lua function call> ::= <lua prefixexp> ':' <lua name> <lua args> */
+#define G1_ACTION_LUA_FUNCTIONCALL_3               "::copy[1]" /* <lua function call> ::= '$' <rhs primary> */
+#define G1_ACTION_LUA_ARGS_1                       "::row" /* <lua args> ::= '(' <lua explist maybe> ')' */
+#define G1_ACTION_LUA_ARGS_2                       "::row" /* <lua args> ::= <lua tableconstructor> */
+#define G1_ACTION_LUA_ARGS_3                       "::row" /* <lua args> ::= <lua literalstring> */
+#define G1_ACTION_LUA_FUNCTIONDEF                  "::row" /* <lua functiondef> ::= 'function' <lua funcbody> */
+#define G1_ACTION_LUA_FUNCBODY                     "::row" /* <lua funcbody> ::= '(' <lua parlist maybe> ')' <lua block> 'end' */
+#define G1_ACTION_LUA_PARLIST_1                    "::row" /* <lua parlist> ::= <lua namelist> <lua comma varargs maybe> */
+#define G1_ACTION_LUA_PARLIST_2                    "::row" /* <lua parlist> ::= '...' */
+#define G1_ACTION_LUA_TABLECONSTRUCTOR             "::row" /* <lua tableconstructor> ::= '{' <lua fieldlist maybe> '}' */
+#define G1_ACTION_LUA_FIELDLIST                    "::row" /* <lua fieldlist> ::= <lua field>+ separator => <lua fieldsep> */
+#define G1_ACTION_LUA_FIELD_1                      "::row" /* <lua field> ::= '[' <lua exp> ']' '=' <lua exp> */
+#define G1_ACTION_LUA_FIELD_2                      "::row" /* <lua field> ::= <lua name> '=' <lua exp> */
+#define G1_ACTION_LUA_FIELD_3                      "::row" /* <lua field> ::= <lua exp> */
+#define G1_ACTION_LUA_FIELDSEP_1                   "::row" /* <lua fieldsep> ::= ',' */
+#define G1_ACTION_LUA_FIELDSEP_2                   "::row" /* <lua fieldsep> ::= ';' */
+#define G1_ACTION_LUA_BINOP_1                      "::row" /* <lua binop> ::= '+' */
+#define G1_ACTION_LUA_BINOP_2                      "::row" /* <lua binop> ::= '-' */
+#define G1_ACTION_LUA_BINOP_3                      "::row" /* <lua binop> ::= '*' */
+#define G1_ACTION_LUA_BINOP_4                      "::row" /* <lua binop> ::= '/' */
+#define G1_ACTION_LUA_BINOP_5                      "::row" /* <lua binop> ::= '//' */
+#define G1_ACTION_LUA_BINOP_6                      "::row" /* <lua binop> ::= '^' */
+#define G1_ACTION_LUA_BINOP_7                      "::row" /* <lua binop> ::= '%' */
+#define G1_ACTION_LUA_BINOP_8                      "::row" /* <lua binop> ::= '&' */
+#define G1_ACTION_LUA_BINOP_9                      "::row" /* <lua binop> ::= '~' */
+#define G1_ACTION_LUA_BINOP_10                     "::row" /* <lua binop> ::= '|' */
+#define G1_ACTION_LUA_BINOP_11                     "::row" /* <lua binop> ::= '>>' */
+#define G1_ACTION_LUA_BINOP_12                     "::row" /* <lua binop> ::= '<<' */
+#define G1_ACTION_LUA_BINOP_13                     "::row" /* <lua binop> ::= '..' */
+#define G1_ACTION_LUA_BINOP_14                     "::row" /* <lua binop> ::= '<' */
+#define G1_ACTION_LUA_BINOP_15                     "::row" /* <lua binop> ::= '<=' */
+#define G1_ACTION_LUA_BINOP_16                     "::row" /* <lua binop> ::= '>' */
+#define G1_ACTION_LUA_BINOP_17                     "::row" /* <lua binop> ::= '>=' */
+#define G1_ACTION_LUA_BINOP_18                     "::row" /* <lua binop> ::= '==' */
+#define G1_ACTION_LUA_BINOP_19                     "::row" /* <lua binop> ::= '~=' */
+#define G1_ACTION_LUA_BINOP_20                     "::row" /* <lua binop> ::= 'and' */
+#define G1_ACTION_LUA_BINOP_21                     "::row" /* <lua binop> ::= 'or' */
+#define G1_ACTION_LUA_UNOP_1                       "::row" /* <lua unop> ::= '-' */
+#define G1_ACTION_LUA_UNOP_2                       "::row" /* <lua unop> ::= 'not' */
+#define G1_ACTION_LUA_UNOP_3                       "::row" /* <lua unop> ::= '#' */
+#define G1_ACTION_LUA_UNOP_4                       "::row" /* <lua unop> ::= '~' */
+#define G1_ACTION_LUA_STAT_ANY                     "::row" /* <lua stat any> ::= <lua stat>* proper => 1 */
+#define G1_ACTION_LUA_COMMA_EXP_MAYBE_1            "::row" /* <lua comma exp maybe> ::= ',' <lua exp> */
+#define G1_ACTION_LUA_COMMA_EXP_MAYBE_2            "::row" /* <lua comma exp maybe> ::= */
+#define G1_ACTION_LUA_RETSTAT_MAYBE_1              "::row" /* <lua retstat maybe> ::= <lua retstat> */
+#define G1_ACTION_LUA_RETSTAT_MAYBE_2              "::row" /* <lua retstat maybe> ::= */
+#define G1_ACTION_LUA_ELSEIF_EXP_THEN_BLOCK_ANY    "::row" /* <lua elseif exp then block any> ::= <lua elseif exp then block>* proper => 1 */
+#define G1_ACTION_LUA_ELSEIF_EXP_THEN_BLOCK        "::row" /* <lua elseif exp then block> ::= 'elseif' <lua exp> 'then' <lua block> */
+#define G1_ACTION_LUA_ELSE_BLOCK_MAYBE_1           "::row" /* <lua else block maybe> ::= 'else' <lua block> */
+#define G1_ACTION_LUA_ELSE_BLOCK_MAYBE_2           "::row" /* <lua else block maybe> ::= */
+#define G1_ACTION_LUA_EXPLIST_MAYBE_1              "::shift"
+#define G1_ACTION_LUA_EXPLIST_MAYBE_2              "::undef"
+#define G1_ACTION_LUA_SEMICOLON_MAYBE_1            "::row" /* <lua semicolon maybe> ::= ';' */
+#define G1_ACTION_LUA_SEMICOLON_MAYBE_2            "::row" /* <lua semicolon maybe> ::= */
+#define G1_ACTION_LUA_DOT_NAME_ANY                 "::row" /* <lua dot name any> ::= <lua dot name>* proper => 1 */
+#define G1_ACTION_LUA_DOT_NAME                     "::row" /* <lua dot name> ::= '.' <lua name> */
+#define G1_ACTION_LUA_COLON_NAME_MAYBE_1           "::row" /* <lua colon name maybe> ::= <lua colon name> */
+#define G1_ACTION_LUA_COLON_NAME_MAYBE_2           "::row" /* <lua colon name maybe> ::= */
+#define G1_ACTION_LUA_COLON_NAME                   "::row" /* <lua colon name> ::= ':' <lua name> */
+#define G1_ACTION_LUA_PARLIST_MAYBE_1              "::row" /* <lua parlist maybe> ::= <lua parlist> */
+#define G1_ACTION_LUA_PARLIST_MAYBE_2              "::row" /* <lua parlist maybe> ::= */
+#define G1_ACTION_LUA_COMMA_VARARGS_MAYBE_1        "::row" /* <lua comma varargs maybe> ::= ',' '...' */
+#define G1_ACTION_LUA_COMMA_VARARGS_MAYBE_2        "::row" /* <lua comma varargs maybe> ::= */
+#define G1_ACTION_LUA_FIELDLIST_MAYBE_1            "::row" /* <lua fieldlist maybe> ::= <lua fieldlist> */
+#define G1_ACTION_LUA_FIELDLIST_MAYBE_2            "::row" /* <lua fieldlist maybe> ::= */
+#define G1_ACTION_LUA_NAME                         "::row" /* <lua name> ::= <identifier> */
+#define G1_ACTION_LUA_NUMERAL                      "::row" /* <lua literalstring> ::= <quoted string literal> */
+#define G1_ACTION_LUA_LITERALSTRING                "::row" /* <lua numeral> ::= /(?:0[xX][a-fA-F0-9]+(?:\.[a-fA-F0-9]+)?(?:[pP][+-]?[0-9]+)?)|(?:[0-9]+(?:\.[0-9]+)?(?:[eE][+-]?[0-9]+)?)/ */
 
 typedef struct bootstrap_grammar_terminal {
   int                        idi;                 /* Identifier */

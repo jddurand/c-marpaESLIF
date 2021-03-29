@@ -37,6 +37,7 @@ public class ESLIFRecognizer {
 	private ESLIFGrammar             eslifGrammar                 = null;
 	private ESLIFRecognizerInterface eslifRecognizerInterface     = null;
 	private ESLIFRecognizer          eslifRecognizerShared        = null;
+	private ESLIFRecognizer          eslifRecognizerPeeked        = null;
 	private ByteBuffer               marpaESLIFRecognizerp        = null;
 	private ByteBuffer               marpaESLIFRecognizerContextp = null;
 	private native void              jniNew(ESLIFGrammar eslifGrammar) throws ESLIFException;
@@ -73,6 +74,8 @@ public class ESLIFRecognizer {
 	private native long              jniColumn() throws ESLIFException;
 	private native void              jniShare(ESLIFRecognizer eslifRecognizerShared) throws ESLIFException;
 	private native void              jniUnshare() throws ESLIFException;
+	private native void              jniPeek(ESLIFRecognizer eslifRecognizerPeeked) throws ESLIFException;
+	private native void              jniUnpeek() throws ESLIFException;
 	private native Object            jniSymbolTry(ESLIFSymbol eslifSymbol) throws ESLIFException;
 
 	/**
@@ -115,6 +118,30 @@ public class ESLIFRecognizer {
 	public void unshare() throws ESLIFException {
 		jniUnshare();
 		setEslifRecognizerShared(null);
+	}
+
+	/**
+	 * 
+	 * @param eslifRecognizerPeeked peeked recognizer
+	 * @throws ESLIFException if the interface failed
+	 * 
+	 * eslifRecognizerPeeked and current recognizer will share this stream, that is "peeked", i.e. it can only grow internally.
+	 * The sharing will stop if eslifRecognizerPeeked is set to a null value.
+	 */
+	public void peek(ESLIFRecognizer eslifRecognizerPeeked) throws ESLIFException {
+		jniPeek(eslifRecognizerPeeked);
+		setEslifRecognizerPeeked(eslifRecognizerPeeked);
+	}
+
+	/**
+	 * 
+	 * @throws ESLIFException if the interface failed
+	 * 
+	 * Stops peeking the stream. Equivalent to a call to peek with a null peeked recognizer.
+	 */
+	public void unpeek() throws ESLIFException {
+		jniUnpeek();
+		setEslifRecognizerPeeked(null);
 	}
 
 	/**
@@ -542,6 +569,12 @@ public class ESLIFRecognizer {
 	}
 	private void setEslifRecognizerShared(ESLIFRecognizer eslifRecognizerShared) {
 		this.eslifRecognizerShared = eslifRecognizerShared;
+	}
+	private ESLIFRecognizer getEslifRecognizerPeeked() {
+		return eslifRecognizerPeeked;
+	}
+	private void setEslifRecognizerPeeked(ESLIFRecognizer eslifRecognizerPeeked) {
+		this.eslifRecognizerPeeked = eslifRecognizerPeeked;
 	}
 	protected ESLIFLoggerInterface getLoggerInterface() {
 		return (eslifGrammar != null) ? eslifGrammar.getLoggerInterface() : null;

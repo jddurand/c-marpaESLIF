@@ -480,6 +480,7 @@ typedef struct marpaESLIFSymbolProperty {
   int                          eventBitSet;
   marpaESLIFAction_t          *symbolActionp;          /* Symbol value specific action */
   marpaESLIFAction_t          *ifActionp;              /* Symbol recognizer if action */
+  int                          parameteri;             /* Number of parameters, -1 if none. Can be >= 0 only for meta symbols. */
 } marpaESLIFSymbolProperty_t;
 
 /* Whenever marpaESLIF fails to parse exactly a JSON number it will call the proposal callback if defined. */
@@ -580,6 +581,7 @@ extern "C" {
 
   marpaESLIF_EXPORT marpaESLIFRecognizer_t       *marpaESLIFRecognizer_newp(marpaESLIFGrammar_t *marpaESLIFGrammarp, marpaESLIFRecognizerOption_t *marpaESLIFRecognizerOptionp);
   marpaESLIF_EXPORT marpaESLIFRecognizer_t       *marpaESLIFRecognizer_newFromp(marpaESLIFGrammar_t *marpaESLIFGrammarp, marpaESLIFRecognizer_t *marpaESLIFRecognizerSharedp);
+  marpaESLIF_EXPORT marpaESLIFRecognizer_t       *marpaESLIFRecognizer_peekFromp(marpaESLIFGrammar_t *marpaESLIFGrammarp, marpaESLIFRecognizer_t *marpaESLIFRecognizerPeekedp);
   marpaESLIF_EXPORT short                         marpaESLIFRecognizer_set_exhausted_flagb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, short exhaustedb);
   marpaESLIF_EXPORT short                         marpaESLIFRecognizer_isExhaustedb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, short *exhaustedbp);
   marpaESLIF_EXPORT short                         marpaESLIFRecognizer_isCanContinueb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, short *isCanContinuebp);

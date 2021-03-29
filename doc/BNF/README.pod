@@ -215,7 +215,7 @@ Everytime expected terminals cannot be match, marpaESLIF will try to match the s
 
 By default, the first symbol of a grammar of level C<n> is its start symbol. This can be set once with e.g.:
 
-  :start ::= symbolname
+  :start ::= <rhs primary>
 
 =item Grammar description
 
@@ -249,6 +249,14 @@ The C<symbol-action> adverb is how a match within a sub-grammar is transfered.
 The C<default-encoding> adverb gives default encoding when the recognizer runs in character mode and the end-user gave no encoding.
 
 The C<fallback-encoding> adverb gives fallback encoding when the recognizer runs in character mode and the end-user gave no encoding nor C<default-encoding>. Then marpaESLIF will try to I<guess> the encoding, and if this fail, will fallback to this setting. This is the desired setting when you grammar accept input in different encoding, and defaults to a given encoding if the guess fail. Please note that, when guessing an encoding, marpaESLIF takes into account an eventual BOM, retreiving the later from input characters if it exists.
+
+=item Embedded lua actions
+
+Actions can be writen directly into a form that is 99% equivalent to the lua syntax, i.e.:
+
+  action => function(a, b) return a+b end
+
+Please look to the section I<Embedded lua script>.
 
 =item Meta actions
 
@@ -939,6 +947,61 @@ marpaESLIF BNF can be expressed in itself:
                                    | /((?:\[(?:(?>[^\[\]]+)|(?-1))*\]))/ ':' /[eijmnsxDJUuaNbcA]+/
   <regular expression>             ~ /(?:(?|(?:\/(?![*\/]))(?:[^\\\/]*(?:\\.[^\\\/]*)*)(?:\/)))/su
                                    | /(?:(?|(?:\/(?![*\/]))(?:[^\\\/]*(?:\\.[^\\\/]*)*)(?:\/)))/su /[eijmnsxDJUuaNbcA]+/
+
+=head1 Embedded lua script
+
+Lua script can be writen into two form:
+
+=over
+
+=item Enclosed within C<luascript> XML-like tags
+
+Everything enclosed into that tag is concatenated, and the final concatenated string is compiled at the end of the your grammar parse, i.e.:
+
+  <luascript>
+    Something
+  </luascript>
+
+  <luascript>
+    Something Else
+  </luascript>
+
+results in a single script that contains:
+
+    Something
+    Something Else
+
+ESLIF will I<not> try to parse the content within C<luascript> tags.
+
+=item As an anonymous lambda action
+
+Any action can be writen using an anonymous lua function definition syntax, i.e.:
+
+  action => function (a ,b) return a+b end
+  action => function (...)
+              local parm={...}
+              return parm[2]
+            end
+
+ESLIF will parse the content of the function definition in a way that is 99% compatible with Lua5.3 language, with the following differences:
+
+=over
+
+=item comments
+
+Lua comment syntax (starting with C<--> is not supported). Instead ESLIF comments will take place.
+
+=item numbers
+
+Only the json numbers notation is supported.
+
+=item string literals
+
+Only the ESLIF string literals (either quoted, either with the C<::u8> C++ formalism) are supported. Note that ESLIF automatically injects into Lua the C<string.encoding()> function, that allows to attach an encoding as per L<IANA charset|https://www.iana.org/assignments/character-sets/character-sets.xhtml> to any string. The embedded lua bindings has a hook when transfering Lua strings into ESLIF that uses this metadata: when encoding is set, a Lua string is transfered to ESLIF as a true STRING instead of an ARRAY. Inside Lua, the string remains a byte array and can be used as before, though when injected by ESLIF, the corresponding string metadata is set when ESLIF source is a string.
+
+=back
+
+=back
 
 =head1 NOTES
 

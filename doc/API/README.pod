@@ -1417,6 +1417,20 @@ The input stream callback will use C<marpaESLIFRecognizerSharedp> settings.
 It is the application responsibility to make sure that the lifetime of C<marpaESLIFRecognizerSharedp> is <greater> than newly created recognizer instance.
 This method returns a recognizer pointer in case of success, C<NULL> in case of failure.
 
+=head3 C<marpaESLIFRecognizer_peekFromp>
+
+  marpaESLIFRecognizer_t *marpaESLIFRecognizer_peekFromp(marpaESLIFGrammar_t    *marpaESLIFGrammarp,
+                                                         marpaESLIFRecognizer_t *marpaESLIFRecognizerPeekedp);
+
+Creates a recognizer out of a C<marpaESLIFGrammarp> grammar instance, that is using explicitly the I<same> settings as C<marpaESLIFRecognizerPeekedp> and shares the later's stream.
+
+From there, any update to the new recognizer's stream or C<marpaESLIFRecognizerSharedp>'s stream are synchronous and shared, but the stream will never shrunk, it can only grow internally. This is usefull if you want to run a new recognizer and make sure the original is not affected. Running the new recognizer and the peeked recognizer in parallel is not allowed.
+
+The input stream callback will use C<marpaESLIFRecognizerPeekedp> settings.
+
+It is the application responsibility to make sure that the lifetime of C<marpaESLIFRecognizerPeekedp> is <greater> than newly created recognizer instance.
+This method returns a recognizer pointer in case of success, C<NULL> in case of failure.
+
 =head3 C<marpaESLIFRecognizer_set_exhausted_flagb>
 
   short marpaESLIFRecognizer_set_exhausted_flagb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp,

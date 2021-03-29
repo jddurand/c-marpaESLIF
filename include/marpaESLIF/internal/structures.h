@@ -173,10 +173,10 @@ struct marpaESLIFSymbol {
   marpaESLIFAction_t          *symbolActionp;          /* Custom symbol, only for terminals or lexemes */
   marpaESLIFAction_t          *ifActionp;              /* if semantic, only for meta symbols that are lexemes or terminals */
   marpaESLIFSymbolOption_t     marpaESLIFSymbolOption;
-  /* Embedded lua - c.f. src/bindings/src/marpaESLIFLua.c */
-  void                        *marpaESLIFLuaSymbolContextp;
-  /* When an external meta symbol is created, it duplicates a symbol content */
-  short                        contentIsShallowb;
+  void                        *marpaESLIFLuaSymbolContextp; /* Embedded lua - c.f. src/bindings/src/marpaESLIFLua.c */
+  short                        contentIsShallowb;      /* When an external meta symbol is created, it duplicates a symbol content */
+  char                        *luaExpressionShows;     /* Only when it is parameterized RHS: the lua expression */
+  char                        *luaExpressions;         /* Only when it is parameterized RHS: the lua internal expression */
 };
 
 /* A rule */
@@ -204,6 +204,8 @@ struct marpaESLIF_rule {
   short                  passthroughb;                 /* This rule is a passthrough */
   int                    propertyBitSet;
   short                  hideseparatorb;
+  int                    parameteri;                   /* -1 is no parameter */
+  char                 **parametersp;                  /* Array of *char */
 };
 
 /* A grammar */
@@ -308,13 +310,19 @@ struct marpaESLIFGrammar {
   short                      hasEofPseudoTerminalb; /* Any :eof terminal in the grammar ? */
   short                      hasEolPseudoTerminalb; /* Any :eol terminal in the grammar ? */
   short                      hasSolPseudoTerminalb; /* Any :sol terminal in the grammar ? */
+  char                      *luabyteInternalp;   /* Lua script source for parameterized symbols */
+  size_t                     luabyteInternall;   /* Lua script source for parameterized symbols length in byte */
+  char                      *luaprecompiledInternalp;    /* Lua script source for parameterized symbols precompiled */
+  size_t                     luaprecompiledInternall;    /* Lua script source for parameterized symbols precompiled length in byte */
+  marpaESLIF_string_t       *luadescInternalp;           /* Delayed until show is requested */
+  genericStack_t            *flatStackp;
 };
 
 struct marpaESLIF_meta {
-  int                          idi;                             /* Non-terminal Id */
+  int                          idi;                             /* Symbol Id */
   char                        *asciinames;
   marpaESLIF_string_t         *descp;                           /* Non-terminal description */
-  marpaWrapperGrammar_t       *marpaWrapperGrammarLexemeClonep; /* Cloned low-level grammar in lexeme search mode (no event) */
+  marpaWrapperGrammar_t       *marpaWrapperGrammarLexemeClonep; /* Cloned low-level grammar in lexeme search mode (no event), refers to SAME grammar when parameteri is >= 0 */
   int                          lexemeIdi;                       /* Lexeme Id in this cloned grammar */
   short                       *prioritizedb;                    /* Internal flag to prevent a prioritized symbol to appear more than once as an LHS */
   marpaESLIFGrammar_t         _marpaESLIFGrammarLexemeClone;    /* Cloned ESLIF grammar in lexeme search mode (no event): allocated when meta is allocated */
@@ -324,6 +332,8 @@ struct marpaESLIF_meta {
   int                         *terminalArrayShallowp;           /* Total grammar terminals */
   size_t                       nSymbolStartl;                   /* Number of lexemes at the very beginning of marpaWrapperGrammarStartp */
   int                         *symbolArrayStartp;               /* Lexemes at the very beginning of marpaWrapperGrammarStartp */
+  int                          parameteri;                      /* Number of parameters, -1 if not parameterized */
+  short                        terminalb;                       /* This is a meta forced to look like a terminal in marpa (case of parameterized symbols) */
 };
 
 struct marpaESLIF_stringGenerator {
@@ -357,6 +367,9 @@ struct marpaESLIFValue {
   marpaESLIFRepresentation_t   proxyRepresentationp; /* Proxy representation callback, c.f. json.c for an example */
   marpaESLIF_stringGenerator_t stringGenerator; /* Internal string generator, put here to avoid unnecessary malloc()/free() calls */
   genericLogger_t             *stringGeneratorLoggerp; /* Internal string generator logger, put here to avoid unnecessary genericLogger_newp()/genericLogger_freev() calls */
+  /* For _marpaESLIFValue_flatten_pointers optimization */
+  genericStack_t               _marpaESLIFValueResultFlattenStack;
+  genericStack_t              *marpaESLIFValueResultFlattenStackp;
 };
 
 struct marpaESLIF_stream {
@@ -480,7 +493,7 @@ struct marpaESLIFRecognizer {
   char                        *eventactions;
   char                        *regexactions;
 
-  /* For _marpaESLIF_flatten_pointers optimization */
+  /* For _marpaESLIFRecognizer_flatten_pointers optimization */
   genericStack_t               _marpaESLIFValueResultFlattenStack;
   genericStack_t              *marpaESLIFValueResultFlattenStackp;
 

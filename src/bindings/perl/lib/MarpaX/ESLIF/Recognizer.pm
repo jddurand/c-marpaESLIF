@@ -50,7 +50,7 @@ An object implementing L<MarpaX::ESLIF::Recognizer::Interface> methods. Required
 
 =head2 $eslifRecognizer->newFrom($eslifGrammar)
 
-  my $eslifRecognizerNewFom = $eslifRecognizer->newFrom($eslifGrammar);
+  my $eslifRecognizerNewFrom = $eslifRecognizer->newFrom($eslifGrammar);
 
 Returns a recognizer instance that is sharing the stream of C<$eslifRecognizer>, but applied to the other grammar C<$eslifGrammar>.
 
@@ -68,7 +68,33 @@ sub newFrom {
         no warnings 'redefine';
         local *_ALLOCATE = sub { return \&_allocate_newFrom };
         #
-        # Take care, this is method that returns a new instance
+        # Take care, this is a method that returns a new instance
+        #
+        return $self->new(@_)
+    }
+}
+
+=head2 $eslifRecognizer->peekFrom($eslifGrammar)
+
+  my $eslifRecognizerPeekFrom = $eslifRecognizer->peekFrom($eslifGrammar);
+
+Returns a recognizer instance that is peeking the stream of C<$eslifRecognizer>, but applied to the other grammar C<$eslifGrammar>.
+
+=cut
+
+sub _allocate_peekFrom {
+    my ($self, $eslifGrammar) = @_;  
+
+    return $self->allocate_peekFrom($eslifGrammar)
+}
+
+sub peekFrom {
+    my $self = shift;
+    {
+        no warnings 'redefine';
+        local *_ALLOCATE = sub { return \&_allocate_peekFrom };
+        #
+        # Take care, this is a method that returns a new instance
         #
         return $self->new(@_)
     }
