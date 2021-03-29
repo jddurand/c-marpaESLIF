@@ -19741,7 +19741,7 @@ static inline marpaESLIFSymbol_t *_marpaESLIFSymbol_meta_newp(marpaESLIF_t *marp
 
   /* This must be a lexeme */
   if (! MARPAESLIF_IS_LEXEME(foundSymbolp)) {
-    MARPAESLIF_ERRORF(marpaESLIFp, "Symbol %s must be a lexeme", symbols);
+    MARPAESLIF_ERRORF(marpaESLIFp, "Symbol <%s> must be a lexeme", symbols);
     goto err;
   }
   
@@ -19750,7 +19750,9 @@ static inline marpaESLIFSymbol_t *_marpaESLIFSymbol_meta_newp(marpaESLIF_t *marp
   if (MARPAESLIF_UNLIKELY(symbolp == NULL)) {
     goto err;
   }
+
   *symbolp = *foundSymbolp;
+  symbolp->marpaESLIFSymbolOption = marpaESLIFSymbolOptionp != NULL ? *marpaESLIFSymbolOptionp : marpaESLIFSymbolOption_default_template;
   symbolp->contentIsShallowb = 1;
 
   goto done;
