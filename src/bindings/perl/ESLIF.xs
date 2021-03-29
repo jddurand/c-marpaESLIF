@@ -4457,6 +4457,54 @@ OUTPUT:
 
 =for comment
   /* ----------------------------------------------------------------------- */
+  /* MarpaX::ESLIF::Symbol::meta_allocate                                    */
+  /* ----------------------------------------------------------------------- */
+=cut
+
+void *
+meta_allocate(Perl_packagep, p, g, symbolsp)
+  SV     *Perl_packagep;
+  SV     *p;
+  SV     *g;
+  SV     *symbolsp;
+PREINIT:
+  static const char *funcs = "MarpaX::ESLIF::Symbol::meta_allocate";
+CODE:
+  MarpaX_ESLIF_t             *MarpaX_ESLIFp         = marpaESLIFPerl_engine(aTHX_ p);
+  MarpaX_ESLIF_Grammar_t     *MarpaX_ESLIF_Grammarp = marpaESLIFPerl_engine(aTHX_ g);
+  marpaESLIF_t               *marpaESLIFp           = MarpaX_ESLIFp->marpaESLIFp;
+  marpaESLIFGrammar_t        *marpaESLIFGrammarp    = MarpaX_ESLIF_Grammarp->marpaESLIFGrammarp;
+  marpaESLIFSymbol_t         *marpaESLIFSymbolp;
+  MarpaX_ESLIF_Symbol_t      *MarpaX_ESLIF_Symbolp;
+  int                         typei;
+  char                       *symbols = NULL;
+  marpaESLIFSymbolOption_t    marpaESLIFSymbolOption;
+
+  typei = marpaESLIFPerl_getTypei(aTHX_ symbolsp);
+  if ((typei & SCALAR) != SCALAR) {
+    MARPAESLIFPERL_CROAK("symbol must be a scalar");
+  }
+  symbols = SvPV_nolen(symbolsp);
+
+  Newx(MarpaX_ESLIF_Symbolp, 1, MarpaX_ESLIF_Symbol_t);
+  marpaESLIFPerl_symbolContextInitv(aTHX_ MarpaX_ESLIFp, p, MarpaX_ESLIF_Symbolp, &(MarpaX_ESLIFp->constants));
+
+  marpaESLIFSymbolOption.userDatavp = (void *) MarpaX_ESLIF_Symbolp;
+  marpaESLIFSymbolOption.importerp  = marpaESLIFPerl_symbolImportb;
+
+  marpaESLIFSymbolp = marpaESLIFSymbol_meta_newp(marpaESLIFp, marpaESLIFGrammarp, symbols, &marpaESLIFSymbolOption);
+  if (MARPAESLIF_UNLIKELY(marpaESLIFSymbolp == NULL)) {
+    marpaESLIFPerl_symbolContextFreev(aTHX_ MarpaX_ESLIF_Symbolp);
+    MARPAESLIFPERL_CROAKF("marpaESLIFSymbol_meta_newp failure, %s", strerror(errno));
+  }
+  MarpaX_ESLIF_Symbolp->marpaESLIFSymbolp = marpaESLIFSymbolp;
+
+  RETVAL = MarpaX_ESLIF_Symbolp;
+OUTPUT:
+  RETVAL
+
+=for comment
+  /* ----------------------------------------------------------------------- */
   /* MarpaX::ESLIF::Symbol::try                                              */
   /* ----------------------------------------------------------------------- */
 =cut

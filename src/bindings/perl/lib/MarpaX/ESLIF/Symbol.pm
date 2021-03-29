@@ -14,20 +14,26 @@ sub _ALLOCATE {
         my ($class, $eslif, %options) = @_;
 
         my $type = $options{type} // croak 'type must be defined';
-        my $pattern = $options{pattern} // croak 'pattern must be defined';
-        my $encoding = $options{encoding};
-        my $modifiers = $options{modifiers};
 
-        return ($type eq 'string')
-            ?
-            MarpaX::ESLIF::Symbol->string_allocate($eslif, $pattern, bytes::length($pattern), $encoding, $modifiers)
-            :
-            (($type eq 'regex')
-             ?
-             MarpaX::ESLIF::Symbol->regex_allocate($eslif, $pattern, bytes::length($pattern), $encoding, $modifiers)
-             :
-             croak "Type must be 'string' or 'regex'"
-            )
+        if (($type eq 'string') or ($type eq 'regex')) {
+            my $pattern = $options{pattern} // croak 'pattern must be defined';
+            my $encoding = $options{encoding};
+            my $modifiers = $options{modifiers};
+
+            return
+                ($type eq 'string')
+                ?
+                MarpaX::ESLIF::Symbol->string_allocate($eslif, $pattern, bytes::length($pattern), $encoding, $modifiers)
+                :
+                MarpaX::ESLIF::Symbol->regex_allocate($eslif, $pattern, bytes::length($pattern), $encoding, $modifiers)
+        } elsif ($type eq 'meta') {
+            my $grammar = $options{grammar} // croak 'grammar must be defined';
+            my $symbol = $options{symbol} // croak 'symbol must be defined';
+
+            return MarpaX::ESLIF::Symbol->meta_allocate($eslif, $grammar, $symbol)
+        } else {
+            croak "Type must be 'string', 'regex' or 'meta'"
+        }
     }
 }
 sub _DISPOSE  { return \&MarpaX::ESLIF::Symbol::dispose }
@@ -36,25 +42,44 @@ sub _EQ {
         my ($class, $args_ref, $eslif, %options) = @_;
 
         my $type = $options{type} // croak 'type must be defined';
-        my $pattern = $options{pattern} // croak 'pattern must be defined';
-        my $encoding = $options{encoding};
-        my $modifiers = $options{modifiers};
 
-        my $definedEncoding = defined($encoding); # It is legal to create a symbol with no encoding
-        my $definedModifiers = defined($modifiers); # It is legal to create a symbol with no modifier
+        if (($type eq 'string') or ($type eq 'regex')) {
 
-        my $_definedEncoding = defined($args_ref->[3]);
-        my $_definedModifiers = defined($args_ref->[4]);
-        return $_ if
-            $eslif == $args_ref->[0]
-            &&
-            $type eq $args_ref->[1]
-            &&
-            $pattern eq $args_ref->[2]
-            &&
-            ((! $definedEncoding && ! $_definedEncoding) || ($definedEncoding && $_definedEncoding && ($encoding eq $args_ref->[3])))
-            &&
-            ((! $definedModifiers && ! $_definedModifiers) || ($definedModifiers && $_definedModifiers && ($modifiers eq $args_ref->[4])))
+            my $pattern = $options{pattern} // croak 'pattern must be defined';
+            my $encoding = $options{encoding};
+            my $modifiers = $options{modifiers};
+
+            my $definedEncoding = defined($encoding); # It is legal to create a symbol with no encoding
+            my $definedModifiers = defined($modifiers); # It is legal to create a symbol with no modifier
+
+            my $_definedEncoding = defined($args_ref->[3]);
+            my $_definedModifiers = defined($args_ref->[4]);
+            return $_ if
+                $eslif == $args_ref->[0]
+                &&
+                $type eq $args_ref->[1]
+                &&
+                $pattern eq $args_ref->[2]
+                &&
+                ((! $definedEncoding && ! $_definedEncoding) || ($definedEncoding && $_definedEncoding && ($encoding eq $args_ref->[3])))
+                &&
+                ((! $definedModifiers && ! $_definedModifiers) || ($definedModifiers && $_definedModifiers && ($modifiers eq $args_ref->[4])))
+
+        } elsif ($type eq 'meta') {
+            my $grammar = $options{grammar} // croak 'grammar must be defined';
+            my $symbol = $options{symbol} // croak 'symbol must be defined';
+
+            return $_ if
+                $eslif == $args_ref->[0]
+                &&
+                $type eq $args_ref->[1]
+                &&
+                $grammar == $args_ref->[2]
+                &&
+                $symbol eq $args_ref->[3]
+        } else {
+            croak "Type must be 'string', 'regex' or 'meta'"
+        }
     }
 }
 
@@ -79,6 +104,11 @@ MarpaX::ESLIF::Symbol allows to create external symbols on demand
   # In ESLIF, a regex is anchored by default
   #
   my $regexSymbol = MarpaX::ESLIF::Symbol->new($eslif, type => 'regex', pattern => 'Regex.*Pattern', modifiers => 'A');
+  my $metaSymbol = MarpaX::ESLIF::Symbol->new($eslif, type => 'meta',
+                                                      grammar => MarpaX::ESLIF::Grammar->new(
+                                                                   $eslif,
+                                                                   "<something> ::= <SOMETHING>\n<SOMETHING> ~ 'that'")
+                                                      symbol => 'SOMETHING');
 
   if (defined(my $match = $stringSymbol->try('String Pattern here'))) {
       print "==> String match: $match\n";
@@ -88,7 +118,11 @@ MarpaX::ESLIF::Symbol allows to create external symbols on demand
       print "==> Regex match: $match\n";
   }
 
-External symbols can be of type C<string> or C<regex>. They can be used agains a L<MarpaX::ESLIF::Recognizer> or any external input.
+  if (defined(my $match = $metaSymbol->try('something'))) {
+      print "==> Meta match: $match\n";
+  }
+
+External symbols can be of type C<string>, C<regex> or C<meta>. They can be used agains a L<MarpaX::ESLIF::Recognizer> or any external input.
 
 A string pattern I<must> follow ESLIF)s BNF, i.e. start and ends with:
 
@@ -102,6 +136,8 @@ A string pattern I<must> follow ESLIF)s BNF, i.e. start and ends with:
 
 =back
 
+A meta symbol I<must> be a lexeme in the given external grammar.
+
 =head1 METHODS
 
 =head2 MarpaX::ESLIF::Symbol->new($eslif, %options)
@@ -112,19 +148,19 @@ Returns a symbol instance, noted C<$symbol> later. C<%options> is a hash that co
 
 =item C<type>
 
-Value must be "string" or "regex". Required.
+Value must be "string", "regex" or "meta". Required.
 
 =item C<pattern>
 
-Value is the pattern content. Required.
+Value is the pattern content. Required for "string" and "regex" types.
 
 =item C<encoding>
 
-Value is the pattern encoding. Optional.
+Value is the pattern encoding. Optional for "string" and "regex" types.
 
 =item C<modifiers>
 
-Value is a string containing modifiers. Optional.
+Value is a string containing modifiers. Optional for "string" and "regex" types.
 
 It must follow the specification of the I<Terminals> section of L<MarpaX::ESLIF::BNF>:
 
@@ -151,6 +187,14 @@ It must follow the specification of the I<Terminals> section of L<MarpaX::ESLIF:
 Note that a string pattern accepts only the C<i> and C<c> modifiers.
 
 =back
+
+=item C<grammar>
+
+Value is an external grammar. Required for "meta" type.
+
+=item C<symbol>
+
+Value is a lexeme in the external grammar. Required for "meta" type.
 
 =head2 $symbol->try($eslif, $scalar)
 
