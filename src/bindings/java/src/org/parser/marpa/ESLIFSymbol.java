@@ -21,15 +21,16 @@ public class ESLIFSymbol {
 	private ByteBuffer     marpaESLIFSymbolp = null;
 	private ByteBuffer     marpaESLIFSymbolContextp = null;
 	private native void    jniNew(String type, byte[] utf8, String modifiers) throws ESLIFException;
+	private native void    jniMetaNew(ESLIFGrammar eslifGrammar, String symbol) throws ESLIFException;
 	private native void    jniFree() throws ESLIFException;
-	private native Object  jniTest(byte[] bytes) throws ESLIFException;
+	private native byte[]  jniTest(byte[] bytes) throws ESLIFException;
 	/*
 	 * ********************************************
 	 * Public methods
 	 * ********************************************
 	 */
 	/**
-	 * Creation of an ESLIFSymbol instance
+	 * Creation of an ESLIFSymbol instance for string and regex literals
 	 * 
 	 * @param eslif an instance of ESLIF
 	 * @param type is the symbol type, must be "regex" or "string"
@@ -55,7 +56,26 @@ public class ESLIFSymbol {
 	}
 
 	/**
-	 * Creation of an ESLIFSymbol instance
+	 * Creation of an ESLIFSymbol instance for lexemes
+	 * 
+	 * @param eslif an instance of ESLIF
+	 * @param eslifGrammar an instance of ESLIFGrammar
+	 * @param symbols is lexeme symbol
+	 * @throws ESLIFException in case of creation failure
+	 */
+	public ESLIFSymbol(ESLIF eslif, ESLIFGrammar eslifGrammar, String symbol) throws ESLIFException {
+		if (eslifGrammar == null) {
+			throw new IllegalArgumentException("eslifGrammar must not be null");
+		}
+		if (symbol == null) {
+			throw new IllegalArgumentException("symbol must not be null");
+		}
+		setEslif(eslif);
+		jniMetaNew(eslifGrammar, symbol);
+	}
+
+	/**
+	 * Creation of an ESLIFSymbol instance for string and regex literals
 	 * 
 	 * @param eslif an instance of ESLIF
 	 * @param type is the symbol type, must be "regex" or "string"
@@ -67,7 +87,7 @@ public class ESLIFSymbol {
 		this(eslif, type, input, null);
 	}
 
-		/* For subclasses that need only eslif parameter */
+	/* For subclasses that need only eslif parameter */
 	protected ESLIFSymbol(ESLIF eslif) throws ESLIFException {
 		if (eslif == null) {
 			throw new IllegalArgumentException("eslif must not be null");
@@ -90,7 +110,7 @@ public class ESLIFSymbol {
 	 * 
 	 * @return null if no match, else the matched bytes
 	 */
-	public synchronized Object test(byte[] bytes) throws ESLIFException {
+	public synchronized byte[] test(byte[] bytes) throws ESLIFException {
 		return jniTest(bytes);
 	}
 	/*

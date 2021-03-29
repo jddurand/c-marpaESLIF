@@ -133,6 +133,8 @@ public class AppThread implements Runnable {
 			 */
 			ESLIFSymbol eslifSymbolRegex = new ESLIFSymbol(eslif, "regex", "[\\d]+");
 			ESLIFSymbol eslifSymbolString = new ESLIFSymbol(eslif, "string", "'('");
+			ESLIFGrammar eslifGrammarForMeta = new ESLIFGrammar(eslif, "<anything up to newline> ::= <ANYTHING UP TO NEWLINE>\n<ANYTHING UP TO NEWLINE> ~ /[^\\n]*/");
+			ESLIFSymbol eslifSymbolMeta = new ESLIFSymbol(eslif, eslifGrammarForMeta, "ANYTHING UP TO NEWLINE");
 			for (int i = 0; i < strings.length; i++) {
 				String string = new String(strings[i]);
 	
@@ -141,21 +143,31 @@ public class AppThread implements Runnable {
 				AppValue eslifAppValue = new AppValue();
 				eslifLogger.info("Testing parse() on " + string);
 				try {
-					Object eslifSymbolMatch;
+					byte[] eslifSymbolMatch;
 					eslifSymbolMatch = eslifSymbolRegex.test(string.getBytes(StandardCharsets.UTF_8));
 					if (eslifSymbolMatch != null) {
 						Describe d = new Describe();
-						eslifLogger.info("Direct Regex \"[\\d]+\": match: " + d.describe(eslifSymbolMatch));
+						eslifLogger.info("Direct Regex \"[\\d]+\": match: " + d.describe(new String(eslifSymbolMatch, StandardCharsets.UTF_8)));
 					} else {
 						eslifLogger.info("Direct Regex \"[\\d]+\": no match");
 					}
+
 					eslifSymbolMatch = eslifSymbolString.test(string.getBytes(StandardCharsets.UTF_8));
 					if (eslifSymbolMatch != null) {
 						Describe d = new Describe();
-						eslifLogger.info("Direct String \"'('\": match: " + d.describe(eslifSymbolMatch));
+						eslifLogger.info("Direct String \"'('\": match: " + d.describe(new String(eslifSymbolMatch, StandardCharsets.UTF_8)));
 					} else {
 						eslifLogger.info("Direct String \"'('\": no match");
 					}
+
+					eslifSymbolMatch = eslifSymbolMeta.test(string.getBytes(StandardCharsets.UTF_8));
+					if (eslifSymbolMatch != null) {
+						Describe d = new Describe();
+						eslifLogger.info("Direct Meta \"'('\": match: " + d.describe(new String(eslifSymbolMatch, StandardCharsets.UTF_8)));
+					} else {
+						eslifLogger.info("Direct Meta \"'('\": no match");
+					}
+
 					if (eslifGrammar.parse(eslifAppRecognizer, eslifAppValue)) {
 						eslifLogger.info("Result: " + eslifAppValue.getResult());
 					}

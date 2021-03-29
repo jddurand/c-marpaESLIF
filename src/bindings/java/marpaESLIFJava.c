@@ -104,7 +104,8 @@ JNIEXPORT jobject      JNICALL Java_org_parser_marpa_ESLIFJSONDecoder_jniDecode 
 JNIEXPORT void         JNICALL Java_org_parser_marpa_ESLIFJSONDecoder_jniFree                  (JNIEnv *envp, jobject eslifJSONDecoderp);
 
 JNIEXPORT void         JNICALL Java_org_parser_marpa_ESLIFSymbol_jniNew                        (JNIEnv *envp, jobject eslifSymbolp, jstring type, jbyteArray utf8byteArrayp, jstring modifiers);
-JNIEXPORT jobject      JNICALL Java_org_parser_marpa_ESLIFSymbol_jniTest                       (JNIEnv *envp, jobject eslifSymbolp, jbyteArray byteArrayp);
+JNIEXPORT void         JNICALL Java_org_parser_marpa_ESLIFSymbol_jniMetaNew                    (JNIEnv *envp, jobject eslifSymbolp, jobject eslifGrammarp, jstring symbolp);
+JNIEXPORT jbyteArray   JNICALL Java_org_parser_marpa_ESLIFSymbol_jniTest                       (JNIEnv *envp, jobject eslifSymbolp, jbyteArray byteArrayp);
 JNIEXPORT void         JNICALL Java_org_parser_marpa_ESLIFSymbol_jniFree                       (JNIEnv *envp, jobject eslifSymbolp);
 
 /* ---------- */
@@ -7399,6 +7400,70 @@ JNIEXPORT void JNICALL Java_org_parser_marpa_ESLIFSymbol_jniNew(JNIEnv *envp, jo
 }
 
 /*****************************************************************************/
+JNIEXPORT void JNICALL Java_org_parser_marpa_ESLIFSymbol_jniMetaNew(JNIEnv *envp, jobject eslifSymbolp, jobject eslifGrammarp, jstring symbolp)
+/*****************************************************************************/
+{
+  static const char             *funcs = "Java_org_parser_marpa_ESLIFSymbol_jniMetaNew";
+  marpaESLIFSymbol_t            *marpaESLIFSymbolp;
+  marpaESLIF_t                  *marpaESLIFp;
+  marpaESLIFGrammar_t           *marpaESLIFGrammarp;
+  jobject                        BYTEBUFFER(marpaESLIFSymbol);
+  jobject                        BYTEBUFFER(marpaESLIFJavaSymbolContext);
+  const char                    *symbols;
+  jboolean                       isCopy;
+  marpaESLIFSymbolOption_t       marpaESLIFSymbolOption;
+  marpaESLIFJavaSymbolContext_t *marpaESLIFJavaSymbolContextp;
+
+  if (! ESLIFGrammar_contextb(envp, eslifGrammarp, &marpaESLIFp, &marpaESLIFGrammarp)) {
+    goto err;
+  }
+
+  marpaESLIFJavaSymbolContextp = (marpaESLIFJavaSymbolContext_t *) malloc(sizeof(marpaESLIFJavaSymbolContext_t));
+  if (marpaESLIFJavaSymbolContextp == NULL) {
+    RAISEEXCEPTIONF(envp, "malloc failure, %s", strerror(errno));
+  }
+  if (! marpaESLIFJava_symbolContextInitb(envp, marpaESLIFJavaSymbolContextp)) {
+    goto err;
+  }
+  MARPAESLIF_PTR2BYTEBUFFER(marpaESLIFJavaSymbolContext, marpaESLIFJavaSymbolContextp);
+  (*envp)->CallVoidMethod(envp, eslifSymbolp, MARPAESLIF_ESLIFSYMBOL_CLASS_setMarpaESLIFSymbolContextp_METHODP, BYTEBUFFER(marpaESLIFJavaSymbolContext));
+  if (HAVEEXCEPTION(envp)) {
+    goto err;
+  }
+
+  symbols = (*envp)->GetStringUTFChars(envp, symbolp, &isCopy);
+  if (symbols == NULL) {
+    RAISEEXCEPTION(envp, "GetStringUTFChars failure");
+  }
+
+  marpaESLIFSymbolOption.userDatavp = marpaESLIFJavaSymbolContextp;
+  marpaESLIFSymbolOption.importerp  = marpaESLIFJava_symbolImportb;
+
+  marpaESLIFSymbolp = marpaESLIFSymbol_meta_newp(marpaESLIFp, marpaESLIFGrammarp, (char *) symbols, &marpaESLIFSymbolOption);
+  if (marpaESLIFSymbolp == NULL) {
+    RAISEEXCEPTIONF(envp, "marpaESLIFSymbol_meta_newp failure, %s", strerror(errno));
+  }
+
+  /* Store the object */
+  MARPAESLIF_PTR2BYTEBUFFER(marpaESLIFSymbol, marpaESLIFSymbolp);
+  (*envp)->CallVoidMethod(envp, eslifSymbolp, MARPAESLIF_ESLIFSYMBOL_CLASS_setMarpaESLIFSymbolp_METHODP, BYTEBUFFER(marpaESLIFSymbol));
+  if (HAVEEXCEPTION(envp)) {
+    goto err;
+  }
+
+  goto done;
+
+ err:
+  Java_org_parser_marpa_ESLIFSymbol_jniFree(envp, eslifSymbolp);
+
+ done:
+  if ((symbolp != NULL) && (symbols != NULL)) {
+    (*envp)->ReleaseStringUTFChars(envp, symbolp, symbols);
+  }
+  return;
+}
+
+/*****************************************************************************/
 JNIEXPORT void JNICALL Java_org_parser_marpa_ESLIFSymbol_jniFree(JNIEnv *envp, jobject eslifSymbolp)
 /*****************************************************************************/
 {
@@ -7412,16 +7477,16 @@ JNIEXPORT void JNICALL Java_org_parser_marpa_ESLIFSymbol_jniFree(JNIEnv *envp, j
 }
 
 /*****************************************************************************/
-JNIEXPORT jobject JNICALL Java_org_parser_marpa_ESLIFSymbol_jniTest(JNIEnv *envp, jobject eslifSymbolp, jbyteArray jinputp)
+JNIEXPORT jbyteArray JNICALL Java_org_parser_marpa_ESLIFSymbol_jniTest(JNIEnv *envp, jobject eslifSymbolp, jbyteArray jinputp)
 /*****************************************************************************/
 {
-  static const char             *funcs = "Java_org_parser_marpa_ESLIFSymbol_jniTest";
+  static const char             *funcs      = "Java_org_parser_marpa_ESLIFSymbol_jniTest";
+  jbyte                         *inputp     = NULL;
+  jbyteArray                     byteArrayp = NULL;
   marpaESLIFSymbol_t            *marpaESLIFSymbolp;
-  jbyte                         *inputp = NULL;
   jsize                          inputl;
   short                          matchb;
   marpaESLIFJavaSymbolContext_t *marpaESLIFJavaSymbolContextp;
-  jobject                        objectp = NULL;
 
   if (! ESLIFSymbol_contextb(envp, eslifSymbolp, NULL /* marpaESLIFpp */, &marpaESLIFSymbolp, &marpaESLIFJavaSymbolContextp)) {
     goto err;
@@ -7447,7 +7512,7 @@ JNIEXPORT jobject JNICALL Java_org_parser_marpa_ESLIFSymbol_jniTest(JNIEnv *envp
     if (GENERICSTACK_USED(marpaESLIFJavaSymbolContextp->objectStackp) != 1) {
       RAISEEXCEPTIONF(envp, "Internal value stack is %d instead of 1", GENERICSTACK_USED(marpaESLIFJavaSymbolContextp->objectStackp));
     }
-    objectp = (jobject) GENERICSTACK_POP_PTR(marpaESLIFJavaSymbolContextp->objectStackp);
+    byteArrayp = (jbyteArray) GENERICSTACK_POP_PTR(marpaESLIFJavaSymbolContextp->objectStackp);
   }
 
   goto done;
@@ -7458,6 +7523,6 @@ JNIEXPORT jobject JNICALL Java_org_parser_marpa_ESLIFSymbol_jniTest(JNIEnv *envp
   }
 
  done:
-  return objectp;
+  return byteArrayp;
 }
 
