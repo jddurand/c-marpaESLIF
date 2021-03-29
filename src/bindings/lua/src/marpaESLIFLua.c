@@ -9164,38 +9164,59 @@ static void marpaESLIFLua_symbolContextFreev(marpaESLIFLuaSymbolContext_t *marpa
 static int marpaESLIFLua_marpaESLIFSymbol_newi(lua_State *L)
 /****************************************************************************/
 {
-  static const char            *funcs = "marpaESLIFLua_marpaESLIFSymbol_newi";
-  marpaESLIFLuaContext_t       *marpaESLIFLuaContextp;
-  marpaESLIFLuaSymbolContext_t *marpaESLIFLuaSymbolContextp;
-  char                         *encodings = NULL;
-  size_t                        encodingl = 0;
-  char                         *modifiers = NULL;
-  size_t                        modifierl = 0;
-  char                         *types;
-  size_t                        typel;
-  char                         *patterns;
-  size_t                        patternl;
-  int                           typei;
-  int                           topi;
-  marpaESLIF_t                 *marpaESLIFp;
-  marpaESLIFString_t            marpaESLIFString;
-  marpaESLIFSymbolOption_t      marpaESLIFSymbolOption;
+  static const char             *funcs = "marpaESLIFLua_marpaESLIFSymbol_newi";
+  marpaESLIFLuaContext_t        *marpaESLIFLuaContextp;
+  marpaESLIFLuaSymbolContext_t  *marpaESLIFLuaSymbolContextp;
+  char                          *encodings = NULL;
+  size_t                         encodingl = 0;
+  char                          *modifiers = NULL;
+  size_t                         modifierl = 0;
+  char                          *types;
+  size_t                         typel;
+  char                          *patterns;
+  size_t                         patternl;
+  int                            typei;
+  int                            topi;
+  marpaESLIF_t                  *marpaESLIFp;
+  marpaESLIFString_t             marpaESLIFString;
+  marpaESLIFSymbolOption_t       marpaESLIFSymbolOption;
+  marpaESLIFLuaGrammarContext_t *marpaESLIFLuaGrammarContextp;
+  marpaESLIFGrammar_t           *marpaESLIFGrammarp;
+  char                          *symbols;
 
   if (! marpaESLIFLua_lua_gettop(&topi, L)) goto err;
   switch (topi) {
   case 5:
-    if (! marpaESLIFLua_luaL_checklstring((const char **) &encodings, L, 3, &encodingl)) goto err;
+    if (! marpaESLIFLua_luaL_checklstring((const char **) &encodings, L, 5, &encodingl)) goto err;
     /* Intentionaly no break */
   case 4:
-    if (! marpaESLIFLua_luaL_checklstring((const char **) &modifiers, L, 3, &modifierl)) goto err;
+    if (! marpaESLIFLua_luaL_checklstring((const char **) &modifiers, L, 4, &modifierl)) goto err;
     /* Intentionaly no break */
   case 3:
-    if (! marpaESLIFLua_luaL_checklstring((const char **) &patterns, L, 3, &patternl)) goto err;
     if (! marpaESLIFLua_luaL_checklstring((const char **) &types, L, 2, &typel)) goto err;
-    if (strcmp(types, "regex") != 0 && strcmp(types, "string") != 0) {
-      marpaESLIFLua_luaL_error(L, "type must be \"regex\" or \"string\"");
+    if ((strcmp(types, "regex") == 0) || (strcmp(types, "string") == 0)) {
+      if (! marpaESLIFLua_luaL_checklstring((const char **) &patterns, L, 3, &patternl)) goto err;
+    } else if (strcmp(types, "meta") == 0) {
+      if (! marpaESLIFLua_lua_type(&typei, L, 3)) goto err;
+      if (typei != LUA_TTABLE) {
+        marpaESLIFLua_luaL_error(L, "marpaESLIFGrammarp must be a table");
+        goto err;
+      }
+      if (! marpaESLIFLua_lua_getfield(NULL, L, 3, "marpaESLIFLuaGrammarContextp")) goto err;
+      if (! marpaESLIFLua_lua_touserdata((void **) &marpaESLIFLuaGrammarContextp, L, -1)) goto err;
+      if (! marpaESLIFLua_lua_pop(L, 1)) goto err;
+      marpaESLIFGrammarp = marpaESLIFLuaGrammarContextp->marpaESLIFGrammarp;
+
+      symbols = modifiers;
+      if (symbols == NULL) {
+        marpaESLIFLua_luaL_error(L, "type \"meta\" requires an additional parameter for symbolName: marpaESLIFSymbol_new(marpaESLIFp, 'meta', marpaESLIFGrammarp, symbol)");
+        goto err;
+      }
+    } else {
+      marpaESLIFLua_luaL_error(L, "type must be \"regex\", \"string\" or \"meta\"");
       goto err;
     }
+
     if (! marpaESLIFLua_lua_type(&typei, L, 1)) goto err;
     if (typei != LUA_TTABLE) {
       marpaESLIFLua_luaL_error(L, "marpaESLIFp must be a table");
@@ -9205,7 +9226,7 @@ static int marpaESLIFLua_marpaESLIFSymbol_newi(lua_State *L)
     if (! marpaESLIFLua_lua_touserdata((void **) &marpaESLIFLuaContextp, L, -1)) goto err;
     break;
   default:
-    marpaESLIFLua_luaL_error(L, "Usage: marpaESLIFSymbol_new(marpaESLIFp, type, pattern[, modifiers[, encoding]])");
+    marpaESLIFLua_luaL_error(L, "Usage: marpaESLIFSymbol_new(marpaESLIFp, 'string', pattern[, modifiers[, encoding]]), or marpaESLIFSymbol_new(marpaESLIFp, 'regex', pattern[, modifiers[, encoding]]), or marpaESLIFSymbol_new(marpaESLIFp, 'meta', marpaESLIFGrammarp, symbolName)");
     goto err;
   }
 
@@ -9218,19 +9239,33 @@ static int marpaESLIFLua_marpaESLIFSymbol_newi(lua_State *L)
   marpaESLIFp = marpaESLIFLuaContextp->marpaESLIFp;
   if (! marpaESLIFLua_symbolContextInitb(L, marpaESLIFp, 1 /* eslifStacki */, marpaESLIFLuaSymbolContextp, 0 /* unmanagedb */)) goto err;
 
-  marpaESLIFString.bytep          = patterns;
-  marpaESLIFString.bytel          = patternl;
-  marpaESLIFString.encodingasciis = encodings;
-  marpaESLIFString.asciis         = NULL;
-
   marpaESLIFSymbolOption.userDatavp = marpaESLIFLuaSymbolContextp;
   marpaESLIFSymbolOption.importerp  = marpaESLIFLua_symbolImporterb;
 
-  marpaESLIFLuaSymbolContextp->marpaESLIFSymbolp = strcmp(types, "regex") == 0 ? marpaESLIFSymbol_regex_newp(marpaESLIFp, &marpaESLIFString, modifiers, &marpaESLIFSymbolOption) : marpaESLIFSymbol_string_newp(marpaESLIFp, &marpaESLIFString, modifiers, &marpaESLIFSymbolOption);
+  if (strcmp(types, "regex") == 0) {
+    marpaESLIFString.bytep          = patterns;
+    marpaESLIFString.bytel          = patternl;
+    marpaESLIFString.encodingasciis = encodings;
+    marpaESLIFString.asciis         = NULL;
+    marpaESLIFLuaSymbolContextp->marpaESLIFSymbolp = marpaESLIFSymbol_regex_newp(marpaESLIFp, &marpaESLIFString, modifiers, &marpaESLIFSymbolOption);
+  } else if (strcmp(types, "string") == 0) {
+    marpaESLIFString.bytep          = patterns;
+    marpaESLIFString.bytel          = patternl;
+    marpaESLIFString.encodingasciis = encodings;
+    marpaESLIFString.asciis         = NULL;
+    marpaESLIFLuaSymbolContextp->marpaESLIFSymbolp = marpaESLIFSymbol_string_newp(marpaESLIFp, &marpaESLIFString, modifiers, &marpaESLIFSymbolOption);
+  } else if (strcmp(types, "meta") == 0) {
+    marpaESLIFLuaSymbolContextp->marpaESLIFSymbolp = marpaESLIFSymbol_meta_newp(marpaESLIFp, marpaESLIFGrammarp, symbols, &marpaESLIFSymbolOption);
+  } else {
+    /* Should never happen */
+    marpaESLIFLua_luaL_error(L, "type is not \"regex\", \"string\" or \"meta\" ?");
+    goto err;
+  }
+
   if (marpaESLIFLuaSymbolContextp->marpaESLIFSymbolp == NULL) {
     int save_errno = errno;
     marpaESLIFLua_symbolContextFreev(marpaESLIFLuaSymbolContextp, 0 /* onStackb */);
-    marpaESLIFLua_luaL_errorf(L, strcmp(types, "regex") == 0 ? "marpaESLIFSymbol_string_newp failure, %s" : "marpaESLIFSymbol_regex_newp failure, %s", strerror(save_errno));
+    marpaESLIFLua_luaL_errorf(L, "marpaESLIFSymbol_%s_newp failure, %s", types, strerror(save_errno));
     goto err;
   }
   marpaESLIFLuaSymbolContextp->managedb = 1;

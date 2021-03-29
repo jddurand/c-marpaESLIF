@@ -471,19 +471,35 @@ recognizerInterface = {
 --
 local regexPattern = "[\\d]+"
 local stringPattern = "'('"
+local metaGrammarp = marpaESLIFp:marpaESLIFGrammar_new([[
+<anything up to newline>        ::= <ANYTHING UP TO NEWLINE>
+<ANYTHING UP TO NEWLINE>          ~ /[^\n]*/
+]]
+)
+
+show = metaGrammarp:show()
+logger:noticef('... External Meta Grammar show: %s', show)
+
 marpaESLIFSymbolRegexp = marpaESLIFp:marpaESLIFSymbol_new('regex', regexPattern)
 marpaESLIFSymbolStringp = marpaESLIFp:marpaESLIFSymbol_new('string', stringPattern)
+metaSymbolName = 'ANYTHING UP TO NEWLINE'
+marpaESLIFSymbolMetap = marpaESLIFp:marpaESLIFSymbol_new('meta', metaGrammarp, metaSymbolName)
 
 for _, localstring in pairs(strings) do
-   logger:noticef('Testing regex symbol %s on %s', regexPattern, localstring)
+   logger:noticef('Testing external symbols on %s', localstring)
+
+   logger:noticef('... Testing regex symbol %s', regexPattern)
    local regexMatch = marpaESLIFSymbolRegexp:try(localstring)
-   logger:noticef('... Regex symbol %s on %s result: %s', regexPattern, localstring, regexMatch)
+   logger:noticef('... ... Regex symbol %s result: %s', regexPattern, regexMatch)
 
-   logger:noticef('Testing string symbol %s on %s', stringPattern, localstring)
+   logger:noticef('... Testing string symbol %s', stringPattern)
    local stringMatch = marpaESLIFSymbolStringp:try(localstring)
-   logger:noticef('... String symbol %s on %s result: %s', stringPattern, localstring, stringMatch)
+   logger:noticef('... ... String symbol %s result: %s', stringPattern, stringMatch)
 
-   local stringMatch = marpaESLIFSymbolStringp:try(localstring)
+   logger:noticef('... Testing meta symbol %s', metaSymbolName)
+   local stringMatch = marpaESLIFSymbolMetap:try(localstring)
+   logger:noticef('... ... Meta symbol %s result: %s', metaSymbolName, stringMatch)
+
    logger:noticef('Testing parse on %s', localstring)
    recognizerInterface:init(localstring)
    local parseb = marpaESLIFGrammarp:parse(recognizerInterface, valueInterface)
