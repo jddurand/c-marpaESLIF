@@ -1608,7 +1608,7 @@ This function should never fail, a false value indicates something fatal happene
 
 Applies :discard on the stream, returning in C<discardlp>, when not C<NULL>, a value that is > 0 if discard was successful.
 
-The discarded data itself can be retreived only if the an associated completion event, e.g.:
+The discarded data itself can be retreived I<only> if there is an associated completion event, e.g.:
 
   :discard                       ::= /[\\s]+/\n event => whitespace$
   :discard                       ::= /(?:(?:#)(?:[^\\n]*)(?:\\n|\\z))/u event => perl_comment$
