@@ -12332,9 +12332,9 @@ static inline void _marpaESLIF_grammar_createshowv(marpaESLIFGrammar_t *marpaESL
 
   MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, ":start");
   MARPAESLIF_LEVEL_CREATESHOW(grammarp, asciishowl, asciishows);
-  MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, " ");
+  MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, " <");
   MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, grammarp->starts);
-  MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "\n");
+  MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, ">\n");
 
   if ((! grammarp->descautob) && (grammarp->descp != NULL) && (grammarp->descp->asciis != NULL)) {
     MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, ":desc");
