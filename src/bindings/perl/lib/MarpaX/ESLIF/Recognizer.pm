@@ -52,7 +52,23 @@ An object implementing L<MarpaX::ESLIF::Recognizer::Interface> methods. Required
 
   my $eslifRecognizerNewFom = $eslifRecognizer->newFrom($eslifGrammar);
 
-Returns a recognizer instance that is sharing the stream of C<$eslifRecognizer>, but applied to the other grammar C<$eslifGrammar>.
+Returns a recognizer instance that is sharing the interface of C<$eslifRecognizer>, but applied to the other grammar C<$eslifGrammar>. It is functionally equivalent to:
+
+  #
+  # $eslifRecognizerInterface is the interface instance used to create $eslifRecognizer
+  #
+  my $eslifRecognizerNewFom = MarpaX::ESLIF::Recognizer->new($eslifGrammar, $eslifRecognizerInterface);
+  #
+  # Say ESLIF that $eslifRecognizer's stream is shared with $eslifRecognizerNewFom's stream
+  #
+  $eslifRecognizerNewFom->share($eslifRecognizer);
+  #
+  # Do some work
+  # ...
+  #
+  # Say ESLIF that sharing is finished
+  #
+  $eslifRecognizerNewFom->unshare();
 
 =cut
 
