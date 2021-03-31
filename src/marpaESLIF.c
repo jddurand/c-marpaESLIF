@@ -7766,8 +7766,8 @@ static inline short _marpaESLIFRecognizer_resume_oneb(marpaESLIFRecognizer_t *ma
   int                              maxStartCompletionsi              = marpaESLIFRecognizerp->maxStartCompletionsi;
   short                            havePriorityb                     = 0;
   marpaESLIF_stream_t             *marpaESLIF_streamp                = marpaESLIFRecognizerp->marpaESLIF_streamp;
+  size_t                           nSymboll                          = 0;
   int                              maxPriorityi;
-  size_t                           nSymboll;
   int                             *symbolArrayp;
   size_t                           symboll;
   int                              symboli;
