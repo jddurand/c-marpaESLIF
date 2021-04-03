@@ -1,5 +1,3 @@
-#undef MARPAESLIF_NDEBUG
-
 #include <stdlib.h>
 #include <errno.h>
 #include <string.h>
@@ -4504,6 +4502,7 @@ static inline marpaESLIF_symbol_t *_marpaESLIF_symbol_newp(marpaESLIF_t *marpaES
   symbolp->ifActionp              = NULL;
   symbolp->marpaESLIFSymbolOption = marpaESLIFSymbolOptionp != NULL ? *marpaESLIFSymbolOptionp : marpaESLIFSymbolOption_default_template;
   symbolp->contentIsShallowb      = 0;
+  symbolp->marpaESLIFGrammarp     = NULL; /* Shallow pointer, set by marpaESLIFSymbol_meta_newp() only */
 
   symbolp->nullableRuleStackp = &(symbolp->_nullableRuleStack);
   GENERICSTACK_INIT(symbolp->nullableRuleStackp);
@@ -19754,6 +19753,7 @@ static inline marpaESLIFSymbol_t *_marpaESLIFSymbol_meta_newp(marpaESLIF_t *marp
   *symbolp = *foundSymbolp;
   symbolp->marpaESLIFSymbolOption = marpaESLIFSymbolOptionp != NULL ? *marpaESLIFSymbolOptionp : marpaESLIFSymbolOption_default_template;
   symbolp->contentIsShallowb = 1;
+  symbolp->marpaESLIFGrammarp = marpaESLIFGrammarp;
 
   goto done;
 
@@ -19840,19 +19840,27 @@ short marpaESLIFSymbol_tryb(marpaESLIFSymbol_t *marpaESLIFSymbolp, char *inputs,
     goto err;
   }
 
-  marpaESLIFGrammar.marpaESLIFp           = marpaESLIFSymbolp->marpaESLIFp;
-  marpaESLIFGrammar.grammarStackp         = NULL;
-  marpaESLIFGrammar.grammarp              = NULL;
-  marpaESLIFGrammar.luabytep              = NULL;
-  marpaESLIFGrammar.luabytel              = 0;
-  marpaESLIFGrammar.luaprecompiledp       = NULL;
-  marpaESLIFGrammar.luaprecompiledl       = 0;
-  marpaESLIFGrammar.luadescp              = NULL;
-  marpaESLIFGrammar.internalRuleCounti    = 0;
-  marpaESLIFGrammar.hasPseudoTerminalb    = 0;
-  marpaESLIFGrammar.hasEofPseudoTerminalb = 0;
-  marpaESLIFGrammar.hasEolPseudoTerminalb = 0;
-  marpaESLIFGrammar.hasSolPseudoTerminalb = 0;
+  if (marpaESLIFSymbolp->marpaESLIFGrammarp != NULL) {
+    /* Case of meta symbol only */
+    marpaESLIFGrammar = *(marpaESLIFSymbolp->marpaESLIFGrammarp);
+    /* Still, we want the marpaESLIF of the symbol */
+    marpaESLIFGrammar.marpaESLIFp           = marpaESLIFSymbolp->marpaESLIFp;
+  } else {
+    marpaESLIFGrammar.marpaESLIFp           = marpaESLIFSymbolp->marpaESLIFp;
+    marpaESLIFGrammar.grammarStackp         = NULL;
+    marpaESLIFGrammar.grammarp              = NULL;
+    marpaESLIFGrammar.luabytep              = NULL;
+    marpaESLIFGrammar.luabytel              = 0;
+    marpaESLIFGrammar.luaprecompiledp       = NULL;
+    marpaESLIFGrammar.luaprecompiledl       = 0;
+    marpaESLIFGrammar.luadescp              = NULL;
+    marpaESLIFGrammar.internalRuleCounti    = 0;
+    marpaESLIFGrammar.hasPseudoTerminalb    = 0;
+    marpaESLIFGrammar.hasEofPseudoTerminalb = 0;
+    marpaESLIFGrammar.hasEolPseudoTerminalb = 0;
+    marpaESLIFGrammar.hasSolPseudoTerminalb = 0;
+  }
+
   
   /* Fake a recognizer. EOF flag will be set automatically in fake mode */
   marpaESLIFRecognizerp = _marpaESLIFRecognizer_newp(&marpaESLIFGrammar,
@@ -19895,20 +19903,41 @@ short marpaESLIFRecognizer_symbol_tryb(marpaESLIFRecognizer_t *marpaESLIFRecogni
   short                      rcb;
   marpaESLIFValueResult_t    marpaESLIFValueResult = marpaESLIFValueResultUndef;
   short                      rcMatcherb;
+  marpaESLIFRecognizer_t    *marpaESLIFRecognizerTmpp;
 
   if (MARPAESLIF_UNLIKELY((marpaESLIFRecognizerp == NULL) || (marpaESLIFSymbolp == NULL))) {
     errno = EINVAL;
     goto err;
   }
 
-  rcMatcherb = _marpaESLIFRecognizer_symbol_matcherb(marpaESLIFRecognizerp,
-                                                     marpaESLIFRecognizerp->marpaESLIF_streamp,
-                                                     marpaESLIFSymbolp,
-                                                     &rci,
-                                                     &marpaESLIFValueResult,
-                                                     0, /* maxStartCompletionsi */
-                                                     NULL, /* lastSizeBeforeCompletionlp */
-                                                     NULL /* numberOfStartCompletionsip */);
+  if (marpaESLIFSymbolp->marpaESLIFGrammarp != NULL) {
+    /* Case of meta symbol only - we create a temporary recognizer */
+    marpaESLIFRecognizerTmpp = marpaESLIFRecognizer_newFromp(marpaESLIFSymbolp->marpaESLIFGrammarp, marpaESLIFRecognizerp);
+    if (marpaESLIFRecognizerTmpp == NULL) {
+      goto err;
+    }
+    rcMatcherb = _marpaESLIFRecognizer_symbol_matcherb(marpaESLIFRecognizerTmpp,
+                                                       marpaESLIFRecognizerTmpp->marpaESLIF_streamp,
+                                                       marpaESLIFSymbolp,
+                                                       &rci,
+                                                       &marpaESLIFValueResult,
+                                                       0, /* maxStartCompletionsi */
+                                                       NULL, /* lastSizeBeforeCompletionlp */
+                                                       NULL /* numberOfStartCompletionsip */);
+    if (! marpaESLIFRecognizer_shareb(marpaESLIFRecognizerTmpp, NULL)) {
+      goto err;
+    }
+    marpaESLIFRecognizer_freev(marpaESLIFRecognizerTmpp);
+  } else {
+    rcMatcherb = _marpaESLIFRecognizer_symbol_matcherb(marpaESLIFRecognizerp,
+                                                       marpaESLIFRecognizerp->marpaESLIF_streamp,
+                                                       marpaESLIFSymbolp,
+                                                       &rci,
+                                                       &marpaESLIFValueResult,
+                                                       0, /* maxStartCompletionsi */
+                                                       NULL, /* lastSizeBeforeCompletionlp */
+                                                       NULL /* numberOfStartCompletionsip */);
+  }
 
   if (rcMatcherb < 0) {
     /* Fatal error */

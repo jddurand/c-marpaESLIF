@@ -177,6 +177,7 @@ struct marpaESLIFSymbol {
   void                        *marpaESLIFLuaSymbolContextp;
   /* When an external meta symbol is created, it duplicates a symbol content */
   short                        contentIsShallowb;
+  marpaESLIFGrammar_t         *marpaESLIFGrammarp;     /* Shallow pointer, set by marpaESLIFSymbol_meta_newp() only */
 };
 
 /* A rule */
