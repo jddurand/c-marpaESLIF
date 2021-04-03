@@ -10640,11 +10640,11 @@ static inline short _marpaESLIFRecognizer_discardParseb(marpaESLIFRecognizer_t *
     goto err;
   }
 
-  noEventb           = marpaESLIFRecognizerp->noEventb;
-  marpaESLIF_streamp = marpaESLIFRecognizerp->marpaESLIF_streamp;
-  discardl           = 0;
-
   if (isDiscardExpectedb) {
+    noEventb           = marpaESLIFRecognizerp->noEventb;
+    marpaESLIF_streamp = marpaESLIFRecognizerp->marpaESLIF_streamp;
+    discardl           = 0;
+
     if (! noEventb) {
       /* Reset discardEvents and discardSymbolp */
       marpaESLIFRecognizerp->discardEvents  = NULL;
@@ -10711,9 +10711,16 @@ static inline short _marpaESLIFRecognizer_discardParseb(marpaESLIFRecognizer_t *
           }
         }
       } else {
-        MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Discard rejected %ld bytes < %ld bytes", (unsigned long) discardl, (unsigned long) minl);
+        MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Discard rejected: %ld bytes < %ld bytes", (unsigned long) discardl, (unsigned long) minl);
+        discardl = 0;
       }
+    } else {
+      MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "Discard parse failure");
+      discardl = 0;
     }
+  } else {
+    MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "No discard expected");
+    discardl = 0;
   }
 
   *discardlp = discardl;
