@@ -183,7 +183,6 @@ static        short _marpaESLIF_bootstrap_G1_action_regexactionb(void *userDatav
 static        short _marpaESLIF_bootstrap_G1_action_eventactionb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
 static        short _marpaESLIF_bootstrap_G1_action_defaultencodingb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
 static        short _marpaESLIF_bootstrap_G1_action_fallbackencodingb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
-static        short _marpaESLIF_bootstrap_G1_action_space_concatb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
 
 /* Helpers */
 #define MARPAESLIF_BOOTSTRAP_GET_ARRAY(marpaESLIFValuep, indicei, _p, _l) do { \
@@ -2104,7 +2103,6 @@ static marpaESLIFValueRuleCallback_t _marpaESLIF_bootstrap_ruleActionResolver(vo
   else if (strcmp(actions, "G1_action_eventaction")                      == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_action_eventactionb;                      }
   else if (strcmp(actions, "G1_action_defaultencoding")                  == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_action_defaultencodingb;                  }
   else if (strcmp(actions, "G1_action_fallbackencoding")                 == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_action_fallbackencodingb;                 }
-  else if (strcmp(actions, "G1_action_space_concat")                     == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_action_space_concatb;                     }
   else
   {
     MARPAESLIF_ERRORF(marpaESLIFp, "Unsupported action \"%s\"", actions);
@@ -8039,74 +8037,6 @@ static short _marpaESLIF_bootstrap_G1_action_fallbackencodingb(void *userDatavp,
   if ((! shallowb) && (fallbackEncodings != NULL)) {
     /* This is not possible in theory */
     free(fallbackEncodings);
-  }
-  rcb = 0;
-
- done:
-  return rcb;
-}
-
-/*****************************************************************************/
-static short _marpaESLIF_bootstrap_G1_action_space_concatb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb)
-/*****************************************************************************/
-{
-  /* Generic action that concatenate all the arguments that MUST BE of type ARRAY */
-  marpaESLIF_t        *marpaESLIFp = marpaESLIFValuep->marpaESLIFp; /*marpaESLIFGrammar_eslifp(marpaESLIFRecognizer_grammarp(marpaESLIFValue_recognizerp(marpaESLIFValuep))); */
-  char                *tmps        = NULL;
-  size_t               tmpl        = 0;
-  char                *p;
-  char                *args;
-  size_t               argl;
-  int                  i;
-  short                undefb;
-  short                rcb;
-
-  for (i = arg0i; i <= argni; i++) {
-    MARPAESLIF_BOOTSTRAP_IS_UNDEF(marpaESLIFValuep, i, undefb);
-    if (undefb) {
-      continue;
-    }
-    MARPAESLIF_BOOTSTRAP_GET_ARRAY(marpaESLIFValuep, i, args, argl);
-    if (argl <= 0) {
-      continue;
-    }
-    tmpl += argl;
-    if (i > arg0i) {
-      tmpl++;
-    }
-  }
-
-  tmps = (char *) malloc(tmpl + 1);
-  if (MARPAESLIF_UNLIKELY(tmps == NULL)) {
-    MARPAESLIF_ERRORF(marpaESLIFp, "malloc failure, %s", strerror(errno));
-    goto err;
-  }
-
-  p = tmps;
-  for (i = arg0i; i <= argni; i++) {
-    MARPAESLIF_BOOTSTRAP_IS_UNDEF(marpaESLIFValuep, i, undefb);
-    if (undefb) {
-      continue;
-    }
-    MARPAESLIF_BOOTSTRAP_GET_ARRAY(marpaESLIFValuep, i, args, argl);
-    if (argl <= 0) {
-      continue;
-    }
-    memcpy(p, args, argl);
-    p += argl;
-    if (i > arg0i) {
-      *p++ = ' ';
-    }
-  }
-  tmps[tmpl] = '\0';
-  MARPAESLIF_BOOTSTRAP_SET_ARRAY(marpaESLIFValuep, resulti, MARPAESLIF_BOOTSTRAP_STACK_TYPE_ARRAY, tmps, tmpl);
-
-  rcb = 1;
-  goto done;
-
- err:
-  if (tmps != NULL) {
-    free(tmps);
   }
   rcb = 0;
 
