@@ -7757,7 +7757,6 @@ static inline short _marpaESLIFRecognizer_resume_oneb(marpaESLIFRecognizer_t *ma
   marpaESLIF_grammar_t            *grammarp                          = marpaESLIFGrammarp->grammarp;
   genericStack_t                  *symbolStackp                      = grammarp->symbolStackp;
   short                            latmb                             = grammarp->latmb;
-  int                              alternativeStackSymboli           = 0;
   genericStack_t                  *alternativeStackSymbolp           = marpaESLIFRecognizerp->alternativeStackSymbolp;
   marpaWrapperRecognizer_t        *marpaWrapperRecognizerp           = marpaESLIFRecognizerp->marpaWrapperRecognizerp;
   short                            maxPriorityInitializedb           = 0;
@@ -7766,6 +7765,7 @@ static inline short _marpaESLIFRecognizer_resume_oneb(marpaESLIFRecognizer_t *ma
   short                            havePriorityb                     = 0;
   marpaESLIF_stream_t             *marpaESLIF_streamp                = marpaESLIFRecognizerp->marpaESLIF_streamp;
   size_t                           nSymboll                          = 0;
+  int                              alternativeStackSymboli;
   int                              maxPriorityi;
   int                             *symbolArrayp;
   size_t                           symboll;
@@ -7865,6 +7865,7 @@ static inline short _marpaESLIFRecognizer_resume_oneb(marpaESLIFRecognizer_t *ma
   /* Try to match */
   retry:
   isPseudoTerminalMatchb = 0;
+  alternativeStackSymboli = 0;
 
   for (symboll = 0; symboll < nSymboll; symboll++) {
     symboli = symbolArrayp[symboll];
