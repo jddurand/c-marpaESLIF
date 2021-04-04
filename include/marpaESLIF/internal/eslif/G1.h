@@ -109,6 +109,59 @@ typedef enum bootstrap_grammar_G1_enum {
   G1_TERMINAL_WHITESPACE,
   G1_TERMINAL_PERL_COMMENT,
   G1_TERMINAL_CPLUSPLUS_COMMENT,
+  G1_TERMINAL_DOLLAR,
+  G1_TERMINAL_NIL,
+  G1_TERMINAL_FALSE,
+  G1_TERMINAL_TRUE,
+  G1_TERMINAL_DOTDOTDOT,
+  G1_TERMINAL_LUA_NUMERAL_DIGITS,
+  G1_TERMINAL_LUA_NUMERAL_HEXDIGITS,
+  G1_TERMINAL_LUA_LITERALSTRING,
+  G1_TERMINAL_FUNCTION,
+  G1_TERMINAL_END,
+  G1_TERMINAL_LSQUARE,
+  G1_TERMINAL_RSQUARE,
+  G1_TERMINAL_SLASH,
+  G1_TERMINAL_SLASHSLASH,
+  G1_TERMINAL_CIRCUMFLEX,
+  G1_TERMINAL_PERCENT,
+  G1_TERMINAL_AMPERSAND,
+  G1_TERMINAL_TILDE,
+  G1_TERMINAL_VERTICALBAR,
+  G1_TERMINAL_GTGT,
+  G1_TERMINAL_LTLT,
+  G1_TERMINAL_DOTDOT,
+  G1_TERMINAL_LT,
+  G1_TERMINAL_LTEQUAL,
+  G1_TERMINAL_GT,
+  G1_TERMINAL_GTEQUAL,
+  G1_TERMINAL_EQUALEQUAL,
+  G1_TERMINAL_TILDEEQUAL,
+  G1_TERMINAL_AND,
+  G1_TERMINAL_OR,
+  G1_TERMINAL_SHARP,
+  G1_TERMINAL_NOT,
+  G1_TERMINAL_LBRACKET,
+  G1_TERMINAL_RBRACKET,
+  G1_TERMINAL_DOT,
+  G1_TERMINAL_COLON,
+  G1_TERMINAL_ELSEIF,
+  G1_TERMINAL_LUA_THEN,
+  G1_TERMINAL_ELSE,
+  G1_TERMINAL_BREAK,
+  G1_TERMINAL_GOTO,
+  G1_TERMINAL_DO,
+  G1_TERMINAL_WHILE,
+  G1_TERMINAL_REPEAT,
+  G1_TERMINAL_UNTIL,
+  G1_TERMINAL_IF,
+  G1_TERMINAL_FOR,
+  G1_TERMINAL_IN,
+  G1_TERMINAL_LOCAL,
+  G1_TERMINAL_RETURN,
+  G1_TERMINAL_LUA_NAME,
+  G1_TERMINAL_COLONCOLON,
+  G1_TERMINAL_RHSCALL,
   /* ----- Non terminals ------ */
   G1_META_STATEMENTS,
   G1_META_STATEMENT,
@@ -169,6 +222,7 @@ typedef enum bootstrap_grammar_G1_enum {
   G1_META_RHS,
   G1_META_RHS_ALTERNATIVE,
   G1_META_RHS_PRIMARY,
+  G1_META_RHS_PARAMETERIZED_PRIMARY,
   G1_META_SINGLE_SYMBOL,
   G1_META_TERMINAL,
   G1_META_SYMBOL,
@@ -197,6 +251,40 @@ typedef enum bootstrap_grammar_G1_enum {
   G1_META_DEFAULTENCODING_NAME,
   G1_META_FALLBACK_ENCODING,
   G1_META_FALLBACKENCODING_NAME,
+  G1_META_LUA_EXPLIST_MAYBE,
+  G1_META_LUA_EXPLIST,
+  G1_META_LUA_EXP,
+  G1_META_LUA_NUMERAL,
+  G1_META_LUA_LITERALSTRING,
+  G1_META_LUA_FUNCTIONDEF,
+  G1_META_LUA_PREFIXEXP,
+  G1_META_LUA_TABLECONSTRUCTOR,
+  G1_META_LUA_BINOP,
+  G1_META_LUA_UNOP,
+  G1_META_LUA_FUNCBODY,
+  G1_META_LUA_PARLIST_MAYBE,
+  G1_META_LUA_PARLIST,
+  G1_META_LUA_FIELDLIST_MAYBE,
+  G1_META_LUA_FIELDLIST,
+  G1_META_LUA_VAR,
+  G1_META_LUA_FUNCTIONCALL,
+  G1_META_LUA_ELSEIF_EXP_THEN_BLOCK,
+  G1_META_LUA_ELSEIF_EXP_THEN_BLOCK_ANY,
+  G1_META_LUA_BLOCK,
+  G1_META_LUA_STAT_ANY,
+  G1_META_LUA_RETSTAT_MAYBE,
+  G1_META_LUA_ELSE_BLOCK_MAYBE,
+  G1_META_LUA_STAT,
+  G1_META_LUA_RETSTAT,
+  G1_META_LUA_NAME,
+  G1_META_LUA_ARGS,
+  G1_META_LUA_FIELD,
+  G1_META_LUA_FIELDSEP,
+  G1_META_LUA_VARLIST,
+  G1_META_LUA_LABEL,
+  G1_META_LUA_NAMELIST,
+  G1_META_LUA_FUNCNAME_HEADER,
+  G1_META_LUA_FUNCNAME,
   /* These meta identifiers are handled by L0 */
   G1_META_FALSE,
   G1_META_TRUE,
@@ -274,6 +362,7 @@ bootstrap_grammar_meta_t bootstrap_grammar_G1_metas[] = {
   { G1_META_RHS,                              "rhs",                                       0,       0,           0,            0 },
   { G1_META_RHS_ALTERNATIVE,                  "rhs alternative",                           0,       0,           0,            0 },
   { G1_META_RHS_PRIMARY,                      "rhs primary",                               0,       0,           0,            0 },
+  { G1_META_RHS_PARAMETERIZED_PRIMARY,        "rhs parameterized primary",                 0,       0,           0,            0 },
   { G1_META_SINGLE_SYMBOL,                    "single symbol",                             0,       0,           0,            0 },
   { G1_META_TERMINAL,                         "terminal",                                  0,       0,           0,            0 },
   { G1_META_SYMBOL,                           "symbol",                                    0,       0,           0,            0 },
@@ -302,6 +391,40 @@ bootstrap_grammar_meta_t bootstrap_grammar_G1_metas[] = {
   { G1_META_DEFAULTENCODING_NAME,             "default encoding name",                     0,       0,           0,            0 },
   { G1_META_FALLBACK_ENCODING,                "fallback encoding",                         0,       0,           0,            0 },
   { G1_META_FALLBACKENCODING_NAME,            "fallback encoding name",                    0,       0,           0,            0 },
+  { G1_META_LUA_EXPLIST_MAYBE,                "lua explist maybe",                         0,       0,           0,            0 },
+  { G1_META_LUA_EXPLIST,                      "lua explist",                               0,       0,           0,            0 },
+  { G1_META_LUA_EXP,                          "lua exp",                                   0,       0,           0,            0 },
+  { G1_META_LUA_NUMERAL,                      "lua Numeral",                               0,       0,           0,            0 },
+  { G1_META_LUA_LITERALSTRING,                "lua LiteralString",                         0,       0,           0,            0 },
+  { G1_META_LUA_FUNCTIONDEF,                  "lua functiondef",                           0,       0,           0,            0 },
+  { G1_META_LUA_PREFIXEXP,                    "lua prefixexp",                             0,       0,           0,            0 },
+  { G1_META_LUA_TABLECONSTRUCTOR,             "lua tableconstructor",                      0,       0,           0,            0 },
+  { G1_META_LUA_BINOP,                        "lua binop",                                 0,       0,           0,            0 },
+  { G1_META_LUA_UNOP,                         "lua unop",                                  0,       0,           0,            0 },
+  { G1_META_LUA_FUNCBODY,                     "lua funcbody",                              0,       0,           0,            0 },
+  { G1_META_LUA_PARLIST_MAYBE,                "lua parlist maybe",                         0,       0,           0,            0 },
+  { G1_META_LUA_PARLIST,                      "lua parlist",                               0,       0,           0,            0 },
+  { G1_META_LUA_FIELDLIST_MAYBE,              "lua fieldlist maybe",                       0,       0,           0,            0 },
+  { G1_META_LUA_FIELDLIST,                    "lua fieldlist",                             0,       0,           0,            0 },
+  { G1_META_LUA_VAR,                          "lua var",                                   0,       0,           0,            0 },
+  { G1_META_LUA_FUNCTIONCALL,                 "lua functioncall",                          0,       0,           0,            0 },
+  { G1_META_LUA_ELSEIF_EXP_THEN_BLOCK,        "lua elseif exp then block",                 0,       0,           0,            0 },
+  { G1_META_LUA_ELSEIF_EXP_THEN_BLOCK_ANY,    "lua elseif exp then block any",             0,       0,           0,            0 },
+  { G1_META_LUA_BLOCK,                        "lua block",                                 0,       0,           0,            0 },
+  { G1_META_LUA_STAT_ANY,                     "lua stat any",                              0,       0,           0,            0 },
+  { G1_META_LUA_RETSTAT_MAYBE,                "lua retstat maybe",                         0,       0,           0,            0 },
+  { G1_META_LUA_ELSE_BLOCK_MAYBE,             "lua else block maybe",                      0,       0,           0,            0 },
+  { G1_META_LUA_STAT,                         "lua stat",                                  0,       0,           0,            0 },
+  { G1_META_LUA_RETSTAT,                      "lua retstat",                               0,       0,           0,            0 },
+  { G1_META_LUA_NAME,                         "lua Name",                                  0,       0,           0,            0 },
+  { G1_META_LUA_ARGS,                         "lua args",                                  0,       0,           0,            0 },
+  { G1_META_LUA_FIELD,                        "lua field",                                 0,       0,           0,            0 },
+  { G1_META_LUA_FIELDSEP,                     "lua fieldsep",                              0,       0,           0,            0 },
+  { G1_META_LUA_VARLIST,                      "lua varlist",                               0,       0,           0,            0 },
+  { G1_META_LUA_LABEL,                        "lua label",                                 0,       0,           0,            0 },
+  { G1_META_LUA_NAMELIST,                     "lua namelist",                              0,       0,           0,            0 },
+  { G1_META_LUA_FUNCNAME_HEADER,              "lua funcname header",                       0,       0,           0,            0 },
+  { G1_META_LUA_FUNCNAME,                     "lua funcname",                              0,       0,           0,            0 },
   /* L0 join */
   { G1_META_FALSE,                            L0_JOIN_G1_META_FALSE,                       0,       0,           0,            0 },
   { G1_META_TRUE,                             L0_JOIN_G1_META_TRUE,                        0,       0,           0,            0 },
@@ -1087,7 +1210,7 @@ bootstrap_grammar_terminal_t bootstrap_grammar_G1_terminals[] = {
     NULL, NULL
 #endif
   },
-  { G1_TERMINAL_WHITESPACE, MARPAESLIF_TERMINAL_TYPE_REGEX, NULL,
+  { G1_TERMINAL_WHITESPACE, MARPAESLIF_TERMINAL_TYPE_REGEX, "u",
     "[\\s]+",
 #ifndef MARPAESLIF_NTRACE
     "\x09\x20xxx", "\x09\x20"
@@ -1098,9 +1221,8 @@ bootstrap_grammar_terminal_t bootstrap_grammar_G1_terminals[] = {
   /* --------------------------------------------------------------------------------------------------------------------------------- */
   /* Taken from Regexp::Common::comment, $RE{comment}{Perl} */
   /* Perl stringified version is: (?:(?:#)(?:[^\n]*)(?:\n)) */
-  /* \z added to match the end of the buffer (ESLIF will ask more data if this is not EOF as well) */
   { G1_TERMINAL_PERL_COMMENT, MARPAESLIF_TERMINAL_TYPE_REGEX, "u",
-    "(?:(?:#)(?:[^\\n]*)(?:\\n|\\z))",
+    "#[^\\n]*",
 #ifndef MARPAESLIF_NTRACE
     "# Comment up to the end of the buffer", "# Again a comment"
 #else
@@ -1110,11 +1232,435 @@ bootstrap_grammar_terminal_t bootstrap_grammar_G1_terminals[] = {
   /* --------------------------------------------------------------------------------------------------------------------------------- */
   /* Taken from Regexp::Common::comment, $RE{comment}{'C++'}, which includes the C language comment */
   /* Perl stringified version is: (?:(?:(?://)(?:[^\n]*)(?:\n))|(?:(?:\/\*)(?:(?:[^\*]+|\*(?!\/))*)(?:\*\/))) */
-  /* \z added to match the end of the buffer in the // mode (ESLIF will ask more data if this is not EOF as well) */
   { G1_TERMINAL_CPLUSPLUS_COMMENT, MARPAESLIF_TERMINAL_TYPE_REGEX, "u",
-    "(?:(?:(?://)(?:[^\\n]*)(?:\\n|\\z))|(?:(?:/\\*)(?:(?:[^\\*]+|\\*(?!/))*)(?:\\*/)))",
+    "//(?:[^\\n]*)|/\\*(?:(?:[^\\*]+|\\*(?!/))*)\\*/",
 #ifndef MARPAESLIF_NTRACE
     "// Comment up to the end of the buffer", "// Again a comment"
+#else
+    NULL, NULL
+#endif
+  },
+  { G1_TERMINAL_DOLLAR, MARPAESLIF_TERMINAL_TYPE_STRING, NULL,
+    "'$'",
+#ifndef MARPAESLIF_NTRACE
+    NULL, NULL
+#else
+    NULL, NULL
+#endif
+  },
+  { G1_TERMINAL_NIL, MARPAESLIF_TERMINAL_TYPE_STRING, NULL,
+    "'nil'",
+#ifndef MARPAESLIF_NTRACE
+    "nil", "ni"
+#else
+    NULL, NULL
+#endif
+  },
+  { G1_TERMINAL_FALSE, MARPAESLIF_TERMINAL_TYPE_STRING, NULL,
+    "'false'",
+#ifndef MARPAESLIF_NTRACE
+    "false", "fal"
+#else
+    NULL, NULL
+#endif
+  },
+  { G1_TERMINAL_TRUE, MARPAESLIF_TERMINAL_TYPE_STRING, NULL,
+    "'true'",
+#ifndef MARPAESLIF_NTRACE
+    "true", "tru"
+#else
+    NULL, NULL
+#endif
+  },
+  { G1_TERMINAL_DOTDOTDOT, MARPAESLIF_TERMINAL_TYPE_STRING, NULL,
+    "'...'",
+#ifndef MARPAESLIF_NTRACE
+    "...", ".."
+#else
+    NULL, NULL
+#endif
+  },
+  { G1_TERMINAL_LUA_NUMERAL_DIGITS, MARPAESLIF_TERMINAL_TYPE_REGEX, NULL,
+    /* A lua number can start with '.' if it followed by a digit */
+    "(?:[0-9]+)(?:\\.[0-9]+)?(?:[eE][+-]?[0-9]+)?",
+#ifndef MARPAESLIF_NTRACE
+    NULL, NULL
+#else
+    NULL, NULL
+#endif
+  },
+  { G1_TERMINAL_LUA_NUMERAL_HEXDIGITS, MARPAESLIF_TERMINAL_TYPE_REGEX, NULL,
+    "0[xX](?:[a-fA-F0-9]+)(?:\\.[a-fA-F0-9]+)?(?:[pP][+-]?[0-9]+)?",
+#ifndef MARPAESLIF_NTRACE
+    NULL, NULL
+#else
+    NULL, NULL
+#endif
+  },
+  { G1_TERMINAL_LUA_LITERALSTRING, MARPAESLIF_TERMINAL_TYPE_REGEX, "su",
+    "(?:(?|(?:')(?:[^\\\\']*(?:\\\\.[^\\\\']*)*)(?:')|(?:\")(?:[^\\\\\"]*(?:\\\\.[^\\\\\"]*)*)(?:\")))",
+#ifndef MARPAESLIF_NTRACE
+    "\"xxx\"", "'xx"
+#else
+    NULL, NULL
+#endif
+  },
+  { G1_TERMINAL_FUNCTION, MARPAESLIF_TERMINAL_TYPE_STRING, NULL,
+    "'function'",
+#ifndef MARPAESLIF_NTRACE
+    "function", "func"
+#else
+    NULL, NULL
+#endif
+  },
+  { G1_TERMINAL_END, MARPAESLIF_TERMINAL_TYPE_STRING, NULL,
+    "'end'",
+#ifndef MARPAESLIF_NTRACE
+    "end", "e"
+#else
+    NULL, NULL
+#endif
+  },
+  { G1_TERMINAL_LSQUARE, MARPAESLIF_TERMINAL_TYPE_STRING, NULL,
+    "'{'",
+#ifndef MARPAESLIF_NTRACE
+    NULL, NULL
+#else
+    NULL, NULL
+#endif
+  },
+  { G1_TERMINAL_RSQUARE, MARPAESLIF_TERMINAL_TYPE_STRING, NULL,
+    "'}'",
+#ifndef MARPAESLIF_NTRACE
+    NULL, NULL
+#else
+    NULL, NULL
+#endif
+  },
+  { G1_TERMINAL_SLASH, MARPAESLIF_TERMINAL_TYPE_STRING, NULL,
+    "'/'",
+#ifndef MARPAESLIF_NTRACE
+    NULL, NULL
+#else
+    NULL, NULL
+#endif
+  },
+  { G1_TERMINAL_SLASHSLASH, MARPAESLIF_TERMINAL_TYPE_STRING, NULL,
+    "'//'",
+#ifndef MARPAESLIF_NTRACE
+    NULL, NULL
+#else
+    NULL, NULL
+#endif
+  },
+  { G1_TERMINAL_CIRCUMFLEX, MARPAESLIF_TERMINAL_TYPE_STRING, NULL,
+    "'^'",
+#ifndef MARPAESLIF_NTRACE
+    NULL, NULL
+#else
+    NULL, NULL
+#endif
+  },
+  { G1_TERMINAL_PERCENT, MARPAESLIF_TERMINAL_TYPE_STRING, NULL,
+    "'%'",
+#ifndef MARPAESLIF_NTRACE
+    NULL, NULL
+#else
+    NULL, NULL
+#endif
+  },
+  { G1_TERMINAL_AMPERSAND, MARPAESLIF_TERMINAL_TYPE_STRING, NULL,
+    "'&'",
+#ifndef MARPAESLIF_NTRACE
+    NULL, NULL
+#else
+    NULL, NULL
+#endif
+  },
+  { G1_TERMINAL_TILDE, MARPAESLIF_TERMINAL_TYPE_STRING, NULL,
+    "'~'",
+#ifndef MARPAESLIF_NTRACE
+    NULL, NULL
+#else
+    NULL, NULL
+#endif
+  },
+  { G1_TERMINAL_VERTICALBAR, MARPAESLIF_TERMINAL_TYPE_STRING, NULL,
+    "'|'",
+#ifndef MARPAESLIF_NTRACE
+    NULL, NULL
+#else
+    NULL, NULL
+#endif
+  },
+  { G1_TERMINAL_GTGT, MARPAESLIF_TERMINAL_TYPE_STRING, NULL,
+    "'>>'",
+#ifndef MARPAESLIF_NTRACE
+    NULL, NULL
+#else
+    NULL, NULL
+#endif
+  },
+  { G1_TERMINAL_LTLT, MARPAESLIF_TERMINAL_TYPE_STRING, NULL,
+    "'<<'",
+#ifndef MARPAESLIF_NTRACE
+    NULL, NULL
+#else
+    NULL, NULL
+#endif
+  },
+  { G1_TERMINAL_DOTDOT, MARPAESLIF_TERMINAL_TYPE_STRING, NULL,
+    "'..'",
+#ifndef MARPAESLIF_NTRACE
+    NULL, NULL
+#else
+    NULL, NULL
+#endif
+  },
+  { G1_TERMINAL_LT, MARPAESLIF_TERMINAL_TYPE_STRING, NULL,
+    "'<'",
+#ifndef MARPAESLIF_NTRACE
+    NULL, NULL
+#else
+    NULL, NULL
+#endif
+  },
+  { G1_TERMINAL_LTEQUAL, MARPAESLIF_TERMINAL_TYPE_STRING, NULL,
+    "'<='",
+#ifndef MARPAESLIF_NTRACE
+    NULL, NULL
+#else
+    NULL, NULL
+#endif
+  },
+  { G1_TERMINAL_GT, MARPAESLIF_TERMINAL_TYPE_STRING, NULL,
+    "'>'",
+#ifndef MARPAESLIF_NTRACE
+    NULL, NULL
+#else
+    NULL, NULL
+#endif
+  },
+  { G1_TERMINAL_GTEQUAL, MARPAESLIF_TERMINAL_TYPE_STRING, NULL,
+    "'>='",
+#ifndef MARPAESLIF_NTRACE
+    NULL, NULL
+#else
+    NULL, NULL
+#endif
+  },
+  { G1_TERMINAL_EQUALEQUAL, MARPAESLIF_TERMINAL_TYPE_STRING, NULL,
+    "'=='",
+#ifndef MARPAESLIF_NTRACE
+    NULL, NULL
+#else
+    NULL, NULL
+#endif
+  },
+  { G1_TERMINAL_TILDEEQUAL, MARPAESLIF_TERMINAL_TYPE_STRING, NULL,
+    "'~='",
+#ifndef MARPAESLIF_NTRACE
+    NULL, NULL
+#else
+    NULL, NULL
+#endif
+  },
+  { G1_TERMINAL_AND, MARPAESLIF_TERMINAL_TYPE_STRING, NULL,
+    "'and'",
+#ifndef MARPAESLIF_NTRACE
+    NULL, NULL
+#else
+    NULL, NULL
+#endif
+  },
+  { G1_TERMINAL_OR, MARPAESLIF_TERMINAL_TYPE_STRING, NULL,
+    "'or'",
+#ifndef MARPAESLIF_NTRACE
+    NULL, NULL
+#else
+    NULL, NULL
+#endif
+  },
+  { G1_TERMINAL_SHARP, MARPAESLIF_TERMINAL_TYPE_STRING, NULL,
+    "'#'",
+#ifndef MARPAESLIF_NTRACE
+    NULL, NULL
+#else
+    NULL, NULL
+#endif
+  },
+  { G1_TERMINAL_NOT, MARPAESLIF_TERMINAL_TYPE_STRING, NULL,
+    "'not'",
+#ifndef MARPAESLIF_NTRACE
+    NULL, NULL
+#else
+    NULL, NULL
+#endif
+  },
+  { G1_TERMINAL_LBRACKET, MARPAESLIF_TERMINAL_TYPE_STRING, NULL,
+    "'['",
+#ifndef MARPAESLIF_NTRACE
+    NULL, NULL
+#else
+    NULL, NULL
+#endif
+  },
+  { G1_TERMINAL_RBRACKET, MARPAESLIF_TERMINAL_TYPE_STRING, NULL,
+    "']'",
+#ifndef MARPAESLIF_NTRACE
+    NULL, NULL
+#else
+    NULL, NULL
+#endif
+  },
+  { G1_TERMINAL_DOT, MARPAESLIF_TERMINAL_TYPE_STRING, NULL,
+    "'.'",
+#ifndef MARPAESLIF_NTRACE
+    NULL, NULL
+#else
+    NULL, NULL
+#endif
+  },
+  { G1_TERMINAL_COLON, MARPAESLIF_TERMINAL_TYPE_STRING, NULL,
+    "':'",
+#ifndef MARPAESLIF_NTRACE
+    NULL, NULL
+#else
+    NULL, NULL
+#endif
+  },
+  { G1_TERMINAL_ELSEIF, MARPAESLIF_TERMINAL_TYPE_STRING, NULL,
+    "'elseif'",
+#ifndef MARPAESLIF_NTRACE
+    NULL, NULL
+#else
+    NULL, NULL
+#endif
+  },
+  { G1_TERMINAL_LUA_THEN, MARPAESLIF_TERMINAL_TYPE_STRING, NULL,
+    "'then'",
+#ifndef MARPAESLIF_NTRACE
+    NULL, NULL
+#else
+    NULL, NULL
+#endif
+  },
+  { G1_TERMINAL_ELSE, MARPAESLIF_TERMINAL_TYPE_STRING, NULL,
+    "'else'",
+#ifndef MARPAESLIF_NTRACE
+    NULL, NULL
+#else
+    NULL, NULL
+#endif
+  },
+  { G1_TERMINAL_BREAK, MARPAESLIF_TERMINAL_TYPE_STRING, NULL,
+    "'break'",
+#ifndef MARPAESLIF_NTRACE
+    NULL, NULL
+#else
+    NULL, NULL
+#endif
+  },
+  { G1_TERMINAL_GOTO, MARPAESLIF_TERMINAL_TYPE_STRING, NULL,
+    "'goto'",
+#ifndef MARPAESLIF_NTRACE
+    NULL, NULL
+#else
+    NULL, NULL
+#endif
+  },
+  { G1_TERMINAL_DO, MARPAESLIF_TERMINAL_TYPE_STRING, NULL,
+    "'do'",
+#ifndef MARPAESLIF_NTRACE
+    NULL, NULL
+#else
+    NULL, NULL
+#endif
+  },
+  { G1_TERMINAL_WHILE, MARPAESLIF_TERMINAL_TYPE_STRING, NULL,
+    "'while'",
+#ifndef MARPAESLIF_NTRACE
+    NULL, NULL
+#else
+    NULL, NULL
+#endif
+  },
+  { G1_TERMINAL_REPEAT, MARPAESLIF_TERMINAL_TYPE_STRING, NULL,
+    "'repeat'",
+#ifndef MARPAESLIF_NTRACE
+    NULL, NULL
+#else
+    NULL, NULL
+#endif
+  },
+  { G1_TERMINAL_UNTIL, MARPAESLIF_TERMINAL_TYPE_STRING, NULL,
+    "'until'",
+#ifndef MARPAESLIF_NTRACE
+    NULL, NULL
+#else
+    NULL, NULL
+#endif
+  },
+  { G1_TERMINAL_IF, MARPAESLIF_TERMINAL_TYPE_STRING, NULL,
+    "'if'",
+#ifndef MARPAESLIF_NTRACE
+    NULL, NULL
+#else
+    NULL, NULL
+#endif
+  },
+  { G1_TERMINAL_FOR, MARPAESLIF_TERMINAL_TYPE_STRING, NULL,
+    "'for'",
+#ifndef MARPAESLIF_NTRACE
+    NULL, NULL
+#else
+    NULL, NULL
+#endif
+  },
+  { G1_TERMINAL_IN, MARPAESLIF_TERMINAL_TYPE_STRING, NULL,
+    "'in'",
+#ifndef MARPAESLIF_NTRACE
+    NULL, NULL
+#else
+    NULL, NULL
+#endif
+  },
+  { G1_TERMINAL_LOCAL, MARPAESLIF_TERMINAL_TYPE_STRING, NULL,
+    "'local'",
+#ifndef MARPAESLIF_NTRACE
+    NULL, NULL
+#else
+    NULL, NULL
+#endif
+  },
+  { G1_TERMINAL_RETURN, MARPAESLIF_TERMINAL_TYPE_STRING, NULL,
+    "'return'",
+#ifndef MARPAESLIF_NTRACE
+    NULL, NULL
+#else
+    NULL, NULL
+#endif
+  },
+  { G1_TERMINAL_LUA_NAME, MARPAESLIF_TERMINAL_TYPE_REGEX, NULL,
+    "[a-zA-Z_][a-zA-Z_0-9]*",
+#ifndef MARPAESLIF_NTRACE
+    NULL, NULL
+#else
+    NULL, NULL
+#endif
+  },
+  { G1_TERMINAL_COLONCOLON, MARPAESLIF_TERMINAL_TYPE_STRING, NULL,
+    "'::'",
+#ifndef MARPAESLIF_NTRACE
+    NULL, NULL
+#else
+    NULL, NULL
+#endif
+  },
+  { G1_TERMINAL_RHSCALL, MARPAESLIF_TERMINAL_TYPE_STRING, NULL,
+    "'->'",
+#ifndef MARPAESLIF_NTRACE
+    NULL, NULL
 #else
     NULL, NULL
 #endif
@@ -1452,6 +1998,19 @@ bootstrap_grammar_rule_t bootstrap_grammar_G1_rules[] = {
   { G1_META_RHS_PRIMARY,                      G1_RULE_RHS_PRIMARY_2,                          MARPAESLIF_RULE_TYPE_ALTERNATIVE, 3, { G1_META_SYMBOL,
                                                                                                                                      G1_TERMINAL_AT_SIGN,
                                                                                                                                      G1_META_GRAMMAR_REFERENCE                    }, -1,                        -1,      -1,              0, G1_ACTION_RHS_PRIMARY_2 },
+  { G1_META_RHS_PRIMARY,                      G1_RULE_RHS_PRIMARY_3,                          MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_RHS_PARAMETERIZED_PRIMARY            }, -1,                        -1,      -1,              0, G1_ACTION_RHS_PRIMARY_3 },
+  { G1_META_RHS_PARAMETERIZED_PRIMARY,        G1_RULE_RHS_PARAMETERIZED_PRIMARY_1,            MARPAESLIF_RULE_TYPE_ALTERNATIVE, 5, { G1_META_SINGLE_SYMBOL,
+                                                                                                                                     G1_TERMINAL_RHSCALL,
+                                                                                                                                     G1_TERMINAL_LPAREN,
+                                                                                                                                     G1_META_LUA_EXPLIST_MAYBE,
+                                                                                                                                     G1_TERMINAL_RPAREN                           }, -1,                        -1,      -1,              0, G1_ACTION_RHS_PARAMETERIZED_PRIMARY_1 },
+  { G1_META_RHS_PARAMETERIZED_PRIMARY,        G1_RULE_RHS_PARAMETERIZED_PRIMARY_2,            MARPAESLIF_RULE_TYPE_ALTERNATIVE, 7, { G1_META_SYMBOL,
+                                                                                                                                     G1_TERMINAL_AT_SIGN,
+                                                                                                                                     G1_META_GRAMMAR_REFERENCE,
+                                                                                                                                     G1_TERMINAL_RHSCALL,
+                                                                                                                                     G1_TERMINAL_LPAREN,
+                                                                                                                                     G1_META_LUA_EXPLIST_MAYBE,
+                                                                                                                                     G1_TERMINAL_RPAREN                          }, -1,                        -1,      -1,              0, G1_ACTION_RHS_PARAMETERIZED_PRIMARY_2 },
   /*
     lhsi                                      descs                                           type                          nrhsl  { rhsi }                                       }  minimumi           separatori  properb hideseparatorb  actions
   */
@@ -1555,17 +2114,249 @@ bootstrap_grammar_rule_t bootstrap_grammar_G1_rules[] = {
   { G1_META_LUASCRIPT_SOURCE,                 G1_RULE_LUASCRIPT_SOURCE,                       MARPAESLIF_RULE_TYPE_SEQUENCE,    1, { G1_TERMINAL_ANY_CHARACTER },                           0,                  -1,       0,              0, G1_ACTION_LUASCRIPT_SOURCE },
   { G1_META_EVENT_ACTION,                     G1_RULE_EVENT_ACTION,                           MARPAESLIF_RULE_TYPE_ALTERNATIVE, 3, { G1_TERMINAL_EVENT_ACTION,
                                                                                                                                      G1_TERMINAL_THEN,
-                                                                                                                                     G1_META_EVENTACTION_NAME                      }, -1,                        -1,      -1,              0, G1_ACTION_EVENTACTION },
-  { G1_META_EVENTACTION_NAME,                 G1_RULE_EVENTACTION_NAME_1,                     MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_RESTRICTED_ASCII_GRAPH_NAME           }, -1,                        -1,      -1,              0, G1_ACTION_EVENTACTION_NAME_1 },
-  { G1_META_EVENTACTION_NAME,                 G1_RULE_EVENTACTION_NAME_2,                     MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_LUA_ACTION_NAME                       }, -1,                        -1,      -1,              0, G1_ACTION_EVENTACTION_NAME_2 },
+                                                                                                                                     G1_META_EVENTACTION_NAME                     }, -1,                        -1,      -1,              0, G1_ACTION_EVENTACTION },
+  { G1_META_EVENTACTION_NAME,                 G1_RULE_EVENTACTION_NAME_1,                     MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_RESTRICTED_ASCII_GRAPH_NAME          }, -1,                        -1,      -1,              0, G1_ACTION_EVENTACTION_NAME_1 },
+  { G1_META_EVENTACTION_NAME,                 G1_RULE_EVENTACTION_NAME_2,                     MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_LUA_ACTION_NAME                      }, -1,                        -1,      -1,              0, G1_ACTION_EVENTACTION_NAME_2 },
   { G1_META_DEFAULT_ENCODING,                 G1_RULE_DEFAULT_ENCODING,                       MARPAESLIF_RULE_TYPE_ALTERNATIVE, 3, { G1_TERMINAL_DEFAULT_ENCODING,
                                                                                                                                      G1_TERMINAL_THEN,
-                                                                                                                                     G1_META_DEFAULTENCODING_NAME                  }, -1,                        -1,      -1,              0, G1_ACTION_DEFAULTENCODING },
-  { G1_META_DEFAULTENCODING_NAME,             G1_RULE_DEFAULTENCODING_NAME,                   MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_GRAPH_ASCII_NAME                      }, -1,                        -1,      -1,              0, G1_ACTION_DEFAULTENCODING_NAME },
+                                                                                                                                     G1_META_DEFAULTENCODING_NAME                 }, -1,                        -1,      -1,              0, G1_ACTION_DEFAULTENCODING },
+  { G1_META_DEFAULTENCODING_NAME,             G1_RULE_DEFAULTENCODING_NAME,                   MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_GRAPH_ASCII_NAME                     }, -1,                        -1,      -1,              0, G1_ACTION_DEFAULTENCODING_NAME },
   { G1_META_FALLBACK_ENCODING,                G1_RULE_FALLBACK_ENCODING,                      MARPAESLIF_RULE_TYPE_ALTERNATIVE, 3, { G1_TERMINAL_FALLBACK_ENCODING,
                                                                                                                                      G1_TERMINAL_THEN,
-                                                                                                                                     G1_META_FALLBACKENCODING_NAME                 }, -1,                        -1,      -1,              0, G1_ACTION_FALLBACKENCODING },
-  { G1_META_FALLBACKENCODING_NAME,             G1_RULE_FALLBACKENCODING_NAME,                 MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_GRAPH_ASCII_NAME                      }, -1,                        -1,      -1,              0, G1_ACTION_FALLBACKENCODING_NAME }
+                                                                                                                                     G1_META_FALLBACKENCODING_NAME                }, -1,                        -1,      -1,              0, G1_ACTION_FALLBACKENCODING },
+  { G1_META_FALLBACKENCODING_NAME,            G1_RULE_FALLBACKENCODING_NAME,                  MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_GRAPH_ASCII_NAME                     }, -1,                        -1,      -1,              0, G1_ACTION_FALLBACKENCODING_NAME },
+
+  /*
+    lhsi                                      descs                                           type                          nrhsl  { rhsi }                                       }  minimumi           separatori  properb hideseparatorb  actions
+  */
+  { G1_META_LUA_EXPLIST_MAYBE,                G1_RULE_LUA_EXPLIST_MAYBE_1,                    MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_LUA_EXPLIST                          }, -1,                        -1,      -1,              0, G1_ACTION_LUA_EXPLIST_MAYBE_1 },
+  { G1_META_LUA_EXPLIST_MAYBE,                G1_RULE_LUA_EXPLIST_MAYBE_2,                    MARPAESLIF_RULE_TYPE_ALTERNATIVE, 0, {                                              }, -1,                        -1,      -1,              0, G1_ACTION_LUA_EXPLIST_MAYBE_2 },
+
+  { G1_META_LUA_EXPLIST,                      G1_RULE_LUA_EXPLIST,                            MARPAESLIF_RULE_TYPE_SEQUENCE,    1, { G1_META_LUA_EXP                              },  1,         G1_TERMINAL_COMMA,       1,              0, G1_ACTION_LUA_EXPLIST },
+
+  { G1_META_LUA_EXP,                          G1_RULE_LUA_EXP_1,                              MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_TERMINAL_NIL                              }, -1,                        -1,      -1,              0, G1_ACTION_LUA_EXP_1 },
+  { G1_META_LUA_EXP,                          G1_RULE_LUA_EXP_2,                              MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_TERMINAL_FALSE                            }, -1,                        -1,      -1,              0, G1_ACTION_LUA_EXP_2 },
+  { G1_META_LUA_EXP,                          G1_RULE_LUA_EXP_3,                              MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_TERMINAL_TRUE                             }, -1,                        -1,      -1,              0, G1_ACTION_LUA_EXP_3 },
+  { G1_META_LUA_EXP,                          G1_RULE_LUA_EXP_4,                              MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_LUA_NUMERAL                          }, -1,                        -1,      -1,              0, G1_ACTION_LUA_EXP_4 },
+  { G1_META_LUA_EXP,                          G1_RULE_LUA_EXP_5,                              MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_LUA_LITERALSTRING                    }, -1,                        -1,      -1,              0, G1_ACTION_LUA_EXP_5 },
+  { G1_META_LUA_EXP,                          G1_RULE_LUA_EXP_6,                              MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_TERMINAL_DOTDOTDOT                        }, -1,                        -1,      -1,              0, G1_ACTION_LUA_EXP_6 },
+  { G1_META_LUA_EXP,                          G1_RULE_LUA_EXP_7,                              MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_LUA_FUNCTIONDEF                      }, -1,                        -1,      -1,              0, G1_ACTION_LUA_EXP_7 },
+  { G1_META_LUA_EXP,                          G1_RULE_LUA_EXP_8,                              MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_LUA_PREFIXEXP                        }, -1,                        -1,      -1,              0, G1_ACTION_LUA_EXP_8 },
+  { G1_META_LUA_EXP,                          G1_RULE_LUA_EXP_9,                              MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_LUA_TABLECONSTRUCTOR                 }, -1,                        -1,      -1,              0, G1_ACTION_LUA_EXP_9 },
+  { G1_META_LUA_EXP,                          G1_RULE_LUA_EXP_10,                             MARPAESLIF_RULE_TYPE_ALTERNATIVE, 3, { G1_META_LUA_EXP,
+                                                                                                                                     G1_META_LUA_BINOP,
+                                                                                                                                     G1_META_LUA_EXP                              }, -1,                        -1,      -1,              0, G1_ACTION_LUA_EXP_10 },
+  { G1_META_LUA_EXP,                          G1_RULE_LUA_EXP_11,                             MARPAESLIF_RULE_TYPE_ALTERNATIVE, 2, { G1_META_LUA_UNOP,
+                                                                                                                                     G1_META_LUA_EXP                              }, -1,                        -1,      -1,              0, G1_ACTION_LUA_EXP_11 },
+  { G1_META_LUA_EXP,                          G1_RULE_LUA_EXP_12,                             MARPAESLIF_RULE_TYPE_ALTERNATIVE, 2, { G1_TERMINAL_DOLLAR,
+                                                                                                                                     G1_META_RHS_PRIMARY                          }, -1,                        -1,      -1,              0, G1_ACTION_LUA_EXP_12 },
+
+  { G1_META_LUA_NUMERAL,                      G1_RULE_LUA_NUMERAL_1,                          MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_TERMINAL_LUA_NUMERAL_DIGITS               }, -1,                        -1,      -1,              0, G1_ACTION_LUA_NUMERAL_1 },
+  { G1_META_LUA_NUMERAL,                      G1_RULE_LUA_NUMERAL_2,                          MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_TERMINAL_LUA_NUMERAL_HEXDIGITS            }, -1,                        -1,      -1,              0, G1_ACTION_LUA_NUMERAL_2 },
+
+  { G1_META_LUA_LITERALSTRING,                G1_RULE_LUA_LITERALSTRING,                      MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_TERMINAL_LUA_LITERALSTRING                }, -1,                        -1,      -1,              0, G1_ACTION_LUA_LITERALSTRING },
+
+  { G1_META_LUA_FUNCTIONDEF,                  G1_RULE_LUA_FUNCTIONDEF,                        MARPAESLIF_RULE_TYPE_ALTERNATIVE, 2, { G1_TERMINAL_FUNCTION,
+                                                                                                                                     G1_META_LUA_FUNCBODY                         }, -1,                        -1,      -1,              0, G1_ACTION_LUA_FUNCTIONDEF },
+  { G1_META_LUA_FUNCBODY,                     G1_RULE_LUA_FUNCBODY,                           MARPAESLIF_RULE_TYPE_ALTERNATIVE, 5, { G1_TERMINAL_LPAREN,
+                                                                                                                                     G1_META_LUA_PARLIST_MAYBE,
+                                                                                                                                     G1_TERMINAL_RPAREN,
+                                                                                                                                     G1_META_LUA_BLOCK,
+                                                                                                                                     G1_TERMINAL_END                              }, -1,                        -1,      -1,              0, G1_ACTION_LUA_FUNCBODY },
+  { G1_META_LUA_PARLIST_MAYBE,                G1_RULE_LUA_PARLIST_MAYBE_1,                    MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_LUA_PARLIST                          }, -1,                        -1,      -1,              0, G1_ACTION_LUA_PARLIST_MAYBE_1 },
+  { G1_META_LUA_PARLIST_MAYBE,                G1_RULE_LUA_PARLIST_MAYBE_2,                    MARPAESLIF_RULE_TYPE_ALTERNATIVE, 0, {                                              }, -1,                        -1,      -1,              0, G1_ACTION_LUA_PARLIST_MAYBE_2 },
+
+  { G1_META_LUA_PARLIST,                      G1_RULE_LUA_PARLIST_1,                          MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_LUA_NAMELIST                         }, -1,                        -1,      -1,              0, G1_ACTION_LUA_PARLIST_1 },
+  { G1_META_LUA_PARLIST,                      G1_RULE_LUA_PARLIST_2,                          MARPAESLIF_RULE_TYPE_ALTERNATIVE, 3, { G1_META_LUA_NAMELIST,
+                                                                                                                                     G1_TERMINAL_COMMA,
+                                                                                                                                     G1_TERMINAL_DOTDOTDOT                        }, -1,                        -1,      -1,              0, G1_ACTION_LUA_PARLIST_2 },
+  { G1_META_LUA_PARLIST,                      G1_RULE_LUA_PARLIST_3,                          MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_TERMINAL_DOTDOTDOT                        }, -1,                        -1,      -1,              0, G1_ACTION_LUA_PARLIST_3 },
+
+  { G1_META_LUA_PREFIXEXP,                    G1_RULE_LUA_PREFIXEXP_1,                        MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_LUA_VAR                              }, -1,                        -1,      -1,              0, G1_ACTION_LUA_PREFIXEXP_1 },
+  { G1_META_LUA_PREFIXEXP,                    G1_RULE_LUA_PREFIXEXP_2,                        MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_LUA_FUNCTIONCALL                     }, -1,                        -1,      -1,              0, G1_ACTION_LUA_PREFIXEXP_2 },
+  { G1_META_LUA_PREFIXEXP,                    G1_RULE_LUA_PREFIXEXP_3,                        MARPAESLIF_RULE_TYPE_ALTERNATIVE, 3, { G1_TERMINAL_LPAREN,
+                                                                                                                                     G1_META_LUA_EXP,
+                                                                                                                                     G1_TERMINAL_RPAREN                           }, -1,                        -1,      -1,              0, G1_ACTION_LUA_PREFIXEXP_3 },
+  { G1_META_LUA_TABLECONSTRUCTOR,             G1_RULE_LUA_TABLECONSTRUCTOR,                   MARPAESLIF_RULE_TYPE_ALTERNATIVE, 3, { G1_TERMINAL_LSQUARE,
+                                                                                                                                     G1_META_LUA_FIELDLIST_MAYBE,
+                                                                                                                                     G1_TERMINAL_RSQUARE                          }, -1,                        -1,      -1,              0, G1_ACTION_LUA_TABLECONSTRUCTOR },
+  { G1_META_LUA_FIELDLIST_MAYBE,              G1_RULE_LUA_FIELDLIST_MAYBE_1,                  MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_LUA_FIELDLIST                        }, -1,                        -1,      -1,              0, G1_ACTION_LUA_FIELDLIST_MAYBE_1 },
+  { G1_META_LUA_FIELDLIST_MAYBE,              G1_RULE_LUA_FIELDLIST_MAYBE_2,                  MARPAESLIF_RULE_TYPE_ALTERNATIVE, 0, {                                              }, -1,                        -1,      -1,              0, G1_ACTION_LUA_FIELDLIST_MAYBE_2 },
+
+  { G1_META_LUA_BINOP,                        G1_RULE_LUA_BINOP_1,                            MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_TERMINAL_PLUS                             }, -1,                        -1,      -1,              0, G1_ACTION_LUA_BINOP_1 },
+  { G1_META_LUA_BINOP,                        G1_RULE_LUA_BINOP_2,                            MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_TERMINAL_MINUS                            }, -1,                        -1,      -1,              0, G1_ACTION_LUA_BINOP_2 },
+  { G1_META_LUA_BINOP,                        G1_RULE_LUA_BINOP_3,                            MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_TERMINAL_STAR                             }, -1,                        -1,      -1,              0, G1_ACTION_LUA_BINOP_3 },
+  { G1_META_LUA_BINOP,                        G1_RULE_LUA_BINOP_4,                            MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_TERMINAL_SLASH                            }, -1,                        -1,      -1,              0, G1_ACTION_LUA_BINOP_4 },
+  { G1_META_LUA_BINOP,                        G1_RULE_LUA_BINOP_5,                            MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_TERMINAL_SLASHSLASH                       }, -1,                        -1,      -1,              0, G1_ACTION_LUA_BINOP_5 },
+  { G1_META_LUA_BINOP,                        G1_RULE_LUA_BINOP_6,                            MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_TERMINAL_CIRCUMFLEX                       }, -1,                        -1,      -1,              0, G1_ACTION_LUA_BINOP_6 },
+  { G1_META_LUA_BINOP,                        G1_RULE_LUA_BINOP_7,                            MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_TERMINAL_PERCENT                          }, -1,                        -1,      -1,              0, G1_ACTION_LUA_BINOP_7 },
+  { G1_META_LUA_BINOP,                        G1_RULE_LUA_BINOP_8,                            MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_TERMINAL_AMPERSAND                        }, -1,                        -1,      -1,              0, G1_ACTION_LUA_BINOP_8 },
+  { G1_META_LUA_BINOP,                        G1_RULE_LUA_BINOP_9,                            MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_TERMINAL_TILDE                            }, -1,                        -1,      -1,              0, G1_ACTION_LUA_BINOP_9 },
+  { G1_META_LUA_BINOP,                        G1_RULE_LUA_BINOP_10,                           MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_TERMINAL_VERTICALBAR                      }, -1,                        -1,      -1,              0, G1_ACTION_LUA_BINOP_10 },
+  { G1_META_LUA_BINOP,                        G1_RULE_LUA_BINOP_11,                           MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_TERMINAL_GTGT                             }, -1,                        -1,      -1,              0, G1_ACTION_LUA_BINOP_11 },
+  { G1_META_LUA_BINOP,                        G1_RULE_LUA_BINOP_12,                           MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_TERMINAL_LTLT                             }, -1,                        -1,      -1,              0, G1_ACTION_LUA_BINOP_12 },
+  { G1_META_LUA_BINOP,                        G1_RULE_LUA_BINOP_13,                           MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_TERMINAL_DOTDOT                           }, -1,                        -1,      -1,              0, G1_ACTION_LUA_BINOP_13 },
+  { G1_META_LUA_BINOP,                        G1_RULE_LUA_BINOP_14,                           MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_TERMINAL_LT                               }, -1,                        -1,      -1,              0, G1_ACTION_LUA_BINOP_14 },
+  { G1_META_LUA_BINOP,                        G1_RULE_LUA_BINOP_15,                           MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_TERMINAL_LTEQUAL                          }, -1,                        -1,      -1,              0, G1_ACTION_LUA_BINOP_15 },
+  { G1_META_LUA_BINOP,                        G1_RULE_LUA_BINOP_16,                           MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_TERMINAL_GT                               }, -1,                        -1,      -1,              0, G1_ACTION_LUA_BINOP_16 },
+  { G1_META_LUA_BINOP,                        G1_RULE_LUA_BINOP_17,                           MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_TERMINAL_GTEQUAL                          }, -1,                        -1,      -1,              0, G1_ACTION_LUA_BINOP_17 },
+  { G1_META_LUA_BINOP,                        G1_RULE_LUA_BINOP_18,                           MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_TERMINAL_EQUALEQUAL                       }, -1,                        -1,      -1,              0, G1_ACTION_LUA_BINOP_18 },
+  { G1_META_LUA_BINOP,                        G1_RULE_LUA_BINOP_19,                           MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_TERMINAL_TILDEEQUAL                       }, -1,                        -1,      -1,              0, G1_ACTION_LUA_BINOP_19 },
+  { G1_META_LUA_BINOP,                        G1_RULE_LUA_BINOP_20,                           MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_TERMINAL_AND                              }, -1,                        -1,      -1,              0, G1_ACTION_LUA_BINOP_20 },
+  { G1_META_LUA_BINOP,                        G1_RULE_LUA_BINOP_21,                           MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_TERMINAL_OR                               }, -1,                        -1,      -1,              0, G1_ACTION_LUA_BINOP_21 },
+
+  { G1_META_LUA_UNOP,                         G1_RULE_LUA_UNOP_1,                             MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_TERMINAL_MINUS                            }, -1,                        -1,      -1,              0, G1_ACTION_LUA_UNOP_1 },
+  { G1_META_LUA_UNOP,                         G1_RULE_LUA_UNOP_2,                             MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_TERMINAL_NOT                              }, -1,                        -1,      -1,              0, G1_ACTION_LUA_UNOP_2 },
+  { G1_META_LUA_UNOP,                         G1_RULE_LUA_UNOP_3,                             MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_TERMINAL_SHARP                            }, -1,                        -1,      -1,              0, G1_ACTION_LUA_UNOP_3 },
+  { G1_META_LUA_UNOP,                         G1_RULE_LUA_UNOP_4,                             MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_TERMINAL_TILDE                            }, -1,                        -1,      -1,              0, G1_ACTION_LUA_UNOP_4 },
+
+  { G1_META_LUA_BLOCK,                        G1_RULE_LUA_BLOCK,                              MARPAESLIF_RULE_TYPE_ALTERNATIVE, 2, { G1_META_LUA_STAT_ANY,
+                                                                                                                                     G1_META_LUA_RETSTAT_MAYBE                    }, -1,                        -1,      -1,              0, G1_ACTION_LUA_BLOCK },
+  { G1_META_LUA_STAT_ANY,                     G1_RULE_LUA_STAT_ANY,                           MARPAESLIF_RULE_TYPE_SEQUENCE,    1, { G1_META_LUA_STAT                             },  0,                        -1,      -1,              0, G1_ACTION_LUA_STAT_ANY },
+
+  { G1_META_LUA_RETSTAT_MAYBE,                G1_RULE_LUA_RETSTAT_MAYBE_1,                    MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_LUA_RETSTAT                          },  0,                        -1,      -1,              0, G1_ACTION_LUA_RETSTAT_MAYBE_1 },
+  { G1_META_LUA_RETSTAT_MAYBE,                G1_RULE_LUA_RETSTAT_MAYBE_2,                    MARPAESLIF_RULE_TYPE_ALTERNATIVE, 0, {                                              },  0,                        -1,      -1,              0, G1_ACTION_LUA_RETSTAT_MAYBE_2 },
+
+  { G1_META_LUA_VAR,                          G1_RULE_LUA_VAR_1,                              MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_LUA_NAME                             }, -1,                        -1,      -1,              0, G1_ACTION_LUA_VAR_1 },
+  { G1_META_LUA_VAR,                          G1_RULE_LUA_VAR_2,                              MARPAESLIF_RULE_TYPE_ALTERNATIVE, 4, { G1_META_LUA_PREFIXEXP,
+                                                                                                                                     G1_TERMINAL_LBRACKET,
+                                                                                                                                     G1_META_LUA_EXP,
+                                                                                                                                     G1_TERMINAL_RBRACKET                         }, -1,                        -1,      -1,              0, G1_ACTION_LUA_VAR_2 },
+  { G1_META_LUA_VAR,                          G1_RULE_LUA_VAR_3,                              MARPAESLIF_RULE_TYPE_ALTERNATIVE, 3, { G1_META_LUA_PREFIXEXP,
+                                                                                                                                     G1_TERMINAL_DOT,
+                                                                                                                                     G1_META_LUA_NAME                             }, -1,                        -1,      -1,              0, G1_ACTION_LUA_VAR_3 },
+
+  { G1_META_LUA_FUNCTIONCALL,                G1_RULE_LUA_FUNCTIONCALL_1,                      MARPAESLIF_RULE_TYPE_ALTERNATIVE, 2, { G1_META_LUA_PREFIXEXP,
+                                                                                                                                     G1_META_LUA_ARGS                             }, -1,                        -1,      -1,              0, G1_ACTION_LUA_FUNCTIONCALL_1 },
+  { G1_META_LUA_FUNCTIONCALL,                G1_RULE_LUA_FUNCTIONCALL_2,                      MARPAESLIF_RULE_TYPE_ALTERNATIVE, 4, { G1_META_LUA_PREFIXEXP,
+                                                                                                                                     G1_TERMINAL_COLON,
+                                                                                                                                     G1_META_LUA_NAME,
+                                                                                                                                     G1_META_LUA_ARGS                             }, -1,                        -1,      -1,              0, G1_ACTION_LUA_FUNCTIONCALL_2 },
+
+  { G1_META_LUA_FIELDLIST,                   G1_RULE_LUA_FIELDLIST,                           MARPAESLIF_RULE_TYPE_SEQUENCE,    1, { G1_META_LUA_FIELD                            },  1,      G1_META_LUA_FIELDSEP,       0,              0, G1_ACTION_LUA_FIELDLIST },
+
+  { G1_META_LUA_ELSEIF_EXP_THEN_BLOCK,       G1_RULE_LUA_ELSEIF_EXP_THEN_BLOCK,               MARPAESLIF_RULE_TYPE_ALTERNATIVE, 4, { G1_TERMINAL_ELSEIF,
+                                                                                                                                     G1_META_LUA_EXP,
+                                                                                                                                     G1_TERMINAL_LUA_THEN,
+                                                                                                                                     G1_META_LUA_BLOCK                            }, -1,                        -1,      -1,              0, G1_ACTION_LUA_ELSEIF_EXP_THEN_BLOCK },
+
+  { G1_META_LUA_ELSEIF_EXP_THEN_BLOCK_ANY,   G1_RULE_LUA_ELSEIF_EXP_THEN_BLOCK_ANY,           MARPAESLIF_RULE_TYPE_SEQUENCE,    1, { G1_META_LUA_ELSEIF_EXP_THEN_BLOCK            },  0,                        -1,      -1,              0, G1_ACTION_LUA_ELSEIF_EXP_THEN_BLOCK },
+
+  { G1_META_LUA_ELSE_BLOCK_MAYBE,            G1_RULE_LUA_ELSE_BLOCK_MAYBE_1,                  MARPAESLIF_RULE_TYPE_ALTERNATIVE, 2, { G1_TERMINAL_ELSE,
+                                                                                                                                     G1_META_LUA_BLOCK                            },  0,                        -1,      -1,              0, G1_ACTION_LUA_ELSE_BLOCK_MAYBE_1 },
+  { G1_META_LUA_ELSE_BLOCK_MAYBE,            G1_RULE_LUA_ELSE_BLOCK_MAYBE_2,                  MARPAESLIF_RULE_TYPE_ALTERNATIVE, 0, {                                              },  0,                        -1,      -1,              0, G1_ACTION_LUA_ELSE_BLOCK_MAYBE_2 },
+
+  { G1_META_LUA_STAT,                        G1_RULE_LUA_STAT_1,                              MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_TERMINAL_SEMICOLON                        }, -1,                        -1,      -1,              0, G1_ACTION_LUA_STAT_1 },
+  { G1_META_LUA_STAT,                        G1_RULE_LUA_STAT_2,                              MARPAESLIF_RULE_TYPE_ALTERNATIVE, 3, { G1_META_LUA_VARLIST,
+                                                                                                                                     G1_TERMINAL_EQUAL,
+                                                                                                                                     G1_META_LUA_EXPLIST                          }, -1,                        -1,      -1,              0, G1_ACTION_LUA_STAT_2 },
+  { G1_META_LUA_STAT,                        G1_RULE_LUA_STAT_3,                              MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_LUA_FUNCTIONCALL                     }, -1,                        -1,      -1,              0, G1_ACTION_LUA_STAT_3 },
+  { G1_META_LUA_STAT,                        G1_RULE_LUA_STAT_4,                              MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_LUA_LABEL                            }, -1,                        -1,      -1,              0, G1_ACTION_LUA_STAT_4 },
+  { G1_META_LUA_STAT,                        G1_RULE_LUA_STAT_5,                              MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_TERMINAL_BREAK                            }, -1,                        -1,      -1,              0, G1_ACTION_LUA_STAT_5 },
+  { G1_META_LUA_STAT,                        G1_RULE_LUA_STAT_6,                              MARPAESLIF_RULE_TYPE_ALTERNATIVE, 2, { G1_TERMINAL_GOTO,
+                                                                                                                                     G1_META_LUA_NAME                             }, -1,                        -1,      -1,              0, G1_ACTION_LUA_STAT_6 },
+  { G1_META_LUA_STAT,                        G1_RULE_LUA_STAT_7,                              MARPAESLIF_RULE_TYPE_ALTERNATIVE, 3, { G1_TERMINAL_DO,
+                                                                                                                                     G1_META_LUA_BLOCK,
+                                                                                                                                     G1_TERMINAL_END                              }, -1,                        -1,      -1,              0, G1_ACTION_LUA_STAT_7 },
+  { G1_META_LUA_STAT,                        G1_RULE_LUA_STAT_8,                              MARPAESLIF_RULE_TYPE_ALTERNATIVE, 5, { G1_TERMINAL_WHILE,
+                                                                                                                                     G1_META_LUA_EXP,
+                                                                                                                                     G1_TERMINAL_DO,
+                                                                                                                                     G1_META_LUA_BLOCK,
+                                                                                                                                     G1_TERMINAL_END                              }, -1,                        -1,      -1,              0, G1_ACTION_LUA_STAT_8 },
+  { G1_META_LUA_STAT,                        G1_RULE_LUA_STAT_9,                              MARPAESLIF_RULE_TYPE_ALTERNATIVE, 4, { G1_TERMINAL_REPEAT,
+                                                                                                                                     G1_META_LUA_BLOCK,
+                                                                                                                                     G1_TERMINAL_UNTIL,
+                                                                                                                                     G1_TERMINAL_END                              }, -1,                        -1,      -1,              0, G1_ACTION_LUA_STAT_9 },
+  { G1_META_LUA_STAT,                        G1_RULE_LUA_STAT_10,                             MARPAESLIF_RULE_TYPE_ALTERNATIVE, 7, { G1_TERMINAL_IF,
+                                                                                                                                     G1_META_LUA_EXP,
+                                                                                                                                     G1_TERMINAL_LUA_THEN,
+                                                                                                                                     G1_META_LUA_BLOCK,
+                                                                                                                                     G1_META_LUA_ELSEIF_EXP_THEN_BLOCK_ANY,
+                                                                                                                                     G1_META_LUA_ELSE_BLOCK_MAYBE,
+                                                                                                                                     G1_TERMINAL_END                              }, -1,                        -1,      -1,              0, G1_ACTION_LUA_STAT_10 },
+  { G1_META_LUA_STAT,                        G1_RULE_LUA_STAT_11,                             MARPAESLIF_RULE_TYPE_ALTERNATIVE,11, { G1_TERMINAL_FOR,
+                                                                                                                                     G1_META_LUA_NAME,
+                                                                                                                                     G1_TERMINAL_EQUAL,
+                                                                                                                                     G1_META_LUA_EXP,
+                                                                                                                                     G1_TERMINAL_COMMA,
+                                                                                                                                     G1_META_LUA_EXP,
+                                                                                                                                     G1_TERMINAL_COMMA,
+                                                                                                                                     G1_META_LUA_EXP,
+                                                                                                                                     G1_TERMINAL_DO,
+                                                                                                                                     G1_META_LUA_BLOCK,
+                                                                                                                                     G1_TERMINAL_END                              }, -1,                        -1,      -1,              0, G1_ACTION_LUA_STAT_11 },
+  { G1_META_LUA_STAT,                        G1_RULE_LUA_STAT_12,                             MARPAESLIF_RULE_TYPE_ALTERNATIVE, 9, { G1_TERMINAL_FOR,
+                                                                                                                                     G1_META_LUA_NAME,
+                                                                                                                                     G1_TERMINAL_EQUAL,
+                                                                                                                                     G1_META_LUA_EXP,
+                                                                                                                                     G1_TERMINAL_COMMA,
+                                                                                                                                     G1_META_LUA_EXP,
+                                                                                                                                     G1_TERMINAL_DO,
+                                                                                                                                     G1_META_LUA_BLOCK,
+                                                                                                                                     G1_TERMINAL_END                              }, -1,                        -1,      -1,              0, G1_ACTION_LUA_STAT_12 },
+  { G1_META_LUA_STAT,                        G1_RULE_LUA_STAT_13,                             MARPAESLIF_RULE_TYPE_ALTERNATIVE, 7, { G1_TERMINAL_FOR,
+                                                                                                                                     G1_META_LUA_NAMELIST,
+                                                                                                                                     G1_TERMINAL_IN,
+                                                                                                                                     G1_META_LUA_EXPLIST,
+                                                                                                                                     G1_TERMINAL_DO,
+                                                                                                                                     G1_META_LUA_BLOCK,
+                                                                                                                                     G1_TERMINAL_END                              }, -1,                        -1,      -1,              0, G1_ACTION_LUA_STAT_13 },
+  { G1_META_LUA_STAT,                        G1_RULE_LUA_STAT_14,                             MARPAESLIF_RULE_TYPE_ALTERNATIVE, 3, { G1_TERMINAL_FUNCTION,
+                                                                                                                                     G1_META_LUA_FUNCNAME,
+                                                                                                                                     G1_META_LUA_FUNCBODY                         }, -1,                        -1,      -1,              0, G1_ACTION_LUA_STAT_14 },
+  { G1_META_LUA_STAT,                        G1_RULE_LUA_STAT_15,                             MARPAESLIF_RULE_TYPE_ALTERNATIVE, 4, { G1_TERMINAL_LOCAL,
+                                                                                                                                     G1_TERMINAL_FUNCTION,
+                                                                                                                                     G1_META_LUA_FUNCNAME,
+                                                                                                                                     G1_META_LUA_FUNCBODY                         }, -1,                        -1,      -1,              0, G1_ACTION_LUA_STAT_15 },
+  { G1_META_LUA_STAT,                        G1_RULE_LUA_STAT_16,                             MARPAESLIF_RULE_TYPE_ALTERNATIVE, 2, { G1_TERMINAL_LOCAL,
+                                                                                                                                     G1_META_LUA_NAMELIST                         }, -1,                        -1,      -1,              0, G1_ACTION_LUA_STAT_16 },
+  { G1_META_LUA_STAT,                        G1_RULE_LUA_STAT_17,                             MARPAESLIF_RULE_TYPE_ALTERNATIVE, 4, { G1_TERMINAL_LOCAL,
+                                                                                                                                     G1_META_LUA_NAMELIST,
+                                                                                                                                     G1_TERMINAL_EQUAL,
+                                                                                                                                     G1_META_LUA_EXPLIST                          }, -1,                        -1,      -1,              0, G1_ACTION_LUA_STAT_17 },
+
+  { G1_META_LUA_RETSTAT,                     G1_RULE_LUA_RETSTAT_1,                           MARPAESLIF_RULE_TYPE_ALTERNATIVE, 2, { G1_TERMINAL_RETURN,
+                                                                                                                                     G1_META_LUA_EXPLIST_MAYBE                    }, -1,                        -1,      -1,              0, G1_ACTION_LUA_RETSTAT_1 },
+  { G1_META_LUA_RETSTAT,                     G1_RULE_LUA_RETSTAT_2,                           MARPAESLIF_RULE_TYPE_ALTERNATIVE, 3, { G1_TERMINAL_RETURN,
+                                                                                                                                     G1_META_LUA_EXPLIST_MAYBE,
+                                                                                                                                     G1_TERMINAL_SEMICOLON                        }, -1,                        -1,      -1,              0, G1_ACTION_LUA_RETSTAT_2 },
+
+  { G1_META_LUA_NAME,                        G1_RULE_LUA_NAME,                                MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_TERMINAL_LUA_NAME                         }, -1,                        -1,      -1,              0, G1_ACTION_LUA_NAME },
+
+  { G1_META_LUA_ARGS,                        G1_RULE_LUA_ARGS_1,                              MARPAESLIF_RULE_TYPE_ALTERNATIVE, 3, { G1_TERMINAL_LPAREN,
+                                                                                                                                     G1_META_LUA_EXPLIST_MAYBE,
+                                                                                                                                     G1_TERMINAL_RPAREN                           }, -1,                        -1,      -1,              0, G1_ACTION_LUA_ARGS_1 },
+  { G1_META_LUA_ARGS,                        G1_RULE_LUA_ARGS_2,                              MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_LUA_TABLECONSTRUCTOR                 }, -1,                        -1,      -1,              0, G1_ACTION_LUA_ARGS_2 },
+  { G1_META_LUA_ARGS,                        G1_RULE_LUA_ARGS_3,                              MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_LUA_LITERALSTRING                    }, -1,                        -1,      -1,              0, G1_ACTION_LUA_ARGS_3 },
+
+  { G1_META_LUA_FIELD,                       G1_RULE_LUA_FIELD_1,                             MARPAESLIF_RULE_TYPE_ALTERNATIVE, 5, { G1_TERMINAL_LSQUARE,
+                                                                                                                                     G1_META_LUA_EXP,
+                                                                                                                                     G1_TERMINAL_RSQUARE,
+                                                                                                                                     G1_TERMINAL_EQUAL,
+                                                                                                                                     G1_META_LUA_EXP                              }, -1,                        -1,      -1,              0, G1_ACTION_LUA_FIELD_1 },
+  { G1_META_LUA_FIELD,                       G1_RULE_LUA_FIELD_2,                             MARPAESLIF_RULE_TYPE_ALTERNATIVE, 3, { G1_META_LUA_NAME,
+                                                                                                                                     G1_TERMINAL_EQUAL,
+                                                                                                                                     G1_META_LUA_EXP                              }, -1,                        -1,      -1,              0, G1_ACTION_LUA_FIELD_2 },
+  { G1_META_LUA_FIELD,                       G1_RULE_LUA_FIELD_3,                             MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_LUA_EXP                              }, -1,                        -1,      -1,              0, G1_ACTION_LUA_FIELD_3 },
+
+  { G1_META_LUA_FIELDSEP,                    G1_RULE_LUA_FIELDSEP_1,                          MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_TERMINAL_COMMA                            }, -1,                        -1,      -1,              0, G1_ACTION_LUA_FIELDSEP_1 },
+  { G1_META_LUA_FIELDSEP,                    G1_RULE_LUA_FIELDSEP_2,                          MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_TERMINAL_SEMICOLON                        }, -1,                        -1,      -1,              0, G1_ACTION_LUA_FIELDSEP_2 },
+
+  { G1_META_LUA_VARLIST,                     G1_RULE_LUA_VARLIST,                             MARPAESLIF_RULE_TYPE_SEQUENCE,    1, { G1_META_LUA_VAR                              },  1,         G1_TERMINAL_COMMA,       1,              0, G1_ACTION_LUA_VARLIST },
+
+  { G1_META_LUA_LABEL,                       G1_RULE_LUA_LABEL,                               MARPAESLIF_RULE_TYPE_ALTERNATIVE, 3, { G1_TERMINAL_COLONCOLON,
+                                                                                                                                     G1_META_LUA_NAME,
+                                                                                                                                     G1_TERMINAL_COLONCOLON                       }, -1,                        -1,      -1,              0, G1_ACTION_LUA_LABEL },
+
+  { G1_META_LUA_NAMELIST,                    G1_RULE_LUA_NAMELIST,                            MARPAESLIF_RULE_TYPE_SEQUENCE,    1, { G1_META_LUA_NAME                             },  1,         G1_TERMINAL_COMMA,       1,              0, G1_ACTION_LUA_NAMELIST },
+
+  { G1_META_LUA_FUNCNAME_HEADER,             G1_RULE_LUA_FUNCNAME_HEADER,                     MARPAESLIF_RULE_TYPE_SEQUENCE,    1, { G1_META_LUA_NAME                             },  1,           G1_TERMINAL_DOT,       1,              0, G1_ACTION_LUA_FUNCNAME_HEADER },
+
+  { G1_META_LUA_FUNCNAME,                    G1_RULE_LUA_FUNCNAME_1,                          MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_LUA_FUNCNAME_HEADER                  }, -1,                        -1,      -1,              0, G1_ACTION_LUA_FUNCNAME_1 },
+  { G1_META_LUA_FUNCNAME,                    G1_RULE_LUA_FUNCNAME_2,                          MARPAESLIF_RULE_TYPE_ALTERNATIVE, 3, { G1_META_LUA_FUNCNAME_HEADER,
+                                                                                                                                     G1_TERMINAL_COLON,
+                                                                                                                                     G1_META_LUA_NAME                             }, -1,                        -1,      -1,              0, G1_ACTION_LUA_FUNCNAME_2 }
+
 };
 
 #endif /* MARPAESLIF_INTERNAL_ESLIF_G1_H */
