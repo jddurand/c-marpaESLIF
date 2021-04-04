@@ -49,7 +49,6 @@ typedef enum _marpaESLIFBootstrapStackTypeEnum {
   marpaESLIFBootstrapStackTypeEnum_ALTERNATIVE_NAME,
   marpaESLIFBootstrapStackTypeEnum_ARRAY,
   marpaESLIFBootstrapStackTypeEnum_STRING,
-  marpaESLIFBootstrapStackTypeEnum_LHS,
   _marpaESLIFBootstrapStackTypeEnum_LAST
 } marpaESLIFBootstrapStackTypeEnum_t;
 
@@ -97,7 +96,6 @@ static char _MARPAESLIF_BOOTSTRAP_STACK_TYPE[_marpaESLIFBootstrapStackTypeEnum_L
 #define MARPAESLIF_BOOTSTRAP_STACK_TYPE_ALTERNATIVE_NAME                 &(_MARPAESLIF_BOOTSTRAP_STACK_TYPE[marpaESLIFBootstrapStackTypeEnum_ALTERNATIVE_NAME])
 #define MARPAESLIF_BOOTSTRAP_STACK_TYPE_ARRAY                            &(_MARPAESLIF_BOOTSTRAP_STACK_TYPE[marpaESLIFBootstrapStackTypeEnum_ARRAY])
 #define MARPAESLIF_BOOTSTRAP_STACK_TYPE_STRING                           &(_MARPAESLIF_BOOTSTRAP_STACK_TYPE[marpaESLIFBootstrapStackTypeEnum_STRING])
-#define MARPAESLIF_BOOTSTRAP_STACK_TYPE_LHS                              &(_MARPAESLIF_BOOTSTRAP_STACK_TYPE[marpaESLIFBootstrapStackTypeEnum_LHS])
 
 /* Forward declarations */
 typedef enum   marpaESLIF_bootstrap_stack_context               marpaESLIF_bootstrap_stack_context_t;
