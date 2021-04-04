@@ -1,0 +1,189 @@
+#
+# Based on perl package MarpaX::Languages::Lua::Parser
+#
+:default                               ::= action => ::ast
+
+:discard                               ::= /\s+/                            # event => whitespace$
+:discard                               ::= /--(?:\[(?!=*\[))?[^\n]*/        # event => short_comment$
+:discard                               ::= /--\[(=*)\[.*?\]\1\]/s           # event => long_comment$
+
+<lua chunk>                            ::=
+<lua chunk>                            ::= <lua stat list>
+                                         | <lua stat list> <lua laststat>
+                                         | <lua stat list> <lua laststat> ';'
+                                         | <lua laststat> ';'
+                                         | <lua laststat>
+<lua stat list>                        ::= <lua stat>
+                                         | <lua stat> ';'
+                                         | <lua stat list> <lua stat> rank => -1
+                                         | <lua stat list> <lua stat> ';'
+<lua block>                            ::= <lua chunk>
+<lua stat>                             ::= <lua varlist> '=' <lua explist>
+                                         | <lua functioncall> rank => -1
+                                         | <lua label>
+                                         | <lua keyword goto> <lua Name>
+                                         | <lua keyword do> <lua block> <lua keyword end>
+                                         | <lua keyword while> <lua exp> <lua keyword do> <lua block> <lua keyword end>
+                                         | <lua keyword repeat> <lua block> <lua keyword until> <lua exp>
+                                         | <lua keyword if> <lua exp> <lua keyword then> <lua block> <lua elseif sequence> <lua optional else block> <lua keyword end>
+                                         | <lua keyword for> <lua Name> '=' <lua exp> ',' <lua exp> ',' <lua exp> <lua keyword do> <lua block> <lua keyword end>
+                                         | <lua keyword for> <lua Name> '=' <lua exp> ',' <lua exp> <lua keyword do> <lua block> <lua keyword end>
+                                         | <lua keyword for> <lua namelist> <lua keyword in> <lua explist> <lua keyword do> <lua block> <lua keyword end>
+                                         | <lua keyword function> <lua funcname> <lua funcbody>
+                                         | <lua keyword local> <lua keyword function> <lua Name> <lua funcbody>
+                                         | <lua keyword local> <lua namelist> <lua optional namelist initialization>
+                                         | ';'
+<lua elseif sequence>                  ::=
+<lua elseif sequence>                  ::= <lua elseif sequence> <lua elseif block>
+<lua elseif block>                     ::= <lua keyword elseif> <lua exp> <lua keyword then> <lua block>
+<lua optional else block>              ::=
+<lua optional else block>              ::= <lua keyword else> <lua block>
+<lua optional namelist initialization> ::=
+<lua optional namelist initialization> ::= '=' <lua explist>
+<lua laststat>                         ::= <lua keyword return> <lua optional explist>
+                                         | <lua keyword break>
+<lua optional explist>                 ::=
+<lua optional explist>                 ::= <lua explist>
+<lua funcname>                         ::= <lua dotted name> <lua optional colon name element>
+<lua dotted name>                      ::= <lua Name>+ separator => '.' proper => 1
+<lua optional colon name element>      ::=
+<lua optional colon name element>      ::= ':' <lua Name>
+<lua varlist>                          ::= <lua var>+ separator => ',' proper => 1
+<lua var>                              ::= <lua Name>
+                                         | <lua prefixexp> '[' <lua exp> ']'
+                                         | <lua prefixexp> '.' <lua Name>
+<lua namelist>                         ::= <lua Name>+ separator => ',' proper => 1
+<lua explist>                          ::= <lua exp>+ separator => ',' proper => 1
+<lua exp>                              ::= <lua var>
+                                         | '(' <lua exp> ')' assoc => group
+                                        || <lua exp> <lua args> assoc => right
+                                        || <lua exp> ':' <lua Name> <lua args> assoc => right
+                                         | <lua keyword nil>
+                                         | <lua keyword false>
+                                         | <lua keyword true>
+                                         | <lua Number>
+                                         | <lua String>
+                                         | '...'
+                                         | <lua tableconstructor>
+                                         | <lua function>
+                                        || <lua exp> '^' <exponent> assoc => right
+                                        || '-' <lua exp>
+                                         | <lua keyword not> <lua exp>
+                                         | '#' <lua exp>
+                                         | '~' <lua exp>
+                                        || <lua exp> '*' <lua exp>
+                                         | <lua exp> '/' <lua exp>
+                                         | <lua exp> '//' <lua exp>
+                                         | <lua exp> '%' <lua exp>
+                                        || <lua exp> '+' <lua exp>
+                                         | <lua exp> '-' <lua exp>
+                                        || <lua exp> '..' <lua exp> assoc => right
+                                        || <lua exp> '<<' <lua exp>
+                                         | <lua exp> '>>' <lua exp>
+                                        || <lua exp> '&' <lua exp>
+                                        || <lua exp> '~' <lua exp>
+                                        || <lua exp> '|' <lua exp>
+                                        || <lua exp> '<' <lua exp>
+                                         | <lua exp> '<=' <lua exp>
+                                         | <lua exp> '>' <lua exp>
+                                         | <lua exp> '>=' <lua exp>
+                                         | <lua exp> '==' <lua exp> rank => 1
+                                         | <lua exp> '~=' <lua exp>
+                                        || <lua exp> <lua keyword and> <lua exp> rank => 1
+                                        || <lua exp> <lua keyword or> <lua exp>
+<exponent>                             ::= <lua var>
+                                         | '(' <lua exp> ')'
+                                        || <exponent> <lua args>
+                                        || <exponent> ':' <lua Name> <lua args>
+                                         | <lua keyword nil>
+                                         | <lua keyword false>
+                                         | <lua keyword true>
+                                         | <lua Number>
+                                         | <lua String>
+                                         | '...'
+                                         | <lua tableconstructor>
+                                         | <lua function>
+                                        || <lua keyword not> <exponent>
+                                         | '#' <exponent>
+                                         | '-' <exponent>
+<lua prefixexp>                        ::= <lua var>
+                                         | <lua functioncall>
+                                         | '(' <lua exp> ')'
+<lua functioncall>                     ::= <lua prefixexp> <lua args>
+                                         | <lua prefixexp> ':' <lua Name> <lua args>
+<lua args>                             ::= '(' <lua optional explist> ')'
+                                         | <lua tableconstructor>
+                                         | <lua String>
+<lua function>                         ::= <lua keyword function> <lua funcbody>
+<lua funcbody>                         ::= '(' <lua optional parlist> ')' <lua block> <lua keyword end>
+<lua optional parlist>                 ::=
+<lua optional parlist>                 ::= <lua namelist>
+                                         | <lua namelist> ',' '...'
+                                         | '...'
+ 
+# A lone comma is not allowed in an empty fieldlist,
+# apparently. This is why I use a dedicated rule
+# for an empty table and a '+' sequence,
+# instead of a '*' sequence.
+ 
+<lua tableconstructor>                 ::= '{' '}'
+                                         | '{' <lua fieldlist> '}'
+<lua fieldlist>                        ::= <lua field>+ separator => [,;]
+<lua field>                            ::= '[' <lua exp> ']' '=' <lua exp>
+                                         | <lua Name> '=' <lua exp>
+                                         | <lua exp>
+<lua label>                            ::= '::' <lua Name> '::'
+<lua Name>                             ::= <LUA NAME> - <LUA RESERVED KEYWORDS>
+<lua String>                           ::= /'(?:[^\\']*(?:\\.[^\\']*)*)'|"(?:[^\\"]*(?:\\.[^\\"]*)*)"|\[(=*)\[.*?\]\1\]/su
+
+# A lua number can start with '.' if the later is followed by at least one (hex) digit
+<lua Number>                           ::= /(?:\.[0-9]+|[0-9]+(?:\.[0-9]*)?)(?:[eE][+-]?[0-9]+)?/ 
+                                         | /0[xX](?:\.[a-fA-F0-9]+|[a-fA-F0-9]+(?:\.[a-fA-F0-9]*)?)(?:\.[a-fA-F0-9]*)?(?:[pP][+-]?[0-9]+)?/ 
+
+
+<lua keyword and>                        ~ 'and'
+<lua keyword break>                      ~ 'break'
+<lua keyword do>                         ~ 'do'
+<lua keyword else>                       ~ 'else'
+<lua keyword elseif>                     ~ 'elseif'
+<lua keyword end>                        ~ 'end'
+<lua keyword false>                      ~ 'false'
+<lua keyword for>                        ~ 'for'
+<lua keyword function>                   ~ 'function'
+<lua keyword if>                         ~ 'if'
+<lua keyword in>                         ~ 'in'
+<lua keyword local>                      ~ 'local'
+<lua keyword nil>                        ~ 'nil'
+<lua keyword not>                        ~ 'not'
+<lua keyword or>                         ~ 'or'
+<lua keyword repeat>                     ~ 'repeat'
+<lua keyword return>                     ~ 'return'
+<lua keyword then>                       ~ 'then'
+<lua keyword true>                       ~ 'true'
+<lua keyword until>                      ~ 'until'
+<lua keyword while>                      ~ 'while'
+<lua keyword goto>                       ~ 'goto'
+ 
+<LUA NAME>                               ~ /[a-zA-Z_][a-zA-Z_0-9]*/
+<LUA RESERVED KEYWORDS>                  ~ 'and'
+                                         | 'break'
+                                         | 'do'
+                                         | 'else'
+                                         | 'elseif'
+                                         | 'end'
+                                         | 'false'
+                                         | 'for'
+                                         | 'function'
+                                         | 'if'
+                                         | 'in'
+                                         | 'local'
+                                         | 'nil'
+                                         | 'not'
+                                         | 'or'
+                                         | 'repeat'
+                                         | 'return'
+                                         | 'then'
+                                         | 'true'
+                                         | 'until'
+                                         | 'while'
+                                         | 'goto'
