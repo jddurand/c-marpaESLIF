@@ -1082,6 +1082,9 @@ static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *mar
   marpaESLIF_stream_t              *marpaESLIF_streamp;
   marpaESLIF_pcre2_callout_enumerate_context_t enumerate_context;
   short                             modifierFoundb;
+  size_t                            slashl;
+  char                             *p;
+  char                             *q;
 
   /* Check some required parameters */
   if (pseudob) {
@@ -1209,23 +1212,46 @@ static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *mar
         goto err;
       }
     } else {
-      /* "/" + XXX + "/" (without escaping) */
+      /* "/" + XXX + "/" (escaping slashes - this is not perfect, it assumes that regexp was writen only in ASCII) */
+      p = content2descp->asciis;
+      slashl = 0;
+      while (*p != '\0') {
+        if (*p++ == '/') {
+          ++slashl;
+        }
+      }
       if (modifiers != NULL) {
         /* xxxx */
-        generatedasciis = (char *) malloc(1 + strlen(content2descp->asciis) + 1 + strlen(modifiers) + 1);
+        generatedasciis = (char *) malloc(1 + slashl + strlen(content2descp->asciis) + 1 + strlen(modifiers) + 1);
       } else {
-        generatedasciis = (char *) malloc(1 + strlen(content2descp->asciis) + 1 + 1);
+        generatedasciis = (char *) malloc(1 + slashl + strlen(content2descp->asciis) + 1 + 1);
       }
       if (MARPAESLIF_UNLIKELY(generatedasciis == NULL)) {
         MARPAESLIF_ERRORF(marpaESLIFp, "malloc failure, %s", strerror(errno));
         goto err;
       }
-      strcpy(generatedasciis, "/");
-      strcat(generatedasciis, content2descp->asciis);
-      strcat(generatedasciis, "/");
-      if (modifiers != NULL) {
-        strcat(generatedasciis, modifiers);
+
+      q = generatedasciis;
+      *q++ = '/';
+
+      p = content2descp->asciis;
+      while (*p != '\0') {
+        if (*p == '/') {
+          *q++ = '\\';
+        }
+        *q++ = *p++;
       }
+
+      *q++ = '/';
+
+      if (modifiers != NULL) {
+        p = modifiers;
+        while (*p != '\0') {
+          *q++ = *p++;
+        }
+      }
+
+      *q = '\0';
     }
     terminalp->descp = _marpaESLIF_string_newp(marpaESLIFp, "ASCII", generatedasciis, strlen(generatedasciis));
   } else {
@@ -12279,14 +12305,17 @@ static inline void _marpaESLIF_rule_createshowv(marpaESLIF_t *marpaESLIFp, marpa
     }
   }
   if ((! rulep->descautob) && (rulep->descp != NULL) && (rulep->descp->asciis != NULL)) {
-    MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, " name => ");
-    MARPAESLIF_STRING_CREATEQUOTE(quote, rulep->descp->asciis);
-    if (strlen(quote[0]) > 0) {
+    /* name adverb is allowed everywhere except with :discard */
+    if (! rulep->lhsp->discardb) {
+      MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, " name => ");
+      MARPAESLIF_STRING_CREATEQUOTE(quote, rulep->descp->asciis);
+      if (strlen(quote[0]) > 0) {
       MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, quote[0]);
-    }
-    MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, rulep->descp->asciis);
-    if (strlen(quote[1]) > 0) {
-      MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, quote[1]);
+      }
+      MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, rulep->descp->asciis);
+      if (strlen(quote[1]) > 0) {
+        MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, quote[1]);
+      }
     }
   }
   if (rulep->lhsp->discardb && rulep->discardEvents != NULL) {
