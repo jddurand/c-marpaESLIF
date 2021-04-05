@@ -3424,8 +3424,10 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
       metap->_grammar.nTerminall                       = metap->nTerminall;
       metap->_grammar.terminalArrayp                   = metap->terminalArrayShallowp;
       /* This is a safe measure, although this will NEVER be used: when trying to match a meta symbol, discard never happens */
+      /*
       metap->_grammar.nSymbolDiscardl                  = 0;
       metap->_grammar.symbolArrayDiscardp              = NULL;
+      */
       metap->_marpaESLIFGrammarLexemeClone             = *marpaESLIFGrammarp;
       metap->_marpaESLIFGrammarLexemeClone.grammarp    = &(metap->_grammar);
       metap->marpaESLIFGrammarLexemeClonep             = &(metap->_marpaESLIFGrammarLexemeClone);
@@ -4872,6 +4874,8 @@ static inline marpaESLIF_t *_marpaESLIF_newp(marpaESLIFOption_t *marpaESLIFOptio
   marpaESLIFp->longmaxcharsl = strlen(tmps);
 #endif
 
+  marpaESLIFp->marpaESLIFGrammarLuap = NULL;
+
   /* From now on we can use MARPAESLIF_ERRORF */
   marpaESLIFp->tablesp = pcre2_maketables(NULL);
   if (MARPAESLIF_UNLIKELY(marpaESLIFp->tablesp == NULL)) {
@@ -4885,6 +4889,8 @@ static inline marpaESLIF_t *_marpaESLIF_newp(marpaESLIFOption_t *marpaESLIFOptio
     MARPAESLIF_ERRORF(marpaESLIFp, "calloc failure, %s", strerror(errno));
     goto err;
   }
+
+  marpaESLIFp->marpaESLIFGrammarLuap = NULL;
   marpaESLIFp->NULLisZeroBytesb = (memcmp(p, &NULLp, sizeof(void *)) == 0);
 
   /* **************************************************************** */
@@ -5090,6 +5096,12 @@ static inline marpaESLIF_t *_marpaESLIF_newp(marpaESLIFOption_t *marpaESLIFOptio
 #endif
   marpaESLIFp->marpaESLIFGrammarp->grammarp = (marpaESLIF_grammar_t *) GENERICSTACK_GET_PTR(marpaESLIFp->marpaESLIFGrammarp->grammarStackp, 0);
 
+  /* marpaESLIFp is complete usable now: get the lua grammar */
+  marpaESLIFp->marpaESLIFGrammarLuap = _marpaESLIF_luaGrammarp(marpaESLIFp);
+  if (marpaESLIFp->marpaESLIFGrammarLuap == NULL) {
+    goto err;
+  }
+
   goto done;
   
  err:
@@ -5156,6 +5168,7 @@ void marpaESLIF_freev(marpaESLIF_t *marpaESLIFp)
 /*****************************************************************************/
 {
   if (marpaESLIFp != NULL) {
+    marpaESLIFGrammar_freev(marpaESLIFp->marpaESLIFGrammarLuap);
     marpaESLIFGrammar_freev(marpaESLIFp->marpaESLIFGrammarp);
     _marpaESLIF_terminal_freev(marpaESLIFp->anycharp);
     _marpaESLIF_terminal_freev(marpaESLIFp->newlinep);
@@ -11047,7 +11060,7 @@ static inline short _marpaESLIFValue_valueb(marpaESLIFValue_t *marpaESLIFValuep,
      - symbol  callback is ALWAYS NULL
      - nulling callback is ALWAYS NULL
 
-     This is because in that mode we have the full control: there is no discard, no event, we own the buffer, we own the matches
+     This is because in that mode we have the full control: there may be discard, though there is never be any event: we own the workflow, the buffer, the matches.
   */
 
   /* Quite vicious, but here it is: there is NO need to call any callback */

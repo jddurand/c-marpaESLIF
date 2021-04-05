@@ -251,6 +251,7 @@ struct marpaESLIF_grammar {
 /* Definition of the opaque structures */
 /* ----------------------------------- */
 struct marpaESLIF {
+  marpaESLIFGrammar_t    *marpaESLIFGrammarLuap;
   marpaESLIFGrammar_t    *marpaESLIFGrammarp;          /* ESLIF has its own grammar -; */
   marpaESLIFOption_t      marpaESLIFOption;
   marpaESLIF_terminal_t  *anycharp;                    /* internal regex for match any character */

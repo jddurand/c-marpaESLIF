@@ -160,7 +160,23 @@ Lexemes are meta-symbols that does appear as the LHS symbol anywhere within the 
   rule      ::= something
   something   ~ [\d]
 
-say that symbol C<something> at grammar level C<0> is a reference to C<something> at grammar level C<1>.
+say that symbol C<something> at grammar level C<0> is a reference to C<something> at grammar level C<1>. It is important to notice that:
+
+=over
+
+=item
+
+A lexeme match respects the C<:discard> rules at its corresponding grammar level. Nevertheless no event can happen, except the internal C<:discard[switch]>, C<:discard[on]> and C<:discard[off]> events.
+
+=item
+
+A lexeme match is successful only if the valuation starting at this symbol is successful and unambiguous
+
+=item
+
+The result of a lexeme match is always of type C<MARPAESLIF_VALUE_TYPE_ARRAY> pointing to raw bytes that matched, these raw bytes will include discarded data.
+
+=back
 
 In contrast a terminal is an explicit quoted string, character class or regular expression, e.g.:
 
