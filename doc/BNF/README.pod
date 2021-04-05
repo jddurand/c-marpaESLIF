@@ -444,14 +444,14 @@ The grammar's C<symbol-action> can be overwritten by setting such entry in C<:le
 A lexeme or a terminal can have an C<if-action> setting, that applies I<only> when the lexeme or a terminal is discovered via the automatic scan. The C<if-action> must refer to a callback in user-land's recognizer interface or in embedded lua interpreter, and must return a boolean:
 
   :lexeme   ::= symbolname1 if-action => Custom_action1
-  :lexeme   ::= symbolname2 if-action => lua::->Custom_action2
+  :lexeme   ::= symbolname2 if-action => ::lua->Custom_action2
 
 Please note that the C<if-action> will always be called with an argument of type ARRAY (i.e. up to the implementation to convert that to a multibyte string, if any).
 
 A lexeme or a terminal can have a C<regex-action> setting, that always applies, regardless if the parsing is done using the automatic scan or not. C<regex-action> is a transversal grammar setting; and can be set only via C<::default> meta rule:
 
   ::default ::= regex-action => Custom_regexaction1
-  ::default   ~ regex-action => lua::->Custom_regexaction2
+  ::default   ~ regex-action => ::lua->Custom_regexaction2
 
 If a regular expression has a callout in the form C<(?CX)> (where C<X> is a number> or C<(?C"string")>, the C<regex-action> is called with a I<block> argument. This <block> argument is a hash in perl, a table in lua, and an I<ESLIFRegexCallout> instance in java.
 
@@ -473,7 +473,7 @@ The grammar, in C<:default> meta rule, can have an I<event action> callback that
 
 or
 
-  :default event-action => lua::->Custom_action2
+  :default event-action => ::lua->Custom_action2
 
   <luascript>
 
