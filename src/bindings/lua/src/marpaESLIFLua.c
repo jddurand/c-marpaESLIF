@@ -3865,7 +3865,7 @@ static short marpaESLIFLua_eventCallbackb(void *userDatavp, marpaESLIFRecognizer
                               MARPAESLIFLUA_STORE_INTEGER(L, "type", eventArrayp[i].type);          /* Stack: function, {}, {"type" => type} */
                               MARPAESLIFLUA_STORE_ASCIISTRING(L, "symbol", eventArrayp[i].symbols); /* Stack: function, {}, {"type" => type, "symbol" => symbol} */
                               MARPAESLIFLUA_STORE_ASCIISTRING(L, "event", eventArrayp[i].events);   /* Stack: function, {}, {"type" => type, "symbol" => symbol, "event" => event} */
-                              if (! marpaESLIFLua_lua_seti(L, -2, (lua_Integer) i)) goto err;       /* Stack: function, {i => {"type" => type, "symbol" => symbol, "event" => event}} */
+                              if (! marpaESLIFLua_lua_seti(L, -2, (lua_Integer) (i + 1))) goto err; /* Stack: function, {i => {"type" => type, "symbol" => symbol, "event" => event}} */
                             }
                           },
                           &tmpi
