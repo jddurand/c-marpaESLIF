@@ -703,22 +703,21 @@ marpaESLIF BNF can be expressed in itself:
    * Meta-grammar settings:
    * **********************
    */
-  :start                         ::= statements
-  :desc                          ::= 'G1'
-   # whitespace
-  :discard                       ::= /[\s]+/
-   # perl comment
-  :discard                       ::= /(?:(?:#)(?:[^\n]*)(?:\n|\z))/u
-   # C++ comment
-  :discard                       ::= /(?:(?:(?:\/\/)(?:[^\n]*)(?:\n|\z))|(?:(?:\/\*)(?:(?:[^\*]+|\*(?!\/))*)(?:\*\/)))/u
+  :start ::= <statements>
+  :desc    ::= 'G1'
+  :default ::=
+    action => ::concat
+    symbol-action => ::transfer
+    latm => 1
+    default-encoding => ASCII
   
   /*
-   * ***************
-   * Event settings:
-   * ***************
+   * ****************
+   * Symbol settings:
+   * ****************
    */
+  event :discard[on]=on = nulled <discard on>
   event :discard[off]=on = nulled <discard off>
-  event :discard[on]=on  = nulled <discard on>
   
   /*
    * ******
@@ -789,7 +788,6 @@ marpaESLIF BNF can be expressed in itself:
                                    | <naming>
                                    | <null adverb>
                                    | <symbol action>
-                                   | <free action>
                                    | <event specification>
                                    | <hide separator specification>
                                    | <if action>
@@ -831,9 +829,6 @@ marpaESLIF BNF can be expressed in itself:
                                    | 'symbol-action' /=>|\x{21D2}/u <quoted string literal>
   <if action>                    ::= 'if-action' /=>|\x{21D2}/u <if action name>
   <regex action>                 ::= 'regex-action' /=>|\x{21D2}/u <regex action name>
-  <event action>                 ::= 'event-action' /=>|\x{21D2}/u <event action name>
-  <default encoding>             ::= 'default-encoding' /=>|\x{21D2}/u <default encoding name>
-  <fallback encoding>            ::= 'fallback-encoding' /=>|\x{21D2}/u <fallback encoding name>
   <alternative name>             ::= <standard name>
                                    | <quoted string literal>
   <event name>                   ::= <restricted ascii graph name>
@@ -859,6 +854,7 @@ marpaESLIF BNF can be expressed in itself:
                                    | <quoted string>
                                    | ':eof'
                                    | ':eol'
+                                   | ':sol'
   <symbol>                       ::= <symbol name>
   <symbol name>                  ::= <bare name>
                                    | <bracketed name>
@@ -877,7 +873,6 @@ marpaESLIF BNF can be expressed in itself:
                                    | '::row'
                                    | '::table'
                                    | '::ast'
-  <free name>                    ::= <restricted ascii graph name>
   <symbol action name>           ::= <restricted ascii graph name>
                                    | '::transfer'
                                    | '::undef'
@@ -887,14 +882,12 @@ marpaESLIF BNF can be expressed in itself:
                                    | <lua action name>
                                    | '::true'
                                    | '::false'
+                                   | '::json'
+                                   | '::jsonf'
   <if action name>               ::= <restricted ascii graph name>
                                    | <lua action name>
   <regex action name>            ::= <restricted ascii graph name>
                                    | <lua action name>
-  <event action name>            ::= <restricted ascii graph name>
-                                   | <lua action name>
-  <default encoding name>        ::= <graph ascii name>
-  <fallback encoding name>       ::= <graph ascii name>
   <quantifier>                   ::= '*'
                                    | '+'
   <signed integer>               ::= /[+-]?\d+/
@@ -902,10 +895,13 @@ marpaESLIF BNF can be expressed in itself:
   <grammar reference>            ::= <quoted string>
                                    | <signed integer>
                                    | '=' <unsigned integer>
+  :discard                       ::= /[\s]+/
+  :discard                       ::= /(?:(?:#)(?:[^\n]*)(?:\n|\z))/u
+  :discard                       ::= /(?:(?:(?:\/\/)(?:[^\n]*)(?:\n|\z))|(?:(?:\/\*)(?:(?:[^\*]+|\*(?!\/))*)(?:\*\/)))/u
   <string literal>               ::= <string literal unit>+ proper => 1
   <string literal unit>          ::= '::u8"' <discard off> <string literal inside any> '"' <discard on>
-  <discard off>                  ::=
   <discard on>                   ::=
+  <discard off>                  ::=
   <string literal inside any>    ::= <string literal inside>* proper => 1
   <string literal inside>        ::= /[^"\\\n]/
                                    | '\\' /["'?\\abfnrtve]/
@@ -914,31 +910,58 @@ marpaESLIF BNF can be expressed in itself:
                                    | '\\' /U\{[a-fA-F0-9]{8}\}/
   <lua script statement>         ::= '<luascript>' <discard off> <lua script source> '</luascript>' <discard on>
   <lua script source>            ::= /[\s\S]/*
+  <event action>                 ::= 'event-action' /=>|\x{21D2}/u <event action name>
+  <event action name>            ::= <restricted ascii graph name>
+                                   | <lua action name>
+  <default encoding>             ::= 'default-encoding' /=>|\x{21D2}/u <default encoding name>
+  <default encoding name>        ::= <graph ascii name>
+  <fallback encoding>            ::= 'fallback-encoding' /=>|\x{21D2}/u <fallback encoding name>
+  <fallback encoding name>       ::= <graph ascii name>
   
-  <op declare any grammar>         ~ /:\[[\d]+\]:=/
-  <op declare top grammar>         ~ '::='
-  <op declare lex grammar>         ~ '~'
-  <op loosen>                      ~ '||'
-  <op equal priority>              ~ '|'
-  <true>                           ~ '1'
-  <false>                          ~ '0'
-  <word character>                 ~ /[\w]/
-  <one or more word characters>    ~ <word character>+ proper => 1
-  <zero or more word characters>   ~ <word character>* proper => 1
-  <restricted ascii graph name>    ~ /[!#$%&*+.\/;?\[\\\]^_`~A-Za-z0-9]+/
-  <graph ascii name>               ~ /[[:graph:]]+/
-  <lua action name>                ~ /::lua->[a-zA-Z_][a-zA-Z0-9_]*/
-  <bare name>                      ~ <word character>+ proper => 1
-  <standard name>                  ~ /[a-zA-Z]/ <zero or more word characters>
-  <bracketed name>                 ~ '<' <bracketed name string> '>'
-  <bracketed name string>          ~ /[\s\w]+/
-  <quoted string>                  ~ /(?:(?|(?:')(?:[^\\']*(?:\\.[^\\']*)*)(?:')|(?:")(?:[^\\"]*(?:\\.[^\\"]*)*)(?:")|(?:\x{201C})(?:[^\\\x{201D}]*(?:\\.[^\\\x{201D}]*)*)(?:\x{201D})))/su
-                                   | /(?:(?|(?:')(?:[^\\']*(?:\\.[^\\']*)*)(?:')|(?:")(?:[^\\"]*(?:\\.[^\\"]*)*)(?:")|(?:\x{201C})(?:[^\\\x{201D}]*(?:\\.[^\\\x{201D}]*)*)(?:\x{201D})))/su ':' /ic?/
-  <quoted string literal>          ~ /(?:(?|(?:')(?:[^\\']*(?:\\.[^\\']*)*)(?:')|(?:")(?:[^\\"]*(?:\\.[^\\"]*)*)(?:")|(?:\x{201C})(?:[^\\\x{201D}]*(?:\\.[^\\\x{201D}]*)*)(?:\x{201D})))/su
-  <character class>                ~ /((?:\[(?:(?>[^\[\]]+)|(?-1))*\]))/
-                                   | /((?:\[(?:(?>[^\[\]]+)|(?-1))*\]))/ ':' /[eijmnsxDJUuaNbcA]+/
-  <regular expression>             ~ /(?:(?|(?:\/(?![*\/]))(?:[^\\\/]*(?:\\.[^\\\/]*)*)(?:\/)))/su
-                                   | /(?:(?|(?:\/(?![*\/]))(?:[^\\\/]*(?:\\.[^\\\/]*)*)(?:\/)))/su /[eijmnsxDJUuaNbcA]+/
+  /*
+   * **********************
+   * Meta-grammar settings:
+   * **********************
+   */
+  :start ~ <op declare any grammar>
+  :desc ~ 'L0'
+  :default ~ action => ::concat symbol-action => ::transfer latm => 1 default-encoding => ASCII
+  
+  /*
+   * ****************
+   * Symbol settings:
+   * ****************
+   */
+  
+  /*
+   * ******
+   * Rules:
+   * ******
+   */
+  <op declare any grammar> ~ /:\[[\d]+\]:=/
+  <op declare top grammar> ~ '::='
+  <op declare lex grammar> ~ '~'
+  <op loosen> ~ '||'
+  <op equal priority> ~ '|'
+  <true> ~ '1'
+  <false> ~ '0'
+  <word character> ~ /[\w]/
+  <one or more word characters> ~ <word character>+ proper => 1
+  <zero or more word characters> ~ <word character>* proper => 1
+  <restricted ascii graph name> ~ /[!#$%&*+.\/;?\[\\\]^_`~A-Za-z0-9]+/
+  <lua action name> ~ /::lua->[a-zA-Z_][a-zA-Z0-9_]*/
+  <bare name> ~ <word character>+ proper => 1
+  <standard name> ~ /[a-zA-Z]/ <zero or more word characters>
+  <bracketed name> ~ '<' <bracketed name string> '>'
+  <bracketed name string> ~ /[\s\w]+/
+  <quoted string> ~ /'(?:[^\\']*(?:\\.[^\\']*)*)'|"(?:[^\\"]*(?:\\.[^\\"]*)*)"|\x{201C}(?:[^\\\x{201D}]*(?:\\.[^\\\x{201D}]*)*)\x{201D}/su
+  <quoted string> ~ /'(?:[^\\']*(?:\\.[^\\']*)*)'|"(?:[^\\"]*(?:\\.[^\\"]*)*)"|\x{201C}(?:[^\\\x{201D}]*(?:\\.[^\\\x{201D}]*)*)\x{201D}/su ':' /ic?/
+  <quoted string literal> ~ /'(?:[^\\']*(?:\\.[^\\']*)*)'|"(?:[^\\"]*(?:\\.[^\\"]*)*)"|\x{201C}(?:[^\\\x{201D}]*(?:\\.[^\\\x{201D}]*)*)\x{201D}/su
+  <character class> ~ /((?:\[(?:(?>[^\[\]]+)|(?-1))*\]))/
+  <character class> ~ /((?:\[(?:(?>[^\[\]]+)|(?-1))*\]))/ ':' /[eijmnsxDJUuaNbcA]+/
+  <regular expression> ~ /\/(?![*\/])(?:[^\\\/]*(?:\\.[^\\\/]*)*)\//su
+  <regular expression> ~ /\/(?![*\/])(?:[^\\\/]*(?:\\.[^\\\/]*)*)\//su /[eijmnsxDJUuaNbcA]+/ name => 'regular expression 2'
+  <graph ascii name> ~ /[[:graph:]]+/ name => 'graph ascii name'
 
 =head1 NOTES
 
