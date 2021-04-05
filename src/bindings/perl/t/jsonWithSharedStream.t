@@ -16,7 +16,7 @@ sub isWithDisableThreshold { 0 }
 sub isWithExhaustion       { 0 }
 sub isWithNewline          { 1 }
 sub isWithTrack            { 1 }
-sub event_action           { my ($self) = shift; $log->infof('Events: %s', \@_); 1 }
+sub event_action           { my ($self) = shift; $log->debugf('Events: %s', \@_); 1 }
 
 package MyValueInterface;
 use strict;
@@ -245,11 +245,11 @@ sub doparse {
     while ($ok && $marpaESLIFRecognizer->isCanContinue()) {
         my $events = $marpaESLIFRecognizer->events();
         my $progress = $marpaESLIFRecognizer->progress(-1, -1);
-        $log->infof('Progress: %s', $progress);
+        $log->debugf('Progress: %s', $progress);
         my $latestEarleySetId = $marpaESLIFRecognizer->latestEarleySetId();
-        $log->infof('Latest Earley Set Id: %d', $latestEarleySetId);
+        $log->debugf('Latest Earley Set Id: %d', $latestEarleySetId);
         my $earleme = $marpaESLIFRecognizer->earleme($latestEarleySetId);
-        $log->infof('Earleme: %d', $earleme);
+        $log->debugf('Earleme: %d', $earleme);
         for (my $k = 0; $k < scalar(@{$events}); $k++) {
             my $event = $events->[$k];
             next unless defined($event);
@@ -257,7 +257,7 @@ sub doparse {
             if ($event->{event} eq 'lstring$') {
                 my $pauses = $marpaESLIFRecognizer->lexemeLastPause('lstring');
                 my ($line, $column) = $marpaESLIFRecognizer->location();
-                $log->infof("Got lstring: %s; length=%ld, current position is {line, column} = {%ld, %ld}", $pauses, length($pauses), $line, $column);
+                $log->debugf("Got lstring: %s; length=%ld, current position is {line, column} = {%ld, %ld}", $pauses, length($pauses), $line, $column);
             }
             elsif ($event->{event} eq '^LCURLY') {
                 my $marpaESLIFRecognizerObject;
@@ -270,18 +270,18 @@ sub doparse {
                 # Set exhausted flag since this grammar is very likely to exit when data remains
                 $marpaESLIFRecognizerObject->set_exhausted_flag(1);
                 # Force read of the LCURLY lexeme
-                $log->info("LCURLY lexeme read");
+                $log->debug("LCURLY lexeme read");
                 $marpaESLIFRecognizerObject->lexemeRead('LCURLY', '{', 1); # In UTF-8 '{' is one byte
                 my $value = doparse($marpaESLIFRecognizerObject, undef, $recursionLevel + 1);
                 # Inject object's value
-                $log->infof("Injecting value from sub grammar: %s", $value);
-                $log->info("OBJECT_FROM_INNER_GRAMMAR lexeme read");
+                $log->debugf("Injecting value from sub grammar: %s", $value);
+                $log->debug("OBJECT_FROM_INNER_GRAMMAR lexeme read");
                 $marpaESLIFRecognizer->lexemeRead('OBJECT_FROM_INNER_GRAMMAR', $value, 0); # Stream moved synchroneously
                 $marpaESLIFRecognizerObject->unshare();
             }
             elsif ($event->{event} eq '^RCURLY') {
                 # Force read of the RCURLY lexeme
-                $log->info("RCURLY lexeme read");
+                $log->debug("RCURLY lexeme read");
                 $marpaESLIFRecognizer->lexemeRead('RCURLY', '}', 1); # In UTF-8 '}' is one byte
                 goto valuation;
             } elsif ($event->{event} eq '^value' || $event->{event} eq 'value$') {
@@ -317,7 +317,7 @@ sub doparse {
             die "Ambiguous grammar";
         }
         $rc = $valueInterface->getResult();
-        $log->infof("[%d] Value: %s", $recursionLevel, $rc);
+        $log->debugf("[%d] Value: %s", $recursionLevel, $rc);
     }
     goto done;
 
@@ -330,7 +330,7 @@ sub doparse {
         # Get last discarded data
         #
         my $discardLast = $marpaESLIFRecognizer->discardLast;
-        $log->infof("[%d] Last discarded data: %s", $recursionLevel, $discardLast);
+        $log->debugf("[%d] Last discarded data: %s", $recursionLevel, $discardLast);
     }
     return $rc;
 }
