@@ -697,7 +697,7 @@ my %RULE_PROPERTIES_BY_LEVEL = (
                  separatorId              => -1,
                  sequence                 => 0,
                  propertyBitSet           => MarpaX::ESLIF::Rule::PropertyBitSet->MARPAESLIF_RULE_IS_PRODUCTIVE,
-                 show                     => "<comment> ::= /(?:(?:(?:\\/\\/)(?:[^\\n]*)(?:\\n|\\z))|(?:(?:\\/\\*)(?:(?:[^\\*]+|\\*(?!\\/))*)(?:\\*\\/)))/u"}
+                 show                     => q{<comment> ::= /(?:(?:(?:\\\\/\\\\/)(?:[^\\n]*)(?:\\n|\\z))|(?:(?:\\\\/\\*)(?:(?:[^\\*]+|\\*(?!\\\\/))*)(?:\\*\\\\/)))/u}}
     },
     '1' => {
         '0' => { action                   => undef,
@@ -1256,7 +1256,7 @@ my %SYMBOL_PROPERTIES_BY_LEVEL = (
                  start => 0,
                  top => 0,
                  type => MarpaX::ESLIF::Symbol::Type->MARPAESLIF_SYMBOLTYPE_META},
-        '18' => {description => "/(?:(?:(?:\\/\\/)(?:[^\\n]*)(?:\\n|\\z))|(?:(?:\\/\\*)(?:(?:[^\\*]+|\\*(?!\\/))*)(?:\\*\\/)))/u",
+        '18' => {description => q{/(?:(?:(?:\\\\/\\\\/)(?:[^\\n]*)(?:\\n|\\z))|(?:(?:\\\\/\\*)(?:(?:[^\\*]+|\\*(?!\\\\/))*)(?:\\*\\\\/)))/u},
                  discard => 0,
                  discardEvent => undef,
                  discardEventInitialState => 1,
