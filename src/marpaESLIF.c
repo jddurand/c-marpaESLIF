@@ -191,7 +191,7 @@ static marpaESLIFValueResult_t marpaESLIFValueResultLazy = {
 #define MARPAESLIF_CHECK_MATCH_RESULT(funcs, marpaESLIFRecognizerp, inputs, symbolp, rci, marpaESLIFValueResult) do { \
     _MARPAESLIF_CHECK_MATCH_RESULT(funcs, marpaESLIFRecognizerp, symbolp, rci, marpaESLIFValueResult); \
     if (rci == MARPAESLIF_MATCH_OK) {                                   \
-      MARPAESLIF_HEXDUMPV(marpaESLIFRecognizerp, "Match dump for ", symbolp->descp->asciis, marpaESLIFValueResult.u.a.p, marpaESLIFValueResult.u.a.sizel, 1); \
+      MARPAESLIFRECOGNIZER_HEXDUMPV(funcs, marpaESLIFRecognizerp, "Match dump for ", symbolp->descp->asciis, marpaESLIFValueResult.u.a.p, marpaESLIFValueResult.u.a.sizel, 1); \
     }                                                                   \
   } while (0)
 #else
@@ -1326,7 +1326,7 @@ static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *mar
       goto err;
     }
 #ifndef MARPAESLIF_NTRACE
-    MARPAESLIF_HEXDUMPV(marpaESLIFRecognizerp, "String conversion to regexp for ", terminalp->descp->asciis, utf8s, utf8l, 1 /* traceb */);
+    MARPAESLIFRECOGNIZER_HEXDUMPV(funcs, marpaESLIFRecognizerp, "String conversion to regexp for ", terminalp->descp->asciis, utf8s, utf8l, 1 /* traceb */);
 #endif
 
     /* Please note that at the very very early startup, when we create marpaESLIFp, there is NO marpaESLIFp->anycharp yet! */
@@ -1391,6 +1391,7 @@ static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *mar
             } else {
               MARPAESLIF_ERRORF(marpaESLIFp, "Impossible first codepoint 0x%02lx, should be 0x201c, \"'\" or '\"'", (unsigned long) codepointi);
             }
+            MARPAESLIFRECOGNIZER_HEXDUMPV(funcs, marpaESLIFRecognizerp, "Dump", "", matchedp, matchedl, 0 /* traceb */);
             errno = EINVAL;
             goto err;
           }
@@ -1720,7 +1721,7 @@ static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *mar
       pcre2_get_error_message(pcre2Errornumberi, pcre2ErrorBuffer, sizeof(pcre2ErrorBuffer));
       MARPAESLIF_ERRORF(marpaESLIFp, "%s: pcre2_compile failure at offset %ld: %s", terminalp->descp->asciis, (unsigned long) pcre2ErrorOffsetl, pcre2ErrorBuffer);
       if (marpaESLIFRecognizerp != NULL) {
-        MARPAESLIF_HEXDUMPV(marpaESLIFRecognizerp, "Dump of PCRE2 pattern", " as an UTF-8 sequence of bytes", utf8s, utf8l, 0 /* traceb */);
+        MARPAESLIFRECOGNIZER_HEXDUMPV(funcs, marpaESLIFRecognizerp, "Dump of PCRE2 pattern", " as an UTF-8 sequence of bytes", utf8s, utf8l, 0 /* traceb */);
       }
       goto err;
     }
@@ -4799,6 +4800,7 @@ static inline marpaESLIF_t *_marpaESLIF_newp(marpaESLIFOption_t *marpaESLIFOptio
     goto err;
   }
 
+  marpaESLIFp->marpaESLIFGrammarLuap     = NULL;
   marpaESLIFp->marpaESLIFOption          = *marpaESLIFOptionp;
   marpaESLIFp->marpaESLIFGrammarp        = NULL;
   marpaESLIFp->anycharp                  = NULL;
@@ -4875,7 +4877,6 @@ static inline marpaESLIF_t *_marpaESLIF_newp(marpaESLIFOption_t *marpaESLIFOptio
   marpaESLIFp->longmaxcharsl = strlen(tmps);
 #endif
 
-  marpaESLIFp->marpaESLIFGrammarLuap = NULL;
 
   /* From now on we can use MARPAESLIF_ERRORF */
   marpaESLIFp->tablesp = pcre2_maketables(NULL);
@@ -4891,7 +4892,6 @@ static inline marpaESLIF_t *_marpaESLIF_newp(marpaESLIFOption_t *marpaESLIFOptio
     goto err;
   }
 
-  marpaESLIFp->marpaESLIFGrammarLuap = NULL;
   marpaESLIFp->NULLisZeroBytesb = (memcmp(p, &NULLp, sizeof(void *)) == 0);
 
   /* **************************************************************** */
@@ -6171,11 +6171,11 @@ static inline char *_marpaESLIF_charconvb(marpaESLIF_t *marpaESLIFp, char *toEnc
   if ((tconvp != NULL) && (errno == EILSEQ) && (inbuforigp != NULL) && (inleftorigl > 0) && (! tconvsilentb)) {
     char                   *fromCodes = tconv_fromcode(tconvp);
     size_t                  consumedl = inleftorigl - inleftl;
-    /* We have to fake a recognizer - this is how the MARPAESLIF_HEXDUMPV() macros works */
+    /* We have to fake a recognizer - this is how the MARPAESLIFRECOGNIZER_HEXDUMPV() macros works */
     /* Take care, I had stack overflow because of these variables that are on the stack... */
     marpaESLIFRecognizer_t *marpaESLIFRecognizerp;
 
-    /* Particularly dangerous: the MARPAESLIF_HEXDUMPV has to use NOTHING ELSE but marpaESLIFRecognizerp->marpaESLIFp (and this is the case -;) */
+    /* Particularly dangerous: the MARPAESLIFRECOGNIZER_HEXDUMPV has to use NOTHING ELSE but marpaESLIFRecognizerp->marpaESLIFp (and this is the case -;) */
     marpaESLIFRecognizerp = (marpaESLIFRecognizer_t *)malloc(sizeof(marpaESLIFRecognizer_t));
     if (marpaESLIFRecognizerp != NULL) {
 
@@ -6193,12 +6193,13 @@ static inline char *_marpaESLIF_charconvb(marpaESLIF_t *marpaESLIFp, char *toEnc
 	    dumps = inbuforigp;
 	    dumpl = consumedl;
 	  }
-	  MARPAESLIF_HEXDUMPV(marpaESLIFRecognizerp,
-			      (fromCodes != NULL) ? fromCodes : "", /* In theory, it is impossible to have fromCodes == NULL here */
-			      " data before the failure",
-			      dumps,
-			      dumpl,
-			      0 /* traceb */);
+	  MARPAESLIFRECOGNIZER_HEXDUMPV(funcs,
+                                        marpaESLIFRecognizerp,
+                                        (fromCodes != NULL) ? fromCodes : "", /* In theory, it is impossible to have fromCodes == NULL here */
+                                        " data before the failure",
+                                        dumps,
+                                        dumpl,
+                                        0 /* traceb */);
 	}
 	MARPAESLIF_ERROR(marpaESLIFp, "<<<<<< CHARACTER FAILURE HERE: >>>>>>");
 	/* If there is some information after, show it */
@@ -6208,12 +6209,13 @@ static inline char *_marpaESLIF_charconvb(marpaESLIF_t *marpaESLIFp, char *toEnc
 
 	  dumps = inbuforigp + consumedl;
 	  dumpl = inleftl > 128 ? 128 : inleftl;
-	  MARPAESLIF_HEXDUMPV(marpaESLIFRecognizerp,
-			      (fromCodes != NULL) ? fromCodes : "", /* In theory, it is impossible to have fromCodes == NULL here */
-			      " data after the failure",
-			      dumps,
-			      dumpl,
-			      0 /* traceb */);
+	  MARPAESLIFRECOGNIZER_HEXDUMPV(funcs,
+                                        marpaESLIFRecognizerp,
+                                        (fromCodes != NULL) ? fromCodes : "", /* In theory, it is impossible to have fromCodes == NULL here */
+                                        " data after the failure",
+                                        dumps,
+                                        dumpl,
+                                        0 /* traceb */);
 	}
 
 	free(marpaESLIFRecognizerp);
@@ -8374,12 +8376,13 @@ static inline short _marpaESLIFRecognizer_resume_oneb(marpaESLIFRecognizer_t *ma
           dumps = marpaESLIF_streamp->buffers;
           dumpl = marpaESLIF_streamp->inputs - marpaESLIF_streamp->buffers;
         }
-        MARPAESLIF_HEXDUMPV(marpaESLIFRecognizerp,
-                            "",
-                            marpaESLIF_streamp->utfb ? "UTF-8 converted data before the failure" : "Raw data before the failure",
-                            dumps,
-                            dumpl,
-                            0 /* traceb */);
+        MARPAESLIFRECOGNIZER_HEXDUMPV(funcs,
+                                      marpaESLIFRecognizerp,
+                                      "",
+                                      marpaESLIF_streamp->utfb ? "UTF-8 converted data before the failure" : "Raw data before the failure",
+                                      dumps,
+                                      dumpl,
+                                      0 /* traceb */);
       }
       if (marpaESLIF_streamp->utfb && marpaESLIFRecognizerp->marpaESLIFRecognizerOption.newlineb) {
         MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "<<<<<< RECOGNIZER FAILURE AT LINE No %ld COLUMN No %ld, HERE: >>>>>>", (unsigned long) marpaESLIF_streamp->linel, (unsigned long) marpaESLIF_streamp->columnl);
@@ -8393,12 +8396,13 @@ static inline short _marpaESLIFRecognizer_resume_oneb(marpaESLIFRecognizer_t *ma
 
         dumps = marpaESLIF_streamp->inputs;
         dumpl = marpaESLIF_streamp->inputl > 128 ? 128 : marpaESLIF_streamp->inputl;
-        MARPAESLIF_HEXDUMPV(marpaESLIFRecognizerp,
-                            "",
-                            marpaESLIF_streamp->utfb ? "UTF-8 converted data after the failure" : "Raw data after the failure",
-                            dumps,
-                            dumpl,
-                            0 /* traceb */);
+        MARPAESLIFRECOGNIZER_HEXDUMPV(funcs,
+                                      marpaESLIFRecognizerp,
+                                      "",
+                                      marpaESLIF_streamp->utfb ? "UTF-8 converted data after the failure" : "Raw data after the failure",
+                                      dumps,
+                                      dumpl,
+                                      0 /* traceb */);
       }
     }
   }

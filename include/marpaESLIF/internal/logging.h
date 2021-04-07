@@ -59,7 +59,7 @@
 #ifndef MARPAESLIF_HEXDUMP_COLS
 #define MARPAESLIF_HEXDUMP_COLS 16
 #endif
-#define MARPAESLIF_HEXDUMPV(marpaESLIFRecognizerp, headers, asciidescs, p, lengthl, traceb) do { \
+#define MARPAESLIFRECOGNIZER_HEXDUMPV(funcs, marpaESLIFRecognizerp, headers, asciidescs, p, lengthl, traceb) do { \
     marpaESLIFRecognizer_t       *_marpaESLIFRecognizerp = (marpaESLIFRecognizer_t *) (marpaESLIFRecognizerp); \
     marpaESLIF_t                 *_marpaESLIFp = _marpaESLIFRecognizerp->marpaESLIFp; \
     marpaESLIF_stringGenerator_t  _marpaESLIF_stringGenerator;          \
