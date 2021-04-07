@@ -658,6 +658,7 @@ Returns a true value on failure, a false value on failure. C<*symbolipp> is neve
     short                        discardEventb;          /* Discard event initial state: 0: off, 1: on - copy of :discard's rule value */
     int                          lookupResolvedLeveli;   /* Resolved grammar level */
     int                          priorityi;              /* Symbol priority */
+    short                        verboseb;               /* Symbol is verbose */
     marpaESLIFAction_t          *nullableActionp;        /* Nullable semantic */
     int                          propertyBitSet;
     int                          eventBitSet;

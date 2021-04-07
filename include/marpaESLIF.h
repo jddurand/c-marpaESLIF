@@ -480,6 +480,7 @@ typedef struct marpaESLIFSymbolProperty {
   int                          eventBitSet;
   marpaESLIFAction_t          *symbolActionp;          /* Symbol value specific action */
   marpaESLIFAction_t          *ifActionp;              /* Symbol recognizer if action */
+  short                        verboseb;               /* Symbol is verbose */
 } marpaESLIFSymbolProperty_t;
 
 /* Whenever marpaESLIF fails to parse exactly a JSON number it will call the proposal callback if defined. */

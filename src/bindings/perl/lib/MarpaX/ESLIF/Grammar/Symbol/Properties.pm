@@ -97,7 +97,8 @@ sub new {
         'propertyBitSet'             => $args{propertyBitSet},
         'eventBitSet'                => $args{eventBitSet},
         'symbolAction'               => $args{symbolAction},
-        'ifAction'                   => $args{ifAction}
+        'ifAction'                   => $args{ifAction},
+        'verbose'                    => $args{verbose}
     };
 
     return bless $self, $pkg
@@ -557,6 +558,30 @@ sub getIfAction {
     my ($self) = @_;
 
     return $self->{ifAction}
+}
+
+=head2 $self->isVerbose
+
+Returns if the symbol is verbose
+
+=cut
+
+sub isVerbose {
+    my ($self) = @_;
+
+    return $self->{verbose}
+}
+
+=head2 $self->getVerbose
+
+Returns if the symbol is verbose
+
+Alias to isVerbose()
+
+=cut
+
+sub getVerbose {
+    goto &isVerbose
 }
 
 =head1 SEE ALSO

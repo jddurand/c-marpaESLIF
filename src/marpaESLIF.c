@@ -4531,6 +4531,7 @@ static inline marpaESLIF_symbol_t *_marpaESLIF_symbol_newp(marpaESLIF_t *marpaES
   symbolp->marpaESLIFSymbolOption = marpaESLIFSymbolOptionp != NULL ? *marpaESLIFSymbolOptionp : marpaESLIFSymbolOption_default_template;
   symbolp->contentIsShallowb      = 0;
   symbolp->marpaESLIFGrammarp     = NULL; /* Shallow pointer, set by marpaESLIFSymbol_meta_newp() only */
+  symbolp->verboseb               = 0; /* Default verbose is 0 */
 
   symbolp->nullableRuleStackp = &(symbolp->_nullableRuleStack);
   GENERICSTACK_INIT(symbolp->nullableRuleStackp);
@@ -5612,7 +5613,6 @@ static inline short _marpaESLIFRecognizer_meta_matcherb(marpaESLIFRecognizer_t *
   marpaESLIFRecognizerOption_t    marpaESLIFRecognizerOption = marpaESLIFRecognizerp->marpaESLIFRecognizerOption; /* This is an internal recognizer */
   marpaESLIFValueOption_t         marpaESLIFValueOption      = marpaESLIFValueOption_default_template;
   short                           rcb;
-  marpaESLIF_meta_t              *metap;
 
   MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_INC;
   MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "start");
@@ -5635,16 +5635,15 @@ static inline short _marpaESLIFRecognizer_meta_matcherb(marpaESLIFRecognizer_t *
   }
 #endif
 
-  metap                                        = symbolp->u.metap;
   marpaESLIFRecognizerOption.disableThresholdb = 1;
   marpaESLIFRecognizerOption.exhaustedb        = 1;
 
-  if (MARPAESLIF_UNLIKELY(! _marpaESLIFGrammar_parseb(metap->marpaESLIFGrammarLexemeClonep,
+  if (MARPAESLIF_UNLIKELY(! _marpaESLIFGrammar_parseb(symbolp->u.metap->marpaESLIFGrammarLexemeClonep,
                                                       &marpaESLIFRecognizerOption,
                                                       &marpaESLIFValueOption,
                                                       0 /* discardb */,
                                                       1 /* noEventb - to make sure that the recognizer uses marpaWrapperGrammarStartNoEventp that we overwrote few lines upper... */,
-                                                      1 /* silentb */,
+                                                      symbolp->verboseb ? 0 : 1 /* silentb */,
                                                       marpaESLIFRecognizerp /* marpaESLIFRecognizerParentp */,
                                                       isExhaustedbp,
                                                       marpaESLIFValueResultp,
@@ -7204,6 +7203,7 @@ short marpaESLIFGrammar_symbolproperty_by_levelb(marpaESLIFGrammar_t *marpaESLIF
   marpaESLIFSymbolProperty.nullableActionp      = symbolp->nullableActionp;
   marpaESLIFSymbolProperty.symbolActionp        = symbolp->symbolActionp;
   marpaESLIFSymbolProperty.ifActionp            = symbolp->ifActionp;
+  marpaESLIFSymbolProperty.verboseb             = symbolp->verboseb;
   /* I could have copied symbolp->propertyBitSet directly, though I believe the code is more maintanable */
   /* and extensible doing that bit per bit. */
   marpaESLIFSymbolProperty.propertyBitSet = 0;
@@ -12529,6 +12529,8 @@ static inline void _marpaESLIF_grammar_createshowv(marpaESLIFGrammar_t *marpaESL
         ||
         (symbolp->priorityi != 0)
         ||
+        (symbolp->verboseb)
+        ||
         (symbolp->symbolActionp != NULL)
         ||
         (symbolp->ifActionp != NULL)
@@ -12551,6 +12553,11 @@ static inline void _marpaESLIF_grammar_createshowv(marpaESLIFGrammar_t *marpaESL
       if (symbolp->priorityi != 0) {
         MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, " priority => ");
         sprintf(tmps, "%d", symbolp->priorityi);
+        MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, tmps);
+      }
+      if (symbolp->verboseb) {
+        MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, " verbose => ");
+        sprintf(tmps, "%d", (int) symbolp->verboseb);
         MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, tmps);
       }
       if (symbolp->symbolActionp != NULL) {

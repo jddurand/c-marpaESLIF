@@ -75,6 +75,7 @@
 #define G1_RULE_ADVERB_ITEM_20                   "G1_rule_adverb_item_20"
 #define G1_RULE_ADVERB_ITEM_21                   "G1_rule_adverb_item_21"
 #define G1_RULE_ADVERB_ITEM_22                   "G1_rule_adverb_item_22"
+#define G1_RULE_ADVERB_ITEM_23                   "G1_rule_adverb_item_23"
 #define G1_RULE_ACTION_1                         "G1_rule_action_1"
 #define G1_RULE_ACTION_2                         "G1_rule_action_2"
 #define G1_RULE_ACTION_3                         "G1_rule_action_3"
@@ -105,6 +106,8 @@
 #define G1_RULE_EVENT_INITIALIZER_2              "G1_rule_event_initializer_2"
 #define G1_RULE_LATM_SPECIFICATION_1             "G1_rule_latm_specification_1"
 #define G1_RULE_LATM_SPECIFICATION_2             "G1_rule_latm_specification_2"
+#define G1_RULE_VERBOSE_SPECIFICATION_1          "G1_rule_verbose_specification_1"
+#define G1_RULE_VERBOSE_SPECIFICATION_2          "G1_rule_verbose_specification_2"
 #define G1_RULE_NAMING                           "G1_rule_naming"
 #define G1_RULE_NULL_ADVERB                      "G1_rule_null_adverb"
 #define G1_RULE_ALTERNATIVE_NAME_1               "G1_rule_alternative_name_1"
@@ -269,6 +272,7 @@
 #define G1_ACTION_ADVERB_ITEM_20                   "::shift" /* <adverb item> ::= <default encoding> */
 #define G1_ACTION_ADVERB_ITEM_21                   "::shift" /* <adverb item> ::= <fallback encoding> */
 #define G1_ACTION_ADVERB_ITEM_22                   "::shift" /* <adverb item> ::= <regex action> */
+#define G1_ACTION_ADVERB_ITEM_23                   "::shift" /* <adverb item> ::= <verbose specification> */
 #define G1_ACTION_ACTION_1                         "G1_action_action_1"                         /* done */
 #define G1_ACTION_ACTION_2                         "G1_action_action_2"                         /* done */
 #define G1_ACTION_ACTION_3                         "G1_action_action_3"                         /* done */
@@ -299,6 +303,8 @@
 #define G1_ACTION_EVENT_INITIALIZER_2              "G1_action_event_initializer_2"              /* done */
 #define G1_ACTION_LATM_SPECIFICATION_1             "G1_action_latm_specification_1"             /* done */
 #define G1_ACTION_LATM_SPECIFICATION_2             "G1_action_latm_specification_2"             /* done */
+#define G1_ACTION_VERBOSE_SPECIFICATION_1          "G1_action_verbose_specification_1"           /* done */
+#define G1_ACTION_VERBOSE_SPECIFICATION_2          "G1_action_verbose_specification_2"           /* done */
 #define G1_ACTION_NAMING                           "G1_action_naming"                           /* done */
 #define G1_ACTION_NULL_ADVERB                      "::undef"
 #define G1_ACTION_ALTERNATIVE_NAME_1               "::shift" /* <alternative name> ::= <standard name> */

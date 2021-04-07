@@ -19,6 +19,7 @@ typedef enum _marpaESLIFBootstrapStackTypeEnum {
   marpaESLIFBootstrapStackTypeEnum_ADVERB_ITEM_GROUP_ASSOCIATION,
   marpaESLIFBootstrapStackTypeEnum_ADVERB_ITEM_SEPARATOR,
   marpaESLIFBootstrapStackTypeEnum_ADVERB_ITEM_PROPER,
+  marpaESLIFBootstrapStackTypeEnum_ADVERB_ITEM_VERBOSE,
   marpaESLIFBootstrapStackTypeEnum_ADVERB_ITEM_HIDESEPARATOR,
   marpaESLIFBootstrapStackTypeEnum_ADVERB_ITEM_RANK,
   marpaESLIFBootstrapStackTypeEnum_ADVERB_ITEM_NULL_RANKING,
@@ -66,6 +67,7 @@ static char _MARPAESLIF_BOOTSTRAP_STACK_TYPE[_marpaESLIFBootstrapStackTypeEnum_L
 #define MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_ITEM_GROUP_ASSOCIATION    &(_MARPAESLIF_BOOTSTRAP_STACK_TYPE[marpaESLIFBootstrapStackTypeEnum_ADVERB_ITEM_GROUP_ASSOCIATION])
 #define MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_ITEM_SEPARATOR            &(_MARPAESLIF_BOOTSTRAP_STACK_TYPE[marpaESLIFBootstrapStackTypeEnum_ADVERB_ITEM_SEPARATOR])
 #define MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_ITEM_PROPER               &(_MARPAESLIF_BOOTSTRAP_STACK_TYPE[marpaESLIFBootstrapStackTypeEnum_ADVERB_ITEM_PROPER])
+#define MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_ITEM_VERBOSE              &(_MARPAESLIF_BOOTSTRAP_STACK_TYPE[marpaESLIFBootstrapStackTypeEnum_ADVERB_ITEM_VERBOSE])
 #define MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_ITEM_HIDESEPARATOR        &(_MARPAESLIF_BOOTSTRAP_STACK_TYPE[marpaESLIFBootstrapStackTypeEnum_ADVERB_ITEM_HIDESEPARATOR])
 #define MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_ITEM_RANK                 &(_MARPAESLIF_BOOTSTRAP_STACK_TYPE[marpaESLIFBootstrapStackTypeEnum_ADVERB_ITEM_RANK])
 #define MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_ITEM_NULL_RANKING         &(_MARPAESLIF_BOOTSTRAP_STACK_TYPE[marpaESLIFBootstrapStackTypeEnum_ADVERB_ITEM_NULL_RANKING])
@@ -135,6 +137,7 @@ enum marpaESLIF_bootstrap_adverb_list_item_type {
   MARPAESLIF_BOOTSTRAP_ADVERB_LIST_ITEM_TYPE_GROUP_ASSOCIATION,
   MARPAESLIF_BOOTSTRAP_ADVERB_LIST_ITEM_TYPE_SEPARATOR,
   MARPAESLIF_BOOTSTRAP_ADVERB_LIST_ITEM_TYPE_PROPER,
+  MARPAESLIF_BOOTSTRAP_ADVERB_LIST_ITEM_TYPE_VERBOSE,
   MARPAESLIF_BOOTSTRAP_ADVERB_LIST_ITEM_TYPE_HIDESEPARATOR,
   MARPAESLIF_BOOTSTRAP_ADVERB_LIST_ITEM_TYPE_RANK,
   MARPAESLIF_BOOTSTRAP_ADVERB_LIST_ITEM_TYPE_NULL_RANKING,
@@ -213,6 +216,7 @@ struct marpaESLIF_bootstrap_adverb_list_item {
     short                                        group_associationb;
     marpaESLIF_bootstrap_rhs_primary_t          *separatorRhsPrimaryp;
     short                                        properb;
+    short                                        verboseb;
     short                                        hideseparatorb;
     int                                          ranki;
     short                                        nullRanksHighb;

@@ -766,6 +766,7 @@ my %SYMBOL_PROPERTIES_BY_LEVEL = (
                  symbolAction => undef,
                  ifAction => undef,
                  priority => 0,
+                 verbose => 0,
                  propertyBitSet => MarpaX::ESLIF::Symbol::PropertyBitSet->MARPAESLIF_SYMBOL_IS_ACCESSIBLE|
                                    MarpaX::ESLIF::Symbol::PropertyBitSet->MARPAESLIF_SYMBOL_IS_PRODUCTIVE|
                                    MarpaX::ESLIF::Symbol::PropertyBitSet->MARPAESLIF_SYMBOL_IS_START,
@@ -796,6 +797,7 @@ my %SYMBOL_PROPERTIES_BY_LEVEL = (
                  symbolAction => undef,
                  ifAction => undef,
                  priority => 0,
+                 verbose => 0,
                  propertyBitSet => MarpaX::ESLIF::Symbol::PropertyBitSet->MARPAESLIF_SYMBOL_IS_PRODUCTIVE,
                  eventBitSet => 0,
                  start => 0,
@@ -823,6 +825,7 @@ my %SYMBOL_PROPERTIES_BY_LEVEL = (
                  symbolAction => undef,
                  ifAction => undef,
                  priority => 0,
+                 verbose => 0,
                  propertyBitSet => MarpaX::ESLIF::Symbol::PropertyBitSet->MARPAESLIF_SYMBOL_IS_PRODUCTIVE,
                  eventBitSet => 0,
                  start => 0,
@@ -850,6 +853,7 @@ my %SYMBOL_PROPERTIES_BY_LEVEL = (
                  symbolAction => undef,
                  ifAction => undef,
                  priority => 0,
+                 verbose => 0,
                  propertyBitSet => MarpaX::ESLIF::Symbol::PropertyBitSet->MARPAESLIF_SYMBOL_IS_PRODUCTIVE,
                  eventBitSet => 0,
                  start => 0,
@@ -877,6 +881,7 @@ my %SYMBOL_PROPERTIES_BY_LEVEL = (
                  symbolAction => undef,
                  ifAction => undef,
                  priority => 0,
+                 verbose => 0,
                  propertyBitSet => MarpaX::ESLIF::Symbol::PropertyBitSet->MARPAESLIF_SYMBOL_IS_ACCESSIBLE|
                                    MarpaX::ESLIF::Symbol::PropertyBitSet->MARPAESLIF_SYMBOL_IS_PRODUCTIVE,
                  eventBitSet => MarpaX::ESLIF::Symbol::EventBitSet->MARPAESLIF_SYMBOL_EVENT_PREDICTION|
@@ -906,6 +911,7 @@ my %SYMBOL_PROPERTIES_BY_LEVEL = (
                  symbolAction => 'perl_number',
                  ifAction => 'test_if_action',
                  priority => 0,
+                 verbose => 0,
                  propertyBitSet => MarpaX::ESLIF::Symbol::PropertyBitSet->MARPAESLIF_SYMBOL_IS_ACCESSIBLE|
                                    MarpaX::ESLIF::Symbol::PropertyBitSet->MARPAESLIF_SYMBOL_IS_PRODUCTIVE|
                                    MarpaX::ESLIF::Symbol::PropertyBitSet->MARPAESLIF_SYMBOL_IS_TERMINAL,
@@ -935,6 +941,7 @@ my %SYMBOL_PROPERTIES_BY_LEVEL = (
                  symbolAction => undef,
                  ifAction => undef,
                  priority => 0,
+                 verbose => 0,
                  propertyBitSet => MarpaX::ESLIF::Symbol::PropertyBitSet->MARPAESLIF_SYMBOL_IS_ACCESSIBLE|
                                    MarpaX::ESLIF::Symbol::PropertyBitSet->MARPAESLIF_SYMBOL_IS_PRODUCTIVE,
                  eventBitSet => 0,
@@ -963,6 +970,7 @@ my %SYMBOL_PROPERTIES_BY_LEVEL = (
                  symbolAction => undef,
                  ifAction => undef,
                  priority => 0,
+                 verbose => 0,
                  propertyBitSet => MarpaX::ESLIF::Symbol::PropertyBitSet->MARPAESLIF_SYMBOL_IS_ACCESSIBLE|
                                    MarpaX::ESLIF::Symbol::PropertyBitSet->MARPAESLIF_SYMBOL_IS_PRODUCTIVE,
                  eventBitSet => 0,
@@ -991,6 +999,7 @@ my %SYMBOL_PROPERTIES_BY_LEVEL = (
                  symbolAction => undef,
                  ifAction => undef,
                  priority => 0,
+                 verbose => 0,
                  propertyBitSet => MarpaX::ESLIF::Symbol::PropertyBitSet->MARPAESLIF_SYMBOL_IS_ACCESSIBLE|
                                    MarpaX::ESLIF::Symbol::PropertyBitSet->MARPAESLIF_SYMBOL_IS_PRODUCTIVE,
                  eventBitSet => 0,
@@ -1019,6 +1028,7 @@ my %SYMBOL_PROPERTIES_BY_LEVEL = (
                  symbolAction => undef,
                  ifAction => undef,
                  priority => 0,
+                 verbose => 0,
                  propertyBitSet => MarpaX::ESLIF::Symbol::PropertyBitSet->MARPAESLIF_SYMBOL_IS_ACCESSIBLE|
                                    MarpaX::ESLIF::Symbol::PropertyBitSet->MARPAESLIF_SYMBOL_IS_PRODUCTIVE,
                  eventBitSet => 0,
@@ -1047,6 +1057,7 @@ my %SYMBOL_PROPERTIES_BY_LEVEL = (
                  symbolAction => undef,
                  ifAction => undef,
                  priority => 0,
+                 verbose => 0,
                  propertyBitSet => MarpaX::ESLIF::Symbol::PropertyBitSet->MARPAESLIF_SYMBOL_IS_ACCESSIBLE|
                                    MarpaX::ESLIF::Symbol::PropertyBitSet->MARPAESLIF_SYMBOL_IS_PRODUCTIVE|
                                    MarpaX::ESLIF::Symbol::PropertyBitSet->MARPAESLIF_SYMBOL_IS_TERMINAL,
@@ -1076,6 +1087,7 @@ my %SYMBOL_PROPERTIES_BY_LEVEL = (
                  symbolAction => undef,
                  ifAction => undef,
                  priority => 0,
+                 verbose => 0,
                  propertyBitSet => MarpaX::ESLIF::Symbol::PropertyBitSet->MARPAESLIF_SYMBOL_IS_ACCESSIBLE|
                                    MarpaX::ESLIF::Symbol::PropertyBitSet->MARPAESLIF_SYMBOL_IS_PRODUCTIVE|
                                    MarpaX::ESLIF::Symbol::PropertyBitSet->MARPAESLIF_SYMBOL_IS_TERMINAL,
@@ -1105,6 +1117,7 @@ my %SYMBOL_PROPERTIES_BY_LEVEL = (
                  symbolAction => undef,
                  ifAction => undef,
                  priority => 0,
+                 verbose => 0,
                  propertyBitSet => MarpaX::ESLIF::Symbol::PropertyBitSet->MARPAESLIF_SYMBOL_IS_ACCESSIBLE|
                                    MarpaX::ESLIF::Symbol::PropertyBitSet->MARPAESLIF_SYMBOL_IS_PRODUCTIVE|
                                    MarpaX::ESLIF::Symbol::PropertyBitSet->MARPAESLIF_SYMBOL_IS_TERMINAL,
@@ -1134,6 +1147,7 @@ my %SYMBOL_PROPERTIES_BY_LEVEL = (
                  symbolAction => undef,
                  ifAction => undef,
                  priority => 0,
+                 verbose => 0,
                  propertyBitSet => MarpaX::ESLIF::Symbol::PropertyBitSet->MARPAESLIF_SYMBOL_IS_ACCESSIBLE|
                                    MarpaX::ESLIF::Symbol::PropertyBitSet->MARPAESLIF_SYMBOL_IS_PRODUCTIVE|
                                    MarpaX::ESLIF::Symbol::PropertyBitSet->MARPAESLIF_SYMBOL_IS_TERMINAL,
@@ -1163,6 +1177,7 @@ my %SYMBOL_PROPERTIES_BY_LEVEL = (
                  symbolAction => undef,
                  ifAction => undef,
                  priority => 0,
+                 verbose => 0,
                  propertyBitSet => MarpaX::ESLIF::Symbol::PropertyBitSet->MARPAESLIF_SYMBOL_IS_ACCESSIBLE|
                                    MarpaX::ESLIF::Symbol::PropertyBitSet->MARPAESLIF_SYMBOL_IS_PRODUCTIVE|
                                    MarpaX::ESLIF::Symbol::PropertyBitSet->MARPAESLIF_SYMBOL_IS_TERMINAL,
@@ -1192,6 +1207,7 @@ my %SYMBOL_PROPERTIES_BY_LEVEL = (
                  symbolAction => undef,
                  ifAction => undef,
                  priority => 0,
+                 verbose => 0,
                  propertyBitSet => MarpaX::ESLIF::Symbol::PropertyBitSet->MARPAESLIF_SYMBOL_IS_ACCESSIBLE|
                                    MarpaX::ESLIF::Symbol::PropertyBitSet->MARPAESLIF_SYMBOL_IS_PRODUCTIVE|
                                    MarpaX::ESLIF::Symbol::PropertyBitSet->MARPAESLIF_SYMBOL_IS_TERMINAL,
@@ -1221,6 +1237,7 @@ my %SYMBOL_PROPERTIES_BY_LEVEL = (
                  symbolAction => undef,
                  ifAction => undef,
                  priority => 0,
+                 verbose => 0,
                  propertyBitSet => MarpaX::ESLIF::Symbol::PropertyBitSet->MARPAESLIF_SYMBOL_IS_ACCESSIBLE|
                                    MarpaX::ESLIF::Symbol::PropertyBitSet->MARPAESLIF_SYMBOL_IS_PRODUCTIVE|
                                    MarpaX::ESLIF::Symbol::PropertyBitSet->MARPAESLIF_SYMBOL_IS_TERMINAL,
@@ -1250,6 +1267,7 @@ my %SYMBOL_PROPERTIES_BY_LEVEL = (
                  symbolAction => undef,
                  ifAction => undef,
                  priority => 0,
+                 verbose => 0,
                  propertyBitSet => MarpaX::ESLIF::Symbol::PropertyBitSet->MARPAESLIF_SYMBOL_IS_PRODUCTIVE|
                                    MarpaX::ESLIF::Symbol::PropertyBitSet->MARPAESLIF_SYMBOL_IS_TERMINAL,
                  eventBitSet => 0,
@@ -1278,6 +1296,7 @@ my %SYMBOL_PROPERTIES_BY_LEVEL = (
                  symbolAction => undef,
                  ifAction => undef,
                  priority => 0,
+                 verbose => 0,
                  propertyBitSet => MarpaX::ESLIF::Symbol::PropertyBitSet->MARPAESLIF_SYMBOL_IS_PRODUCTIVE|
                                    MarpaX::ESLIF::Symbol::PropertyBitSet->MARPAESLIF_SYMBOL_IS_TERMINAL,
                  eventBitSet => 0,
@@ -1308,6 +1327,7 @@ my %SYMBOL_PROPERTIES_BY_LEVEL = (
                  symbolAction => undef,
                  ifAction => undef,
                  priority => 0,
+                 verbose => 0,
                  propertyBitSet => MarpaX::ESLIF::Symbol::PropertyBitSet->MARPAESLIF_SYMBOL_IS_ACCESSIBLE|
                                    MarpaX::ESLIF::Symbol::PropertyBitSet->MARPAESLIF_SYMBOL_IS_PRODUCTIVE|
                                    MarpaX::ESLIF::Symbol::PropertyBitSet->MARPAESLIF_SYMBOL_IS_START,
@@ -1337,6 +1357,7 @@ my %SYMBOL_PROPERTIES_BY_LEVEL = (
                  symbolAction => undef,
                  ifAction => undef,
                  priority => 0,
+                 verbose => 0,
                  propertyBitSet => MarpaX::ESLIF::Symbol::PropertyBitSet->MARPAESLIF_SYMBOL_IS_ACCESSIBLE|
                                    MarpaX::ESLIF::Symbol::PropertyBitSet->MARPAESLIF_SYMBOL_IS_PRODUCTIVE|
                                    MarpaX::ESLIF::Symbol::PropertyBitSet->MARPAESLIF_SYMBOL_IS_TERMINAL,
@@ -1366,6 +1387,7 @@ my %SYMBOL_PROPERTIES_BY_LEVEL = (
                  symbolAction => undef,
                  ifAction => undef,
                  priority => 0,
+                 verbose => 0,
                  propertyBitSet => MarpaX::ESLIF::Symbol::PropertyBitSet->MARPAESLIF_SYMBOL_IS_PRODUCTIVE,
                  eventBitSet => 0,
                  start => 0,
@@ -1393,6 +1415,7 @@ my %SYMBOL_PROPERTIES_BY_LEVEL = (
                  symbolAction => undef,
                  ifAction => undef,
                  priority => 0,
+                 verbose => 0,
                  propertyBitSet => MarpaX::ESLIF::Symbol::PropertyBitSet->MARPAESLIF_SYMBOL_IS_PRODUCTIVE|
                                    MarpaX::ESLIF::Symbol::PropertyBitSet->MARPAESLIF_SYMBOL_IS_TERMINAL,
                  eventBitSet => 0,
@@ -1811,7 +1834,7 @@ Expression ::=
     |     Expression  '-' Expression                                             name => 'Expression is -'
 
 :lexeme ::= NUMBER pause => before event => ^NUMBER symbol-action => perl_number priority => 1 if-action => ::lua->test_if_action
-:lexeme ::= NUMBER pause => after  event => NUMBER$ priority => 0
+:lexeme ::= NUMBER pause => after  event => NUMBER$ priority => 0 verbose => 0
 
 :default ~ regex-action => RegexAction
 

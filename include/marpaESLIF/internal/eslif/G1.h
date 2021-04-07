@@ -40,6 +40,7 @@ typedef enum bootstrap_grammar_G1_enum {
   G1_TERMINAL_GROUP,
   G1_TERMINAL_SEPARATOR,
   G1_TERMINAL_PROPER,
+  G1_TERMINAL_VERBOSE,
   G1_TERMINAL_HIDESEPARATOR,
   G1_TERMINAL_RANK,
   G1_TERMINAL_NULL_RANKING,
@@ -150,6 +151,7 @@ typedef enum bootstrap_grammar_G1_enum {
   G1_META_GROUP_ASSOCIATION,
   G1_META_SEPARATOR_SPECIFICATION,
   G1_META_PROPER_SPECIFICATION,
+  G1_META_VERBOSE_SPECIFICATION,
   G1_META_HIDESEPARATOR_SPECIFICATION,
   G1_META_RANK_SPECIFICATION,
   G1_META_NULL_RANKING_SPECIFICATION,
@@ -255,6 +257,7 @@ bootstrap_grammar_meta_t bootstrap_grammar_G1_metas[] = {
   { G1_META_GROUP_ASSOCIATION,                "group association",                         0,       0,           0,            0 },
   { G1_META_SEPARATOR_SPECIFICATION,          "separator specification",                   0,       0,           0,            0 },
   { G1_META_PROPER_SPECIFICATION,             "proper specification",                      0,       0,           0,            0 },
+  { G1_META_VERBOSE_SPECIFICATION,            "verbose specification",                     0,       0,           0,            0 },
   { G1_META_HIDESEPARATOR_SPECIFICATION,      "hide separator specification",              0,       0,           0,            0 },
   { G1_META_RANK_SPECIFICATION,               "rank specification",                        0,       0,           0,            0 },
   { G1_META_NULL_RANKING_SPECIFICATION,       "null ranking specification",                0,       0,           0,            0 },
@@ -575,6 +578,14 @@ bootstrap_grammar_terminal_t bootstrap_grammar_G1_terminals[] = {
     "'proper'",
 #ifndef MARPAESLIF_NTRACE
     "proper", "pro"
+#else
+    NULL, NULL
+#endif
+  },
+  { G1_TERMINAL_VERBOSE, MARPAESLIF_TERMINAL_TYPE_STRING, NULL,
+    "'verbose'",
+#ifndef MARPAESLIF_NTRACE
+    "verbose", "verb"
 #else
     NULL, NULL
 #endif
@@ -1296,6 +1307,7 @@ bootstrap_grammar_rule_t bootstrap_grammar_G1_rules[] = {
   { G1_META_ADVERB_ITEM,                      G1_RULE_ADVERB_ITEM_20,                         MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_DEFAULT_ENCODING                     }, -1,                        -1,      -1,              0, G1_ACTION_ADVERB_ITEM_20 },
   { G1_META_ADVERB_ITEM,                      G1_RULE_ADVERB_ITEM_21,                         MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_FALLBACK_ENCODING                    }, -1,                        -1,      -1,              0, G1_ACTION_ADVERB_ITEM_21 },
   { G1_META_ADVERB_ITEM,                      G1_RULE_ADVERB_ITEM_22,                         MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_REGEX_ACTION                         }, -1,                        -1,      -1,              0, G1_ACTION_ADVERB_ITEM_22 },
+  { G1_META_ADVERB_ITEM,                      G1_RULE_ADVERB_ITEM_23,                         MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_VERBOSE_SPECIFICATION                }, -1,                        -1,      -1,              0, G1_ACTION_ADVERB_ITEM_23 },
   { G1_META_ACTION,                           G1_RULE_ACTION_1,                               MARPAESLIF_RULE_TYPE_ALTERNATIVE, 3, { G1_TERMINAL_ACTION,
                                                                                                                                      G1_TERMINAL_THEN,
                                                                                                                                      G1_META_ACTION_NAME                          }, -1,                        -1,      -1,              0, G1_ACTION_ACTION_1 },
@@ -1364,6 +1376,12 @@ bootstrap_grammar_rule_t bootstrap_grammar_G1_rules[] = {
                                                                                                                                      G1_META_EVENT_INITIALIZATION                 }, -1,                        -1,      -1,              0, G1_ACTION_EVENT_SPECIFICATION },
   { G1_META_EVENT_INITIALIZATION,             G1_RULE_EVENT_INITIALIZATION,                   MARPAESLIF_RULE_TYPE_ALTERNATIVE, 2, { G1_META_EVENT_NAME,
                                                                                                                                      G1_META_EVENT_INITIALIZER                    }, -1,                        -1,      -1,              0, G1_ACTION_EVENT_INITIALIZATION },
+  { G1_META_VERBOSE_SPECIFICATION,            G1_RULE_VERBOSE_SPECIFICATION_1,                MARPAESLIF_RULE_TYPE_ALTERNATIVE, 3, { G1_TERMINAL_VERBOSE,
+                                                                                                                                     G1_TERMINAL_THEN,
+                                                                                                                                     G1_META_FALSE                                }, -1,                        -1,      -1,              0, G1_ACTION_VERBOSE_SPECIFICATION_1 },
+  { G1_META_VERBOSE_SPECIFICATION,            G1_RULE_VERBOSE_SPECIFICATION_2,                MARPAESLIF_RULE_TYPE_ALTERNATIVE, 3, { G1_TERMINAL_VERBOSE,
+                                                                                                                                     G1_TERMINAL_THEN,
+                                                                                                                                     G1_META_TRUE                                 }, -1,                        -1,      -1,              0, G1_ACTION_VERBOSE_SPECIFICATION_2 },
   /*
     lhsi                                      descs                                           type                          nrhsl  { rhsi }                                       }  minimumi           separatori  properb hideseparatorb  actions
   */

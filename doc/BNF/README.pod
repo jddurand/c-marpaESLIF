@@ -655,12 +655,18 @@ Modifiers are allowed after string, character class or regular expressions.
 Sequence rules can be I<proper>, i.e. without trailing separator:
 
   proper => 1
+  proper => true
+  proper => 0
+  proper => false
 
 =item Hiding separator specification
 
 Default for sequence rules actions is to always include the separator in the stack. This may be changed in the grammar using:
 
   hide-separator => 1
+  hide-separator => true
+  hide-separator => 0
+  hide-separator => false
 
 =item Rank specification
 
@@ -682,6 +688,15 @@ Nulling symbols can rank high low, the default is low.
 Lexemes and terminals can be prioritized, using a signed integer:
 
   priority => 15
+
+=item Verbose specification
+
+Lexemes can be verbose when they are parsed:
+
+  verbose => 1
+  verbose => true
+  verbose => 0
+  verbose => false
 
 =item Pause specification
 
@@ -811,6 +826,7 @@ marpaESLIF BNF can be expressed in itself:
                                    | <default encoding>
                                    | <fallback encoding>
                                    | <regex action>
+                                   | <verbose specification>
   <action>                       ::= 'action' /=>|\x{21D2}/u <action name>
                                    | 'action' /=>|\x{21D2}/u <string literal>
                                    | 'action' /=>|\x{21D2}/u <quoted string literal>
@@ -933,6 +949,8 @@ marpaESLIF BNF can be expressed in itself:
   <default encoding name>        ::= <graph ascii name>
   <fallback encoding>            ::= 'fallback-encoding' /=>|\x{21D2}/u <fallback encoding name>
   <fallback encoding name>       ::= <graph ascii name>
+  <verbose specification>        ::= 'verbose' /=>|\x{21D2}/u <false>
+                                   | 'verbose' /=>|\x{21D2}/u <true>
   
   /*
    * **********************
