@@ -27,7 +27,6 @@
 static short _marpaESLIFValue_lua_newb(marpaESLIFValue_t *marpaESLIFValuep);
 static short _marpaESLIFRecognizer_lua_newb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp);
 static int   _marpaESLIFGrammar_lua_writeri(lua_State *L, const void* p, size_t sz, void* ud);
-static int   _marpaESLIFValue_lua_writeri(lua_State *L, const void* p, size_t sz, void* ud);
 
 #define MARPAESLIFLUA_LOG_PANIC_STRING(containerp, f) do {              \
     char *panicstring;							\
@@ -556,47 +555,6 @@ static int _marpaESLIFGrammar_lua_writeri(lua_State *L, const void* p, size_t sz
       marpaESLIFGrammarp->luaprecompiledp = q;
       q += marpaESLIFGrammarp->luaprecompiledl;
       marpaESLIFGrammarp->luaprecompiledl += sz;
-    }
-
-    memcpy(q, p, sz);
-  }
-
-  rci = 0;
-  goto end;
-  
- err:
-  rci = 1;
-  
- end:
-  return rci;
-}
-
-/*****************************************************************************/
-static int _marpaESLIFValue_lua_writeri(lua_State *L, const void* p, size_t sz, void* ud)
-/*****************************************************************************/
-{
-  marpaESLIFValue_t *marpaESLIFValuep = (marpaESLIFValue_t *) ud;
-  char              *q;
-  int                rci;
-
-  if (sz > 0) {
-    if (marpaESLIFValuep->luaprecompiledp == NULL) {
-      marpaESLIFValuep->luaprecompiledp = (char *) malloc(sz);
-      if (MARPAESLIF_UNLIKELY(marpaESLIFValuep->luaprecompiledp == NULL)) {
-        MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "malloc failure, %s", strerror(errno));
-        goto err;
-      }
-      q = marpaESLIFValuep->luaprecompiledp;
-      marpaESLIFValuep->luaprecompiledl = sz;
-    } else {
-      q = (char *) realloc(marpaESLIFValuep->luaprecompiledp, marpaESLIFValuep->luaprecompiledl + sz);
-      if (MARPAESLIF_UNLIKELY(q == NULL)) {
-        MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "malloc failure, %s", strerror(errno));
-        goto err;
-      }
-      marpaESLIFValuep->luaprecompiledp = q;
-      q += marpaESLIFValuep->luaprecompiledl;
-      marpaESLIFValuep->luaprecompiledl += sz;
     }
 
     memcpy(q, p, sz);
@@ -1366,42 +1324,6 @@ static marpaESLIFGrammar_t *_marpaESLIF_luaGrammarp(marpaESLIF_t *marpaESLIFp)
   marpaESLIFGrammarOption.encodingl = 0; /* ASCII is the default */
 
   return marpaESLIFGrammar_newp(marpaESLIFp, &marpaESLIFGrammarOption);
-}
-
-/*****************************************************************************/
-static short _marpaESLIFValue_lua_precompileb(marpaESLIFValue_t *marpaESLIFValuep, char *inputs, size_t inputl)
-/*****************************************************************************/
-{
-  short  rcb;
-
-  if ((inputs == NULL) || (inputl <= 0)) {
-    errno = EINVAL;
-    goto err;
-  }
-
-  /* Create the lua state if needed */
-  if (MARPAESLIF_UNLIKELY(! _marpaESLIFValue_lua_newb(marpaESLIFValuep))) {
-    goto err;
-  }
-
-  /* Compiles lua script */
-  LUAL_LOADBUFFER(marpaESLIFValuep, inputs, inputl, "=<luascript/>");
-
-  /* Result is a "function" at the top of the stack - we now have to dump it so that lua knows about it. */
-  /* We voluntarily strip any debug information so that comparing the bytecodes should do it. */
-  LUA_DUMP(marpaESLIFValuep, _marpaESLIFValue_lua_writeri, marpaESLIFValuep, 1 /* strip */);
-
-  /* Clear the stack */
-  LUA_SETTOP(marpaESLIFValuep, 0);
-
-  rcb = 1;
-  goto done;
-
- err:
-  rcb = 0;
-
- done:
-  return rcb;
 }
 
 /*****************************************************************************/

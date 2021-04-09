@@ -7885,9 +7885,8 @@ static short _marpaESLIF_bootstrap_G1_action_lua_functionb(void *userDatavp, mar
   p += luaFuncbodyAfterLparenl;
   p[0] = '\0';
 
-  if (! _marpaESLIFValue_lua_precompileb(marpaESLIFValuep, luaFunctions, luaFunctionl)) {
-    goto err;
-  }
+  /* Note that we do NOT precompile it: we trust our grammar implementation of Lua, precompilation */
+  /* will happen at runtime if needed. */
 
   MARPAESLIF_BOOTSTRAP_SET_PTR(marpaESLIFValuep, resulti, MARPAESLIF_BOOTSTRAP_STACK_TYPE_LUA_FUNCTION, luaFunctions);
   /* luaFunctions is in the stack */
