@@ -27,6 +27,7 @@
 static short _marpaESLIFValue_lua_newb(marpaESLIFValue_t *marpaESLIFValuep);
 static short _marpaESLIFRecognizer_lua_newb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp);
 static int   _marpaESLIFGrammar_lua_writeri(lua_State *L, const void* p, size_t sz, void* ud);
+static int   _marpaESLIFValue_lua_writeri(lua_State *L, const void* p, size_t sz, void* ud);
 
 #define MARPAESLIFLUA_LOG_PANIC_STRING(containerp, f) do {              \
     char *panicstring;							\
@@ -131,6 +132,20 @@ static int   _marpaESLIFGrammar_lua_writeri(lua_State *L, const void* p, size_t 
     }                                                                   \
   } while (0)
 
+#define LUAL_LOADSTRING(containerp, s) do {                             \
+    int _rci = -1;                                                      \
+    if (MARPAESLIF_UNLIKELY(luaunpanicL_loadstring(&_rci, containerp->L, s))) { \
+      MARPAESLIFLUA_LOG_PANIC_STRING(containerp, luaL_loadstring);      \
+      errno = ENOSYS;                                                   \
+      goto err;                                                         \
+    }                                                                   \
+    if (MARPAESLIF_UNLIKELY(_rci != 0)) {                               \
+      MARPAESLIFLUA_LOG_ERROR_STRING(containerp, luaL_loadstring);      \
+      errno = ENOSYS;                                                   \
+      goto err;                                                         \
+    }                                                                   \
+  } while (0)
+
 #define LUAL_CHECKSTACK(containerp, extra, msg) do {                    \
     if (MARPAESLIF_UNLIKELY(luaunpanicL_checkstack(containerp->L, extra, msg))) { \
       MARPAESLIFLUA_LOG_PANIC_STRING(containerp, luaL_checkstack);      \
@@ -139,20 +154,28 @@ static int   _marpaESLIFGrammar_lua_writeri(lua_State *L, const void* p, size_t 
     }                                                                   \
   } while (0)
 
-#define LUA_SETTOP(containerp, idx) do {                             \
-    if (MARPAESLIF_UNLIKELY(luaunpanic_settop(containerp->L, idx))) {   \
-      MARPAESLIFLUA_LOG_PANIC_STRING(containerp, lua_settop);        \
-      errno = ENOSYS;                                                \
-      goto err;                                                      \
-    }                                                                \
+#define LUA_GETTOP(containerp, rcip) do {                               \
+    if (MARPAESLIF_UNLIKELY(luaunpanic_gettop(rcip, containerp->L))) {  \
+      MARPAESLIFLUA_LOG_PANIC_STRING(containerp, lua_gettop);           \
+      errno = ENOSYS;                                                   \
+      goto err;                                                         \
+    }                                                                   \
   } while (0)
 
-#define LUA_TOUSERDATA(containerp, rcpp, idx) do {                    \
+#define LUA_SETTOP(containerp, idx) do {                                \
+    if (MARPAESLIF_UNLIKELY(luaunpanic_settop(containerp->L, idx))) {   \
+      MARPAESLIFLUA_LOG_PANIC_STRING(containerp, lua_settop);           \
+      errno = ENOSYS;                                                   \
+      goto err;                                                         \
+    }                                                                   \
+  } while (0)
+
+#define LUA_TOUSERDATA(containerp, rcpp, idx) do {                      \
     if (MARPAESLIF_UNLIKELY(luaunpanic_touserdata((void **) rcpp, containerp->L, idx))) { \
-      MARPAESLIFLUA_LOG_PANIC_STRING(containerp, lua_touserdata);     \
-      errno = ENOSYS;                                                 \
-      goto err;                                                       \
-    }                                                                 \
+      MARPAESLIFLUA_LOG_PANIC_STRING(containerp, lua_touserdata);       \
+      errno = ENOSYS;                                                   \
+      goto err;                                                         \
+    }                                                                   \
   } while (0)
 
 #define LUAL_REQUIREF(containerp, modname, openf, glb) do {             \
@@ -163,12 +186,12 @@ static int   _marpaESLIFGrammar_lua_writeri(lua_State *L, const void* p, size_t 
     }                                                                   \
   } while (0)
 
-#define LUA_POP(containerp, n) do {                             \
+#define LUA_POP(containerp, n) do {                                     \
     if (MARPAESLIF_UNLIKELY(luaunpanic_pop(containerp->L, n))) {        \
-      MARPAESLIFLUA_LOG_PANIC_STRING(containerp, lua_pop);      \
-      errno = ENOSYS;                                           \
-      goto err;                                                 \
-    }                                                           \
+      MARPAESLIFLUA_LOG_PANIC_STRING(containerp, lua_pop);              \
+      errno = ENOSYS;                                                   \
+      goto err;                                                         \
+    }                                                                   \
   } while (0)
 
 #define LUA_PCALL(containerp, n, r, f) do {                             \
@@ -268,7 +291,7 @@ static short _marpaESLIFRecognizer_lua_newb(marpaESLIFRecognizer_t *marpaESLIFRe
 
   /* We load byte code generated during grammar validation */
   if ((marpaESLIFGrammarp->luabytep != NULL) && (marpaESLIFGrammarp->luabytel > 0)) {
-    LUAL_LOADBUFFER(marpaESLIFRecognizerTopp, marpaESLIFGrammarp->luaprecompiledp, marpaESLIFGrammarp->luaprecompiledl, "=<luaScript/>");
+    LUAL_LOADBUFFER(marpaESLIFRecognizerTopp, marpaESLIFGrammarp->luaprecompiledp, marpaESLIFGrammarp->luaprecompiledl, "=<luascript/>");
     LUA_PCALL(marpaESLIFRecognizerTopp, 0, LUA_MULTRET, 0);
     /* Clear the stack */
     LUA_SETTOP(marpaESLIFRecognizerTopp, 0);
@@ -354,7 +377,6 @@ static short _marpaESLIFValue_lua_symbolb(void *userDatavp, marpaESLIFValue_t *m
 /*****************************************************************************/
 {
   static const char               *funcs                 = "_marpaESLIFValue_lua_symbolb";
-  marpaESLIFRecognizer_t          *marpaESLIFRecognizerp = marpaESLIFValuep->marpaESLIFRecognizerp;
   marpaESLIFValueSymbolCallback_t  symbolCallbackp;
   short                            rcb;
 
@@ -396,7 +418,7 @@ static short _marpaESLIFRecognizer_lua_ifactionb(void *userDatavp, marpaESLIFRec
     goto err;
   }
 
-  ifCallbackp = marpaESLIFLua_recognizerIfActionResolver(userDatavp, marpaESLIFRecognizerp, marpaESLIFRecognizerp->ifactions);
+  ifCallbackp = marpaESLIFLua_recognizerIfActionResolver(userDatavp, marpaESLIFRecognizerp, marpaESLIFRecognizerp->actions);
   if (MARPAESLIF_UNLIKELY(ifCallbackp == NULL)) {
     MARPAESLIF_ERROR(marpaESLIFRecognizerp->marpaESLIFp, "Lua bindings returned no if-action callback");
     goto err; /* Lua will shutdown anyway */
@@ -429,7 +451,7 @@ static short _marpaESLIFRecognizer_lua_regexactionb(void *userDatavp, marpaESLIF
     goto err;
   }
 
-  regexCallbackp = marpaESLIFLua_recognizerRegexActionResolver(userDatavp, marpaESLIFRecognizerp, marpaESLIFRecognizerp->regexactions);
+  regexCallbackp = marpaESLIFLua_recognizerRegexActionResolver(userDatavp, marpaESLIFRecognizerp, marpaESLIFRecognizerp->actions);
   if (MARPAESLIF_UNLIKELY(regexCallbackp == NULL)) {
     MARPAESLIF_ERROR(marpaESLIFRecognizerp->marpaESLIFp, "Lua bindings returned no regex-action callback");
     goto err; /* Lua will shutdown anyway */
@@ -459,7 +481,7 @@ static short _marpaESLIFGrammar_lua_precompileb(marpaESLIFGrammar_t *marpaESLIFG
     marpaESLIF_t *marpaESLIFp;
   } container = {
     NULL,
-    marpaESLIFGrammar_eslifp(marpaESLIFGrammarp)
+    marpaESLIFGrammarp->marpaESLIFp
   };
   struct _container *containerp = &container;
 
@@ -481,7 +503,7 @@ static short _marpaESLIFGrammar_lua_precompileb(marpaESLIFGrammar_t *marpaESLIFG
     LUAL_CHECKVERSION(containerp);
 
     /* Compiles lua script present in the grammar */
-    LUAL_LOADBUFFER(containerp, marpaESLIFGrammarp->luabytep, marpaESLIFGrammarp->luabytel, "=<luaScript/>");
+    LUAL_LOADBUFFER(containerp, marpaESLIFGrammarp->luabytep, marpaESLIFGrammarp->luabytel, "=<luascript/>");
 
     /* Result is a "function" at the top of the stack - we now have to dump it so that lua knows about it  */
     LUA_DUMP(containerp, _marpaESLIFGrammar_lua_writeri, marpaESLIFGrammarp, 0 /* strip */);
@@ -524,6 +546,7 @@ static int _marpaESLIFGrammar_lua_writeri(lua_State *L, const void* p, size_t sz
         goto err;
       }
       q = marpaESLIFGrammarp->luaprecompiledp;
+      marpaESLIFGrammarp->luaprecompiledl = sz;
     } else {
       q = (char *) realloc(marpaESLIFGrammarp->luaprecompiledp, marpaESLIFGrammarp->luaprecompiledl + sz);
       if (MARPAESLIF_UNLIKELY(q == NULL)) {
@@ -532,10 +555,51 @@ static int _marpaESLIFGrammar_lua_writeri(lua_State *L, const void* p, size_t sz
       }
       marpaESLIFGrammarp->luaprecompiledp = q;
       q += marpaESLIFGrammarp->luaprecompiledl;
+      marpaESLIFGrammarp->luaprecompiledl += sz;
     }
 
     memcpy(q, p, sz);
-    marpaESLIFGrammarp->luaprecompiledl += sz;
+  }
+
+  rci = 0;
+  goto end;
+  
+ err:
+  rci = 1;
+  
+ end:
+  return rci;
+}
+
+/*****************************************************************************/
+static int _marpaESLIFValue_lua_writeri(lua_State *L, const void* p, size_t sz, void* ud)
+/*****************************************************************************/
+{
+  marpaESLIFValue_t *marpaESLIFValuep = (marpaESLIFValue_t *) ud;
+  char              *q;
+  int                rci;
+
+  if (sz > 0) {
+    if (marpaESLIFValuep->luaprecompiledp == NULL) {
+      marpaESLIFValuep->luaprecompiledp = (char *) malloc(sz);
+      if (MARPAESLIF_UNLIKELY(marpaESLIFValuep->luaprecompiledp == NULL)) {
+        MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "malloc failure, %s", strerror(errno));
+        goto err;
+      }
+      q = marpaESLIFValuep->luaprecompiledp;
+      marpaESLIFValuep->luaprecompiledl = sz;
+    } else {
+      q = (char *) realloc(marpaESLIFValuep->luaprecompiledp, marpaESLIFValuep->luaprecompiledl + sz);
+      if (MARPAESLIF_UNLIKELY(q == NULL)) {
+        MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "malloc failure, %s", strerror(errno));
+        goto err;
+      }
+      marpaESLIFValuep->luaprecompiledp = q;
+      q += marpaESLIFValuep->luaprecompiledl;
+      marpaESLIFValuep->luaprecompiledl += sz;
+    }
+
+    memcpy(q, p, sz);
   }
 
   rci = 0;
@@ -1067,7 +1131,7 @@ static short _marpaESLIFRecognizer_lua_eventactionb(void *userDatavp, marpaESLIF
     goto err;
   }
 
-  eventCallbackp = marpaESLIFLua_recognizerEventActionResolver(userDatavp, marpaESLIFRecognizerp, marpaESLIFRecognizerp->eventactions);
+  eventCallbackp = marpaESLIFLua_recognizerEventActionResolver(userDatavp, marpaESLIFRecognizerp, marpaESLIFRecognizerp->actions);
   if (MARPAESLIF_UNLIKELY(eventCallbackp == NULL)) {
     MARPAESLIF_ERROR(marpaESLIFRecognizerp->marpaESLIFp, "Lua bindings returned no event-action callback");
     goto err; /* Lua will shutdown anyway */
@@ -1093,194 +1157,205 @@ static marpaESLIFGrammar_t *_marpaESLIF_luaGrammarp(marpaESLIF_t *marpaESLIFp)
 {
   static const char *luas =
     "#\n"
-    "# Based on perl package MarpaX::Languages::Lua::Parser\n"
+    "# Special entry just to make ESLIF happy\n"
     "#\n"
-    ":default                               ::= action => ::undef\n"
+    "dummy ::= 'not used'\n"
+    "#\n"
+    "# Special entries used to hook the lua grammar in ESLIF\n"
+    "#\n"
+    "<lua funcbody after lparen>            :[2]:= <lua optional parlist> ')' <lua block> <lua keyword end>\n"
     "\n"
-    ":discard                               ::= /\\s+/                                # event => whitespace$\n"
-    ":discard                               ::= /--(?:\\[(?!=*\\[))?[^\\n]*/          # event => short_comment$\n"
-    ":discard                               ::= /--\\[(=*)\\[.*?\\]\\1\\]/s           # event => long_comment$\n"
+    "#\n"
+    "# -----------------------------------------------------------------------\n"
+    "# Lua 5.3.4 grammar. Based on perl package MarpaX::Languages::Lua::Parser\n"
+    "# -----------------------------------------------------------------------\n"
+    "#\n"
+    ":desc                                  :[2]:= 'Lua 5.3'\n"
     "\n"
-    "<lua chunk>                            ::=\n"
-    "<lua chunk>                            ::= <lua stat list>\n"
-    "                                         | <lua stat list> <lua laststat>\n"
-    "                                         | <lua stat list> <lua laststat> ';'\n"
-    "                                         | <lua laststat> ';'\n"
-    "                                         | <lua laststat>\n"
-    "<lua stat list>                        ::= <lua stat>\n"
-    "                                         | <lua stat> ';'\n"
-    "                                         | <lua stat list> <lua stat> rank => -1\n"
-    "                                         | <lua stat list> <lua stat> ';'\n"
-    "<lua block>                            ::= <lua chunk>\n"
-    "<lua stat>                             ::= <lua varlist> '=' <lua explist>\n"
-    "                                         | <lua functioncall> rank => -1\n"
-    "                                         | <lua label>\n"
-    "                                         | <lua keyword goto> <lua Name>\n"
-    "                                         | <lua keyword do> <lua block> <lua keyword end>\n"
-    "                                         | <lua keyword while> <lua exp> <lua keyword do> <lua block> <lua keyword end>\n"
-    "                                         | <lua keyword repeat> <lua block> <lua keyword until> <lua exp>\n"
-    "                                         | <lua keyword if> <lua exp> <lua keyword then> <lua block> <lua elseif sequence> <lua optional else block> <lua keyword end>\n"
-    "                                         | <lua keyword for> <lua Name> '=' <lua exp> ',' <lua exp> ',' <lua exp> <lua keyword do> <lua block> <lua keyword end>\n"
-    "                                         | <lua keyword for> <lua Name> '=' <lua exp> ',' <lua exp> <lua keyword do> <lua block> <lua keyword end>\n"
-    "                                         | <lua keyword for> <lua namelist> <lua keyword in> <lua explist> <lua keyword do> <lua block> <lua keyword end>\n"
-    "                                         | <lua keyword function> <lua funcname> <lua funcbody>\n"
-    "                                         | <lua keyword local> <lua keyword function> <lua Name> <lua funcbody>\n"
-    "                                         | <lua keyword local> <lua namelist> <lua optional namelist initialization>\n"
-    "                                         | ';'\n"
-    "<lua elseif sequence>                  ::=\n"
-    "<lua elseif sequence>                  ::= <lua elseif sequence> <lua elseif block>\n"
-    "<lua elseif block>                     ::= <lua keyword elseif> <lua exp> <lua keyword then> <lua block>\n"
-    "<lua optional else block>              ::=\n"
-    "<lua optional else block>              ::= <lua keyword else> <lua block>\n"
-    "<lua optional namelist initialization> ::=\n"
-    "<lua optional namelist initialization> ::= '=' <lua explist>\n"
-    "<lua laststat>                         ::= <lua keyword return> <lua optional explist>\n"
-    "                                         | <lua keyword break>\n"
-    "<lua optional explist>                 ::=\n"
-    "<lua optional explist>                 ::= <lua explist>\n"
-    "<lua funcname>                         ::= <lua dotted name> <lua optional colon name element>\n"
-    "<lua dotted name>                      ::= <lua Name>+ separator => '.' proper => 1\n"
-    "<lua optional colon name element>      ::=\n"
-    "<lua optional colon name element>      ::= ':' <lua Name>\n"
-    "<lua varlist>                          ::= <lua var>+ separator => ',' proper => 1\n"
-    "<lua var>                              ::= <lua Name>\n"
-    "                                         | <lua prefixexp> '[' <lua exp> ']'\n"
-    "                                         | <lua prefixexp> '.' <lua Name>\n"
-    "<lua namelist>                         ::= <lua Name>+ separator => ',' proper => 1\n"
-    "<lua explist>                          ::= <lua exp>+ separator => ',' proper => 1\n"
-    "<lua exp>                              ::= <lua var>\n"
-    "                                         | '(' <lua exp> ')' assoc => group\n"
-    "                                        || <lua exp> <lua args> assoc => right\n"
-    "                                        || <lua exp> ':' <lua Name> <lua args> assoc => right\n"
-    "                                         | <lua keyword nil>\n"
-    "                                         | <lua keyword false>\n"
-    "                                         | <lua keyword true>\n"
-    "                                         | <lua Number>\n"
-    "                                         | <lua String>\n"
-    "                                         | '...'\n"
-    "                                         | <lua tableconstructor>\n"
-    "                                         | <lua function>\n"
-    "                                        || <lua exp> '^' <exponent> assoc => right\n"
-    "                                        || '-' <lua exp>\n"
-    "                                         | <lua keyword not> <lua exp>\n"
-    "                                         | '#' <lua exp>\n"
-    "                                         | '~' <lua exp>\n"
-    "                                        || <lua exp> '*' <lua exp>\n"
-    "                                         | <lua exp> '/' <lua exp>\n"
-    "                                         | <lua exp> '//' <lua exp>\n"
-    "                                         | <lua exp> '%' <lua exp>\n"
-    "                                        || <lua exp> '+' <lua exp>\n"
-    "                                         | <lua exp> '-' <lua exp>\n"
-    "                                        || <lua exp> '..' <lua exp> assoc => right\n"
-    "                                        || <lua exp> '<<' <lua exp>\n"
-    "                                         | <lua exp> '>>' <lua exp>\n"
-    "                                        || <lua exp> '&' <lua exp>\n"
-    "                                        || <lua exp> '~' <lua exp>\n"
-    "                                        || <lua exp> '|' <lua exp>\n"
-    "                                        || <lua exp> '<' <lua exp>\n"
-    "                                         | <lua exp> '<=' <lua exp>\n"
-    "                                         | <lua exp> '>' <lua exp>\n"
-    "                                         | <lua exp> '>=' <lua exp>\n"
-    "                                         | <lua exp> '==' <lua exp> rank => 1\n"
-    "                                         | <lua exp> '~=' <lua exp>\n"
-    "                                        || <lua exp> <lua keyword and> <lua exp> rank => 1\n"
-    "                                        || <lua exp> <lua keyword or> <lua exp>\n"
-    "<exponent>                             ::= <lua var>\n"
-    "                                         | '(' <lua exp> ')'\n"
-    "                                        || <exponent> <lua args>\n"
-    "                                        || <exponent> ':' <lua Name> <lua args>\n"
-    "                                         | <lua keyword nil>\n"
-    "                                         | <lua keyword false>\n"
-    "                                         | <lua keyword true>\n"
-    "                                         | <lua Number>\n"
-    "                                         | <lua String>\n"
-    "                                         | '...'\n"
-    "                                         | <lua tableconstructor>\n"
-    "                                         | <lua function>\n"
-    "                                        || <lua keyword not> <exponent>\n"
-    "                                         | '#' <exponent>\n"
-    "                                         | '-' <exponent>\n"
-    "<lua prefixexp>                        ::= <lua var>\n"
-    "                                         | <lua functioncall>\n"
-    "                                         | '(' <lua exp> ')'\n"
-    "<lua functioncall>                     ::= <lua prefixexp> <lua args>\n"
-    "                                         | <lua prefixexp> ':' <lua Name> <lua args>\n"
-    "<lua args>                             ::= '(' <lua optional explist> ')'\n"
-    "                                         | <lua tableconstructor>\n"
-    "                                         | <lua String>\n"
-    "<lua function>                         ::= <lua keyword function> <lua funcbody>\n"
-    "<lua funcbody>                         ::= '(' <lua optional parlist> ')' <lua block> <lua keyword end>\n"
-    "<lua optional parlist>                 ::=\n"
-    "<lua optional parlist>                 ::= <lua namelist>\n"
-    "                                         | <lua namelist> ',' '...'\n"
-    "                                         | '...'\n"
+    ":discard                               :[2]:= /\\s+/\n"
+    ":discard                               :[2]:= /--(?:\\[(?!=*\\[)|(?!\\[))[^\\n]*/\n"
+    ":discard                               :[2]:= /--\\[(=*)\\[.*?\\]\\1\\]/s\n"
+    "\n"
+    "<lua chunk>                            :[2]:=\n"
+    "<lua chunk>                            :[2]:= <lua stat list>\n"
+    "                                            | <lua stat list> <lua laststat>\n"
+    "                                            | <lua stat list> <lua laststat> ';'\n"
+    "                                            | <lua laststat> ';'\n"
+    "                                            | <lua laststat>\n"
+    "<lua stat list>                        :[2]:= <lua stat>\n"
+    "                                            | <lua stat> ';'\n"
+    "                                            | <lua stat list> <lua stat> rank => -1\n"
+    "                                            | <lua stat list> <lua stat> ';'\n"
+    "<lua block>                            :[2]:= <lua chunk>\n"
+    "<lua stat>                             :[2]:= <lua varlist> '=' <lua explist>\n"
+    "                                            | <lua functioncall> rank => -1\n"
+    "                                            | <lua label>\n"
+    "                                            | <lua keyword goto> <lua Name>\n"
+    "                                            | <lua keyword do> <lua block> <lua keyword end>\n"
+    "                                            | <lua keyword while> <lua exp> <lua keyword do> <lua block> <lua keyword end>\n"
+    "                                            | <lua keyword repeat> <lua block> <lua keyword until> <lua exp>\n"
+    "                                            | <lua keyword if> <lua exp> <lua keyword then> <lua block> <lua elseif sequence> <lua optional else block> <lua keyword end>\n"
+    "                                            | <lua keyword for> <lua Name> '=' <lua exp> ',' <lua exp> ',' <lua exp> <lua keyword do> <lua block> <lua keyword end>\n"
+    "                                            | <lua keyword for> <lua Name> '=' <lua exp> ',' <lua exp> <lua keyword do> <lua block> <lua keyword end>\n"
+    "                                            | <lua keyword for> <lua namelist> <lua keyword in> <lua explist> <lua keyword do> <lua block> <lua keyword end>\n"
+    "                                            | <lua keyword function> <lua funcname> <lua funcbody>\n"
+    "                                            | <lua keyword local> <lua keyword function> <lua Name> <lua funcbody>\n"
+    "                                            | <lua keyword local> <lua namelist> <lua optional namelist initialization>\n"
+    "                                            | ';'\n"
+    "<lua elseif sequence>                  :[2]:=\n"
+    "<lua elseif sequence>                  :[2]:= <lua elseif sequence> <lua elseif block>\n"
+    "<lua elseif block>                     :[2]:= <lua keyword elseif> <lua exp> <lua keyword then> <lua block>\n"
+    "<lua optional else block>              :[2]:=\n"
+    "<lua optional else block>              :[2]:= <lua keyword else> <lua block>\n"
+    "<lua optional namelist initialization> :[2]:=\n"
+    "<lua optional namelist initialization> :[2]:= '=' <lua explist>\n"
+    "<lua laststat>                         :[2]:= <lua keyword return> <lua optional explist>\n"
+    "                                            | <lua keyword break>\n"
+    "<lua optional explist>                 :[2]:=\n"
+    "<lua optional explist>                 :[2]:= <lua explist>\n"
+    "<lua funcname>                         :[2]:= <lua dotted name> <lua optional colon name element>\n"
+    "<lua dotted name>                      :[2]:= <lua Name>+ separator => '.' proper => 1\n"
+    "<lua optional colon name element>      :[2]:=\n"
+    "<lua optional colon name element>      :[2]:= ':' <lua Name>\n"
+    "<lua varlist>                          :[2]:= <lua var>+ separator => ',' proper => 1\n"
+    "<lua var>                              :[2]:= <lua Name>\n"
+    "                                            | <lua prefixexp> '[' <lua exp> ']'\n"
+    "                                            | <lua prefixexp> '.' <lua Name>\n"
+    "<lua namelist>                         :[2]:= <lua Name>+ separator => ',' proper => 1\n"
+    "<lua explist>                          :[2]:= <lua exp>+ separator => ',' proper => 1\n"
+    "<lua exp>                              :[2]:= <lua var>\n"
+    "                                            | '(' <lua exp> ')' assoc => group\n"
+    "                                           || <lua exp> <lua args> assoc => right\n"
+    "                                           || <lua exp> ':' <lua Name> <lua args> assoc => right\n"
+    "                                            | <lua keyword nil>\n"
+    "                                            | <lua keyword false>\n"
+    "                                            | <lua keyword true>\n"
+    "                                            | <lua Number>\n"
+    "                                            | <lua String>\n"
+    "                                            | '...'\n"
+    "                                            | <lua tableconstructor>\n"
+    "                                            | <lua function>\n"
+    "                                           || <lua exp> '^' <exponent> assoc => right\n"
+    "                                           || '-' <lua exp>\n"
+    "                                            | <lua keyword not> <lua exp>\n"
+    "                                            | '#' <lua exp>\n"
+    "                                            | '~' <lua exp>\n"
+    "                                           || <lua exp> '*' <lua exp>\n"
+    "                                            | <lua exp> '/' <lua exp>\n"
+    "                                            | <lua exp> '//' <lua exp>\n"
+    "                                            | <lua exp> '%' <lua exp>\n"
+    "                                           || <lua exp> '+' <lua exp>\n"
+    "                                            | <lua exp> '-' <lua exp>\n"
+    "                                           || <lua exp> '..' <lua exp> assoc => right\n"
+    "                                           || <lua exp> '<<' <lua exp>\n"
+    "                                            | <lua exp> '>>' <lua exp>\n"
+    "                                           || <lua exp> '&' <lua exp>\n"
+    "                                           || <lua exp> '~' <lua exp>\n"
+    "                                           || <lua exp> '|' <lua exp>\n"
+    "                                           || <lua exp> '<' <lua exp>\n"
+    "                                            | <lua exp> '<=' <lua exp>\n"
+    "                                            | <lua exp> '>' <lua exp>\n"
+    "                                            | <lua exp> '>=' <lua exp>\n"
+    "                                            | <lua exp> '==' <lua exp> rank => 1\n"
+    "                                            | <lua exp> '~=' <lua exp>\n"
+    "                                           || <lua exp> <lua keyword and> <lua exp> rank => 1\n"
+    "                                           || <lua exp> <lua keyword or> <lua exp>\n"
+    "<exponent>                             :[2]:= <lua var>\n"
+    "                                            | '(' <lua exp> ')'\n"
+    "                                           || <exponent> <lua args>\n"
+    "                                           || <exponent> ':' <lua Name> <lua args>\n"
+    "                                            | <lua keyword nil>\n"
+    "                                            | <lua keyword false>\n"
+    "                                            | <lua keyword true>\n"
+    "                                            | <lua Number>\n"
+    "                                            | <lua String>\n"
+    "                                            | '...'\n"
+    "                                            | <lua tableconstructor>\n"
+    "                                            | <lua function>\n"
+    "                                           || <lua keyword not> <exponent>\n"
+    "                                            | '#' <exponent>\n"
+    "                                            | '-' <exponent>\n"
+    "<lua prefixexp>                        :[2]:= <lua var>\n"
+    "                                            | <lua functioncall>\n"
+    "                                            | '(' <lua exp> ')'\n"
+    "<lua functioncall>                     :[2]:= <lua prefixexp> <lua args>\n"
+    "                                            | <lua prefixexp> ':' <lua Name> <lua args>\n"
+    "<lua args>                             :[2]:= '(' <lua optional explist> ')'\n"
+    "                                            | <lua tableconstructor>\n"
+    "                                            | <lua String>\n"
+    "<lua function>                         :[2]:= <lua keyword function> <lua funcbody>\n"
+    "<lua funcbody>                         :[2]:= '(' <lua optional parlist> ')' <lua block> <lua keyword end>\n"
+    "<lua optional parlist   >              :[2]:=\n"
+    "<lua optional parlist>                 :[2]:= <lua namelist>\n"
+    "                                            | <lua namelist> ',' '...'\n"
+    "                                            | '...'\n"
     " \n"
     "# A lone comma is not allowed in an empty fieldlist,\n"
     "# apparently. This is why I use a dedicated rule\n"
     "# for an empty table and a '+' sequence,\n"
     "# instead of a '*' sequence.\n"
     " \n"
-    "<lua tableconstructor>                 ::= '{' '}'\n"
-    "                                         | '{' <lua fieldlist> '}'\n"
-    "<lua fieldlist>                        ::= <lua field>+ separator => [,;]\n"
-    "<lua field>                            ::= '[' <lua exp> ']' '=' <lua exp>\n"
-    "                                         | <lua Name> '=' <lua exp>\n"
-    "                                         | <lua exp>\n"
-    "<lua label>                            ::= '::' <lua Name> '::'\n"
-    "<lua Name>                             ::= <LUA NAME> - <LUA RESERVED KEYWORDS>\n"
-    "<lua String>                           ::= /'(?:[^\\\\']*(?:\\\\.[^\\\\']*)*)'|\"(?:[^\\\\\"]*(?:\\\\.[^\\\\\"]*)*)\"|\\[(=*)\\[.*?\\]\\1\\]/su\n"
+    "<lua tableconstructor>                 :[2]:= '{' '}'\n"
+    "                                            | '{' <lua fieldlist> '}'\n"
+    "<lua fieldlist>                        :[2]:= <lua field>+ separator => [,;]\n"
+    "<lua field>                            :[2]:= '[' <lua exp> ']' '=' <lua exp>\n"
+    "                                            | <lua Name> '=' <lua exp>\n"
+    "                                            | <lua exp>\n"
+    "<lua label>                            :[2]:= '::' <lua Name> '::'\n"
+    "<lua Name>                             :[2]:= <LUA NAME> - <LUA RESERVED KEYWORDS>\n"
+    "<lua String>                           :[2]:= /'(?:[^\\\\']*(?:\\\\.[^\\\\']*)*)'|\"(?:[^\\\\\"]*(?:\\\\.[^\\\\\"]*)*)\"|\\[(=*)\\[.*?\\]\\1\\]/su\n"
     "\n"
     "# A lua number can start with '.' if the later is followed by at least one (hex) digit\n"
-    "<lua Number>                           ::= /(?:\\.[0-9]+|[0-9]+(?:\\.[0-9]*)?)(?:[eE][+-]?[0-9]+)?/ \n"
-    "                                         | /0[xX](?:\\.[a-fA-F0-9]+|[a-fA-F0-9]+(?:\\.[a-fA-F0-9]*)?)(?:\\.[a-fA-F0-9]*)?(?:[pP][+-]?[0-9]+)?/ \n"
+    "<lua Number>                           :[2]:= /(?:\\.[0-9]+|[0-9]+(?:\\.[0-9]*)?)(?:[eE][+-]?[0-9]+)?/ \n"
+    "                                            | /0[xX](?:\\.[a-fA-F0-9]+|[a-fA-F0-9]+(?:\\.[a-fA-F0-9]*)?)(?:\\.[a-fA-F0-9]*)?(?:[pP][+-]?[0-9]+)?/ \n"
     "\n"
     "\n"
-    "<lua keyword and>                        ~ 'and'\n"
-    "<lua keyword break>                      ~ 'break'\n"
-    "<lua keyword do>                         ~ 'do'\n"
-    "<lua keyword else>                       ~ 'else'\n"
-    "<lua keyword elseif>                     ~ 'elseif'\n"
-    "<lua keyword end>                        ~ 'end'\n"
-    "<lua keyword false>                      ~ 'false'\n"
-    "<lua keyword for>                        ~ 'for'\n"
-    "<lua keyword function>                   ~ 'function'\n"
-    "<lua keyword if>                         ~ 'if'\n"
-    "<lua keyword in>                         ~ 'in'\n"
-    "<lua keyword local>                      ~ 'local'\n"
-    "<lua keyword nil>                        ~ 'nil'\n"
-    "<lua keyword not>                        ~ 'not'\n"
-    "<lua keyword or>                         ~ 'or'\n"
-    "<lua keyword repeat>                     ~ 'repeat'\n"
-    "<lua keyword return>                     ~ 'return'\n"
-    "<lua keyword then>                       ~ 'then'\n"
-    "<lua keyword true>                       ~ 'true'\n"
-    "<lua keyword until>                      ~ 'until'\n"
-    "<lua keyword while>                      ~ 'while'\n"
-    "<lua keyword goto>                       ~ 'goto'\n"
+    "<lua keyword and>                      :[3]:= 'and'\n"
+    "<lua keyword break>                    :[3]:= 'break'\n"
+    "<lua keyword do>                       :[3]:= 'do'\n"
+    "<lua keyword else>                     :[3]:= 'else'\n"
+    "<lua keyword elseif>                   :[3]:= 'elseif'\n"
+    "<lua keyword end>                      :[3]:= 'end'\n"
+    "<lua keyword false>                    :[3]:= 'false'\n"
+    "<lua keyword for>                      :[3]:= 'for'\n"
+    "<lua keyword function>                 :[3]:= 'function'\n"
+    "<lua keyword if>                       :[3]:= 'if'\n"
+    "<lua keyword in>                       :[3]:= 'in'\n"
+    "<lua keyword local>                    :[3]:= 'local'\n"
+    "<lua keyword nil>                      :[3]:= 'nil'\n"
+    "<lua keyword not>                      :[3]:= 'not'\n"
+    "<lua keyword or>                       :[3]:= 'or'\n"
+    "<lua keyword repeat>                   :[3]:= 'repeat'\n"
+    "<lua keyword return>                   :[3]:= 'return'\n"
+    "<lua keyword then>                     :[3]:= 'then'\n"
+    "<lua keyword true>                     :[3]:= 'true'\n"
+    "<lua keyword until>                    :[3]:= 'until'\n"
+    "<lua keyword while>                    :[3]:= 'while'\n"
+    "<lua keyword goto>                     :[3]:= 'goto'\n"
     " \n"
-    "<LUA NAME>                               ~ /[a-zA-Z_][a-zA-Z_0-9]*/\n"
-    "<LUA RESERVED KEYWORDS>                  ~ 'and'\n"
-    "                                         | 'break'\n"
-    "                                         | 'do'\n"
-    "                                         | 'else'\n"
-    "                                         | 'elseif'\n"
-    "                                         | 'end'\n"
-    "                                         | 'false'\n"
-    "                                         | 'for'\n"
-    "                                         | 'function'\n"
-    "                                         | 'if'\n"
-    "                                         | 'in'\n"
-    "                                         | 'local'\n"
-    "                                         | 'nil'\n"
-    "                                         | 'not'\n"
-    "                                         | 'or'\n"
-    "                                         | 'repeat'\n"
-    "                                         | 'return'\n"
-    "                                         | 'then'\n"
-    "                                         | 'true'\n"
-    "                                         | 'until'\n"
-    "                                         | 'while'\n"
-    "                                         | 'goto'\n"
+    "<LUA NAME>                             :[3]:= /[a-zA-Z_][a-zA-Z_0-9]*/\n"
+    "<LUA RESERVED KEYWORDS>                :[3]:= 'and'\n"
+    "                                            | 'break'\n"
+    "                                            | 'do'\n"
+    "                                            | 'else'\n"
+    "                                            | 'elseif'\n"
+    "                                            | 'end'\n"
+    "                                            | 'false'\n"
+    "                                            | 'for'\n"
+    "                                            | 'function'\n"
+    "                                            | 'if'\n"
+    "                                            | 'in'\n"
+    "                                            | 'local'\n"
+    "                                            | 'nil'\n"
+    "                                            | 'not'\n"
+    "                                            | 'or'\n"
+    "                                            | 'repeat'\n"
+    "                                            | 'return'\n"
+    "                                            | 'then'\n"
+    "                                            | 'true'\n"
+    "                                            | 'until'\n"
+    "                                            | 'while'\n"
+    "                                            | 'goto'\n"
     "\n"
     ;
   marpaESLIFGrammarOption_t marpaESLIFGrammarOption;
@@ -1291,4 +1366,194 @@ static marpaESLIFGrammar_t *_marpaESLIF_luaGrammarp(marpaESLIF_t *marpaESLIFp)
   marpaESLIFGrammarOption.encodingl = 0; /* ASCII is the default */
 
   return marpaESLIFGrammar_newp(marpaESLIFp, &marpaESLIFGrammarOption);
+}
+
+/*****************************************************************************/
+static short _marpaESLIFValue_lua_precompileb(marpaESLIFValue_t *marpaESLIFValuep, char *inputs, size_t inputl)
+/*****************************************************************************/
+{
+  short  rcb;
+
+  if ((inputs == NULL) || (inputl <= 0)) {
+    errno = EINVAL;
+    goto err;
+  }
+
+  /* Create the lua state if needed */
+  if (MARPAESLIF_UNLIKELY(! _marpaESLIFValue_lua_newb(marpaESLIFValuep))) {
+    goto err;
+  }
+
+  /* Compiles lua script */
+  LUAL_LOADBUFFER(marpaESLIFValuep, inputs, inputl, "=<luascript/>");
+
+  /* Result is a "function" at the top of the stack - we now have to dump it so that lua knows about it. */
+  /* We voluntarily strip any debug information so that comparing the bytecodes should do it. */
+  LUA_DUMP(marpaESLIFValuep, _marpaESLIFValue_lua_writeri, marpaESLIFValuep, 1 /* strip */);
+
+  /* Clear the stack */
+  LUA_SETTOP(marpaESLIFValuep, 0);
+
+  rcb = 1;
+  goto done;
+
+ err:
+  rcb = 0;
+
+ done:
+  return rcb;
+}
+
+/*****************************************************************************/
+static short _marpaESLIFValue_lua_action_functionb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb)
+/*****************************************************************************/
+{
+  static const char *funcs = "_marpaESLIFValue_lua_action_functionb";
+  int                topi;
+  short              rcb;
+
+  /* Create the lua state if needed */
+  if (MARPAESLIF_UNLIKELY(! _marpaESLIFValue_lua_newb(marpaESLIFValuep))) {
+    goto err;
+  }
+
+  LUA_GETTOP(marpaESLIFValuep, &topi);
+  LUAL_LOADSTRING(marpaESLIFValuep, marpaESLIFValuep->actions);
+  LUA_PCALL(marpaESLIFValuep, 0, 1, 0);
+  rcb = marpaESLIFLua_valueCallbackb(userDatavp, marpaESLIFValuep, arg0i, argni, NULL /* marpaESLIFValueResultLexemep */, resulti, nullableb, 0 /* symbolb */, 1 /* precompiledb */);
+  LUA_SETTOP(marpaESLIFValuep, topi);
+
+  if (MARPAESLIF_UNLIKELY(! rcb)) goto err;
+
+  goto done;
+
+ err:
+  MARPAESLIFLUA_LOG_LATEST_ERROR(marpaESLIFValuep);
+  rcb = 0;
+
+ done:
+  return rcb;
+}
+
+/*****************************************************************************/
+static short _marpaESLIFValue_lua_symbol_functionb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, marpaESLIFValueResult_t *marpaESLIFValueResultp, int resulti)
+/*****************************************************************************/
+{
+  static const char *funcs = "_marpaESLIFValue_lua_symbol_functionb";
+  int                topi;
+  short              rcb;
+
+  /* Create the lua state if needed */
+  if (MARPAESLIF_UNLIKELY(! _marpaESLIFValue_lua_newb(marpaESLIFValuep))) {
+    goto err;
+  }
+
+  LUA_GETTOP(marpaESLIFValuep, &topi);
+  LUAL_LOADSTRING(marpaESLIFValuep, marpaESLIFValuep->actions);
+  LUA_PCALL(marpaESLIFValuep, 0, 1, 0);
+  rcb = marpaESLIFLua_valueCallbackb(userDatavp, marpaESLIFValuep, -1 /* arg0i */, -1 /* argni */, marpaESLIFValueResultp, resulti, 0 /* nullableb */, 1 /* symbolb */, 1 /* precompiledb */);
+  LUA_SETTOP(marpaESLIFValuep, topi);
+  if (MARPAESLIF_UNLIKELY(! rcb)) goto err;
+
+  goto done;
+
+ err:
+  MARPAESLIFLUA_LOG_LATEST_ERROR(marpaESLIFValuep);
+  rcb = 0;
+
+ done:
+  return rcb;
+}
+
+/*****************************************************************************/
+static short _marpaESLIFRecognizer_lua_ifaction_functionb(void *userDatavp, marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFValueResult_t *marpaESLIFValueResultp, marpaESLIFValueResultBool_t *marpaESLIFValueResultBoolp)
+/*****************************************************************************/
+{
+  static const char *funcs = "_marpaESLIFRecognizer_lua_ifaction_functionb";
+  int                topi;
+  short              rcb;
+
+  /* Create the lua state if needed */
+  if (MARPAESLIF_UNLIKELY(! _marpaESLIFRecognizer_lua_newb(marpaESLIFRecognizerp))) {
+    goto err;
+  }
+
+  LUA_GETTOP(marpaESLIFRecognizerp, &topi);
+  LUAL_LOADSTRING(marpaESLIFRecognizerp, marpaESLIFRecognizerp->actions);
+  LUA_PCALL(marpaESLIFRecognizerp, 0, 1, 0);
+  rcb = marpaESLIFLua_ifCallbackb(userDatavp, marpaESLIFRecognizerp, marpaESLIFValueResultp, marpaESLIFValueResultBoolp, 1 /* precompiledb */);
+  LUA_SETTOP(marpaESLIFRecognizerp, topi);
+
+  if (MARPAESLIF_UNLIKELY(! rcb)) goto err;
+
+  goto done;
+
+ err:
+  MARPAESLIFLUA_LOG_LATEST_ERROR(marpaESLIFRecognizerp);
+  rcb = 0;
+
+ done:
+  return rcb;
+}
+
+/*****************************************************************************/
+static short _marpaESLIFRecognizer_lua_regexaction_functionb(void *userDatavp, marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFValueResult_t *marpaESLIFCalloutBlockp, marpaESLIFValueResultInt_t *marpaESLIFValueResultOutp)
+/*****************************************************************************/
+{
+  static const char *funcs = "_marpaESLIFRecognizer_lua_regexaction_functionb";
+  int                topi;
+  short              rcb;
+
+  /* Create the lua state if needed */
+  if (MARPAESLIF_UNLIKELY(! _marpaESLIFRecognizer_lua_newb(marpaESLIFRecognizerp))) {
+    goto err;
+  }
+
+  LUA_GETTOP(marpaESLIFRecognizerp, &topi);
+  LUAL_LOADSTRING(marpaESLIFRecognizerp, marpaESLIFRecognizerp->actions);
+  LUA_PCALL(marpaESLIFRecognizerp, 0, 1, 0);
+  rcb = marpaESLIFLua_regexCallbackb(userDatavp, marpaESLIFRecognizerp, marpaESLIFCalloutBlockp, marpaESLIFValueResultOutp, 1 /* precompiledb */);
+  LUA_SETTOP(marpaESLIFRecognizerp, topi);
+
+  if (MARPAESLIF_UNLIKELY(! rcb)) goto err;
+
+  goto done;
+
+ err:
+  MARPAESLIFLUA_LOG_LATEST_ERROR(marpaESLIFRecognizerp);
+  rcb = 0;
+
+ done:
+  return rcb;
+}
+
+/*****************************************************************************/
+static short _marpaESLIFRecognizer_lua_eventaction_functionb(void *userDatavp, marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFEvent_t *eventArrayp, size_t eventArrayl, marpaESLIFValueResultBool_t *marpaESLIFValueResultBoolp)
+/*****************************************************************************/
+{
+  static const char *funcs = "_marpaESLIFRecognizer_lua_eventaction_functionb";
+  int                topi;
+  short              rcb;
+
+  /* Create the lua state if needed */
+  if (MARPAESLIF_UNLIKELY(! _marpaESLIFRecognizer_lua_newb(marpaESLIFRecognizerp))) {
+    goto err;
+  }
+
+  LUA_GETTOP(marpaESLIFRecognizerp, &topi);
+  LUAL_LOADSTRING(marpaESLIFRecognizerp, marpaESLIFRecognizerp->actions);
+  LUA_PCALL(marpaESLIFRecognizerp, 0, 1, 0);
+  rcb = marpaESLIFLua_eventCallbackb(userDatavp, marpaESLIFRecognizerp, eventArrayp, eventArrayl, marpaESLIFValueResultBoolp, 1 /* precompiledb */);
+  LUA_SETTOP(marpaESLIFRecognizerp, topi);
+
+  if (MARPAESLIF_UNLIKELY(! rcb)) goto err;
+
+  goto done;
+
+ err:
+  MARPAESLIFLUA_LOG_LATEST_ERROR(marpaESLIFRecognizerp);
+  rcb = 0;
+
+ done:
+  return rcb;
 }

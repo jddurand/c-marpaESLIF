@@ -7,6 +7,8 @@
 static const char  *_marpaESLIF_bootstrap_descEncodingInternals = "ASCII";
 static const char  *_marpaESLIF_bootstrap_descInternals = "INTERNAL";
 static const size_t _marpaESLIF_bootstrap_descInternall = 8; /* strlen("INTERNAL") */
+static const char  *_marpaESLIF_bootstrap_lua_return_function_lparens = "return function(";
+static const char  *_marpaESLIF_bootstrap_lua_function_lparens = "function(";
 
 /* For ord2utf */
 static const int utf8_table1[] = { 0x7f, 0x7ff, 0xffff, 0x1fffff, 0x3ffffff, 0x7fffffff};
@@ -187,6 +189,8 @@ static        short _marpaESLIF_bootstrap_G1_action_eventactionb(void *userDatav
 static        short _marpaESLIF_bootstrap_G1_action_defaultencodingb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
 static        short _marpaESLIF_bootstrap_G1_action_fallbackencodingb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
 static        short _marpaESLIF_bootstrap_G1_action_space_concatb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
+static        short _marpaESLIF_bootstrap_G1_action_lua_functionb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
+static inline short _marpaESLIF_bootstrap_G1_action_generic_1b(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb, char *contexts, void *contextp);
 
 /* Helpers */
 #define MARPAESLIF_BOOTSTRAP_GET_ARRAY(marpaESLIFValuep, indicei, _p, _l) do { \
@@ -870,7 +874,7 @@ static inline marpaESLIF_symbol_t *_marpaESLIF_bootstrap_check_meta_by_namep(mar
   }
 
   if (forcecreateb || (createb && (symbolp == NULL))) {
-    metap = _marpaESLIF_meta_newp(marpaESLIFp, grammarp, MARPAWRAPPERGRAMMAR_EVENTTYPE_NONE, asciinames, NULL /* descEncodings */, NULL /* descs */, 0 /* descl */);
+    metap = _marpaESLIF_meta_newp(marpaESLIFp, grammarp, MARPAWRAPPERGRAMMAR_EVENTTYPE_NONE, asciinames, NULL /* descEncodings */, NULL /* descs */, 0 /* descl */, 0 /* lazyb */);
     if (MARPAESLIF_UNLIKELY(metap == NULL)) {
       goto err;
     }
@@ -1927,6 +1931,7 @@ static void _marpaESLIF_bootstrap_freeDefaultActionv(void *userDatavNotUsedp, ma
   else if (marpaESLIFValueResultp->contextp == MARPAESLIF_BOOTSTRAP_STACK_TYPE_ALTERNATIVE_NAME                ) { free(marpaESLIFValueResultp->u.a.p); }
   else if (marpaESLIFValueResultp->contextp == MARPAESLIF_BOOTSTRAP_STACK_TYPE_ARRAY                           ) { free(marpaESLIFValueResultp->u.a.p); }
   else if (marpaESLIFValueResultp->contextp == MARPAESLIF_BOOTSTRAP_STACK_TYPE_STRING                          ) { _marpaESLIF_string_freev((marpaESLIF_string_t *) marpaESLIFValueResultp->u.p.p, 0 /* onStackb */); }
+  else if (marpaESLIFValueResultp->contextp == MARPAESLIF_BOOTSTRAP_STACK_TYPE_LUA_FUNCTION                    ) { free(marpaESLIFValueResultp->u.a.p); }
   else                                                                                   { }
 }
 
@@ -2126,6 +2131,7 @@ static marpaESLIFValueRuleCallback_t _marpaESLIF_bootstrap_ruleActionResolver(vo
   else if (strcmp(actions, "G1_action_defaultencoding")                  == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_action_defaultencodingb;                  }
   else if (strcmp(actions, "G1_action_fallbackencoding")                 == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_action_fallbackencodingb;                 }
   else if (strcmp(actions, "G1_action_space_concat")                     == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_action_space_concatb;                     }
+  else if (strcmp(actions, "G1_action_lua_function")                     == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_action_lua_functionb;                     }
   else
   {
     MARPAESLIF_ERRORF(marpaESLIFp, "Unsupported action \"%s\"", actions);
@@ -2618,78 +2624,7 @@ static short _marpaESLIF_bootstrap_G1_action_adverb_list_itemsb(void *userDatavp
 static short _marpaESLIF_bootstrap_G1_action_action_1b(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb)
 /*****************************************************************************/
 {
-  /* action ::= 'action' '=>' <action name> */
-  marpaESLIF_t        *marpaESLIFp = marpaESLIFValuep->marpaESLIFp; /* marpaESLIFGrammar_eslifp(marpaESLIFRecognizer_grammarp(marpaESLIFValue_recognizerp(marpaESLIFValuep))); */
-  char                *names       = NULL;
-  marpaESLIF_action_t *actionp     = NULL;
-  char                *actions     = NULL;
-  char                *tmps;
-  short                luab;
-  short                rcb;
-
-  /* Cannot be nullable */
-  if (MARPAESLIF_UNLIKELY(nullableb)) {
-    MARPAESLIF_ERROR(marpaESLIFp, "Nullable mode is not supported");
-    goto err;
-  }
-
-  /* <action name> is an ASCII string  */
-  MARPAESLIF_BOOTSTRAP_GET_ASCII(marpaESLIFValuep, argni, names);
-  /* It is a non-sense to not have no action in this case */
-  if (MARPAESLIF_UNLIKELY(names == NULL)) {
-    MARPAESLIF_ERRORF(marpaESLIFp, "action at indice %d returned NULL", argni);
-    goto err;
-  }
-  if (strstr(names, LUA_ACTION_PREFIX) == names) {
-    /* lua action ? */
-    tmps = names + strlen(LUA_ACTION_PREFIX);
-    if (MARPAESLIF_UNLIKELY(*tmps == '\0')) {
-      MARPAESLIF_ERRORF(marpaESLIFp, "No lua identifier after %s", LUA_ACTION_PREFIX);
-      goto err;
-    }
-    actions = strdup(tmps);
-    if (MARPAESLIF_UNLIKELY(actions == NULL)) {
-      MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "strdup failure, %s", strerror(errno));
-      goto err;
-    }
-    luab = 1;
-  } else {
-    actions = strdup(names);
-    if (MARPAESLIF_UNLIKELY(actions == NULL)) {
-      MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "strdup failure, %s", strerror(errno));
-      goto err;
-    }
-    luab = 0;
-  }
-
-  actionp = (marpaESLIF_action_t *) malloc(sizeof(marpaESLIF_action_t));
-  if (MARPAESLIF_UNLIKELY(actionp == NULL)) {
-    MARPAESLIF_ERRORF(marpaESLIFp, "malloc failure, %s", strerror(errno));
-    goto err;
-  }
-  if (luab) {
-    actionp->type = MARPAESLIF_ACTION_TYPE_LUA;
-    actionp->u.luas = actions;
-  } else {
-    actionp->type = MARPAESLIF_ACTION_TYPE_NAME;
-    actionp->u.names = actions;
-  }
-  actions = NULL; /* actions is now in actionp */
-
-  MARPAESLIF_BOOTSTRAP_SET_PTR(marpaESLIFValuep, resulti, MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_ITEM_ACTION, actionp);
-
-  rcb = 1;
-  goto done;
-
- err:
-  _marpaESLIF_action_freev(actionp);
-  rcb = 0;
-
- done:
-  if (actions != NULL) {
-    free(actions);
-  }
-  return rcb;
+  return _marpaESLIF_bootstrap_G1_action_generic_1b(userDatavp, marpaESLIFValuep, arg0i, argni, resulti, nullableb, "action", MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_ITEM_ACTION);
 }
 
 /*****************************************************************************/
@@ -3190,77 +3125,7 @@ static short _marpaESLIF_bootstrap_G1_action_symbolaction_1b(void *userDatavp, m
 /*****************************************************************************/
 {
   /* action ::= 'symbol-action' '=>' <action name> */
-  marpaESLIF_t        *marpaESLIFp   = marpaESLIFValuep->marpaESLIFp; /*marpaESLIFGrammar_eslifp(marpaESLIFRecognizer_grammarp(marpaESLIFValue_recognizerp(marpaESLIFValuep))); */
-  char                *names         = NULL;
-  marpaESLIF_action_t *symbolactionp = NULL;
-  char                *actions       = NULL;
-  char                *tmps;
-  short                luab;
-  short                rcb;
-
-  /* Cannot be nullable */
-  if (MARPAESLIF_UNLIKELY(nullableb)) {
-    MARPAESLIF_ERROR(marpaESLIFp, "Nullable mode is not supported");
-    goto err;
-  }
-
-  /* <action name> is an ASCII string  */
-  MARPAESLIF_BOOTSTRAP_GET_ASCII(marpaESLIFValuep, argni, names);
-  /* It is a non-sense to not have no action in this case */
-  if (MARPAESLIF_UNLIKELY(names == NULL)) {
-    MARPAESLIF_ERRORF(marpaESLIFp, "symbol-action at indice %d returned NULL", argni);
-    goto err;
-  }
-  if (strstr(names, LUA_ACTION_PREFIX) == names) {
-    /* lua action ? */
-    tmps = names + strlen(LUA_ACTION_PREFIX);
-    if (MARPAESLIF_UNLIKELY(*tmps == '\0')) {
-      MARPAESLIF_ERRORF(marpaESLIFp, "No lua identifier after %s", LUA_ACTION_PREFIX);
-      goto err;
-    }
-    actions = strdup(tmps);
-    if (MARPAESLIF_UNLIKELY(actions == NULL)) {
-      MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "strdup failure, %s", strerror(errno));
-      goto err;
-    }
-    luab = 1;
-  } else {
-    actions = strdup(names);
-    if (MARPAESLIF_UNLIKELY(actions == NULL)) {
-      MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "strdup failure, %s", strerror(errno));
-      goto err;
-    }
-    luab = 0;
-  }
-
-  symbolactionp = (marpaESLIF_action_t *) malloc(sizeof(marpaESLIF_action_t));
-  if (MARPAESLIF_UNLIKELY(symbolactionp == NULL)) {
-    MARPAESLIF_ERRORF(marpaESLIFp, "malloc failure, %s", strerror(errno));
-    goto err;
-  }
-  if (luab) {
-    symbolactionp->type = MARPAESLIF_ACTION_TYPE_LUA;
-    symbolactionp->u.luas = actions;
-  } else {
-    symbolactionp->type = MARPAESLIF_ACTION_TYPE_NAME;
-    symbolactionp->u.names = actions;
-  }
-  actions = NULL; /* actions is now in actionp */
-
-  MARPAESLIF_BOOTSTRAP_SET_PTR(marpaESLIFValuep, resulti, MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_ITEM_SYMBOLACTION, symbolactionp);
-
-  rcb = 1;
-  goto done;
-
- err:
-  _marpaESLIF_action_freev(symbolactionp);
-  rcb = 0;
-
- done:
-  if (actions != NULL) {
-    free(actions);
-  }
-  return rcb;
+  return _marpaESLIF_bootstrap_G1_action_generic_1b(userDatavp, marpaESLIFValuep, arg0i, argni, resulti, nullableb, "symbol-action", MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_ITEM_SYMBOLACTION);
 }
 
 /*****************************************************************************/
@@ -5534,7 +5399,7 @@ static short _marpaESLIF_bootstrap_G1_action_desc_ruleb(void *userDatavp, marpaE
   }
   grammarp->descautob = 0;
 
-  /* Overwrite grammar start */
+  /* Overwrite grammar description */
   MARPAESLIF_TRACEF(marpaESLIFp, funcs, "Grammar level %d description set to %s", grammarp->leveli, grammarp->descp->asciis);
 
   rcb = 1;
@@ -7789,77 +7654,7 @@ static short _marpaESLIF_bootstrap_G1_action_ifactionb(void *userDatavp, marpaES
 /*****************************************************************************/
 {
   /* <if action> ::= 'if-action' '=>' <if action name> */
-  marpaESLIF_t        *marpaESLIFp = marpaESLIFValuep->marpaESLIFp; /*marpaESLIFGrammar_eslifp(marpaESLIFRecognizer_grammarp(marpaESLIFValue_recognizerp(marpaESLIFValuep))); */
-  char                *names       = NULL;
-  marpaESLIF_action_t *ifactionp   = NULL;
-  char                *actions     = NULL;
-  char                *tmps;
-  short                luab;
-  short                rcb;
-
-  /* Cannot be nullable */
-  if (MARPAESLIF_UNLIKELY(nullableb)) {
-    MARPAESLIF_ERROR(marpaESLIFp, "Nullable mode is not supported");
-    goto err;
-  }
-
-  /* <action name> is an ASCII string  */
-  MARPAESLIF_BOOTSTRAP_GET_ASCII(marpaESLIFValuep, argni, names);
-  /* It is a non-sense to not have no action in this case */
-  if (MARPAESLIF_UNLIKELY(names == NULL)) {
-    MARPAESLIF_ERRORF(marpaESLIFp, "if-action at indice %d returned NULL", argni);
-    goto err;
-  }
-  if (strstr(names, LUA_ACTION_PREFIX) == names) {
-    /* lua action ? */
-    tmps = names + strlen(LUA_ACTION_PREFIX);
-    if (MARPAESLIF_UNLIKELY(*tmps == '\0')) {
-      MARPAESLIF_ERRORF(marpaESLIFp, "No lua identifier after %s", LUA_ACTION_PREFIX);
-      goto err;
-    }
-    actions = strdup(tmps);
-    if (MARPAESLIF_UNLIKELY(actions == NULL)) {
-      MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "strdup failure, %s", strerror(errno));
-      goto err;
-    }
-    luab = 1;
-  } else {
-    actions = strdup(names);
-    if (MARPAESLIF_UNLIKELY(actions == NULL)) {
-      MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "strdup failure, %s", strerror(errno));
-      goto err;
-    }
-    luab = 0;
-  }
-
-  ifactionp = (marpaESLIF_action_t *) malloc(sizeof(marpaESLIF_action_t));
-  if (MARPAESLIF_UNLIKELY(ifactionp == NULL)) {
-    MARPAESLIF_ERRORF(marpaESLIFp, "malloc failure, %s", strerror(errno));
-    goto err;
-  }
-  if (luab) {
-    ifactionp->type = MARPAESLIF_ACTION_TYPE_LUA;
-    ifactionp->u.luas = actions;
-  } else {
-    ifactionp->type = MARPAESLIF_ACTION_TYPE_NAME;
-    ifactionp->u.names = actions;
-  }
-  actions = NULL; /* actions is now in actionp */
-
-  MARPAESLIF_BOOTSTRAP_SET_PTR(marpaESLIFValuep, resulti, MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_ITEM_IFACTION, ifactionp);
-
-  rcb = 1;
-  goto done;
-
- err:
-  _marpaESLIF_action_freev(ifactionp);
-  rcb = 0;
-
- done:
-  if (actions != NULL) {
-    free(actions);
-  }
-  return rcb;
+  return _marpaESLIF_bootstrap_G1_action_generic_1b(userDatavp, marpaESLIFValuep, arg0i, argni, resulti, nullableb, "if-action", MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_ITEM_IFACTION);
 }
 
 /*****************************************************************************/
@@ -7867,77 +7662,7 @@ static short _marpaESLIF_bootstrap_G1_action_regexactionb(void *userDatavp, marp
 /*****************************************************************************/
 {
   /* <regex action> ::= 'regex-action' '=>' <regex action name> */
-  marpaESLIF_t        *marpaESLIFp    = marpaESLIFValuep->marpaESLIFp; /*marpaESLIFGrammar_eslifp(marpaESLIFRecognizer_grammarp(marpaESLIFValue_recognizerp(marpaESLIFValuep))); */
-  char                *names          = NULL;
-  char                *actions        = NULL;
-  marpaESLIF_action_t *regexactionp   = NULL;
-  char                *tmps;
-  short                luab;
-  short                rcb;
-
-  /* Cannot be nullable */
-  if (MARPAESLIF_UNLIKELY(nullableb)) {
-    MARPAESLIF_ERROR(marpaESLIFp, "Nullable mode is not supported");
-    goto err;
-  }
-
-  /* <action name> is an ASCII string  */
-  MARPAESLIF_BOOTSTRAP_GET_ASCII(marpaESLIFValuep, argni, names);
-  /* It is a non-sense to not have no action in this case */
-  if (MARPAESLIF_UNLIKELY(names == NULL)) {
-    MARPAESLIF_ERRORF(marpaESLIFp, "regex-action at indice %d returned NULL", argni);
-    goto err;
-  }
-  if (strstr(names, LUA_ACTION_PREFIX) == names) {
-    /* lua action ? */
-    tmps = names + strlen(LUA_ACTION_PREFIX);
-    if (MARPAESLIF_UNLIKELY(*tmps == '\0')) {
-      MARPAESLIF_ERRORF(marpaESLIFp, "No lua identifier after %s", LUA_ACTION_PREFIX);
-      goto err;
-    }
-    actions = strdup(tmps);
-    if (MARPAESLIF_UNLIKELY(actions == NULL)) {
-      MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "strdup failure, %s", strerror(errno));
-      goto err;
-    }
-    luab = 1;
-  } else {
-    actions = strdup(names);
-    if (MARPAESLIF_UNLIKELY(actions == NULL)) {
-      MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "strdup failure, %s", strerror(errno));
-      goto err;
-    }
-    luab = 0;
-  }
-
-  regexactionp = (marpaESLIF_action_t *) malloc(sizeof(marpaESLIF_action_t));
-  if (MARPAESLIF_UNLIKELY(regexactionp == NULL)) {
-    MARPAESLIF_ERRORF(marpaESLIFp, "malloc failure, %s", strerror(errno));
-    goto err;
-  }
-  if (luab) {
-    regexactionp->type = MARPAESLIF_ACTION_TYPE_LUA;
-    regexactionp->u.luas = actions;
-  } else {
-    regexactionp->type = MARPAESLIF_ACTION_TYPE_NAME;
-    regexactionp->u.names = actions;
-  }
-  actions = NULL; /* actions is now in actionp */
-
-  MARPAESLIF_BOOTSTRAP_SET_PTR(marpaESLIFValuep, resulti, MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_ITEM_REGEXACTION, regexactionp);
-
-  rcb = 1;
-  goto done;
-
- err:
-  _marpaESLIF_action_freev(regexactionp);
-  rcb = 0;
-
- done:
-  if (actions != NULL) {
-    free(actions);
-  }
-  return rcb;
+  return _marpaESLIF_bootstrap_G1_action_generic_1b(userDatavp, marpaESLIFValuep, arg0i, argni, resulti, nullableb, "regex-action", MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_ITEM_REGEXACTION);
 }
 
 /*****************************************************************************/
@@ -7945,77 +7670,7 @@ static short _marpaESLIF_bootstrap_G1_action_eventactionb(void *userDatavp, marp
 /*****************************************************************************/
 {
   /* <event action> ::= 'event-action' '=>' <event action name> */
-  marpaESLIF_t        *marpaESLIFp    = marpaESLIFValuep->marpaESLIFp; /*marpaESLIFGrammar_eslifp(marpaESLIFRecognizer_grammarp(marpaESLIFValue_recognizerp(marpaESLIFValuep))); */
-  char                *names          = NULL;
-  marpaESLIF_action_t *eventactionp   = NULL;
-  char                *actions        = NULL;
-  char                *tmps;
-  short                luab;
-  short                rcb;
-
-  /* Cannot be nullable */
-  if (MARPAESLIF_UNLIKELY(nullableb)) {
-    MARPAESLIF_ERROR(marpaESLIFp, "Nullable mode is not supported");
-    goto err;
-  }
-
-  /* <action name> is an ASCII string  */
-  MARPAESLIF_BOOTSTRAP_GET_ASCII(marpaESLIFValuep, argni, names);
-  /* It is a non-sense to not have no action in this case */
-  if (MARPAESLIF_UNLIKELY(names == NULL)) {
-    MARPAESLIF_ERRORF(marpaESLIFp, "if-action at indice %d returned NULL", argni);
-    goto err;
-  }
-  if (strstr(names, LUA_ACTION_PREFIX) == names) {
-    /* lua action ? */
-    tmps = names + strlen(LUA_ACTION_PREFIX);
-    if (MARPAESLIF_UNLIKELY(*tmps == '\0')) {
-      MARPAESLIF_ERRORF(marpaESLIFp, "No lua identifier after %s", LUA_ACTION_PREFIX);
-      goto err;
-    }
-    actions = strdup(tmps);
-    if (MARPAESLIF_UNLIKELY(actions == NULL)) {
-      MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "strdup failure, %s", strerror(errno));
-      goto err;
-    }
-    luab = 1;
-  } else {
-    actions = strdup(names);
-    if (MARPAESLIF_UNLIKELY(actions == NULL)) {
-      MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "strdup failure, %s", strerror(errno));
-      goto err;
-    }
-    luab = 0;
-  }
-
-  eventactionp = (marpaESLIF_action_t *) malloc(sizeof(marpaESLIF_action_t));
-  if (MARPAESLIF_UNLIKELY(eventactionp == NULL)) {
-    MARPAESLIF_ERRORF(marpaESLIFp, "malloc failure, %s", strerror(errno));
-    goto err;
-  }
-  if (luab) {
-    eventactionp->type = MARPAESLIF_ACTION_TYPE_LUA;
-    eventactionp->u.luas = actions;
-  } else {
-    eventactionp->type = MARPAESLIF_ACTION_TYPE_NAME;
-    eventactionp->u.names = actions;
-  }
-  actions = NULL; /* actions is now in actionp */
-
-  MARPAESLIF_BOOTSTRAP_SET_PTR(marpaESLIFValuep, resulti, MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_ITEM_EVENTACTION, eventactionp);
-
-  rcb = 1;
-  goto done;
-
- err:
-  _marpaESLIF_action_freev(eventactionp);
-  rcb = 0;
-
- done:
-  if (actions != NULL) {
-    free(actions);
-  }
-  return rcb;
+  return _marpaESLIF_bootstrap_G1_action_generic_1b(userDatavp, marpaESLIFValuep, arg0i, argni, resulti, nullableb, "event-action", MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_ITEM_EVENTACTION);
 }
 
 /*****************************************************************************/
@@ -8177,16 +7832,186 @@ static short _marpaESLIF_bootstrap_G1_action_space_concatb(void *userDatavp, mar
   }
   tmps[tmpl] = '\0';
   MARPAESLIF_BOOTSTRAP_SET_ARRAY(marpaESLIFValuep, resulti, MARPAESLIF_BOOTSTRAP_STACK_TYPE_ARRAY, tmps, tmpl);
+  tmps = NULL; /* temps is now in the value stack */
 
   rcb = 1;
   goto done;
 
  err:
-  if (tmps != NULL) {
-    free(tmps);
-  }
   rcb = 0;
 
  done:
+  if (tmps != NULL) {
+    free(tmps);
+  }
   return rcb;
 }
+
+/*****************************************************************************/
+static short _marpaESLIF_bootstrap_G1_action_lua_functionb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb)
+/*****************************************************************************/
+{
+  /* <lua function> ::= '::lua->function(' <lua funcbody after lparen> */
+  marpaESLIF_t                        *marpaESLIFp  = marpaESLIFValuep->marpaESLIFp; /*marpaESLIFGrammar_eslifp(marpaESLIFRecognizer_grammarp(marpaESLIFValue_recognizerp(marpaESLIFValuep))); */
+  char                                *luaFunctions = NULL;
+  size_t                               luaFunctionl = 0;
+  char                                *p;
+  char                                *luaFuncbodyAfterLparens;
+  size_t                               luaFuncbodyAfterLparenl;
+  short                                rcb;
+
+  /* By definition, because both '::lua->function(' terminal and             */
+  /* <lua funcbody after lparen> lexeme have a :discard[switch] after event  */
+  /* the whole content starting at the '(' character of ''::lua->function('' */
+  /* must compile inside lua.                                                */
+  /* We compile in lua a function that will return the wanted function...:   */
+  /* return function( xxxxxxxx                                               */
+
+  MARPAESLIF_BOOTSTRAP_GET_ARRAY(marpaESLIFValuep, arg0i + 1, luaFuncbodyAfterLparens, luaFuncbodyAfterLparenl);
+
+  luaFunctionl  = strlen(_marpaESLIF_bootstrap_lua_return_function_lparens);
+  luaFunctionl += luaFuncbodyAfterLparenl;
+
+  luaFunctions = (char *) malloc(luaFunctionl + 1);
+  if (MARPAESLIF_UNLIKELY(luaFunctions == NULL)) {
+    MARPAESLIF_ERRORF(marpaESLIFp, "malloc failure, %s", strerror(errno));
+    goto err;
+  }
+  
+  p = luaFunctions;
+  memcpy(p, _marpaESLIF_bootstrap_lua_return_function_lparens, strlen(_marpaESLIF_bootstrap_lua_return_function_lparens));
+  p += strlen(_marpaESLIF_bootstrap_lua_return_function_lparens);
+  memcpy(p, luaFuncbodyAfterLparens, luaFuncbodyAfterLparenl);
+  p += luaFuncbodyAfterLparenl;
+  p[0] = '\0';
+
+  if (! _marpaESLIFValue_lua_precompileb(marpaESLIFValuep, luaFunctions, luaFunctionl)) {
+    goto err;
+  }
+
+  MARPAESLIF_BOOTSTRAP_SET_PTR(marpaESLIFValuep, resulti, MARPAESLIF_BOOTSTRAP_STACK_TYPE_LUA_FUNCTION, luaFunctions);
+  /* luaFunctions is in the stack */
+  luaFunctions = NULL;
+
+  rcb = 1;
+  goto done;
+
+ err:
+  rcb = 0;
+
+ done:
+  if (luaFunctions != NULL) {
+    free(luaFunctions);
+  }
+  return rcb;
+}
+
+/*****************************************************************************/
+static inline short _marpaESLIF_bootstrap_G1_action_generic_1b(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb, char *contexts, void *contextp)
+/*****************************************************************************/
+{
+  /* ... ::= contexts '=>' <action name> */
+  marpaESLIF_t                        *marpaESLIFp  = marpaESLIFValuep->marpaESLIFp; /* marpaESLIFGrammar_eslifp(marpaESLIFRecognizer_grammarp(marpaESLIFValue_recognizerp(marpaESLIFValuep))); */
+  char                                *names        = NULL;
+  marpaESLIF_action_t                 *actionp      = NULL;
+  char                                *actions      = NULL;
+  marpaESLIFValueResult_t             *marpaESLIFValueResultp;
+  char                                *tmps;
+  short                                luab;
+  short                                rcb;
+
+  /* Cannot be nullable */
+  if (MARPAESLIF_UNLIKELY(nullableb)) {
+    MARPAESLIF_ERROR(marpaESLIFp, "Nullable mode is not supported");
+    goto err;
+  }
+
+  marpaESLIFValueResultp = _marpaESLIFValue_stack_getp(marpaESLIFValuep, argni);
+  if (MARPAESLIF_UNLIKELY(marpaESLIFValueResultp == NULL)) {
+    goto err;
+  }
+
+  switch (marpaESLIFValueResultp->type) {
+  case MARPAESLIF_VALUE_TYPE_STRING:
+    /* <action name> is an ASCII string or a PTR (precompiled)  */
+    MARPAESLIF_BOOTSTRAP_GET_ASCII(marpaESLIFValuep, argni, names);
+    /* It is a non-sense to not have no action in this case */
+    if (MARPAESLIF_UNLIKELY(names == NULL)) {
+      MARPAESLIF_ERRORF(marpaESLIFp, "%s: Indice %d returned NULL", contexts, argni);
+      goto err;
+    }
+    if (strstr(names, LUA_ACTION_PREFIX) == names) {
+      /* lua action ? */
+      tmps = names + strlen(LUA_ACTION_PREFIX);
+      if (MARPAESLIF_UNLIKELY(*tmps == '\0')) {
+        MARPAESLIF_ERRORF(marpaESLIFp, "%: No lua identifier after %s", contexts, LUA_ACTION_PREFIX);
+        goto err;
+      }
+      actions = strdup(tmps);
+      if (MARPAESLIF_UNLIKELY(actions == NULL)) {
+        MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "%s: strdup failure, %s", contexts, strerror(errno));
+        goto err;
+      }
+      luab = 1;
+    } else {
+      actions = strdup(names);
+      if (MARPAESLIF_UNLIKELY(actions == NULL)) {
+        MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "%s: strdup failure, %s", contexts, strerror(errno));
+        goto err;
+      }
+      luab = 0;
+    }
+
+    actionp = (marpaESLIF_action_t *) malloc(sizeof(marpaESLIF_action_t));
+    if (MARPAESLIF_UNLIKELY(actionp == NULL)) {
+      MARPAESLIF_ERRORF(marpaESLIFp, "malloc failure, %s", strerror(errno));
+      goto err;
+    }
+    if (luab) {
+      actionp->type = MARPAESLIF_ACTION_TYPE_LUA;
+      actionp->u.luas = actions;
+    } else {
+      actionp->type = MARPAESLIF_ACTION_TYPE_NAME;
+      actionp->u.names = actions;
+    }
+    actions = NULL; /* actions is now in actionp */
+    break;
+
+  case MARPAESLIF_VALUE_TYPE_PTR:
+    MARPAESLIF_BOOTSTRAP_GETANDFORGET_PTR(marpaESLIFValuep, argni, actions);
+    /* It is a non-sense to not have no action in this case */
+    if (MARPAESLIF_UNLIKELY(actions == NULL)) {
+      MARPAESLIF_ERRORF(marpaESLIFp, "%s: Indice %d returned NULL", contexts, argni);
+      goto err;
+    }
+    actionp = (marpaESLIF_action_t *) malloc(sizeof(marpaESLIF_action_t));
+    if (MARPAESLIF_UNLIKELY(actionp == NULL)) {
+      MARPAESLIF_ERRORF(marpaESLIFp, "malloc failure, %s", strerror(errno));
+      goto err;
+    }
+    actionp->type = MARPAESLIF_ACTION_TYPE_LUA_FUNCTION;
+    actionp->u.luaFunctions = actions;
+    actions = NULL; /* actions is now in actionp */
+    break;
+
+  defaut:
+    MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "marpaESLIFValueResultp->type is not ASCII nor PTR (got %d, %s)", marpaESLIFValueResultp->type, _marpaESLIF_value_types(marpaESLIFValueResultp->type));
+    goto err;
+  }
+    
+  MARPAESLIF_BOOTSTRAP_SET_PTR(marpaESLIFValuep, resulti, contextp, actionp);
+
+  rcb = 1;
+  goto done;
+
+ err:
+  _marpaESLIF_action_freev(actionp);
+  rcb = 0;
+
+ done:
+  if (actions != NULL) {
+    free(actions);
+  }
+  return rcb;
+}
+

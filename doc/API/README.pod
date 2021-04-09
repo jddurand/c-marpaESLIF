@@ -292,6 +292,7 @@ Returns a true value on failure, a false value on failure.
     MARPAESLIF_ACTION_TYPE_NAME = 0,
     MARPAESLIF_ACTION_TYPE_STRING,
     MARPAESLIF_ACTION_TYPE_LUA,
+    MARPAESLIF_ACTION_TYPE_LUA_FUNCTION
   } marpaESLIFActionType_t;
 
   typedef struct marpaESLIFAction {
@@ -300,6 +301,7 @@ Returns a true value on failure, a false value on failure.
       char               *names;
       marpaESLIFString_t *stringp;
       char               *luas;
+      char               *luaFunctions;
     } u;
   } marpaESLIFAction_t;
 
@@ -337,6 +339,18 @@ A string literal. Then the action result is forced to be a lua function, using a
   </luascript>
 
 where there will be as many arguments as there are Right-Hand side values.
+
+=item C<MARPAESLIF_ACTION_TYPE_LUA_FUNCTION>
+
+A function lua 5.3.4 source. The action is an anonymous function that is reloaded and executed everytime, using an embedded lua interpreter that ESLIF provides. Such function should be declare like e.g.:
+
+  action => ::lua->function(s)
+                     -- Lua semantics!
+                     print('Argument: '..tostring(s))
+                     return s
+                   end
+
+Lua 5.3.4 semantics are applied I<immediately> after the opening parenthesis, up to the end of a function body parsing as per the Lua 5.3.4 grammar. ESLIF semantics takes over after the C<end> lua keyword that corresponds to the end of the lua function.
 
 =back
 

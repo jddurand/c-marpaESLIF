@@ -6537,6 +6537,10 @@ static jstring marpaESLIFJava_marpaESLIFActionToJavap(JNIEnv *envp, marpaESLIFAc
     case MARPAESLIF_ACTION_TYPE_LUA:
       stringp = marpaESLIFJava_marpaESLIFASCIIToJavap(envp, actionp->u.luas);
       break;
+    case MARPAESLIF_ACTION_TYPE_LUA_FUNCTION:
+      /* ESLIF generates "return function..." */
+      stringp = marpaESLIFJava_marpaESLIFASCIIToJavap(envp, actionp->u.luaFunctions + 7);
+      break;
     default:
       RAISEEXCEPTIONF(envp, "Unsuported action type %d", actionp->type);
     }

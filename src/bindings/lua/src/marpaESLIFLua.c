@@ -201,10 +201,10 @@ static short                              marpaESLIFLua_valueSymbolCallbackb(voi
 static short                              marpaESLIFLua_recognizerIfCallbackb(void *userDatavp, marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFValueResult_t *marpaESLIFValueResultLexemep, marpaESLIFValueResultBool_t *marpaESLIFValueResultBoolp);
 static short                              marpaESLIFLua_recognizerEventCallbackb(void *userDatavp, marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFEvent_t *eventArrayp, size_t eventArrayl, marpaESLIFValueResultBool_t *marpaESLIFValueResultBoolp);
 static short                              marpaESLIFLua_recognizerRegexCallbackb(void *userDatavp, marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFValueResult_t *marpaESLIFCalloutBlockp, marpaESLIFValueResultInt_t *marpaESLIFValueResultOutp);
-static short                              marpaESLIFLua_valueCallbackb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, marpaESLIFValueResult_t *marpaESLIFValueResultLexemep, int resulti, short nullableb, short symbolb);
-static short                              marpaESLIFLua_ifCallbackb(void *userDatavp, marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFValueResult_t *marpaESLIFValueResultLexemep, marpaESLIFValueResultBool_t *marpaESLIFValueResultBoolp);
-static short                              marpaESLIFLua_eventCallbackb(void *userDatavp, marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFEvent_t *eventArrayp, size_t eventArrayl, marpaESLIFValueResultBool_t *marpaESLIFValueResultBoolp);
-static short                              marpaESLIFLua_regexCallbackb(void *userDatavp, marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFValueResult_t *marpaESLIFCalloutBlockp, marpaESLIFValueResultInt_t *marpaESLIFValueResultOutp);
+static short                              marpaESLIFLua_valueCallbackb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, marpaESLIFValueResult_t *marpaESLIFValueResultLexemep, int resulti, short nullableb, short symbolb, short precompiledb);
+static short                              marpaESLIFLua_ifCallbackb(void *userDatavp, marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFValueResult_t *marpaESLIFValueResultLexemep, marpaESLIFValueResultBool_t *marpaESLIFValueResultBoolp, short precompiledb);
+static short                              marpaESLIFLua_eventCallbackb(void *userDatavp, marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFEvent_t *eventArrayp, size_t eventArrayl, marpaESLIFValueResultBool_t *marpaESLIFValueResultBoolp, short precompiledb);
+static short                              marpaESLIFLua_regexCallbackb(void *userDatavp, marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFValueResult_t *marpaESLIFCalloutBlockp, marpaESLIFValueResultInt_t *marpaESLIFValueResultOutp, short precompiledb);
 static void                               marpaESLIFLua_valueFreeCallbackv(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, marpaESLIFValueResult_t *marpaESLIFValueResultp);
 static void                               marpaESLIFLua_recognizerFreeCallbackv(void *userDatavp, marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFValueResult_t *marpaESLIFValueResultp);
 static void                               marpaESLIFLua_genericFreeCallbackv(void *userDatavp, marpaESLIFValueResult_t *marpaESLIFValueResultp);
@@ -518,7 +518,7 @@ static short marpaESLIFLua_lua_isinteger(int *rcip, lua_State *L, int idx);
   MARPAESLIFLUA_STORE_BY_KEY(L, key,                                    \
                              if (actionp != NULL) {                     \
                                switch (actionp->type) {                 \
-                               case MARPAESLIF_ACTION_TYPE_NAME:        \
+                                 case MARPAESLIF_ACTION_TYPE_NAME:        \
                                  if (! marpaESLIFLua_lua_pushstring(NULL, L, actionp->u.names)) goto err; \
                                  break;                                 \
                                case MARPAESLIF_ACTION_TYPE_STRING:      \
@@ -526,6 +526,10 @@ static short marpaESLIFLua_lua_isinteger(int *rcip, lua_State *L, int idx);
                                  break;                                 \
                                case MARPAESLIF_ACTION_TYPE_LUA:        \
                                  if (! marpaESLIFLua_lua_pushstring(NULL, L, actionp->u.luas)) goto err; \
+                                 break;                                 \
+                               case MARPAESLIF_ACTION_TYPE_LUA_FUNCTION: \
+                                 /* ESLIF generates "return function..." */ \
+                                 if (! marpaESLIFLua_lua_pushstring(NULL, L, actionp->u.luaFunctions +7)) goto err; \
                                  break;                                 \
                                default:                                 \
                                  marpaESLIFLua_luaL_errorf(L, "Unsupported action type %d", actionp->type); \
@@ -543,27 +547,34 @@ static short marpaESLIFLua_lua_isinteger(int *rcip, lua_State *L, int idx);
 /* reside in the main namespace and have no object. We distinguish the two cases with the interface_r value: */
 #define MARPAESLIFLUA_CALLBACK(L, interface_r, funcs, nargs, parameters) do { \
     int _typei;                                                         \
-    if (interface_r != LUA_NOREF) {					\
+    int _nargs = nargs;                                                 \
+    if ((interface_r != LUA_NOREF) && (funcs != NULL)) {                \
       MARPAESLIFLUA_DEREF(L, interface_r);                              \
       if (! marpaESLIFLua_lua_getfield(NULL, L, -1, funcs)) goto err;   \
       if (! marpaESLIFLua_lua_type(&_typei, L, -1)) goto err;           \
       if (_typei != LUA_TFUNCTION) {                                    \
-        marpaESLIFLua_luaL_errorf(L, "No such function %s", funcs);     \
+        marpaESLIFLua_luaL_errorf(L, "No such method %s", funcs);       \
         goto err;                                                       \
       }                                                                 \
       if (! marpaESLIFLua_lua_insert(L, -2)) goto err;                  \
-      parameters                                                        \
-      if (! marpaESLIFLua_lua_call(L, nargs + 1, LUA_MULTRET)) goto err; \
-    } else {								\
+      _nargs++;                                                         \
+    } else if (funcs != NULL) {                                         \
       if (! marpaESLIFLua_lua_getglobal(NULL, L, funcs)) goto err;      \
       if (! marpaESLIFLua_lua_type(&_typei, L, -1)) goto err;           \
       if (_typei != LUA_TFUNCTION) {                                    \
         marpaESLIFLua_luaL_errorf(L, "No such function %s", funcs);     \
         goto err;                                                       \
       }                                                                 \
-      parameters                                                        \
-      if (! marpaESLIFLua_lua_call(L, nargs, LUA_MULTRET)) goto err;    \
+    } else {                                                            \
+      /* It assumed that the caller loaded a function already */        \
+      if (! marpaESLIFLua_lua_type(&_typei, L, -1)) goto err;           \
+      if (_typei != LUA_TFUNCTION) {                                    \
+        marpaESLIFLua_luaL_error(L, "No function at top of the stack"); \
+        goto err;                                                       \
+      }                                                                 \
     }                                                                   \
+    parameters                                                          \
+    if (! marpaESLIFLua_lua_call(L, _nargs, LUA_MULTRET)) goto err;     \
 } while (0)
     
 #define MARPAESLIFLUA_CALLBACKV(L, interface_r, funcs, nargs, parameters) do { \
@@ -577,19 +588,40 @@ static short marpaESLIFLua_lua_isinteger(int *rcip, lua_State *L, int idx);
 #define MARPAESLIFLUA_CALLBACKB(L, interface_r, funcs, nargs, parameters, bp) do { \
     int _topi;                                                          \
     int _newtopi;                                                       \
+    int _expectedtopi;                                                  \
     int _typei;                                                         \
     int _tmpi;                                                          \
                                                                         \
     if (! marpaESLIFLua_lua_gettop(&_topi, L)) goto err;                \
+    if ((interface_r != LUA_NOREF) && (funcs != NULL)) {                \
+      _expectedtopi = _topi + 1;                                        \
+    } else if (funcs != NULL) {                                         \
+      _expectedtopi = _topi + 1;                                        \
+    } else {                                                            \
+      _expectedtopi = _topi;                                            \
+    }                                                                   \
+                                                                        \
     MARPAESLIFLUA_CALLBACK(L, interface_r, funcs, nargs, parameters);   \
     if (! marpaESLIFLua_lua_gettop(&_newtopi, L)) goto err;             \
-    if (_newtopi != (_topi + 1)) {                                      \
-      marpaESLIFLua_luaL_errorf(L, "Function %s must return exactly one value", funcs); \
+    if (_newtopi != _expectedtopi) {                                    \
+      if ((interface_r != LUA_NOREF) && (funcs != NULL)) {              \
+        marpaESLIFLua_luaL_errorf(L, "Method %s must return exactly one value", funcs); \
+      } else if (funcs != NULL) {                                       \
+        marpaESLIFLua_luaL_errorf(L, "Function %s must return exactly one value", funcs); \
+      } else {                                                          \
+        marpaESLIFLua_luaL_error(L, "Function must return exactly one value"); \
+      }                                                                 \
       goto err;                                                         \
     }                                                                   \
     if (! marpaESLIFLua_lua_type(&_typei, L, -1)) goto err;             \
     if (_typei != LUA_TBOOLEAN) {                                       \
-      marpaESLIFLua_luaL_errorf(L, "Function %s must return a boolean value, got %s", funcs, lua_typename(L, _typei)); \
+      if ((interface_r != LUA_NOREF) && (funcs != NULL)) {              \
+        marpaESLIFLua_luaL_errorf(L, "Method %s must return a boolean value, got %s", funcs, lua_typename(L, _typei)); \
+      } else if (funcs != NULL) {                                       \
+        marpaESLIFLua_luaL_errorf(L, "Function %s must return a boolean value, got %s", funcs, lua_typename(L, _typei)); \
+      } else {                                                          \
+        marpaESLIFLua_luaL_errorf(L, "Function must return a boolean value, got %s", lua_typename(L, _typei)); \
+      }                                                                 \
       goto err;                                                         \
     }                                                                   \
     if (bp != NULL) {                                                   \
@@ -602,20 +634,41 @@ static short marpaESLIFLua_lua_isinteger(int *rcip, lua_State *L, int idx);
 #define MARPAESLIFLUA_CALLBACKI(L, interface_r, funcs, nargs, parameters, ip) do { \
     int _topi;                                                          \
     int _newtopi;                                                       \
+    int _expectedtopi;                                                  \
     int _isnum;                                                         \
     int _typei;                                                         \
     lua_Integer _i;                                                     \
                                                                         \
     if (! marpaESLIFLua_lua_gettop(&_topi, L)) goto err;                \
+    if ((interface_r != LUA_NOREF) && (funcs != NULL)) {                \
+      _expectedtopi = _topi + 1;                                        \
+    } else if (funcs != NULL) {                                         \
+      _expectedtopi = _topi + 1;                                        \
+    } else {                                                            \
+      _expectedtopi = _topi;                                            \
+    }                                                                   \
+                                                                        \
     MARPAESLIFLUA_CALLBACK(L, interface_r, funcs, nargs, parameters);   \
     if (! marpaESLIFLua_lua_gettop(&_newtopi, L)) goto err;             \
-    if (_newtopi != (_topi + 1)) {                                      \
-      marpaESLIFLua_luaL_errorf(L, "Function %s must return exactly one value", funcs); \
+    if (_newtopi != _expectedtopi) {                                    \
+      if ((interface_r != LUA_NOREF) && (funcs != NULL)) {              \
+        marpaESLIFLua_luaL_errorf(L, "Method %s must return exactly one value", funcs); \
+      } else if (funcs != NULL) {                                       \
+        marpaESLIFLua_luaL_errorf(L, "Function %s must return exactly one value", funcs); \
+      } else {                                                          \
+        marpaESLIFLua_luaL_error(L, "Function must return exactly one value"); \
+      }                                                                 \
       goto err;                                                         \
     }                                                                   \
     if (! marpaESLIFLua_lua_type(&_typei, L, -1)) goto err;             \
     if (_typei != LUA_TNUMBER) {                                        \
-      marpaESLIFLua_luaL_errorf(L, "Function %s must return a number value, got %s", funcs, lua_typename(L, _typei)); \
+      if ((interface_r != LUA_NOREF) && (funcs != NULL)) {              \
+        marpaESLIFLua_luaL_errorf(L, "Method %s must return a number value, got %s", funcs, lua_typename(L, _typei)); \
+      } else if (funcs != NULL) {                                       \
+        marpaESLIFLua_luaL_errorf(L, "Function %s must return a number value, got %s", funcs, lua_typename(L, _typei)); \
+      } else {                                                          \
+        marpaESLIFLua_luaL_errorf(L, "Function must return a number value, got %s", lua_typename(L, _typei)); \
+      }                                                                 \
       goto err;                                                         \
     }                                                                   \
     if (ip != NULL) {                                                   \
@@ -633,15 +686,30 @@ static short marpaESLIFLua_lua_isinteger(int *rcip, lua_State *L, int idx);
 #define MARPAESLIFLUA_CALLBACKS(L, interface_r, funcs, nargs, parameters, sp, lp) do { \
     int _topi;                                                          \
     int _newtopi;                                                       \
+    int _expectedtopi;                                                  \
     const char *_s;                                                     \
     size_t _l;                                                          \
     int _typei;                                                         \
                                                                         \
     if (! marpaESLIFLua_lua_gettop(&_topi, L)) goto err;                \
+    if ((interface_r != LUA_NOREF) && (funcs != NULL)) {                \
+      _expectedtopi = _topi + 1;                                        \
+    } else if (funcs != NULL) {                                         \
+      _expectedtopi = _topi + 1;                                        \
+    } else {                                                            \
+      _expectedtopi = _topi;                                            \
+    }                                                                   \
+                                                                        \
     MARPAESLIFLUA_CALLBACK(L, interface_r, funcs, nargs, parameters);   \
     if (! marpaESLIFLua_lua_gettop(&_newtopi, L)) goto err;             \
-    if (_newtopi != (_topi + 1)) {                                      \
-      marpaESLIFLua_luaL_errorf(L, "Function %s must return exactly one value", funcs); \
+    if (_newtopi != _expectedtopi) {                                    \
+      if ((interface_r != LUA_NOREF) && (funcs != NULL)) {              \
+        marpaESLIFLua_luaL_errorf(L, "Method %s must return exactly one value", funcs); \
+      } else if (funcs != NULL) {                                       \
+        marpaESLIFLua_luaL_errorf(L, "Function %s must return exactly one value", funcs); \
+      } else {                                                          \
+        marpaESLIFLua_luaL_error(L, "Function must return exactly one value"); \
+      }                                                                 \
       goto err;                                                         \
     }                                                                   \
     if (! marpaESLIFLua_lua_type(&_typei, L, -1)) goto err;             \
@@ -666,7 +734,13 @@ static short marpaESLIFLua_lua_isinteger(int *rcip, lua_State *L, int idx);
       }                                                                 \
       break;                                                            \
     default:                                                            \
-      marpaESLIFLua_luaL_errorf(L, "Function %s must return a string value or nil, got %s", funcs, lua_typename(L, _typei)); \
+      if ((interface_r != LUA_NOREF) && (funcs != NULL)) {              \
+        marpaESLIFLua_luaL_errorf(L, "Method %s must return a string value or nil, got %s", funcs, lua_typename(L, _typei)); \
+      } else if (funcs != NULL) {                                       \
+        marpaESLIFLua_luaL_errorf(L, "Function %s must return a string value or nil, got %s", funcs, lua_typename(L, _typei)); \
+      } else {                                                          \
+        marpaESLIFLua_luaL_errorf(L, "Function must return a string value or nil, got %s", lua_typename(L, _typei)); \
+      }                                                                 \
       goto err;                                                         \
     }                                                                   \
     if (! marpaESLIFLua_lua_settop(L, _topi)) goto err;                                               \
@@ -1516,8 +1590,13 @@ static void marpaESLIFLua_stackdumpv(lua_State* L, int forcelookupi)
   int i;
   int t;
 
+  /* Flush current stdout in any case */
+  fflush(stdout);
+  fprintf(stdout, "-------------------\n"); fflush(stdout);
+  fprintf(stdout, "stack dump follows:\n"); fflush(stdout);
+
   if (! forcelookupi) {
-    printf("total in stack %d\n", topi);
+    fprintf(stdout, "total in stack %d\n", topi); fflush(stdout);
   }
   
   for (i = starti; i <= endi; i++) {
@@ -1525,29 +1604,31 @@ static void marpaESLIFLua_stackdumpv(lua_State* L, int forcelookupi)
     t = lua_type(L, i); /* We voluntarily do not use luaunpanic */
     switch (t) {
     case LUA_TNIL:
-      printf("  [%d] nil\n", i);
+      fprintf(stdout, "  [%d] nil\n", i); fflush(stdout);
       break;
     case LUA_TNUMBER:
-      printf("  [%d] number: %g\n", i, (double) lua_tonumber(L, i));
+      fprintf(stdout, "  [%d] number: %g\n", i, (double) lua_tonumber(L, i)); fflush(stdout);
       break;
     case LUA_TBOOLEAN:
-      printf("  [%d] boolean %s\n", i, lua_toboolean(L, i) ? "true" : "false");
+      fprintf(stdout, "  [%d] boolean %s\n", i, lua_toboolean(L, i) ? "true" : "false"); fflush(stdout);
       break;
     case LUA_TUSERDATA:
-      printf("  [%d] userdata: %p\n", i, lua_touserdata(L, i));
+      fprintf(stdout, "  [%d] userdata: %p\n", i, lua_touserdata(L, i)); fflush(stdout);
       break;
     case LUA_TLIGHTUSERDATA:
-      printf("  [%d] light userdata: %p\n", i, lua_touserdata(L, i));
+      fprintf(stdout, "  [%d] light userdata: %p\n", i, lua_touserdata(L, i)); fflush(stdout);
       break;
     case LUA_TSTRING:
-      printf("  [%d] string: '%s'\n", i, lua_tostring(L, i));
+      fprintf(stdout, "  [%d] string: '%s'\n", i, lua_tostring(L, i)); fflush(stdout);
       break;
     default:  /* other values */
-      printf("  [%d] %s\n", i, lua_typename(L, t));
+      fprintf(stdout, "  [%d] %s\n", i, lua_typename(L, t)); fflush(stdout);
       break;
     }
   }
-  fflush(stdout);
+
+  fprintf(stdout, "stack dump done\n"); fflush(stdout);
+  fprintf(stdout, "---------------\n"); fflush(stdout);
 }
 
 /****************************************************************************/
@@ -1561,6 +1642,10 @@ static void marpaESLIFLua_tabledumpv(lua_State *L, const char *texts, int indice
   int         absindicei;
 
   absindicei = lua_absindex(L, indicei);
+
+  /* Flush current stdout in any case */
+  fflush(stdout);
+  fprintf(stdout, "table dump follows:\n"); fflush(stdout);
 
   if (texts != NULL) {
     fprintf(stdout, "[%s] table at indice %d (absolute indice %d, identi=%d)\n", texts, indicei, absindicei, identi);
@@ -1617,6 +1702,10 @@ static void marpaESLIFLua_tabledump_usingpairsv(lua_State *L, const char *texts,
   int         getmetai;
 
   absindicei = lua_absindex(L, indicei);
+
+  /* Flush current stdout in any case */
+  fflush(stdout);
+  fprintf(stdout, "table dump using pairs follows:\n"); fflush(stdout);
 
   if (texts != NULL) {
     fprintf(stdout, "[%s] table at indice %d (absolute indice %d, identi=%d)\n", texts, indicei, absindicei, identi);
@@ -3671,39 +3760,39 @@ static marpaESLIFRecognizerRegexCallback_t marpaESLIFLua_recognizerRegexActionRe
 static short marpaESLIFLua_valueRuleCallbackb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb)
 /*****************************************************************************/
 {
-  return marpaESLIFLua_valueCallbackb(userDatavp, marpaESLIFValuep, arg0i, argni, NULL /* marpaESLIFValueResultLexemep */, resulti, nullableb, 0 /* symbolb */);
+  return marpaESLIFLua_valueCallbackb(userDatavp, marpaESLIFValuep, arg0i, argni, NULL /* marpaESLIFValueResultLexemep */, resulti, nullableb, 0 /* symbolb */, 0 /* precompiledb */);
 }
 
 /*****************************************************************************/
 static short marpaESLIFLua_valueSymbolCallbackb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, marpaESLIFValueResult_t *marpaESLIFValueResultp, int resulti)
 /*****************************************************************************/
 {
-  return marpaESLIFLua_valueCallbackb(userDatavp, marpaESLIFValuep, -1 /* arg0i */, -1 /* argni */, marpaESLIFValueResultp, resulti, 0 /* nullableb */, 1 /* symbolb */);
+  return marpaESLIFLua_valueCallbackb(userDatavp, marpaESLIFValuep, -1 /* arg0i */, -1 /* argni */, marpaESLIFValueResultp, resulti, 0 /* nullableb */, 1 /* symbolb */, 0 /* precompiledb */);
 }
 
 /*****************************************************************************/
 static short marpaESLIFLua_recognizerIfCallbackb(void *userDatavp, marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFValueResult_t *marpaESLIFValueResultLexemep, marpaESLIFValueResultBool_t *marpaESLIFValueResultBoolp)
 /*****************************************************************************/
 {
-  return marpaESLIFLua_ifCallbackb(userDatavp, marpaESLIFRecognizerp, marpaESLIFValueResultLexemep, marpaESLIFValueResultBoolp);
+  return marpaESLIFLua_ifCallbackb(userDatavp, marpaESLIFRecognizerp, marpaESLIFValueResultLexemep, marpaESLIFValueResultBoolp, 0 /* precompiledb */);
 }
 
 /*****************************************************************************/
 static short marpaESLIFLua_recognizerRegexCallbackb(void *userDatavp, marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFValueResult_t *marpaESLIFCalloutBlockp, marpaESLIFValueResultInt_t *marpaESLIFValueResultOutp)
 /*****************************************************************************/
 {
-  return marpaESLIFLua_regexCallbackb(userDatavp, marpaESLIFRecognizerp, marpaESLIFCalloutBlockp, marpaESLIFValueResultOutp);
+  return marpaESLIFLua_regexCallbackb(userDatavp, marpaESLIFRecognizerp, marpaESLIFCalloutBlockp, marpaESLIFValueResultOutp, 0 /* precompiledb */);
 }
 
 /*****************************************************************************/
 static short marpaESLIFLua_recognizerEventCallbackb(void *userDatavp, marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFEvent_t *eventArrayp, size_t eventArrayl, marpaESLIFValueResultBool_t *marpaESLIFValueResultBoolp)
 /*****************************************************************************/
 {
-  return marpaESLIFLua_eventCallbackb(userDatavp, marpaESLIFRecognizerp, eventArrayp, eventArrayl, marpaESLIFValueResultBoolp);
+  return marpaESLIFLua_eventCallbackb(userDatavp, marpaESLIFRecognizerp, eventArrayp, eventArrayl, marpaESLIFValueResultBoolp, 0 /* precompiledb */);
 }
 
 /*****************************************************************************/
-static short marpaESLIFLua_valueCallbackb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, marpaESLIFValueResult_t *marpaESLIFValueResultLexemep, int resulti, short nullableb, short symbolb)
+static short marpaESLIFLua_valueCallbackb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, marpaESLIFValueResult_t *marpaESLIFValueResultLexemep, int resulti, short nullableb, short symbolb, short precompiledb)
 /*****************************************************************************/
 /* The code doing rule and symbol callback to lua is shared. */
 /* We distinguish the symbol case v.s. the rule case by testing bytep. */
@@ -3721,6 +3810,9 @@ static short marpaESLIFLua_valueCallbackb(void *userDatavp, marpaESLIFValue_t *m
 #endif
   lua_State                   *L                          = marpaESLIFLuaValueContextp->L;
   char                        *encodings                  = NULL;
+  char                        *actions                    = precompiledb ? NULL : marpaESLIFLuaValueContextp->actions;
+  int                          interface_r                = marpaESLIFLuaValueContextp->valueInterface_r;
+  int                          expectedtopi;
   int                          topi;
   int                          newtopi;
   int                          i;
@@ -3735,12 +3827,23 @@ static short marpaESLIFLua_valueCallbackb(void *userDatavp, marpaESLIFValue_t *m
   /* fprintf(stdout, "... action %s start\n", marpaESLIFLuaValueContextp->actions); fflush(stdout); fflush(stderr); */
 
   if (! marpaESLIFLua_lua_gettop(&topi, L)) goto err;
+  if ((interface_r != LUA_NOREF) && (actions != NULL)) {
+    /* We pushed to the stack: function, object, arguments, that got replaced by result */
+    expectedtopi = topi + 1;
+  } else if (actions != NULL) {
+    /* We pushed to the stack: function, arguments, that got replaced by result */
+    expectedtopi = topi + 1;
+  } else {
+    /* We pushed nothing to the stack: caller is expected to have pushed a function at its top, this got replaced by result */
+    expectedtopi = topi;
+  }
+
   if (symbolb) {
-    MARPAESLIFLUA_CALLBACK(L, marpaESLIFLuaValueContextp->valueInterface_r, marpaESLIFLuaValueContextp->actions, 1 /* nargs */,
+    MARPAESLIFLUA_CALLBACK(L, interface_r, actions, 1 /* nargs */,
                            if (! marpaESLIFLua_pushValueb(marpaESLIFLuaValueContextp, marpaESLIFValuep, -1 /* stackindicei */, marpaESLIFValueResultLexemep)) goto err;
                            );
   } else {
-    MARPAESLIFLUA_CALLBACK(L, marpaESLIFLuaValueContextp->valueInterface_r, marpaESLIFLuaValueContextp->actions, nullableb ? 0 : (argni - arg0i + 1) /* nargs */, 
+    MARPAESLIFLUA_CALLBACK(L, interface_r, actions, nullableb ? 0 : (argni - arg0i + 1) /* nargs */, 
                            if (! nullableb) {
                              for (i = arg0i; i <= argni; i++) {
                                if (! marpaESLIFLua_pushValueb(marpaESLIFLuaValueContextp, marpaESLIFValuep, i, NULL /* marpaESLIFValueResultLexemep */)) goto err;
@@ -3750,17 +3853,23 @@ static short marpaESLIFLua_valueCallbackb(void *userDatavp, marpaESLIFValue_t *m
   }
 
   if (! marpaESLIFLua_lua_gettop(&newtopi, L)) goto err;
-  if (newtopi == topi) {
-    if (! marpaESLIFLua_lua_pushnil(L)) goto err;
-  } else {
-    if (newtopi != (topi + 1)) {
-      marpaESLIFLua_luaL_errorf(L, "Function %s must return exactly one or zero value", marpaESLIFLuaValueContextp->actions);
-      goto err;
+  if (newtopi != expectedtopi) {
+    if ((interface_r != LUA_NOREF) && (actions != NULL)) {
+      marpaESLIFLua_luaL_errorf(L, "Method %s must return exactly one value", actions);
+    } else if (actions != NULL) {
+      marpaESLIFLua_luaL_errorf(L, "Function %s must return exactly one value", actions);
+    } else {
+      marpaESLIFLua_luaL_error(L, "Function must return exactly one value");
     }
+    goto err;
   }
 
   if (! marpaESLIFLua_stack_setb(L, marpaESLIFLuaValueContextp->marpaESLIFp, marpaESLIFValuep, resulti, NULL /* marpaESLIFValueResultOutputp */)) goto err;
-  if (! marpaESLIFLua_lua_pop(L, 1)) goto err;
+
+  /* Here newtopi is either original topi, either original topi + 1 */
+  /* In any case we restore the stack to its original indice. */
+  /* Up to the caller to remove the eventual function he pushed in case of direct callback using precompiled stuff */
+  if (! marpaESLIFLua_lua_settop(L, topi)) goto err;
 
   /* After every valuation we clean the MARPAESLIFOPAQUETABLE global table */
   if (! marpaESLIFLua_lua_pushnil(L)) goto err;
@@ -3782,7 +3891,7 @@ static short marpaESLIFLua_valueCallbackb(void *userDatavp, marpaESLIFValue_t *m
 }
 
 /*****************************************************************************/
-static short marpaESLIFLua_ifCallbackb(void *userDatavp, marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFValueResult_t *marpaESLIFValueResultLexemep, marpaESLIFValueResultBool_t *marpaESLIFValueResultBoolp)
+static short marpaESLIFLua_ifCallbackb(void *userDatavp, marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFValueResult_t *marpaESLIFValueResultLexemep, marpaESLIFValueResultBool_t *marpaESLIFValueResultBoolp, short precompiledb)
 /*****************************************************************************/
 {
   static const char           *funcs                      = "marpaESLIFLua_ifCallbackb";
@@ -3796,6 +3905,7 @@ static short marpaESLIFLua_ifCallbackb(void *userDatavp, marpaESLIFRecognizer_t 
   marpaESLIFLuaRecognizerContext_t *marpaESLIFLuaRecognizerContextp = (marpaESLIFLuaRecognizerContext_t *) userDatavp;
 #endif
   lua_State                   *L                          = marpaESLIFLuaRecognizerContextp->L;
+  char                        *actions                    = precompiledb ? NULL : marpaESLIFLuaRecognizerContextp->actions;
   int                          tmpi;
   short                        rcb;
 
@@ -3803,7 +3913,7 @@ static short marpaESLIFLua_ifCallbackb(void *userDatavp, marpaESLIFRecognizer_t 
 
   MARPAESLIFLUA_CALLBACKB(L,
                           marpaESLIFLuaRecognizerContextp->recognizerInterface_r,
-                          marpaESLIFLuaRecognizerContextp->actions,
+                          actions,
                           1 /* nargs */,
                           {
                             if (! marpaESLIFLua_pushRecognizerb(marpaESLIFLuaRecognizerContextp, marpaESLIFRecognizerp, marpaESLIFValueResultLexemep)) goto err;
@@ -3826,7 +3936,7 @@ static short marpaESLIFLua_ifCallbackb(void *userDatavp, marpaESLIFRecognizer_t 
 }
 
 /*****************************************************************************/
-static short marpaESLIFLua_regexCallbackb(void *userDatavp, marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFValueResult_t *marpaESLIFCalloutBlockp, marpaESLIFValueResultInt_t *marpaESLIFValueResultOutp)
+static short marpaESLIFLua_regexCallbackb(void *userDatavp, marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFValueResult_t *marpaESLIFCalloutBlockp, marpaESLIFValueResultInt_t *marpaESLIFValueResultOutp, short precompiledb)
 /*****************************************************************************/
 {
   static const char           *funcs                      = "marpaESLIFLua_regexCallbackb";
@@ -3840,6 +3950,7 @@ static short marpaESLIFLua_regexCallbackb(void *userDatavp, marpaESLIFRecognizer
   marpaESLIFLuaRecognizerContext_t *marpaESLIFLuaRecognizerContextp = (marpaESLIFLuaRecognizerContext_t *) userDatavp;
 #endif
   lua_State                   *L                          = marpaESLIFLuaRecognizerContextp->L;
+  char                        *actions                    = precompiledb ? NULL : marpaESLIFLuaRecognizerContextp->actions;
   int                          tmpi;
   short                        rcb;
 
@@ -3847,7 +3958,7 @@ static short marpaESLIFLua_regexCallbackb(void *userDatavp, marpaESLIFRecognizer
 
   MARPAESLIFLUA_CALLBACKI(L,
                           marpaESLIFLuaRecognizerContextp->recognizerInterface_r,
-                          marpaESLIFLuaRecognizerContextp->actions,
+                          actions,
                           1 /* nargs */,
                           {
                             if (! marpaESLIFLua_pushRecognizerb(marpaESLIFLuaRecognizerContextp, marpaESLIFRecognizerp, marpaESLIFCalloutBlockp)) goto err;
@@ -3872,7 +3983,7 @@ static short marpaESLIFLua_regexCallbackb(void *userDatavp, marpaESLIFRecognizer
 }
 
 /*****************************************************************************/
-static short marpaESLIFLua_eventCallbackb(void *userDatavp, marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFEvent_t *eventArrayp, size_t eventArrayl, marpaESLIFValueResultBool_t *marpaESLIFValueResultBoolp)
+static short marpaESLIFLua_eventCallbackb(void *userDatavp, marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFEvent_t *eventArrayp, size_t eventArrayl, marpaESLIFValueResultBool_t *marpaESLIFValueResultBoolp, short precompiledb)
 /*****************************************************************************/
 {
   static const char           *funcs                      = "marpaESLIFLua_eventCallbackb";
@@ -3886,6 +3997,7 @@ static short marpaESLIFLua_eventCallbackb(void *userDatavp, marpaESLIFRecognizer
   marpaESLIFLuaRecognizerContext_t *marpaESLIFLuaRecognizerContextp = (marpaESLIFLuaRecognizerContext_t *) userDatavp;
 #endif
   lua_State                   *L                          = marpaESLIFLuaRecognizerContextp->L;
+  char                        *actions                    = precompiledb ? NULL : marpaESLIFLuaRecognizerContextp->actions;
   size_t                       i;
   int                          tmpi;
   short                        rcb;
@@ -3894,7 +4006,7 @@ static short marpaESLIFLua_eventCallbackb(void *userDatavp, marpaESLIFRecognizer
 
   MARPAESLIFLUA_CALLBACKB(L,
                           marpaESLIFLuaRecognizerContextp->recognizerInterface_r,
-                          marpaESLIFLuaRecognizerContextp->actions,
+                          actions,
                           1 /* nargs */,
                           {
                             if (! marpaESLIFLua_lua_newtable(L)) goto err;                          /* Stack: function, {} */

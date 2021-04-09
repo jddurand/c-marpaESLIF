@@ -474,6 +474,10 @@ static const size_t  UTF8l = 5; /* "UTF-8" is 5 bytes in ASCII encoding */
       case MARPAESLIF_ACTION_TYPE_LUA:                                  \
         MARPAESLIFPERL_XV_STORE(hvp, key, newSVpv(actionp->u.luas, 0)); \
         break;                                                          \
+      case MARPAESLIF_ACTION_TYPE_LUA_FUNCTION:                         \
+        /* ESLIF generates "return function..." */                      \
+        MARPAESLIFPERL_XV_STORE(hvp, key, newSVpv(actionp->u.luaFunctions + 7, 0)); \
+        break;                                                          \
       default:                                                          \
         warn("Unsupported action type %d", actionp->type);              \
         MARPAESLIFPERL_XV_STORE_UNDEF(hvp, key);                        \

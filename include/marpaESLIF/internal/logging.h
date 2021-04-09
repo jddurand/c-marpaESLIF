@@ -81,11 +81,9 @@
     _genericLoggerp = GENERICLOGGER_CUSTOM(_marpaESLIF_generateStringWithLoggerCallback, (void *) &_marpaESLIF_stringGenerator, GENERICLOGGER_LOGLEVEL_TRACE); \
     if (_genericLoggerp != NULL) {                                      \
       if (_traceb) {                                                    \
-        MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "--------------------------------------------"); \
-        MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "%s%s (%ld bytes)", _headers, _asciidescs, (unsigned long) _lengthl); \
+        MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "%s%s (%ld bytes):", _headers, _asciidescs, (unsigned long) _lengthl); \
       } else {                                                          \
-        MARPAESLIF_ERROR(_marpaESLIFp, "--------------------------------------------"); \
-        MARPAESLIF_ERRORF(_marpaESLIFp, "%s%s (%ld bytes)", _headers, _asciidescs, (unsigned long) _lengthl); \
+        MARPAESLIF_ERRORF(_marpaESLIFp, "%s%s (%ld bytes):", _headers, _asciidescs, (unsigned long) _lengthl); \
       }                                                                 \
       for (_i = 0; _i < _lengthl + ((_lengthl % MARPAESLIF_HEXDUMP_COLS) ? (MARPAESLIF_HEXDUMP_COLS - _lengthl % MARPAESLIF_HEXDUMP_COLS) : 0); _i++) { \
         /* print offset */                                              \
@@ -122,11 +120,6 @@
             _marpaESLIF_stringGenerator.okb = 0;                        \
           }                                                             \
         }                                                               \
-      }                                                                 \
-      if (_traceb) {                                                    \
-        MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "--------------------------------------------"); \
-      } else {                                                          \
-        MARPAESLIF_ERROR(_marpaESLIFp, "--------------------------------------------"); \
       }                                                                 \
       GENERICLOGGER_FREE(_genericLoggerp);                              \
     }                                                                   \

@@ -327,6 +327,7 @@ struct marpaESLIF_meta {
   int                         *terminalArrayShallowp;           /* Total grammar terminals */
   size_t                       nSymbolStartl;                   /* Number of lexemes at the very beginning of marpaWrapperGrammarStartp */
   int                         *symbolArrayStartp;               /* Lexemes at the very beginning of marpaWrapperGrammarStartp */
+  short                        lazyb;                           /* Meta symbol is lazy - for internal usage only at bootstrap */
 };
 
 struct marpaESLIF_stringGenerator {
@@ -349,7 +350,9 @@ struct marpaESLIFValue {
   short                        inValuationb;
   marpaESLIF_symbol_t         *symbolp;
   marpaESLIF_rule_t           *rulep;
-  char                        *actions; /* True external name of best-effort ASCII in case of literal */
+  char                        *actions;
+  char                        *actionprecompiledp;    /* Lua script source precompiled (shallow) */
+  size_t                       actionprecompiledl;    /* Lua script source precompiled length in byte */
   marpaESLIF_string_t         *stringp; /* Not NULL only when is a literal - then callback is forced to be internal */
   lua_State                   *L;       /* Shallow copy of the L that is in the top-level recognizer */
   void                        *marpaESLIFLuaValueContextp;
@@ -360,6 +363,8 @@ struct marpaESLIFValue {
   marpaESLIFRepresentation_t   proxyRepresentationp; /* Proxy representation callback, c.f. json.c for an example */
   marpaESLIF_stringGenerator_t stringGenerator; /* Internal string generator, put here to avoid unnecessary malloc()/free() calls */
   genericLogger_t             *stringGeneratorLoggerp; /* Internal string generator logger, put here to avoid unnecessary genericLogger_newp()/genericLogger_freev() calls */
+  char                        *luaprecompiledp;    /* Lua script source precompiled */
+  size_t                       luaprecompiledl;    /* Lua script source precompiled length in byte */
 };
 
 struct marpaESLIF_stream {
@@ -479,9 +484,7 @@ struct marpaESLIFRecognizer {
 
   /* For lua action callbacks */
   lua_State                   *L;              /* Only owned by the top-level recognizer */
-  char                        *ifactions;
-  char                        *eventactions;
-  char                        *regexactions;
+  char                        *actions;
 
   /* For _marpaESLIF_flatten_pointers optimization */
   genericStack_t               _marpaESLIFValueResultFlattenStack;

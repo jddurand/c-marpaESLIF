@@ -153,6 +153,7 @@
 #define G1_RULE_ACTION_NAME_12                   "G1_rule_action_name_12"
 #define G1_RULE_ACTION_NAME_13                   "G1_rule_action_name_13"
 #define G1_RULE_ACTION_NAME_14                   "G1_rule_action_name_14"
+#define G1_RULE_ACTION_NAME_15                   "G1_rule_action_name_15"
 #define G1_RULE_SYMBOLACTION_NAME_1              "G1_rule_symbolaction_name_1"
 #define G1_RULE_SYMBOLACTION_NAME_2              "G1_rule_symbolaction_name_2"
 #define G1_RULE_SYMBOLACTION_NAME_3              "G1_rule_symbolaction_name_3"
@@ -163,6 +164,8 @@
 #define G1_RULE_SYMBOLACTION_NAME_8              "G1_rule_symbolaction_name_8"
 #define G1_RULE_SYMBOLACTION_NAME_9              "G1_rule_symbolaction_name_9"
 #define G1_RULE_SYMBOLACTION_NAME_10             "G1_rule_symbolaction_name_10"
+#define G1_RULE_SYMBOLACTION_NAME_11             "G1_rule_symbolaction_name_11"
+#define G1_RULE_SYMBOLACTION_NAME_12             "G1_rule_symbolaction_name_12"
 #define G1_RULE_QUANTIFIER_1                     "G1_rule_quantifier_1"
 #define G1_RULE_QUANTIFIER_2                     "G1_rule_quantifier_2"
 #define G1_RULE_SIGNED_INTEGER                   "G1_rule_signed_integer"
@@ -188,16 +191,20 @@
 #define G1_RULE_IF_ACTION                        "G1_rule_if_action"
 #define G1_RULE_IFACTION_NAME_1                  "G1_rule_ifaction_name_1"
 #define G1_RULE_IFACTION_NAME_2                  "G1_rule_ifaction_name_2"
+#define G1_RULE_IFACTION_NAME_3                  "G1_rule_ifaction_name_3"
 #define G1_RULE_REGEX_ACTION                     "G1_rule_regex_action"
 #define G1_RULE_REGEXACTION_NAME_1               "G1_rule_regexaction_name_1"
 #define G1_RULE_REGEXACTION_NAME_2               "G1_rule_regexaction_name_2"
+#define G1_RULE_REGEXACTION_NAME_3               "G1_rule_regexaction_name_3"
 #define G1_RULE_EVENT_ACTION                     "G1_rule_event_action"
 #define G1_RULE_EVENTACTION_NAME_1               "G1_rule_eventaction_name_1"
 #define G1_RULE_EVENTACTION_NAME_2               "G1_rule_eventaction_name_2"
+#define G1_RULE_EVENTACTION_NAME_3               "G1_rule_eventaction_name_3"
 #define G1_RULE_DEFAULT_ENCODING                 "G1_rule_default_encoding"
 #define G1_RULE_DEFAULTENCODING_NAME             "G1_rule_defaultencoding_name"
 #define G1_RULE_FALLBACK_ENCODING                "G1_rule_fallback_encoding"
 #define G1_RULE_FALLBACKENCODING_NAME            "G1_rule_fallbackencoding_name"
+#define G1_RULE_LUA_FUNCTION                     "G1_rule_lua_function"
 
 #define G1_ACTION_STATEMENTS                       "::undef"
 #define G1_ACTION_STATEMENT_01                     "::undef"
@@ -350,6 +357,7 @@
 #define G1_ACTION_ACTION_NAME_12                   "::ascii" /* <action name> ::= '::row' */
 #define G1_ACTION_ACTION_NAME_13                   "::ascii" /* <action name> ::= '::table' */
 #define G1_ACTION_ACTION_NAME_14                   "::ascii" /* <action name> ::= '::ast' */
+#define G1_ACTION_ACTION_NAME_15                   "::shift" /* <action name> ::= <lua function> */
 #define G1_ACTION_SYMBOLACTION_NAME_1              "::ascii" /* <symbol action name> ::= <ascii graph name> */
 #define G1_ACTION_SYMBOLACTION_NAME_2              "::ascii" /* <symbol action name> ::= '::transfer' */
 #define G1_ACTION_SYMBOLACTION_NAME_3              "::ascii" /* <symbol action name> ::= '::undef' */
@@ -360,6 +368,8 @@
 #define G1_ACTION_SYMBOLACTION_NAME_8              "::ascii" /* <symbol action name> ::= '::true' */
 #define G1_ACTION_SYMBOLACTION_NAME_9              "::ascii" /* <symbol action name> ::= '::false' */
 #define G1_ACTION_SYMBOLACTION_NAME_10             "::ascii" /* <symbol action name> ::= '::json' */
+#define G1_ACTION_SYMBOLACTION_NAME_11             "::ascii" /* <symbol action name> ::= '::jsonf' */
+#define G1_ACTION_SYMBOLACTION_NAME_12             "::shift" /* <symbol action name> ::= <lua function> */
 #define G1_ACTION_QUANTIFIER_1                     "G1_action_quantifier_1"                     /* done */
 #define G1_ACTION_QUANTIFIER_2                     "G1_action_quantifier_2"                     /* done */
 #define G1_ACTION_SIGNED_INTEGER                   "::ascii" /* <signed integer> ::= /[+-]?\d+/ */
@@ -381,23 +391,29 @@
 #define G1_ACTION_LUASCRIPT_SOURCE                 "::concat"
 #define G1_ACTION_IFACTION_NAME_1                  "::ascii" /* <if action name> ::= <ascii graph name> */
 #define G1_ACTION_IFACTION_NAME_2                  "::ascii" /* <if action name> ::= <lua action name> */
+#define G1_ACTION_IFACTION_NAME_3                  "::shift" /* <if action name> ::= <lua function> */
 #define G1_ACTION_IFACTION                         "G1_action_ifaction"                         /* done */
 #define G1_ACTION_REGEXACTION_NAME_1               "::ascii" /* <regex action name> ::= <ascii graph name> */
 #define G1_ACTION_REGEXACTION_NAME_2               "::ascii" /* <regex action name> ::= <lua action name> */
+#define G1_ACTION_REGEXACTION_NAME_3               "::shift" /* <regex action name> ::= <lua function> */
 #define G1_ACTION_REGEXACTION                      "G1_action_regexaction"                       /* done */
 #define G1_ACTION_EVENTACTION                      "G1_action_eventaction"                   /* done */
 #define G1_ACTION_EVENTACTION_NAME_1               "::ascii" /* <event action name> ::= <ascii graph name> */
 #define G1_ACTION_EVENTACTION_NAME_2               "::ascii" /* <event action name> ::= <lua identifier> */
+#define G1_ACTION_EVENTACTION_NAME_3               "::shift" /* <event action name> ::= <lua function> */
 #define G1_ACTION_DEFAULTENCODING                  "G1_action_defaultencoding"                   /* done */
 #define G1_ACTION_DEFAULTENCODING_NAME             "::ascii" /* <default encoding name> ::= <ascii graph name> */
 #define G1_ACTION_FALLBACKENCODING                 "G1_action_fallbackencoding"                   /* done */
 #define G1_ACTION_FALLBACKENCODING_NAME            "::ascii" /* <fallback encoding name> ::= <ascii graph name> */
+#define G1_ACTION_LUA_FUNCTION                     "G1_action_lua_function" /* <lua function>> ::= '::lua->function(' <lua function after lparen> */
 
 typedef struct bootstrap_grammar_terminal {
   int                        idi;                 /* Identifier */
   marpaESLIF_terminal_type_t terminalType;        /* Terminal type */
   char                      *modifiers;           /* Modifiers */
   char                      *utf8s;               /* ASCII UTF-8 compatible encoding */
+  char                      *eventBefores;
+  char                      *eventAfters;
   char                      *testFullMatchs;
   char                      *testPartialMatchs;
 } bootstrap_grammar_terminal_t;
@@ -409,6 +425,11 @@ typedef struct bootstrap_grammar_meta {
   short  discardb;             /* Discard symbol ? */
   short  discardonb;           /* :discard[on] event ? */
   short  discardoffb;          /* :discard[off] event ? */
+  short  lazyb;                /* Lazy ? Only ESLIF is using that */
+  int    lookupLevelDeltai;    /* When >= 0, this is a forced lookupLevelDeltai at symbol level */
+  short  verboseb;             /* Forced verbose mode - only for lexemes */
+  char  *eventBefores;         /* Event before - only for lexemes */
+  char  *eventAfters;          /* Event after - only for lexemes */
 } bootstrap_grammar_meta_t;
 
 typedef enum bootstrap_grammar_rule_type {

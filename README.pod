@@ -8,6 +8,25 @@ marpaESLIF - Extended Marpa's Scanless Interface
 
 =head1 DESCRIPTION
 
+  /*
+   * Example of a calulator with ESLIF BNF:
+   *
+   * Automatic discard of whitespaces
+   * Correct association for expressions
+   * Embedded action using anonymous lua functions
+   *
+  */
+  :discard ::= /[\s]+/
+  
+  exp ::=
+      /[\d]+/
+      |    "("  exp ")"    assoc => group action => ::copy[1]
+     || exp (- '**' -) exp assoc => right action => ::lua->function(x,y) return x^y end
+     || exp (-  '*' -) exp                action => ::lua->function(x,y) return x*y end
+      | exp (-  '/' -) exp                action => ::lua->function(x,y) return x/y end
+     || exp (-  '+' -) exp                action => ::lua->function(x,y) return x+y end
+      | exp (-  '-' -) exp                action => ::lua->function(x,y) return x-y end
+
 marpaESLIF is a Scanless Interface expressed in a BNF format, that is using L<marpaWrapper|https://github.com/jddurand/c-marpaWrapper>, itself being a thin interface on top of L<libmarpa|https://jeffreykegler.github.io/Marpa-web-site/libmarpa.html> parser.
 
 The L<marpaESLIF BNF|https://github.com/jddurand/c-marpaESLIF/tree/master/doc/BNF> is inspired from L<Marpa::R2's DSL|https://metacpan.org/pod/distribution/Marpa-R2/pod/Scanless/DSL.pod>, though with some incompatible changes and add-ons:

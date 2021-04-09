@@ -50,6 +50,7 @@ typedef enum _marpaESLIFBootstrapStackTypeEnum {
   marpaESLIFBootstrapStackTypeEnum_ALTERNATIVE_NAME,
   marpaESLIFBootstrapStackTypeEnum_ARRAY,
   marpaESLIFBootstrapStackTypeEnum_STRING,
+  marpaESLIFBootstrapStackTypeEnum_LUA_FUNCTION,
   _marpaESLIFBootstrapStackTypeEnum_LAST
 } marpaESLIFBootstrapStackTypeEnum_t;
 
@@ -98,6 +99,7 @@ static char _MARPAESLIF_BOOTSTRAP_STACK_TYPE[_marpaESLIFBootstrapStackTypeEnum_L
 #define MARPAESLIF_BOOTSTRAP_STACK_TYPE_ALTERNATIVE_NAME                 &(_MARPAESLIF_BOOTSTRAP_STACK_TYPE[marpaESLIFBootstrapStackTypeEnum_ALTERNATIVE_NAME])
 #define MARPAESLIF_BOOTSTRAP_STACK_TYPE_ARRAY                            &(_MARPAESLIF_BOOTSTRAP_STACK_TYPE[marpaESLIFBootstrapStackTypeEnum_ARRAY])
 #define MARPAESLIF_BOOTSTRAP_STACK_TYPE_STRING                           &(_MARPAESLIF_BOOTSTRAP_STACK_TYPE[marpaESLIFBootstrapStackTypeEnum_STRING])
+#define MARPAESLIF_BOOTSTRAP_STACK_TYPE_LUA_FUNCTION                     &(_MARPAESLIF_BOOTSTRAP_STACK_TYPE[marpaESLIFBootstrapStackTypeEnum_LUA_FUNCTION])
 
 /* Forward declarations */
 typedef enum   marpaESLIF_bootstrap_stack_context               marpaESLIF_bootstrap_stack_context_t;
@@ -128,6 +130,7 @@ typedef struct marpaESLIF_bootstrap_rhs_alternative_exception  marpaESLIF_bootst
 typedef struct marpaESLIF_bootstrap_rhs_alternative_quantified marpaESLIF_bootstrap_rhs_alternative_quantified_t;
 typedef struct marpaESLIF_bootstrap_alternative                marpaESLIF_bootstrap_alternative_t;
 typedef struct marpaESLIF_bootstrap_event_initialization       marpaESLIF_bootstrap_event_initialization_t;
+typedef struct marpaESLIF_bootstrap_lua_function               marpaESLIF_bootstrap_lua_function_t;
 
 enum marpaESLIF_bootstrap_adverb_list_item_type {
   MARPAESLIF_BOOTSTRAP_ADVERB_LIST_ITEM_TYPE_NA = 0,
@@ -340,6 +343,12 @@ enum marpaESLIF_bootstrap_event_initializer_type {
 struct marpaESLIF_bootstrap_event_initialization {
   char                                         *eventNames;
   marpaESLIF_bootstrap_event_initializer_type_t initializerb;
+};
+
+struct marpaESLIF_bootstrap_lua_function {
+  char   *luas;
+  char   *luaprecompiledp;
+  size_t  luaprecompiledl;
 };
 
 static marpaESLIFValueRuleCallback_t _marpaESLIF_bootstrap_ruleActionResolver(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, char *actions);

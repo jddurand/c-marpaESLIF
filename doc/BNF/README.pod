@@ -621,6 +621,17 @@ It is possible to set a hardcoded UTF-8 string as result, using a string literal
 
 where C<\x{hh}> will translate to a byte having the hexadecimal value C<hh>, and C<\u{uuuu}> and C<\U{uuuuuuuu}> will translate to the UTF-8 version of C<uuuu> unicode code point, C<uuuuuuuu> is for the very large, less common, code points.
 
+Actions can be be writen in plain lua, conforming to the lua version embedded by ESLIF, e:g:
+
+  action => action => ::lua->function(x,y) return x^y end
+
+The lua semantics apply immediately after the first opening pathenthesis, up to the end of the function body:
+
+  action => action => ::lua->function(x,y)
+                               --[=[ Lua semantics here ]=]
+                               return x^y
+                             end
+
 =item Left association
 
 In a prioritized statement, associate with the left-most operand:
@@ -691,12 +702,14 @@ Lexemes and terminals can be prioritized, using a signed integer:
 
 =item Verbose specification
 
-Lexemes can be verbose when they are parsed:
+Lexemes can be verbose when they fail to parse:
 
   verbose => 1
   verbose => true
   verbose => 0
   verbose => false
+
+If C<verbose> is a true value, ESLIF will printout the sub-recognizer state and stream if the lexeme valuation fails.
 
 =item Pause specification
 
