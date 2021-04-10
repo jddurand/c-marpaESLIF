@@ -49,6 +49,8 @@ The L<marpaESLIF BNF|https://github.com/jddurand/c-marpaESLIF/tree/master/doc/BN
 
 =item JSON (strict and extended) grammars for decoding/encoding
 
+=item Declarative lua action directly into the grammar
+
 =back
 
 The following sections are a general presentation of marpaESLIF architecture, features, things-to-know.
