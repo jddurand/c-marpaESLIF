@@ -350,9 +350,8 @@ struct marpaESLIFValue {
   short                        inValuationb;
   marpaESLIF_symbol_t         *symbolp;
   marpaESLIF_rule_t           *rulep;
-  char                        *actions;
-  char                        *actionprecompiledp;    /* Lua script source precompiled (shallow) */
-  size_t                       actionprecompiledl;    /* Lua script source precompiled length in byte */
+  char                        *actions; /* Shallow pointer to action "name", depends on action type */
+  marpaESLIF_action_t         *actionp; /* Shallow pointer to action */
   marpaESLIF_string_t         *stringp; /* Not NULL only when is a literal - then callback is forced to be internal */
   lua_State                   *L;       /* Shallow copy of the L that is in the top-level recognizer */
   void                        *marpaESLIFLuaValueContextp;
@@ -484,7 +483,8 @@ struct marpaESLIFRecognizer {
 
   /* For lua action callbacks */
   lua_State                   *L;              /* Only owned by the top-level recognizer */
-  char                        *actions;
+  char                        *actions;        /* Shallow pointer to action "name", depends on action type */
+  marpaESLIF_action_t         *actionp;        /* Shallow pointer to action */
 
   /* For _marpaESLIF_flatten_pointers optimization */
   genericStack_t               _marpaESLIFValueResultFlattenStack;
@@ -507,6 +507,9 @@ struct marpaESLIFRecognizer {
   /* Storage for latest call to marpaWrapperRecognizer_progressb */
   size_t                          progressallocl;
   marpaESLIFRecognizerProgress_t *progressp;
+
+  char                           *luaprecompiledp;    /* Lua script source precompiled */
+  size_t                          luaprecompiledl;    /* Lua script source precompiled length in byte */
   };
 
 struct marpaESLIF_lexeme_data {

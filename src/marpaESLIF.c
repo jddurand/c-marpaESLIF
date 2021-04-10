@@ -3865,7 +3865,7 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
   /*
     10. Precompile lua script
   */
-  if (MARPAESLIF_UNLIKELY(! _marpaESLIFGrammar_lua_precompileb(marpaESLIFGrammarp))) {
+  if (MARPAESLIF_UNLIKELY(! _marpaESLIFGrammar_lua_precompileb(marpaESLIFGrammarp, 1 /* popb */))) {
     MARPAESLIF_ERROR(marpaESLIFp, "Lua precompilation failure");
     goto err;
   }
@@ -5383,7 +5383,8 @@ static inline short _marpaESLIFRecognizer_terminal_matcherb(marpaESLIFRecognizer
 
   /*********************************************************************************/
   /* A matcher tries to match a terminal v.s. input that is eventually incomplete. */
-  /* It return 1 on success, 0 on failure, -1 if more data is needed.              */
+  /* It return 1 on success, 0 on failure, -1 if more data is needed in rcip       */
+  /* The method return value itself is 0 on error, 1 on success, -1 on fatal error */
   /*********************************************************************************/
 
   if (terminalp->pseudob) {
@@ -5588,6 +5589,12 @@ static inline short _marpaESLIFRecognizer_terminal_matcherb(marpaESLIFRecognizer
     }
 #endif
 
+    /* Whatever happened, PCRE2_ERROR_CALLOUT is a user exception, that is stopping everything */
+    if (pcre2Errornumberi == PCRE2_ERROR_CALLOUT) {
+      MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "%s: fatal user error caught", terminalp->descp->asciis);
+      goto fatal;
+    }
+
     /* In any case - set UTF buffer correctness if needed and if possible */
     if (binmodeb && marpaESLIF_regexp->utfb) {
       if ((pcre2Errornumberi >= 0) || (pcre2Errornumberi == PCRE2_ERROR_NOMATCH)) {
@@ -5750,6 +5757,10 @@ static inline short _marpaESLIFRecognizer_terminal_matcherb(marpaESLIFRecognizer
   rcb = 1;
   goto done;
 
+ fatal:
+  rcb = -1;
+  goto done;
+
  err:
   rcb = 0;
 
@@ -5848,6 +5859,7 @@ static inline short _marpaESLIFRecognizer_symbol_matcherb(marpaESLIFRecognizer_t
   int                               numberOfStartCompletionsi;
   marpaESLIFRecognizerIfCallback_t  ifCallbackp;
   marpaESLIFValueResultBool_t       marpaESLIFValueResultBool;
+  short                             rcMatcherb;
 
   MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_INC;
   MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "start");
@@ -5865,17 +5877,22 @@ static inline short _marpaESLIFRecognizer_symbol_matcherb(marpaESLIFRecognizer_t
       goto done;
     }
     /* A terminal matcher NEVER updates the stream : inputs, inputl and eof can be passed as is. */
-    if (MARPAESLIF_UNLIKELY(! _marpaESLIFRecognizer_terminal_matcherb(marpaESLIFRecognizerp,
-                                                                      marpaESLIF_streamp,
-                                                                      symbolp->u.terminalp,
-                                                                      marpaESLIF_streamp->inputs,
-                                                                      marpaESLIF_streamp->inputl,
-                                                                      marpaESLIF_streamp->eofb,
-                                                                      &rci,
-                                                                      &marpaESLIFValueResult,
-                                                                      NULL /* matchedLengthlp */))) {
+    rcMatcherb = _marpaESLIFRecognizer_terminal_matcherb(marpaESLIFRecognizerp,
+                                                         marpaESLIF_streamp,
+                                                         symbolp->u.terminalp,
+                                                         marpaESLIF_streamp->inputs,
+                                                         marpaESLIF_streamp->inputl,
+                                                         marpaESLIF_streamp->eofb,
+                                                         &rci,
+                                                         &marpaESLIFValueResult,
+                                                         NULL /* matchedLengthlp */);
+    if (MARPAESLIF_UNLIKELY(rcMatcherb < 0)) {
+      goto fatal;
+    }
+    if (! rcMatcherb) {
       goto err;
     }
+
     switch (rci) {
     case MARPAESLIF_MATCH_AGAIN:
       /* We have to load more unless already at EOF */
@@ -10260,11 +10277,14 @@ static inline marpaESLIFRecognizer_t *_marpaESLIFRecognizer_newp(marpaESLIFGramm
   marpaESLIFRecognizerp->lastDiscards                       = NULL;
   marpaESLIFRecognizerp->L                                  = NULL;
   marpaESLIFRecognizerp->actions                            = NULL;
+  marpaESLIFRecognizerp->actionp                            = NULL;
   marpaESLIFRecognizerp->marpaESLIFValueResultFlattenStackp = NULL;
   marpaESLIFRecognizerp->marpaESLIFCalloutBlockp            = NULL;
   marpaESLIFRecognizerp->expectedTerminalArrayp             = NULL;
   marpaESLIFRecognizerp->progressallocl                     = 0;
   marpaESLIFRecognizerp->progressp                          = NULL;
+  marpaESLIFRecognizerp->luaprecompiledp                    = NULL;    /* Lua script source precompiled */
+  marpaESLIFRecognizerp->luaprecompiledl                    = 0;    /* Lua script source precompiled length in byte */
 
   marpaWrapperRecognizerOption.genericLoggerp            = silentb ? NULL : marpaESLIFp->marpaESLIFOption.genericLoggerp;
   marpaWrapperRecognizerOption.disableThresholdb         = marpaESLIFRecognizerOptionp->disableThresholdb;
@@ -12284,14 +12304,14 @@ static inline short _marpaESLIFRecognizer_readb(marpaESLIFRecognizer_t *marpaESL
 
 #define MARPAESLIF_LEVEL_CREATESHOW(grammarp, asciishowl, asciishows) do { \
     if (grammarp->leveli == 0) {                                        \
-      asciishowl += 4;                                                  \
+      asciishowl += 5;                                                  \
       if (asciishows != NULL) {                                         \
-        strcat(asciishows, " ::=");                                     \
+        strcat(asciishows, " ::= ");                                    \
       }                                                                 \
     } else if (grammarp->leveli == 1) {                                 \
-      asciishowl += 2;                                                  \
+      asciishowl += 3;                                                  \
       if (asciishows != NULL) {                                         \
-        strcat(asciishows, " ~");                                       \
+        strcat(asciishows, " ~ ");                                      \
       }                                                                 \
     } else {                                                            \
       asciishowl += 2;                                                  \
@@ -12305,9 +12325,9 @@ static inline short _marpaESLIFRecognizer_readb(marpaESLIFRecognizer_t *marpaESL
         strcat(asciishows, tmps);                                       \
         strcat(asciishows, "]");                                        \
       }                                                                 \
-      asciishowl += 2;                                                  \
+      asciishowl += 3;                                                  \
       if (asciishows != NULL) {                                         \
-        strcat(asciishows, ":=");                                       \
+        strcat(asciishows, ":= ");                                      \
       }                                                                 \
     }                                                                   \
   } while (0)
@@ -12331,6 +12351,28 @@ static inline short _marpaESLIFRecognizer_readb(marpaESLIFRecognizer_t *marpaESL
       strcpy(quote[1], "");                                     \
     }                                                           \
   } while (0)
+
+#define MARPAESLIF_SYMBOL_CREATESHOW(asciishowl, asciishows, symbolp) do { \
+    switch (symbolp->type) {                                            \
+    case MARPAESLIF_SYMBOL_TYPE_TERMINAL:                               \
+      MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, symbolp->descp->asciis); \
+      break;                                                            \
+    case MARPAESLIF_SYMBOL_TYPE_META:                                   \
+      MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "<");        \
+      MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, (symbolp->lookupMetas != NULL) ? symbolp->lookupMetas : symbolp->u.metap->asciinames); \
+      MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, ">");        \
+      if (MARPAESLIF_IS_LEXEME(symbolp)) {                              \
+        /* Default lookup is grammarp->leveli + 1 : we output the @deltaLeveli information if this is not the case */ \
+        if (symbolp->lookupResolvedLeveli != (grammarp->leveli + 1)) {  \
+          MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "@");    \
+          sprintf(tmps, "%+d", symbolp->lookupLevelDeltai);             \
+          MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, tmps);   \
+        }                                                               \
+      }                                                                 \
+    default:                                                            \
+      break;                                                            \
+    }                                                                   \
+   } while (0)
 
 /*****************************************************************************/
 static inline void _marpaESLIF_rule_createshowv(marpaESLIF_t *marpaESLIFp, marpaESLIF_grammar_t *grammarp, marpaESLIF_rule_t *rulep, char *asciishows, size_t *asciishowlp)
@@ -12362,31 +12404,15 @@ static inline void _marpaESLIF_rule_createshowv(marpaESLIF_t *marpaESLIFp, marpa
       continue;
     }
 #endif
+    if (rhsi > 0) {
+      MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, " ");
+    }
     symbolp = GENERICSTACK_GET_PTR(rhsStackp, rhsi);
     skipb = (rulep->skipbp != NULL) && rulep->skipbp[rhsi];
-    MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, " ");
     if (skipb) {
       MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "(- ");
     }
-    switch (symbolp->type) {
-    case MARPAESLIF_SYMBOL_TYPE_TERMINAL:
-      MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, symbolp->descp->asciis);
-      break;
-    case MARPAESLIF_SYMBOL_TYPE_META:
-      MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "<");
-      MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, (symbolp->lookupMetas != NULL) ? symbolp->lookupMetas : symbolp->u.metap->asciinames);
-      MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, ">");
-    default:
-      break;
-    }
-    if (symbolp->lookupResolvedLeveli != grammarp->leveli) {
-      /* Default lookup is grammarp->leveli + 1 : we output the @deltaLeveli information if this is not the case */
-      if (symbolp->lookupResolvedLeveli != (grammarp->leveli + 1)) {
-        MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "@");
-        sprintf(tmps, "%+d", symbolp->lookupLevelDeltai);
-        MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, tmps);
-      }
-    }
+    MARPAESLIF_SYMBOL_CREATESHOW(asciishowl, asciishows, symbolp);
     if (skipb) {
       MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, " -)");
     }
@@ -12444,9 +12470,7 @@ static inline void _marpaESLIF_rule_createshowv(marpaESLIF_t *marpaESLIFp, marpa
       MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, rulep->actionp->u.luas);
       break;
     case MARPAESLIF_ACTION_TYPE_LUA_FUNCTION:
-      MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "::lua->");
-      /* We generated luaFunctions as being "return function..." */
-      MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, rulep->actionp->u.luaFunctions + 7);
+      MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, rulep->actionp->u.luaFunction.actions);
       break;
     default:
       break;
@@ -12516,14 +12540,13 @@ static inline void _marpaESLIF_grammar_createshowv(marpaESLIFGrammar_t *marpaESL
 
   MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, ":start");
   MARPAESLIF_LEVEL_CREATESHOW(grammarp, asciishowl, asciishows);
-  MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, " <");
+  MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "<");
   MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, grammarp->starts);
   MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, ">\n");
 
   if ((! grammarp->descautob) && (grammarp->descp != NULL) && (grammarp->descp->asciis != NULL)) {
     MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, ":desc");
     MARPAESLIF_LEVEL_CREATESHOW(grammarp, asciishowl, asciishows);
-    MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, " ");
     MARPAESLIF_STRING_CREATEQUOTE(quote, grammarp->descp->asciis);
     if (strlen(quote[0]) > 0) {
       MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, quote[0]);
@@ -12566,9 +12589,7 @@ static inline void _marpaESLIF_grammar_createshowv(marpaESLIFGrammar_t *marpaESL
         MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, grammarp->defaultRuleActionp->u.luas);
         break;
       case MARPAESLIF_ACTION_TYPE_LUA_FUNCTION:
-        MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "::lua->");
-      /* We generated luaFunctions as being "return function..." */
-        MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, grammarp->defaultRuleActionp->u.luaFunctions + 7);
+        MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, grammarp->defaultRuleActionp->u.luaFunction.actions);
         break;
       default:
         break;
@@ -12590,9 +12611,7 @@ static inline void _marpaESLIF_grammar_createshowv(marpaESLIFGrammar_t *marpaESL
         MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, grammarp->defaultEventActionp->u.luas);
         break;
       case MARPAESLIF_ACTION_TYPE_LUA_FUNCTION:
-        MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "::lua->");
-      /* We generated luaFunctions as being "return function..." */
-        MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, grammarp->defaultEventActionp->u.luaFunctions + 7);
+        MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, grammarp->defaultEventActionp->u.luaFunction.actions);
         break;
       default:
         break;
@@ -12614,9 +12633,7 @@ static inline void _marpaESLIF_grammar_createshowv(marpaESLIFGrammar_t *marpaESL
         MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, grammarp->defaultRegexActionp->u.luas);
         break;
       case MARPAESLIF_ACTION_TYPE_LUA_FUNCTION:
-        MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "::lua->");
-      /* We generated luaFunctions as being "return function..." */
-        MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, grammarp->defaultRegexActionp->u.luaFunctions + 7);
+        MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, grammarp->defaultRegexActionp->u.luaFunction.actions);
         break;
       default:
         break;
@@ -12638,9 +12655,7 @@ static inline void _marpaESLIF_grammar_createshowv(marpaESLIFGrammar_t *marpaESL
         MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, grammarp->defaultSymbolActionp->u.luas);
         break;
       case MARPAESLIF_ACTION_TYPE_LUA_FUNCTION:
-        MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "::lua->");
-      /* We generated luaFunctions as being "return function..." */
-        MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, grammarp->defaultSymbolActionp->u.luaFunctions + 7);
+        MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, grammarp->defaultSymbolActionp->u.luaFunction.actions);
         break;
       default:
         break;
@@ -12692,31 +12707,30 @@ static inline void _marpaESLIF_grammar_createshowv(marpaESLIFGrammar_t *marpaESL
         ) {
       MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, MARPAESLIF_IS_LEXEME(symbolp) ? ":lexeme" : ":terminal");
       MARPAESLIF_LEVEL_CREATESHOW(grammarp, asciishowl, asciishows);
-      MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, " <");
-      MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, symbolp->descp->asciis);
-      MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, ">");
+      MARPAESLIF_SYMBOL_CREATESHOW(asciishowl, asciishows, symbolp);
+
       if (symbolp->eventBefores != NULL) {
-        MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, " pause => before event => ");
+        MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "pause => before event => ");
         MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, symbolp->eventBefores);
         MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, symbolp->eventBeforeb ? "=on" : "=off");
       }
       if (symbolp->eventAfters != NULL) {
-        MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, " pause => after event => ");
+        MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "pause => after event => ");
         MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, symbolp->eventAfters);
         MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, symbolp->eventAfterb ? "=on" : "=off");
       }
       if (symbolp->priorityi != 0) {
-        MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, " priority => ");
+        MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "priority => ");
         sprintf(tmps, "%d", symbolp->priorityi);
         MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, tmps);
       }
       if (symbolp->verboseb) {
-        MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, " verbose => ");
+        MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "verbose => ");
         sprintf(tmps, "%d", (int) symbolp->verboseb);
         MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, tmps);
       }
       if (symbolp->symbolActionp != NULL) {
-        MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, " symbol-action => ");
+        MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "symbol-action => ");
         switch (symbolp->symbolActionp->type) {
         case MARPAESLIF_ACTION_TYPE_NAME:
           MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, symbolp->symbolActionp->u.names);
@@ -12731,16 +12745,14 @@ static inline void _marpaESLIF_grammar_createshowv(marpaESLIFGrammar_t *marpaESL
           MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, symbolp->symbolActionp->u.luas);
           break;
         case MARPAESLIF_ACTION_TYPE_LUA_FUNCTION:
-          MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "::lua->");
-      /* We generated luaFunctions as being "return function..." */
-          MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, symbolp->symbolActionp->u.luaFunctions + 7);
+          MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, symbolp->symbolActionp->u.luaFunction.actions);
           break;
         default:
           break;
         }
       }
       if (symbolp->ifActionp != NULL) {
-        MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, " if-action => ");
+        MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "if-action => ");
         switch (symbolp->ifActionp->type) {
         case MARPAESLIF_ACTION_TYPE_NAME:
           MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, symbolp->ifActionp->u.names);
@@ -12755,9 +12767,7 @@ static inline void _marpaESLIF_grammar_createshowv(marpaESLIFGrammar_t *marpaESL
           MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, symbolp->ifActionp->u.luas);
           break;
         case MARPAESLIF_ACTION_TYPE_LUA_FUNCTION:
-          MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "::lua->");
-      /* We generated luaFunctions as being "return function..." */
-          MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, symbolp->ifActionp->u.luaFunctions + 7);
+          MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, symbolp->ifActionp->u.luaFunction.actions);
           break;
         default:
           break;
@@ -12865,7 +12875,6 @@ static inline void _marpaESLIF_grammar_createshowv(marpaESLIFGrammar_t *marpaESL
       MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, symbolp->descp->asciis);
       MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, ">");
       MARPAESLIF_LEVEL_CREATESHOW(grammarp, asciishowl, asciishows);
-      MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, " ");
       MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "<");
       MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, symbolp->lookupMetas);
       MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, ">");
@@ -15446,6 +15455,7 @@ static inline marpaESLIFValue_t *_marpaESLIFValue_newp(marpaESLIFRecognizer_t *m
   marpaESLIFValuep->symbolp                     = NULL;
   marpaESLIFValuep->rulep                       = NULL;
   marpaESLIFValuep->actions                     = NULL;
+  marpaESLIFValuep->actionp                     = NULL;
   marpaESLIFValuep->stringp                     = NULL;
   marpaESLIFValuep->L                           = NULL;
   marpaESLIFValuep->marpaESLIFLuaValueContextp  = NULL; /* Shallow pointer */
@@ -18270,6 +18280,10 @@ static inline void _marpaESLIFRecognizer_freev(marpaESLIFRecognizer_t *marpaESLI
     free(marpaESLIFRecognizerp->progressp);
   }
 
+  if (marpaESLIFRecognizerp->luaprecompiledp != NULL) {
+    free(marpaESLIFRecognizerp->luaprecompiledp);
+  }
+
   MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "return");
   MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_DEC;
 
@@ -18512,8 +18526,7 @@ static inline char *_marpaESLIF_action2asciis(marpaESLIF_action_t *actionp)
   case MARPAESLIF_ACTION_TYPE_LUA:
     return actionp->u.luas;
   case MARPAESLIF_ACTION_TYPE_LUA_FUNCTION:
-    /* We generated luaFunctions as being "return function..." */
-    return actionp->u.luaFunctions + 7;
+    return actionp->u.luaFunction.actions;
   default:
     return (char *) MARPAESLIF_UNKNOWN_STRING;
   }
@@ -18547,18 +18560,27 @@ static inline short _marpaESLIF_action_validb(marpaESLIF_t *marpaESLIFp, marpaES
   case MARPAESLIF_ACTION_TYPE_LUA:
     if (MARPAESLIF_UNLIKELY(actionp->u.luas == NULL)) {
       MARPAESLIF_ERROR(marpaESLIFp, "actionp->type is MARPAESLIF_ACTION_TYPE_LUA but actionp->u.luas is NULL");
-      goto err;    
+      goto err;
     }
     break;
   case MARPAESLIF_ACTION_TYPE_LUA_FUNCTION:
-    if (MARPAESLIF_UNLIKELY(actionp->u.luaFunctions == NULL)) {
-      MARPAESLIF_ERROR(marpaESLIFp, "actionp->type is MARPAESLIF_ACTION_TYPE_LUA_FUNCTION but actionp->u.luaFunctions is NULL");
-      goto err;    
+    if (MARPAESLIF_UNLIKELY(actionp->u.luaFunction.luas == NULL)) {
+      MARPAESLIF_ERROR(marpaESLIFp, "actionp->type is MARPAESLIF_ACTION_TYPE_LUA_FUNCTION but actionp->u.luaFunction.luas is NULL");
+      goto err;
+    }
+    if (MARPAESLIF_UNLIKELY(actionp->u.luaFunction.actions == NULL)) {
+      MARPAESLIF_ERROR(marpaESLIFp, "actionp->type is MARPAESLIF_ACTION_TYPE_LUA_FUNCTION but actionp->u.luaFunction.actions is NULL");
+      goto err;
+    }
+    /* Only the stripped version is guaranteed to never be NULL */
+    if (MARPAESLIF_UNLIKELY(actionp->u.luaFunction.luacstripp == NULL)) {
+      MARPAESLIF_ERROR(marpaESLIFp, "actionp->type is MARPAESLIF_ACTION_TYPE_LUA_FUNCTION but actionp->u.luaFunction.luacstripp is NULL");
+      goto err;
     }
     break;
   default:
     MARPAESLIF_ERRORF(marpaESLIFp, "Invalid actionp->type %d", actionp->type);
-    goto err;    
+    goto err;
   }
 
   rcb = 1;
@@ -18592,13 +18614,18 @@ static inline short _marpaESLIF_action_eqb(marpaESLIF_action_t *action1p, marpaE
   /* Here types are equal */
   switch (action1p->type) {
   case MARPAESLIF_ACTION_TYPE_NAME:
-    return (strcmp(action1p->u.names, action2p->u.names) == 0);
+    return (strcmp(action1p->u.names, action2p->u.names) == 0) ? 1 : 0;
   case MARPAESLIF_ACTION_TYPE_STRING:
     return _marpaESLIF_string_utf8_eqb(action1p->u.stringp, action2p->u.stringp);
   case MARPAESLIF_ACTION_TYPE_LUA:
-    return (strcmp(action1p->u.luas, action2p->u.luas) == 0);
+    return (strcmp(action1p->u.luas, action2p->u.luas) == 0) ? 1 : 0;
   case MARPAESLIF_ACTION_TYPE_LUA_FUNCTION:
-    return (strcmp(action1p->u.luaFunctions, action2p->u.luaFunctions) == 0);
+    /* For inline functions, we compare the stripped binary - no check on binary length, it is ok by definition at this stage */
+    return
+      (
+       (action1p->u.luaFunction.luacstripl == action2p->u.luaFunction.luacstripl) &&
+       (memcmp(action1p->u.luaFunction.luacstripp, action2p->u.luaFunction.luacstripp, action2p->u.luaFunction.luacstripl) == 0)
+       ) ? 1 : 0;
   default:
     return 0;
   }
@@ -18640,10 +18667,39 @@ static inline marpaESLIF_action_t *_marpaESLIF_action_clonep(marpaESLIF_t *marpa
     }
     break;
   case MARPAESLIF_ACTION_TYPE_LUA_FUNCTION:
-    dup->u.luaFunctions = strdup(actionp->u.luaFunctions);
-    if (MARPAESLIF_UNLIKELY(dup->u.luaFunctions == NULL)) {
+    dup->u.luaFunction.luas       = NULL;
+    dup->u.luaFunction.actions    = NULL;
+    dup->u.luaFunction.luacb      = actionp->u.luaFunction.luacb;
+    dup->u.luaFunction.luacp      = NULL;
+    dup->u.luaFunction.luacl      = 0;
+    dup->u.luaFunction.luacstripp = NULL;
+    dup->u.luaFunction.luacstripl = 0;
+
+    dup->u.luaFunction.luas = strdup(actionp->u.luaFunction.luas);
+    if (MARPAESLIF_UNLIKELY(dup->u.luaFunction.luas == NULL)) {
       MARPAESLIF_ERRORF(marpaESLIFp, "strdup failure, %s", strerror(errno));
       goto err;
+    }
+    dup->u.luaFunction.actions = strdup(actionp->u.luaFunction.actions);
+    if (MARPAESLIF_UNLIKELY(dup->u.luaFunction.actions == NULL)) {
+      MARPAESLIF_ERRORF(marpaESLIFp, "strdup failure, %s", strerror(errno));
+      goto err;
+    }
+    if (actionp->u.luaFunction.luacp != NULL) {
+      dup->u.luaFunction.luacp = (char *) malloc(actionp->u.luaFunction.luacl);
+      if (MARPAESLIF_UNLIKELY(dup->u.luaFunction.luacp == NULL)) {
+        MARPAESLIF_ERRORF(marpaESLIFp, "malloc failure, %s", strerror(errno));
+        goto err;
+      }
+      memcmp(dup->u.luaFunction.luacp, actionp->u.luaFunction.luacp, actionp->u.luaFunction.luacl);
+    }
+    if (actionp->u.luaFunction.luacstripp != NULL) {
+      dup->u.luaFunction.luacstripp = (char *) malloc(actionp->u.luaFunction.luacstripl);
+      if (MARPAESLIF_UNLIKELY(dup->u.luaFunction.luacstripp == NULL)) {
+        MARPAESLIF_ERRORF(marpaESLIFp, "malloc failure, %s", strerror(errno));
+        goto err;
+      }
+      memcmp(dup->u.luaFunction.luacstripp, actionp->u.luaFunction.luacstripp, actionp->u.luaFunction.luacstripl);
     }
     break;
   default:
@@ -18681,8 +18737,17 @@ static inline void _marpaESLIF_action_freev(marpaESLIF_action_t *actionp)
       }
       break;
     case MARPAESLIF_ACTION_TYPE_LUA_FUNCTION:
-      if (actionp->u.luaFunctions != NULL) {
-        free(actionp->u.luaFunctions);
+      if (actionp->u.luaFunction.luas != NULL) {
+        free(actionp->u.luaFunction.luas);
+      }
+      if (actionp->u.luaFunction.actions != NULL) {
+        free(actionp->u.luaFunction.actions);
+      }
+      if (actionp->u.luaFunction.luacp != NULL) {
+        free(actionp->u.luaFunction.luacp);
+      }
+      if (actionp->u.luaFunction.luacstripp != NULL) {
+        free(actionp->u.luaFunction.luacstripp);
       }
       break;
     default:
@@ -18725,6 +18790,7 @@ static inline short _marpaESLIFValue_ruleActionCallbackb(marpaESLIFValue_t *marp
       char *names;
 
       marpaESLIFValuep->actions            = actionp->u.names;
+      marpaESLIFValuep->actionp            = NULL;
       marpaESLIFValuep->stringp            = NULL;
 
       /* Get the callback pointer */
@@ -18779,6 +18845,7 @@ static inline short _marpaESLIFValue_ruleActionCallbackb(marpaESLIFValue_t *marp
     /* Action name is the ASCII best-effort translation */
     ruleCallbackp                        = _marpaESLIF_rule_literal_transferb;
     marpaESLIFValuep->actions            = actionp->u.stringp->asciis;
+    marpaESLIFValuep->actionp            = NULL;
     marpaESLIFValuep->stringp            = actionp->u.stringp;
     break;
 
@@ -18786,13 +18853,15 @@ static inline short _marpaESLIFValue_ruleActionCallbackb(marpaESLIFValue_t *marp
     /* Lua action: this is a built-in */
     ruleCallbackp                        = _marpaESLIFValue_lua_actionb;
     marpaESLIFValuep->actions            = actionp->u.luas;
+    marpaESLIFValuep->actionp            = NULL;
     marpaESLIFValuep->stringp            = NULL;
     break;
 
   case MARPAESLIF_ACTION_TYPE_LUA_FUNCTION:
     /* Lua function: this is a built-in */
     ruleCallbackp                        = _marpaESLIFValue_lua_action_functionb;
-    marpaESLIFValuep->actions            = actionp->u.luaFunctions;
+    marpaESLIFValuep->actions            = actionp->u.luaFunction.luas;
+    marpaESLIFValuep->actionp            = actionp;
     marpaESLIFValuep->stringp            = NULL;
     break;
 
@@ -18856,8 +18925,7 @@ static inline short _marpaESLIFValue_symbolActionCallbackb(marpaESLIFValue_t *ma
         char *names;
 
         marpaESLIFValuep->actions            = actionp->u.names;
-        marpaESLIFValuep->actionprecompiledp = NULL;
-        marpaESLIFValuep->actionprecompiledl = 0;
+        marpaESLIFValuep->actionp            = actionp;
         marpaESLIFValuep->stringp            = NULL;
 
         /* Get the callback pointer */
@@ -18902,27 +18970,26 @@ static inline short _marpaESLIFValue_symbolActionCallbackb(marpaESLIFValue_t *ma
     case MARPAESLIF_ACTION_TYPE_STRING:
       /* String literal: this is a built-in */
       /* Action name is the ASCII best-effort translation */
-      symbolCallbackp                      = _marpaESLIF_symbol_literal_transferb;
-      marpaESLIFValuep->actions            = actionp->u.stringp->asciis;
-      marpaESLIFValuep->actionprecompiledp = NULL;
-      marpaESLIFValuep->actionprecompiledl = 0;
-      marpaESLIFValuep->stringp            = actionp->u.stringp;
+      symbolCallbackp           = _marpaESLIF_symbol_literal_transferb;
+      marpaESLIFValuep->actions = actionp->u.stringp->asciis;
+      marpaESLIFValuep->actionp = actionp;
+      marpaESLIFValuep->stringp = actionp->u.stringp;
       break;
 
     case MARPAESLIF_ACTION_TYPE_LUA:
       /* Lua action: this is a built-in */
-      symbolCallbackp                      = _marpaESLIFValue_lua_symbolb;
-      marpaESLIFValuep->actions            = actionp->u.luas;
-      marpaESLIFValuep->actionprecompiledp = NULL;
-      marpaESLIFValuep->actionprecompiledl = 0;
-      marpaESLIFValuep->stringp            = NULL;
+      symbolCallbackp           = _marpaESLIFValue_lua_symbolb;
+      marpaESLIFValuep->actions = actionp->u.luas;
+      marpaESLIFValuep->actionp = actionp;
+      marpaESLIFValuep->stringp = NULL;
       break;
 
     case MARPAESLIF_ACTION_TYPE_LUA_FUNCTION:
       /* Lua function: this is a built-in */
-      symbolCallbackp                      = _marpaESLIFValue_lua_symbol_functionb;
-      marpaESLIFValuep->actions            = actionp->u.luaFunctions;
-      marpaESLIFValuep->stringp            = NULL;
+      symbolCallbackp           = _marpaESLIFValue_lua_symbol_functionb;
+      marpaESLIFValuep->actions = actionp->u.luaFunction.luas;
+      marpaESLIFValuep->actionp = actionp;
+      marpaESLIFValuep->stringp = NULL;
       break;
 
     default:
@@ -18973,16 +19040,19 @@ static inline short _marpaESLIFRecognizer_recognizerIfActionCallbackb(marpaESLIF
     } else {
       MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "%s: action \"%s\" resolved to %p", asciishows, ifactions, ifCallbackp);
     }
+    marpaESLIFRecognizerp->actionp = ifActionp;
     break;
   case MARPAESLIF_ACTION_TYPE_LUA:
     /* Lua action: this is a built-in */
     ifCallbackp                    = _marpaESLIFRecognizer_lua_ifactionb;
     marpaESLIFRecognizerp->actions = ifActionp->u.luas;
+    marpaESLIFRecognizerp->actionp = ifActionp;
     break;
   case MARPAESLIF_ACTION_TYPE_LUA_FUNCTION:
     /* Lua action: this is a built-in */
     ifCallbackp                    = _marpaESLIFRecognizer_lua_ifaction_functionb;
-    marpaESLIFRecognizerp->actions = ifActionp->u.luaFunctions;
+    marpaESLIFRecognizerp->actions = ifActionp->u.luaFunction.luas;
+    marpaESLIFRecognizerp->actionp = ifActionp;
     break;
   default:
     MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "Invalid action type %d", ifActionp->type);
@@ -19030,16 +19100,19 @@ static inline short _marpaESLIFRecognizer_recognizerRegexActionCallbackb(marpaES
     } else {
       MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "%s: action \"%s\" resolved to %p", asciishows, regexactions, regexCallbackp);
     }
+    marpaESLIFRecognizerp->actionp = regexActionp;
     break;
   case MARPAESLIF_ACTION_TYPE_LUA:
     /* Lua action: this is a built-in */
     regexCallbackp                 = _marpaESLIFRecognizer_lua_regexactionb;
     marpaESLIFRecognizerp->actions = regexActionp->u.luas;
+    marpaESLIFRecognizerp->actionp = regexActionp;
     break;
   case MARPAESLIF_ACTION_TYPE_LUA_FUNCTION:
     /* Lua action: this is a built-in */
     regexCallbackp                 = _marpaESLIFRecognizer_lua_regexaction_functionb;
-    marpaESLIFRecognizerp->actions = regexActionp->u.luaFunctions;
+    marpaESLIFRecognizerp->actions = regexActionp->u.luaFunction.luas;
+    marpaESLIFRecognizerp->actionp = regexActionp;
     break;
   default:
     MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "Invalid action type %d", regexActionp->type);
@@ -19085,16 +19158,19 @@ static inline short _marpaESLIFRecognizer_recognizerEventActionCallbackb(marpaES
     } else {
       MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Action \"%s\" resolved to %p", eventactions, eventCallbackp);
     }
+    marpaESLIFRecognizerp->actionp = eventActionp;
     break;
   case MARPAESLIF_ACTION_TYPE_LUA:
     /* Lua action: this is a built-in */
     eventCallbackp                 = _marpaESLIFRecognizer_lua_eventactionb;
     marpaESLIFRecognizerp->actions = eventActionp->u.luas;
+    marpaESLIFRecognizerp->actionp = eventActionp;
     break;
   case MARPAESLIF_ACTION_TYPE_LUA_FUNCTION:
     /* Lua action: this is a built-in */
     eventCallbackp                 = _marpaESLIFRecognizer_lua_eventaction_functionb;
-    marpaESLIFRecognizerp->actions = eventActionp->u.luaFunctions;
+    marpaESLIFRecognizerp->actions = eventActionp->u.luaFunction.luas;
+    marpaESLIFRecognizerp->actionp = eventActionp;
     break;
   default:
     MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "Invalid action type %d", eventActionp->type);

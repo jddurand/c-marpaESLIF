@@ -624,6 +624,7 @@ where C<\x{hh}> will translate to a byte having the hexadecimal value C<hh>, and
 Actions can be be writen in plain lua, conforming to the lua version embedded by ESLIF, e:g:
 
   action => action => ::lua->function(x,y) return x^y end
+  action => action => ::luac->function(x,y) return x^y end
 
 The lua semantics apply immediately after the first opening pathenthesis, up to the end of the function body:
 
@@ -631,6 +632,42 @@ The lua semantics apply immediately after the first opening pathenthesis, up to 
                                --[=[ Lua semantics here ]=]
                                return x^y
                              end
+
+The workflow for lua actions is:
+
+=over
+
+=item 1
+
+Content of grammar's luascript is always loaded first
+
+=item 2
+
+Lua actions are loaded dynamcally:
+
+=over
+
+=item a
+
+The actions starting with C<::lua->function> are always loaded as string, i.e. compiled and then executed
+
+=item a
+
+The actions starting with C<::luac->function> are compiled once if needed, and the binary chunk is re-injected as is for execution.
+
+=back
+
+Internally ESLIF creates a function that returns the user function, e.g. if in your grammar you have:
+
+  action => action => ::lua->function(x,y) return true end
+
+then ESLIF will inject this:
+
+  return function(x,y) return true end
+
+The top of the lua stack is then executed, leaving to user's wanted anonymous function.
+
+=back
 
 =item Left association
 
@@ -796,7 +833,7 @@ marpaESLIF BNF can be expressed in itself:
   <quantified rule>              ::= <lhs> <op declare> <rhs primary> <quantifier> <adverb list>
   <discard rule>                 ::= ':discard' <op declare> <rhs primary> <adverb list>
   <default rule>                 ::= ':default' <op declare> <adverb list>
-  <lexeme rule>                  ::= ':lexeme' <op declare> <symbol> <adverb list>
+  <lexeme rule>                  ::= ':lexeme' <op declare> <rhs primary> <adverb list>
   <terminal rule>                ::= ':terminal' <op declare> <terminal> <adverb list>
   <completion event declaration> ::= 'event' <event initialization> '=' 'completed' <symbol>
                                    | 'event' <event initialization> <op declare> 'completed' <symbol>

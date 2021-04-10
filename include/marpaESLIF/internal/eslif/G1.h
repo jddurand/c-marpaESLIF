@@ -1140,10 +1140,10 @@ bootstrap_grammar_terminal_t bootstrap_grammar_G1_terminals[] = {
     NULL, NULL
 #endif
   },
-  { G1_TERMINAL_LUA_FUNCTION, MARPAESLIF_TERMINAL_TYPE_STRING, NULL,
-    "'::lua->function('", NULL, ":discard[switch]",
+  { G1_TERMINAL_LUA_FUNCTION, MARPAESLIF_TERMINAL_TYPE_REGEX, NULL,
+    "::luac?\\->function\\(", NULL, ":discard[switch]",
 #ifndef MARPAESLIF_NTRACE
-    "::lua->function(", "::lua->function"
+    "::luac->function(", "::lua->function"
 #else
     NULL, NULL
 #endif
@@ -1222,7 +1222,7 @@ bootstrap_grammar_rule_t bootstrap_grammar_G1_rules[] = {
   */
   { G1_META_LEXEME_RULE,                      G1_RULE_LEXEME_RULE,                            MARPAESLIF_RULE_TYPE_ALTERNATIVE, 4, { G1_TERMINAL__LEXEME,
                                                                                                                                      G1_META_OP_DECLARE,
-                                                                                                                                     G1_META_SYMBOL,
+                                                                                                                                     G1_META_RHS_PRIMARY,
                                                                                                                                      G1_META_ADVERB_LIST                          }, -1,                        -1,      -1,              0, G1_ACTION_LEXEME_RULE },
   { G1_META_TERMINAL_RULE,                    G1_RULE_TERMINAL_RULE,                          MARPAESLIF_RULE_TYPE_ALTERNATIVE, 4, { G1_TERMINAL__TERMINAL,
                                                                                                                                      G1_META_OP_DECLARE,

@@ -362,13 +362,23 @@ typedef struct marpaESLIFString {
    */
 } marpaESLIFString_t;
 
+typedef struct marpaESLIFLuaFunction {
+  char  *luas;       /* Original action as per the grammar */
+  char  *actions;    /* The action injected into lua */
+  short  luacb;      /* True if action was in the form ::luac->function */
+  char  *luacp;      /* Precompiled chunk. Not NULL only when luacb is true and action as been used at least once */
+  size_t luacl;      /* Precompiled chunk length */
+  char  *luacstripp; /* Precompiled stripped chunk - never NULL (it is done during grammar validation) */
+  size_t luacstripl; /* Precompiled stripped chunk length */
+} marpaESLIFLuaFunction_t;
+
 typedef struct marpaESLIFAction {
   marpaESLIFActionType_t type;
   union {
     char                          *names;
     marpaESLIFString_t            *stringp;
     char                          *luas;
-    char                          *luaFunctions;
+    marpaESLIFLuaFunction_t        luaFunction;
   } u;
 } marpaESLIFAction_t;
 

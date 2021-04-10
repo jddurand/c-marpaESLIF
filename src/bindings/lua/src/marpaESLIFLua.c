@@ -528,8 +528,7 @@ static short marpaESLIFLua_lua_isinteger(int *rcip, lua_State *L, int idx);
                                  if (! marpaESLIFLua_lua_pushstring(NULL, L, actionp->u.luas)) goto err; \
                                  break;                                 \
                                case MARPAESLIF_ACTION_TYPE_LUA_FUNCTION: \
-                                 /* ESLIF generates "return function..." */ \
-                                 if (! marpaESLIFLua_lua_pushstring(NULL, L, actionp->u.luaFunctions +7)) goto err; \
+                                 if (! marpaESLIFLua_lua_pushstring(NULL, L, actionp->u.luaFunction.luas)) goto err; \
                                  break;                                 \
                                default:                                 \
                                  marpaESLIFLua_luaL_errorf(L, "Unsupported action type %d", actionp->type); \

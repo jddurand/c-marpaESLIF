@@ -347,8 +347,10 @@ struct marpaESLIF_bootstrap_event_initialization {
 
 struct marpaESLIF_bootstrap_lua_function {
   char   *luas;
-  char   *luaprecompiledp;
-  size_t  luaprecompiledl;
+  char   *actions;
+  short   luacb;
+  char   *luacstripp;
+  size_t  luacstripl;
 };
 
 static marpaESLIFValueRuleCallback_t _marpaESLIF_bootstrap_ruleActionResolver(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, char *actions);
