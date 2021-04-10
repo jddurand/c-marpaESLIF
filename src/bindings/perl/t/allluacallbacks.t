@@ -105,7 +105,7 @@ exp ::=
     /[\d]+/
     |    "("  exp ")"    assoc => group action => ::copy[1]
    || exp (- '**' -) exp assoc => right action => ::lua->function(x,y) return x^y end
-   || exp (-  '*' -) exp                action => ::lua->function(x,y) return x*y end
+   || exp (-  '*' -) exp                action => ::luac->function(x,y) return x*y end
     | exp (-  '/' -) exp                action => ::lua->function(x,y) return x/y end
-   || exp (-  '+' -) exp                action => ::lua->function(x,y) return x+y end
+   || exp (-  '+' -) exp                action => ::luac->function(x,y) return x+y end
     | exp (-  '-' -) exp                action => ::lua->function(x,y) return x-y end
