@@ -1308,7 +1308,7 @@ static marpaESLIFGrammar_t *_marpaESLIF_luaGrammarp(marpaESLIF_t *marpaESLIFp)
     "                                            | <lua String>\n"
     "<lua function>                         :[2]:= <lua keyword function> <lua funcbody>\n"
     "<lua funcbody>                         :[2]:= '(' <lua optional parlist> ')' <lua block> <lua keyword end>\n"
-    "<lua optional parlist   >              :[2]:=\n"
+    "<lua optional parlist>                 :[2]:=\n"
     "<lua optional parlist>                 :[2]:= <lua namelist>\n"
     "                                            | <lua namelist> ',' '...'\n"
     "                                            | '...'\n"
