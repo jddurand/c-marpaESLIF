@@ -922,77 +922,77 @@ marpaESLIF BNF can be expressed in itself:
                                    | <symbol> '@' <grammar reference>
   <single symbol>                ::= <symbol>
                                    | <terminal>
-  <terminal>                    ::= <character class>
-                                  | <regular expression>
-                                  | <quoted string>
-                                  | ':eof'
-                                  | ':eol'
-                                  | ':sol'
-  <symbol>                      ::= <symbol name>
-  <symbol name>                 ::= <bare name>
-                                  | <bracketed name>
-  <action name>                 ::= <restricted ascii graph name>
-                                  | '::shift'
-                                  | '::undef'
-                                  | '::ascii'
-                                  | /::convert\[[^\]]+\]/
-                                  | '::concat'
-                                  | /::copy\[\d+\]/
-                                  | <lua action name>
-                                  | '::true'
-                                  | '::false'
-                                  | '::json'
-                                  | '::jsonf'
-                                  | '::row'
-                                  | '::table'
-                                  | '::ast'
-                                  | <lua function>
-  <symbol action name>          ::= <restricted ascii graph name>
-                                  | '::transfer'
-                                  | '::undef'
-                                  | '::ascii'
-                                  | /::convert\[[^\]]+\]/
-                                  | '::concat'
-                                  | <lua action name>
-                                  | '::true'
-                                  | '::false'
-                                  | '::json'
-                                  | '::jsonf'
-                                  | <lua function>
-  <if action name>              ::= <restricted ascii graph name>
-                                  | <lua action name>
-                                  | <lua function>
-  <regex action name>           ::= <restricted ascii graph name>
-                                  | <lua action name>
-                                  | <lua function>
-  <quantifier>                  ::= '*'
-                                  | '+'
-  <signed integer>              ::= /[+-]?\d+/
-  <unsigned integer>            ::= /\d+/
-  <grammar reference>           ::= <quoted string>
-                                  | <signed integer>
-                                  | '=' <unsigned integer>
-  <string literal>              ::= <string literal unit>+ proper => 1
-  <string literal unit>         ::= '::u8"' <discard off> <string literal inside any> '"' <discard on>
-  <discard on>                  ::=
-  <discard off>                 ::=
-  <string literal inside any>   ::= <string literal inside>* proper => 1
-  <string literal inside>       ::= /[^"\\\n]/
-                                  | '\\' /["'?\\abfnrtve]/
-                                  | '\\' /x\{[a-fA-F0-9]{2}\}/
-                                  | '\\' /u\{[a-fA-F0-9]{4}\}/
-                                  | '\\' /U\{[a-fA-F0-9]{8}\}/
-  <lua script statement>        ::= '<luascript>' <discard off> <lua script source> '</luascript>' <discard on>
-  <lua script source>           ::= /[\s\S]/*
-  <event action>                ::= 'event-action' /=>|\x{21D2}/u <event action name>
-  <event action name>           ::= <restricted ascii graph name>
-                                  | <lua action name>
-                                  | <lua function>
-  <default encoding>            ::= 'default-encoding' /=>|\x{21D2}/u <default encoding name>
-  <default encoding name>       ::= <graph ascii name>
-  <fallback encoding>           ::= 'fallback-encoding' /=>|\x{21D2}/u <fallback encoding name>
-  <fallback encoding name>      ::= <graph ascii name>
-  <lua function>                ::= /::luac?\->function\(/ <lua funcbody after lparen>@+2
+  <terminal>                     ::= <character class>
+                                   | <regular expression>
+                                   | <quoted string>
+                                   | ':eof'
+                                   | ':eol'
+                                   | ':sol'
+  <symbol>                       ::= <symbol name>
+  <symbol name>                  ::= <bare name>
+                                   | <bracketed name>
+  <action name>                  ::= <restricted ascii graph name>
+                                   | '::shift'
+                                   | '::undef'
+                                   | '::ascii'
+                                   | /::convert\[[^\]]+\]/
+                                   | '::concat'
+                                   | /::copy\[\d+\]/
+                                   | <lua action name>
+                                   | '::true'
+                                   | '::false'
+                                   | '::json'
+                                   | '::jsonf'
+                                   | '::row'
+                                   | '::table'
+                                   | '::ast'
+                                   | <lua function>
+  <symbol action name>           ::= <restricted ascii graph name>
+                                   | '::transfer'
+                                   | '::undef'
+                                   | '::ascii'
+                                   | /::convert\[[^\]]+\]/
+                                   | '::concat'
+                                   | <lua action name>
+                                   | '::true'
+                                   | '::false'
+                                   | '::json'
+                                   | '::jsonf'
+                                   | <lua function>
+  <if action name>               ::= <restricted ascii graph name>
+                                   | <lua action name>
+                                   | <lua function>
+  <regex action name>            ::= <restricted ascii graph name>
+                                   | <lua action name>
+                                   | <lua function>
+  <quantifier>                   ::= '*'
+                                   | '+'
+  <signed integer>               ::= /[+-]?\d+/
+  <unsigned integer>             ::= /\d+/
+  <grammar reference>            ::= <quoted string>
+                                   | <signed integer>
+                                   | '=' <unsigned integer>
+  <string literal>               ::= <string literal unit>+ proper => 1
+  <string literal unit>          ::= '::u8"' <discard off> <string literal inside any> '"' <discard on>
+  <discard on>                   ::=
+  <discard off>                  ::=
+  <string literal inside any>    ::= <string literal inside>* proper => 1
+  <string literal inside>        ::= /[^"\\\n]/
+                                   | '\\' /["'?\\abfnrtve]/
+                                   | '\\' /x\{[a-fA-F0-9]{2}\}/
+                                   | '\\' /u\{[a-fA-F0-9]{4}\}/
+                                   | '\\' /U\{[a-fA-F0-9]{8}\}/
+  <lua script statement>         ::= '<luascript>' <discard off> <lua script source> '</luascript>' <discard on>
+  <lua script source>            ::= /[\s\S]/*
+  <event action>                 ::= 'event-action' /=>|\x{21D2}/u <event action name>
+  <event action name>            ::= <restricted ascii graph name>
+                                   | <lua action name>
+                                   | <lua function>
+  <default encoding>             ::= 'default-encoding' /=>|\x{21D2}/u <default encoding name>
+  <default encoding name>        ::= <graph ascii name>
+  <fallback encoding>            ::= 'fallback-encoding' /=>|\x{21D2}/u <fallback encoding name>
+  <fallback encoding name>       ::= <graph ascii name>
+  <lua function>                 ::= /::luac?\->function\(/ <lua funcbody after lparen>@+2
   
   #######################################################
   
