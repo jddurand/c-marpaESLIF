@@ -1131,7 +1131,7 @@ bootstrap_grammar_terminal_t bootstrap_grammar_G1_terminals[] = {
   /* Taken from Regexp::Common::comment, $RE{comment}{'C++'}, which includes the C language comment */
   /* Perl stringified version is: (?:(?:(?://)(?:[^\n]*)(?:\n))|(?:(?:\/\*)(?:(?:[^\*]+|\*(?!\/))*)(?:\*\/))) */
   { G1_TERMINAL_CPLUSPLUS_COMMENT, MARPAESLIF_TERMINAL_TYPE_REGEX, "u",
-    "//[^\\n]*|/\\*(?:(?:[^\\*]+|\\*(?!/))*)\\*/", NULL, NULL,
+    "//[^\\n]*|/\\*(?:[^\\*]+|\\*(?!/))*\\*/", NULL, NULL,
 #ifndef MARPAESLIF_NTRACE
     "// Comment up to the end of the buffer", "// Again a comment"
 #else

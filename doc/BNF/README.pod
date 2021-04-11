@@ -369,9 +369,9 @@ Note than when an event is set, this will be triggered only on the C<:discard>'s
 
 An explicit terminal can also be set directly, e.g.:
 
-  :discard ::= /[\s]+/                                        event => whitespace$
-  :discard ::= /#[^\n]*/u                                     event => perl_comment$
-  :discard ::= /\/\/[^\n]*|\/\*(?:(?:[^\*]+|\*(?!\/))*)\*\//u event => cplusplus_comment$
+  :discard ::= /[\s]+/                                    event => whitespace$
+  :discard ::= /#[^\n]*/u                                 event => perl_comment$
+  :discard ::= /\/\/[^\n]*|\/\*(?:[^\*]+|\*(?!\/))*\*\//u event => cplusplus_comment$
 
 this form is highly recommended, because ESLIF recognizes the case where C<:discard> consist only of explicit terminals, and applies an optimization that prevent the intanciation of an internal parse.
 
@@ -786,7 +786,7 @@ marpaESLIF BNF can be expressed in itself:
   
   :discard ::= /[\s]+/u
   :discard ::= /#[^\n]*/u
-  :discard ::= /\/\/[^\n]*|\/\*(?:(?:[^\*]+|\*(?!\/))*)\*\//u
+  :discard ::= /\/\/[^\n]*|\/\*(?:[^\*]+|\*(?!\/))*\*\//u
   
   :terminal ::= /::luac?\->function\(/ pause => after event => :discard[switch]
   :lexeme   ::= <lua funcbody after lparen>@+2 pause => after event => :discard[switch] verbose => 1
