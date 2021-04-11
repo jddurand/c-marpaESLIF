@@ -58,7 +58,9 @@ enum marpaESLIF_terminal_type {
   MARPAESLIF_TERMINAL_TYPE_REGEX,    /* Regular expression */
   MARPAESLIF_TERMINAL_TYPE__EOF,     /* :eof */
   MARPAESLIF_TERMINAL_TYPE__EOL,     /* :eol */
-  MARPAESLIF_TERMINAL_TYPE__SOL      /* :sol */
+  MARPAESLIF_TERMINAL_TYPE__SOL,     /* :sol */
+  /* Internal terminal types */
+  MARPAESLIF_TERMINAL_TYPE__SET_CONTEXT
 };
 
 /* Regex modifiers - we take JPCRE2 matching semantics, c.f. https://neurobin.org/projects/softwares/libs/jpcre2/ */
@@ -101,18 +103,19 @@ struct marpaESLIF_regex {
 };
 
 struct marpaESLIF_terminal {
-  int                         idi;                 /* Terminal Id */
-  marpaESLIF_string_t        *descp;               /* Terminal description */
-  char                       *modifiers;           /* Modifiers */
-  char                       *patterns;            /* This is what is sent to PCRE2 and what defines exactly the terminal */
-  size_t                      patternl;
-  marpaESLIF_uint32_t         patterni;            /* ... this includes pattern options */
-  marpaESLIF_terminal_type_t  type;                /* Original type. Used for description. When origin is STRING we know that patterns if ASCII safe */
-  marpaESLIF_regex_t          regex;               /* Regex version */
-  short                       memcmpb;             /* Flag saying that memcmp is possible */
-  char                       *bytes;               /* Original UTF-8 bytes, used for memcmp() when possible */
-  size_t                      bytel;               /* i.e. when this is a string terminal without modifier */
-  short                       pseudob;             /* Pseudo terminal */
+  int                            idi;                 /* Terminal Id */
+  marpaESLIF_string_t           *descp;               /* Terminal description */
+  char                          *modifiers;           /* Modifiers */
+  char                          *patterns;            /* This is what is sent to PCRE2 and what defines exactly the terminal */
+  size_t                         patternl;
+  marpaESLIF_uint32_t            patterni;            /* ... this includes pattern options */
+  marpaESLIF_terminal_type_t     type;                /* Original type. Used for description. When origin is STRING we know that patterns if ASCII safe */
+  marpaESLIF_regex_t             regex;               /* Regex version */
+  short                          memcmpb;             /* Flag saying that memcmp is possible */
+  char                          *bytes;               /* Original UTF-8 bytes, used for memcmp() when possible */
+  size_t                         bytel;               /* i.e. when this is a string terminal without modifier */
+  short                          pseudob;             /* Pseudo terminal */
+  marpaESLIF_lua_functioncall_t *luaFunctionCallp;    /* If terminal is a pseudo for function call */
 };
 
 /* Matcher return values */
@@ -160,7 +163,7 @@ struct marpaESLIFSymbol {
   char                          *discardEvents;          /* Discard event name - shallow pointer to a :discard rule's discardEvents */
   short                          discardEventb;          /* Discard event initial state: 0: off, 1: on - copy of :discard's rule value */
   int                            lookupLevelDeltai;      /* Referenced grammar delta level */
-  char                          *lookupMetas;            /* Referenced lookup meta name - shallow pointer */
+  marpaESLIF_symbol_t           *lookupSymbolp;          /* Forced referenced lookup symbol */
   int                            lookupResolvedLeveli;   /* Resolved grammar level */
   int                            priorityi;              /* Symbol priority */
   genericStack_t                 _nullableRuleStack;     /* Used during validation, to determine nullable semantics */
@@ -180,7 +183,6 @@ struct marpaESLIFSymbol {
   short                          contentIsShallowb;
   marpaESLIFGrammar_t           *marpaESLIFGrammarp;     /* Shallow pointer, set by marpaESLIFSymbol_meta_newp() only */
   short                          verboseb;               /* Symbol is verbose */
-  marpaESLIF_lua_functioncall_t *luaFunctionCallp;       /* If symbol is function call */
 };
 
 /* A rule */

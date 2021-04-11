@@ -12,8 +12,10 @@ typedef enum _marpaESLIFBootstrapStackTypeEnum {
   marpaESLIFBootstrapStackTypeEnum_SYMBOL_NAME,
   marpaESLIFBootstrapStackTypeEnum_RHS_PRIMARY,
   marpaESLIFBootstrapStackTypeEnum_LUA_FUNCTIONCALL,
+  marpaESLIFBootstrapStackTypeEnum_LUA_FUNCTIONDECL,
   marpaESLIFBootstrapStackTypeEnum_RHS_ALTERNATIVE,
   marpaESLIFBootstrapStackTypeEnum_RHS,
+  marpaESLIFBootstrapStackTypeEnum_LHS,
   marpaESLIFBootstrapStackTypeEnum_ADVERB_ITEM_ACTION,
   marpaESLIFBootstrapStackTypeEnum_ADVERB_ITEM_LEFT_ASSOCIATION,
   marpaESLIFBootstrapStackTypeEnum_ADVERB_ITEM_RIGHT_ASSOCIATION,
@@ -62,8 +64,10 @@ static char _MARPAESLIF_BOOTSTRAP_STACK_TYPE[_marpaESLIFBootstrapStackTypeEnum_L
 #define MARPAESLIF_BOOTSTRAP_STACK_TYPE_SYMBOL_NAME                      &(_MARPAESLIF_BOOTSTRAP_STACK_TYPE[marpaESLIFBootstrapStackTypeEnum_SYMBOL_NAME])
 #define MARPAESLIF_BOOTSTRAP_STACK_TYPE_RHS_PRIMARY                      &(_MARPAESLIF_BOOTSTRAP_STACK_TYPE[marpaESLIFBootstrapStackTypeEnum_RHS_PRIMARY])
 #define MARPAESLIF_BOOTSTRAP_STACK_TYPE_LUA_FUNCTIONCALL                 &(_MARPAESLIF_BOOTSTRAP_STACK_TYPE[marpaESLIFBootstrapStackTypeEnum_LUA_FUNCTIONCALL])
+#define MARPAESLIF_BOOTSTRAP_STACK_TYPE_LUA_FUNCTIONDECL                 &(_MARPAESLIF_BOOTSTRAP_STACK_TYPE[marpaESLIFBootstrapStackTypeEnum_LUA_FUNCTIONDECL])
 #define MARPAESLIF_BOOTSTRAP_STACK_TYPE_RHS_ALTERNATIVE                  &(_MARPAESLIF_BOOTSTRAP_STACK_TYPE[marpaESLIFBootstrapStackTypeEnum_RHS_ALTERNATIVE])
 #define MARPAESLIF_BOOTSTRAP_STACK_TYPE_RHS                              &(_MARPAESLIF_BOOTSTRAP_STACK_TYPE[marpaESLIFBootstrapStackTypeEnum_RHS])
+#define MARPAESLIF_BOOTSTRAP_STACK_TYPE_LHS                              &(_MARPAESLIF_BOOTSTRAP_STACK_TYPE[marpaESLIFBootstrapStackTypeEnum_LHS])
 #define MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_ITEM_ACTION               &(_MARPAESLIF_BOOTSTRAP_STACK_TYPE[marpaESLIFBootstrapStackTypeEnum_ADVERB_ITEM_ACTION])
 #define MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_ITEM_LEFT_ASSOCIATION     &(_MARPAESLIF_BOOTSTRAP_STACK_TYPE[marpaESLIFBootstrapStackTypeEnum_ADVERB_ITEM_LEFT_ASSOCIATION])
 #define MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_ITEM_RIGHT_ASSOCIATION    &(_MARPAESLIF_BOOTSTRAP_STACK_TYPE[marpaESLIFBootstrapStackTypeEnum_ADVERB_ITEM_RIGHT_ASSOCIATION])
@@ -127,6 +131,7 @@ typedef struct marpaESLIF_bootstrap_grammar_reference          marpaESLIF_bootst
 typedef struct marpaESLIF_bootstrap_symbol_and_reference       marpaESLIF_bootstrap_symbol_and_reference_t;
 typedef struct marpaESLIF_bootstrap_rhs_primary                marpaESLIF_bootstrap_rhs_primary_t;
 typedef struct marpaESLIF_bootstrap_lua_functioncall           marpaESLIF_bootstrap_lua_functioncall_t;
+typedef struct marpaESLIF_bootstrap_lua_functiondecl           marpaESLIF_bootstrap_lua_functiondecl_t;
 typedef struct marpaESLIF_bootstrap_rhs_alternative            marpaESLIF_bootstrap_rhs_alternative_t;
 typedef struct marpaESLIF_bootstrap_rhs_alternative_priorities marpaESLIF_bootstrap_rhs_alternative_priorities_t;
 typedef struct marpaESLIF_bootstrap_rhs_alternative_exception  marpaESLIF_bootstrap_rhs_alternative_exception_t;
@@ -183,7 +188,8 @@ struct marpaESLIF_bootstrap_symbol {
 };
 
 struct marpaESLIF_bootstrap_lhs {
-  char *symbols;
+  char                                    *symbols;
+  marpaESLIF_bootstrap_lua_functiondecl_t *luaFunctionDeclp;
 };
 
 enum marpaESLIF_bootstrap_terminal_type {
@@ -314,6 +320,12 @@ struct marpaESLIF_bootstrap_lua_functioncall {
   char  *luas;       /* Original call as per the grammar */
   char  *actions;    /* The call is transformed to this action injected into lua */
   short  luacb;      /* True if call was in the form -->( */
+};
+
+struct marpaESLIF_bootstrap_lua_functiondecl {
+  char  *luas;       /* Original decl as per the grammar */
+  char  *actions;    /* The call is transformed to this action injected into lua */
+  short  luacb;      /* True if decl was in the form <--( */
 };
 
 struct marpaESLIF_bootstrap_rhs_alternative {

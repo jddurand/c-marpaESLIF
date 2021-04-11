@@ -912,6 +912,7 @@ marpaESLIF BNF can be expressed in itself:
                                    | ':discard[off]'
                                    | ':discard[switch]'
   <lhs>                          ::= <symbol name>
+                                   | <lhs> <lua functiondecl>
   <rhs>                          ::= <rhs alternative>+
   <rhs alternative>              ::= <rhs primary>
                                    | '(-' <priorities> '-)'
@@ -997,6 +998,7 @@ marpaESLIF BNF can be expressed in itself:
   <fallback encoding name>       ::= <graph ascii name>
   <lua function>                 ::= /::luac?\->function\(/ <lua funcbody after lparen>@+2
   <lua functioncall>             ::= /\-\-?>\(/' <lua args after lparen>@+2
+  <lua functiondecl>             ::= /<\-\-?\(/ <lua optional parlist after lparen>@+2
   
   #######################################################
   
@@ -1043,6 +1045,7 @@ marpaESLIF BNF can be expressed in itself:
   #
   <lua funcbody after lparen>            :[2]:= <lua optional parlist> ')' <lua block> <lua keyword end>
   <lua args after lparen>                :[2]:= <lua optional explist> ')'
+  <lua optional parlist after lparen>    :[2]:= <lua optional parlist> ')'
   
   <lua chunk>                            :[2]:=
   <lua chunk>                            :[2]:= <lua stat list>

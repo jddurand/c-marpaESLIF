@@ -1188,6 +1188,7 @@ static marpaESLIFGrammar_t *_marpaESLIF_luaGrammarp(marpaESLIF_t *marpaESLIFp)
     "#\n"
     "<lua funcbody after lparen>            :[2]:= <lua optional parlist> ')' <lua block> <lua keyword end>\n"
     "<lua args after lparen>                :[2]:= <lua optional explist> ')'\n"
+    "<lua optional parlist after lparen>    :[2]:= <lua optional parlist> ')'\n"
     "\n"
     "#\n"
     "# -----------------------------------------------------------------------\n"

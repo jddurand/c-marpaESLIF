@@ -117,7 +117,8 @@
 #define G1_RULE_EVENT_NAME_3                     "G1_rule_event_name_3"
 #define G1_RULE_EVENT_NAME_4                     "G1_rule_event_name_4"
 #define G1_RULE_EVENT_NAME_5                     "G1_rule_event_name_4"
-#define G1_RULE_LHS                              "G1_rule_lhs"
+#define G1_RULE_LHS_1                            "G1_rule_lhs_1"
+#define G1_RULE_LHS_2                            "G1_rule_lhs_2"
 #define G1_RULE_RHS                              "G1_rule_rhs"
 #define G1_RULE_RHS_ALTERNATIVE_1                "G1_rule_rhs_alternative_1"
 #define G1_RULE_RHS_ALTERNATIVE_2                "G1_rule_rhs_alternative_2"
@@ -207,6 +208,7 @@
 #define G1_RULE_FALLBACKENCODING_NAME            "G1_rule_fallbackencoding_name"
 #define G1_RULE_LUA_FUNCTION                     "G1_rule_lua_function"
 #define G1_RULE_LUA_FUNCTIONCALL                 "G1_rule_lua_functioncall"
+#define G1_RULE_LUA_FUNCTIONDECL                 "G1_rule_lua_functiondecl"
 
 #define G1_ACTION_STATEMENTS                       "::undef"
 #define G1_ACTION_STATEMENT_01                     "::undef"
@@ -323,7 +325,8 @@
 #define G1_ACTION_EVENT_NAME_3                     "::ascii" /* <event name> ::= ':discard[on]' */
 #define G1_ACTION_EVENT_NAME_4                     "::ascii" /* <event name> ::= ':discard[off]' */
 #define G1_ACTION_EVENT_NAME_5                     "::ascii" /* <event name> ::= ':discard[switch]' */
-#define G1_ACTION_LHS                              "::shift" /* lhs ::= <symbol name> */
+#define G1_ACTION_LHS_1                            "::shift" /* lhs ::= <symbol name> */
+#define G1_ACTION_LHS_2                            "G1_action_lhs_2" /* lhs ::= <lhs> /\-\-?\(/ <lua optional parlist after lparen> */
 #define G1_ACTION_RHS                              "G1_action_rhs"                              /* done */
 #define G1_ACTION_RHS_ALTERNATIVE_1                "G1_action_rhs_alternative_1"                /* done */
 #define G1_ACTION_RHS_ALTERNATIVE_2                "G1_action_rhs_alternative_2"                /* done */
@@ -410,6 +413,7 @@
 #define G1_ACTION_FALLBACKENCODING_NAME            "::ascii" /* <fallback encoding name> ::= <ascii graph name> */
 #define G1_ACTION_LUA_FUNCTION                     "G1_action_lua_function" /* <lua function>> ::= '::lua->function(' <lua function after lparen>@+2 */
 #define G1_ACTION_LUA_FUNCTIONCALL                 "G1_action_lua_functioncall" /* <lua functioncall>> ::= '->(' <lua args after lparen>@+2 */
+#define G1_ACTION_LUA_FUNCTIONDECL                 "G1_action_lua_functiondecl" /* <lua functiondecl>> ::= '<-(' <lua args after lparen>@+2 */
 
 typedef struct bootstrap_grammar_terminal {
   int                        idi;                 /* Identifier */
