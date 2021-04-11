@@ -12494,7 +12494,10 @@ static inline void _marpaESLIF_rule_createshowv(marpaESLIF_t *marpaESLIFp, marpa
     /* Please note that this is a shared with symbol's discardEvents, even if the show does not "show" it */
     MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, " event => ");
     MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, rulep->discardEvents);
-    MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, rulep->discardEventb ? "=on" : "=off");
+    /* Show event state only if it off, default is on */
+    if (! rulep->discardEventb) {
+      MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "=off");
+    }
   }
   asciishowl++; /* NUL byte */
 
@@ -12710,27 +12713,33 @@ static inline void _marpaESLIF_grammar_createshowv(marpaESLIFGrammar_t *marpaESL
       MARPAESLIF_SYMBOL_CREATESHOW(asciishowl, asciishows, symbolp);
 
       if (symbolp->eventBefores != NULL) {
-        MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "pause => before event => ");
+        MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, " pause => before event => ");
         MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, symbolp->eventBefores);
-        MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, symbolp->eventBeforeb ? "=on" : "=off");
+        /* Show event state only if it off, default is on */
+        if (! symbolp->eventBeforeb) {
+          MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "=off");
+        }
       }
       if (symbolp->eventAfters != NULL) {
-        MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "pause => after event => ");
+        MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, " pause => after event => ");
         MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, symbolp->eventAfters);
-        MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, symbolp->eventAfterb ? "=on" : "=off");
+        /* Show event state only if it off, default is on */
+        if (! symbolp->eventAfterb) {
+          MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "=off");
+        }
       }
       if (symbolp->priorityi != 0) {
-        MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "priority => ");
+        MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, " priority => ");
         sprintf(tmps, "%d", symbolp->priorityi);
         MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, tmps);
       }
       if (symbolp->verboseb) {
-        MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "verbose => ");
+        MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, " verbose => ");
         sprintf(tmps, "%d", (int) symbolp->verboseb);
         MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, tmps);
       }
       if (symbolp->symbolActionp != NULL) {
-        MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "symbol-action => ");
+        MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, " symbol-action => ");
         switch (symbolp->symbolActionp->type) {
         case MARPAESLIF_ACTION_TYPE_NAME:
           MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, symbolp->symbolActionp->u.names);
@@ -12752,7 +12761,7 @@ static inline void _marpaESLIF_grammar_createshowv(marpaESLIFGrammar_t *marpaESL
         }
       }
       if (symbolp->ifActionp != NULL) {
-        MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "if-action => ");
+        MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, " if-action => ");
         switch (symbolp->ifActionp->type) {
         case MARPAESLIF_ACTION_TYPE_NAME:
           MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, symbolp->ifActionp->u.names);
@@ -12790,7 +12799,10 @@ static inline void _marpaESLIF_grammar_createshowv(marpaESLIFGrammar_t *marpaESL
     if (symbolp->eventPredicteds != NULL) {
       MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "event ");
       MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, symbolp->eventPredicteds);
-      MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, symbolp->eventPredictedb ? "=on" : "=off");
+      /* Show event state only if it off, default is on */
+      if (! symbolp->eventPredictedb) {
+        MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "=off");
+      }
       MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, " = predicted ");
       MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "<");
       MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, symbolp->descp->asciis);
@@ -12801,7 +12813,10 @@ static inline void _marpaESLIF_grammar_createshowv(marpaESLIFGrammar_t *marpaESL
     if (symbolp->eventNulleds != NULL) {
       MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "event ");
       MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, symbolp->eventNulleds);
-      MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, symbolp->eventNulledb ? "=on" : "=off");
+      /* Show event state only if it off, default is on */
+      if (! symbolp->eventNulledb) {
+        MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "=off");
+      }
       MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, " = nulled ");
       MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "<");
       MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, symbolp->descp->asciis);
@@ -12812,7 +12827,10 @@ static inline void _marpaESLIF_grammar_createshowv(marpaESLIFGrammar_t *marpaESL
     if (symbolp->eventCompleteds != NULL) {
       MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "event ");
       MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, symbolp->eventCompleteds);
-      MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, symbolp->eventCompletedb ? "=on" : "=off");
+      /* Show event state only if it off, default is on */
+      if (! symbolp->eventCompletedb) {
+        MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "=off");
+      }
       MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, " = completed ");
       MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "<");
       MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, symbolp->descp->asciis);
