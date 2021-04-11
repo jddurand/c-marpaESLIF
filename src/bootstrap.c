@@ -8,9 +8,6 @@ static const char  *_marpaESLIF_bootstrap_descEncodingInternals = "ASCII";
 static const char  *_marpaESLIF_bootstrap_descInternals = "INTERNAL";
 static const size_t _marpaESLIF_bootstrap_descInternall = 8; /* strlen("INTERNAL") */
 static const char  *_marpaESLIF_bootstrap_lua_return_function_lparens = "return function(";
-static const char  *_marpaESLIF_bootstrap_lua_functioncall_wrapper =
-  "\n"
-  "  r = marpaESLIFRecognizer:newFrom
 
 /* For ord2utf */
 static const int utf8_table1[] = { 0x7f, 0x7ff, 0xffff, 0x1fffff, 0x3ffffff, 0x7fffffff};
