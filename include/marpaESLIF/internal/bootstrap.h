@@ -11,6 +11,7 @@ typedef enum _marpaESLIFBootstrapStackTypeEnum {
   marpaESLIFBootstrapStackTypeEnum_OP_DECLARE,
   marpaESLIFBootstrapStackTypeEnum_SYMBOL_NAME,
   marpaESLIFBootstrapStackTypeEnum_RHS_PRIMARY,
+  marpaESLIFBootstrapStackTypeEnum_LUA_FUNCTIONCALL,
   marpaESLIFBootstrapStackTypeEnum_RHS_ALTERNATIVE,
   marpaESLIFBootstrapStackTypeEnum_RHS,
   marpaESLIFBootstrapStackTypeEnum_ADVERB_ITEM_ACTION,
@@ -60,6 +61,7 @@ static char _MARPAESLIF_BOOTSTRAP_STACK_TYPE[_marpaESLIFBootstrapStackTypeEnum_L
 #define MARPAESLIF_BOOTSTRAP_STACK_TYPE_OP_DECLARE                       &(_MARPAESLIF_BOOTSTRAP_STACK_TYPE[marpaESLIFBootstrapStackTypeEnum_OP_DECLARE])
 #define MARPAESLIF_BOOTSTRAP_STACK_TYPE_SYMBOL_NAME                      &(_MARPAESLIF_BOOTSTRAP_STACK_TYPE[marpaESLIFBootstrapStackTypeEnum_SYMBOL_NAME])
 #define MARPAESLIF_BOOTSTRAP_STACK_TYPE_RHS_PRIMARY                      &(_MARPAESLIF_BOOTSTRAP_STACK_TYPE[marpaESLIFBootstrapStackTypeEnum_RHS_PRIMARY])
+#define MARPAESLIF_BOOTSTRAP_STACK_TYPE_LUA_FUNCTIONCALL                 &(_MARPAESLIF_BOOTSTRAP_STACK_TYPE[marpaESLIFBootstrapStackTypeEnum_LUA_FUNCTIONCALL])
 #define MARPAESLIF_BOOTSTRAP_STACK_TYPE_RHS_ALTERNATIVE                  &(_MARPAESLIF_BOOTSTRAP_STACK_TYPE[marpaESLIFBootstrapStackTypeEnum_RHS_ALTERNATIVE])
 #define MARPAESLIF_BOOTSTRAP_STACK_TYPE_RHS                              &(_MARPAESLIF_BOOTSTRAP_STACK_TYPE[marpaESLIFBootstrapStackTypeEnum_RHS])
 #define MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_ITEM_ACTION               &(_MARPAESLIF_BOOTSTRAP_STACK_TYPE[marpaESLIFBootstrapStackTypeEnum_ADVERB_ITEM_ACTION])
@@ -124,6 +126,7 @@ typedef struct marpaESLIF_bootstrap_adverb_list_item           marpaESLIF_bootst
 typedef struct marpaESLIF_bootstrap_grammar_reference          marpaESLIF_bootstrap_grammar_reference_t;
 typedef struct marpaESLIF_bootstrap_symbol_and_reference       marpaESLIF_bootstrap_symbol_and_reference_t;
 typedef struct marpaESLIF_bootstrap_rhs_primary                marpaESLIF_bootstrap_rhs_primary_t;
+typedef struct marpaESLIF_bootstrap_lua_functioncall           marpaESLIF_bootstrap_lua_functioncall_t;
 typedef struct marpaESLIF_bootstrap_rhs_alternative            marpaESLIF_bootstrap_rhs_alternative_t;
 typedef struct marpaESLIF_bootstrap_rhs_alternative_priorities marpaESLIF_bootstrap_rhs_alternative_priorities_t;
 typedef struct marpaESLIF_bootstrap_rhs_alternative_exception  marpaESLIF_bootstrap_rhs_alternative_exception_t;
@@ -299,11 +302,18 @@ struct marpaESLIF_bootstrap_rhs_alternative_quantified {
 
 struct marpaESLIF_bootstrap_rhs_primary {
   marpaESLIF_symbol_t                     *symbolShallowp; /* To avoid possible recursion */
+  marpaESLIF_bootstrap_lua_functioncall_t *luaFunctionCallp;
   marpaESLIF_bootstrap_rhs_primary_type_t  type;
   union {
     marpaESLIF_bootstrap_single_symbol_t             *singleSymbolp;
     marpaESLIF_bootstrap_symbol_and_reference_t      *symbolAndReferencep;
   } u;
+};
+
+struct marpaESLIF_bootstrap_lua_functioncall {
+  char  *luas;       /* Original call as per the grammar */
+  char  *actions;    /* The call is transformed to this action injected into lua */
+  short  luacb;      /* True if call was in the form -->( */
 };
 
 struct marpaESLIF_bootstrap_rhs_alternative {

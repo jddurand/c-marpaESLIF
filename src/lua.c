@@ -1187,6 +1187,7 @@ static marpaESLIFGrammar_t *_marpaESLIF_luaGrammarp(marpaESLIF_t *marpaESLIFp)
     "# Special entries used to hook the lua grammar in ESLIF\n"
     "#\n"
     "<lua funcbody after lparen>            :[2]:= <lua optional parlist> ')' <lua block> <lua keyword end>\n"
+    "<lua args after lparen>                :[2]:= <lua optional explist> ')'\n"
     "\n"
     "#\n"
     "# -----------------------------------------------------------------------\n"

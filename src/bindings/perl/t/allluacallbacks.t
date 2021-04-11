@@ -75,9 +75,33 @@ my @strings = (
 for (my $i = 0; $i <= $#strings; $i++) {
   my $string = $strings[$i];
 
-  my $recognizerInterface = MyRecognizerInterface->new($string, $log);
-  my $valueInterface = MyValueInterface->new($log, $eslifGrammar);
+  my $recognizerInterface = MyRecognizerInterface->new($string);
+  my $valueInterface = MyValueInterface->new();
+  my $eslifRecognizer = MarpaX::ESLIF::Recognizer->new($eslifGrammar, $recognizerInterface);
 
+  if ($eslifRecognizer->scan) {
+      my $ok = 1;
+      while ($eslifRecognizer->isCanContinue) {
+          if (! $eslifRecognizer->resume) {
+              $ok = 0;
+              last;
+          }
+      }
+      if ($ok) {
+          my $eslifValue = eval { MarpaX::ESLIF::Value->new($eslifRecognizer, $valueInterface) };
+          if (defined($eslifValue)) {
+              while ($eslifValue->value) {
+                  my $result = $valueInterface->getResult;
+                  if (defined($result)) {
+                      diag("$string => $result");
+                  } else {
+                      diag("$string => <undef>");
+                  }
+              }
+          }
+      }
+  }
+  
   if ($eslifGrammar->parse($recognizerInterface, $valueInterface)) {
     my $result = $valueInterface->getResult;
     if (defined($result)) {
@@ -100,7 +124,8 @@ __DATA__
  *
 */
 :discard ::= /[\s]+/
-
+:default ::= event-action => ::luac->function() error('JDD') end
+event ^exp = predicted exp
 exp ::=
     /[\d]+/
     |    "("  exp ")"    assoc => group action => ::copy[1]

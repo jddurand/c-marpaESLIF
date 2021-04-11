@@ -270,7 +270,7 @@ typedef struct MarpaX_ESLIF_Recognizer {
   marpaESLIFRecognizer_t   *marpaESLIFRecognizerp;
   SV                       *Perl_MarpaX_ESLIF_Grammarp;
   SV                       *Perl_recognizerInterfacep;
-  SV                       *Perl_recognizer_sharep;
+  SV                       *Perl_recognizer_origp;
   char                     *actions;                    /* Shallow copy of last resolved name */
   SV                       *Perl_datap;
   SV                       *Perl_encodingp;
@@ -363,7 +363,7 @@ static inline void                            marpaESLIFPerl_recognizerContextFr
 static inline void                            marpaESLIFPerl_resetInternalStackv(pTHX_ genericStack_t *internalStackp);
 static inline void                            marpaESLIFPerl_grammarContextInitv(pTHX_ SV *Perl_MarpaX_ESLIFp, MarpaX_ESLIF_t *MarpaX_ESLIFp, MarpaX_ESLIF_Grammar_t *MarpaX_ESLIF_Grammarp, MarpaX_ESLIF_constants_t *constantsp);
 static inline void                            marpaESLIFPerl_symbolContextInitv(pTHX_ MarpaX_ESLIF_t *MarpaX_ESLIFp, SV *Perl_MarpaX_ESLIFp, MarpaX_ESLIF_Symbol_t *MarpaX_ESLIF_Symbolp, MarpaX_ESLIF_constants_t *constantsp);
-static inline void                            marpaESLIFPerl_recognizerContextInitv(pTHX_ MarpaX_ESLIF_Grammar_t *MarpaX_ESLIF_Grammarp, SV *Perl_MarpaX_ESLIF_Grammarp, SV *Perl_recognizerInterfacep, MarpaX_ESLIF_Recognizer_t *MarpaX_ESLIF_Recognizerp, SV *Perl_recognizer_sharep, MarpaX_ESLIF_constants_t *constantsp);
+static inline void                            marpaESLIFPerl_recognizerContextInitv(pTHX_ MarpaX_ESLIF_Grammar_t *MarpaX_ESLIF_Grammarp, SV *Perl_MarpaX_ESLIF_Grammarp, SV *Perl_recognizerInterfacep, MarpaX_ESLIF_Recognizer_t *MarpaX_ESLIF_Recognizerp, SV *Perl_recognizer_origp, MarpaX_ESLIF_constants_t *constantsp);
 static inline void                            marpaESLIFPerl_valueContextInitv(pTHX_ SV *Perl_MarpaX_ESLIF_Grammarp, SV *Perl_valueInterfacep, MarpaX_ESLIF_Value_t *MarpaX_ESLIF_Valuep, MarpaX_ESLIF_constants_t *constantsp, MarpaX_ESLIF_t *MarpaX_ESLIFp);
 static inline void                            marpaESLIFPerl_paramIsGrammarv(pTHX_ SV *sv);
 static inline void                            marpaESLIFPerl_paramIsEncodingv(pTHX_ SV *sv);
@@ -1500,7 +1500,7 @@ static inline void marpaESLIFPerl_symbolContextInitv(pTHX_ MarpaX_ESLIF_t *Marpa
 }
 
 /*****************************************************************************/
-static inline void marpaESLIFPerl_recognizerContextInitv(pTHX_ MarpaX_ESLIF_Grammar_t *MarpaX_ESLIF_Grammarp, SV *Perl_MarpaX_ESLIF_Grammarp, SV *Perl_recognizerInterfacep, MarpaX_ESLIF_Recognizer_t *MarpaX_ESLIF_Recognizerp, SV *Perl_recognizer_sharep, MarpaX_ESLIF_constants_t *constantsp)
+static inline void marpaESLIFPerl_recognizerContextInitv(pTHX_ MarpaX_ESLIF_Grammar_t *MarpaX_ESLIF_Grammarp, SV *Perl_MarpaX_ESLIF_Grammarp, SV *Perl_recognizerInterfacep, MarpaX_ESLIF_Recognizer_t *MarpaX_ESLIF_Recognizerp, SV *Perl_recognizer_origp, MarpaX_ESLIF_constants_t *constantsp)
 /*****************************************************************************/
 {
   static const char *funcs          = "marpaESLIFPerl_recognizerContextInitv";
@@ -1520,7 +1520,7 @@ static inline void marpaESLIFPerl_recognizerContextInitv(pTHX_ MarpaX_ESLIF_Gram
   MarpaX_ESLIF_Recognizerp->MarpaX_ESLIF_Grammarp         = MarpaX_ESLIF_Grammarp;
   MarpaX_ESLIF_Recognizerp->Perl_recognizerInterfacep     = Perl_recognizerInterfacep;
   MarpaX_ESLIF_Recognizerp->Perl_MarpaX_ESLIF_Grammarp    = Perl_MarpaX_ESLIF_Grammarp;
-  MarpaX_ESLIF_Recognizerp->Perl_recognizer_sharep        = Perl_recognizer_sharep;
+  MarpaX_ESLIF_Recognizerp->Perl_recognizer_origp         = Perl_recognizer_origp;
   MarpaX_ESLIF_Recognizerp->Perl_datap                    = NULL;
   MarpaX_ESLIF_Recognizerp->Perl_encodingp                = NULL;
   MarpaX_ESLIF_Recognizerp->marpaESLIFRecognizerp         = NULL;
@@ -4627,14 +4627,14 @@ allocate_newFrom(p1, p2)
 PREINIT:
   static const char *funcs = "MarpaX::ESLIF::Recognizer::newFrom";
 CODE:
-  MarpaX_ESLIF_Recognizer_t *MarpaX_ESLIF_Recognizer_sharep = marpaESLIFPerl_engine(aTHX_ p1);
-  MarpaX_ESLIF_Grammar_t    *MarpaX_ESLIF_Grammarp          = marpaESLIFPerl_engine(aTHX_ p2);
+  MarpaX_ESLIF_Recognizer_t *MarpaX_ESLIF_Recognizer_origp = marpaESLIFPerl_engine(aTHX_ p1);
+  MarpaX_ESLIF_Grammar_t    *MarpaX_ESLIF_Grammarp         = marpaESLIFPerl_engine(aTHX_ p2);
   MarpaX_ESLIF_Recognizer_t *MarpaX_ESLIF_Recognizerp;
 
   Newx(MarpaX_ESLIF_Recognizerp, 1, MarpaX_ESLIF_Recognizer_t);
-  marpaESLIFPerl_recognizerContextInitv(aTHX_ MarpaX_ESLIF_Grammarp, p2, MarpaX_ESLIF_Recognizer_sharep->Perl_recognizerInterfacep, MarpaX_ESLIF_Recognizerp, p1, MarpaX_ESLIF_Grammarp->constantsp);
+  marpaESLIFPerl_recognizerContextInitv(aTHX_ MarpaX_ESLIF_Grammarp, p2, MarpaX_ESLIF_Recognizer_origp->Perl_recognizerInterfacep, MarpaX_ESLIF_Recognizerp, p1, MarpaX_ESLIF_Grammarp->constantsp);
 
-  MarpaX_ESLIF_Recognizerp->marpaESLIFRecognizerp = marpaESLIFRecognizer_newFromp(MarpaX_ESLIF_Grammarp->marpaESLIFGrammarp, MarpaX_ESLIF_Recognizer_sharep->marpaESLIFRecognizerp);
+  MarpaX_ESLIF_Recognizerp->marpaESLIFRecognizerp = marpaESLIFRecognizer_newFromp(MarpaX_ESLIF_Grammarp->marpaESLIFGrammarp, MarpaX_ESLIF_Recognizer_origp->marpaESLIFRecognizerp);
   if (MARPAESLIF_UNLIKELY(MarpaX_ESLIF_Recognizerp->marpaESLIFRecognizerp == NULL)) {
     int save_errno = errno;
     marpaESLIFPerl_recognizerContextFreev(aTHX_ MarpaX_ESLIF_Recognizerp, 0 /* onStackb */);
@@ -4680,8 +4680,8 @@ CODE:
   MarpaX_ESLIF_Recognizer_t *MarpaX_ESLIF_Recognizerp       = marpaESLIFPerl_engine(aTHX_ p1);
 
   if (SvTRUE(p2)) {
-    MarpaX_ESLIF_Recognizer_t *MarpaX_ESLIF_RecognizerSharedp = marpaESLIFPerl_engine(aTHX_ p2);
-    if (MARPAESLIF_UNLIKELY(! marpaESLIFRecognizer_shareb(MarpaX_ESLIF_Recognizerp->marpaESLIFRecognizerp, MarpaX_ESLIF_RecognizerSharedp->marpaESLIFRecognizerp))) {
+    MarpaX_ESLIF_Recognizer_t *MarpaX_ESLIF_RecognizerOrigp = marpaESLIFPerl_engine(aTHX_ p2);
+    if (MARPAESLIF_UNLIKELY(! marpaESLIFRecognizer_shareb(MarpaX_ESLIF_Recognizerp->marpaESLIFRecognizerp, MarpaX_ESLIF_RecognizerOrigp->marpaESLIFRecognizerp))) {
       MARPAESLIFPERL_CROAKF("marpaESLIFRecognizer_shareb failure, %s", strerror(errno));
     }
   } else {
@@ -4706,6 +4706,50 @@ CODE:
 
   if (MARPAESLIF_UNLIKELY(! marpaESLIFRecognizer_shareb(MarpaX_ESLIF_Recognizerp->marpaESLIFRecognizerp, NULL))) {
     MARPAESLIFPERL_CROAKF("marpaESLIFRecognizer_shareb failure, %s", strerror(errno));
+  }
+
+=for comment
+  /* ----------------------------------------------------------------------- */
+  /* MarpaX::ESLIF::Recognizer::peek                                         */
+  /* ----------------------------------------------------------------------- */
+=cut
+
+void
+peek(p1, p2)
+  SV *p1;
+  SV *p2;
+PREINIT:
+  static const char *funcs = "MarpaX::ESLIF::Recognizer::peek";
+CODE:
+  MarpaX_ESLIF_Recognizer_t *MarpaX_ESLIF_Recognizerp       = marpaESLIFPerl_engine(aTHX_ p1);
+
+  if (SvTRUE(p2)) {
+    MarpaX_ESLIF_Recognizer_t *MarpaX_ESLIF_RecognizerOrigp = marpaESLIFPerl_engine(aTHX_ p2);
+    if (MARPAESLIF_UNLIKELY(! marpaESLIFRecognizer_peekb(MarpaX_ESLIF_Recognizerp->marpaESLIFRecognizerp, MarpaX_ESLIF_RecognizerOrigp->marpaESLIFRecognizerp))) {
+      MARPAESLIFPERL_CROAKF("marpaESLIFRecognizer_peekb failure, %s", strerror(errno));
+    }
+  } else {
+    if (MARPAESLIF_UNLIKELY(! marpaESLIFRecognizer_peekb(MarpaX_ESLIF_Recognizerp->marpaESLIFRecognizerp, NULL))) {
+      MARPAESLIFPERL_CROAKF("marpaESLIFRecognizer_peekb failure, %s", strerror(errno));
+    }
+  }
+
+=for comment
+  /* ----------------------------------------------------------------------- */
+  /* MarpaX::ESLIF::Recognizer::unpeek                                       */
+  /* ----------------------------------------------------------------------- */
+=cut
+
+void
+unpeek(p)
+  SV *p;
+PREINIT:
+  static const char *funcs = "MarpaX::ESLIF::Recognizer::unpeek";
+CODE:
+  MarpaX_ESLIF_Recognizer_t *MarpaX_ESLIF_Recognizerp = marpaESLIFPerl_engine(aTHX_ p);
+
+  if (MARPAESLIF_UNLIKELY(! marpaESLIFRecognizer_peekb(MarpaX_ESLIF_Recognizerp->marpaESLIFRecognizerp, NULL))) {
+    MARPAESLIFPERL_CROAKF("marpaESLIFRecognizer_peekb failure, %s", strerror(errno));
   }
 
 =for comment

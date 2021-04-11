@@ -5,6 +5,8 @@
 
 #define G1_META_LUA_FUNCTION_DESC "lua function"
 #define G1_META_LUA_FUNCBODY_AFTER_LPAREN_DESC "lua funcbody after lparen"
+#define G1_META_LUA_FUNCTIONCALL_DESC "lua functioncall"
+#define G1_META_LUA_ARGS_AFTER_LPAREN_DESC "lua args after lparen"
 
 /* Description of internal G1 grammar */
 
@@ -114,6 +116,7 @@ typedef enum bootstrap_grammar_G1_enum {
   G1_TERMINAL_PERL_COMMENT,
   G1_TERMINAL_CPLUSPLUS_COMMENT,
   G1_TERMINAL_LUA_FUNCTION,
+  G1_TERMINAL_LUA_FUNCTIONCALL,
   /* ----- Non terminals ------ */
   G1_META_STATEMENTS,
   G1_META_STATEMENT,
@@ -218,7 +221,9 @@ typedef enum bootstrap_grammar_G1_enum {
   G1_META_GRAPH_ASCII_NAME,
   /* These meta identifiers are lazy in G1 */
   G1_META_LUA_FUNCTION,
-  G1_META_LUA_FUNCBODY_AFTER_LPAREN
+  G1_META_LUA_FUNCBODY_AFTER_LPAREN,
+  G1_META_LUA_FUNCTIONCALL,
+  G1_META_LUA_ARGS_AFTER_LPAREN
 } bootstrap_grammar_G1_enum_t;
 
 /* All non-terminals are listed here */
@@ -327,7 +332,9 @@ bootstrap_grammar_meta_t bootstrap_grammar_G1_metas[] = {
   { G1_META_GRAPH_ASCII_NAME,                 L0_JOIN_G1_META_GRAPH_ASCII_NAME,            0,       0,           0,            0,    0,               -1,       0,        NULL,       NULL },
   /* G1 lazy */
   { G1_META_LUA_FUNCTION,                     G1_META_LUA_FUNCTION_DESC,                   0,       0,           0,            0,    1,               -1,       0,        NULL,       NULL },
-  { G1_META_LUA_FUNCBODY_AFTER_LPAREN,        G1_META_LUA_FUNCBODY_AFTER_LPAREN_DESC,      0,       0,           0,            0,    1,                2,       1,        NULL,       ":discard[switch]" }
+  { G1_META_LUA_FUNCBODY_AFTER_LPAREN,        G1_META_LUA_FUNCBODY_AFTER_LPAREN_DESC,      0,       0,           0,            0,    1,                2,       1,        NULL,       ":discard[switch]" },
+  { G1_META_LUA_FUNCTIONCALL,                 G1_META_LUA_FUNCTIONCALL_DESC,               0,       0,           0,            0,    1,               -1,       0,        NULL,       NULL },
+  { G1_META_LUA_ARGS_AFTER_LPAREN,            G1_META_LUA_ARGS_AFTER_LPAREN_DESC,          0,       0,           0,            0,    1,                2,       1,        NULL,       ":discard[switch]" }
 };
 
 /* Here it is very important that all the string constants are UTF-8 compatible - this is the case */
@@ -1145,6 +1152,14 @@ bootstrap_grammar_terminal_t bootstrap_grammar_G1_terminals[] = {
 #else
     NULL, NULL
 #endif
+  },
+  { G1_TERMINAL_LUA_FUNCTIONCALL, MARPAESLIF_TERMINAL_TYPE_REGEX, NULL,
+    "\\-\\-?>\\(", NULL, ":discard[switch]",
+#ifndef MARPAESLIF_NTRACE
+    "-->(", "->"
+#else
+    NULL, NULL
+#endif
   }
 };
 
@@ -1612,7 +1627,11 @@ bootstrap_grammar_rule_t bootstrap_grammar_G1_lazy_rules[] = {
   { G1_META_REGEXACTION_NAME,                 G1_RULE_REGEXACTION_NAME_3,                     MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_LUA_FUNCTION                         }, -1,                        -1,      -1,              0, G1_ACTION_REGEXACTION_NAME_3 },
   { G1_META_EVENTACTION_NAME,                 G1_RULE_EVENTACTION_NAME_3,                     MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_LUA_FUNCTION                         }, -1,                        -1,      -1,              0, G1_ACTION_EVENTACTION_NAME_3 },
   { G1_META_LUA_FUNCTION,                     G1_RULE_LUA_FUNCTION,                           MARPAESLIF_RULE_TYPE_ALTERNATIVE, 2, { G1_TERMINAL_LUA_FUNCTION,
-                                                                                                                                     G1_META_LUA_FUNCBODY_AFTER_LPAREN            }, -1,                        -1,      -1,              0, G1_ACTION_LUA_FUNCTION   }
+                                                                                                                                     G1_META_LUA_FUNCBODY_AFTER_LPAREN            }, -1,                        -1,      -1,              0, G1_ACTION_LUA_FUNCTION   },
+  { G1_META_RHS_PRIMARY,                      G1_RULE_RHS_PRIMARY_3,                          MARPAESLIF_RULE_TYPE_ALTERNATIVE, 2, { G1_META_RHS_PRIMARY,
+                                                                                                                                     G1_META_LUA_FUNCTIONCALL                     }, -1,                        -1,      -1,              0, G1_ACTION_RHS_PRIMARY_3 },
+  { G1_META_LUA_FUNCTIONCALL,                 G1_RULE_LUA_FUNCTIONCALL,                       MARPAESLIF_RULE_TYPE_ALTERNATIVE, 2, { G1_TERMINAL_LUA_FUNCTIONCALL,
+                                                                                                                                     G1_META_LUA_ARGS_AFTER_LPAREN                }, -1,                        -1,      -1,              0, G1_ACTION_LUA_FUNCTIONCALL   }
 };
 
 #endif /* MARPAESLIF_INTERNAL_ESLIF_G1_H */

@@ -372,6 +372,14 @@ typedef struct marpaESLIFLuaFunction {
   size_t luacstripl; /* Precompiled stripped chunk length */
 } marpaESLIFLuaFunction_t;
 
+typedef struct marpaESLIFLuaFunctionCall {
+  char  *luas;       /* Original call as per the grammar */
+  char  *actions;    /* The call is transformed to this action injected into lua */
+  short  luacb;      /* True if call was in the form -->( */
+  char  *luacp;      /* Precompiled chunk. Not NULL only when luacb is true and call as been used at least once */
+  size_t luacl;      /* Precompiled chunk length */
+} marpaESLIFLuaFunctionCall_t;
+
 typedef struct marpaESLIFAction {
   marpaESLIFActionType_t type;
   union {

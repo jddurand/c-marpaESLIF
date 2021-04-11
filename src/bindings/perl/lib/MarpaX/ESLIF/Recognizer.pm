@@ -110,6 +110,20 @@ Unshares the stream of C<$eslifRecognizer> instance. This is equivalent to:
 
   $eslifRecognizer->share(undef);
 
+=head2 $eslifRecognizer->peek($eslifRecognizerPeeked)
+
+  $eslifRecognizer->peek($eslifRecognizerPeeked);
+
+Peeks the stream of C<$eslifRecognizerPeeked> recognizer instance with the C<$eslifRecognizer> instance. This mean that internal buffer of both recognizers will grow until the stream is unpeeked, as if ESLIF was processing a lexeme.
+
+=head2 $eslifRecognizer->unpeek()
+
+  $eslifRecognizer->unpeek();
+
+Unpeeks the stream of C<$eslifRecognizer> instance. This is equivalent to:
+
+  $eslifRecognizer->peek(undef);
+
 =head2 $eslifRecognizer->isCanContinue()
 
 Returns a true value if recognizing can continue.

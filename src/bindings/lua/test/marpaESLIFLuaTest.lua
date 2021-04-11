@@ -680,7 +680,8 @@ for _, localstring in pairs(strings) do
    local context = "main loop"
    logger:noticef('Testing scan/resume on %s', localstring)
    recognizerInterface:init(localstring)
-   local eslifRecognizer = marpaESLIFGrammarp:marpaESLIFRecognizer_new(recognizerInterface)
+   local eslifRecognizerOrig = marpaESLIFGrammarp:marpaESLIFRecognizer_new(recognizerInterface)
+   local eslifRecognizer = eslifRecognizerOrig:clone()
    local matchRegex = eslifRecognizer:symbolTry(symbolRegex)
    if (matchRegex == nil) then
       logger:infof("%s: no match", symbolRegexPattern)
