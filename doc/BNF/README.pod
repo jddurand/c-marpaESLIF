@@ -788,8 +788,8 @@ marpaESLIF BNF can be expressed in itself:
   :discard ::= /#[^\n]*/u
   :discard ::= /\/\/[^\n]*|\/\*(?:(?:[^\*]+|\*(?!\/))*)\*\//u
   
-  :terminal ::= /::luac?\->function\(/pause => after event => :discard[switch]=on
-  :lexeme   ::= <lua funcbody after lparen>@+2pause => after event => :discard[switch]=onverbose => 1
+  :terminal ::= /::luac?\->function\(/ pause => after event => :discard[switch]=on
+  :lexeme   ::= <lua funcbody after lparen>@+2 pause => after event => :discard[switch]=onverbose => 1
   
   event :discard[on]  = nulled <discard on>
   event :discard[off] = nulled <discard off>
