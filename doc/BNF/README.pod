@@ -779,32 +779,21 @@ A name can be associated to the rule, in the form:
 
 marpaESLIF BNF can be expressed in itself:
 
-  /*
-   * **********************
-   * Meta-grammar settings:
-   * **********************
-   */
+  #######################################################
+  
+  :desc ::= 'G1'
   :start ::= <statements>
-  :desc    ::= 'G1'
-  :default ::=
-    action => ::concat
-    symbol-action => ::transfer
-    latm => 1
-    default-encoding => ASCII
   
-  /*
-   * ****************
-   * Symbol settings:
-   * ****************
-   */
-  event :discard[on]=on = nulled <discard on>
-  event :discard[off]=on = nulled <discard off>
+  :discard ::= /[\s]+/
+  :discard ::= /(?:(?:#)(?:[^\n]*)(?:\n|\z))/u
+  :discard ::= /(?:(?:(?:\/\/)(?:[^\n]*)(?:\n|\z))|(?:(?:\/\*)(?:(?:[^\*]+|\*(?!\/))*)(?:\*\/)))/u
   
-  /*
-   * ******
-   * Rules:
-   * ******
-   */
+  :terminal ::= /::luac?\->function\(/pause => after event => :discard[switch]=on
+  :lexeme   ::= <lua funcbody after lparen>@+2pause => after event => :discard[switch]=onverbose => 1
+  
+  event :discard[on]  = nulled <discard on>
+  event :discard[off] = nulled <discard off>
+  
   <statements>                   ::= <statement>*
   <statement>                    ::= <start rule>
                                    | <desc rule>
@@ -837,7 +826,7 @@ marpaESLIF BNF can be expressed in itself:
   <terminal rule>                ::= ':terminal' <op declare> <terminal> <adverb list>
   <completion event declaration> ::= 'event' <event initialization> '=' 'completed' <symbol>
                                    | 'event' <event initialization> <op declare> 'completed' <symbol>
-  <nulled event declaration>     ::= 'event' <event initialization> '=' 'nulled' <symbol>
+  <nulled event declaration> ::= 'event' <event initialization> '=' 'nulled' <symbol>
                                    | 'event' <event initialization> <op declare> 'nulled' <symbol>
   <prediction event declaration> ::= 'event' <event initialization> '=' 'predicted' <symbol>
                                    | 'event' <event initialization> <op declare> 'predicted' <symbol>
@@ -898,10 +887,12 @@ marpaESLIF BNF can be expressed in itself:
                                    | 'pause' /=>|\x{21D2}/u 'after'
   <event specification>          ::= 'event' /=>|\x{21D2}/u <event initialization>
   <event initialization>         ::= <event name> <event initializer>
+  <verbose specification>        ::= 'verbose' /=>|\x{21D2}/u <false>
+                                   | 'verbose' /=>|\x{21D2}/u <true>
   <event initializer>            ::= '=' <on or off>
   <on or off>                    ::= 'on'
                                    | 'off'
-  <event initializer>            ::=
+  <event initializer> ::= 
   <latm specification>           ::= 'latm' /=>|\x{21D2}/u <false>
                                    | 'latm' /=>|\x{21D2}/u <true>
   <naming>                       ::= 'name' /=>|\x{21D2}/u <alternative name>
@@ -931,121 +922,306 @@ marpaESLIF BNF can be expressed in itself:
                                    | <symbol> '@' <grammar reference>
   <single symbol>                ::= <symbol>
                                    | <terminal>
-  <terminal>                     ::= <character class>
-                                   | <regular expression>
-                                   | <quoted string>
-                                   | ':eof'
-                                   | ':eol'
-                                   | ':sol'
-  <symbol>                       ::= <symbol name>
-  <symbol name>                  ::= <bare name>
-                                   | <bracketed name>
-  <action name>                  ::= <restricted ascii graph name>
-                                   | '::shift'
-                                   | '::undef'
-                                   | '::ascii'
-                                   | /::convert\[[^\]]+\]/
-                                   | '::concat'
-                                   | /::copy\[\d+\]/
-                                   | <lua action name>
-                                   | '::true'
-                                   | '::false'
-                                   | '::json'
-                                   | '::jsonf'
-                                   | '::row'
-                                   | '::table'
-                                   | '::ast'
-  <symbol action name>           ::= <restricted ascii graph name>
-                                   | '::transfer'
-                                   | '::undef'
-                                   | '::ascii'
-                                   | /::convert\[[^\]]+\]/
-                                   | '::concat'
-                                   | <lua action name>
-                                   | '::true'
-                                   | '::false'
-                                   | '::json'
-                                   | '::jsonf'
-  <if action name>               ::= <restricted ascii graph name>
-                                   | <lua action name>
-  <regex action name>            ::= <restricted ascii graph name>
-                                   | <lua action name>
-  <quantifier>                   ::= '*'
-                                   | '+'
-  <signed integer>               ::= /[+-]?\d+/
-  <unsigned integer>             ::= /\d+/
-  <grammar reference>            ::= <quoted string>
-                                   | <signed integer>
-                                   | '=' <unsigned integer>
-  :discard                       ::= /[\s]+/
-  :discard                       ::= /(?:(?:#)(?:[^\n]*)(?:\n|\z))/u
-  :discard                       ::= /(?:(?:(?:\/\/)(?:[^\n]*)(?:\n|\z))|(?:(?:\/\*)(?:(?:[^\*]+|\*(?!\/))*)(?:\*\/)))/u
-  <string literal>               ::= <string literal unit>+ proper => 1
-  <string literal unit>          ::= '::u8"' <discard off> <string literal inside any> '"' <discard on>
-  <discard on>                   ::=
-  <discard off>                  ::=
-  <string literal inside any>    ::= <string literal inside>* proper => 1
-  <string literal inside>        ::= /[^"\\\n]/
-                                   | '\\' /["'?\\abfnrtve]/
-                                   | '\\' /x\{[a-fA-F0-9]{2}\}/
-                                   | '\\' /u\{[a-fA-F0-9]{4}\}/
-                                   | '\\' /U\{[a-fA-F0-9]{8}\}/
-  <lua script statement>         ::= '<luascript>' <discard off> <lua script source> '</luascript>' <discard on>
-  <lua script source>            ::= /[\s\S]/*
-  <event action>                 ::= 'event-action' /=>|\x{21D2}/u <event action name>
-  <event action name>            ::= <restricted ascii graph name>
-                                   | <lua action name>
-  <default encoding>             ::= 'default-encoding' /=>|\x{21D2}/u <default encoding name>
-  <default encoding name>        ::= <graph ascii name>
-  <fallback encoding>            ::= 'fallback-encoding' /=>|\x{21D2}/u <fallback encoding name>
-  <fallback encoding name>       ::= <graph ascii name>
-  <verbose specification>        ::= 'verbose' /=>|\x{21D2}/u <false>
-                                   | 'verbose' /=>|\x{21D2}/u <true>
+  <terminal>                    ::= <character class>
+                                  | <regular expression>
+                                  | <quoted string>
+                                  | ':eof'
+                                  | ':eol'
+                                  | ':sol'
+  <symbol>                      ::= <symbol name>
+  <symbol name>                 ::= <bare name>
+                                  | <bracketed name>
+  <action name>                 ::= <restricted ascii graph name>
+                                  | '::shift'
+                                  | '::undef'
+                                  | '::ascii'
+                                  | /::convert\[[^\]]+\]/
+                                  | '::concat'
+                                  | /::copy\[\d+\]/
+                                  | <lua action name>
+                                  | '::true'
+                                  | '::false'
+                                  | '::json'
+                                  | '::jsonf'
+                                  | '::row'
+                                  | '::table'
+                                  | '::ast'
+                                  | <lua function>
+  <symbol action name>          ::= <restricted ascii graph name>
+                                  | '::transfer'
+                                  | '::undef'
+                                  | '::ascii'
+                                  | /::convert\[[^\]]+\]/
+                                  | '::concat'
+                                  | <lua action name>
+                                  | '::true'
+                                  | '::false'
+                                  | '::json'
+                                  | '::jsonf'
+                                  | <lua function>
+  <if action name>              ::= <restricted ascii graph name>
+                                  | <lua action name>
+                                  | <lua function>
+  <regex action name>           ::= <restricted ascii graph name>
+                                  | <lua action name>
+                                  | <lua function>
+  <quantifier>                  ::= '*'
+                                  | '+'
+  <signed integer>              ::= /[+-]?\d+/
+  <unsigned integer>            ::= /\d+/
+  <grammar reference>           ::= <quoted string>
+                                  | <signed integer>
+                                  | '=' <unsigned integer>
+  <string literal>              ::= <string literal unit>+ proper => 1
+  <string literal unit>         ::= '::u8"' <discard off> <string literal inside any> '"' <discard on>
+  <discard on>                  ::=
+  <discard off>                 ::=
+  <string literal inside any>   ::= <string literal inside>* proper => 1
+  <string literal inside>       ::= /[^"\\\n]/
+                                  | '\\' /["'?\\abfnrtve]/
+                                  | '\\' /x\{[a-fA-F0-9]{2}\}/
+                                  | '\\' /u\{[a-fA-F0-9]{4}\}/
+                                  | '\\' /U\{[a-fA-F0-9]{8}\}/
+  <lua script statement>        ::= '<luascript>' <discard off> <lua script source> '</luascript>' <discard on>
+  <lua script source>           ::= /[\s\S]/*
+  <event action>                ::= 'event-action' /=>|\x{21D2}/u <event action name>
+  <event action name>           ::= <restricted ascii graph name>
+                                  | <lua action name>
+                                  | <lua function>
+  <default encoding>            ::= 'default-encoding' /=>|\x{21D2}/u <default encoding name>
+  <default encoding name>       ::= <graph ascii name>
+  <fallback encoding>           ::= 'fallback-encoding' /=>|\x{21D2}/u <fallback encoding name>
+  <fallback encoding name>      ::= <graph ascii name>
+  <lua function>                ::= /::luac?\->function\(/ <lua funcbody after lparen>@+2
   
-  /*
-   * **********************
-   * Meta-grammar settings:
-   * **********************
-   */
-  :start ~ <op declare any grammar>
+  #######################################################
+  
   :desc ~ 'L0'
-  :default ~ action => ::concat symbol-action => ::transfer latm => 1 default-encoding => ASCII
-  
-  /*
-   * ****************
-   * Symbol settings:
-   * ****************
-   */
-  
-  /*
-   * ******
-   * Rules:
-   * ******
-   */
-  <op declare any grammar> ~ /:\[[\d]+\]:=/
-  <op declare top grammar> ~ '::='
-  <op declare lex grammar> ~ '~'
-  <op loosen> ~ '||'
-  <op equal priority> ~ '|'
-  <true> ~ '1'
-  <false> ~ '0'
-  <word character> ~ /[\w]/
-  <one or more word characters> ~ <word character>+ proper => 1
+  <op declare any grammar>       ~ /:\[[\d]+\]:=/
+  <op declare top grammar>       ~ '::='
+  <op declare lex grammar>       ~ '~'
+  <op loosen>                    ~ '||'
+  <op equal priority>            ~ '|'
+  <true>                         ~ '1'
+  <false>                        ~ '0'
+  <word character>               ~ /[\w]/
+  <one or more word characters>  ~ <word character>+ proper => 1
   <zero or more word characters> ~ <word character>* proper => 1
-  <restricted ascii graph name> ~ /[!#$%&*+.\/;?\[\\\]^_`~A-Za-z0-9]+/
-  <lua action name> ~ /::lua->[a-zA-Z_][a-zA-Z0-9_]*/
-  <bare name> ~ <word character>+ proper => 1
-  <standard name> ~ /[a-zA-Z]/ <zero or more word characters>
-  <bracketed name> ~ '<' <bracketed name string> '>'
-  <bracketed name string> ~ /[\s\w]+/
-  <quoted string> ~ /'(?:[^\\']*(?:\\.[^\\']*)*)'|"(?:[^\\"]*(?:\\.[^\\"]*)*)"|\x{201C}(?:[^\\\x{201D}]*(?:\\.[^\\\x{201D}]*)*)\x{201D}/su
-  <quoted string> ~ /'(?:[^\\']*(?:\\.[^\\']*)*)'|"(?:[^\\"]*(?:\\.[^\\"]*)*)"|\x{201C}(?:[^\\\x{201D}]*(?:\\.[^\\\x{201D}]*)*)\x{201D}/su ':' /ic?/
-  <quoted string literal> ~ /'(?:[^\\']*(?:\\.[^\\']*)*)'|"(?:[^\\"]*(?:\\.[^\\"]*)*)"|\x{201C}(?:[^\\\x{201D}]*(?:\\.[^\\\x{201D}]*)*)\x{201D}/su
-  <character class> ~ /((?:\[(?:(?>[^\[\]]+)|(?-1))*\]))/
-  <character class> ~ /((?:\[(?:(?>[^\[\]]+)|(?-1))*\]))/ ':' /[eijmnsxDJUuaNbcA]+/
-  <regular expression> ~ /\/(?![*\/])(?:[^\\\/]*(?:\\.[^\\\/]*)*)\//su
-  <regular expression> ~ /\/(?![*\/])(?:[^\\\/]*(?:\\.[^\\\/]*)*)\//su /[eijmnsxDJUuaNbcA]+/ name => 'regular expression 2'
-  <graph ascii name> ~ /[[:graph:]]+/ name => 'graph ascii name'
+  <restricted ascii graph name>  ~ /[!#$%&*+.\/;?\[\\\]^_`~A-Za-z0-9]+/
+  <lua action name>              ~ /::lua->[a-zA-Z_][a-zA-Z0-9_]*/
+  <bare name>                    ~ <word character>+ proper => 1
+  <standard name>                ~ /[a-zA-Z]/ <zero or more word characters>
+  <bracketed name>               ~ '<' <bracketed name string> '>'
+  <bracketed name string>        ~ /[\s\w]+/
+  <quoted string>                ~ /'(?:[^\\']*(?:\\.[^\\']*)*)'|"(?:[^\\"]*(?:\\.[^\\"]*)*)"|\x{201C}(?:[^\\\x{201D}]*(?:\\.[^\\\x{201D}]*)*)\x{201D}/su
+                                 | /'(?:[^\\']*(?:\\.[^\\']*)*)'|"(?:[^\\"]*(?:\\.[^\\"]*)*)"|\x{201C}(?:[^\\\x{201D}]*(?:\\.[^\\\x{201D}]*)*)\x{201D}/su ':' /ic?/
+  <quoted string literal>        ~ /'(?:[^\\']*(?:\\.[^\\']*)*)'|"(?:[^\\"]*(?:\\.[^\\"]*)*)"|\x{201C}(?:[^\\\x{201D}]*(?:\\.[^\\\x{201D}]*)*)\x{201D}/su
+  <character class>              ~ /((?:\[(?:(?>[^\[\]]+)|(?-1))*\]))/
+                                 | /((?:\[(?:(?>[^\[\]]+)|(?-1))*\]))/ ':' /[eijmnsxDJUuaNbcA]+/
+  <regular expression>           ~ /\/(?![*\/])(?:[^\\\/]*(?:\\.[^\\\/]*)*)\//su
+                                 | /\/(?![*\/])(?:[^\\\/]*(?:\\.[^\\\/]*)*)\//su /[eijmnsxDJUuaNbcA]+/
+  <graph ascii name>             ~ /[[:graph:]]+/
+  
+  #######################################################
+  
+  :desc                                  :[2]:= 'Lua 5.3'
+  :discard                               :[2]:= /\s+/
+  :discard                               :[2]:= /--(?:\[(?!=*\[)|(?!\[))[^\n]*/
+  :discard                               :[2]:= /--\[(=*)\[.*?\]\1\]/s
+  #
+  # -----------------------------------------------------------------------
+  # Lua 5.3.4 grammar. Based on perl package MarpaX::Languages::Lua::Parser
+  # -----------------------------------------------------------------------
+  #
+  
+  #
+  # Special entries used to hook the lua grammar in ESLIF
+  #
+  <lua funcbody after lparen>            :[2]:= <lua optional parlist> ')' <lua block> <lua keyword end>
+  
+  
+  <lua chunk>                            :[2]:=
+  <lua chunk>                            :[2]:= <lua stat list>
+                                              | <lua stat list> <lua laststat>
+                                              | <lua stat list> <lua laststat> ';'
+                                              | <lua laststat> ';'
+                                              | <lua laststat>
+  <lua stat list>                        :[2]:= <lua stat>
+                                              | <lua stat> ';'
+                                              | <lua stat list> <lua stat> rank => -1
+                                              | <lua stat list> <lua stat> ';'
+  <lua block>                            :[2]:= <lua chunk>
+  <lua stat>                             :[2]:= <lua varlist> '=' <lua explist>
+                                              | <lua functioncall> rank => -1
+                                              | <lua label>
+                                              | <lua keyword goto> <lua Name>
+                                              | <lua keyword do> <lua block> <lua keyword end>
+                                              | <lua keyword while> <lua exp> <lua keyword do> <lua block> <lua keyword end>
+                                              | <lua keyword repeat> <lua block> <lua keyword until> <lua exp>
+                                              | <lua keyword if> <lua exp> <lua keyword then> <lua block> <lua elseif sequence> <lua optional else block> <lua keyword end>
+                                              | <lua keyword for> <lua Name> '=' <lua exp> ',' <lua exp> ',' <lua exp> <lua keyword do> <lua block> <lua keyword end>
+                                              | <lua keyword for> <lua Name> '=' <lua exp> ',' <lua exp> <lua keyword do> <lua block> <lua keyword end>
+                                              | <lua keyword for> <lua namelist> <lua keyword in> <lua explist> <lua keyword do> <lua block> <lua keyword end>
+                                              | <lua keyword function> <lua funcname> <lua funcbody>
+                                              | <lua keyword local> <lua keyword function> <lua Name> <lua funcbody>
+                                              | <lua keyword local> <lua namelist> <lua optional namelist initialization>
+                                              | ';'
+  <lua elseif sequence>                  :[2]:=
+  <lua elseif sequence>                  :[2]:= <lua elseif sequence> <lua elseif block>
+  <lua elseif block>                     :[2]:= <lua keyword elseif> <lua exp> <lua keyword then> <lua block>
+  <lua optional else block>              :[2]:=
+  <lua optional else block>              :[2]:= <lua keyword else> <lua block>
+  <lua optional namelist initialization> :[2]:=
+  <lua optional namelist initialization> :[2]:= '=' <lua explist>
+  <lua laststat>                         :[2]:= <lua keyword return> <lua optional explist>
+                                              | <lua keyword break>
+  <lua optional explist>                 :[2]:=
+  <lua optional explist>                 :[2]:= <lua explist>
+  <lua funcname>                         :[2]:= <lua dotted name> <lua optional colon name element>
+  <lua dotted name>                      :[2]:= <lua Name>+ separator => '.' proper => 1
+  <lua optional colon name element>      :[2]:=
+  <lua optional colon name element>      :[2]:= ':' <lua Name>
+  <lua varlist>                          :[2]:= <lua var>+ separator => ',' proper => 1
+  <lua var>                              :[2]:= <lua Name>
+                                              | <lua prefixexp> '[' <lua exp> ']'
+                                              | <lua prefixexp> '.' <lua Name>
+  <lua namelist>                         :[2]:= <lua Name>+ separator => ',' proper => 1
+  <lua explist>                          :[2]:= <lua exp>+ separator => ',' proper => 1
+  <lua exp>                              :[2]:= <lua var>
+                                              | '(' <lua exp> ')' assoc => group
+                                             || <lua exp> <lua args> assoc => right
+                                             || <lua exp> ':' <lua Name> <lua args> assoc => right
+                                              | <lua keyword nil>
+                                              | <lua keyword false>
+                                              | <lua keyword true>
+                                              | <lua Number>
+                                              | <lua String>
+                                              | '...'
+                                              | <lua tableconstructor>
+                                              | <lua function>
+                                             || <lua exp> '^' <exponent> assoc => right
+                                             || '-' <lua exp>
+                                              | <lua keyword not> <lua exp>
+                                              | '#' <lua exp>
+                                              | '~' <lua exp>
+                                             || <lua exp> '*' <lua exp>
+                                              | <lua exp> '/' <lua exp>
+                                              | <lua exp> '//' <lua exp>
+                                              | <lua exp> '%' <lua exp>
+                                             || <lua exp> '+' <lua exp>
+                                              | <lua exp> '-' <lua exp>
+                                             || <lua exp> '..' <lua exp> assoc => right
+                                             || <lua exp> '<<' <lua exp>
+                                              | <lua exp> '>>' <lua exp>
+                                             || <lua exp> '&' <lua exp>
+                                             || <lua exp> '~' <lua exp>
+                                             || <lua exp> '|' <lua exp>
+                                             || <lua exp> '<' <lua exp>
+                                              | <lua exp> '<=' <lua exp>
+                                              | <lua exp> '>' <lua exp>
+                                              | <lua exp> '>=' <lua exp>
+                                              | <lua exp> '==' <lua exp> rank => 1
+                                              | <lua exp> '~=' <lua exp>
+                                             || <lua exp> <lua keyword and> <lua exp> rank => 1
+                                             || <lua exp> <lua keyword or> <lua exp>
+  <exponent>                             :[2]:= <lua var>
+                                              | '(' <lua exp> ')'
+                                             || <exponent> <lua args>
+                                             || <exponent> ':' <lua Name> <lua args>
+                                              | <lua keyword nil>
+                                              | <lua keyword false>
+                                              | <lua keyword true>
+                                              | <lua Number>
+                                              | <lua String>
+                                              | '...'
+                                              | <lua tableconstructor>
+                                              | <lua function>
+                                             || <lua keyword not> <exponent>
+                                              | '#' <exponent>
+                                              | '-' <exponent>
+  <lua prefixexp>                        :[2]:= <lua var>
+                                              | <lua functioncall>
+                                              | '(' <lua exp> ')'
+  <lua functioncall>                     :[2]:= <lua prefixexp> <lua args>
+                                              | <lua prefixexp> ':' <lua Name> <lua args>
+  <lua args>                             :[2]:= '(' <lua optional explist> ')'
+                                              | <lua tableconstructor>
+                                              | <lua String>
+  <lua function>                         :[2]:= <lua keyword function> <lua funcbody>
+  <lua funcbody>                         :[2]:= '(' <lua optional parlist> ')' <lua block> <lua keyword end>
+  <lua optional parlist>                 :[2]:=
+  <lua optional parlist>                 :[2]:= <lua namelist>
+                                              | <lua namelist> ',' '...'
+                                              | '...'
+   
+  # A lone comma is not allowed in an empty fieldlist,
+  # apparently. This is why I use a dedicated rule
+  # for an empty table and a '+' sequence,
+  # instead of a '*' sequence.
+   
+  <lua tableconstructor>                 :[2]:= '{' '}'
+                                              | '{' <lua fieldlist> '}'
+  <lua fieldlist>                        :[2]:= <lua field>+ separator => [,;]
+  <lua field>                            :[2]:= '[' <lua exp> ']' '=' <lua exp>
+                                              | <lua Name> '=' <lua exp>
+                                              | <lua exp>
+  <lua label>                            :[2]:= '::' <lua Name> '::'
+  <lua Name>                             :[2]:= <LUA NAME> - <LUA RESERVED KEYWORDS>
+  <lua String>                           :[2]:= /'(?:[^\\']*(?:\\.[^\\']*)*)'|"(?:[^\\"]*(?:\\.[^\\"]*)*)"|\[(=*)\[.*?\]\1\]/su
+  
+  # A lua number can start with '.' if the later is followed by at least one (hex) digit
+  <lua Number>                           :[2]:= /(?:\.[0-9]+|[0-9]+(?:\.[0-9]*)?)(?:[eE][+-]?[0-9]+)?/ 
+                                              | /0[xX](?:\.[a-fA-F0-9]+|[a-fA-F0-9]+(?:\.[a-fA-F0-9]*)?)(?:\.[a-fA-F0-9]*)?(?:[pP][+-]?[0-9]+)?/ 
+  
+  
+  #######################################################
+  
+  <lua keyword and>                      :[3]:= 'and'
+  <lua keyword break>                    :[3]:= 'break'
+  <lua keyword do>                       :[3]:= 'do'
+  <lua keyword else>                     :[3]:= 'else'
+  <lua keyword elseif>                   :[3]:= 'elseif'
+  <lua keyword end>                      :[3]:= 'end'
+  <lua keyword false>                    :[3]:= 'false'
+  <lua keyword for>                      :[3]:= 'for'
+  <lua keyword function>                 :[3]:= 'function'
+  <lua keyword if>                       :[3]:= 'if'
+  <lua keyword in>                       :[3]:= 'in'
+  <lua keyword local>                    :[3]:= 'local'
+  <lua keyword nil>                      :[3]:= 'nil'
+  <lua keyword not>                      :[3]:= 'not'
+  <lua keyword or>                       :[3]:= 'or'
+  <lua keyword repeat>                   :[3]:= 'repeat'
+  <lua keyword return>                   :[3]:= 'return'
+  <lua keyword then>                     :[3]:= 'then'
+  <lua keyword true>                     :[3]:= 'true'
+  <lua keyword until>                    :[3]:= 'until'
+  <lua keyword while>                    :[3]:= 'while'
+  <lua keyword goto>                     :[3]:= 'goto'
+   
+  <LUA NAME>                             :[3]:= /[a-zA-Z_][a-zA-Z_0-9]*/
+  <LUA RESERVED KEYWORDS>                :[3]:= 'and'
+                                              | 'break'
+                                              | 'do'
+                                              | 'else'
+                                              | 'elseif'
+                                              | 'end'
+                                              | 'false'
+                                              | 'for'
+                                              | 'function'
+                                              | 'if'
+                                              | 'in'
+                                              | 'local'
+                                              | 'nil'
+                                              | 'not'
+                                              | 'or'
+                                              | 'repeat'
+                                              | 'return'
+                                              | 'then'
+                                              | 'true'
+                                              | 'until'
+                                              | 'while'
+                                              | 'goto'
 
 =head1 NOTES
 
