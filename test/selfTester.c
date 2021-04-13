@@ -33,8 +33,10 @@ const static char *selfs = "# Self grammar\n"
   " * Meta-grammar settings:\n"
   " * **********************\n"
   " */\n"
-  ":start ::= <statements>\n"
-  ":desc    ::= 'G1'\n"
+  "# :start ::= <statements>\n"
+  "start ::= <lhs with parameters>->('startx', ...)\n"
+  "        | <lhs with parameters>->('starty', ...)\n"
+  ":desc    ::= 'G1 TEST'\n"
   ":default ::=\n"
   "  action           => ::lua->function(...)\n"
   "                               -- Lua semantics!\n"
@@ -75,12 +77,14 @@ const static char *selfs = "# Self grammar\n"
   " * Symbol settings:\n"
   " * ****************\n"
   " */\n"
-  ":terminal ::= /::luac?\\->function\\(/ pause => after event => :discard[switch]=on\n"
+  ":terminal ::= /::luac?\\->function\\(/ pause => after event => :discard[switch]\n"
   ":terminal ::= /\\-\\-?>\\(/ pause => after event => :discard[switch]\n"
-  ":lexeme ::= <lua funcbody after lparen>@=2 pause => after event => :discard[switch]=on verbose => 1\n"
+  ":terminal ::= /<\\-\\-?\\(/ pause => after event => :discard[switch]\n"
+  ":lexeme ::= <lua funcbody after lparen>@=2 pause => after event => :discard[switch] verbose => 1\n"
   ":lexeme ::= <lua args after lparen>@+2 pause => after event => :discard[switch] verbose => 1\n"
-  "event :discard[on]=on = nulled <discard on>\n"
-  "event :discard[off]=on = nulled <discard off>\n"
+  ":lexeme ::= <lua optional parlist after lparen>@+2 pause => after event => :discard[switch] verbose => 1\n"
+  "event :discard[on] = nulled <discard on>\n"
+  "event :discard[off] = nulled <discard off>\n"
   "\n"
   "/*\n"
   " * ******\n"
@@ -106,8 +110,9 @@ const static char *selfs = "# Self grammar\n"
   "                                 | <autorank statement>\n"
   "                                 | <lua script statement>\n"
   "                                 | <terminal rule>\n"
-  "                                 | <lhs with rhs call>\n"
-  "<start rule>                   ::= ':start' <op declare> <symbol>\n"
+  "<start rule>                   ::= ':start' <op declare> <start symbol>\n"
+  "<start symbol>                 ::= <symbol>\n"
+  "                                 | <start symbol> <lua functioncall>\n"
   "<desc rule>                    ::= ':desc' <op declare> <quoted string literal>\n"
   "<empty rule>                   ::= <lhs> <op declare> <adverb list>\n"
   "<null statement>               ::= ';'\n"
@@ -301,7 +306,7 @@ const static char *selfs = "# Self grammar\n"
   " * **********************\n"
   " */\n"
   ":start ~ <op declare any grammar>\n"
-  ":desc ~ 'L0'\n"
+  ":desc ~ 'L0 TEST'\n"
   ":default ~ action => ::concat\n"
   "           symbol-action => ::transfer\n"
   "           latm => 1\n"
@@ -348,7 +353,7 @@ const static char *selfs = "# Self grammar\n"
   "# Lua 5.3.4 grammar. Based on perl package MarpaX::Languages::Lua::Parser\n"
   "# -----------------------------------------------------------------------\n"
   "#\n"
-  ":desc                                  :[2]:= 'Lua 5.3'\n"
+  ":desc                                  :[2]:= 'Lua 5.3 TEST'\n"
   "<lua funcbody after lparen>            :[2]:= <lua optional parlist> ')' <lua block> <lua keyword end>\n"
   "<lua args after lparen>                :[2]:= <lua optional explist> ')'\n"
   "<lua optional parlist after lparen>    :[2]:= <lua optional parlist> ')'\n"
@@ -466,7 +471,7 @@ const static char *selfs = "# Self grammar\n"
   "                                            | <lua String>\n"
   "<lua function>                         :[2]:= <lua keyword function> <lua funcbody>\n"
   "<lua funcbody>                         :[2]:= '(' <lua optional parlist> ')' <lua block> <lua keyword end>\n"
-  "<lua optional parlist   >              :[2]:=\n"
+  "<lua optional parlist>                 :[2]:=\n"
   "<lua optional parlist>                 :[2]:= <lua namelist>\n"
   "                                            | <lua namelist> ',' '...'\n"
   "                                            | '...'\n"
@@ -541,14 +546,15 @@ const static char *selfs = "# Self grammar\n"
   "# ---------\n"
   "# For tests\n"
   "# ---------\n"
-  "<anything up to newline>        ::= <ANYTHING UP TO NEWLINE>\n"
+  "\n"
+  "<anything up to newline><-()    ::= <ANYTHING UP TO NEWLINE>\n"
   "<ANYTHING UP TO NEWLINE>          ~ /[^\\n]*/\n"
-  "test_group                      ::= 'X' (  'Y' action => ::convert[UTF-8]\n"
+  "test_group<-(jdd)                      ::= 'X' (  'Y' action => ::convert[UTF-8]\n"
   "                                       |  'Z'\n"
   "                                       || (-'yy'-)\n"
-  "                                       |  'zz'\n"
-  "                                       |  ( TEST_GROUP_FOR_EXCEPTION_0 - TEST_GROUP_FOR_EXCEPTION_1 action => exceptionAction)\n"
-  "                                       |  ( 'A'* action => quantifiedAction )\n"
+  "                                       |  'zz'->()\n"
+  "                                       |  ( TEST_GROUP_FOR_EXCEPTION_0->(jdd, 'X') - TEST_GROUP_FOR_EXCEPTION_1->(what) action => exceptionAction)\n"
+  "                                       |  ( 'A'->(what2)* action => quantifiedAction )\n"
   "                                       )\n"
   "TEST_GROUP                       ~ 'X' ( 'Y' action => ::convert[UTF32] | 'Z' || (-'yy'-) | 'zz' | ('B'* action => quantifiedAction ) )\n"
   "TEST_GROUP_FOR_EXCEPTION_0       ~ 'X'\n"
@@ -802,7 +808,7 @@ int main() {
   string.asciis         = NULL;
 
   GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "Creating string symbol for: %s, no modifier", STRING);
-  stringSymbolp = marpaESLIFSymbol_string_newp(marpaESLIFp, &string, NULL /* modifiers */, &marpaESLIFSymbolOption);
+  stringSymbolp = marpaESLIFSymbol_string_newp(marpaESLIFp, &string, NULL /* modifiers */, &marpaESLIFSymbolOption, NULL /* luaexplists */, 0 /* luaexplistcb */);
   if (stringSymbolp == NULL) {
     goto err;
   }
@@ -813,7 +819,7 @@ int main() {
   string.asciis         = NULL;
 
   GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "Creating string symbol for: %s, no modifier", STRING2);
-  stringSymbol2p = marpaESLIFSymbol_string_newp(marpaESLIFp, &string, NULL /* modifiers */, &marpaESLIFSymbolOption);
+  stringSymbol2p = marpaESLIFSymbol_string_newp(marpaESLIFp, &string, NULL /* modifiers */, &marpaESLIFSymbolOption, NULL /* luaexplists */, 0 /* luaexplistcb */);
   if (stringSymbol2p == NULL) {
     goto err;
   }
@@ -824,13 +830,13 @@ int main() {
   string.asciis         = NULL;
 
   GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "Creating regex symbol for: %s, no modifier", REGEX);
-  regexSymbolp = marpaESLIFSymbol_regex_newp(marpaESLIFp, &string, NULL, &marpaESLIFSymbolOption);
+  regexSymbolp = marpaESLIFSymbol_regex_newp(marpaESLIFp, &string, NULL, &marpaESLIFSymbolOption, NULL /* luaexplists */, 0 /* luaexplistcb */);
   if (regexSymbolp == NULL) {
     goto err;
   }
 
   GENERICLOGGER_INFO(marpaESLIFOption.genericLoggerp, "Creating meta symbol at \"ANYTHING UP TO NEWLINE\" in our grammar");
-  metaSymbolp = marpaESLIFSymbol_meta_newp(marpaESLIFp, marpaESLIFGrammarp, "ANYTHING UP TO NEWLINE", &marpaESLIFSymbolOption);
+  metaSymbolp = marpaESLIFSymbol_meta_newp(marpaESLIFp, marpaESLIFGrammarp, "ANYTHING UP TO NEWLINE", &marpaESLIFSymbolOption, NULL /* luaexplists */, 0 /* luaexplistcb */);
   if (metaSymbolp == NULL) {
     goto err;
   }

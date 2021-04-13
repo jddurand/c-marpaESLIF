@@ -372,14 +372,6 @@ typedef struct marpaESLIFLuaFunction {
   size_t luacstripl; /* Precompiled stripped chunk length */
 } marpaESLIFLuaFunction_t;
 
-typedef struct marpaESLIFLuaFunctionCall {
-  char  *luas;       /* Original call as per the grammar */
-  char  *actions;    /* The call is transformed to this action injected into lua */
-  short  luacb;      /* True if call was in the form -->( */
-  char  *luacp;      /* Precompiled chunk. Not NULL only when luacb is true and call as been used at least once */
-  size_t luacl;      /* Precompiled chunk length */
-} marpaESLIFLuaFunctionCall_t;
-
 typedef struct marpaESLIFAction {
   marpaESLIFActionType_t type;
   union {
@@ -728,14 +720,19 @@ extern "C" {
   marpaESLIF_EXPORT char                         *marpaESLIF_dtos(marpaESLIF_t *marpaESLIFp, double d);
   marpaESLIF_EXPORT char                         *marpaESLIF_ldtos(marpaESLIF_t *marpaESLIFp, long double ld);
 
-  /* -------------------------------------- */
-  /* Terminals not not bound to any grammar */
-  /* -------------------------------------- */
-  marpaESLIF_EXPORT marpaESLIFSymbol_t           *marpaESLIFSymbol_string_newp(marpaESLIF_t *marpaESLIFp, marpaESLIFString_t *stringp, char *modifiers, marpaESLIFSymbolOption_t *marpaESLIFSymbolOptionp);
-  marpaESLIF_EXPORT marpaESLIFSymbol_t           *marpaESLIFSymbol_regex_newp(marpaESLIF_t *marpaESLIFp, marpaESLIFString_t *stringp, char *modifiers, marpaESLIFSymbolOption_t *marpaESLIFSymbolOptionp);
+  /* ---------------------------------------------- */
+  /* Symbols not not bound to any grammar           */
+  /* luaexplists is the eventual context injection: */
+  /* "(" <lua optional explist> ")"                 */
+  /* luaexplistcb, if true, inlines the injection.  */
+  /* Only true terminals can be created with a      */
+  /* context injection.                             */
+  /* ---------------------------------------------- */
+  marpaESLIF_EXPORT marpaESLIFSymbol_t           *marpaESLIFSymbol_string_newp(marpaESLIF_t *marpaESLIFp, marpaESLIFString_t *stringp, char *modifiers, marpaESLIFSymbolOption_t *marpaESLIFSymbolOptionp, char *luaexplists, short luaexplistcb);
+  marpaESLIF_EXPORT marpaESLIFSymbol_t           *marpaESLIFSymbol_regex_newp(marpaESLIF_t *marpaESLIFp, marpaESLIFString_t *stringp, char *modifiers, marpaESLIFSymbolOption_t *marpaESLIFSymbolOptionp, char *luaexplists, short luaexplistcb);
   /* For meta external symbol, the start symbol of the given grammar is duplicated */
-  marpaESLIF_EXPORT marpaESLIFSymbol_t           *marpaESLIFSymbol_meta_newp(marpaESLIF_t *marpaESLIFp, marpaESLIFGrammar_t *marpaESLIFGrammarp, char *symbols, marpaESLIFSymbolOption_t *marpaESLIFSymbolOptionp);
-  marpaESLIF_EXPORT marpaESLIFSymbol_t           *marpaESLIFSymbol_meta_new_by_levelp(marpaESLIF_t *marpaESLIFp, marpaESLIFGrammar_t *marpaESLIFGrammarp, char *symbols, int leveli, marpaESLIFString_t *descp, marpaESLIFSymbolOption_t *marpaESLIFSymbolOptionp);
+  marpaESLIF_EXPORT marpaESLIFSymbol_t           *marpaESLIFSymbol_meta_newp(marpaESLIF_t *marpaESLIFp, marpaESLIFGrammar_t *marpaESLIFGrammarp, char *symbols, marpaESLIFSymbolOption_t *marpaESLIFSymbolOptionp, char *luaexplists, short luaexplistcb);
+  marpaESLIF_EXPORT marpaESLIFSymbol_t           *marpaESLIFSymbol_meta_new_by_levelp(marpaESLIF_t *marpaESLIFp, marpaESLIFGrammar_t *marpaESLIFGrammarp, char *symbols, int leveli, marpaESLIFString_t *descp, marpaESLIFSymbolOption_t *marpaESLIFSymbolOptionp, char *luaexplists, short luaexplistcb);
   marpaESLIF_EXPORT marpaESLIF_t                 *marpaESLIFSymbol_eslifp(marpaESLIFSymbol_t *marpaESLIFSymbolp);
   /* An external symbol can be used directly inside the recognizer phase in the current input stream. The later will automatically expand if needed */
   /* as in normal recognizer lifetime. */

@@ -815,7 +815,9 @@ marpaESLIF BNF can be expressed in itself:
                                    | <autorank statement>
                                    | <lua script statement>
                                    | <terminal rule>
-  <start rule>                   ::= ':start' <op declare> <symbol>
+  <start rule>                   ::= ':start' <op declare> <start symbol>
+  <start symbol>                 ::= <symbol>
+                                   | <start symbol> <lua functioncall>
   <desc rule>                    ::= ':desc' <op declare> <quoted string literal>
   <empty rule>                   ::= <lhs> <op declare> <adverb list>
   <null statement>               ::= ';'

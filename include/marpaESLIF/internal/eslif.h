@@ -23,6 +23,8 @@
 #define G1_RULE_STATEMENT_19                     "G1_rule_statement_19"
 #define G1_RULE_STATEMENT_20                     "G1_rule_statement_20"
 #define G1_RULE_START_RULE                       "G1_rule_start_rule"
+#define G1_RULE_START_SYMBOL_1                   "G1_rule_start_symbol_1"
+#define G1_RULE_START_SYMBOL_2                   "G1_rule_start_symbol_2"
 #define G1_RULE_DESC_RULE                        "G1_rule_desc_rule"
 #define G1_RULE_EMPTY_RULE                       "G1_rule_empty_rule"
 #define G1_RULE_NULL_STATEMENT                   "G1_rule_null_statement"
@@ -232,6 +234,8 @@
 #define G1_ACTION_STATEMENT_19                     "::undef"
 #define G1_ACTION_STATEMENT_20                     "::undef"
 #define G1_ACTION_START_RULE                       "G1_action_start_rule"                       /* done */
+#define G1_ACTION_START_SYMBOL_1                   "G1_action_start_symbol_1"                   /* done */
+#define G1_ACTION_START_SYMBOL_2                   "G1_action_start_symbol_2"                   /* done */
 #define G1_ACTION_DESC_RULE                        "G1_action_desc_rule"                        /* done */
 #define G1_ACTION_EMPTY_RULE                       "G1_action_empty_rule"                       /* done */
 #define G1_ACTION_NULL_STATEMENT                   "::undef"
@@ -325,7 +329,7 @@
 #define G1_ACTION_EVENT_NAME_3                     "::ascii" /* <event name> ::= ':discard[on]' */
 #define G1_ACTION_EVENT_NAME_4                     "::ascii" /* <event name> ::= ':discard[off]' */
 #define G1_ACTION_EVENT_NAME_5                     "::ascii" /* <event name> ::= ':discard[switch]' */
-#define G1_ACTION_LHS_1                            "::shift" /* lhs ::= <symbol name> */
+#define G1_ACTION_LHS_1                            "G1_action_lhs_1" /* lhs ::= <symbol name> */
 #define G1_ACTION_LHS_2                            "G1_action_lhs_2" /* lhs ::= <lhs> /\-\-?\(/ <lua optional parlist after lparen> */
 #define G1_ACTION_RHS                              "G1_action_rhs"                              /* done */
 #define G1_ACTION_RHS_ALTERNATIVE_1                "G1_action_rhs_alternative_1"                /* done */
