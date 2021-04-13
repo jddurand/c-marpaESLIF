@@ -791,7 +791,7 @@ marpaESLIF BNF can be expressed in itself:
   :terminal ::= /::luac?\->function\(/ pause => after event => :discard[switch]
   :terminal ::= /\-\-?>\(/' pause => after event => :discard[switch]
   :lexeme   ::= <lua funcbody after lparen>@+2 pause => after event => :discard[switch] verbose => 1
-  :lexeme ::= <lua args after lparen>@+2 pause => after event => :discard[switch] verbose => 1
+  :lexeme   ::= <lua args after lparen>@+2 pause => after event => :discard[switch] verbose => 1
   
   event :discard[on]  = nulled <discard on>
   event :discard[off] = nulled <discard off>
