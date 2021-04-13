@@ -13180,7 +13180,6 @@ static inline void _marpaESLIF_grammar_createshowv(marpaESLIFGrammar_t *marpaESL
         case MARPAESLIF_TERMINAL_TYPE__EOF:
         case MARPAESLIF_TERMINAL_TYPE__EOL:
         case MARPAESLIF_TERMINAL_TYPE__SOL:
-        case MARPAESLIF_TERMINAL_TYPE__SET_CONTEXT:
           /* We know we made a 100% ASCII compatible pattern that is the builtin lexeme itself when the original type is _EOF, _EOL or _SOL */
           MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, " ");
           MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, symbolp->u.terminalp->patterns);
@@ -13342,6 +13341,11 @@ static inline void _marpaESLIF_grammar_createshowv(marpaESLIFGrammar_t *marpaESL
       MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "<");
       MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, symbolp->descp->asciis);
       MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, ">");
+      MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "\n");
+    }
+    if (symbolp->luaexplists != NULL) {
+      MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "#   Parameters: ");
+      MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, symbolp->luaexplists);
       MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "\n");
     }
   }
