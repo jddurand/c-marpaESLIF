@@ -1,5 +1,56 @@
 #include "marpaESLIF/internal/bootstrap.h"
 
+/* ------------------------------------------------------------ */
+/* Parameterization                                             */
+/* ------------------------------------------------------------ */
+/* First, in ESLIF, there are the internal symbols (created     */
+/* for priority rules) and the non-internal symbols (those      */
+/* that appear in the grammar).                                 */
+/* Internal symbols are always starting with a name like        */
+/* "Internal[", which is forbidden in a BNF.                    */
+/*                                                              */
+/* By definition a terminal can never be internal, because      */
+/* ESLIF only creates internal meta symbols if needed.          */
+/*                                                              */
+/* This is how  _marpaESLIF_bootstrap_check_meta_by_namep() and */
+/* _marpaESLIF_bootstrap_check_terminal_by_typep() works:       */
+/* If a meta is parameterized and is not internal, it is always */
+/* unique.                                                      */
+/* If a terminal is parameterized, it is always unique.         */
+/*                                                              */
+/* Consolidation will happen when we create a rule and rely     */
+/* on the notion of marpa's LHS TERMINAL.                       */
+/*                                                              */
+/*   --------------------------------------                     */
+/* - For any parameterized RHSx->(explist):                     */
+/*   --------------------------------------                     */
+/*                                                              */
+/*   ...            ::= ... RHS->(explist) ...                  */
+/*                          ^^^^^^^^^^^^^^^                     */
+/*                          META or TERMINAL                    */
+/*                                                              */
+/*   If RHS->(explist) is a META, we verify that an LHS         */
+/*   TERMINAL with the name "RHS" exist.                        */
+/*                                                              */
+/*   If RHS->(explist) is a TERMINAL, nothing to do.            */
+/*                                                              */
+/*   -----------------------------------------------------      */
+/* - If LHS is parameterized (it is unique per definition):     */
+/*   -----------------------------------------------------      */
+/*                                                              */
+/*   LHS<-(parlist) ::= list of RHS action => ::shift           */
+/*   ^^^^^^^^^^^^^^                                             */
+/*   META                                                       */
+/*                                                              */
+/*   We verify that an LHS TERMINAL with the name "LHS" exist.  */
+/*   Two rules are then created:                                */
+/*                                                              */
+/*   LHS            ::= list of RHS                             */
+/*   LHS<-(parlist) ::= LHS                                     */
+/*   ^^^^^^^^^^^^^^     ^^^                                     */
+/*   META               ESLIF META but an LHS TERMINAL          */
+/* ------------------------------------------------------------ */
+ 
 #undef  FILENAMES
 #define FILENAMES "bootstrap.c" /* For logging */
 
@@ -45,7 +96,7 @@ static        void _marpaESLIF_bootstrap_freeDefaultActionv(void *userDatavNotUs
 static inline marpaESLIF_bootstrap_utf_string_t *_marpaESLIF_bootstrap_unquote_string_literalp(marpaESLIF_t *marpaESLIFp, void *bytep, size_t bytel, short allowEmptyStringb);
 
 static inline marpaESLIF_grammar_t *_marpaESLIF_bootstrap_check_grammarp(marpaESLIF_t *marpaESLIFp, marpaESLIFGrammar_t *marpaESLIFGrammarp, int leveli, marpaESLIF_bootstrap_utf_string_t *stringp);
-static inline marpaESLIF_symbol_t  *_marpaESLIF_bootstrap_check_meta_by_namep(marpaESLIF_t *marpaESLIFp, marpaESLIFGrammar_t *marpaESLIFGrammarp, marpaESLIF_grammar_t *grammarp, char *asciinames, short createb, short forcecreateb, char *luaexplists, short luaexplistcb);
+static inline marpaESLIF_symbol_t  *_marpaESLIF_bootstrap_check_meta_by_namep(marpaESLIF_t *marpaESLIFp, marpaESLIFGrammar_t *marpaESLIFGrammarp, marpaESLIF_grammar_t *grammarp, char *asciinames, short createb, short forcecreateb, char *luaexplists, short luaexplistcb, short terminalb);
 static inline short                 _marpaESLIF_bootstrap_search_terminal_by_descriptionb(marpaESLIF_t *marpaESLIFp, marpaESLIF_grammar_t *grammarp, marpaESLIF_terminal_type_t terminalType, marpaESLIF_bootstrap_utf_string_t *stringp, marpaESLIF_symbol_t **symbolpp);
 static inline short                 _marpaESLIF_bootstrap_search_terminal_pseudob(marpaESLIF_t *marpaESLIFp, marpaESLIF_grammar_t *grammarp, marpaESLIF_terminal_type_t terminalType, marpaESLIF_symbol_t **symbolpp);
 static inline marpaESLIF_symbol_t  *_marpaESLIF_bootstrap_check_terminal_by_typep(marpaESLIF_t *marpaESLIFp, marpaESLIFGrammar_t *marpaESLIFGrammarp, marpaESLIF_grammar_t *grammarp, marpaESLIF_terminal_type_t terminalType, marpaESLIF_bootstrap_utf_string_t *stringp, short createb, short pseudob, short forcecreateb, char *descEncodings, char *descs, size_t descl, char *luaexplists, short luaexplistcb);
@@ -201,6 +252,7 @@ static        short _marpaESLIF_bootstrap_G1_action_lhs_1b(void *userDatavp, mar
 static        short _marpaESLIF_bootstrap_G1_action_lhs_2b(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
 static        short _marpaESLIF_bootstrap_G1_action_start_symbol_1b(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
 static        short _marpaESLIF_bootstrap_G1_action_start_symbol_2b(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
+static inline marpaESLIF_rule_t *_marpaESLIF_bootstrap_check_rulep(marpaESLIF_t *marpaESLIFp, marpaESLIFGrammar_t *marpaESLIFGrammarp, marpaESLIF_grammar_t *grammarp, char *descEncodings, char *descs, size_t descl, int lhsi, size_t nrhsl, int *rhsip, int exceptioni, int ranki, short nullRanksHighb, short sequenceb, int minimumi, int separatori, short properb, marpaESLIF_action_t *actionp, short passthroughb, short hideseparatorb, short *skipbp);
 
 /* Helpers */
 #define MARPAESLIF_BOOTSTRAP_GET_ARRAY(marpaESLIFValuep, indicei, _p, _l) do { \
@@ -866,7 +918,7 @@ static inline void _marpaESLIF_bootstrap_event_initialization_freev(marpaESLIF_b
 static inline marpaESLIF_grammar_t *_marpaESLIF_bootstrap_check_grammarp(marpaESLIF_t *marpaESLIFp, marpaESLIFGrammar_t *marpaESLIFGrammarp, int leveli, marpaESLIF_bootstrap_utf_string_t *stringp)
 /*****************************************************************************/
 {
-  marpaESLIF_grammar_t        *grammarp = NULL;
+  marpaESLIF_grammar_t       *grammarp = NULL;
   marpaESLIF_string_t         desc;
   marpaESLIF_string_t        *descp = NULL;
   marpaWrapperGrammarOption_t marpaWrapperGrammarOption;
@@ -931,16 +983,23 @@ static inline marpaESLIF_grammar_t *_marpaESLIF_bootstrap_check_grammarp(marpaES
 }
 
 /*****************************************************************************/
-static inline marpaESLIF_symbol_t *_marpaESLIF_bootstrap_check_meta_by_namep(marpaESLIF_t *marpaESLIFp, marpaESLIFGrammar_t *marpaESLIFGrammarp, marpaESLIF_grammar_t *grammarp, char *asciinames, short createb, short forcecreateb, char *luaexplists, short luaexplistcb)
+static inline marpaESLIF_symbol_t *_marpaESLIF_bootstrap_check_meta_by_namep(marpaESLIF_t *marpaESLIFp, marpaESLIFGrammar_t *marpaESLIFGrammarp, marpaESLIF_grammar_t *grammarp, char *asciinames, short createb, short forcecreateb, char *luaexplists, short luaexplistcb, short terminalb)
 /*****************************************************************************/
 {
   static const char   *funcs        = "_marpaESLIF_bootstrap_check_meta_by_namep";
   genericStack_t      *symbolStackp = grammarp->symbolStackp;
   marpaESLIF_symbol_t *symbolp      = NULL;
   marpaESLIF_meta_t   *metap        = NULL;
-  short                terminalb    = (luaexplists != NULL) ? 1 : 0; /* This is how we handle parameterization */
   marpaESLIF_symbol_t *symbol_i_p;
   int                  i;
+
+
+  /* A parameterized meta symbol is always unique in the grammar */
+  /* Caller should take care to not provide luaexplists when this is an internal symbol */
+  /* though we protect against that */
+  if ((luaexplists != NULL) && (strstr(asciinames, "Internal[") != asciinames)) {
+    forcecreateb = 1;
+  }
 
   for (i = 0; i < GENERICSTACK_USED(symbolStackp); i++) {
     MARPAESLIF_INTERNAL_GET_SYMBOL_FROM_STACK(marpaESLIFp, symbol_i_p, symbolStackp, i);
@@ -951,6 +1010,11 @@ static inline marpaESLIF_symbol_t *_marpaESLIF_bootstrap_check_meta_by_namep(mar
       symbolp = symbol_i_p;
       break;
     }
+  }
+
+  /* If terminalb is the not the same we consider that we did not found the symbol */
+  if ((symbolp != NULL) && ((symbolp->u.metap->terminalb && (! terminalb)) || ((! symbolp->u.metap->terminalb) && terminalb))) {
+    symbolp = NULL;
   }
 
   if (forcecreateb || (createb && (symbolp == NULL))) {
@@ -1112,6 +1176,11 @@ static inline marpaESLIF_symbol_t  *_marpaESLIF_bootstrap_check_terminal_by_type
   marpaESLIF_symbol_t   *symbolp   = NULL;
   marpaESLIF_terminal_t *terminalp = NULL;
 
+  /* A parameterized terminal symbol is always unique in the grammar */
+  if (luaexplists != NULL) {
+    forcecreateb = 1;
+  }
+
   if (pseudob) {
     if (MARPAESLIF_UNLIKELY(! _marpaESLIF_bootstrap_search_terminal_pseudob(marpaESLIFp, grammarp, terminalType, &symbolp))) {
       goto err;
@@ -1256,7 +1325,7 @@ static inline marpaESLIF_symbol_t *_marpaESLIF_bootstrap_check_singleSymbolp(mar
 static inline marpaESLIF_symbol_t *_marpaESLIF_bootstrap_check_symbolp(marpaESLIF_t *marpaESLIFp, marpaESLIFGrammar_t *marpaESLIFGrammarp, marpaESLIF_grammar_t *grammarp, marpaESLIF_bootstrap_symbol_t *symbolp, short createb, short forcecreateb, char *luaexplists, short luaexplistcb)
 /*****************************************************************************/
 {
-  return _marpaESLIF_bootstrap_check_meta_by_namep(marpaESLIFp, marpaESLIFGrammarp, grammarp, symbolp->symbols, createb, forcecreateb, luaexplists, luaexplistcb);
+  return _marpaESLIF_bootstrap_check_meta_by_namep(marpaESLIFp, marpaESLIFGrammarp, grammarp, symbolp->symbols, createb, forcecreateb, luaexplists, luaexplistcb, 0 /* terminalb */);
 }
 
 /*****************************************************************************/
@@ -1338,7 +1407,10 @@ static inline marpaESLIF_symbol_t  *_marpaESLIF_bootstrap_check_rhsAlternativep(
        <op declare> implicitly correspond to current grammar.
     */
     sprintf(tmps, "Internal[%d]", marpaESLIFGrammarp->internalRuleCounti++);
-    symbolp = _marpaESLIF_bootstrap_check_meta_by_namep(marpaESLIFp, marpaESLIFGrammarp, grammarp, tmps, 1 /* createb */, 0 /* forcecreateb */, luaexplists, luaexplistcb);
+    /* Internal symbol: no parameter:
+       symbolp = _marpaESLIF_bootstrap_check_meta_by_namep(marpaESLIFp, marpaESLIFGrammarp, grammarp, tmps, 1, 0, luaexplists, luaexplistcb, 0);
+    */
+    symbolp = _marpaESLIF_bootstrap_check_meta_by_namep(marpaESLIFp, marpaESLIFGrammarp, grammarp, tmps, 1 /* createb */, 0 /* forcecreateb */, NULL /* luaexplists */, 0 /* luaexplistcb */, 0 /* terminalb */);
     if (MARPAESLIF_UNLIKELY(symbolp == NULL)) {
       goto err;
     }
@@ -1353,7 +1425,10 @@ static inline marpaESLIF_symbol_t  *_marpaESLIF_bootstrap_check_rhsAlternativep(
        <op declare> implicitly correspond to current grammar.
     */
     sprintf(tmps, "Internal[%d]", marpaESLIFGrammarp->internalRuleCounti++);
-    symbolp = _marpaESLIF_bootstrap_check_meta_by_namep(marpaESLIFp, marpaESLIFGrammarp, grammarp, tmps, 1 /* createb */, 0 /* forcecreateb */, luaexplists, luaexplistcb);
+    /* Internal symbol: no parameter:
+       symbolp = _marpaESLIF_bootstrap_check_meta_by_namep(marpaESLIFp, marpaESLIFGrammarp, grammarp, tmps, 1, 0, luaexplists, luaexplistcb, 0);
+    */
+    symbolp = _marpaESLIF_bootstrap_check_meta_by_namep(marpaESLIFp, marpaESLIFGrammarp, grammarp, tmps, 1 /* createb */, 0 /* forcecreateb */, NULL /* luaexplists */, 0 /* luaexplistcb */, 0 /* terminalb */);
     if (MARPAESLIF_UNLIKELY(symbolp == NULL)) {
       goto err;
     }
@@ -1397,27 +1472,26 @@ static inline marpaESLIF_symbol_t  *_marpaESLIF_bootstrap_check_rhsAlternativep(
     }
     /* If naming is not NULL, it is guaranteed to be an UTF-8 thingy */
     MARPAESLIF_TRACEF(marpaESLIFp, funcs, "Creating exception rule %s ::= %s - %s", symbolp->descp->asciis, rhsp->descp->asciis, rhsExceptionp->descp->asciis);
-    rulep = _marpaESLIF_rule_newp(marpaESLIFp,
-                                  grammarp,
-                                  (namingp != NULL) ? (char *) MARPAESLIF_UTF8_STRING : NULL, /* descEncodings */
-                                  (namingp != NULL) ? namingp->bytep : NULL, /* descs */
-                                  (namingp != NULL) ? namingp->bytel : 0, /* descl */
-                                  symbolp->idi,
-                                  1, /* nrhsl */
-                                  &(rhsp->idi), /* rhsip */
-                                  rhsExceptionp->idi,
-                                  ranki,
-                                  0, /*nullRanksHighb */
-                                  0, /* sequenceb */
-                                  0, /* minimumi */
-                                  -1, /* separatori */
-                                  0, /* properb */
-                                  actionp,
-                                  0, /* passthroughb */
-                                  0 /* hideseparatorb */,
-                                  NULL, /* skipbp */
-                                  declp != NULL ? declp->luaparlists : NULL, /* luaparlists */
-                                  declp != NULL ? declp->luaparlistcb : 0  /* luaparlistcb */);
+    rulep = _marpaESLIF_bootstrap_check_rulep(marpaESLIFp,
+                                              marpaESLIFGrammarp,
+                                              grammarp,
+                                              (namingp != NULL) ? (char *) MARPAESLIF_UTF8_STRING : NULL, /* descEncodings */
+                                              (namingp != NULL) ? namingp->bytep : NULL, /* descs */
+                                              (namingp != NULL) ? namingp->bytel : 0, /* descl */
+                                              symbolp->idi,
+                                              1, /* nrhsl */
+                                              &(rhsp->idi), /* rhsip */
+                                              rhsExceptionp->idi,
+                                              ranki,
+                                              0, /*nullRanksHighb */
+                                              0, /* sequenceb */
+                                              0, /* minimumi */
+                                              -1, /* separatori */
+                                              0, /* properb */
+                                              actionp,
+                                              0, /* passthroughb */
+                                              0 /* hideseparatorb */,
+                                              NULL /* skipbp */);
     if (MARPAESLIF_UNLIKELY(rulep == NULL)) {
       goto err;
     }
@@ -1435,7 +1509,10 @@ static inline marpaESLIF_symbol_t  *_marpaESLIF_bootstrap_check_rhsAlternativep(
        <op declare> implicitly correspond to current grammar.
     */
     sprintf(tmps, "Internal[%d]", marpaESLIFGrammarp->internalRuleCounti++);
-    symbolp = _marpaESLIF_bootstrap_check_meta_by_namep(marpaESLIFp, marpaESLIFGrammarp, grammarp, tmps, 1 /* createb */, 0 /* forcecreateb */, luaexplists, luaexplistcb);
+    /* Internal symbol: no parameter:
+       symbolp = _marpaESLIF_bootstrap_check_meta_by_namep(marpaESLIFp, marpaESLIFGrammarp, grammarp, tmps, 1, 0, luaexplists, luaexplistcb, 0);
+    */
+    symbolp = _marpaESLIF_bootstrap_check_meta_by_namep(marpaESLIFp, marpaESLIFGrammarp, grammarp, tmps, 1 /* createb */, 0 /* forcecreateb */, NULL /* luaexplists */, 0 /* luaexplistcb */, 0 /* terminalb */);
     if (MARPAESLIF_UNLIKELY(symbolp == NULL)) {
       goto err;
     }
@@ -1483,33 +1560,32 @@ static inline marpaESLIF_symbol_t  *_marpaESLIF_bootstrap_check_rhsAlternativep(
     }
     /* If naming is not NULL, it is guaranteed to be an UTF-8 thingy */
 #ifndef MARPAESLIF_NTRACE
-  if (separatorp != NULL) {
-    MARPAESLIF_TRACEF(marpaESLIFp, funcs, "Creating rule %s ::= %s%s ranki=>%d separator=>%s proper=>%d hide-separator=>%d null-ranking=>%s at grammar level %d", symbolp->descp->asciis, rhsp->descp->asciis, rhsAlternativep->u.quantified.minimumi ? "+" : "*", ranki, separatorp->descp->asciis, (int) properb, (int) hideseparatorb, nullRanksHighb ? "high" : "low", grammarp->leveli);
-  } else {
-    MARPAESLIF_TRACEF(marpaESLIFp, funcs, "Creating rule %s ::= %s%s ranki=>%d null-ranking=>%s at grammar level %d", symbolp->descp->asciis, rhsp->descp->asciis, rhsAlternativep->u.quantified.minimumi ? "+" : "*", ranki, nullRanksHighb ? "high" : "low", grammarp->leveli);
-  }
+    if (separatorp != NULL) {
+      MARPAESLIF_TRACEF(marpaESLIFp, funcs, "Creating rule %s ::= %s%s ranki=>%d separator=>%s proper=>%d hide-separator=>%d null-ranking=>%s at grammar level %d", symbolp->descp->asciis, rhsp->descp->asciis, rhsAlternativep->u.quantified.minimumi ? "+" : "*", ranki, separatorp->descp->asciis, (int) properb, (int) hideseparatorb, nullRanksHighb ? "high" : "low", grammarp->leveli);
+    } else {
+      MARPAESLIF_TRACEF(marpaESLIFp, funcs, "Creating rule %s ::= %s%s ranki=>%d null-ranking=>%s at grammar level %d", symbolp->descp->asciis, rhsp->descp->asciis, rhsAlternativep->u.quantified.minimumi ? "+" : "*", ranki, nullRanksHighb ? "high" : "low", grammarp->leveli);
+    }
 #endif
-    rulep = _marpaESLIF_rule_newp(marpaESLIFp,
-                                  grammarp,
-                                  (namingp != NULL) ? (char *) MARPAESLIF_UTF8_STRING : NULL, /* descEncodings */
-                                  (namingp != NULL) ? namingp->bytep : NULL, /* descs */
-                                  (namingp != NULL) ? namingp->bytel : 0, /* descl */
-                                  symbolp->idi,
-                                  1, /* nrhsl */
-                                  &(rhsp->idi), /* rhsip */
-                                  -1, /* exceptioni */
-                                  ranki,
-                                  nullRanksHighb,
-                                  1, /* sequenceb */
-                                  rhsAlternativep->u.quantified.minimumi,
-                                  (separatorp != NULL) ? separatorp->idi : -1, /* separatori */
-                                  properb,
-                                  actionp,
-                                  0, /* passthroughb */
-                                  hideseparatorb,
-                                  NULL, /* skipbp */
-                                  declp != NULL ? declp->luaparlists : NULL, /* luaparlists */
-                                  declp != NULL ? declp->luaparlistcb : 0  /* luaparlistcb */);
+    rulep = _marpaESLIF_bootstrap_check_rulep(marpaESLIFp,
+                                              marpaESLIFGrammarp,
+                                              grammarp,
+                                              (namingp != NULL) ? (char *) MARPAESLIF_UTF8_STRING : NULL, /* descEncodings */
+                                              (namingp != NULL) ? namingp->bytep : NULL, /* descs */
+                                              (namingp != NULL) ? namingp->bytel : 0, /* descl */
+                                              symbolp->idi,
+                                              1, /* nrhsl */
+                                              &(rhsp->idi), /* rhsip */
+                                              -1, /* exceptioni */
+                                              ranki,
+                                              nullRanksHighb,
+                                              1, /* sequenceb */
+                                              rhsAlternativep->u.quantified.minimumi,
+                                              (separatorp != NULL) ? separatorp->idi : -1, /* separatori */
+                                              properb,
+                                              actionp,
+                                              0, /* passthroughb */
+                                              hideseparatorb,
+                                              NULL /* skipbp */);
     if (MARPAESLIF_UNLIKELY(rulep == NULL)) {
       goto err;
     }
@@ -3908,38 +3984,43 @@ static inline short _marpaESLIF_bootstrap_G1_action_priority_loosen_ruleb(marpaE
   strcat(topasciis, "[0]");
 
   /* A symbol must appear once as a prioritized LHS in the whole grammar */
-  if (MARPAESLIF_UNLIKELY(_marpaESLIF_bootstrap_check_meta_by_namep(marpaESLIFp, marpaESLIFGrammarp, grammarp, topasciis, 0 /* createb */, 0 /* forcecreateb */, luaexplists, luaexplistcb) != NULL)) {
+  /* Internal symbol: no parameter:
+     if (MARPAESLIF_UNLIKELY(_marpaESLIF_bootstrap_check_meta_by_namep(marpaESLIFp, marpaESLIFGrammarp, grammarp, topasciis, 0, 0, luaexplists, luaexplistcb, 0) != NULL)) {
+  */
+  if (MARPAESLIF_UNLIKELY(_marpaESLIF_bootstrap_check_meta_by_namep(marpaESLIFp, marpaESLIFGrammarp, grammarp, topasciis, 0 /* createb */, 0 /* forcecreateb */, NULL /* luaexplists */, 0 /* luaexplistcb */, 0 /* terminalb */) != NULL)) {
     MARPAESLIF_ERRORF(marpaESLIFp, "Symbol %s must appear once in the grammar as the LHS of a a prioritized rule", lhsp->u.metap->asciinames);
     goto err;
   }
-  prioritizedLhsp = _marpaESLIF_bootstrap_check_meta_by_namep(marpaESLIFp, marpaESLIFGrammarp, grammarp, topasciis, 1 /* createb */, 0 /* forcecreateb */, luaexplists, luaexplistcb);
+  /* Internal symbol: no parameter:
+     prioritizedLhsp = _marpaESLIF_bootstrap_check_meta_by_namep(marpaESLIFp, marpaESLIFGrammarp, grammarp, topasciis, 1, 0, luaexplists, luaexplistcb, 0);
+  */
+  prioritizedLhsp = _marpaESLIF_bootstrap_check_meta_by_namep(marpaESLIFp, marpaESLIFGrammarp, grammarp, topasciis, 1 /* createb */, 0 /* forcecreateb */, NULL /* luaexplists */, 0 /* luaexplistcb */, 0 /* terminalb */);
   if (MARPAESLIF_UNLIKELY(prioritizedLhsp == NULL)) {
     goto err;
   }
 
   /* Create the rule lhs := lhs[0] action => ::shift */
   MARPAESLIF_TRACEF(marpaESLIFp, funcs, "Creating rule %s ::= %s at grammar level %d", lhsp->descp->asciis, prioritizedLhsp->descp->asciis, grammarp->leveli);
-  rulep = _marpaESLIF_rule_newp(marpaESLIFp,
-                                grammarp,
-                                NULL, /* descEncodings */
-                                NULL, /* descs */
-                                0, /* descl */
-                                lhsp->idi,
-                                1, /* nrhsl */
-                                &(prioritizedLhsp->idi), /* rhsip */
-                                -1, /* exceptioni */
-                                0, /* ranki */
-                                0, /* nullRanksHighb */
-                                0, /* sequenceb */
-                                -1, /* minimumi */
-                                -1, /* separatori */
-                                0, /* properb */
-                                &action,
-                                0, /* passthroughb */
-                                0 /* hideseparatorb */,
-                                NULL, /* skipbp */
-                                declp != NULL ? declp->luaparlists : NULL, /* luaparlists */
-                                declp != NULL ? declp->luaparlistcb : 0 /* luaparlistcb */);
+  rulep = _marpaESLIF_bootstrap_check_rulep(marpaESLIFp,
+                                            marpaESLIFGrammarp,
+                                            grammarp,
+                                            NULL, /* descEncodings */
+                                            NULL, /* descs */
+                                            0, /* descl */
+                                            lhsp->idi,
+                                            1, /* nrhsl */
+                                            &(prioritizedLhsp->idi), /* rhsip */
+                                            -1, /* exceptioni */
+                                            0, /* ranki */
+                                            0, /* nullRanksHighb */
+                                            0, /* sequenceb */
+                                            -1, /* minimumi */
+                                            -1, /* separatori */
+                                            0, /* properb */
+                                            &action,
+                                            0, /* passthroughb */
+                                            0 /* hideseparatorb */,
+                                            NULL /* skipbp */);
   if (MARPAESLIF_UNLIKELY(rulep == NULL)) {
     goto err;
   }
@@ -3981,7 +4062,10 @@ static inline short _marpaESLIF_bootstrap_G1_action_priority_loosen_ruleb(marpaE
     strcat(currentasciis, "[");
     strcat(currentasciis, tmps);
     strcat(currentasciis, "]");
-    prioritizedLhsp = _marpaESLIF_bootstrap_check_meta_by_namep(marpaESLIFp, marpaESLIFGrammarp, grammarp, currentasciis, 1 /* createb */, 0 /* forcecreateb */, luaexplists, luaexplistcb);
+    /* Internal symbol: no parameter:
+       prioritizedLhsp = _marpaESLIF_bootstrap_check_meta_by_namep(marpaESLIFp, marpaESLIFGrammarp, grammarp, currentasciis, 1, 0, luaexplists, luaexplistcb, 0);
+    */
+    prioritizedLhsp = _marpaESLIF_bootstrap_check_meta_by_namep(marpaESLIFp, marpaESLIFGrammarp, grammarp, currentasciis, 1 /* createb */, 0 /* forcecreateb */, NULL /* luaexplists */, 0 /* luaexplistcb */, 0 /* terminalb */);
     if (MARPAESLIF_UNLIKELY(prioritizedLhsp == NULL)) {
       goto err;
     }
@@ -3999,34 +4083,36 @@ static inline short _marpaESLIF_bootstrap_G1_action_priority_loosen_ruleb(marpaE
     strcat(nextasciis, "[");
     strcat(nextasciis, tmps);
     strcat(nextasciis, "]");
-    nextPrioritizedLhsp = _marpaESLIF_bootstrap_check_meta_by_namep(marpaESLIFp, marpaESLIFGrammarp, grammarp, nextasciis, 1 /* createb */, 0 /* forcecreateb */, luaexplists, luaexplistcb);
+    /* Internal symbol: no parameter:
+       nextPrioritizedLhsp = _marpaESLIF_bootstrap_check_meta_by_namep(marpaESLIFp, marpaESLIFGrammarp, grammarp, nextasciis, 1, 0, luaexplists, luaexplistcb, 0);
+    */
+    nextPrioritizedLhsp = _marpaESLIF_bootstrap_check_meta_by_namep(marpaESLIFp, marpaESLIFGrammarp, grammarp, nextasciis, 1 /* createb */, 0 /* forcecreateb */, NULL /* luaexplists */, 0 /* luaexplistcb */, 0 /* terminalb */);
     if (MARPAESLIF_UNLIKELY(nextPrioritizedLhsp == NULL)) {
       goto err;
     }
 
     /* Create the transition rule lhs[priorityi-1] := lhs[priorityi] action => ::shift */
     MARPAESLIF_TRACEF(marpaESLIFp, funcs, "Creating transition rule %s ::= %s at grammar level %d", prioritizedLhsp->descp->asciis, nextPrioritizedLhsp->descp->asciis, grammarp->leveli);
-    rulep = _marpaESLIF_rule_newp(marpaESLIFp,
-                                  grammarp,
-                                  NULL, /* descEncodings */
-                                  NULL, /* descs */
-                                  0, /* descl */
-                                  prioritizedLhsp->idi,
-                                  1, /* nrhsl */
-                                  &(nextPrioritizedLhsp->idi), /* rhsip */
-                                  -1, /* exceptioni */
-                                  0, /* ranki */
-                                  0, /* nullRanksHighb */
-                                  0, /* sequenceb */
-                                  -1, /* minimumi */
-                                  -1, /* separatori */
-                                  0, /* properb */
-                                  &action,
-                                  0, /* passthroughb */
-                                  0 /* hideseparatorb */,
-                                  NULL, /* skipbp */
-                                  declp != NULL ? declp->luaparlists : NULL, /* luaparlists */
-                                  declp != NULL ? declp->luaparlistcb : 0 /* luaparlistcb */);
+    rulep = _marpaESLIF_bootstrap_check_rulep(marpaESLIFp,
+                                              marpaESLIFGrammarp,
+                                              grammarp,
+                                              NULL, /* descEncodings */
+                                              NULL, /* descs */
+                                              0, /* descl */
+                                              prioritizedLhsp->idi,
+                                              1, /* nrhsl */
+                                              &(nextPrioritizedLhsp->idi), /* rhsip */
+                                              -1, /* exceptioni */
+                                              0, /* ranki */
+                                              0, /* nullRanksHighb */
+                                              0, /* sequenceb */
+                                              -1, /* minimumi */
+                                              -1, /* separatori */
+                                              0, /* properb */
+                                              &action,
+                                              0, /* passthroughb */
+                                              0 /* hideseparatorb */,
+                                              NULL /* skipbp */);
     if (MARPAESLIF_UNLIKELY(rulep == NULL)) {
       goto err;
     }
@@ -4064,7 +4150,10 @@ static inline short _marpaESLIF_bootstrap_G1_action_priority_loosen_ruleb(marpaE
     strcat(currentasciis, "[");
     strcat(currentasciis, tmps);
     strcat(currentasciis, "]");
-    prioritizedLhsp = _marpaESLIF_bootstrap_check_meta_by_namep(marpaESLIFp, marpaESLIFGrammarp, grammarp, currentasciis, 1 /* createb */, 0 /* forcecreateb */, luaexplists, luaexplistcb);
+    /* Internal symbol: no parameter:
+       prioritizedLhsp = _marpaESLIF_bootstrap_check_meta_by_namep(marpaESLIFp, marpaESLIFGrammarp, grammarp, currentasciis, 1, 0, luaexplists, luaexplistcb, 0);
+    */
+    prioritizedLhsp = _marpaESLIF_bootstrap_check_meta_by_namep(marpaESLIFp, marpaESLIFGrammarp, grammarp, currentasciis, 1 /* createb */, 0 /* forcecreateb */, NULL /* luaexplists */, 0 /* luaexplistcb */, 0 /* terminalb */);
     if (MARPAESLIF_UNLIKELY(prioritizedLhsp == NULL)) {
       goto err;
     }
@@ -4090,7 +4179,10 @@ static inline short _marpaESLIF_bootstrap_G1_action_priority_loosen_ruleb(marpaE
     strcat(nextasciis, "[");
     strcat(nextasciis, tmps);
     strcat(nextasciis, "]");
-    nextPrioritizedLhsp = _marpaESLIF_bootstrap_check_meta_by_namep(marpaESLIFp, marpaESLIFGrammarp, grammarp, nextasciis, 1 /* createb */, 0 /* forcecreateb */, luaexplists, luaexplistcb);
+    /* Internal symbol: no parameter:
+       nextPrioritizedLhsp = _marpaESLIF_bootstrap_check_meta_by_namep(marpaESLIFp, marpaESLIFGrammarp, grammarp, nextasciis, 1, 0, luaexplists, luaexplistcb, 0);
+    */
+    nextPrioritizedLhsp = _marpaESLIF_bootstrap_check_meta_by_namep(marpaESLIFp, marpaESLIFGrammarp, grammarp, nextasciis, 1 /* createb */, 0 /* forcecreateb */, NULL /* luaexplists */, 0 /* luaexplistcb */, 0 /* terminalb */);
     if (MARPAESLIF_UNLIKELY(nextPrioritizedLhsp == NULL)) {
       goto err;
     }
@@ -4471,27 +4563,26 @@ static inline short _marpaESLIF_bootstrap_G1_action_priority_flat_ruleb(marpaESL
       }
 #endif
       /* If naming is not NULL, it is guaranteed to be an UTF-8 thingy */
-      rulep = _marpaESLIF_rule_newp(marpaESLIFp,
-                                    grammarp,
-                                    (namingp != NULL) ? (char *) MARPAESLIF_UTF8_STRING : NULL, /* descEncodings */
-                                    (namingp != NULL) ? namingp->bytep : NULL, /* descs */
-                                    (namingp != NULL) ? namingp->bytel : 0, /* descl */
-                                    (alternativep->forcedLhsp != NULL) ? alternativep->forcedLhsp->idi : lhsp->idi,
-                                    (size_t) nrhsi,
-                                    rhsip,
-                                    -1, /* exceptioni */
-                                    ranki,
-                                    nullRanksHighb,
-                                    0, /* sequenceb */
-                                    -1, /* minimumi */
-                                    -1, /* separatori */
-                                    0, /* properb */
-                                    actionp,
-                                    0, /* passthroughb */
-                                    0 /* hideseparatorb */,
-                                    have_skipb ? skipbp : NULL,
-                                    declp != NULL ? declp->luaparlists : NULL,
-                                    declp != NULL ? declp->luaparlistcb : 0);
+      rulep = _marpaESLIF_bootstrap_check_rulep(marpaESLIFp,
+                                                marpaESLIFGrammarp,
+                                                grammarp,
+                                                (namingp != NULL) ? (char *) MARPAESLIF_UTF8_STRING : NULL, /* descEncodings */
+                                                (namingp != NULL) ? namingp->bytep : NULL, /* descs */
+                                                (namingp != NULL) ? namingp->bytel : 0, /* descl */
+                                                (alternativep->forcedLhsp != NULL) ? alternativep->forcedLhsp->idi : lhsp->idi,
+                                                (size_t) nrhsi,
+                                                rhsip,
+                                                -1, /* exceptioni */
+                                                ranki,
+                                                nullRanksHighb,
+                                                0, /* sequenceb */
+                                                -1, /* minimumi */
+                                                -1, /* separatori */
+                                                0, /* properb */
+                                                actionp,
+                                                0, /* passthroughb */
+                                                0 /* hideseparatorb */,
+                                                have_skipb ? skipbp : NULL);
       if (MARPAESLIF_UNLIKELY(rulep == NULL)) {
         goto err;
       }
@@ -4559,7 +4650,7 @@ static short _marpaESLIF_bootstrap_G1_action_priority_ruleb(void *userDatavp, ma
   }
 
   /* Check the lhs exist */
-  lhsp = _marpaESLIF_bootstrap_check_meta_by_namep(marpaESLIFp, marpaESLIFGrammarp, grammarp, bootstrapLhsp->symbols, 1 /* createb */, 0 /* forcecreateb */, bootstrapLhsp->luaFunctionDeclp != NULL ? bootstrapLhsp->luaFunctionDeclp->luaparlists : NULL, bootstrapLhsp->luaFunctionDeclp != NULL ? bootstrapLhsp->luaFunctionDeclp->luaparlistcb : 0);
+  lhsp = _marpaESLIF_bootstrap_check_meta_by_namep(marpaESLIFp, marpaESLIFGrammarp, grammarp, bootstrapLhsp->symbols, 1 /* createb */, 0 /* forcecreateb */, bootstrapLhsp->luaFunctionDeclp != NULL ? bootstrapLhsp->luaFunctionDeclp->luaparlists : NULL, bootstrapLhsp->luaFunctionDeclp != NULL ? bootstrapLhsp->luaFunctionDeclp->luaparlistcb : 0, 0 /* terminalb */);
   if (MARPAESLIF_UNLIKELY(lhsp == NULL)) {
     goto err;
   }
@@ -5402,7 +5493,7 @@ static short _marpaESLIF_bootstrap_G1_action_quantified_ruleb(void *userDatavp, 
   }
 
   /* Check the lhs */
-  lhsp = _marpaESLIF_bootstrap_check_meta_by_namep(marpaESLIFp, marpaESLIFGrammarp, grammarp, bootstrapLhsp->symbols, 1 /* createb */, 0 /* forcecreateb */, bootstrapLhsp->luaFunctionDeclp != NULL ? bootstrapLhsp->luaFunctionDeclp->luaparlists : NULL, bootstrapLhsp->luaFunctionDeclp != NULL ? bootstrapLhsp->luaFunctionDeclp->luaparlistcb : 0);
+  lhsp = _marpaESLIF_bootstrap_check_meta_by_namep(marpaESLIFp, marpaESLIFGrammarp, grammarp, bootstrapLhsp->symbols, 1 /* createb */, 0 /* forcecreateb */, bootstrapLhsp->luaFunctionDeclp != NULL ? bootstrapLhsp->luaFunctionDeclp->luaparlists : NULL, bootstrapLhsp->luaFunctionDeclp != NULL ? bootstrapLhsp->luaFunctionDeclp->luaparlistcb : 0, 0 /* terminalb */);
   if (MARPAESLIF_UNLIKELY(lhsp == NULL)) {
     goto err;
   }
@@ -5460,27 +5551,26 @@ static short _marpaESLIF_bootstrap_G1_action_quantified_ruleb(void *userDatavp, 
   }
 #endif
   /* If naming is not NULL, it is guaranteed to be an UTF-8 thingy */
-  rulep = _marpaESLIF_rule_newp(marpaESLIFp,
-                                grammarp,
-                                (namingp != NULL) ? (char *) MARPAESLIF_UTF8_STRING : NULL, /* descEncodings */
-                                (namingp != NULL) ? namingp->bytep : NULL, /* descs */
-                                (namingp != NULL) ? namingp->bytel : 0, /* descl */
-                                lhsp->idi,
-                                1, /* nrhsl */
-                                &(rhsp->idi), /* rhsip */
-                                -1, /* exceptioni */
-                                ranki,
-                                nullRanksHighb,
-                                1, /* sequenceb */
-                                minimumi,
-                                (separatorp != NULL) ? separatorp->idi : -1, /* separatori */
-                                properb,
-                                actionp,
-                                0, /* passthroughb */
-                                hideseparatorb,
-                                NULL, /* skipbp */
-                                bootstrapLhsp->luaFunctionDeclp != NULL ? bootstrapLhsp->luaFunctionDeclp->luaparlists : NULL,
-                                bootstrapLhsp->luaFunctionDeclp != NULL ? bootstrapLhsp->luaFunctionDeclp->luaparlistcb : 0);
+  rulep = _marpaESLIF_bootstrap_check_rulep(marpaESLIFp,
+                                            marpaESLIFGrammarp,
+                                            grammarp,
+                                            (namingp != NULL) ? (char *) MARPAESLIF_UTF8_STRING : NULL, /* descEncodings */
+                                            (namingp != NULL) ? namingp->bytep : NULL, /* descs */
+                                            (namingp != NULL) ? namingp->bytel : 0, /* descl */
+                                            lhsp->idi,
+                                            1, /* nrhsl */
+                                            &(rhsp->idi), /* rhsip */
+                                            -1, /* exceptioni */
+                                            ranki,
+                                            nullRanksHighb,
+                                            1, /* sequenceb */
+                                            minimumi,
+                                            (separatorp != NULL) ? separatorp->idi : -1, /* separatori */
+                                            properb,
+                                            actionp,
+                                            0, /* passthroughb */
+                                            hideseparatorb,
+                                            NULL /* skipbp */);
   if (MARPAESLIF_UNLIKELY(rulep == NULL)) {
     goto err;
   }
@@ -5524,7 +5614,7 @@ static short _marpaESLIF_bootstrap_G1_action_start_ruleb(void *userDatavp, marpa
   }
 
   /* Check the symbol */
-  startp = _marpaESLIF_bootstrap_check_meta_by_namep(marpaESLIFp, marpaESLIFGrammarp, grammarp, startSymbolp->symbols, 1 /* createb */, 0 /* forcecreateb */, startSymbolp->luaFunctionCallp != NULL ? startSymbolp->luaFunctionCallp->luaexplists : NULL, startSymbolp->luaFunctionCallp != NULL ? startSymbolp->luaFunctionCallp->luaexplistcb : 0);
+  startp = _marpaESLIF_bootstrap_check_meta_by_namep(marpaESLIFp, marpaESLIFGrammarp, grammarp, startSymbolp->symbols, 1 /* createb */, 0 /* forcecreateb */, startSymbolp->luaFunctionCallp != NULL ? startSymbolp->luaFunctionCallp->luaexplists : NULL, startSymbolp->luaFunctionCallp != NULL ? startSymbolp->luaFunctionCallp->luaexplistcb : 0, 0 /* terminalb */);
   if (MARPAESLIF_UNLIKELY(startp == NULL)) {
     goto err;
   }
@@ -5640,7 +5730,7 @@ static short _marpaESLIF_bootstrap_G1_action_empty_ruleb(void *userDatavp, marpa
   }
 
   /* Check the lhs exist */
-  lhsp = _marpaESLIF_bootstrap_check_meta_by_namep(marpaESLIFp, marpaESLIFGrammarp, grammarp, bootstrapLhsp->symbols, 1 /* createb */, 0 /* forcecreateb */, bootstrapLhsp->luaFunctionDeclp != NULL ? bootstrapLhsp->luaFunctionDeclp->luaparlists : NULL, bootstrapLhsp->luaFunctionDeclp != NULL ? bootstrapLhsp->luaFunctionDeclp->luaparlistcb : 0);
+  lhsp = _marpaESLIF_bootstrap_check_meta_by_namep(marpaESLIFp, marpaESLIFGrammarp, grammarp, bootstrapLhsp->symbols, 1 /* createb */, 0 /* forcecreateb */, bootstrapLhsp->luaFunctionDeclp != NULL ? bootstrapLhsp->luaFunctionDeclp->luaparlists : NULL, bootstrapLhsp->luaFunctionDeclp != NULL ? bootstrapLhsp->luaFunctionDeclp->luaparlistcb : 0, 0 /* terminalb */);
   if (MARPAESLIF_UNLIKELY(lhsp == NULL)) {
     goto err;
   }
@@ -5677,27 +5767,26 @@ static short _marpaESLIF_bootstrap_G1_action_empty_ruleb(void *userDatavp, marpa
   /* Create the rule */
   /* If there is a name description, then it is UTF-8 compatible (<standard name> or <quoted name>) */
   MARPAESLIF_TRACEF(marpaESLIFp, funcs, "Creating empty rule %s at grammar level %d", lhsp->descp->asciis, grammarp->leveli);
-  rulep = _marpaESLIF_rule_newp(marpaESLIFp,
-                                grammarp,
-                                (namingp != NULL) ? (char *) MARPAESLIF_UTF8_STRING : NULL, /* descEncodings */
-                                (namingp != NULL) ? namingp->bytep : NULL, /* descs */
-                                (namingp != NULL) ? namingp->bytel : 0, /* descl */
-                                lhsp->idi,
-                                0, /* nrhsl */
-                                NULL, /* rhsip */
-                                -1, /* exceptioni */
-                                ranki,
-                                nullRanksHighb,
-                                0, /* sequenceb */
-                                -1, /* minimumi */
-                                -1, /* separatori */
-                                0, /* properb */
-                                actionp,
-                                0, /* passthroughb */
-                                0 /* hideseparatorb */,
-                                NULL, /* skipbp */
-                                bootstrapLhsp->luaFunctionDeclp != NULL ? bootstrapLhsp->luaFunctionDeclp->luaparlists : NULL,
-                                bootstrapLhsp->luaFunctionDeclp != NULL ? bootstrapLhsp->luaFunctionDeclp->luaparlistcb : 0);
+  rulep = _marpaESLIF_bootstrap_check_rulep(marpaESLIFp,
+                                            marpaESLIFGrammarp,
+                                            grammarp,
+                                            (namingp != NULL) ? (char *) MARPAESLIF_UTF8_STRING : NULL, /* descEncodings */
+                                            (namingp != NULL) ? namingp->bytep : NULL, /* descs */
+                                            (namingp != NULL) ? namingp->bytel : 0, /* descl */
+                                            lhsp->idi,
+                                            0, /* nrhsl */
+                                            NULL, /* rhsip */
+                                            -1, /* exceptioni */
+                                            ranki,
+                                            nullRanksHighb,
+                                            0, /* sequenceb */
+                                            -1, /* minimumi */
+                                            -1, /* separatori */
+                                            0, /* properb */
+                                            actionp,
+                                            0, /* passthroughb */
+                                            0 /* hideseparatorb */,
+                                            NULL /* skipbp */);
   if (MARPAESLIF_UNLIKELY(rulep == NULL)) {
     goto err;
   }
@@ -6783,7 +6872,7 @@ static short _marpaESLIF_bootstrap_G1_action_discard_ruleb(void *userDatavp, mar
   }
 
   /* Check the :discard */
-  discardp = _marpaESLIF_bootstrap_check_meta_by_namep(marpaESLIFp, marpaESLIFGrammarp, grammarp, ":discard", 1 /* createb */, 0 /* forcecreateb */, NULL /* luaexplists */, 0 /* luaexplistcb */);
+  discardp = _marpaESLIF_bootstrap_check_meta_by_namep(marpaESLIFp, marpaESLIFGrammarp, grammarp, ":discard", 1 /* createb */, 0 /* forcecreateb */, NULL /* luaexplists */, 0 /* luaexplistcb */, 0 /* terminalb */);
   if (MARPAESLIF_UNLIKELY(discardp == NULL)) {
     goto err;
   }
@@ -6835,27 +6924,26 @@ static short _marpaESLIF_bootstrap_G1_action_discard_ruleb(void *userDatavp, mar
 
   MARPAESLIF_TRACEF(marpaESLIFp, funcs, "Creating rule %s ::= %s at grammar level %d", discardp->descp->asciis, rhsp->descp->asciis, grammarp->leveli);
   /* If naming is not NULL, it is guaranteed to be an UTF-8 thingy */
-  rulep = _marpaESLIF_rule_newp(marpaESLIFp,
-                                grammarp,
-                                NULL, /* descEncodings */
-                                NULL, /* descs */
-                                0, /* descl */
-                                discardp->idi,
-                                1, /* nrhsl */
-                                &(rhsp->idi), /* rhsip */
-                                -1, /* exceptioni */
-                                0, /* ranki */
-                                0, /* nullRanksHighb */
-                                0, /* sequenceb */
-                                -1, /* minimumi */
-                                -1, /* separatori */
-                                0, /* properb */
-                                NULL, /* actionp */
-                                0, /* passthroughb */
-                                0 /* hideseparatorb */,
-                                NULL, /* skipbp */
-                                NULL, /* luaparlists */
-                                0 /* luaparlistcb */);
+  rulep = _marpaESLIF_bootstrap_check_rulep(marpaESLIFp,
+                                            marpaESLIFGrammarp,
+                                            grammarp,
+                                            NULL, /* descEncodings */
+                                            NULL, /* descs */
+                                            0, /* descl */
+                                            discardp->idi,
+                                            1, /* nrhsl */
+                                            &(rhsp->idi), /* rhsip */
+                                            -1, /* exceptioni */
+                                            0, /* ranki */
+                                            0, /* nullRanksHighb */
+                                            0, /* sequenceb */
+                                            -1, /* minimumi */
+                                            -1, /* separatori */
+                                            0, /* properb */
+                                            NULL, /* actionp */
+                                            0, /* passthroughb */
+                                            0 /* hideseparatorb */,
+                                            NULL /* skipbp */);
   if (MARPAESLIF_UNLIKELY(rulep == NULL)) {
     goto err;
   }
@@ -6951,7 +7039,7 @@ static inline short _marpaESLIF_bootstrap_G1_action_event_declarationb(void *use
   }
 
   /* Check the symbol */
-  symbolp = _marpaESLIF_bootstrap_check_meta_by_namep(marpaESLIFp, marpaESLIFGrammarp, grammarp, bootstrapSymbolp->symbols, 1 /* createb */, 0 /* forcecreateb */, NULL /* luaexplists */, 0 /* luaexplistcb */);
+  symbolp = _marpaESLIF_bootstrap_check_meta_by_namep(marpaESLIFp, marpaESLIFGrammarp, grammarp, bootstrapSymbolp->symbols, 1 /* createb */, 0 /* forcecreateb */, NULL /* luaexplists */, 0 /* luaexplistcb */, 0 /* terminalb */);
   if (MARPAESLIF_UNLIKELY(symbolp == NULL)) {
     goto err;
   }
@@ -7223,7 +7311,7 @@ static short _marpaESLIF_bootstrap_G1_action_exception_statementb(void *userData
   }
 
   /* Check the lhs */
-  lhsp = _marpaESLIF_bootstrap_check_meta_by_namep(marpaESLIFp, marpaESLIFGrammarp, grammarp, bootstrapLhsp->symbols, 1 /* createb */, 0 /* forcecreateb */, bootstrapLhsp->luaFunctionDeclp != NULL ? bootstrapLhsp->luaFunctionDeclp->luaparlists : NULL, bootstrapLhsp->luaFunctionDeclp != NULL ? bootstrapLhsp->luaFunctionDeclp->luaparlistcb : 0);
+  lhsp = _marpaESLIF_bootstrap_check_meta_by_namep(marpaESLIFp, marpaESLIFGrammarp, grammarp, bootstrapLhsp->symbols, 1 /* createb */, 0 /* forcecreateb */, bootstrapLhsp->luaFunctionDeclp != NULL ? bootstrapLhsp->luaFunctionDeclp->luaparlists : NULL, bootstrapLhsp->luaFunctionDeclp != NULL ? bootstrapLhsp->luaFunctionDeclp->luaparlistcb : 0, 0 /* terminalb */);
   if (MARPAESLIF_UNLIKELY(lhsp == NULL)) {
     goto err;
   }
@@ -7271,27 +7359,26 @@ static short _marpaESLIF_bootstrap_G1_action_exception_statementb(void *userData
 
   MARPAESLIF_TRACEF(marpaESLIFp, funcs, "Creating exception rule %s ::= %s - %s", lhsp->descp->asciis, rhsp->descp->asciis, rhsExceptionp->descp->asciis);
   /* If naming is not NULL, it is guaranteed to be an UTF-8 thingy */
-  rulep = _marpaESLIF_rule_newp(marpaESLIFp,
-                                grammarp,
-                                (namingp != NULL) ? (char *) MARPAESLIF_UTF8_STRING : NULL, /* descEncodings */
-                                (namingp != NULL) ? namingp->bytep : NULL, /* descs */
-                                (namingp != NULL) ? namingp->bytel : 0, /* descl */
-                                lhsp->idi,
-                                1, /* nrhsl */
-                                &(rhsp->idi), /* rhsip */
-                                rhsExceptionp->idi,
-                                ranki,
-                                0, /*nullRanksHighb */
-                                0, /* sequenceb */
-                                0, /* minimumi */
-                                -1, /* separatori */
-                                0, /* properb */
-                                actionp,
-                                0, /* passthroughb */
-                                0 /* hideseparatorb */,
-                                NULL, /* skipbp */
-                                bootstrapLhsp->luaFunctionDeclp != NULL ? bootstrapLhsp->luaFunctionDeclp->luaparlists : NULL,
-                                bootstrapLhsp->luaFunctionDeclp != NULL ? bootstrapLhsp->luaFunctionDeclp->luaparlistcb : 0);
+  rulep = _marpaESLIF_bootstrap_check_rulep(marpaESLIFp,
+                                            marpaESLIFGrammarp,
+                                            grammarp,
+                                            (namingp != NULL) ? (char *) MARPAESLIF_UTF8_STRING : NULL, /* descEncodings */
+                                            (namingp != NULL) ? namingp->bytep : NULL, /* descs */
+                                            (namingp != NULL) ? namingp->bytel : 0, /* descl */
+                                            lhsp->idi,
+                                            1, /* nrhsl */
+                                            &(rhsp->idi), /* rhsip */
+                                            rhsExceptionp->idi,
+                                            ranki,
+                                            0, /*nullRanksHighb */
+                                            0, /* sequenceb */
+                                            0, /* minimumi */
+                                            -1, /* separatori */
+                                            0, /* properb */
+                                            actionp,
+                                            0, /* passthroughb */
+                                            0 /* hideseparatorb */,
+                                            NULL /* skipbp */);
   if (MARPAESLIF_UNLIKELY(rulep == NULL)) {
     goto err;
   }
@@ -8519,3 +8606,168 @@ static short _marpaESLIF_bootstrap_G1_action_start_symbol_2b(void *userDatavp, m
   _marpaESLIF_bootstrap_lua_functioncall_freev(luaFunctionCallp);
   return rcb;
 }
+
+/*****************************************************************************/
+static inline marpaESLIF_rule_t *_marpaESLIF_bootstrap_check_rulep(marpaESLIF_t *marpaESLIFp, marpaESLIFGrammar_t *marpaESLIFGrammarp, marpaESLIF_grammar_t *grammarp, char *descEncodings, char *descs, size_t descl, int lhsi, size_t nrhsl, int *rhsip, int exceptioni, int ranki, short nullRanksHighb, short sequenceb, int minimumi, int separatori, short properb, marpaESLIF_action_t *actionp, short passthroughb, short hideseparatorb, short *skipbp)
+/*****************************************************************************/
+{
+  int                 *rhsiclonep = NULL;
+  size_t               rhsl;
+  marpaESLIF_symbol_t *symbolp;
+  marpaESLIF_rule_t   *rulep;
+  marpaESLIF_symbol_t *lhsp;
+  marpaESLIF_action_t  action;
+
+  if (rhsip != NULL) {
+    rhsiclonep = (int *) malloc(nrhsl * sizeof(int));
+    if (rhsiclonep == NULL) {
+      MARPAESLIF_ERRORF(marpaESLIFp, "malloc failure, %s", strerror(errno));
+      goto err;
+    }
+    memcpy(rhsiclonep, rhsip, nrhsl * sizeof(int));
+  }
+
+  goto jdd:
+  for (rhsl = 0; rhsl < nrhsl; rhsl++) {
+    symbolp = _marpaESLIF_symbol_findp(marpaESLIFp, grammarp, NULL /* asciis */, rhsiclonep[rhsl], NULL /* symbolip */);
+    if (symbolp == NULL) {
+      goto err;
+    }
+    /* Parameterized RHS ? */
+    if (symbolp->luaexplists == NULL) {
+      continue;
+    }
+    /* Only ESLIF META symbols are of interest here */
+    if (symbolp->type != MARPAESLIF_SYMBOL_TYPE_META) {
+      continue;
+    }
+
+    /* Make sure there is an LHS TERMINAL with that name */
+    lhsp = _marpaESLIF_bootstrap_check_meta_by_namep(marpaESLIFp,
+                                                     marpaESLIFGrammarp,
+                                                     grammarp,
+                                                     symbolp->u.metap->asciinames,
+                                                     1 /* createb */,
+                                                     0 /* forcecreateb */,
+                                                     symbolp->luaexplists,
+                                                     symbolp->luaexplistcb,
+                                                     1 /* terminalb */);
+    if (lhsp == NULL) {
+      goto err;
+    }
+
+    /* Replace the rhs Id */
+    rhsiclonep[rhsl] = lhsp->idi;
+  }
+
+  symbolp = _marpaESLIF_symbol_findp(marpaESLIFp, grammarp, NULL /* asciis */, lhsi, NULL /* symbolip */);
+  if (symbolp == NULL) {
+    goto err;
+  }
+  /* It is non-sens to not have an ESLIF META here */
+  if (symbolp->type != MARPAESLIF_SYMBOL_TYPE_META) {
+    MARPAESLIF_ERRORF(marpaESLIFp, "Symbol %s is not a meta symbol", symbolp->descp->asciis);
+    goto err;
+  }
+  if (symbolp->luaexplists != NULL) {
+    /* Make sure there is a non-parameterized LHS TERMINAL with that name */
+    lhsp = _marpaESLIF_bootstrap_check_meta_by_namep(marpaESLIFp,
+                                                     marpaESLIFGrammarp,
+                                                     grammarp,
+                                                     symbolp->u.metap->asciinames,
+                                                     1 /* createb */,
+                                                     0 /* forcecreateb */,
+                                                     NULL /* luaexplists */,
+                                                     0 /* luaexplistcb */,
+                                                     1 /* terminalb */);
+    if (lhsp == NULL) {
+      goto err;
+    }
+    /* Create rule with this LHS terminal: LHS ::= ... */
+    rulep = _marpaESLIF_rule_newp(marpaESLIFp,
+                                  grammarp,
+                                  descEncodings,
+                                  descs,
+                                  descl,
+                                  lhsp->idi,
+                                  nrhsl,
+                                  rhsiclonep,
+                                  exceptioni,
+                                  ranki,
+                                  nullRanksHighb,
+                                  sequenceb,
+                                  minimumi,
+                                  separatori,
+                                  properb,
+                                  actionp,
+                                  passthroughb,
+                                  hideseparatorb,
+                                  skipbp);
+    if (rulep == NULL) {
+      goto err;
+    }
+    GENERICSTACK_SET_PTR(grammarp->ruleStackp, rulep, rulep->idi);
+    if (MARPAESLIF_UNLIKELY(GENERICSTACK_ERROR(grammarp->ruleStackp))) {
+      MARPAESLIF_ERRORF(marpaESLIFp, "ruleStackp set failure, %s", strerror(errno));
+      goto err;
+    }
+
+    /* Constant action */
+    action.type    = MARPAESLIF_ACTION_TYPE_NAME;
+    action.u.names = "::shift";
+
+    /* Create rule LHS() ::= LHS action => ::shift */ 
+    rulep = _marpaESLIF_rule_newp(marpaESLIFp,
+                                  grammarp,
+                                  NULL, /* descEncodings */
+                                  NULL, /* descs */
+                                  0, /* descl */
+                                  lhsi,
+                                  1, /* nrhsl */
+                                  &(lhsp->idi),
+                                  -1, /* exceptioni */
+                                  0, /* ranki */
+                                  0, /* nullRanksHighb */
+                                  0, /* sequenceb */
+                                  -1, /* minimumi */
+                                  -1, /* separatori */
+                                  0, /* properb */
+                                  &action,
+                                  0, /* passthroughb */
+                                  0, /* hideseparatorb */
+                                  NULL /* skipbp */);
+  } else {
+  jdd:
+    rulep = _marpaESLIF_rule_newp(marpaESLIFp,
+                                  grammarp,
+                                  descEncodings,
+                                  descs,
+                                  descl,
+                                  lhsi,
+                                  nrhsl,
+                                  rhsiclonep,
+                                  exceptioni,
+                                  ranki,
+                                  nullRanksHighb,
+                                  sequenceb,
+                                  minimumi,
+                                  separatori,
+                                  properb,
+                                  actionp,
+                                  passthroughb,
+                                  hideseparatorb,
+                                  skipbp);
+  }
+
+  goto done;
+
+ err:
+  rulep = NULL;
+
+ done:
+  if (rhsiclonep != NULL) {
+    free(rhsiclonep);
+  }
+  return rulep;
+}
+

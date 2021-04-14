@@ -622,7 +622,7 @@ static inline marpaESLIFValueResult_t *_marpaESLIFRecognizer_lexemeStack_i_getp(
 static inline const char            *_marpaESLIF_genericStack_i_types(genericStack_t *stackp, int i);
 static inline const char            *_marpaESLIF_value_types(int typei);
 
-static inline marpaESLIF_rule_t     *_marpaESLIF_rule_newp(marpaESLIF_t *marpaESLIFp, marpaESLIF_grammar_t *grammarp, char *descEncodings, char *descs, size_t descl, int lhsi, size_t nrhsl, int *rhsip, int exceptioni, int ranki, short nullRanksHighb, short sequenceb, int minimumi, int separatori, short properb, marpaESLIF_action_t *actionp, short passthroughb, short hideseparatorb, short *skipbp, char *luaparlists, short luaparlistcb);
+static inline marpaESLIF_rule_t     *_marpaESLIF_rule_newp(marpaESLIF_t *marpaESLIFp, marpaESLIF_grammar_t *grammarp, char *descEncodings, char *descs, size_t descl, int lhsi, size_t nrhsl, int *rhsip, int exceptioni, int ranki, short nullRanksHighb, short sequenceb, int minimumi, int separatori, short properb, marpaESLIF_action_t *actionp, short passthroughb, short hideseparatorb, short *skipbp);
 static inline void                   _marpaESLIF_rule_freev(marpaESLIF_rule_t *rulep);
 
 static inline marpaESLIF_symbol_t   *_marpaESLIF_symbol_newp(marpaESLIF_t *marpaESLIFp, marpaESLIFSymbolOption_t *marpaESLIFSymbolOptionp, char *luaexplists, short luaexplistcb);
@@ -1955,7 +1955,7 @@ static inline marpaESLIF_meta_t *_marpaESLIF_meta_newp(marpaESLIF_t *marpaESLIFp
   metap->lazyb                           = lazyb;
   metap->terminalb                       = terminalb;
 
-  marpaWrapperGrammarSymbolOption.terminalb = terminalb; /* Should be 0 for all meta symbols excepts those that are parameterized */
+  marpaWrapperGrammarSymbolOption.terminalb = terminalb;
   marpaWrapperGrammarSymbolOption.startb    = 0;
   marpaWrapperGrammarSymbolOption.eventSeti = eventSeti;
 
@@ -2208,8 +2208,7 @@ static inline marpaESLIF_grammar_t *_marpaESLIF_bootstrap_grammarp(marpaESLIFGra
 				  NULL, /* descs */
 				  0, /* descl */
                                   bootstrap_grammar_metap[i].lazyb,
-                                  0 /* terminalb */
-				  );
+                                  0 /* terminalb */);
     if (MARPAESLIF_UNLIKELY(metap == NULL)) {
       goto err;
     }
@@ -2277,10 +2276,7 @@ static inline marpaESLIF_grammar_t *_marpaESLIF_bootstrap_grammarp(marpaESLIFGra
                                   (ruleAction.u.names != NULL) ? &ruleAction : NULL,
                                   0, /* passthroughb */
                                   bootstrap_grammar_rulep[i].hideseparatorb,
-                                  NULL, /* skipbp */
-                                  NULL, /* luaparlists */
-                                  0 /* luaparlistcb */
-				  );
+                                  NULL /* skipbp */);
     if (MARPAESLIF_UNLIKELY(rulep == NULL)) {
       goto err;
     }
@@ -2314,10 +2310,7 @@ static inline marpaESLIF_grammar_t *_marpaESLIF_bootstrap_grammarp(marpaESLIFGra
                                   (ruleAction.u.names != NULL) ? &ruleAction : NULL,
                                   0, /* passthroughb */
                                   bootstrap_grammar_lazy_rulep[i].hideseparatorb,
-                                  NULL, /* skipbp */
-                                  NULL, /* luaparlists */
-                                  0 /* luaparlistcb */
-				  );
+                                  NULL /* skipbp */);
     if (MARPAESLIF_UNLIKELY(rulep == NULL)) {
       goto err;
     }
@@ -4351,7 +4344,7 @@ static inline short _marpaESLIFRecognizer_lexemeStack_i_setb(marpaESLIFRecognize
 }
 
 /*****************************************************************************/
-static inline marpaESLIF_rule_t *_marpaESLIF_rule_newp(marpaESLIF_t *marpaESLIFp, marpaESLIF_grammar_t *grammarp, char *descEncodings, char *descs, size_t descl, int lhsi, size_t nrhsl, int *rhsip, int exceptioni, int ranki, short nullRanksHighb, short sequenceb, int minimumi, int separatori, short properb, marpaESLIF_action_t *actionp, short passthroughb, short hideseparatorb, short *skipbp, char *luaparlists, short luaparlistcb)
+static inline marpaESLIF_rule_t *_marpaESLIF_rule_newp(marpaESLIF_t *marpaESLIFp, marpaESLIF_grammar_t *grammarp, char *descEncodings, char *descs, size_t descl, int lhsi, size_t nrhsl, int *rhsip, int exceptioni, int ranki, short nullRanksHighb, short sequenceb, int minimumi, int separatori, short properb, marpaESLIF_action_t *actionp, short passthroughb, short hideseparatorb, short *skipbp)
 /*****************************************************************************/
 {
   static const char               *funcs          = "_marpaESLIF_rule_newp";
@@ -4402,19 +4395,6 @@ static inline marpaESLIF_rule_t *_marpaESLIF_rule_newp(marpaESLIF_t *marpaESLIFp
   rulep->passthroughb      = passthroughb;
   rulep->propertyBitSet    = 0; /* Filled by grammar validation */
   rulep->hideseparatorb    = hideseparatorb;
-  rulep->luaparlists       = NULL;
-  rulep->luaparlistactions = NULL;
-  rulep->luaparlistcb      = luaparlistcb;
-  rulep->luaparlistcp      = NULL;
-  rulep->luaparlistcl      = 0;
-
-  if (luaparlists != NULL) {
-    rulep->luaparlists = strdup(luaparlists);
-    if (rulep->luaparlists == NULL) {
-      MARPAESLIF_ERRORF(marpaESLIFp, "strdup failure, %s", strerror(errno));
-      goto err;
-    }
-  }
 
   /* Look to the symbol itself, and remember it is an LHS - this is used when validating the grammar */
   for (symboli = 0; symboli < GENERICSTACK_USED(symbolStackp); symboli++) {
@@ -4589,15 +4569,6 @@ static inline void _marpaESLIF_rule_freev(marpaESLIF_rule_t *rulep)
     _marpaESLIF_symbol_freev(marpaESLIFp, exceptionp);
     */
     GENERICSTACK_RESET(rulep->rhsStackp); /* Take care, this is a pointer to a stack inside rule structure */
-    if (rulep->luaparlists != NULL) {
-      free(rulep->luaparlists);
-    }
-    if (rulep->luaparlistactions != NULL) {
-      free(rulep->luaparlistactions);
-    }
-    if (rulep->luaparlistcp != NULL) {
-      free(rulep->luaparlistcp);
-    }
     free(rulep);
   }
 }
@@ -12424,15 +12395,20 @@ static inline short _marpaESLIFRecognizer_readb(marpaESLIFRecognizer_t *marpaESL
     }                                                           \
   } while (0)
 
-#define MARPAESLIF_SYMBOL_CREATESHOW(asciishowl, asciishows, symbolp) do { \
+#define MARPAESLIF_SYMBOL_CREATESHOW(asciishowl, asciishows, symbolp, lhsb) do { \
     switch (symbolp->type) {                                            \
     case MARPAESLIF_SYMBOL_TYPE_TERMINAL:                               \
       MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, symbolp->descp->asciis); \
       break;                                                            \
     case MARPAESLIF_SYMBOL_TYPE_META:                                   \
-      MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "<");        \
-      MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, symbolp->u.metap->asciinames); \
-      MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, ">");        \
+      /* Special case of ":discard" that we want to shown as is */      \
+      if (symbolp->discardb) {                                          \
+        MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, symbolp->u.metap->asciinames); \
+      } else {                                                          \
+        MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "<");      \
+        MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, symbolp->u.metap->asciinames); \
+        MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, ">");      \
+      }                                                                 \
       if (MARPAESLIF_IS_LEXEME(symbolp)) {                              \
         /* Default lookup is grammarp->leveli + 1 : we output the @deltaLeveli information if this is not the case */ \
         if (symbolp->lookupResolvedLeveli != (grammarp->leveli + 1)) {  \
@@ -12446,9 +12422,9 @@ static inline short _marpaESLIFRecognizer_readb(marpaESLIFRecognizer_t *marpaESL
     }                                                                   \
     if (symbolp->luaexplists != NULL) {                                 \
       if (symbolp->luaexplistcb) {                                      \
-        MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "-->");    \
+        MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, lhsb >= 0 ? (lhsb ? "<--" : "-->") : ""); \
       } else {                                                          \
-        MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "->");    \
+        MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, lhsb >= 0 ? (lhsb ? "<-" : "->") : ""); \
       }                                                                 \
       MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, symbolp->luaexplists); \
     }                                                                   \
@@ -12468,23 +12444,7 @@ static inline void _marpaESLIF_rule_createshowv(marpaESLIF_t *marpaESLIFp, marpa
 
   /* Calculate the size needed to show the rule in ASCII form */
 
-  /* There is a special case with :discard, that we want to be shown as-is */
-  if (rulep->lhsp->discardb) {
-    MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, rulep->lhsp->descp->asciis);
-  } else {
-    MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "<");
-    MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, rulep->lhsp->descp->asciis);
-    MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, ">");
-  }
-  if (rulep->luaparlists != NULL) {
-    if (rulep->luaparlistcb) {
-      MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "<--");
-    } else {
-      MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "<-");
-    }
-    MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, rulep->luaparlists);
-  }
-
+  MARPAESLIF_SYMBOL_CREATESHOW(asciishowl, asciishows, rulep->lhsp, 1 /* lhsb */);
   MARPAESLIF_LEVEL_CREATESHOW(grammarp, asciishowl, asciishows);
   for (rhsi = 0; rhsi < GENERICSTACK_USED(rhsStackp); rhsi++) {
 #ifndef MARPAESLIF_NTRACE
@@ -12501,7 +12461,7 @@ static inline void _marpaESLIF_rule_createshowv(marpaESLIF_t *marpaESLIFp, marpa
     if (skipb) {
       MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "(- ");
     }
-    MARPAESLIF_SYMBOL_CREATESHOW(asciishowl, asciishows, symbolp);
+    MARPAESLIF_SYMBOL_CREATESHOW(asciishowl, asciishows, symbolp, 0 /* lhsb */);
     if (skipb) {
       MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, " -)");
     }
@@ -12531,7 +12491,7 @@ static inline void _marpaESLIF_rule_createshowv(marpaESLIF_t *marpaESLIFp, marpa
   }
   if (rulep->exceptionp != NULL) {
     MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, " - ");
-    MARPAESLIF_SYMBOL_CREATESHOW(asciishowl, asciishows, rulep->exceptionp);
+    MARPAESLIF_SYMBOL_CREATESHOW(asciishowl, asciishows, rulep->exceptionp, 0 /* lhsb */);
   }
   if (rulep->ranki != 0) {
     MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, " rank => ");
@@ -12797,7 +12757,7 @@ static inline void _marpaESLIF_grammar_createshowv(marpaESLIFGrammar_t *marpaESL
         ) {
       MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, MARPAESLIF_IS_LEXEME(symbolp) ? ":lexeme" : ":terminal");
       MARPAESLIF_LEVEL_CREATESHOW(grammarp, asciishowl, asciishows);
-      MARPAESLIF_SYMBOL_CREATESHOW(asciishowl, asciishows, symbolp);
+      MARPAESLIF_SYMBOL_CREATESHOW(asciishowl, asciishows, symbolp, -1 /* Not lhs nor rhs */);
 
       if (symbolp->eventBefores != NULL) {
         MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, " pause => before event => ");
@@ -13110,7 +13070,11 @@ static inline void _marpaESLIF_grammar_createshowv(marpaESLIFGrammar_t *marpaESL
       MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "#         Type: ESLIF TERMINAL\n");
       break;
     case MARPAESLIF_SYMBOL_TYPE_META:
-      MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "#         Type: ESLIF META\n");
+      if (symbolp->u.metap->terminalb) {
+        MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "#         Type: ESLIF META TERMINAL\n");
+      } else {
+        MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "#         Type: ESLIF META\n");
+      }
       break;
     default:
       MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "#         Type: ?\n");
@@ -13192,7 +13156,7 @@ static inline void _marpaESLIF_grammar_createshowv(marpaESLIFGrammar_t *marpaESL
         if (symbolp->lookupSymbolp != NULL) {
           MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "#       Lookup:");
           MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, " ");
-          MARPAESLIF_SYMBOL_CREATESHOW(asciishowl, asciishows, symbolp->lookupSymbolp);
+          MARPAESLIF_SYMBOL_CREATESHOW(asciishowl, asciishows, symbolp->lookupSymbolp, -1 /* Not lhs nor rhs */);
           MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "\n");
         }
       } else {

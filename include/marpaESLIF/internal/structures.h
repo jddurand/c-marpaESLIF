@@ -211,11 +211,6 @@ struct marpaESLIF_rule {
   short                          passthroughb;                 /* This rule is a passthrough */
   int                            propertyBitSet;
   short                          hideseparatorb;
-  char                          *luaparlists;
-  char                          *luaparlistactions;
-  short                          luaparlistcb;
-  char                          *luaparlistcp;               /* Precompiled chunk. Not NULL only when luaparlistcb is true and call as been used at least once */
-  size_t                         luaparlistcl;               /* Precompiled chunk length */
 };
 
 /* A grammar */
