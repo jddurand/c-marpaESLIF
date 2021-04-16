@@ -648,10 +648,6 @@ const static char *selfs = "# Self grammar\n"
   "</luascript>\n"
   ;
 
-static void jdd() {
-  fprintf(stderr, "JDD 01\n");
-}
-
 int main() {
   marpaESLIF_t                *marpaESLIFp        = NULL;
   marpaESLIFGrammar_t         *marpaESLIFGrammarp = NULL;
@@ -739,8 +735,6 @@ int main() {
   GENERICLOGGER_INFO (marpaESLIFOption.genericLoggerp, "ESLIF grammar script:");
   GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "-------------------------\n%s", grammarscripts);
 
-  jdd();
-  
   marpaESLIFGrammarOption.bytep               = (void *) selfs;
   marpaESLIFGrammarOption.bytel               = strlen(selfs);
   marpaESLIFGrammarOption.encodings           = UTF_8_STRING;
