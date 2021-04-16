@@ -133,8 +133,8 @@ typedef struct marpaESLIF_bootstrap_adverb_list_item           marpaESLIF_bootst
 typedef struct marpaESLIF_bootstrap_grammar_reference          marpaESLIF_bootstrap_grammar_reference_t;
 typedef struct marpaESLIF_bootstrap_symbol_and_reference       marpaESLIF_bootstrap_symbol_and_reference_t;
 typedef struct marpaESLIF_bootstrap_rhs_primary                marpaESLIF_bootstrap_rhs_primary_t;
-typedef struct marpaESLIF_bootstrap_lua_functioncall           marpaESLIF_bootstrap_lua_functioncall_t;
-typedef struct marpaESLIF_bootstrap_lua_functiondecl           marpaESLIF_bootstrap_lua_functiondecl_t;
+typedef        marpaESLIF_lua_functioncall_t                   marpaESLIF_bootstrap_lua_functioncall_t;
+typedef        marpaESLIF_lua_functiondecl_t                   marpaESLIF_bootstrap_lua_functiondecl_t;
 typedef struct marpaESLIF_bootstrap_rhs_alternative            marpaESLIF_bootstrap_rhs_alternative_t;
 typedef struct marpaESLIF_bootstrap_rhs_alternative_priorities marpaESLIF_bootstrap_rhs_alternative_priorities_t;
 typedef struct marpaESLIF_bootstrap_rhs_alternative_exception  marpaESLIF_bootstrap_rhs_alternative_exception_t;
@@ -192,12 +192,12 @@ struct marpaESLIF_bootstrap_symbol {
 
 struct marpaESLIF_bootstrap_lhs {
   char                                    *symbols;
-  marpaESLIF_bootstrap_lua_functiondecl_t *luaFunctionDeclp;
+  marpaESLIF_bootstrap_lua_functiondecl_t *declp;
 };
 
 struct marpaESLIF_bootstrap_start_symbol {
   char                                    *symbols;
-  marpaESLIF_bootstrap_lua_functioncall_t *luaFunctionCallp;
+  marpaESLIF_bootstrap_lua_functioncall_t *callp;
 };
 
 enum marpaESLIF_bootstrap_terminal_type {
@@ -310,28 +310,19 @@ struct marpaESLIF_bootstrap_rhs_alternative_exception {
 struct marpaESLIF_bootstrap_rhs_alternative_quantified {
   short                               skipb;
   marpaESLIF_bootstrap_rhs_primary_t *rhsPrimaryp;
+  marpaESLIF_bootstrap_rhs_primary_t *separatorRhsPrimaryp;
   int                                 minimumi;
   genericStack_t                     *adverbListItemStackp;
 };
 
 struct marpaESLIF_bootstrap_rhs_primary {
   marpaESLIF_symbol_t                     *symbolShallowp; /* To avoid possible recursion */
-  marpaESLIF_bootstrap_lua_functioncall_t *luaFunctionCallp;
+  marpaESLIF_bootstrap_lua_functioncall_t *callp;
   marpaESLIF_bootstrap_rhs_primary_type_t  type;
   union {
     marpaESLIF_bootstrap_single_symbol_t             *singleSymbolp;
     marpaESLIF_bootstrap_symbol_and_reference_t      *symbolAndReferencep;
   } u;
-};
-
-struct marpaESLIF_bootstrap_lua_functioncall {
-  char  *luaexplists;
-  short  luaexplistcb;
-};
-
-struct marpaESLIF_bootstrap_lua_functiondecl {
-  char  *luaparlists;
-  short  luaparlistcb;
 };
 
 struct marpaESLIF_bootstrap_rhs_alternative {

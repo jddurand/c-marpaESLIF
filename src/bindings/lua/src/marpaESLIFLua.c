@@ -9462,10 +9462,6 @@ static int marpaESLIFLua_marpaESLIFSymbol_newi(lua_State *L)
   size_t                         patternl;
   char                          *symbols;
   size_t                         symboll;
-  char                          *luaexplists = NULL;
-  size_t                         luaexplistl;
-  int                            luaexplistci;
-  short                          luaexplistcb = 0;
   int                            typei;
   int                            topi;
   marpaESLIF_t                  *marpaESLIFp;
@@ -9492,27 +9488,12 @@ static int marpaESLIFLua_marpaESLIFSymbol_newi(lua_State *L)
 
   if ((strcmp(types, "regex") == 0) || (strcmp(types, "string") == 0)) {
     /* Same formalism for both: */
-    /* marpaESLIFSymbol_new(marpaESLIFp, types, pattern[, modifiers[, encoding[, luaexplists[, luaexplistcb]]]]) */
-    if (topi > 7) {
-      marpaESLIFLua_luaL_errorf(L, "Usage: marpaESLIFSymbol_new(marpaESLIFp, '%s', pattern[, modifiers[, encoding[, luaexplist[, luaexplistcb]]]])", types);
+    /* marpaESLIFSymbol_new(marpaESLIFp, types, pattern[, modifiers[, encoding]]) */
+    if (topi > 5) {
+      marpaESLIFLua_luaL_errorf(L, "Usage: marpaESLIFSymbol_new(marpaESLIFp, '%s', pattern[, modifiers[, encoding]])", types);
       goto err;
     }
     switch (topi) {
-    case 7:
-      if (! marpaESLIFLua_lua_type(&typei, L, 7)) goto err;
-      if (typei != LUA_TBOOLEAN) {
-        marpaESLIFLua_luaL_errorf(L, "Usage: marpaESLIFSymbol_new(marpaESLIFp, '%s', pattern, modifiers, encoding, luaexplist, luaexplistcb) but luaexplistcb is not a boolean", types);
-        goto err;
-      }
-      if (! marpaESLIFLua_lua_toboolean(&luaexplistci, L, 7)) goto err;
-      luaexplistcb = (luaexplistci != 0) ? 1 : 0;
-      /* Intentionaly no break */
-    case 6:
-      if (! marpaESLIFLua_lua_type(&typei, L, 6)) goto err;
-      if (typei != LUA_TNIL) {
-        if (! marpaESLIFLua_luaL_checklstring((const char **) &luaexplists, L, 5, &luaexplistl)) goto err;
-      }
-      /* Intentionaly no break */
     case 5:
       if (! marpaESLIFLua_lua_type(&typei, L, 6)) goto err;
       if (typei != LUA_TNIL) {
@@ -9533,26 +9514,11 @@ static int marpaESLIFLua_marpaESLIFSymbol_newi(lua_State *L)
       break;
     }
   } else if (strcmp(types, "meta") == 0) {
-    if (topi > 6) {
-      marpaESLIFLua_luaL_error(L, "Usage: marpaESLIFSymbol_new(marpaESLIFp, 'meta', marpaESLIFGrammarp[, symbolName[, luaexplists[, luaexplistcb]]])");
+    if (topi > 4) {
+      marpaESLIFLua_luaL_error(L, "Usage: marpaESLIFSymbol_new(marpaESLIFp, 'meta', marpaESLIFGrammarp[, symbolName])");
       goto err;
     }
     switch (topi) {
-    case 6:
-      if (! marpaESLIFLua_lua_type(&typei, L, 6)) goto err;
-      if (typei != LUA_TBOOLEAN) {
-        marpaESLIFLua_luaL_error(L, "Usage: marpaESLIFSymbol_new(marpaESLIFp, 'meta', marpaESLIFGrammarp, symbolName, luaexplists, luaexplistcb) but luaexplistcb is not a boolean");
-        goto err;
-      }
-      if (! marpaESLIFLua_lua_toboolean(&luaexplistci, L, 6)) goto err;
-      luaexplistcb = (luaexplistci != 0) ? 1 : 0;
-      /* Intentionaly no break */
-    case 5:
-      if (! marpaESLIFLua_lua_type(&typei, L, 5)) goto err;
-      if (typei != LUA_TNIL) {
-        if (! marpaESLIFLua_luaL_checklstring((const char **) &luaexplists, L, 5, &luaexplistl)) goto err;
-      }
-      /* Intentionaly no break */
     case 4:
       if (! marpaESLIFLua_luaL_checklstring((const char **) &symbols, L, 4, &symboll)) goto err;
       /* Intentionaly no break */
@@ -9592,15 +9558,15 @@ static int marpaESLIFLua_marpaESLIFSymbol_newi(lua_State *L)
     marpaESLIFString.bytel          = patternl;
     marpaESLIFString.encodingasciis = encodings;
     marpaESLIFString.asciis         = NULL;
-    marpaESLIFLuaSymbolContextp->marpaESLIFSymbolp = marpaESLIFSymbol_regex_newp(marpaESLIFp, &marpaESLIFString, modifiers, &marpaESLIFSymbolOption, luaexplists, luaexplistcb);
+    marpaESLIFLuaSymbolContextp->marpaESLIFSymbolp = marpaESLIFSymbol_regex_newp(marpaESLIFp, &marpaESLIFString, modifiers, &marpaESLIFSymbolOption);
   } else if (strcmp(types, "string") == 0) {
     marpaESLIFString.bytep          = patterns;
     marpaESLIFString.bytel          = patternl;
     marpaESLIFString.encodingasciis = encodings;
     marpaESLIFString.asciis         = NULL;
-    marpaESLIFLuaSymbolContextp->marpaESLIFSymbolp = marpaESLIFSymbol_string_newp(marpaESLIFp, &marpaESLIFString, modifiers, &marpaESLIFSymbolOption, luaexplists, luaexplistcb);
+    marpaESLIFLuaSymbolContextp->marpaESLIFSymbolp = marpaESLIFSymbol_string_newp(marpaESLIFp, &marpaESLIFString, modifiers, &marpaESLIFSymbolOption);
   } else if (strcmp(types, "meta") == 0) {
-    marpaESLIFLuaSymbolContextp->marpaESLIFSymbolp = marpaESLIFSymbol_meta_newp(marpaESLIFp, marpaESLIFGrammarp, symbols, &marpaESLIFSymbolOption, luaexplists, luaexplistcb);
+    marpaESLIFLuaSymbolContextp->marpaESLIFSymbolp = marpaESLIFSymbol_meta_newp(marpaESLIFp, marpaESLIFGrammarp, symbols, &marpaESLIFSymbolOption);
   } else {
     /* Should never happen */
     marpaESLIFLua_luaL_error(L, "type is not \"regex\", \"string\" or \"meta\" ?");

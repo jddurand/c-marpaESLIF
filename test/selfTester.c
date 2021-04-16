@@ -33,9 +33,8 @@ const static char *selfs = "# Self grammar\n"
   " * Meta-grammar settings:\n"
   " * **********************\n"
   " */\n"
-  "# :start ::= <statements>\n"
-  "start ::= <lhs with parameters>->('startx', ...)\n"
-  "        | <lhs with parameters>->('starty', ...)\n"
+  "# :start ::= <start>\n"
+  "# start ::= <lhs with rhs call 2>-->('x', 'y')\n"
   ":desc    ::= 'G1 TEST'\n"
   ":default ::=\n"
   "  action           => ::lua->function(...)\n"
@@ -564,7 +563,7 @@ const static char *selfs = "# Self grammar\n"
   "TEST_GROUP_FOR_ACTION_1          ~ 'X' action => \"\xE2\x99\xA5\x21" "Y!\"\n"
   "TEST_GROUP_FOR_ACTION_2          ~ 'X' action => \xE2\x80\x9C\x21Z\x21\xE2\x80\x9D\n"
   "<lhs with rhs call>            ::= <anything up to newline>-->(x, 'y', { a = 1, b = 2}  )  \n"
-  "<lhs with rhs call 2>          ::= <anything up to newline>-->(x, 'y', { a = 3, b = 4}  )  \n"
+  "<lhs with rhs call 2><-(x, y)          ::= <anything up to newline>-->(x, 'y', { a = 3, b = 4}  )  \n"
   "<lhs with eof>                 ::= :eof\n"
   "<lhs with parameters><-(x, ...)::= :eof\n"
   "\n"
@@ -647,6 +646,10 @@ const static char *selfs = "# Self grammar\n"
   "end\n"
   "</luascript>\n"
   ;
+
+static void jdd() {
+  fprintf(stderr, "JDD 01\n");
+}
 
 int main() {
   marpaESLIF_t                *marpaESLIFp        = NULL;
@@ -735,6 +738,8 @@ int main() {
   GENERICLOGGER_INFO (marpaESLIFOption.genericLoggerp, "ESLIF grammar script:");
   GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "-------------------------\n%s", grammarscripts);
 
+  jdd();
+  
   marpaESLIFGrammarOption.bytep               = (void *) selfs;
   marpaESLIFGrammarOption.bytel               = strlen(selfs);
   marpaESLIFGrammarOption.encodings           = UTF_8_STRING;
@@ -809,7 +814,7 @@ int main() {
   string.asciis         = NULL;
 
   GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "Creating string symbol for: %s, no modifier", STRING);
-  stringSymbolp = marpaESLIFSymbol_string_newp(marpaESLIFp, &string, NULL /* modifiers */, &marpaESLIFSymbolOption, NULL /* luaexplists */, 0 /* luaexplistcb */);
+  stringSymbolp = marpaESLIFSymbol_string_newp(marpaESLIFp, &string, NULL /* modifiers */, &marpaESLIFSymbolOption);
   if (stringSymbolp == NULL) {
     goto err;
   }
@@ -820,7 +825,7 @@ int main() {
   string.asciis         = NULL;
 
   GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "Creating string symbol for: %s, no modifier", STRING2);
-  stringSymbol2p = marpaESLIFSymbol_string_newp(marpaESLIFp, &string, NULL /* modifiers */, &marpaESLIFSymbolOption, NULL /* luaexplists */, 0 /* luaexplistcb */);
+  stringSymbol2p = marpaESLIFSymbol_string_newp(marpaESLIFp, &string, NULL /* modifiers */, &marpaESLIFSymbolOption);
   if (stringSymbol2p == NULL) {
     goto err;
   }
@@ -831,13 +836,13 @@ int main() {
   string.asciis         = NULL;
 
   GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "Creating regex symbol for: %s, no modifier", REGEX);
-  regexSymbolp = marpaESLIFSymbol_regex_newp(marpaESLIFp, &string, NULL, &marpaESLIFSymbolOption, NULL /* luaexplists */, 0 /* luaexplistcb */);
+  regexSymbolp = marpaESLIFSymbol_regex_newp(marpaESLIFp, &string, NULL, &marpaESLIFSymbolOption);
   if (regexSymbolp == NULL) {
     goto err;
   }
 
   GENERICLOGGER_INFO(marpaESLIFOption.genericLoggerp, "Creating meta symbol at \"ANYTHING UP TO NEWLINE\" in our grammar");
-  metaSymbolp = marpaESLIFSymbol_meta_newp(marpaESLIFp, marpaESLIFGrammarp, "ANYTHING UP TO NEWLINE", &marpaESLIFSymbolOption, NULL /* luaexplists */, 0 /* luaexplistcb */);
+  metaSymbolp = marpaESLIFSymbol_meta_newp(marpaESLIFp, marpaESLIFGrammarp, "ANYTHING UP TO NEWLINE", &marpaESLIFSymbolOption);
   if (metaSymbolp == NULL) {
     goto err;
   }
