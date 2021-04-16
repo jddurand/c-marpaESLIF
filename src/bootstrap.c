@@ -8741,6 +8741,8 @@ static inline marpaESLIF_rule_t *_marpaESLIF_bootstrap_check_rulep(marpaESLIF_t 
   int                  *rhsiClonep = NULL;
   size_t                rhsl;
   marpaESLIF_symbol_t  *rhsp;
+  marpaESLIF_symbol_t  *exceptionp;
+  marpaESLIF_symbol_t  *separatorp;
   marpaESLIF_symbol_t  *lexemep;
   marpaESLIF_rule_t    *rulep;
 
@@ -8774,6 +8776,32 @@ static inline marpaESLIF_rule_t *_marpaESLIF_bootstrap_check_rulep(marpaESLIF_t 
     rhsiClonep[rhsl] = lexemep->idi;
   }
 
+  /* Item for exception and separator, eventually */
+  if ((exceptioni >= 0) && (exceptioncallp != NULL)) {
+    exceptionp = _marpaESLIF_symbol_findp(marpaESLIFp, grammarp, NULL /* asciis */, exceptioni, NULL /* symbolip */);
+    if (exceptionp == NULL) {
+      goto err;
+    }
+    lexemep = _marpaESLIF_bootstrap_symbol2lexemep(marpaESLIFp, marpaESLIFGrammarp, grammarp, exceptionp);
+    if (lexemep == NULL) {
+      goto err;
+    }
+    exceptioni = lexemep->idi;
+  }
+
+  if ((separatori >= 0) && (separatorcallp != NULL)) {
+    separatorp = _marpaESLIF_symbol_findp(marpaESLIFp, grammarp, NULL /* asciis */, separatori, NULL /* symbolip */);
+    if (separatorp == NULL) {
+      goto err;
+    }
+    lexemep = _marpaESLIF_bootstrap_symbol2lexemep(marpaESLIFp, marpaESLIFGrammarp, grammarp, separatorp);
+    if (lexemep == NULL) {
+      goto err;
+    }
+    separatori = lexemep->idi;
+  }
+
+  /* Create the wanted rule after eventual modifications */
   rulep = _marpaESLIF_rule_newp(marpaESLIFp,
                                 grammarp,
                                 descEncodings,
@@ -8893,7 +8921,7 @@ static inline marpaESLIF_symbol_t *_marpaESLIF_bootstrap_symbol2lexemep(marpaESL
     goto err;
   }
 
-  /* Force loopup of internalNextGrammarp[1] to be internalCurrentGrammarp[0] */
+  /* Force lookup of internalNextGrammarp[1] to be internalCurrentGrammarp[0] */
   internalNextGrammarp[1]->lookupLevelDeltai = -1;
   internalNextGrammarp[1]->lookupSymbolp     = internalCurrentGrammarp[0];
 

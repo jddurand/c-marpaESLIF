@@ -12475,17 +12475,7 @@ static inline void _marpaESLIF_rule_createshowv(marpaESLIF_t *marpaESLIFp, marpa
     MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, (rulep->minimumi == 0) ? "*" : "+");
     if (rulep->separatorp != NULL) {
       MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, " separator => ");
-      switch (rulep->separatorp->type) {
-      case MARPAESLIF_SYMBOL_TYPE_TERMINAL:
-        MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, rulep->separatorp->descp->asciis);
-        break;
-      case MARPAESLIF_SYMBOL_TYPE_META:
-        MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "<");
-        MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, rulep->separatorp->u.metap->asciinames);
-        MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, ">");
-      default:
-        break;
-      }
+      MARPAESLIF_RHS_CREATESHOW(asciishowl, asciishows, rulep->separatorp, rulep->separatorcallp);
     }
     if (rulep->properb) {
       MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, " proper => 1");
@@ -12939,7 +12929,7 @@ static inline void _marpaESLIF_grammar_createshowv(marpaESLIFGrammar_t *marpaESL
     if (symbolp->type != MARPAESLIF_SYMBOL_TYPE_META) {
       continue;
     }
-    if ((symbolp->lookupSymbolp != NULL) && (symbolp->lookupResolvedLeveli != grammarp->leveli)) {
+    if (symbolp->lookupSymbolp != NULL) {
       MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "# ");
       MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "<");
       MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, symbolp->descp->asciis);
