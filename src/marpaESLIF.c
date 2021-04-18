@@ -13376,6 +13376,24 @@ static inline void _marpaESLIF_grammar_createshowv(marpaESLIFGrammar_t *marpaESL
       MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, tmps);
       MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "\n");
     }
+    if (symbolp->declp != NULL) {
+      MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "#   #arguments: ");
+      sprintf(tmps, "%ld", (unsigned long) symbolp->declp->sizel);
+      MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, tmps);
+      MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "\n");
+      MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "#    arguments: ");
+      MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, symbolp->declp->luaparlists);
+      MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "\n");
+    }
+    if (symbolp->callp != NULL) {
+      MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "# #expressions: ");
+      sprintf(tmps, "%ld", (unsigned long) symbolp->callp->sizel);
+      MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, tmps);
+      MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "\n");
+      MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "#  expressions: ");
+      MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, symbolp->callp->luaexplists);
+      MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "\n");
+    }
   }
 
   asciishowl++; /* NUL byte */
@@ -20931,6 +20949,7 @@ static inline marpaESLIF_lua_functiondecl_t *_marpaESLIF_lua_functiondecl_newp(m
 
   declp->luaparlists  = NULL;
   declp->luaparlistcb = 0;
+  declp->sizel        = 0;
   declp->luap         = NULL; /* Lua function decl source precompiled */
   declp->lual         = 0;    /* Lua function decl source precompiled length in byte */
 
@@ -20958,6 +20977,7 @@ static inline marpaESLIF_lua_functioncall_t *_marpaESLIF_lua_functioncall_newp(m
 
   callp->luaexplists  = NULL;
   callp->luaexplistcb = 0;
+  callp->sizel        = 0;
   callp->luap         = NULL; /* Lua function call source precompiled */
   callp->lual         = 0;    /* Lua function call source precompiled length in byte */
 
@@ -20988,6 +21008,7 @@ static inline marpaESLIF_lua_functiondecl_t *_marpaESLIF_lua_functiondecl_clonep
     MARPAESLIF_ERRORF(marpaESLIFp, "strdup failure, %s", strerror(errno));
     goto err;
   }
+  clonep->sizel        = declp->sizel;
   clonep->luaparlistcb = declp->luaparlistcb;
 
   goto done;
@@ -21017,6 +21038,7 @@ static inline marpaESLIF_lua_functioncall_t *_marpaESLIF_lua_functioncall_clonep
     MARPAESLIF_ERRORF(marpaESLIFp, "strdup failure, %s", strerror(errno));
     goto err;
   }
+  clonep->sizel        = callp->sizel;
   clonep->luaexplistcb = callp->luaexplistcb;
 
   goto done;
