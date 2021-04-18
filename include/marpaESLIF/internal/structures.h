@@ -181,7 +181,9 @@ struct marpaESLIFSymbol {
   short                          contentIsShallowb;
   marpaESLIFGrammar_t           *marpaESLIFGrammarp;     /* Shallow pointer, set by marpaESLIFSymbol_meta_newp() only */
   short                          verboseb;               /* Symbol is verbose */
-  short                          internalb;              /* Internal symbol, it bypasses some consistency checks, in particular about exception rules. We know what we are doing ;) */
+  marpaESLIF_symbol_t           *neighbourSymbolp;       /* Forced neighbour lookup symbol - only for parameterized symbols */
+  marpaESLIF_lua_functioncall_t *callp;                  /* Guaranteed to be valid if neighbourSymbolp is != NULL */
+  marpaESLIF_lua_functiondecl_t *declp;                  /* Used only in the context of neighbourSymbolp != NULL, may be NULL */
 };
 
 /* A rule */
@@ -213,7 +215,7 @@ struct marpaESLIF_rule {
   marpaESLIF_lua_functioncall_t **callpp;
   marpaESLIF_lua_functioncall_t  *exceptioncallp;
   marpaESLIF_lua_functioncall_t  *separatorcallp;
-  short                           internalb;              /* Internal symbol, it affectes the automatic search of start symbol */
+  short                           internalb;                   /* Internal rule (:discard and :start cases) */
 };
 
 /* A grammar */
@@ -259,8 +261,11 @@ struct marpaESLIF_grammar {
 /* ----------------------------------- */
 /* Definition of the opaque structures */
 /* ----------------------------------- */
+#define MARPAESLIFGRAMMARLUA_FOR_PARLIST 0
+#define MARPAESLIFGRAMMARLUA_FOR_EXPLIST 1
 struct marpaESLIF {
   marpaESLIFGrammar_t    *marpaESLIFGrammarLuap;
+  marpaESLIFGrammar_t    *marpaESLIFGrammarLuapp[2];   /* C.f. MARPAESLIFGRAMMARLUA_FOR_PARLIST and MARPAESLIFGRAMMARLUA_FOR_EXPLIST */
   marpaESLIFGrammar_t    *marpaESLIFGrammarp;          /* ESLIF has its own grammar -; */
   marpaESLIFOption_t      marpaESLIFOption;
   marpaESLIF_terminal_t  *anycharp;                    /* internal regex for match any character */
@@ -336,7 +341,6 @@ struct marpaESLIF_meta {
   size_t                       nSymbolStartl;                   /* Number of lexemes at the very beginning of marpaWrapperGrammarStartp */
   int                         *symbolArrayStartp;               /* Lexemes at the very beginning of marpaWrapperGrammarStartp */
   short                        lazyb;                           /* Meta symbol is lazy - for internal usage only at bootstrap */
-  short                        terminalb;                       /* When true, this is how we handle parameterized symbol */
 };
 
 struct marpaESLIF_stringGenerator {
@@ -610,13 +614,19 @@ struct marpaESLIFStringHelper {
 };
 
 struct marpaESLIF_lua_functioncall {
-  char  *luaexplists;
-  short  luaexplistcb;
+  char   *luaexplists;
+  short   luaexplistcb;
+  size_t  sizel;   /* Number of top expressions */
+  char   *luap;    /* Lua function call source precompiled */
+  size_t  lual;    /* Lua function call source precompiled length in byte */
 };
 
 struct marpaESLIF_lua_functiondecl {
-  char  *luaparlists;
-  short  luaparlistcb;
+  char   *luaparlists;
+  short   luaparlistcb;
+  size_t  sizel;   /* Number of parameters */
+  char   *luap;    /* Lua function decl source precompiled */
+  size_t  lual;    /* Lua function decl source precompiled length in byte */
 };
 
 #include "marpaESLIF/internal/eslif.h"

@@ -1175,7 +1175,7 @@ static short _marpaESLIFRecognizer_lua_eventactionb(void *userDatavp, marpaESLIF
 }
 
 /*****************************************************************************/
-static marpaESLIFGrammar_t *_marpaESLIF_luaGrammarp(marpaESLIF_t *marpaESLIFp)
+static marpaESLIFGrammar_t *_marpaESLIF_luaGrammarp(marpaESLIF_t *marpaESLIFp, char *starts)
 /*****************************************************************************/
 {
   static const char *luas =
@@ -1187,8 +1187,20 @@ static marpaESLIFGrammar_t *_marpaESLIF_luaGrammarp(marpaESLIF_t *marpaESLIFp)
     "# Special entries used to hook the lua grammar in ESLIF\n"
     "#\n"
     "<lua funcbody after lparen>            :[2]:= <lua optional parlist> ')' <lua block> <lua keyword end>\n"
-    "<lua args after lparen>                :[2]:= <lua optional explist> ')'\n"
-    "<lua optional parlist after lparen>    :[2]:= <lua optional parlist> ')'\n"
+    "<lua args after lparen>                :[2]:= <lua optional explist> ')' action => ::lua->listSize\n"
+    "<lua optional parlist after lparen>    :[2]:= <lua optional parlist> ')' action => ::lua->listSize\n"
+    "\n"
+    "<luascript>\n"
+    "  function addDotDotDotToTable(namelist, comma, dotdotdot)\n"
+    "     namelist[#namelist + 1] = dotdotdot\n"
+    "     return namelist\n"
+    "  end\n"
+    "  \n"
+    "  function listSize(list, rparen)\n"
+    "    return #list\n"
+    "  end\n"
+    "  \n"
+    "</luascript>\n"
     "\n"
     "#\n"
     "# -----------------------------------------------------------------------\n"
@@ -1246,8 +1258,8 @@ static marpaESLIFGrammar_t *_marpaESLIF_luaGrammarp(marpaESLIF_t *marpaESLIFp)
     "<lua var>                              :[2]:= <lua Name>\n"
     "                                            | <lua prefixexp> '[' <lua exp> ']'\n"
     "                                            | <lua prefixexp> '.' <lua Name>\n"
-    "<lua namelist>                         :[2]:= <lua Name>+ separator => ',' proper => 1\n"
-    "<lua explist>                          :[2]:= <lua exp>+ separator => ',' proper => 1\n"
+    "<lua namelist>                         :[2]:= <lua Name>+ separator => ',' proper => 1 hide-separator => 1           action => ::row # Table of arguments\n"
+    "<lua explist>                          :[2]:= <lua exp>+ separator => ',' proper => 1 hide-separator => 1\n"
     "<lua exp>                              :[2]:= <lua var>\n"
     "                                            | '(' <lua exp> ')' assoc => group\n"
     "                                           || <lua exp> <lua args> assoc => right\n"
@@ -1310,10 +1322,10 @@ static marpaESLIFGrammar_t *_marpaESLIF_luaGrammarp(marpaESLIF_t *marpaESLIFp)
     "                                            | <lua String>\n"
     "<lua function>                         :[2]:= <lua keyword function> <lua funcbody>\n"
     "<lua funcbody>                         :[2]:= '(' <lua optional parlist> ')' <lua block> <lua keyword end>\n"
-    "<lua optional parlist>                 :[2]:=\n"
-    "<lua optional parlist>                 :[2]:= <lua namelist>\n"
-    "                                            | <lua namelist> ',' '...'\n"
-    "                                            | '...'\n"
+    "<lua optional parlist>                 :[2]:=                             action => ::row # Empty table\n"
+    "<lua optional parlist>                 :[2]:= <lua namelist>              action => ::shift\n"
+    "                                            | <lua namelist> ',' '...'    action => ::lua->addDotDotDotToTable\n"
+    "                                            | '...'                       action => ::row # Table with one entry\n"
     " \n"
     "# A lone comma is not allowed in an empty fieldlist,\n"
     "# apparently. This is why I use a dedicated rule\n"
@@ -1383,14 +1395,45 @@ static marpaESLIFGrammar_t *_marpaESLIF_luaGrammarp(marpaESLIF_t *marpaESLIFp)
     "                                            | 'goto'\n"
     "\n"
     ;
-  marpaESLIFGrammarOption_t marpaESLIFGrammarOption;
+  char                      *grammars;
+  size_t                     grammarl;
+  marpaESLIFGrammarOption_t  marpaESLIFGrammarOption;
+  marpaESLIFGrammar_t       *rcp;
 
-  marpaESLIFGrammarOption.bytep     = (char *) luas;
-  marpaESLIFGrammarOption.bytel     = strlen(luas);
+  if (starts == NULL) {
+    grammars = (char *) luas;
+    grammarl = strlen(grammars);
+  } else {
+    grammarl = strlen(luas)
+      + strlen("\n:start :[2]:= <")
+      + strlen(starts)
+      + strlen(">\n");
+    grammars = (char *) malloc(grammarl + 1);
+    if (grammars == NULL) {
+      MARPAESLIF_ERRORF(marpaESLIFp, "malloc failure, %s", strerror(errno));
+      goto err;
+    }
+    strcpy(grammars, luas);
+    strcat(grammars, "\n:start :[2]:= <");
+    strcat(grammars, starts);
+    strcat(grammars, ">\n");
+  }
+  marpaESLIFGrammarOption.bytep     = grammars;
+  marpaESLIFGrammarOption.bytel     = grammarl;
   marpaESLIFGrammarOption.encodings = NULL; /* ASCII is the default and is ok */
   marpaESLIFGrammarOption.encodingl = 0; /* ASCII is the default */
 
-  return marpaESLIFGrammar_newp(marpaESLIFp, &marpaESLIFGrammarOption);
+  rcp = marpaESLIFGrammar_newp(marpaESLIFp, &marpaESLIFGrammarOption);
+  goto done;
+
+ err:
+  rcp = NULL;
+
+ done:
+  if ((grammars != NULL) && (grammars != (char *) luas)) {
+    free(grammars);
+  }
+  return rcp;
 }
 
 /*****************************************************************************/
