@@ -3878,7 +3878,6 @@ CODE:
   MARPAESLIFPERL_XV_STORE_IV         (avp, "sequence",                 ruleProperty.sequenceb);
   MARPAESLIFPERL_XV_STORE_IV         (avp, "proper",                   ruleProperty.properb);
   MARPAESLIFPERL_XV_STORE_IV         (avp, "minimum",                  ruleProperty.minimumi);
-  MARPAESLIFPERL_XV_STORE_IV         (avp, "internal",                 ruleProperty.internalb);
   MARPAESLIFPERL_XV_STORE_IV         (avp, "propertyBitSet",           ruleProperty.propertyBitSet);
   MARPAESLIFPERL_XV_STORE_IV         (avp, "hideseparator",            ruleProperty.hideseparatorb);
 
@@ -3927,7 +3926,6 @@ CODE:
   MARPAESLIFPERL_XV_STORE_IV         (avp, "sequence",                 ruleProperty.sequenceb);
   MARPAESLIFPERL_XV_STORE_IV         (avp, "proper",                   ruleProperty.properb);
   MARPAESLIFPERL_XV_STORE_IV         (avp, "minimum",                  ruleProperty.minimumi);
-  MARPAESLIFPERL_XV_STORE_IV         (avp, "internal",                 ruleProperty.internalb);
   MARPAESLIFPERL_XV_STORE_IV         (avp, "propertyBitSet",           ruleProperty.propertyBitSet);
   MARPAESLIFPERL_XV_STORE_IV         (avp, "hideseparator",            ruleProperty.hideseparatorb);
 

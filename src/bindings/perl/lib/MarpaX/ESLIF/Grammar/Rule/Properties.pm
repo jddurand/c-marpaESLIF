@@ -87,7 +87,6 @@ sub new {
         'sequence'                 => $args{sequence},
         'proper'                   => $args{proper},
         'minimum'                  => $args{minimum},
-        'internal'                 => $args{internal},
         'propertyBitSet'           => $args{propertyBitSet},
         'hideseparator'            => $args{hideseparator}
     };
@@ -333,30 +332,6 @@ sub getMinimum {
     my ($self) = @_;
 
     return $self->{minimum}
-}
-
-=head2 $self->isInternal
-
-Returns Rule is internal ? (possible only when there is the loosen operator "||")
-
-=cut
-
-sub isInternal {
-    my ($self) = @_;
-
-    return $self->{internal}
-}
-
-=head2 $self->getInternal
-
-Returns Rule is internal ? (possible only when there is the loosen operator "||")
-
-Alias to isInternal()
-
-=cut
-
-sub getInternal {
-    goto &isInternal
 }
 
 =head2 $self->getPropertyBitSet
