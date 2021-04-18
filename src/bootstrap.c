@@ -8424,10 +8424,14 @@ static short _marpaESLIF_bootstrap_G1_action_lua_functioncallb(void *userDatavp,
 /*****************************************************************************/
 {
   /* <lua functioncall> ::= /\-\-?>\(/' <lua args after lparen>@+2 */
-  marpaESLIF_t                  *marpaESLIFp = marpaESLIFValuep->marpaESLIFp; /*marpaESLIFGrammar_eslifp(marpaESLIFRecognizer_grammarp(marpaESLIFValue_recognizerp(marpaESLIFValuep))); */
-  char                          *luaexplists = NULL;
-  size_t                         luaexplistl = 0;
-  marpaESLIF_lua_functioncall_t *callp       = NULL;
+  marpaESLIF_t                  *marpaESLIFp                = marpaESLIFValuep->marpaESLIFp; /*marpaESLIFGrammar_eslifp(marpaESLIFRecognizer_grammarp(marpaESLIFValue_recognizerp(marpaESLIFValuep))); */
+  char                          *luaexplists                = NULL;
+  size_t                         luaexplistl                = 0;
+  marpaESLIF_lua_functioncall_t *callp                      = NULL;
+  marpaESLIFRecognizerOption_t   marpaESLIFRecognizerOption = marpaESLIFRecognizerOption_default_template;
+  marpaESLIFValueOption_t        marpaESLIFValueOption      = marpaESLIFValueOption_default_template;
+  marpaESLIFGrammarOption_t      marpaESLIFGrammarOption;
+  marpaESLIF_readerContext_t     marpaESLIF_readerContext;
   char                          *arg0s;
   size_t                         arg0l;
   char                          *p;
@@ -8458,6 +8462,32 @@ static short _marpaESLIF_bootstrap_G1_action_lua_functioncallb(void *userDatavp,
     goto err;
   }
 
+  /* Get the number of expressions - by definition this should never fail since we managed to parse it as a lexeme */
+  marpaESLIFGrammarOption.bytep     = (void *) luaArgsAfterLparens;
+  marpaESLIFGrammarOption.bytel     = luaArgsAfterLparenl;
+  marpaESLIFGrammarOption.encodings = NULL;
+  marpaESLIFGrammarOption.encodingl = 0;
+
+  marpaESLIF_readerContext.marpaESLIFp              = marpaESLIFp;
+  marpaESLIF_readerContext.marpaESLIFGrammarOptionp = &marpaESLIFGrammarOption;
+
+  marpaESLIFRecognizerOption.userDatavp        = (void *) &marpaESLIF_readerContext;
+  marpaESLIFRecognizerOption.readerCallbackp   = _marpaESLIFReader_grammarReader;
+
+  marpaESLIFValueOption.userDatavp            = &(callp->sizel);
+  marpaESLIFValueOption.importerp             = marpaESLIFValueImport;
+
+  if (! marpaESLIFGrammar_parse_by_levelb(marpaESLIFp->marpaESLIFGrammarLuapp[MARPAESLIFGRAMMARLUA_FOR_EXPLIST],
+                                          &marpaESLIFRecognizerOption,
+                                          &marpaESLIFValueOption,
+                                          NULL, /* isExhaustedbp */
+                                          2, /* leveli */
+                                          NULL /* descp */)) {
+    MARPAESLIF_ERRORF(marpaESLIFp, "Failed to get number of expressions for: %s", luaexplists);
+    goto err;
+  }
+  MARPAESLIF_NOTICEF(marpaESLIFp, "%s has %ld expressions", luaexplists, (unsigned long) callp->sizel);
+  
   callp->luaexplists  = luaexplists;
   callp->luaexplistcb = (strcmp(arg0s, "-->") == 0) ? 1 : 0;
 
@@ -8497,15 +8527,15 @@ static short _marpaESLIF_bootstrap_G1_action_lua_functiondeclb(void *userDatavp,
   char                          *arg0s;
   size_t                         arg0l;
   char                          *p;
-  char                          *luaArgsAfterLparens;
-  size_t                         luaArgsAfterLparenl;
+  char                          *luaOptionalParlistAfterLparens;
+  size_t                         luaOptionalParlistAfterLparenl;
   short                          rcb;
 
   MARPAESLIF_BOOTSTRAP_GET_ARRAY(marpaESLIFValuep, arg0i, arg0s, arg0l);
-  MARPAESLIF_BOOTSTRAP_GET_ARRAY(marpaESLIFValuep, arg0i + 1, luaArgsAfterLparens, luaArgsAfterLparenl);
+  MARPAESLIF_BOOTSTRAP_GET_ARRAY(marpaESLIFValuep, arg0i + 1, luaOptionalParlistAfterLparens, luaOptionalParlistAfterLparenl);
 
   luaparlistl = 1; /* '(' */
-  luaparlistl += luaArgsAfterLparenl;
+  luaparlistl += luaOptionalParlistAfterLparenl;
   luaparlists = (char *) malloc(luaparlistl + 1);
   if (luaparlists == NULL) {
     MARPAESLIF_ERRORF(marpaESLIFp, "malloc failure, %s", strerror(errno));
@@ -8514,8 +8544,8 @@ static short _marpaESLIF_bootstrap_G1_action_lua_functiondeclb(void *userDatavp,
 
   p = luaparlists;
   *p++ = '(';
-  memcpy(p, luaArgsAfterLparens, luaArgsAfterLparenl);
-  p += luaArgsAfterLparenl;
+  memcpy(p, luaOptionalParlistAfterLparens, luaOptionalParlistAfterLparenl);
+  p += luaOptionalParlistAfterLparenl;
   *p = '\0';
 
   declp = _marpaESLIF_lua_functiondecl_newp(marpaESLIFp);
@@ -8525,8 +8555,8 @@ static short _marpaESLIF_bootstrap_G1_action_lua_functiondeclb(void *userDatavp,
   }
 
   /* Get the number of parameters - by definition this should never fail since we managed to parse it as a lexeme */
-  marpaESLIFGrammarOption.bytep     = (void *) luaArgsAfterLparens;
-  marpaESLIFGrammarOption.bytel     = luaArgsAfterLparenl;
+  marpaESLIFGrammarOption.bytep     = (void *) luaOptionalParlistAfterLparens;
+  marpaESLIFGrammarOption.bytel     = luaOptionalParlistAfterLparenl;
   marpaESLIFGrammarOption.encodings = NULL;
   marpaESLIFGrammarOption.encodingl = 0;
 
