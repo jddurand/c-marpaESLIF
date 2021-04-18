@@ -3921,6 +3921,9 @@ static inline short _marpaESLIF_bootstrap_G1_action_priority_loosen_ruleb(marpaE
   if (declp != NULL) {
     decl2call.luaexplists  = declp->luaparlists;
     decl2call.luaexplistcb = declp->luaparlistcb;
+    decl2call.sizel        = declp->sizel;
+    decl2call.luap         = NULL;
+    decl2call.lual         = 0;
     decl2callp = &decl2call;
   } else {
     decl2callp = NULL;
@@ -4418,6 +4421,9 @@ static inline short _marpaESLIF_bootstrap_G1_action_priority_flat_ruleb(marpaESL
   if (declp != NULL) {
     decl2call.luaexplists  = declp->luaparlists;
     decl2call.luaexplistcb = declp->luaparlistcb;
+    decl2call.sizel        = declp->sizel;
+    decl2call.luap         = NULL;
+    decl2call.lual         = 0;
     decl2callp = &decl2call;
   } else {
     decl2callp = NULL;
