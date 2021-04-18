@@ -35,7 +35,6 @@ public class ESLIFGrammarRuleProperties {
 	  private boolean   sequence;
 	  private boolean   proper;
 	  private int       minimum;
-	  private boolean   internal;
 	  private int       propertyBitSet;
 	  private boolean   hideseparator;
 
@@ -63,11 +62,10 @@ public class ESLIFGrammarRuleProperties {
 	 * @param sequence Is a sequence ?
 	 * @param proper When it is a sequence, is separatation proper ?
 	 * @param minimum When it is a sequence, mininum number of items
-	 * @param internal Internal rule (happens only when loosen operator '||' is used) ?
 	 * @param propertyBitSet Low-level property bit set
 	 * @param hideseparator When it is a sequence, hide separator for action arguments ?
 	 */
-	public ESLIFGrammarRuleProperties(int id, String description, String show, int lhsId, int separatorId, int[] rhsIds, boolean[] skipIndices, int exceptionId, String  action, String  discardEvent, boolean discardEventInitialState, int rank, boolean nullRanksHigh, boolean sequence, boolean proper, int minimum, boolean internal, int propertyBitSet, boolean hideseparator) {
+	public ESLIFGrammarRuleProperties(int id, String description, String show, int lhsId, int separatorId, int[] rhsIds, boolean[] skipIndices, int exceptionId, String  action, String  discardEvent, boolean discardEventInitialState, int rank, boolean nullRanksHigh, boolean sequence, boolean proper, int minimum, int propertyBitSet, boolean hideseparator) {
 		  this.id = id;
 		  this.description = description;
 		  this.show = show;
@@ -84,7 +82,6 @@ public class ESLIFGrammarRuleProperties {
 		  this.sequence = sequence;
 		  this.proper = proper;
 		  this.minimum = minimum;
-		  this.internal = internal;
 		  this.propertyBitSet = propertyBitSet;
 		  this.hideseparator = hideseparator;
 	}
@@ -103,7 +100,6 @@ public class ESLIFGrammarRuleProperties {
 		result = prime * result + exceptionId;
 		result = prime * result + (hideseparator ? 1231 : 1237);
 		result = prime * result + id;
-		result = prime * result + (internal ? 1231 : 1237);
 		result = prime * result + lhsId;
 		result = prime * result + minimum;
 		result = prime * result + (nullRanksHigh ? 1231 : 1237);
@@ -164,9 +160,6 @@ public class ESLIFGrammarRuleProperties {
 			return false;
 		}
 		if (id != other.id) {
-			return false;
-		}
-		if (internal != other.internal) {
 			return false;
 		}
 		if (lhsId != other.lhsId) {
@@ -250,7 +243,6 @@ public class ESLIFGrammarRuleProperties {
 				+ ", sequence="	+ sequence
 				+ ", proper=" + proper
 				+ ", minimum=" + minimum
-				+ ", internal=" + internal
 				+ ", propertyBitSet=" + propertyBitSet
 				+ ", hideseparator=" + hideseparator + "]";
 	}
@@ -401,22 +393,6 @@ public class ESLIFGrammarRuleProperties {
 	 */
 	public int getMinimum() {
 		return minimum;
-	}
-
-	/**
-	 * @return Rule is internal ? (possible only when there is the loosen operator "||")
-	 */
-	public boolean isInternal() {
-		return internal;
-	}
-
-	/**
-	 * Alias to isInternal()
-	 * 
-	 * @return Rule is internal ? (possible only when there is the loosen operator "||")
-	 */
-	public boolean getInternal() {
-		return isInternal();
 	}
 
 	/**

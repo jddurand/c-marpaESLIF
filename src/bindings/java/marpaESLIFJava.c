@@ -612,7 +612,7 @@ static marpaESLIFJavaMethodCache_t marpaESLIFJavaMethodCacheArrayp[] = {
   {      &MARPAESLIF_ESLIFGRAMMARPROPERTIES_CLASSCACHE, "<init>",                   "(IILjava/lang/String;ZLjava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;II[I[ILjava/lang/String;Ljava/lang/String;)V", 0 /* staticb */, NULL, 1 /* requiredb */ },
 
   #define MARPAESLIF_ESLIFGRAMMARRULEPROPERTIES_CLASS_init_METHODP                  marpaESLIFJavaMethodCacheArrayp[63].methodp
-  {      &MARPAESLIF_ESLIFGRAMMARRULEPROPERTIES_CLASSCACHE, "<init>",               "(ILjava/lang/String;Ljava/lang/String;II[I[ZILjava/lang/String;Ljava/lang/String;ZIZZZIZIZ)V", 0 /* staticb */, NULL, 1 /* requiredb */ },
+  {      &MARPAESLIF_ESLIFGRAMMARRULEPROPERTIES_CLASSCACHE, "<init>",               "(ILjava/lang/String;Ljava/lang/String;II[I[ZILjava/lang/String;Ljava/lang/String;ZIZZZIIZ)V", 0 /* staticb */, NULL, 1 /* requiredb */ },
 
   #define MARPAESLIF_ESLIFGRAMMARSYMBOLPROPERTIES_CLASS_init_METHODP                marpaESLIFJavaMethodCacheArrayp[64].methodp
   {      &MARPAESLIF_ESLIFGRAMMARSYMBOLPROPERTIES_CLASSCACHE, "<init>",             "(Lorg/parser/marpa/ESLIFSymbolType;ZZZZZILjava/lang/String;Ljava/lang/String;ZLjava/lang/String;ZLjava/lang/String;ZLjava/lang/String;ZLjava/lang/String;ZLjava/lang/String;ZIILjava/lang/String;IILjava/lang/String;Ljava/lang/String;Z)V", 0 /* staticb */, NULL, 1 /* requiredb */ },
@@ -5915,7 +5915,6 @@ static jobject marpaESLIFJava_rulePropertiesp(JNIEnv *envp, marpaESLIFRuleProper
   jboolean                     sequence;
   jboolean                     proper;
   jint                         minimum;
-  jboolean                     internal;
   jint                         propertyBitSet;
   jboolean                     hideseparator;
   size_t                       i;
@@ -5977,7 +5976,6 @@ static jobject marpaESLIFJava_rulePropertiesp(JNIEnv *envp, marpaESLIFRuleProper
   sequence                 = rulePropertyp->sequenceb ? JNI_TRUE : JNI_FALSE;
   proper                   = rulePropertyp->properb ? JNI_TRUE : JNI_FALSE;
   minimum                  = (jint) rulePropertyp->minimumi;
-  internal                 = rulePropertyp->internalb ? JNI_TRUE : JNI_FALSE;
   propertyBitSet           = (jint) rulePropertyp->propertyBitSet;
   hideseparator            = rulePropertyp->hideseparatorb ? JNI_TRUE : JNI_FALSE;
 
@@ -6000,7 +5998,6 @@ static jobject marpaESLIFJava_rulePropertiesp(JNIEnv *envp, marpaESLIFRuleProper
                                    sequence,
                                    proper,
                                    minimum,
-                                   internal,
                                    propertyBitSet,
                                    hideseparator
                                    );
