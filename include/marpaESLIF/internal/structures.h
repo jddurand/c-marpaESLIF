@@ -1,7 +1,7 @@
 #ifndef MARPAESLIF_INTERNAL_STRUCTURES_H
 #define MARPAESLIF_INTERNAL_STRUCTURES_H
 
-#include <marpaESLIF.h>
+#include "marpaESLIF.h"
 #include "config.h"
 /*
  * Prior to genericStack inclusion, we want to define a custom type for performance
@@ -14,7 +14,6 @@
 #include <genericLogger.h>
 #include <pcre2.h>
 #include <tconv.h>
-#include "marpaESLIF/internal/lua.h" /* For lua_State* */
 
 #define INTERNAL_ANYCHAR_PATTERN "."                    /* This ASCII string is UTF-8 compatible */
 #define INTERNAL_UTF8BOM_PATTERN "\\x{FEFF}"            /* FEFF Unicode code point i.e. EFBBBF in UTF-8 encoding */
@@ -44,6 +43,8 @@ typedef struct  marpaESLIF_stream           marpaESLIF_stream_t;
 typedef struct  marpaESLIF_stringGenerator  marpaESLIF_stringGenerator_t;
 typedef struct  marpaESLIF_lua_functioncall marpaESLIF_lua_functioncall_t;
 typedef struct  marpaESLIF_lua_functiondecl marpaESLIF_lua_functiondecl_t;
+
+#include "marpaESLIF/internal/lua.h" /* For lua_State* */
 
 /* Symbol types */
 enum marpaESLIF_symbol_type {

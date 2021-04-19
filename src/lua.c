@@ -31,9 +31,9 @@ static int   _marpaESLIFValue_lua_writeri(lua_State *L, const void* p, size_t sz
 
 static short _marpaESLIFValue_lua_newb(marpaESLIFValue_t *marpaESLIFValuep);
 static short _marpaESLIFRecognizer_lua_newb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp);
-static short _marpaESLIFValue_lua_loadactionb(marpaESLIFValue_t *marpaESLIFValuep);
-static short _marpaESLIFRecognizer_lua_loadactionb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp);
-static short _marpaESLIFRecognizer_lua_precompileb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, char *luabytep, size_t luabytel, short stripb, int popi);
+static short _marpaESLIFValue_lua_function_loadb(marpaESLIFValue_t *marpaESLIFValuep);
+static short _marpaESLIFRecognizer_lua_function_loadb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp);
+static short _marpaESLIFRecognizer_lua_function_precompileb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, char *luabytep, size_t luabytel, short stripb, int popi);
 
 #define MARPAESLIFLUA_LOG_PANIC_STRING(containerp, f) do {              \
     char *panicstring;							\
@@ -1450,7 +1450,7 @@ static short _marpaESLIFValue_lua_action_functionb(void *userDatavp, marpaESLIFV
   }
 
   LUA_GETTOP(marpaESLIFValuep, &topi);
-  if (! _marpaESLIFValue_lua_loadactionb(marpaESLIFValuep)) {
+  if (! _marpaESLIFValue_lua_function_loadb(marpaESLIFValuep)) {
     goto err;
   }
   rcb = marpaESLIFLua_valueCallbackb(userDatavp, marpaESLIFValuep, arg0i, argni, NULL /* marpaESLIFValueResultLexemep */, resulti, nullableb, 0 /* symbolb */, 1 /* precompiledb */);
@@ -1483,7 +1483,7 @@ static short _marpaESLIFValue_lua_symbol_functionb(void *userDatavp, marpaESLIFV
   }
 
   LUA_GETTOP(marpaESLIFValuep, &topi);
-  if (! _marpaESLIFValue_lua_loadactionb(marpaESLIFValuep)) {
+  if (! _marpaESLIFValue_lua_function_loadb(marpaESLIFValuep)) {
     goto err;
   }
   rcb = marpaESLIFLua_valueCallbackb(userDatavp, marpaESLIFValuep, -1 /* arg0i */, -1 /* argni */, marpaESLIFValueResultp, resulti, 0 /* nullableb */, 1 /* symbolb */, 1 /* precompiledb */);
@@ -1516,7 +1516,7 @@ static short _marpaESLIFRecognizer_lua_ifaction_functionb(void *userDatavp, marp
   }
 
   LUA_GETTOP(marpaESLIFRecognizerp, &topi);
-  if (! _marpaESLIFRecognizer_lua_loadactionb(marpaESLIFRecognizerp)) {
+  if (! _marpaESLIFRecognizer_lua_function_loadb(marpaESLIFRecognizerp)) {
     goto err;
   }
   rcb = marpaESLIFLua_ifCallbackb(userDatavp, marpaESLIFRecognizerp, marpaESLIFValueResultp, marpaESLIFValueResultBoolp, 1 /* precompiledb */);
@@ -1549,7 +1549,7 @@ static short _marpaESLIFRecognizer_lua_regexaction_functionb(void *userDatavp, m
   }
 
   LUA_GETTOP(marpaESLIFRecognizerp, &topi);
-  if (! _marpaESLIFRecognizer_lua_loadactionb(marpaESLIFRecognizerp)) {
+  if (! _marpaESLIFRecognizer_lua_function_loadb(marpaESLIFRecognizerp)) {
     goto err;
   }
   rcb = marpaESLIFLua_regexCallbackb(userDatavp, marpaESLIFRecognizerp, marpaESLIFCalloutBlockp, marpaESLIFValueResultOutp, 1 /* precompiledb */);
@@ -1582,7 +1582,7 @@ static short _marpaESLIFRecognizer_lua_eventaction_functionb(void *userDatavp, m
   }
 
   LUA_GETTOP(marpaESLIFRecognizerp, &topi);
-  if (! _marpaESLIFRecognizer_lua_loadactionb(marpaESLIFRecognizerp)) {
+  if (! _marpaESLIFRecognizer_lua_function_loadb(marpaESLIFRecognizerp)) {
     goto err;
   }
   rcb = marpaESLIFLua_eventCallbackb(userDatavp, marpaESLIFRecognizerp, eventArrayp, eventArrayl, marpaESLIFValueResultBoolp, 1 /* precompiledb */);
@@ -1602,7 +1602,7 @@ static short _marpaESLIFRecognizer_lua_eventaction_functionb(void *userDatavp, m
 }
 
 /*****************************************************************************/
-static short _marpaESLIFValue_lua_loadactionb(marpaESLIFValue_t *marpaESLIFValuep)
+static short _marpaESLIFValue_lua_function_loadb(marpaESLIFValue_t *marpaESLIFValuep)
 /*****************************************************************************/
 {
   char *actions = marpaESLIFValuep->actionp->u.luaFunction.actions;
@@ -1641,7 +1641,7 @@ static short _marpaESLIFValue_lua_loadactionb(marpaESLIFValue_t *marpaESLIFValue
 }
 
 /*****************************************************************************/
-static short _marpaESLIFRecognizer_lua_loadactionb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp)
+static short _marpaESLIFRecognizer_lua_function_loadb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp)
 /*****************************************************************************/
 {
   char *actions = marpaESLIFRecognizerp->actionp->u.luaFunction.actions;
@@ -1650,7 +1650,7 @@ static short _marpaESLIFRecognizer_lua_loadactionb(marpaESLIFRecognizer_t *marpa
   if (marpaESLIFRecognizerp->actionp->u.luaFunction.luacb) {
     if (marpaESLIFRecognizerp->actionp->u.luaFunction.luacp == NULL) {
       /* We precompile the unstripped version if not already done */
-      if (! _marpaESLIFRecognizer_lua_precompileb(marpaESLIFRecognizerp, actions, strlen(actions), 0 /* stripb */, 0 /* popi */)) {
+      if (! _marpaESLIFRecognizer_lua_function_precompileb(marpaESLIFRecognizerp, actions, strlen(actions), 0 /* stripb */, 0 /* popi */)) {
         goto err;
       }
       marpaESLIFRecognizerp->actionp->u.luaFunction.luacp = marpaESLIFRecognizerp->luaprecompiledp;
@@ -1680,7 +1680,7 @@ static short _marpaESLIFRecognizer_lua_loadactionb(marpaESLIFRecognizer_t *marpa
 }
 
 /*****************************************************************************/
-static short _marpaESLIFRecognizer_lua_precompileb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, char *luabytep, size_t luabytel, short stripb, int popi)
+static short _marpaESLIFRecognizer_lua_function_precompileb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, char *luabytep, size_t luabytel, short stripb, int popi)
 /*****************************************************************************/
 {
   short  rcb;
@@ -1708,4 +1708,11 @@ static short _marpaESLIFRecognizer_lua_precompileb(marpaESLIFRecognizer_t *marpa
 
  done:
   return rcb;
+}
+
+/*****************************************************************************/
+static short _marpaESLIFRecognizer_lua_contextb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIF_symbol_t *symbolp)
+/*****************************************************************************/
+{
+  short rcb;
 }

@@ -1,7 +1,7 @@
 #ifndef MARPAESLIF_INTERNAL_BOOTSTRAP_H
 #define MARPAESLIF_INTERNAL_BOOTSTRAP_H
 
-#include <marpaESLIF.h>
+#include "marpaESLIF.h"
 
 /* This file contain the declaration of all bootstrap actions, i.e. the ESLIF grammar itself */
 /* This is an example of how to use the API */
