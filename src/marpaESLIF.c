@@ -12464,12 +12464,19 @@ static inline short _marpaESLIFRecognizer_readb(marpaESLIFRecognizer_t *marpaESL
   } while (0)
 
 #define MARPAESLIF_SYMBOL_CREATESHOW(asciishowl, asciishows, symbolp) do { \
-    /*                                                                  \
-    if (symbolp->declp != NULL) {                                       \
-      MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, symbolp->declp->luaparlistcb ? "<--" : "<-"); \
-      MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, symbolp->declp->luaparlists); \
+    if (symbolp->neighbourSymbolp != NULL) {                            \
+      MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "/* Neighbour symbol "); \
+      if (symbolp->declp != NULL) {                                     \
+        MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, symbolp->declp->luaparlists); \
+        MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, symbolp->declp->luaparlistcb ? "<--" : "<-"); \
+      }                                                                 \
+      MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "[Lua]"); \
+      if (symbolp->callp != NULL) {                                     \
+        MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, symbolp->callp->luaexplistcb ? "-->" : "->"); \
+        MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, symbolp->callp->luaexplists); \
+      }                                                                 \
+      MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, " */ "); \
     }                                                                   \
-    */                                                                  \
     switch (symbolp->type) {                                            \
     case MARPAESLIF_SYMBOL_TYPE_TERMINAL:                               \
       MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, symbolp->descp->asciis); \
@@ -12496,10 +12503,6 @@ static inline short _marpaESLIFRecognizer_readb(marpaESLIFRecognizer_t *marpaESL
       break;                                                            \
     }                                                                   \
     /*                                                                  \
-    if (symbolp->callp != NULL) {                                       \
-      MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, symbolp->callp->luaexplistcb ? "-->" : "->"); \
-      MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, symbolp->callp->luaexplists); \
-    }                                                                   \
     */                                                                  \
    } while (0)
 
