@@ -78,6 +78,7 @@
 #define G1_RULE_ADVERB_ITEM_21                   "G1_rule_adverb_item_21"
 #define G1_RULE_ADVERB_ITEM_22                   "G1_rule_adverb_item_22"
 #define G1_RULE_ADVERB_ITEM_23                   "G1_rule_adverb_item_23"
+#define G1_RULE_ADVERB_ITEM_24                   "G1_rule_adverb_item_24"
 #define G1_RULE_ACTION_1                         "G1_rule_action_1"
 #define G1_RULE_ACTION_2                         "G1_rule_action_2"
 #define G1_RULE_ACTION_3                         "G1_rule_action_3"
@@ -200,6 +201,10 @@
 #define G1_RULE_REGEXACTION_NAME_1               "G1_rule_regexaction_name_1"
 #define G1_RULE_REGEXACTION_NAME_2               "G1_rule_regexaction_name_2"
 #define G1_RULE_REGEXACTION_NAME_3               "G1_rule_regexaction_name_3"
+#define G1_RULE_CONTEXT_ACTION                   "G1_rule_context_action"
+#define G1_RULE_CONTEXTACTION_NAME_1             "G1_rule_contextaction_name_1"
+#define G1_RULE_CONTEXTACTION_NAME_2             "G1_rule_contextaction_name_2"
+#define G1_RULE_CONTEXTACTION_NAME_3             "G1_rule_contextaction_name_3"
 #define G1_RULE_EVENT_ACTION                     "G1_rule_event_action"
 #define G1_RULE_EVENTACTION_NAME_1               "G1_rule_eventaction_name_1"
 #define G1_RULE_EVENTACTION_NAME_2               "G1_rule_eventaction_name_2"
@@ -288,6 +293,7 @@
 #define G1_ACTION_ADVERB_ITEM_21                   "::shift" /* <adverb item> ::= <fallback encoding> */
 #define G1_ACTION_ADVERB_ITEM_22                   "::shift" /* <adverb item> ::= <regex action> */
 #define G1_ACTION_ADVERB_ITEM_23                   "::shift" /* <adverb item> ::= <verbose specification> */
+#define G1_ACTION_ADVERB_ITEM_24                   "::shift" /* <adverb item> ::= <context action> */
 #define G1_ACTION_ACTION_1                         "G1_action_action_1"                         /* done */
 #define G1_ACTION_ACTION_2                         "G1_action_action_2"                         /* done */
 #define G1_ACTION_ACTION_3                         "G1_action_action_3"                         /* done */
@@ -407,6 +413,10 @@
 #define G1_ACTION_REGEXACTION_NAME_2               "::ascii" /* <regex action name> ::= <lua action name> */
 #define G1_ACTION_REGEXACTION_NAME_3               "::shift" /* <regex action name> ::= <lua function> */
 #define G1_ACTION_REGEXACTION                      "G1_action_regexaction"                       /* done */
+#define G1_ACTION_CONTEXTACTION_NAME_1             "::ascii" /* <context action name> ::= <ascii graph name> */
+#define G1_ACTION_CONTEXTACTION_NAME_2             "::ascii" /* <context action name> ::= <lua action name> */
+#define G1_ACTION_CONTEXTACTION_NAME_3             "::shift" /* <context action name> ::= <lua function> */
+#define G1_ACTION_CONTEXTACTION                    "G1_action_contextaction"                       /* done */
 #define G1_ACTION_EVENTACTION                      "G1_action_eventaction"                   /* done */
 #define G1_ACTION_EVENTACTION_NAME_1               "::ascii" /* <event action name> ::= <ascii graph name> */
 #define G1_ACTION_EVENTACTION_NAME_2               "::ascii" /* <event action name> ::= <lua identifier> */
