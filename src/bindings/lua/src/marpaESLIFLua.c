@@ -14,6 +14,7 @@
 #include "lua_newkeywords.c"
 #include "lua_niledtable.c"
 #include "lua_marpaESLIFJSON.c"
+#include "lua_marpaESLIFContextStack.c"
 
 /* Shall this module determine automatically string encoding ? */
 /* #define MARPAESLIFLUA_AUTO_ENCODING_DETECT */
@@ -1015,6 +1016,15 @@ static int marpaESLIFLua_installi(lua_State *L)
   }
   /* marpaESLIFJSON in on the stack */                                     /* Stack: marpaESLIFJSON */
   if (! marpaESLIFLua_lua_setglobal(L, "marpaESLIFJSON")) goto err;        /* Stack: */
+
+  /* We load the marpaESLIFContextStack implementation */
+  if (! marpaESLIFLua_luaL_dostring(&dostringi, L, MARPAESLIFLUA_CONTEXTSTACK)) goto err;
+  if (dostringi != LUA_OK) {
+    marpaESLIFLua_luaL_errorf(L, "Loading marpaESLIFContextStack source failed with status %d", dostringi);
+    goto err;
+  }
+  /* marpaESLIFContextStack in on the stack */                              /* Stack: marpaESLIFContextStack */
+  if (! marpaESLIFLua_lua_setglobal(L, "marpaESLIFContextStack")) goto err; /* Stack: */
 
   /* Install marpaESLIF main entry points */
   if (! marpaESLIFLua_luaL_newlib(L, marpaESLIFLua_installTable)) goto err;

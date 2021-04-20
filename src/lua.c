@@ -882,6 +882,9 @@ static short marpaESLIFLua_luaL_unref(lua_State *L, int t, int ref)
 static short marpaESLIFLua_luaL_requiref(lua_State *L, const char *modname, lua_CFunction openf, int glb)
 /****************************************************************************/
 {
+  short rcb = marpaESLIFLua_luaL_checkstack(L, 1, "Cannot grow stack by 1") && (! luaunpanicL_requiref(L, modname, openf, glb));
+  fprintf(stderr, "marpaESLIFLua_luaL_requiref returns %d\n", rcb);
+  return rcb;
   return marpaESLIFLua_luaL_checkstack(L, 1, "Cannot grow stack by 1") && (! luaunpanicL_requiref(L, modname, openf, glb));
 }
 
@@ -1709,3 +1712,81 @@ static short _marpaESLIFRecognizer_lua_function_precompileb(marpaESLIFRecognizer
  done:
   return rcb;
 }
+
+/*****************************************************************************/
+static short _marpaESLIFRecognizer_lua_push_contextb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIF_lua_functiondecl_t *declp, marpaESLIF_lua_functioncall_t *callp, marpaESLIF_action_t **contextActionpp)
+/*****************************************************************************/
+{
+  marpaESLIF_action_t *contextActionp = NULL;
+  size_t               lual;
+  short                rcb;
+
+  /* Create the lua state if needed - this is a lua state using ESLIF internal's, i.e. there is no </luascript> in it. */
+  if (MARPAESLIF_UNLIKELY(! _marpaESLIFRecognizer_lua_newb(marpaESLIFRecognizerp))) {
+    goto err;
+  }
+
+  /* --------------------------------------------------------------------- */
+  /* Context is computed by lua: LHS<-(parlist) ::= ... RHS->(arglist) ... */
+  /* We maintain directly in lua the stack of contexts.                    */
+  /*                                                                       */
+  /* A new context is (unprotected version):                               */
+  /*                                                                       */
+  /* return function(parlist)                                              */
+  /*   return arglist                                                      */
+  /* end                                                                   */
+  /*                                                                       */
+  /* Before calling this function, we will push on the stack the unpack    */
+  /* of previous context:                                                  */
+  /*                                                                       */
+  /* if (contextStack[#contextStack] ~= nil) then                          */
+  /*   push table.unpack(previousContext)                                  */
+  /* end                                                                   */
+  /*                                                                       */
+  /* Then we call the generated function                                   */
+  /*                                                                       */
+  /* newContext = generatedfunction                                        */
+  /*                                                                       */
+  /* And we push remember this new context:                                */
+  /* contextStack[#contextStack + 1] = table.pack(newContext)              */
+  /*                                                                       */
+  /* By definition a parlist is just a list of variables. This is why      */
+  /* inlining in reality depends only on the arglist: if the user said     */
+  /* RHS->(arglist) we do not inline, RHS-->(arglist) we inline.           */
+  /*                                                                       */
+  /* - If there is no arglist, then this is a no-op                        */
+  /* - Else                                                                */
+  /*                                                                       */
+  /* --------------------------------------------------------------------- */
+  if (*contextActionpp == NULL) {
+    /* We initialize the correct action content. */
+    contextActionp = (marpaESLIF_action_t *) malloc(sizeof(marpaESLIF_action_t));
+    if (contextActionp == NULL) {
+      MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "malloc failure, %s", strerror(errno));
+      goto err;
+    }
+    contextActionp->type                     = MARPAESLIF_ACTION_TYPE_LUA_FUNCTION;
+    contextActionp->u.luaFunction.luas       = NULL; /* Original action as per the grammar - not used */
+    contextActionp->u.luaFunction.actions    = NULL; /* The action injected into lua */
+    contextActionp->u.luaFunction.luacb      = 0;    /* True if action is precompiled */
+    contextActionp->u.luaFunction.luacp      = NULL; /* Precompiled chunk. Not NULL only when luacb is true and action as been used at least once */
+    contextActionp->u.luaFunction.luacl      = 0;    /* Precompiled chunk length */
+    contextActionp->u.luaFunction.luacstripp = NULL; /* Precompiled stripped chunk - not used */
+    contextActionp->u.luaFunction.luacstripl = 0;    /* Precompiled stripped chunk length */
+
+    lual =
+      strlen("return function") +
+      declp != NULL ? strlen(declp->luaparlists) : strlen("()") +
+      callp != NULL ? strlen(callp->luaexplists) : strlen("()");
+  }
+
+  rcb = 1;
+  goto done;
+
+ err:
+  rcb = 0;
+
+ done:
+  return rcb;
+}
+
