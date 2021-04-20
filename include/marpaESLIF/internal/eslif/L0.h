@@ -388,10 +388,9 @@ bootstrap_grammar_rule_t bootstrap_grammar_L0_rules[] = {
   { L0_META_GRAPH_ASCII_NAME,                 "graph ascii name",                             MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { L0_TERMINAL_GRAPH_ASCII_CHARACTERS           }, -1,                        -1,      -1,             0, NULL }
 };
 
+/* No L0 lazy rule
 bootstrap_grammar_rule_t bootstrap_grammar_L0_lazy_rules[] = {
-  /*
-    lhsi                                      descs                                           type                          nrhsl  { rhsi }                                       }  minimumi           separatori  properb  hideseparatorb  actions
-  */
 };
+*/
 
 #endif /* MARPAESLIF_INTERNAL_ESLIF_L0_H */

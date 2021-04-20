@@ -142,9 +142,6 @@ typedef enum marpaESLIFCalloutBlockEnum {
 typedef short (*marpaESLIFRecognizerRegexCallback_t)(void *userDatavp, marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFValueResult_t *marpaESLIFCalloutBlockp, marpaESLIFValueResultInt_t *marpaESLIFValueResultOutp);
 typedef marpaESLIFRecognizerRegexCallback_t (*marpaESLIFRecognizerRegexActionResolver_t)(void *userDatavp, marpaESLIFRecognizer_t *marpaESLIFRecognizerp, char *actions);
 
-typedef short (*marpaESLIFRecognizerContextCallback_t)(void *userDatavp, marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFValueResultTable_t *marpaESLIFValueResultTablep, marpaESLIFValueResultTable_t *marpaESLIFValueResultOutp);
-typedef marpaESLIFRecognizerContextCallback_t (*marpaESLIFRecognizerContextActionResolver_t)(void *userDatavp, marpaESLIFRecognizer_t *marpaESLIFRecognizerp, char *actions);
-
 /* Ask the host system to import a marpaESLIFValueResult in the recognizer namespace */
 typedef short (*marpaESLIFRecognizerImport_t)(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, void *userDatavp, marpaESLIFValueResult_t *marpaESLIFValueResultp);
 
@@ -161,7 +158,6 @@ typedef struct marpaESLIFRecognizerOption {
   marpaESLIFRecognizerIfActionResolver_t      ifActionResolverp;   /* Will return the function doing the wanted if action */
   marpaESLIFRecognizerEventActionResolver_t   eventActionResolverp; /* Will return the function doing the wanted event action */
   marpaESLIFRecognizerRegexActionResolver_t   regexActionResolverp; /* Will return the function doing the wanted regex callout action */
-  marpaESLIFRecognizerContextActionResolver_t contextActionResolverp; /* Will return the function doing the wanted context action */
   marpaESLIFRecognizerImport_t                importerp;           /* If end-user want to import a marpaESLIFValueResult */
 } marpaESLIFRecognizerOption_t;
 
@@ -392,7 +388,6 @@ typedef struct marpaESLIFGrammarDefaults {
   marpaESLIFAction_t *defaultSymbolActionp; /* Default action for symbols */
   marpaESLIFAction_t *defaultEventActionp;  /* Default action for events */
   marpaESLIFAction_t *defaultRegexActionp;  /* Default action for regex */
-  marpaESLIFAction_t *defaultContextActionp;  /* Default action for context */
   char               *defaultEncodings;     /* Default encoding */
   char               *fallbackEncodings;    /* Fallback encoding */
 } marpaESLIFGrammarDefaults_t;
@@ -432,7 +427,6 @@ typedef struct marpaESLIFGrammarProperty {
   marpaESLIFAction_t    *defaultRuleActionp;           /* Default action for rules - never NULL */
   marpaESLIFAction_t    *defaultEventActionp;          /* Default action for event - can be NULL */
   marpaESLIFAction_t    *defaultRegexActionp;          /* Default action for regex - can be NULL */
-  marpaESLIFAction_t    *defaultContextActionp;        /* Default action for context - can be NULL */
   int                    starti;                       /* Start symbol Id - always >= 0 */
   int                    discardi;                     /* Discard symbol Id (-1 if none) */
   size_t                 nsymboll;                     /* Number of symbols - always > 0*/
@@ -535,12 +529,6 @@ typedef struct marpaESLIFGrammarOption {
 typedef struct marpaESLIF        marpaESLIF_t;
 typedef struct marpaESLIFGrammar marpaESLIFGrammar_t;
 
-/* User-defined recognizer context */
-typedef struct marpaESLIFRecognizerContext {
-  int   contexti;
-  void *contextp;
-} marpaESLIFRecognizerContext_t;
-
 /* Ask the host system to import a marpaESLIFValueResult in the symbol namespace */
 typedef short (*marpaESLIFSymbolImport_t)(marpaESLIFSymbol_t *marpaESLIFSymbolp, void *userDatavp, marpaESLIFValueResult_t *marpaESLIFValueResultp);
 
@@ -624,16 +612,12 @@ extern "C" {
   marpaESLIF_EXPORT short                         marpaESLIFRecognizer_eventb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, size_t *eventArraylp, marpaESLIFEvent_t **eventArraypp);
   marpaESLIF_EXPORT short                         marpaESLIFRecognizer_progressLogb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, int starti, int endi, genericLoggerLevel_t logleveli);
   marpaESLIF_EXPORT short                         marpaESLIFRecognizer_progressb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, int starti, int endi, size_t *progresslp, marpaESLIFRecognizerProgress_t **progresspp);
-  marpaESLIF_EXPORT short                         marpaESLIFRecognizer_latestEarleySetIdb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, int *latestEarleySetIdip);
-  marpaESLIF_EXPORT short                         marpaESLIFRecognizer_earlemeb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, int earleySetIdi, int *earlemeip);
   marpaESLIF_EXPORT short                         marpaESLIFRecognizer_inputb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, char **inputsp, size_t *inputlp);
   marpaESLIF_EXPORT short                         marpaESLIFRecognizer_locationb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, size_t *linelp, size_t *columnlp);
   marpaESLIF_EXPORT short                         marpaESLIFRecognizer_readb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, char **inputsp, size_t *inputlp);
   marpaESLIF_EXPORT short                         marpaESLIFRecognizer_last_completedb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, char *names, char **offsetpp, size_t *lengthlp);
   marpaESLIF_EXPORT short                         marpaESLIFRecognizer_hook_discardb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, short discardOnOffb);
   marpaESLIF_EXPORT short                         marpaESLIFRecognizer_hook_discard_switchb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp);
-  marpaESLIF_EXPORT short                         marpaESLIFRecognizer_context_setb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFRecognizerContext_t marpaESLIFRecognizerContext);
-  marpaESLIF_EXPORT short                         marpaESLIFRecognizer_context_getb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, int earleySetIdi, marpaESLIFRecognizerContext_t *marpaESLIFRecognizerContextp);
   marpaESLIF_EXPORT void                          marpaESLIFRecognizer_freev(marpaESLIFRecognizer_t *marpaESLIFRecognizerp);
 
   marpaESLIF_EXPORT marpaESLIFValue_t            *marpaESLIFValue_newp(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFValueOption_t *marpaESLIFValueOptionp);
@@ -645,23 +629,25 @@ extern "C" {
   marpaESLIF_EXPORT short                         marpaESLIFValue_contextb(marpaESLIFValue_t *marpaESLIFValuep, char **symbolsp, int *symbolip, char **rulesp, int *ruleip);
   marpaESLIF_EXPORT void                          marpaESLIFValue_freev(marpaESLIFValue_t *marpaESLIFValuep);
 
+  /* ----------------------------------------- */
+  /* Context management when doing recognition */
+  /* ----------------------------------------- */
+  marpaESLIF_EXPORT short                         marpaESLIFRecognizer_context_setb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFValueResult_t *marpaESLIFValueResultp);
+  marpaESLIF_EXPORT marpaESLIFValueResult_t      *marpaESLIFRecognizer_context_getp(marpaESLIFRecognizer_t *marpaESLIFRecognizerp);
+
   /* ------------------------------------- */
   /* Stack management when doing valuation */
   /* ------------------------------------- */
-  /* Generic setter */
   marpaESLIF_EXPORT short                         marpaESLIFValue_stack_setb(marpaESLIFValue_t *marpaESLIFValuep, int indicei, marpaESLIFValueResult_t *marpaESLIFValueResultp);
-  /* Generic getter */
-  marpaESLIF_EXPORT short                         marpaESLIFValue_stack_getb(marpaESLIFValue_t *marpaESLIFValuep, int indicei, marpaESLIFValueResult_t *marpaESLIFValueResultp);
-  /* Optimized generic getter: returns a direct pointer to the marpaESLIFValuep in memory instead of a copy via marpaESLIFValue_stack_getb */
   marpaESLIF_EXPORT marpaESLIFValueResult_t      *marpaESLIFValue_stack_getp(marpaESLIFValue_t *marpaESLIFValuep, int indicei);
-
-  /* Helpers */
-  
   /* marpaESLIFValue_stack_forgetb is like setting a value of type MARPAESLIFVALUE_TYPE_UNDEF saying that memory management is switched off at this specific indice */
   marpaESLIF_EXPORT short                         marpaESLIFValue_stack_forgetb(marpaESLIFValue_t *marpaESLIFValuep, int indicei);
   /* marpaESLIFValue_stack_getAndForgetb transfers the memory management from the stack to the end-user in one call */
-  /* It is nothing else but a wrapper on marpaESLIFValue_stack_getb followed by marpaESLIFValue_stack_forgetb */
+  /* It is nothing else but a wrapper on marpaESLIFValue_stack_getp followed by marpaESLIFValue_stack_forgetb */
   marpaESLIF_EXPORT short                         marpaESLIFValue_stack_getAndForgetb(marpaESLIFValue_t *marpaESLIFValuep, int indicei, marpaESLIFValueResult_t *marpaESLIFValueResultp);
+
+  /* Helpers */
+  
   /* -------------------------------------------------------------------------------------------------------------------------------------------------------------- */
   /* Import helpers                                                                                                                                                 */
   /* -------------------------------------------------------------------------------------------------------------------------------------------------------------- */

@@ -1709,10 +1709,3 @@ static short _marpaESLIFRecognizer_lua_function_precompileb(marpaESLIFRecognizer
  done:
   return rcb;
 }
-
-/*****************************************************************************/
-static short _marpaESLIFRecognizer_lua_contextb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIF_symbol_t *symbolp)
-/*****************************************************************************/
-{
-  short rcb;
-}

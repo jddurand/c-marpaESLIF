@@ -7,7 +7,6 @@
 
 static short inputReaderb(void *userDatavp, char **inputsp, size_t *inputlp, short *eofbp, short *characterStreambp, char **encodingsp, size_t *encodinglp, marpaESLIFReaderDispose_t *disposeCallbackpp);
 static short symbolImportb(marpaESLIFSymbol_t *marpaESLIFSymbolp, void *userDatavp, marpaESLIFValueResult_t *marpaESLIFValueResultp);
-static marpaESLIFRecognizerEventCallback_t eventActionResolver(void *userDatavp, marpaESLIFRecognizer_t *marpaESLIFRecognizerp, char *actions);
 
 #define UTF_8_STRING "UTF-8"
 #define SUBJECT "::anything"
@@ -796,7 +795,7 @@ int main() {
   marpaESLIFRecognizerOption.buftriggerperci   = 50; /* Excess number of bytes, in percentage of bufsizl, where stream buffer size is reduced. Recommended: 50 */
   marpaESLIFRecognizerOption.bufaddperci       = 50; /* Policy of minimum of bytes for increase, in percentage of current allocated size, when stream buffer size need to augment. Recommended: 50 */
   marpaESLIFRecognizerOption.ifActionResolverp    = NULL;
-  marpaESLIFRecognizerOption.eventActionResolverp = eventActionResolver;
+  marpaESLIFRecognizerOption.eventActionResolverp = NULL;
   marpaESLIFRecognizerOption.regexActionResolverp = NULL;
   marpaESLIFRecognizerOption.importerp            = NULL;
 
@@ -1020,16 +1019,3 @@ static short symbolImportb(marpaESLIFSymbol_t *marpaESLIFSymbolp, void *userData
  done:
   return rcb;
 }
-
-/*****************************************************************************/
-static marpaESLIFRecognizerEventCallback_t eventActionResolver(void *userDatavp, marpaESLIFRecognizer_t *marpaESLIFRecognizerp, char *actions)
-/*****************************************************************************/
-{
-  marpaESLIFTester_context_t *marpaESLIFTester_contextp = (marpaESLIFTester_context_t *) userDatavp;
-  short                       rcb;
-
-  GENERICLOGGER_NOTICEF(marpaESLIFTester_contextp->genericLoggerp, "Event %s", actions);
-
-  return 0;
-}
-

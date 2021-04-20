@@ -245,7 +245,6 @@ struct marpaESLIF_grammar {
   marpaESLIFAction_t    *defaultRuleActionp;                 /* Default action for rules - never NULL */
   marpaESLIFAction_t    *defaultEventActionp;                /* Default action for events - can be NULL */
   marpaESLIFAction_t    *defaultRegexActionp;                /* Default regex action, it is transversal and applies to all regexes of a grammar - can be NULL */
-  marpaESLIFAction_t    *defaultContextActionp;              /* Default context action, it is transversal and applies to all contextes of a grammar - can be NULL */
   int                    starti;                             /* Default start symbol ID - filled during grammar validation */
   char                  *starts;                             /* Default start symbol name - filled during grammar validation - shallow pointer */
   int                   *ruleip;                             /* Array of rule IDs - filled by grammar validation */
@@ -589,7 +588,6 @@ marpaESLIFRecognizerOption_t marpaESLIFRecognizerOption_default_template = {
   NULL,              /* ifActionResolverp */
   NULL,              /* eventActionResolverp */
   NULL,              /* regexActionResolverp */
-  NULL,              /* contextActionResolverp */
   NULL               /* importerp */
 };
 
