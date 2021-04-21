@@ -1,56 +1,5 @@
 #include "marpaESLIF/internal/bootstrap.h"
 
-/* ------------------------------------------------------------ */
-/* Parameterization                                             */
-/* ------------------------------------------------------------ */
-/* First, in ESLIF, there are the internal symbols (created     */
-/* for priority rules) and the non-internal symbols (those      */
-/* that appear in the grammar).                                 */
-/* Internal symbols are always starting with a name like        */
-/* "Internal[", which is forbidden in a BNF.                    */
-/*                                                              */
-/* By definition a terminal can never be internal, because      */
-/* ESLIF only creates internal meta symbols if needed.          */
-/*                                                              */
-/* This is how  _marpaESLIF_bootstrap_check_meta_by_namep() and */
-/* _marpaESLIF_bootstrap_check_terminal_by_typep() works:       */
-/* If a meta is parameterized and is not internal, it is always */
-/* unique.                                                      */
-/* If a terminal is parameterized, it is always unique.         */
-/*                                                              */
-/* Consolidation will happen when we create a rule and rely     */
-/* on the notion of marpa's LHS TERMINAL.                       */
-/*                                                              */
-/*   --------------------------------------                     */
-/* - For any parameterized RHSx->(explist):                     */
-/*   --------------------------------------                     */
-/*                                                              */
-/*   ...            ::= ... RHS->(explist) ...                  */
-/*                          ^^^^^^^^^^^^^^^                     */
-/*                          META or TERMINAL                    */
-/*                                                              */
-/*   If RHS->(explist) is a META, we verify that an LHS         */
-/*   TERMINAL with the name "RHS" exist.                        */
-/*                                                              */
-/*   If RHS->(explist) is a TERMINAL, nothing to do.            */
-/*                                                              */
-/*   -----------------------------------------------------      */
-/* - If LHS is parameterized (it is unique per definition):     */
-/*   -----------------------------------------------------      */
-/*                                                              */
-/*   LHS<-(parlist) ::= list of RHS action => ::shift           */
-/*   ^^^^^^^^^^^^^^                                             */
-/*   META                                                       */
-/*                                                              */
-/*   We verify that an LHS TERMINAL with the name "LHS" exist.  */
-/*   Two rules are then created:                                */
-/*                                                              */
-/*   LHS            ::= list of RHS                             */
-/*   LHS<-(parlist) ::= LHS                                     */
-/*   ^^^^^^^^^^^^^^     ^^^                                     */
-/*   META               ESLIF META but an LHS TERMINAL          */
-/* ------------------------------------------------------------ */
- 
 #undef  FILENAMES
 #define FILENAMES "bootstrap.c" /* For logging */
 

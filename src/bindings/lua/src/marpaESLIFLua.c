@@ -1017,7 +1017,8 @@ static int marpaESLIFLua_installi(lua_State *L)
   /* marpaESLIFJSON in on the stack */                                     /* Stack: marpaESLIFJSON */
   if (! marpaESLIFLua_lua_setglobal(L, "marpaESLIFJSON")) goto err;        /* Stack: */
 
-  /* We load the marpaESLIFContextStack implementation */
+  /* We load the marpaESLIFContextStack implementation when we are embedded */
+#ifdef MARPAESLIFLUA_EMBEDDED
   if (! marpaESLIFLua_luaL_dostring(&dostringi, L, MARPAESLIFLUA_CONTEXTSTACK)) goto err;
   if (dostringi != LUA_OK) {
     marpaESLIFLua_luaL_errorf(L, "Loading marpaESLIFContextStack source failed with status %d", dostringi);
@@ -1025,6 +1026,7 @@ static int marpaESLIFLua_installi(lua_State *L)
   }
   /* marpaESLIFContextStack in on the stack */                              /* Stack: marpaESLIFContextStack */
   if (! marpaESLIFLua_lua_setglobal(L, "marpaESLIFContextStack")) goto err; /* Stack: */
+#endif
 
   /* Install marpaESLIF main entry points */
   if (! marpaESLIFLua_luaL_newlib(L, marpaESLIFLua_installTable)) goto err;
@@ -1106,6 +1108,8 @@ static int marpaESLIFLua_installi(lua_State *L)
       if (! marpaESLIFLua_lua_pop(L, 3)) goto err;                                        /* Stack: marpaESLIFLuaTable */
     }
   }
+
+  /* We create the marpaESLIFContextStack object */
 
   rci = 1;
   goto done;

@@ -7,6 +7,7 @@
 
 static short inputReaderb(void *userDatavp, char **inputsp, size_t *inputlp, short *eofbp, short *characterStreambp, char **encodingsp, size_t *encodinglp, marpaESLIFReaderDispose_t *disposeCallbackpp);
 static short symbolImportb(marpaESLIFSymbol_t *marpaESLIFSymbolp, void *userDatavp, marpaESLIFValueResult_t *marpaESLIFValueResultp);
+static short eventManagerb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, genericLogger_t *genericLoggerp);
 
 #define UTF_8_STRING "UTF-8"
 #define SUBJECT "::anything"
@@ -39,14 +40,16 @@ const static char *selfs = "# Self grammar\n"
   "  action           => ::lua->function(...)\n"
   "                               -- Lua semantics!\n"
   "                               rc = concat(...)\n"
-  "                               print('action called with '..select('#', ...)..' arguments: '..rc)\n"
+  "                               -- print('action called with '..select('#', ...)..' arguments: '..rc)\n"
+  "                               print(string.format('action Context stack: %s', tableDump(marpaESLIFContextStackp:stack())))\n"
   "                               return rc\n"
   "                             end\n"
   "  symbol-action    => ::luac->function(...)\n"
   "                               -- Lua semantics!\n"
   "                               rc = concat(...)\n"
   "                               --[=[ print('action called with '..select('#', ...)..' arguments: '..rc) --]=]\n"
-  "                               print('symbol-action called with '..select('#', ...)..' arguments: '..rc)\n"
+  "                               -- print('symbol-action called with '..select('#', ...)..' arguments: '..rc)\n"
+  "                               print(string.format('symbol-action Context stack: %s', tableDump(marpaESLIFContextStackp:stack())))\n"
   "                               return rc\n"
   "                             end\n"
   "  latm             => 1\n"
@@ -57,6 +60,8 @@ const static char *selfs = "# Self grammar\n"
   "                             end\n"
   "  event-action    => ::lua->function(...)\n"
   "                               print('event-action called with '..select('#', ...)..' arguments: '..concat(...))\n"
+  "                               print(string.format('event-action arguments: %s', tableDump(...)))\n"
+  "                               print(string.format('event-action Context stack: %s', tableDump(marpaESLIFContextStackp:stack())))\n"
   "                               return true\n"
   "                             end\n"
   ":lexeme ::= <op declare any grammar> if-action => ::lua->function(...)\n"
@@ -67,7 +72,8 @@ const static char *selfs = "# Self grammar\n"
   "                                                print('if-action on :terminal called with '..select('#', ...)..' arguments: '..concat(...))\n"
   "                                                return true\n"
   "                                              end\n"
-  "event statement$ = completed statement\n"
+  "event ^lhs_with_rhs_call_2 = predicted <lhs with rhs call 2>\n"
+  "event lhs_with_rhs_call_2$ = completed <lhs with rhs call 2>\n"
   ":lexeme ::= <op declare top grammar> pause => after event => op_declare_top_grammar$\n"
   "\n"
   "/*\n"
@@ -109,8 +115,6 @@ const static char *selfs = "# Self grammar\n"
   "                                 | <lua script statement>\n"
   "                                 | <terminal rule>\n"
   "                                 | <lhs with rhs call 2>-->('x', 'y')\n"
-  "# event jdd01$ = completed <lhs with rhs call 2>-->('x', 'y')\n"
-  "event jdd02$ = completed <lhs with rhs call 2>\n"
   "<start rule>                   ::= ':start' <op declare> <start symbol>\n"
   "<start symbol>                 ::= <symbol>\n"
   "                                 | <start symbol> <lua functioncall>\n"
@@ -688,6 +692,8 @@ int main() {
   size_t                       discardl;
   char                        *discardLasts;
   size_t                       discardLastl;
+  short                        continueb;
+  short                        exhaustedb;
 
   genericLoggerp = GENERICLOGGER_NEW(GENERICLOGGER_LOGLEVEL_TRACE);
 
@@ -788,7 +794,7 @@ int main() {
   marpaESLIFRecognizerOption.userDatavp        = &marpaESLIFTester_context; /* User specific context */
   marpaESLIFRecognizerOption.readerCallbackp   = inputReaderb; /* Reader */
   marpaESLIFRecognizerOption.disableThresholdb = 0; /* Default: 0 */
-  marpaESLIFRecognizerOption.exhaustedb        = 0; /* Exhaustion event. Default: 0 */
+  marpaESLIFRecognizerOption.exhaustedb        = 1; /* Exhaustion event. Default: 0 */
   marpaESLIFRecognizerOption.newlineb          = 1; /* Count line/column numbers. Default: 0 */
   marpaESLIFRecognizerOption.trackb            = 1; /* Absolute position tracking. Default: 0 */
   marpaESLIFRecognizerOption.bufsizl           = 10; /* Minimum stream buffer size: Recommended: 0 (internally, a system default will apply) */
@@ -799,6 +805,33 @@ int main() {
   marpaESLIFRecognizerOption.regexActionResolverp = NULL;
   marpaESLIFRecognizerOption.importerp            = NULL;
 
+  /* Test with events */
+  GENERICLOGGER_NOTICE(genericLoggerp, "Testing interactive recognizer");
+  marpaESLIFRecognizerp = marpaESLIFRecognizer_newp(marpaESLIFGrammarp, &marpaESLIFRecognizerOption);
+  if (marpaESLIFRecognizerp == NULL) {
+    goto err;
+  }
+  if (! marpaESLIFRecognizer_scanb(marpaESLIFRecognizerp, 1 /* initialEventsb */, &continueb, &exhaustedb)) {
+    goto err;
+  }
+  GENERICLOGGER_INFOF(genericLoggerp, "After scan: continueb=%d, exhaustedb=%d", (int) continueb, (int) exhaustedb);
+  while (continueb) {
+    if (! marpaESLIFRecognizer_resumeb(marpaESLIFRecognizerp, 0, &continueb, &exhaustedb)) {
+      goto err;
+    }
+    GENERICLOGGER_INFOF(genericLoggerp, "After resume: continueb=%d, exhaustedb=%d", (int) continueb, (int) exhaustedb);
+    if (! eventManagerb(marpaESLIFRecognizerp, genericLoggerp)) {
+      goto err;
+    }
+  }
+  marpaESLIFRecognizer_freev(marpaESLIFRecognizerp);
+  marpaESLIFRecognizerp = NULL;
+
+  /* Test valuation (no event) */
+  GENERICLOGGER_NOTICE(genericLoggerp, "Testing parse");
+  marpaESLIFTester_context.inputs         = (char *) selfs;
+  marpaESLIFTester_context.inputl         = strlen(selfs);
+  marpaESLIFRecognizerOption.exhaustedb   = 0; /* Exhaustion event. Default: 0 */
   if (! marpaESLIFGrammar_parseb(marpaESLIFGrammarp, &marpaESLIFRecognizerOption, NULL /* marpaESLIFValueOptionp */, NULL /* exhaustedbp */)) {
     goto err;
   }
@@ -1008,6 +1041,58 @@ static short symbolImportb(marpaESLIFSymbol_t *marpaESLIFSymbolp, void *userData
   } else {
     GENERICLOGGER_ERRORF(marpaESLIFTester_contextp->genericLoggerp, "Match of type %d ?", marpaESLIFValueResultp->type);
     goto err;
+  }
+
+  rcb = 1;
+  goto done;
+
+ err:
+  rcb = 0;
+
+ done:
+  return rcb;
+}
+
+/*****************************************************************************/
+static short eventManagerb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, genericLogger_t *genericLoggerp)
+/*****************************************************************************/
+{
+  marpaESLIFEvent_t      *eventArrayp;
+  size_t                  eventArrayl;
+  size_t                  eventArrayIteratorl;
+  short                   rcb;
+
+  if (! marpaESLIFRecognizer_eventb(marpaESLIFRecognizerp, &eventArrayl, &eventArrayp)) {
+    goto err;
+  }
+
+  for (eventArrayIteratorl = 0; eventArrayIteratorl < eventArrayl; eventArrayIteratorl++) {
+    switch (eventArrayp[eventArrayIteratorl].type) {
+    case MARPAESLIF_EVENTTYPE_COMPLETED:
+      GENERICLOGGER_INFOF(genericLoggerp, "Event %s for symbol %s", eventArrayp[eventArrayIteratorl].events, eventArrayp[eventArrayIteratorl].symbols);
+      break;
+    case MARPAESLIF_EVENTTYPE_NULLED:
+      GENERICLOGGER_INFOF(genericLoggerp, "Event %s for symbol %s", eventArrayp[eventArrayIteratorl].events, eventArrayp[eventArrayIteratorl].symbols);
+      break;
+    case MARPAESLIF_EVENTTYPE_PREDICTED:
+      GENERICLOGGER_INFOF(genericLoggerp, "Event %s for symbol %s", eventArrayp[eventArrayIteratorl].events, eventArrayp[eventArrayIteratorl].symbols);
+      break;
+    case MARPAESLIF_EVENTTYPE_AFTER:
+      GENERICLOGGER_INFOF(genericLoggerp, "Event %s for symbol %s", eventArrayp[eventArrayIteratorl].events, eventArrayp[eventArrayIteratorl].symbols);
+      break;
+    case MARPAESLIF_EVENTTYPE_EXHAUSTED:
+      GENERICLOGGER_INFO (genericLoggerp, ">>> Exhausted event");
+      break;
+    case MARPAESLIF_EVENTTYPE_DISCARD:
+      GENERICLOGGER_INFOF(genericLoggerp, "Event %s for symbol %s", eventArrayp[eventArrayIteratorl].events, eventArrayp[eventArrayIteratorl].symbols);
+      break;
+    default:
+      if (eventArrayp[eventArrayIteratorl].type != MARPAESLIF_EVENTTYPE_NONE) {
+        /* Should NEVER happen */
+        GENERICLOGGER_WARNF(genericLoggerp, "Unsupported event type %d", eventArrayp[eventArrayIteratorl].type);
+      }
+      break;
+    }
   }
 
   rcb = 1;

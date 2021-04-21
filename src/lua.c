@@ -100,9 +100,17 @@ static short _marpaESLIFRecognizer_lua_function_precompileb(marpaESLIFRecognizer
     }                                                                   \
   } while (0)
 
-#define LUA_GETFIELDI(rcp, containerp, idx, k) do {                     \
+#define LUA_GETFIELD(rcp, containerp, idx, k) do {                      \
     if (MARPAESLIF_UNLIKELY(luaunpanic_getfield(rcp, containerp->L, idx, k))) { \
       MARPAESLIFLUA_LOG_PANIC_STRING(containerp, lua_getfield);         \
+      errno = ENOSYS;                                                   \
+      goto err;                                                         \
+    }                                                                   \
+  } while (0)
+
+#define LUA_REMOVE(containerp, idx) do {                                \
+    if (MARPAESLIF_UNLIKELY(luaunpanic_remove(containerp->L, idx))) {   \
+      MARPAESLIFLUA_LOG_PANIC_STRING(containerp, lua_remove);           \
       errno = ENOSYS;                                                   \
       goto err;                                                         \
     }                                                                   \
@@ -176,6 +184,14 @@ static short _marpaESLIFRecognizer_lua_function_precompileb(marpaESLIFRecognizer
     }                                                                   \
   } while (0)
 
+#define LUA_INSERT(containerp, idx) do {                                \
+    if (MARPAESLIF_UNLIKELY(luaunpanic_insert(containerp->L, idx))) {   \
+      MARPAESLIFLUA_LOG_PANIC_STRING(containerp, lua_insert);           \
+      errno = ENOSYS;                                                   \
+      goto err;                                                         \
+    }                                                                   \
+  } while (0)
+
 #define LUA_TOUSERDATA(containerp, rcpp, idx) do {                      \
     if (MARPAESLIF_UNLIKELY(luaunpanic_touserdata((void **) rcpp, containerp->L, idx))) { \
       MARPAESLIFLUA_LOG_PANIC_STRING(containerp, lua_touserdata);       \
@@ -209,6 +225,14 @@ static short _marpaESLIFRecognizer_lua_function_precompileb(marpaESLIFRecognizer
     }                                                                   \
     if (MARPAESLIF_UNLIKELY(_rci != 0)) {                               \
       MARPAESLIFLUA_LOG_ERROR_STRING(containerp, lua_pcall);            \
+      errno = ENOSYS;                                                   \
+      goto err;                                                         \
+    }                                                                   \
+  } while (0)
+
+#define LUA_PUSHSTRING(sp, containerp, s) do {                          \
+    if (MARPAESLIF_UNLIKELY(luaunpanic_pushstring(sp, containerp->L, s))) { \
+      MARPAESLIFLUA_LOG_PANIC_STRING(containerp, lua_pushstring);       \
       errno = ENOSYS;                                                   \
       goto err;                                                         \
     }                                                                   \
@@ -302,6 +326,14 @@ static short _marpaESLIFRecognizer_lua_newb(marpaESLIFRecognizer_t *marpaESLIFRe
     /* Clear the stack */
     LUA_SETTOP(marpaESLIFRecognizerTopp, 0);
   }
+
+  /* We are embedded: instantiate the marpaESLIFContextStack object */
+  LUA_GETGLOBAL(NULL, marpaESLIFRecognizerTopp, "marpaESLIFContextStack");                      /* stack: ..., marpaESLIFContextStack */
+  LUAL_CHECKSTACK(marpaESLIFRecognizerTopp, 1, 0);                                              /* stack: ..., marpaESLIFContextStack */
+  LUA_GETFIELD(NULL, marpaESLIFRecognizerTopp, -1, "new");                                      /* stack: ..., marpaESLIFContextStack, marpaESLIFContextStack.new() */
+  LUA_REMOVE(marpaESLIFRecognizerTopp, -2);                                                     /* stack: ..., marpaESLIFContextStack.new() */
+  LUA_PCALL(marpaESLIFRecognizerTopp, 0, 1, 0);                                                 /* stack: ..., marpaESLIFContextStackp = marpaESLIFContextStack.new() */
+  LUA_SETGLOBAL(marpaESLIFRecognizerTopp, "marpaESLIFContextStackp");                           /* stack: ...  */
 
   /* Top level recognizer owns lua state, and we do not */
   marpaESLIFRecognizerp->L  = marpaESLIFRecognizerTopp->L;
@@ -1122,7 +1154,7 @@ static short _marpaESLIFValue_lua_representationb(void *userDatavp, marpaESLIFVa
     goto err; /* Lua will shutdown anyway */
   }
   /* And this marpaESLIFValue is a table with a key "marpaESLIFValueContextp" */
-  LUA_GETFIELDI(&typei, marpaESLIFValuep, -1, "marpaESLIFLuaValueContextp");     /* stack: ..., marpaESLIFValueTable, marpaESLIFLuaValueContextp */
+  LUA_GETFIELD(&typei, marpaESLIFValuep, -1, "marpaESLIFLuaValueContextp");     /* stack: ..., marpaESLIFValueTable, marpaESLIFLuaValueContextp */
   if (MARPAESLIF_UNLIKELY(typei != LUA_TLIGHTUSERDATA)) {
     MARPAESLIF_ERROR(marpaESLIFValuep->marpaESLIFp, "Lua marpaESLIFLuaValueContextp is not a light userdata");
     goto err; /* Lua will shutdown anyway */
@@ -1717,9 +1749,11 @@ static short _marpaESLIFRecognizer_lua_function_precompileb(marpaESLIFRecognizer
 static short _marpaESLIFRecognizer_lua_push_contextb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIF_lua_functiondecl_t *declp, marpaESLIF_lua_functioncall_t *callp, marpaESLIF_action_t **contextActionpp)
 /*****************************************************************************/
 {
-  marpaESLIF_action_t *contextActionp = NULL;
-  size_t               lual;
-  short                rcb;
+  marpaESLIF_action_t          *contextActionp = NULL;
+  genericLogger_t              *genericLoggerp = NULL;
+  marpaESLIF_stringGenerator_t  marpaESLIF_stringGenerator;
+  size_t                        lual;
+  short                         rcb;
 
   /* Create the lua state if needed - this is a lua state using ESLIF internal's, i.e. there is no </luascript> in it. */
   if (MARPAESLIF_UNLIKELY(! _marpaESLIFRecognizer_lua_newb(marpaESLIFRecognizerp))) {
@@ -1727,36 +1761,12 @@ static short _marpaESLIFRecognizer_lua_push_contextb(marpaESLIFRecognizer_t *mar
   }
 
   /* --------------------------------------------------------------------- */
-  /* Context is computed by lua: LHS<-(parlist) ::= ... RHS->(arglist) ... */
-  /* We maintain directly in lua the stack of contexts.                    */
-  /*                                                                       */
-  /* A new context is (unprotected version):                               */
-  /*                                                                       */
-  /* return function(parlist)                                              */
-  /*   return arglist                                                      */
+  /* We generate this function:                                            */
+  /* --------------------------------------------------------------------- */
+  /* return function()                                                     */
+  /*   (parlist) = table.unpack(marpaESLIFContextStackp:get())             */
+  /*   marpaESLIFContextStackp:push(table.pack(explist))                   */
   /* end                                                                   */
-  /*                                                                       */
-  /* Before calling this function, we will push on the stack the unpack    */
-  /* of previous context:                                                  */
-  /*                                                                       */
-  /* if (contextStack[#contextStack] ~= nil) then                          */
-  /*   push table.unpack(previousContext)                                  */
-  /* end                                                                   */
-  /*                                                                       */
-  /* Then we call the generated function                                   */
-  /*                                                                       */
-  /* newContext = generatedfunction                                        */
-  /*                                                                       */
-  /* And we push remember this new context:                                */
-  /* contextStack[#contextStack + 1] = table.pack(newContext)              */
-  /*                                                                       */
-  /* By definition a parlist is just a list of variables. This is why      */
-  /* inlining in reality depends only on the arglist: if the user said     */
-  /* RHS->(arglist) we do not inline, RHS-->(arglist) we inline.           */
-  /*                                                                       */
-  /* - If there is no arglist, then this is a no-op                        */
-  /* - Else                                                                */
-  /*                                                                       */
   /* --------------------------------------------------------------------- */
   if (*contextActionpp == NULL) {
     /* We initialize the correct action content. */
@@ -1774,11 +1784,78 @@ static short _marpaESLIFRecognizer_lua_push_contextb(marpaESLIFRecognizer_t *mar
     contextActionp->u.luaFunction.luacstripp = NULL; /* Precompiled stripped chunk - not used */
     contextActionp->u.luaFunction.luacstripl = 0;    /* Precompiled stripped chunk length */
 
-    lual =
-      strlen("return function") +
-      declp != NULL ? strlen(declp->luaparlists) : strlen("()") +
-      callp != NULL ? strlen(callp->luaexplists) : strlen("()");
+    marpaESLIF_stringGenerator.marpaESLIFp = marpaESLIFRecognizerp->marpaESLIFp;
+    marpaESLIF_stringGenerator.s           = NULL;
+    marpaESLIF_stringGenerator.l           = 0;
+    marpaESLIF_stringGenerator.okb         = 0;
+    marpaESLIF_stringGenerator.allocl      = 0;
+
+    genericLoggerp = GENERICLOGGER_CUSTOM(_marpaESLIF_generateStringWithLoggerCallback, (void *) &marpaESLIF_stringGenerator, GENERICLOGGER_LOGLEVEL_TRACE);
+    if (genericLoggerp == NULL) {
+      goto err;
+    }
+
+    GENERICLOGGER_TRACE(genericLoggerp, "return function()\n");
+    if (MARPAESLIF_UNLIKELY(! marpaESLIF_stringGenerator.okb)) {
+      goto err;
+    }
+    if ((declp != NULL) && (declp->sizel > 0)) {
+      GENERICLOGGER_TRACEF(genericLoggerp, "  %s = table.unpack(marpaESLIFContextStackp:get())\n", declp->luaparlists);
+      if (MARPAESLIF_UNLIKELY(! marpaESLIF_stringGenerator.okb)) {
+        goto err;
+      }
+    }
+    if ((callp != NULL) && (callp->sizel > 0)) {
+      GENERICLOGGER_TRACEF(genericLoggerp, "  marpaESLIFContextStackp:push(table.pack%s)\n", callp->luaexplists);
+    } else {
+      GENERICLOGGER_TRACE(genericLoggerp, "  marpaESLIFContextStackp:push(table.pack())\n");
+    }
+    if (MARPAESLIF_UNLIKELY(! marpaESLIF_stringGenerator.okb)) {
+      goto err;
+    }
+    GENERICLOGGER_TRACE(genericLoggerp, "end\n");
+    if (MARPAESLIF_UNLIKELY(! marpaESLIF_stringGenerator.okb)) {
+      goto err;
+    }
+
+    contextActionp->u.luaFunction.actions = marpaESLIF_stringGenerator.s;
+    marpaESLIF_stringGenerator.s = NULL;
+
+    /* Action is always precompiled unless declp or callp says it should not */
+    if (((declp != NULL) && (! declp->luaparlistcb)) || ((callp != NULL) && (! callp->luaexplistcb))) {
+      contextActionp->u.luaFunction.luacb = 0;
+    } else {
+      contextActionp->u.luaFunction.luacb = 1;
+    }
   }
+
+  rcb = 1;
+  goto done;
+
+ err:
+  rcb = 0;
+
+ done:
+  if (marpaESLIF_stringGenerator.s != NULL) {
+    free(marpaESLIF_stringGenerator.s);
+  }
+  GENERICLOGGER_FREE(genericLoggerp);
+  return rcb;
+}
+
+/*****************************************************************************/
+static short _marpaESLIFRecognizer_lua_pop_contextb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp)
+/*****************************************************************************/
+{
+  short rcb;
+
+  /* We do not check if lua state if created - it must be by definition */
+
+  LUA_GETGLOBAL(NULL, marpaESLIFRecognizerp, "marpaESLIFContextStackp");                     /* stack: ..., marpaESLIFContextStackp */
+  LUAL_CHECKSTACK(marpaESLIFRecognizerp, 1, 0);                                              /* stack: ..., marpaESLIFContextStack */
+  LUA_GETFIELD(NULL, marpaESLIFRecognizerp, -1, "pop");                                      /* stack: ..., marpaESLIFContextStackp, marpaESLIFContextStackp.pop() */
+  LUA_INSERT(marpaESLIFRecognizerp, -2);                                                     /* stack: ..., marpaESLIFContextStack.pop(), marpaESLIFContextStackp */
+  LUA_PCALL(marpaESLIFRecognizerp, 1, 0, 0);                                                 /* stack: ... [one argument, no result] */
 
   rcb = 1;
   goto done;
