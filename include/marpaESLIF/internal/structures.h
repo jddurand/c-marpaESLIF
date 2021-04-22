@@ -182,7 +182,6 @@ struct marpaESLIFSymbol {
   short                          contentIsShallowb;
   marpaESLIFGrammar_t           *marpaESLIFGrammarp;     /* Shallow pointer, set by marpaESLIFSymbol_meta_newp() only */
   short                          verboseb;               /* Symbol is verbose */
-  marpaESLIF_symbol_t           *neighbourSymbolp;       /* Forced neighbour lookup symbol - only for parameterized symbols */
   marpaESLIF_lua_functioncall_t *callp;                  /* Guaranteed to be valid if neighbourSymbolp is != NULL */
   marpaESLIF_lua_functiondecl_t *declp;                  /* Used only in the context of neighbourSymbolp != NULL, may be NULL */
   marpaESLIFAction_t            *contextActionp;         /* Context action, depends on declp and callp */
@@ -343,6 +342,7 @@ struct marpaESLIF_meta {
   size_t                       nSymbolStartl;                   /* Number of lexemes at the very beginning of marpaWrapperGrammarStartp */
   int                         *symbolArrayStartp;               /* Lexemes at the very beginning of marpaWrapperGrammarStartp */
   short                        lazyb;                           /* Meta symbol is lazy - for internal usage only at bootstrap */
+  short                        peekb;                           /* When this meta symbol is a grammar terminal: use a peeking recognizer */
 };
 
 struct marpaESLIF_stringGenerator {
