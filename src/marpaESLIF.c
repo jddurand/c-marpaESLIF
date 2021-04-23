@@ -2958,8 +2958,9 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
        - any event on A is transfered to A'
 
    2. Grammar at any level must precompute at its start symbol and its eventual discard symbol
-     a. Only one symbol can have the start flag
-     b. Only one symbol can have the discard flag
+     a. Precompile lua script
+     b. Only one symbol can have the start flag
+     c. Only one symbol can have the discard flag
      d. Default symbol action is ::transfer, and default rule action is ::concat
    3. At any grammar level n, if a symbol never appear as an LHS of a rule, then
       it must be an LHS of grammar at level leveli, which must de-factor must also exist.
@@ -2978,8 +2979,6 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
    7. lexeme and terminal events are meaningul only on lexemes or terminals
    8. Grammar names must all be different
    9. :discard events are possible only if the RHS of the :discard rule is not a lexeme
-  10. Precompile lua script if needed
-  11. Count the number of marpa terminals in the grammar
 
       It is not illegal to have sparse items in grammarStackp.
 
@@ -3001,11 +3000,20 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
     goto err;
   }
   grammarp = (marpaESLIF_grammar_t *) GENERICSTACK_GET_PTR(grammarStackp, 0);
+
   /*
    2. Grammar at level 0 must precompute at its start symbol, grammar at level n at its eventual discard symbol
-     a. Only one symbol can have the start flag
-     b. Only one symbol can have the discard flag
+     a. Precompile lua script
+     b. Only one symbol can have the start flag
+     c. Only one symbol can have the discard flag
+     d. Default symbol action is ::transfer, and default rule action is ::concat
   */
+
+  if (MARPAESLIF_UNLIKELY(! _marpaESLIFGrammar_lua_precompileb(marpaESLIFGrammarp, 1 /* popb */))) {
+    MARPAESLIF_ERROR(marpaESLIFp, "Lua precompilation failure");
+    goto err;
+  }
+
   /* Pre-scan all grammars to set the topb attribute of every symbol */
   for (grammari = 0; grammari < GENERICSTACK_USED(grammarStackp); grammari++) {
     if (! GENERICSTACK_IS_PTR(grammarStackp, grammari)) {
@@ -3860,14 +3868,6 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
         }
       }
     }
-  }
-
-  /*
-    10. Precompile lua script
-  */
-  if (MARPAESLIF_UNLIKELY(! _marpaESLIFGrammar_lua_precompileb(marpaESLIFGrammarp, 1 /* popb */))) {
-    MARPAESLIF_ERROR(marpaESLIFp, "Lua precompilation failure");
-    goto err;
   }
 
   /* Fill grammars information */
