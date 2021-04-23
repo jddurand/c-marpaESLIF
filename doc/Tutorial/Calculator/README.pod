@@ -8,7 +8,7 @@ marpaESLIF_CALCULATOR - Extended Marpa's Scanless Interface Calculator Tutorial
 
 marpaESLIF is a Scanless Interface expressed in a BNF format, that is using L<marpaWrapper|https://github.com/jddurand/c-marpaWrapper>, itself being a thin interface on top of L<libmarpa|https://jeffreykegler.github.io/Marpa-web-site/libmarpa.html> parser.
 
-This documentation is giving a tutorial with a calculator as example.
+This documentation is a tutorial with a calculator as example.
 
 =head2 GRAMMAR v1
 
@@ -25,7 +25,7 @@ We start with the simplest grammar:
 
 which means obviously that an expression is number, or a group of expressions, or an sub-expression where the 'power of' operator has right associativity (i.e. the C<Expression> on the right is to be processed first).
 
-To get that compiled you will need of course marpaESLIF header files, and we use the generic logger to have something in the output. The grammar length is given with C<strlen(), requiring C#<string.h>#, we will use C<perror()> and C<exit()> that requires C#<stdio.h># and C#<stdlib.h>#:
+To get that compiled you will need of course marpaESLIF header files, and we use the generic logger to have something in the output. The grammar length is given with C<strlen()>, requiring C#<string.h>#, we will use C<perror()> and C<exit()> that requires C#<stdio.h># and C#<stdlib.h>#:
 
   #include <stdio.h>
   #include <stdlib.h>
@@ -33,7 +33,7 @@ To get that compiled you will need of course marpaESLIF header files, and we use
   #include <marpaESLIF.h>
   #include <genericLogger.h>
 
-Grammar is set in a constant:
+The grammar is set in a constant:
 
   const static char *grammars =
     "Expression ::=\n"
@@ -46,7 +46,7 @@ Grammar is set in a constant:
     "    |     Expression  '-' Expression\n"
     "\n";
 
-and main program will instanciate a generic logger:
+and main program will instantiate a generic logger:
 
   genericLoggerp = GENERICLOGGER_NEW(GENERICLOGGER_LOGLEVEL_DEBUG);
 
@@ -54,7 +54,7 @@ then a marpaESLIF instance:
 
   marpaESLIFp = marpaESLIF_newp(&marpaESLIFOption);
 
-then compile the grammar:
+and then compile the grammar:
 
   marpaESLIFGrammar_t *marpaESLIFGrammarp = marpaESLIFGrammar_newp(marpaESLIFp, &marpaESLIFGrammarOption);
 
@@ -103,7 +103,9 @@ A C<marpaESLIFGrammarOption_t> structure is setup like this:
     exit(1);
   }
 
-which means: the whole grammar start at C<bytep>, is of length C<bytel>, and please manage grammar encoding yourself.
+which means that the whole grammar start at C<bytep>,
+that it is of length C<bytel>, and
+that you should (please) manage the grammar encoding yourself.
 
 =head3 Cleanup
 
@@ -116,7 +118,7 @@ We have to clean the grammar,the marpaESLIF and the generic logger:
 
 =head3 The program
 
-All in all, this give:
+All in all, this gives:
 
   #include <stdio.h>
   #include <stdlib.h>
@@ -173,11 +175,12 @@ All in all, this give:
 
 =head2 Grammar v2: discard and parsing test
 
-Obviously, we would like the grammar to discard automatically any non-significant I<whitespace>, as it is done traditionnaly in any language:
+Obviously, we would like the grammar to discard non-significant I<whitespace> automatically, as is traditional in most languages.
+The statement
 
   :discard ::= [\s]
 
-will do it.
+will do that.
 
 And we want to have I<actions> to compute the arithmetic result:
 
@@ -193,7 +196,7 @@ We will just copy what is in the middle:
 
   '(' Expression ')'              assoc => group action => ::copy[1]
 
-Here C<[1]> is the relative indice from the first RHS.
+Here C<[1]> is the index, relative to the first RHS.
 
 =item * Any other rule can give anything, we will choose a C<double> for convenience
 
@@ -215,7 +218,11 @@ So we end up with this grammar:
         |     Expression  '-' Expression
 
 
-At this stage, if we do not instanciate any valuation, it is perfectly okay to have no action implementation. Indeed, we can try immediately to parse some input. For example one that is compliant with the grammar. Since marpaESLIF is working natively in stream mode, we have to have a I<reader>, that in our case will send the whole chunk of input in one go:
+At this stage, if we do not instantiate any valuation, it is perfectly okay to have no action implementation.
+Indeed, we can try immediately to parse some input.
+For example one that is compliant with the grammar.
+Since marpaESLIF is working natively in stream mode, we have to have a I<reader>.
+In our case will send the whole chunk of input in one go:
 
   typedef struct reader_context {
     char            *inputs;
