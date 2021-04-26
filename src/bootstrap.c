@@ -928,8 +928,10 @@ static inline marpaESLIF_symbol_t *_marpaESLIF_bootstrap_check_meta_by_namep(mar
   marpaESLIF_meta_t             *metap        = NULL;
   short                          terminalb    = 0;
   size_t                         paraml       = 0;
-  marpaESLIF_lua_functiondecl_t  call2decl;
   marpaESLIF_symbol_t           *symbol_i_p;
+  marpaESLIF_symbol_t           *lhsp         = NULL;
+  marpaESLIF_lua_functiondecl_t  call2decl;
+  marpaESLIF_lua_functiondecl_t *call2declp;
   int                            i;
 
   /* It is not legal to have both lhsb and rshb */
@@ -969,8 +971,20 @@ static inline marpaESLIF_symbol_t *_marpaESLIF_bootstrap_check_meta_by_namep(mar
     }
   }
 
-  /* When this is a parameterized RHS, we always want to force the creation and make it a meta terminal */
+  /* When this is a parameterized RHS, we always want to force the creation and make it a meta terminal. */
+  /* In addition it can only access an LHS with the same number of parameters in the same grammar.       */
   if (rhsb && (paraml > 0)) {
+    call2decl.luaparlists  = NULL;
+    call2decl.luaparlistcb = 0;
+    call2decl.sizel        = paraml;
+    call2decl.luap         = NULL;
+    call2decl.lual         = 0;
+
+    call2declp             = &call2decl;
+    lhsp = _marpaESLIF_bootstrap_check_meta_by_namep(marpaESLIFp, marpaESLIFGrammarp, grammarp, asciinames, 1 /* createb */, 0 /* forcecreateb */, 1 /* lhsb */, call2declp, 0 /* rhsb */, NULL /* callp */);
+    if (lhsp == NULL) {
+      goto err;
+    }
     forcecreateb = 1;
     terminalb    = 1;
   }
@@ -990,6 +1004,10 @@ static inline marpaESLIF_symbol_t *_marpaESLIF_bootstrap_check_meta_by_namep(mar
     symbolp->u.metap           = metap;
     symbolp->idi               = metap->idi;
     symbolp->descp             = metap->descp;
+    if (lhsp != NULL) {
+      symbolp->lookupSymbolp     = lhsp;
+      symbolp->lookupLevelDeltai = 0;
+    }
     metap = NULL; /* metap is now in symbolp */
 
     GENERICSTACK_SET_PTR(grammarp->symbolStackp, symbolp, symbolp->idi);
@@ -1397,12 +1415,20 @@ static inline marpaESLIF_symbol_t  *_marpaESLIF_bootstrap_check_rhsAlternativep(
     if (MARPAESLIF_UNLIKELY(symbolp == NULL)) {
       goto err;
     }
-    /* Check the rhs primary */
+    /* Check the rhs primary - we know it has to be a lexeme, and a lexeme cannot be parameterized. */
+    if ((rhsAlternativep->u.exception.rhsPrimaryp->callp != NULL) && (rhsAlternativep->u.exception.rhsPrimaryp->callp->sizel > 0)) {
+      MARPAESLIF_ERROR(marpaESLIFp, "Left side of an exception rule cannot be parameterized");
+      goto err;
+    }
     rhsp = _marpaESLIF_bootstrap_check_rhsPrimaryp(marpaESLIFp, marpaESLIFGrammarp, grammarp, rhsAlternativep->u.exception.rhsPrimaryp, 1 /* createb */, 0 /* forcecreateb */);
     if (MARPAESLIF_UNLIKELY(rhsp == NULL)) {
       goto err;
     }
-    /* Check the rhs primary exception */
+    /* Check the rhs primary exception - we know it has to be a lexeme, and a lexeme cannot be parameterized. */
+    if ((rhsAlternativep->u.exception.rhsPrimaryExceptionp->callp != NULL) && (rhsAlternativep->u.exception.rhsPrimaryExceptionp->callp->sizel > 0)) {
+      MARPAESLIF_ERROR(marpaESLIFp, "Right side of an exception rule cannot be parameterized");
+      goto err;
+    }
     rhsExceptionp = _marpaESLIF_bootstrap_check_rhsPrimaryp(marpaESLIFp, marpaESLIFGrammarp, grammarp, rhsAlternativep->u.exception.rhsPrimaryExceptionp, 1 /* createb */, 0 /* forcecreateb */);
     if (MARPAESLIF_UNLIKELY(rhsExceptionp == NULL)) {
       goto err;
@@ -1644,7 +1670,8 @@ static inline marpaESLIF_symbol_t  *_marpaESLIF_bootstrap_check_rhsPrimaryp(marp
       call2decl.sizel        = rhsPrimaryp->callp->sizel;
       call2decl.luap         = NULL;
       call2decl.lual         = 0;
-      call2declp = &call2decl;
+
+      call2declp             = &call2decl;
     } else {
       call2declp = NULL;
     }
@@ -7438,12 +7465,21 @@ static short _marpaESLIF_bootstrap_G1_action_exception_statementb(void *userData
     goto err;
   }
 
-  /* Check the rhs primary */
+  /* Check the rhs primary - we know it has to be a lexeme, and a lexeme cannot be parameterized. */
+  if ((rhsPrimaryp->callp != NULL) && (rhsPrimaryp->callp->sizel > 0)) {
+    MARPAESLIF_ERROR(marpaESLIFp, "Left side of an exception rule cannot be parameterized");
+    goto err;
+  }
   rhsp = _marpaESLIF_bootstrap_check_rhsPrimaryp(marpaESLIFp, marpaESLIFGrammarp, grammarp, rhsPrimaryp, 1 /* createb */, 0 /* forcecreateb */);
   if (MARPAESLIF_UNLIKELY(rhsp == NULL)) {
     goto err;
   }
 
+  /* Check the rhs primary exception - we know it has to be a lexeme, and a lexeme cannot be parameterized. */
+  if ((rhsPrimaryExceptionp->callp != NULL) && (rhsPrimaryExceptionp->callp->sizel > 0)) {
+    MARPAESLIF_ERROR(marpaESLIFp, "Right side of an exception rule cannot be parameterized");
+    goto err;
+  }
   /* Check the rhs primary exception */
   rhsExceptionp = _marpaESLIF_bootstrap_check_rhsPrimaryp(marpaESLIFp, marpaESLIFGrammarp, grammarp, rhsPrimaryExceptionp, 1 /* createb */, 0 /* forcecreateb */);
   if (MARPAESLIF_UNLIKELY(rhsExceptionp == NULL)) {
