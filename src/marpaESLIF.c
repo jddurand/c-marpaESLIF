@@ -161,6 +161,7 @@ static marpaESLIFValueResult_t marpaESLIFValueResultLazy = {
 /* -------------------------------------------------------------------------------------------- */
 #define MARPAESLIF_IS_LEXEME(symbolp) (((symbolp)->type == MARPAESLIF_SYMBOL_TYPE_META) && (! (symbolp)->lhsb))
 #define MARPAESLIF_IS_META(symbolp)  ((symbolp)->type == MARPAESLIF_SYMBOL_TYPE_META)
+#define MARPAESLIF_IS_META_TERMINAL(symbolp)  (((symbolp)->type == MARPAESLIF_SYMBOL_TYPE_META) && (symbolp)->u.metap->terminalb)
 #define MARPAESLIF_IS_TERMINAL(symbolp)  ((symbolp)->type == MARPAESLIF_SYMBOL_TYPE_TERMINAL)
 #define MARPAESLIF_SYMBOL_IS_PSEUDO_TERMINAL(symbolp) (MARPAESLIF_IS_TERMINAL(symbolp) && (symbolp)->u.terminalp->pseudob)
 #define MARPAESLIF_IS_DISCARD(symbolp) (symbolp)->discardb
@@ -3460,8 +3461,8 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
     for (symboli = 0; symboli < GENERICSTACK_USED(symbolStackp); symboli++) {
       MARPAESLIF_INTERNAL_GET_SYMBOL_FROM_STACK(marpaESLIFp, symbolp, symbolStackp, symboli);
 
-      /* Only lexemes should be looked at */
-      if (! MARPAESLIF_IS_LEXEME(symbolp)) {
+      /* Only lexemes or meta terminals should be looked at */
+      if ((! MARPAESLIF_IS_LEXEME(symbolp)) && (! MARPAESLIF_IS_META_TERMINAL(symbolp))) {
         /* This is always resolved in the same grammar */
         symbolp->lookupResolvedLeveli = grammarp->leveli;
         continue;
@@ -12093,6 +12094,10 @@ static char *_marpaESLIFGrammar_symbolDescriptionCallback(void *userDatavp, int 
   }
 
   marpaWrapperGrammarSymbolOptionp->eventSeti = MARPAWRAPPERGRAMMAR_EVENTTYPE_NONE;
+  if (symbolp->type == MARPAESLIF_SYMBOL_TYPE_META) {
+    /* Make sure terminalb is propagated */
+    marpaWrapperGrammarSymbolOptionp->terminalb = symbolp->u.metap->terminalb;
+  }
 
   if ((symbolp->eventNulleds != NULL) &&
       ((strcmp(symbolp->eventNulleds, ":discard[on]") == 0) || (strcmp(symbolp->eventNulleds, ":discard[off]") == 0) || (strcmp(symbolp->eventNulleds, ":discard[switch]") == 0))) {
