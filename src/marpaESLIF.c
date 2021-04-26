@@ -13427,6 +13427,10 @@ static inline void _marpaESLIF_grammar_createshowv(marpaESLIFGrammar_t *marpaESL
       MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, symbolp->descp->asciis);
       MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, ">");
       MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "\n");
+      MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "# Nbparameters: ");
+      sprintf(tmps, "%ld", (unsigned long) symbolp->u.metap->paraml);
+      MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, tmps);
+      MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "\n");
     }
     if ((symbolp->lookupSymbolp != NULL) && (symbolp->lookupResolvedLeveli != grammarp->leveli)) {
       MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "#       Lookup: ");
