@@ -315,8 +315,8 @@ struct marpaESLIF_bootstrap_rhs_alternative_quantified {
 };
 
 struct marpaESLIF_bootstrap_rhs_primary {
-  marpaESLIF_symbol_t           *symbolShallowp; /* To avoid possible recursion */
-  marpaESLIF_lua_functioncall_t *callp;
+  marpaESLIF_symbol_t                     *symbolShallowp; /* To avoid possible recursion */
+  marpaESLIF_lua_functioncall_t           *callp;
   marpaESLIF_bootstrap_rhs_primary_type_t  type;
   union {
     marpaESLIF_bootstrap_single_symbol_t             *singleSymbolp;

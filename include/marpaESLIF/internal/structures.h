@@ -182,9 +182,11 @@ struct marpaESLIFSymbol {
   short                          contentIsShallowb;
   marpaESLIFGrammar_t           *marpaESLIFGrammarp;     /* Shallow pointer, set by marpaESLIFSymbol_meta_newp() only */
   short                          verboseb;               /* Symbol is verbose */
-  marpaESLIF_lua_functioncall_t *callp;                  /* Guaranteed to be valid if neighbourSymbolp is != NULL */
-  marpaESLIF_lua_functiondecl_t *declp;                  /* Used only in the context of neighbourSymbolp != NULL, may be NULL */
-  marpaESLIFAction_t            *contextActionp;         /* Context action, depends on declp and callp */
+  marpaESLIF_symbol_t           *proxiedSymbolp;         /* Special case of parameterized symbols - used in validation of the exception rule */
+  marpaESLIF_symbol_t           *proxierSymbolp;         /* Special case of parameterized symbols - used in validation of the exception rule */
+  short                          proxyb;                 /* The technical symbol, one grammar later, that is used to join proxiedSymbolp and proxierSymbolp */
+  marpaESLIF_lua_functiondecl_t *declp;                  /* Only for proxier symbols */
+  marpaESLIF_lua_functioncall_t *callp;                  /* Only for proxier symbols */
 };
 
 /* A rule */
@@ -257,6 +259,8 @@ struct marpaESLIF_grammar {
   char                  *defaultEncodings;                   /* Default encoding is reader returns NULL */
   char                  *fallbackEncodings;                  /* Fallback encoding is reader returns NULL and tconv fails to detect encoding */
   short                  fastDiscardb;                       /* True when :discard can be done in the context of the current recognizer */
+  genericStack_t         _parameterizedRuleStack;            /* Stack of parameterized rules - Filled by grammar parsing and consumed by grammar validation */
+  genericStack_t        *parameterizedRuleStackp;            /* Pointer to stack of parameterized rules */
 };
 
 /* ----------------------------------- */
@@ -328,21 +332,23 @@ struct marpaESLIFGrammar {
 };
 
 struct marpaESLIF_meta {
-  int                          idi;                             /* Non-terminal Id */
-  char                        *asciinames;
-  marpaESLIF_string_t         *descp;                           /* Non-terminal description */
-  marpaWrapperGrammar_t       *marpaWrapperGrammarLexemeClonep; /* Cloned low-level grammar in lexeme search mode (no event) */
-  int                          lexemeIdi;                       /* Lexeme Id in this cloned grammar */
-  short                       *prioritizedb;                    /* Internal flag to prevent a prioritized symbol to appear more than once as an LHS */
-  marpaESLIFGrammar_t         _marpaESLIFGrammarLexemeClone;    /* Cloned ESLIF grammar in lexeme search mode (no event): allocated when meta is allocated */
-  marpaESLIF_grammar_t        _grammar;
-  marpaESLIFGrammar_t         *marpaESLIFGrammarLexemeClonep;   /* Cloned ESLIF grammar in lexeme search mode (no event) */
-  size_t                       nTerminall;                      /* Total number of grammar terminals */
-  int                         *terminalArrayShallowp;           /* Total grammar terminals */
-  size_t                       nSymbolStartl;                   /* Number of lexemes at the very beginning of marpaWrapperGrammarStartp */
-  int                         *symbolArrayStartp;               /* Lexemes at the very beginning of marpaWrapperGrammarStartp */
-  short                        lazyb;                           /* Meta symbol is lazy - for internal usage only at bootstrap */
-  short                        peekb;                           /* When this meta symbol is a grammar terminal: use a peeking recognizer */
+  int                            idi;                             /* Non-terminal Id */
+  char                          *asciinames;
+  marpaESLIF_string_t           *descp;                           /* Non-terminal description */
+  marpaWrapperGrammar_t         *marpaWrapperGrammarLexemeClonep; /* Cloned low-level grammar in lexeme search mode (no event) */
+  int                            lexemeIdi;                       /* Lexeme Id in this cloned grammar */
+  short                         *prioritizedb;                    /* Internal flag to prevent a prioritized symbol to appear more than once as an LHS */
+  marpaESLIFGrammar_t           _marpaESLIFGrammarLexemeClone;    /* Cloned ESLIF grammar in lexeme search mode (no event): allocated when meta is allocated */
+  marpaESLIF_grammar_t          _grammar;
+  marpaESLIFGrammar_t           *marpaESLIFGrammarLexemeClonep;   /* Cloned ESLIF grammar in lexeme search mode (no event) */
+  size_t                         nTerminall;                      /* Total number of grammar terminals */
+  int                           *terminalArrayShallowp;           /* Total grammar terminals */
+  size_t                         nSymbolStartl;                   /* Number of lexemes at the very beginning of marpaWrapperGrammarStartp */
+  int                           *symbolArrayStartp;               /* Lexemes at the very beginning of marpaWrapperGrammarStartp */
+  short                          lazyb;                           /* Meta symbol is lazy - for internal usage only at bootstrap */
+  short                          terminalb;                       /* Meta terminal ? */
+  size_t                         paraml;                          /* Number of parameters */
+  marpaESLIF_lua_functioncall_t *callp;                           /* RHS metas are unique, this is their call parameters - For LHS metas the rule contains the declaration. */
 };
 
 struct marpaESLIF_stringGenerator {
