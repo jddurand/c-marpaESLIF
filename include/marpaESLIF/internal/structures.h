@@ -185,8 +185,6 @@ struct marpaESLIFSymbol {
   marpaESLIF_symbol_t           *proxiedSymbolp;         /* Special case of parameterized symbols - used in validation of the exception rule */
   marpaESLIF_symbol_t           *proxierSymbolp;         /* Special case of parameterized symbols - used in validation of the exception rule */
   short                          proxyb;                 /* The technical symbol, one grammar later, that is used to join proxiedSymbolp and proxierSymbolp */
-  marpaESLIF_lua_functiondecl_t *declp;                  /* Only for proxier symbols */
-  marpaESLIF_lua_functioncall_t *callp;                  /* Only for proxier symbols */
 };
 
 /* A rule */
@@ -348,7 +346,9 @@ struct marpaESLIF_meta {
   short                          lazyb;                           /* Meta symbol is lazy - for internal usage only at bootstrap */
   short                          terminalb;                       /* Meta terminal ? */
   size_t                         paraml;                          /* Number of parameters */
-  marpaESLIF_lua_functioncall_t *callp;                           /* RHS metas are unique, this is their call parameters - For LHS metas the rule contains the declaration. */
+  marpaESLIF_lua_functioncall_t *callp;                           /* Only for RHS metas (they are unique) */
+  marpaESLIF_lua_functiondecl_t *declp;                           /* Only for RHS metas (they are unique) */
+  marpaESLIF_action_t           *pushContextActionp;              /* Only for RHS metas (they are unique) */
 };
 
 struct marpaESLIF_stringGenerator {
@@ -531,6 +531,8 @@ struct marpaESLIFRecognizer {
 
   char                           *luaprecompiledp;    /* Lua script source precompiled */
   size_t                          luaprecompiledl;    /* Lua script source precompiled length in byte */
+  short                           popContextActionShallowb;  /* Only when this is an internal peeked recognizer for parameterized RHS: inherit parent popContextActionp if any */
+  marpaESLIF_action_t            *popContextActionp;  /* Only when this is an internal peeked recognizer for parameterized RHS */
   };
 
 struct marpaESLIF_lexeme_data {

@@ -307,6 +307,9 @@ static int                                marpaESLIFLua_marpaESLIFSymbol_newFrom
 #endif
 static int                                marpaESLIFLua_marpaESLIFSymbol_tryi(lua_State *L);
 static int                                marpaESLIFLua_marpaESLIFSymbol_freei(lua_State *L);
+#ifdef MARPAESLIFLUA_EMBEDDED
+static short                              marpaESLIFLua_contextCallbackb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFValueResult_t *marpaESLIFValueResultOutputp);
+#endif
 
 #define MARPAESLIFLUA_NOOP
 
@@ -9606,3 +9609,60 @@ static int marpaESLIFLua_marpaESLIFSymbol_freei(lua_State *L)
  err:
   return 0;
 }
+
+#ifdef MARPAESLIFLUA_EMBEDDED
+/*****************************************************************************/
+static short marpaESLIFLua_contextCallbackb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFValueResult_t *marpaESLIFValueResultOutputp)
+/*****************************************************************************/
+{
+  static const char                *funcs                           = "marpaESLIFLua_contextCallbackb";
+  /* We are called by ESLIF by definition, it has injected the context */
+  marpaESLIFLuaRecognizerContext_t *marpaESLIFLuaRecognizerContextp = (marpaESLIFLuaRecognizerContext_t *) marpaESLIFRecognizerp->marpaESLIFLuaRecognizerContextp;
+  lua_State                        *L                          = marpaESLIFLuaRecognizerContextp->L;
+  short                             rcb;
+  int                               expectedtopi;
+  int                               topi;
+  int                               newtopi;
+  int                               typei;
+
+  if (! marpaESLIFLua_lua_gettop(&topi, L)) goto err;
+  /* We pushed nothing to the stack: caller is expected to have pushed a function at its top, this got replaced by result */
+  expectedtopi = topi;
+
+  MARPAESLIFLUA_CALLBACK(L,
+                         LUA_NOREF, /* interface_r */
+                         NULL, /* funcs */
+                         0, /* nargs */
+                         /* parameters */
+                         );
+
+  if (! marpaESLIFLua_lua_gettop(&newtopi, L)) goto err;
+  if (newtopi != expectedtopi) {
+    marpaESLIFLua_luaL_error(L, "Context function must return exactly one value");
+    goto err;
+  }
+
+  if (! marpaESLIFLua_lua_type(&typei, L, -1)) goto err;
+  if ((typei != LUA_TTABLE) && (typei != LUA_TNIL)) {
+    marpaESLIFLua_luaL_error(L, "Context function return value must be a table or nil");
+    goto err;
+  }
+
+  if (! marpaESLIFLua_stack_setb(L, marpaESLIFLuaRecognizerContextp->marpaESLIFp, NULL /* marpaESLIFValuep */, -1 /* resulti */, marpaESLIFValueResultOutputp)) goto err;
+
+  if (! marpaESLIFLua_lua_settop(L, topi)) goto err;
+
+  /* Clean the MARPAESLIFOPAQUETABLE global table */
+  if (! marpaESLIFLua_lua_pushnil(L)) goto err;
+  if (! marpaESLIFLua_lua_setglobal(L, MARPAESLIFOPAQUETABLE)) goto err;
+
+  rcb = 1;
+  goto done;
+
+ err:
+  rcb = 0;
+
+ done:
+  return rcb;
+}
+#endif /* MARPAESLIFLUA_EMBEDDED */

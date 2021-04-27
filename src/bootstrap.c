@@ -202,6 +202,7 @@ static        short _marpaESLIF_bootstrap_G1_action_start_symbol_1b(void *userDa
 static        short _marpaESLIF_bootstrap_G1_action_start_symbol_2b(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
 static inline marpaESLIF_rule_t *_marpaESLIF_bootstrap_check_rulep(marpaESLIF_t *marpaESLIFp, marpaESLIFGrammar_t *marpaESLIFGrammarp, marpaESLIF_grammar_t *grammarp, char *descEncodings, char *descs, size_t descl, int lhsi, size_t nrhsl, int *rhsip, int exceptioni, int ranki, short nullRanksHighb, short sequenceb, int minimumi, int separatori, short properb, marpaESLIF_action_t *actionp, short passthroughb, short hideseparatorb, short *skipbp, marpaESLIF_lua_functiondecl_t *declp, marpaESLIF_lua_functioncall_t **callpp, marpaESLIF_lua_functioncall_t *exceptioncallp, marpaESLIF_lua_functioncall_t *separatorcallp);
 static short marpaESLIFValueImport(marpaESLIFValue_t *marpaESLIFValuep, void *userDatavp, marpaESLIFValueResult_t *marpaESLIFValueResultp);
+static inline marpaESLIF_string_t *_marpaESLIF_terminal2stringp(marpaESLIF_t *marpaESLIFp, marpaESLIF_bootstrap_terminal_t *terminalp);
 
 /* Helpers */
 #define MARPAESLIF_BOOTSTRAP_GET_ARRAY(marpaESLIFValuep, indicei, _p, _l) do { \
@@ -1293,37 +1294,39 @@ static inline marpaESLIF_symbol_t *_marpaESLIF_bootstrap_check_terminalp(marpaES
 /*****************************************************************************/
 {
   marpaESLIF_symbol_t *symbolp = NULL;
+  marpaESLIF_string_t *stringp = NULL;
 
   /* A terminal can never be parameterized */
-  if (((declp != NULL) && (declp->sizel > 0)) ||
-      ((callp != NULL) && (callp->sizel > 0))) {
+  if ((declp != NULL) || (callp != NULL)) {
+    stringp = _marpaESLIF_terminal2stringp(marpaESLIFp, terminalp);
+
     switch (terminalp->type) {
     case MARPAESLIF_BOOTSTRAP_TERMINAL_TYPE_CHARACTER_CLASS:
-      MARPAESLIF_ERROR(marpaESLIFp, "A character class terminal cannot be parameterized");
+      MARPAESLIF_ERRORF(marpaESLIFp, "%s%sA character class terminal cannot be parameterized", (stringp != NULL) ? stringp->asciis : "", (stringp != NULL) ? ": " : "");
       goto err;
       break;
     case MARPAESLIF_BOOTSTRAP_TERMINAL_TYPE_REGULAR_EXPRESSION:
-      MARPAESLIF_ERROR(marpaESLIFp, "A regular expression terminal cannot be parameterized");
+      MARPAESLIF_ERRORF(marpaESLIFp, "%s%sA regular expression terminal cannot be parameterized", (stringp != NULL) ? stringp->asciis : "", (stringp != NULL) ? ": " : "");
       goto err;
       break;
     case MARPAESLIF_BOOTSTRAP_TERMINAL_TYPE_QUOTED_STRING:
-      MARPAESLIF_ERROR(marpaESLIFp, "A quoted string terminal cannot be parameterized");
+      MARPAESLIF_ERRORF(marpaESLIFp, "%s%sA quoted string terminal cannot be parameterized", (stringp != NULL) ? stringp->asciis : "", (stringp != NULL) ? ": " : "");
       goto err;
       break;
     case MARPAESLIF_BOOTSTRAP_TERMINAL_TYPE__EOF:
-      MARPAESLIF_ERROR(marpaESLIFp, "An :eof terminal cannot be parameterized");
+      MARPAESLIF_ERRORF(marpaESLIFp, "%s%sAn :eof terminal cannot be parameterized", (stringp != NULL) ? stringp->asciis : "", (stringp != NULL) ? ": " : "");
       goto err;
       break;
     case MARPAESLIF_BOOTSTRAP_TERMINAL_TYPE__EOL:
-      MARPAESLIF_ERROR(marpaESLIFp, "An :eol terminal cannot be parameterized");
+      MARPAESLIF_ERRORF(marpaESLIFp, "%s%sAn :eol terminal cannot be parameterized", (stringp != NULL) ? stringp->asciis : "", (stringp != NULL) ? ": " : "");
       goto err;
       break;
     case MARPAESLIF_BOOTSTRAP_TERMINAL_TYPE__SOL:
-      MARPAESLIF_ERROR(marpaESLIFp, "An :sol terminal cannot be parameterized");
+      MARPAESLIF_ERRORF(marpaESLIFp, "%s%sAn :sol terminal cannot be parameterized", (stringp != NULL) ? stringp->asciis : "", (stringp != NULL) ? ": " : "");
       goto err;
       break;
     default:
-      MARPAESLIF_ERROR(marpaESLIFp, "A terminal cannot be parameterized");
+      MARPAESLIF_ERRORF(marpaESLIFp, "%s%sA terminal cannot be parameterized", (stringp != NULL) ? stringp->asciis : "", (stringp != NULL) ? ": " : "");
       goto err;
     }
   }
@@ -1358,6 +1361,7 @@ static inline marpaESLIF_symbol_t *_marpaESLIF_bootstrap_check_terminalp(marpaES
   symbolp = NULL;
 
  done:
+  _marpaESLIF_string_freev(stringp, 0 /* onStackb */);
   return symbolp;
 }
 
@@ -1416,7 +1420,7 @@ static inline marpaESLIF_symbol_t  *_marpaESLIF_bootstrap_check_rhsAlternativep(
       goto err;
     }
     /* Check the rhs primary - we know it has to be a lexeme, and a lexeme cannot be parameterized. */
-    if ((rhsAlternativep->u.exception.rhsPrimaryp->callp != NULL) && (rhsAlternativep->u.exception.rhsPrimaryp->callp->sizel > 0)) {
+    if (rhsAlternativep->u.exception.rhsPrimaryp->callp != NULL) {
       MARPAESLIF_ERROR(marpaESLIFp, "Left side of an exception rule cannot be parameterized");
       goto err;
     }
@@ -1425,7 +1429,7 @@ static inline marpaESLIF_symbol_t  *_marpaESLIF_bootstrap_check_rhsAlternativep(
       goto err;
     }
     /* Check the rhs primary exception - we know it has to be a lexeme, and a lexeme cannot be parameterized. */
-    if ((rhsAlternativep->u.exception.rhsPrimaryExceptionp->callp != NULL) && (rhsAlternativep->u.exception.rhsPrimaryExceptionp->callp->sizel > 0)) {
+    if (rhsAlternativep->u.exception.rhsPrimaryExceptionp->callp != NULL) {
       MARPAESLIF_ERROR(marpaESLIFp, "Right side of an exception rule cannot be parameterized");
       goto err;
     }
@@ -7466,7 +7470,7 @@ static short _marpaESLIF_bootstrap_G1_action_exception_statementb(void *userData
   }
 
   /* Check the rhs primary - we know it has to be a lexeme, and a lexeme cannot be parameterized. */
-  if ((rhsPrimaryp->callp != NULL) && (rhsPrimaryp->callp->sizel > 0)) {
+  if (rhsPrimaryp->callp != NULL) {
     MARPAESLIF_ERROR(marpaESLIFp, "Left side of an exception rule cannot be parameterized");
     goto err;
   }
@@ -7476,7 +7480,7 @@ static short _marpaESLIF_bootstrap_G1_action_exception_statementb(void *userData
   }
 
   /* Check the rhs primary exception - we know it has to be a lexeme, and a lexeme cannot be parameterized. */
-  if ((rhsPrimaryExceptionp->callp != NULL) && (rhsPrimaryExceptionp->callp->sizel > 0)) {
+  if (rhsPrimaryExceptionp->callp != NULL) {
     MARPAESLIF_ERROR(marpaESLIFp, "Right side of an exception rule cannot be parameterized");
     goto err;
   }
@@ -8524,7 +8528,6 @@ static short _marpaESLIF_bootstrap_G1_action_lua_functioncallb(void *userDatavp,
     MARPAESLIF_ERRORF(marpaESLIFp, "Failed to get number of expressions for: %s", luaexplists);
     goto err;
   }
-  MARPAESLIF_NOTICEF(marpaESLIFp, "%s has %ld expressions", luaexplists, (unsigned long) callp->sizel);
   
   callp->luaexplists  = luaexplists;
   callp->luaexplistcb = (strcmp(arg0s, "-->") == 0) ? 1 : 0;
@@ -8616,7 +8619,6 @@ static short _marpaESLIF_bootstrap_G1_action_lua_functiondeclb(void *userDatavp,
     MARPAESLIF_ERRORF(marpaESLIFp, "Failed to get number of parameters for: %s", luaparlists);
     goto err;
   }
-  MARPAESLIF_NOTICEF(marpaESLIFp, "%s has %ld arguments", luaparlists, (unsigned long) declp->sizel);
   
   declp->luaparlists  = luaparlists;
   declp->luaparlistcb = (strcmp(arg0s, "<--") == 0) ? 1 : 0;
@@ -8834,29 +8836,69 @@ static short _marpaESLIF_bootstrap_G1_action_start_symbol_2b(void *userDatavp, m
 /*****************************************************************************/
 static inline marpaESLIF_rule_t *_marpaESLIF_bootstrap_check_rulep(marpaESLIF_t *marpaESLIFp, marpaESLIFGrammar_t *marpaESLIFGrammarp, marpaESLIF_grammar_t *grammarp, char *descEncodings, char *descs, size_t descl, int lhsi, size_t nrhsl, int *rhsip, int exceptioni, int ranki, short nullRanksHighb, short sequenceb, int minimumi, int separatori, short properb, marpaESLIF_action_t *actionp, short passthroughb, short hideseparatorb, short *skipbp, marpaESLIF_lua_functiondecl_t *declp, marpaESLIF_lua_functioncall_t **callpp, marpaESLIF_lua_functioncall_t *exceptioncallp, marpaESLIF_lua_functioncall_t *separatorcallp)
 {
-  return _marpaESLIF_rule_newp(marpaESLIFp,
-                               grammarp,
-                               descEncodings,
-                               descs,
-                               descl,
-                               lhsi,
-                               nrhsl,
-                               rhsip,
-                               exceptioni,
-                               ranki,
-                               nullRanksHighb,
-                               sequenceb,
-                               minimumi,
-                               separatori,
-                               properb,
-                               actionp,
-                               passthroughb,
-                               hideseparatorb,
-                               skipbp,
-                               declp,
-                               callpp,
-                               exceptioncallp,
-                               separatorcallp);
+  marpaESLIF_rule_t   *rulep;
+  size_t               rhsl;
+  marpaESLIF_symbol_t *rhsp;
+
+  /* We duplicate declp on parameterized RHS for execution speedup (no need to lookup the rule's decl to which they belong). */
+  /* Remember that parameterized RHS are always unique: they can appear once only.                                           */
+  if ((declp != NULL) && (callpp != NULL)) {
+    for (rhsl = 0; rhsl < nrhsl; rhsl++) {
+      if (callpp[rhsl] != NULL) {
+        MARPAESLIF_INTERNAL_GET_SYMBOL_FROM_STACK(marpaESLIFp, rhsp, grammarp->symbolStackp, rhsip[rhsl]);
+        /* A parameterized symbol must be a meta */
+        if (rhsp->type != MARPAESLIF_SYMBOL_TYPE_META) {
+          MARPAESLIF_ERROR(marpaESLIFp, "A parameterized symbol is not a meta symbol ?");
+          goto err;                             \
+        }
+        if (rhsp->u.metap->declp != NULL) {
+          MARPAESLIF_ERROR(marpaESLIFp, "Parameterized symbol decl already set ?");
+          goto err;                             \
+        }
+        rhsp->u.metap->declp = _marpaESLIF_lua_functiondecl_clonep(marpaESLIFp, declp);
+        if (rhsp->u.metap->declp == NULL) {
+          goto err;
+        }
+      }
+    }
+  }
+
+  rulep = _marpaESLIF_rule_newp(marpaESLIFp,
+                                grammarp,
+                                descEncodings,
+                                descs,
+                                descl,
+                                lhsi,
+                                nrhsl,
+                                rhsip,
+                                exceptioni,
+                                ranki,
+                                nullRanksHighb,
+                                sequenceb,
+                                minimumi,
+                                separatori,
+                                properb,
+                                actionp,
+                                passthroughb,
+                                hideseparatorb,
+                                skipbp,
+                                declp,
+                                callpp,
+                                exceptioncallp,
+                                separatorcallp);
+
+  /* We attach decl information on every RHS meta terminal */
+  if (rulep == NULL) {
+    goto err;
+  }
+
+  goto done;
+
+ err:
+  rulep = NULL;
+
+ done:
+  return rulep;
 }
 
 /*****************************************************************************/
@@ -8913,4 +8955,36 @@ static short marpaESLIFValueImport(marpaESLIFValue_t *marpaESLIFValuep, void *us
 
  done:
   return rcb;
+}
+
+/*****************************************************************************/
+static inline marpaESLIF_string_t *_marpaESLIF_terminal2stringp(marpaESLIF_t *marpaESLIFp, marpaESLIF_bootstrap_terminal_t *terminalp)
+/*****************************************************************************/
+{
+  marpaESLIF_string_t *stringp = NULL;
+
+  switch (terminalp->type) {
+  case MARPAESLIF_BOOTSTRAP_TERMINAL_TYPE_CHARACTER_CLASS:
+    stringp = _marpaESLIF_string_newp(marpaESLIFp, (char *) MARPAESLIF_UTF8_STRING, terminalp->u.characterClassp->bytep, terminalp->u.characterClassp->bytel);
+    break;
+  case MARPAESLIF_BOOTSTRAP_TERMINAL_TYPE_REGULAR_EXPRESSION:
+    stringp = _marpaESLIF_string_newp(marpaESLIFp, (char *) MARPAESLIF_UTF8_STRING, terminalp->u.regularExpressionp->bytep, terminalp->u.regularExpressionp->bytel);
+    break;
+  case MARPAESLIF_BOOTSTRAP_TERMINAL_TYPE_QUOTED_STRING:
+    stringp = _marpaESLIF_string_newp(marpaESLIFp, (char *) MARPAESLIF_UTF8_STRING, terminalp->u.stringp->bytep, terminalp->u.stringp->bytel);
+    break;
+  case MARPAESLIF_BOOTSTRAP_TERMINAL_TYPE__EOF:
+    stringp = _marpaESLIF_string_newp(marpaESLIFp, (char *) MARPAESLIF_UTF8_STRING, (char *) MARPAESLIF_TERMINAL__EOF, strlen(MARPAESLIF_TERMINAL__EOF));
+    break;
+  case MARPAESLIF_BOOTSTRAP_TERMINAL_TYPE__EOL:
+    stringp = _marpaESLIF_string_newp(marpaESLIFp, (char *) MARPAESLIF_UTF8_STRING, (char *) MARPAESLIF_TERMINAL__EOL, strlen(MARPAESLIF_TERMINAL__EOL));
+    break;
+  case MARPAESLIF_BOOTSTRAP_TERMINAL_TYPE__SOL:
+    stringp = _marpaESLIF_string_newp(marpaESLIFp, (char *) MARPAESLIF_UTF8_STRING, (char *) MARPAESLIF_TERMINAL__SOL, strlen(MARPAESLIF_TERMINAL__SOL));
+    break;
+  default:
+    break;
+  }
+
+  return stringp;
 }
