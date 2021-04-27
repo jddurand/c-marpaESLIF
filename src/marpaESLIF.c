@@ -11103,6 +11103,10 @@ static inline short _marpaESLIFGrammar_parseb(marpaESLIFGrammar_t *marpaESLIFGra
   marpaESLIFValueOption_t marpaESLIFValueOption = (marpaESLIFValueOptionp != NULL) ? *marpaESLIFValueOptionp : marpaESLIFValueOption_default_template;
   marpaESLIFValue_t      *marpaESLIFValuep      = NULL;
   short                   utfb                  = (marpaESLIFRecognizerParentp != NULL) ? marpaESLIFRecognizerParentp->marpaESLIF_streamp->utfb : 0;
+  /* We peek a recognizer only if we are doing a meta terminal and the parent recognizer is the top-level recognizer */
+  short                   peekb                 = (paraml > 0) && (marpaESLIFRecognizerParentp != NULL) && (marpaESLIFRecognizerParentp->marpaESLIFRecognizerParentp == NULL);
+  short                   peekedb               = 0;
+  short                   contextb              = 0;
   short                   isExhaustedb;
   short                   canContinueb;
   short                   rcb;
@@ -11121,21 +11125,21 @@ static inline short _marpaESLIFGrammar_parseb(marpaESLIFGrammar_t *marpaESLIFGra
     goto err;
   }
 
-  if (paraml > 0) {
+  if (peekb) {
     /* By construction, there is a callp != NULL, when declp may be NULL - in any case we want to set a context. */
     /* In addition, this will be a peeked recognizer because we want to keep original grammar actions.           */
     if (! _marpaESLIFRecognizer_lua_push_contextb(marpaESLIFRecognizerp, declp, callp, pushContextActionpp)) {
       goto err;
     }
-    if (marpaESLIFRecognizerParentp != NULL) {
-      /* This should always be the case -; */
-      if (! _marpaESLIFRecognizer_peekb(marpaESLIFRecognizerp, marpaESLIFRecognizerParentp)) {
-        goto err;
-      }
-      /* Prevent unnecessary reload of common context pop function */
-      marpaESLIFRecognizerp->popContextActionShallowb = 1;
-      marpaESLIFRecognizerp->popContextActionpp       = marpaESLIFRecognizerParentp->popContextActionpp;
+    contextb = 1;
+    /* This should always be the case -; */
+    if (! _marpaESLIFRecognizer_peekb(marpaESLIFRecognizerp, marpaESLIFRecognizerParentp)) {
+      goto err;
     }
+    peekedb = 1;
+    /* Prevent unnecessary reload of common context pop function */
+    marpaESLIFRecognizerp->popContextActionShallowb = 1;
+    marpaESLIFRecognizerp->popContextActionpp       = marpaESLIFRecognizerParentp->popContextActionpp;
   }
 
   if (MARPAESLIF_UNLIKELY(! _marpaESLIFRecognizer_scanb(marpaESLIFRecognizerp, initialEventsb, &canContinueb, &isExhaustedb))) {
@@ -11194,13 +11198,13 @@ static inline short _marpaESLIFGrammar_parseb(marpaESLIFGrammar_t *marpaESLIFGra
     if ((! rcb) && silentb && verboseb) {
       _marpaESLIFRecognizer_errorv(marpaESLIFRecognizerp);
     }
-    if (paraml > 0) {
-      if (marpaESLIFRecognizerParentp != NULL) {
-        /* This should never fail */
-        if (! _marpaESLIFRecognizer_peekb(marpaESLIFRecognizerp, NULL)) {
-          rcb = 0;
-        }
+    if (peekedb) {
+      /* This should never fail */
+      if (! _marpaESLIFRecognizer_peekb(marpaESLIFRecognizerp, NULL)) {
+        rcb = 0;
       }
+    }
+    if (contextb) {
       if (! _marpaESLIFRecognizer_lua_pop_contextb(marpaESLIFRecognizerp)) {
         MARPAESLIF_WARN(marpaESLIFRecognizerp->marpaESLIFp, "Context pop failure");
         rcb = 0;
