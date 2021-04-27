@@ -1909,7 +1909,7 @@ static short _marpaESLIFRecognizer_lua_pop_contextb(marpaESLIFRecognizer_t *marp
   /* Note that since this function is always the same, we allocate it      */
   /* once only, in the top-level recognizer.                               */
   /* --------------------------------------------------------------------- */
-  if (marpaESLIFRecognizerp->marpaESLIFRecognizerTopp->popContextActionp == NULL) {
+  if (*(marpaESLIFRecognizerp->popContextActionpp) == NULL) {
     /* We initialize the correct action content. */
     popContextActionp = (marpaESLIF_action_t *) malloc(sizeof(marpaESLIF_action_t));
     if (popContextActionp == NULL) {
@@ -1955,11 +1955,11 @@ static short _marpaESLIFRecognizer_lua_pop_contextb(marpaESLIFRecognizer_t *marp
     /* Action is always precompiled */
     popContextActionp->u.luaFunction.luacb = 1;
 
-    marpaESLIFRecognizerp->marpaESLIFRecognizerTopp->popContextActionp = popContextActionp;
+    *(marpaESLIFRecognizerp->popContextActionpp) = popContextActionp;
   }
 
   /* Call the context action and recuperate latest context */
-  marpaESLIFRecognizerp->actionp = marpaESLIFRecognizerp->marpaESLIFRecognizerTopp->popContextActionp;
+  marpaESLIFRecognizerp->actionp = *(marpaESLIFRecognizerp->popContextActionpp);
   LUA_GETTOP(marpaESLIFRecognizerp, &topi);
   if (! _marpaESLIFRecognizer_lua_function_loadb(marpaESLIFRecognizerp)) {
     goto err;

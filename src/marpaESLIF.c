@@ -10451,7 +10451,8 @@ static inline marpaESLIFRecognizer_t *_marpaESLIFRecognizer_newp(marpaESLIFGramm
   marpaESLIFRecognizerp->luaprecompiledp                    = NULL;    /* Lua script source precompiled */
   marpaESLIFRecognizerp->luaprecompiledl                    = 0;    /* Lua script source precompiled length in byte */
   marpaESLIFRecognizerp->popContextActionShallowb           = 0;
-  marpaESLIFRecognizerp->popContextActionp                  = NULL;  /* Only when this is an internal peeked recognizer for parameterized RHS */
+  marpaESLIFRecognizerp->_popContextActionp                 = NULL;
+  marpaESLIFRecognizerp->popContextActionpp                 = &(marpaESLIFRecognizerp->_popContextActionp);
 
 
   marpaWrapperRecognizerOption.genericLoggerp            = silentb ? NULL : marpaESLIFp->marpaESLIFOption.genericLoggerp;
@@ -11132,10 +11133,8 @@ static inline short _marpaESLIFGrammar_parseb(marpaESLIFGrammar_t *marpaESLIFGra
         goto err;
       }
       /* Prevent unnecessary reload of common context pop function */
-      if (marpaESLIFRecognizerParentp->popContextActionp != NULL) {
-        marpaESLIFRecognizerp->popContextActionShallowb = 1;
-        marpaESLIFRecognizerp->popContextActionp        = marpaESLIFRecognizerParentp->popContextActionp;
-      }
+      marpaESLIFRecognizerp->popContextActionShallowb = 1;
+      marpaESLIFRecognizerp->popContextActionpp       = marpaESLIFRecognizerParentp->popContextActionpp;
     }
   }
 
@@ -18542,7 +18541,8 @@ static inline void _marpaESLIFRecognizer_freev(marpaESLIFRecognizer_t *marpaESLI
   }
 
   if (! marpaESLIFRecognizerp->popContextActionShallowb) {
-    _marpaESLIF_action_freev(marpaESLIFRecognizerp->popContextActionp);
+    /* It is never NULL by definition */
+    _marpaESLIF_action_freev(*(marpaESLIFRecognizerp->popContextActionpp));
   }
 
   MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "return");

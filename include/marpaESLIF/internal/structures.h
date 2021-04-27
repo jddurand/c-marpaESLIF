@@ -532,7 +532,8 @@ struct marpaESLIFRecognizer {
   char                           *luaprecompiledp;    /* Lua script source precompiled */
   size_t                          luaprecompiledl;    /* Lua script source precompiled length in byte */
   short                           popContextActionShallowb;  /* Only when this is an internal peeked recognizer for parameterized RHS: inherit parent popContextActionp if any */
-  marpaESLIF_action_t            *popContextActionp;  /* Only when this is an internal peeked recognizer for parameterized RHS */
+  marpaESLIF_action_t            *_popContextActionp;  /* Hack to allow pookng recognizers to share popContextActionp */
+  marpaESLIF_action_t           **popContextActionpp;  /* Hack to allow pookng recognizers to share popContextActionp */
   };
 
 struct marpaESLIF_lexeme_data {
