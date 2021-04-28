@@ -345,7 +345,7 @@ struct marpaESLIF_meta {
   int                           *symbolArrayStartp;               /* Lexemes at the very beginning of marpaWrapperGrammarStartp */
   short                          lazyb;                           /* Meta symbol is lazy - for internal usage only at bootstrap */
   short                          terminalb;                       /* Meta terminal ? */
-  size_t                         paraml;                          /* Number of parameters */
+  int                            parami;                          /* Number of parameters, -1 when it is not parameterized */
   marpaESLIF_lua_functioncall_t *callp;                           /* Only for RHS metas (they are unique) */
   marpaESLIF_lua_functiondecl_t *declp;                           /* Only for RHS metas (they are unique) */
   marpaESLIF_action_t           *pushContextActionp;              /* Only for RHS metas (they are unique) */
@@ -627,7 +627,7 @@ struct marpaESLIFStringHelper {
 struct marpaESLIF_lua_functioncall {
   char   *luaexplists;
   short   luaexplistcb;
-  size_t  sizel;   /* Number of top expressions */
+  int     sizei;   /* Number of top expressions */
   char   *luap;    /* Lua function call source precompiled */
   size_t  lual;    /* Lua function call source precompiled length in byte */
 };
@@ -635,7 +635,7 @@ struct marpaESLIF_lua_functioncall {
 struct marpaESLIF_lua_functiondecl {
   char   *luaparlists;
   short   luaparlistcb;
-  size_t  sizel;   /* Number of parameters */
+  int     sizei;   /* Number of parameters */
   char   *luap;    /* Lua function decl source precompiled */
   size_t  lual;    /* Lua function decl source precompiled length in byte */
 };

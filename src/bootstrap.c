@@ -928,7 +928,7 @@ static inline marpaESLIF_symbol_t *_marpaESLIF_bootstrap_check_meta_by_namep(mar
   marpaESLIF_symbol_t           *symbolp      = NULL;
   marpaESLIF_meta_t             *metap        = NULL;
   short                          terminalb    = 0;
-  size_t                         paraml       = 0;
+  int                            parami       = -1;
   marpaESLIF_symbol_t           *symbol_i_p;
   marpaESLIF_symbol_t           *lhsp         = NULL;
   marpaESLIF_lua_functiondecl_t  call2decl;
@@ -947,7 +947,7 @@ static inline marpaESLIF_symbol_t *_marpaESLIF_bootstrap_check_meta_by_namep(mar
       MARPAESLIF_ERROR(marpaESLIFp, "declp is set but this is an rhs context");
       goto err;
     }
-    paraml = declp->sizel;
+    parami = declp->sizei;
   }
 
   if (callp != NULL) {
@@ -955,7 +955,7 @@ static inline marpaESLIF_symbol_t *_marpaESLIF_bootstrap_check_meta_by_namep(mar
       MARPAESLIF_ERROR(marpaESLIFp, "callp is set but this is an lhs context");
       goto err;
     }
-    paraml = callp->sizel;
+    parami = callp->sizei;
   }
   
   for (i = 0; i < GENERICSTACK_USED(symbolStackp); i++) {
@@ -963,7 +963,7 @@ static inline marpaESLIF_symbol_t *_marpaESLIF_bootstrap_check_meta_by_namep(mar
     if (symbol_i_p->type != MARPAESLIF_SYMBOL_TYPE_META) {
       continue;
     }
-    if (symbol_i_p->u.metap->paraml != paraml) {
+    if (symbol_i_p->u.metap->parami != parami) {
       continue;
     }
     if (strcmp(symbol_i_p->u.metap->asciinames, asciinames) == 0) {
@@ -974,10 +974,10 @@ static inline marpaESLIF_symbol_t *_marpaESLIF_bootstrap_check_meta_by_namep(mar
 
   /* When this is a parameterized RHS, we always want to force the creation and make it a meta terminal. */
   /* In addition it can only access an LHS with the same number of parameters in the same grammar.       */
-  if (rhsb && (paraml > 0)) {
+  if (rhsb && (parami >= 0)) {
     call2decl.luaparlists  = NULL;
     call2decl.luaparlistcb = 0;
-    call2decl.sizel        = paraml;
+    call2decl.sizei        = parami;
     call2decl.luap         = NULL;
     call2decl.lual         = 0;
 
@@ -991,7 +991,7 @@ static inline marpaESLIF_symbol_t *_marpaESLIF_bootstrap_check_meta_by_namep(mar
   }
   
   if (forcecreateb || (createb && (symbolp == NULL))) {
-    metap = _marpaESLIF_meta_newp(marpaESLIFp, grammarp, MARPAWRAPPERGRAMMAR_EVENTTYPE_NONE, asciinames, NULL /* descEncodings */, NULL /* descs */, 0 /* descl */, 0 /* lazyb */, terminalb, paraml, callp);
+    metap = _marpaESLIF_meta_newp(marpaESLIFp, grammarp, MARPAWRAPPERGRAMMAR_EVENTTYPE_NONE, asciinames, NULL /* descEncodings */, NULL /* descs */, 0 /* descl */, 0 /* lazyb */, terminalb, parami, callp);
     if (MARPAESLIF_UNLIKELY(metap == NULL)) {
       goto err;
     }
@@ -1127,10 +1127,12 @@ static inline short _marpaESLIF_bootstrap_search_terminal_pseudob(marpaESLIF_t *
   rcb = 1;
   goto done;
 
- err:
+#ifndef MARPAESLIF_NTRACE
+err: /* For MARPAESLIF_INTERNAL_GET_SYMBOL_FROM_STACK */
   rcb = 0;
+#endif
 
- done:
+done:
   return rcb;
 }
 
@@ -1621,7 +1623,6 @@ static inline marpaESLIF_symbol_t  *_marpaESLIF_bootstrap_check_rhsPrimaryp(marp
   marpaESLIF_grammar_t                 *referencedGrammarp;
   marpaESLIF_symbol_t                  *referencedSymbolp = NULL;
   marpaESLIF_bootstrap_single_symbol_t  singleSymbol; /* Fake single symbol in case of a "referenced-in-any-grammar" symbol */
-  char                                  tmps[1024];
   genericStack_t                       *alternativesStackp = NULL;
   int                                   ranki = 0;
   marpaESLIF_rule_t                    *rulep  = NULL;
@@ -1671,7 +1672,7 @@ static inline marpaESLIF_symbol_t  *_marpaESLIF_bootstrap_check_rhsPrimaryp(marp
     if (rhsPrimaryp->callp != NULL) {
       call2decl.luaparlists  = NULL;
       call2decl.luaparlistcb = 0;
-      call2decl.sizel        = rhsPrimaryp->callp->sizel;
+      call2decl.sizei        = rhsPrimaryp->callp->sizei;
       call2decl.luap         = NULL;
       call2decl.lual         = 0;
 
@@ -3963,7 +3964,7 @@ static inline short _marpaESLIF_bootstrap_G1_action_priority_loosen_ruleb(marpaE
   if (declp != NULL) {
     decl2call.luaexplists  = declp->luaparlists;
     decl2call.luaexplistcb = declp->luaparlistcb;
-    decl2call.sizel        = declp->sizel;
+    decl2call.sizei        = declp->sizei;
     decl2call.luap         = NULL;
     decl2call.lual         = 0;
     decl2callp = &decl2call;
@@ -4445,7 +4446,7 @@ static inline short _marpaESLIF_bootstrap_G1_action_priority_flat_ruleb(marpaESL
   if (declp != NULL) {
     decl2call.luaexplists  = declp->luaparlists;
     decl2call.luaexplistcb = declp->luaparlistcb;
-    decl2call.sizel        = declp->sizel;
+    decl2call.sizei        = declp->sizei;
     decl2call.luap         = NULL;
     decl2call.lual         = 0;
     decl2callp = &decl2call;
@@ -5697,7 +5698,7 @@ static short _marpaESLIF_bootstrap_G1_action_start_ruleb(void *userDatavp, marpa
 
   /* Check the symbol */
 
-  if ((startSymbolp->callp != NULL) && (startSymbolp->callp->sizel > 0)) {
+  if (startSymbolp->callp != NULL) {
     /* A parameterized start symbolp is special - we have to create an internal lhs to make it an RHS */
     startp = _marpaESLIF_bootstrap_check_meta_by_namep(marpaESLIFp, marpaESLIFGrammarp, grammarp, startSymbolp->symbols, 1 /* createb */, 0 /* forcecreateb */, 0 /* lhsb */, NULL /* declp */, 1 /* rhsb */, startSymbolp->callp);
     if (MARPAESLIF_UNLIKELY(startp == NULL)) {
@@ -8431,7 +8432,7 @@ static inline short _marpaESLIF_bootstrap_G1_action_generic_1b(void *userDatavp,
     bootstrapLuaFunctionp = NULL; /* actions is now in actionp */
     break;
 
-  defaut:
+  default:
     MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "marpaESLIFValueResultp->type is not ASCII nor PTR (got %d, %s)", marpaESLIFValueResultp->type, _marpaESLIF_value_types(marpaESLIFValueResultp->type));
     goto err;
   }
@@ -8516,7 +8517,7 @@ static short _marpaESLIF_bootstrap_G1_action_lua_functioncallb(void *userDatavp,
   marpaESLIFRecognizerOption.userDatavp        = (void *) &marpaESLIF_readerContext;
   marpaESLIFRecognizerOption.readerCallbackp   = _marpaESLIFReader_grammarReader;
 
-  marpaESLIFValueOption.userDatavp            = &(callp->sizel);
+  marpaESLIFValueOption.userDatavp            = &(callp->sizei);
   marpaESLIFValueOption.importerp             = marpaESLIFValueImport;
 
   if (! marpaESLIFGrammar_parse_by_levelb(marpaESLIFp->marpaESLIFGrammarLuapp[MARPAESLIFGRAMMARLUA_FOR_EXPLIST],
@@ -8607,7 +8608,7 @@ static short _marpaESLIF_bootstrap_G1_action_lua_functiondeclb(void *userDatavp,
   marpaESLIFRecognizerOption.userDatavp        = (void *) &marpaESLIF_readerContext;
   marpaESLIFRecognizerOption.readerCallbackp   = _marpaESLIFReader_grammarReader;
 
-  marpaESLIFValueOption.userDatavp            = &(declp->sizel);
+  marpaESLIFValueOption.userDatavp            = &(declp->sizei);
   marpaESLIFValueOption.importerp             = marpaESLIFValueImport;
 
   if (! marpaESLIFGrammar_parse_by_levelb(marpaESLIFp->marpaESLIFGrammarLuapp[MARPAESLIFGRAMMARLUA_FOR_PARLIST],
@@ -8906,40 +8907,40 @@ static short marpaESLIFValueImport(marpaESLIFValue_t *marpaESLIFValuep, void *us
 /*****************************************************************************/
 {
   marpaESLIF_t *marpaESLIFp = marpaESLIFValuep->marpaESLIFp;
-  size_t       *sizelp      = (size_t *) userDatavp;
+  int          *sizeip      = (int *) userDatavp;
   short         rcb;
 
   /* We expect a lua integer and nothing else. Note that we do not test if the number is < 0. We own the actions */
-  /* (c.f. src/lua.c), we know this cannot happen. We just verify that result fits in a size_t (which is unsigned btw). */
+  /* (c.f. src/lua.c), we know this cannot happen. We just verify that result fits in a int (which is unsigned btw). */
   switch (marpaESLIFValueResultp->type) {
   case MARPAESLIF_VALUE_TYPE_SHORT:
-    if (sizeof(size_t) < sizeof(short)) {
-      MARPAESLIF_ERRORF(marpaESLIFp, "Cannot store a short in a size_t (sizeof(short) is %ld, sizeof(size_t) is %ld)", (unsigned long) sizeof(short), (unsigned long) sizeof(size_t));
+    if (sizeof(int) < sizeof(short)) {
+      MARPAESLIF_ERRORF(marpaESLIFp, "Cannot store a short in a int (sizeof(short) is %ld, sizeof(int) is %ld)", (unsigned long) sizeof(short), (unsigned long) sizeof(int));
       goto err;
     }
-    *sizelp = (size_t) marpaESLIFValueResultp->u.b;
+    *sizeip = (int) marpaESLIFValueResultp->u.b;
     break;
   case MARPAESLIF_VALUE_TYPE_INT:
-    if (sizeof(size_t) < sizeof(int)) {
-      MARPAESLIF_ERRORF(marpaESLIFp, "Cannot store a short in a size_t (sizeof(int) is %ld, sizeof(size_t) is %ld)", (unsigned long) sizeof(int), (unsigned long) sizeof(size_t));
+    if (sizeof(int) < sizeof(int)) {
+      MARPAESLIF_ERRORF(marpaESLIFp, "Cannot store a short in a int (sizeof(int) is %ld, sizeof(int) is %ld)", (unsigned long) sizeof(int), (unsigned long) sizeof(int));
       goto err;
     }
-    *sizelp = (size_t) marpaESLIFValueResultp->u.i;
+    *sizeip = (int) marpaESLIFValueResultp->u.i;
     break;
   case MARPAESLIF_VALUE_TYPE_LONG:
-    if (sizeof(size_t) < sizeof(long)) {
-      MARPAESLIF_ERRORF(marpaESLIFp, "Cannot store a long in a size_t (sizeof(long) is %ld, sizeof(size_t) is %ld)", (unsigned long) sizeof(long), (unsigned long) sizeof(size_t));
+    if (sizeof(int) < sizeof(long)) {
+      MARPAESLIF_ERRORF(marpaESLIFp, "Cannot store a long in a int (sizeof(long) is %ld, sizeof(int) is %ld)", (unsigned long) sizeof(long), (unsigned long) sizeof(int));
       goto err;
     }
-    *sizelp = (size_t) marpaESLIFValueResultp->u.l;
+    *sizeip = (int) marpaESLIFValueResultp->u.l;
     break;
 #ifdef MARPAESLIF_HAVE_LONG_LONG
   case MARPAESLIF_VALUE_TYPE_LONG_LONG:
-    if (sizeof(size_t) < sizeof(long)) {
-      MARPAESLIF_ERRORF(marpaESLIFp, "Cannot store a long long in a size_t (sizeof(long long) is %ld, sizeof(size_t) is %ld)", (unsigned long) sizeof(long long), (unsigned long) sizeof(size_t));
+    if (sizeof(int) < sizeof(long)) {
+      MARPAESLIF_ERRORF(marpaESLIFp, "Cannot store a long long in a int (sizeof(long long) is %ld, sizeof(int) is %ld)", (unsigned long) sizeof(long long), (unsigned long) sizeof(int));
       goto err;
     }
-    *sizelp = (size_t) marpaESLIFValueResultp->u.ll;
+    *sizeip = (int) marpaESLIFValueResultp->u.ll;
     break;
 #endif
   default:

@@ -1755,7 +1755,6 @@ static short _marpaESLIFRecognizer_lua_push_contextb(marpaESLIFRecognizer_t *mar
   genericLogger_t              *genericLoggerp       = NULL;
   char                         *parlistWithoutParens = NULL;
   marpaESLIF_stringGenerator_t  marpaESLIF_stringGenerator;
-  size_t                        lual;
   int                           topi;
   marpaESLIFValueResult_t       marpaESLIFValueResult;
   short                         rcb;
@@ -1806,7 +1805,7 @@ static short _marpaESLIFRecognizer_lua_push_contextb(marpaESLIFRecognizer_t *mar
     if (MARPAESLIF_UNLIKELY(! marpaESLIF_stringGenerator.okb)) {
       goto err;
     }
-    if ((declp != NULL) && (declp->sizel > 0)) {
+    if ((declp != NULL) && (declp->sizei > 0)) {
       parlistWithoutParens = strdup(declp->luaparlists);
       if (parlistWithoutParens == NULL) {
         MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "strdup failure, %s", strerror(errno));
@@ -1819,7 +1818,7 @@ static short _marpaESLIFRecognizer_lua_push_contextb(marpaESLIFRecognizer_t *mar
         goto err;
       }
     }
-    if ((callp != NULL) && (callp->sizel > 0)) {
+    if ((callp != NULL) && (callp->sizei > 0)) {
       GENERICLOGGER_TRACEF(genericLoggerp, "  return marpaESLIFContextStackp.push(table.pack%s)\n", callp->luaexplists);
     } else {
       GENERICLOGGER_TRACE(genericLoggerp, "  return marpaESLIFContextStackp.push(table.pack())\n");
@@ -1887,7 +1886,6 @@ static short _marpaESLIFRecognizer_lua_pop_contextb(marpaESLIFRecognizer_t *marp
   genericLogger_t              *genericLoggerp = NULL;
   marpaESLIF_action_t          *popContextActionp;
   marpaESLIF_stringGenerator_t  marpaESLIF_stringGenerator;
-  size_t                        lual;
   int                           topi;
   marpaESLIFValueResult_t       marpaESLIFValueResult;
   short                         rcb;
