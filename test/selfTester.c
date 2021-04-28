@@ -701,7 +701,7 @@ int main() {
   short                        continueb;
   short                        exhaustedb;
 
-  genericLoggerp = GENERICLOGGER_NEW(GENERICLOGGER_LOGLEVEL_TRACE);
+  genericLoggerp = GENERICLOGGER_NEW(GENERICLOGGER_LOGLEVEL_INFO);
 
   marpaESLIFOption.genericLoggerp = genericLoggerp;
   marpaESLIFp = marpaESLIF_newp(&marpaESLIFOption);
@@ -800,7 +800,7 @@ int main() {
   marpaESLIFRecognizerOption.userDatavp        = &marpaESLIFTester_context; /* User specific context */
   marpaESLIFRecognizerOption.readerCallbackp   = inputReaderb; /* Reader */
   marpaESLIFRecognizerOption.disableThresholdb = 0; /* Default: 0 */
-  marpaESLIFRecognizerOption.exhaustedb        = 1; /* Exhaustion event. Default: 0 */
+  marpaESLIFRecognizerOption.exhaustedb        = 0; /* Exhaustion event. Default: 0 */
   marpaESLIFRecognizerOption.newlineb          = 1; /* Count line/column numbers. Default: 0 */
   marpaESLIFRecognizerOption.trackb            = 1; /* Absolute position tracking. Default: 0 */
   marpaESLIFRecognizerOption.bufsizl           = 10; /* Minimum stream buffer size: Recommended: 0 (internally, a system default will apply) */
@@ -812,6 +812,7 @@ int main() {
   marpaESLIFRecognizerOption.importerp            = NULL;
 
   /* Test with events */
+  GENERICLOGGER_LEVEL_SET(genericLoggerp, GENERICLOGGER_LOGLEVEL_TRACE);
   GENERICLOGGER_NOTICE(genericLoggerp, "Testing interactive recognizer");
   marpaESLIFRecognizerp = marpaESLIFRecognizer_newp(marpaESLIFGrammarp, &marpaESLIFRecognizerOption);
   if (marpaESLIFRecognizerp == NULL) {
@@ -835,6 +836,7 @@ int main() {
 
   /* Test valuation (no event) */
   GENERICLOGGER_NOTICE(genericLoggerp, "Testing parse");
+  marpaESLIFTester_context.firstb         = 1;
   marpaESLIFTester_context.inputs         = (char *) selfs;
   marpaESLIFTester_context.inputl         = strlen(selfs);
   marpaESLIFRecognizerOption.exhaustedb   = 0; /* Exhaustion event. Default: 0 */

@@ -7579,12 +7579,17 @@ marpaESLIFRecognizer_t *marpaESLIFRecognizer_newp(marpaESLIFGrammar_t *marpaESLI
 short marpaESLIFRecognizer_shareb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFRecognizer_t *marpaESLIFRecognizerSharedp)
 /*****************************************************************************/
 {
-  short rcb;
+  static const char *funcs = "marpaESLIFRecognizer_shareb";
+  short              rcb;
 
   if (MARPAESLIF_UNLIKELY(marpaESLIFRecognizerp == NULL)) {
     errno = EINVAL;
-    goto err;
+    rcb = 0;
+    goto fast_done;
   }
+
+  MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_INC;
+  MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "start");
 
   if (MARPAESLIF_UNLIKELY(marpaESLIFRecognizerp == marpaESLIFRecognizerSharedp)) {
     errno = EINVAL;
@@ -7598,6 +7603,9 @@ short marpaESLIFRecognizer_shareb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp,
   rcb = 0;
 
  done:
+  MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "return %d", (int) rcb);
+  MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_DEC;
+ fast_done:
   return rcb;
 }
 
@@ -7605,12 +7613,17 @@ short marpaESLIFRecognizer_shareb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp,
 short marpaESLIFRecognizer_peekb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFRecognizer_t *marpaESLIFRecognizerPeekedp)
 /*****************************************************************************/
 {
-  short rcb;
+  static const char *funcs = "marpaESLIFRecognizer_peekb";
+  short              rcb;
 
   if (MARPAESLIF_UNLIKELY(marpaESLIFRecognizerp == NULL)) {
     errno = EINVAL;
-    goto err;
+    rcb = 0;
+    goto fast_done;
   }
+
+  MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_INC;
+  MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "start");
 
   rcb = _marpaESLIFRecognizer_peekb(marpaESLIFRecognizerp, marpaESLIFRecognizerPeekedp);
   goto done;
@@ -7619,6 +7632,9 @@ short marpaESLIFRecognizer_peekb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, 
   rcb = 0;
 
  done:
+  MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "return %d", (int) rcb);
+  MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_DEC;
+ fast_done:
   return rcb;
 }
 
@@ -7626,12 +7642,17 @@ short marpaESLIFRecognizer_peekb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, 
 marpaESLIF_t *marpaESLIFRecognizer_eslifp(marpaESLIFRecognizer_t *marpaESLIFRecognizerp)
 /*****************************************************************************/
 {
-  marpaESLIF_t *marpaESLIFp;
+  static const char *funcs = "marpaESLIFRecognizer_eslifp";
+  marpaESLIF_t      *marpaESLIFp;
 
   if (MARPAESLIF_UNLIKELY(marpaESLIFRecognizerp == NULL)) {
     errno = EINVAL;
-    goto err;
+    marpaESLIFp = NULL;
+    goto fast_done;
   }
+
+  MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_INC;
+  MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "start");
 
   marpaESLIFp = marpaESLIFRecognizerp->marpaESLIFp;
   goto done;
@@ -7640,6 +7661,9 @@ marpaESLIF_t *marpaESLIFRecognizer_eslifp(marpaESLIFRecognizer_t *marpaESLIFReco
   marpaESLIFp = NULL;
 
  done:
+  MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "return %p", marpaESLIFp);
+  MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_DEC;
+ fast_done:
   return marpaESLIFp;
 }
 
@@ -7647,12 +7671,17 @@ marpaESLIF_t *marpaESLIFRecognizer_eslifp(marpaESLIFRecognizer_t *marpaESLIFReco
 short marpaESLIFRecognizer_scanb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, short initialEventsb, short *continuebp, short *isExhaustedbp)
 /*****************************************************************************/
 {
-  short rcb;
+  static const char *funcs = "marpaESLIFRecognizer_scanb";
+  short              rcb;
 
   if (MARPAESLIF_UNLIKELY(marpaESLIFRecognizerp == NULL)) {
     errno = EINVAL;
-    goto err;
+    rcb = 0;
+    goto fast_done;
   }
+
+  MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_INC;
+  MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "start");
 
   rcb = _marpaESLIFRecognizer_scanb(marpaESLIFRecognizerp, initialEventsb, continuebp, isExhaustedbp);
   goto done;
@@ -7661,6 +7690,9 @@ short marpaESLIFRecognizer_scanb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, 
   rcb = 0;
 
  done:
+  MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "return %d", (int) rcb);
+  MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_DEC;
+ fast_done:
   return rcb;
 }
 
@@ -7668,12 +7700,25 @@ short marpaESLIFRecognizer_scanb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, 
 short marpaESLIFRecognizer_resumeb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, size_t deltaLengthl, short *continuebp, short *isExhaustedbp)
 /*****************************************************************************/
 {
-  short rcb;
+  static const char *funcs = "marpaESLIFRecognizer_resumeb";
+  short              rcb;
 
   if (MARPAESLIF_UNLIKELY(marpaESLIFRecognizerp == NULL)) {
     errno = EINVAL;
-    goto err;
+    rcb = 0;
+    goto fast_done;
   }
+
+  /* This is tricky, for log-analysis, we want resume to look as if the caller did not called us    */
+  /* e.g. as if we were always in the classic no-event parse() mode. But in the parse() mode, there */
+  /* is one callstack more:                                                                         */
+  /* parse() -> _scan() -> _resume() -> _resume_oneb()                                              */
+  /* If we are here, without incrementing twice the callstack, we would have:                       */
+  /* resume() -> _resume() -> _resume_oneb()                                                        */
+
+  MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_INC;
+  MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_INC;
+  MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "start");
 
   rcb = _marpaESLIFRecognizer_resumeb(marpaESLIFRecognizerp, deltaLengthl, 0 /* initialEventsb */, continuebp, isExhaustedbp);
   goto done;
@@ -7682,6 +7727,10 @@ short marpaESLIFRecognizer_resumeb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp
   rcb = 0;
 
  done:
+  MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "return %d", (int) rcb);
+  MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_DEC;
+  MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_DEC;
+ fast_done:
   return rcb;
 }
 
@@ -8821,8 +8870,13 @@ short marpaESLIFRecognizer_lexeme_alternativeb(marpaESLIFRecognizer_t *marpaESLI
 
   if (MARPAESLIF_UNLIKELY(marpaESLIFRecognizerp == NULL)) {
     errno = EINVAL;
-    return 0;
+    rcb = 0;
+    goto fast_done;
   }
+
+  MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_INC;
+  MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "start");
+
   marpaESLIFp        = marpaESLIFRecognizerp->marpaESLIFp;
   marpaESLIFGrammarp = marpaESLIFRecognizerp->marpaESLIFGrammarp;
   grammarp           = marpaESLIFGrammarp->grammarp;
@@ -8880,6 +8934,9 @@ short marpaESLIFRecognizer_lexeme_alternativeb(marpaESLIFRecognizer_t *marpaESLI
   rcb = 0;
 
  done:
+  MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "return %d", (int) rcb);
+  MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_DEC;
+ fast_done:
   return rcb;
 }
 
@@ -8950,24 +9007,55 @@ static inline short _marpaESLIFRecognizer_isEofb(marpaESLIFRecognizer_t *marpaES
 short marpaESLIFRecognizer_isEofb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, short *eofbp)
 /*****************************************************************************/
 {
-  if (marpaESLIFRecognizerp == NULL) {
+  static const char *funcs = "marpaESLIFRecognizer_isEofb";
+  short              rcb;
+
+  if (MARPAESLIF_UNLIKELY(marpaESLIFRecognizerp == NULL)) {
     errno = EINVAL;
-    return 0;
+    rcb = 0;
+    goto fast_done;
   }
 
-  return _marpaESLIFRecognizer_isEofb(marpaESLIFRecognizerp, eofbp);
+  MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_INC;
+  MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "start");
+
+  rcb = _marpaESLIFRecognizer_isEofb(marpaESLIFRecognizerp, eofbp);
+  goto done;
+
+ done:
+  MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "return %d", (int) rcb);
+  MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_DEC;
+ fast_done:
+  return rcb;
 }
 
 /*****************************************************************************/
 short marpaESLIFRecognizer_lexeme_completeb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, size_t lengthl)
 /*****************************************************************************/
 {
+  static const char *funcs = "marpaESLIFRecognizer_lexeme_completeb";
+  short              rcb;
+
   if (marpaESLIFRecognizerp == NULL) {
     errno = EINVAL;
-    return 0;
+    rcb = 0;
+    goto fast_done;
   }
 
-  return _marpaESLIFRecognizer_lexeme_completeb(marpaESLIFRecognizerp, lengthl);
+  MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_INC;
+  MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "start");
+
+  rcb = _marpaESLIFRecognizer_lexeme_completeb(marpaESLIFRecognizerp, lengthl);
+  goto done;
+
+ err:
+  rcb = 0;
+
+ done:
+  MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "return %d", (int) rcb);
+  MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_DEC;
+ fast_done:
+  return rcb;
 }
 
 /*****************************************************************************/
@@ -9235,20 +9323,38 @@ static inline short _marpaESLIFRecognizer_discard_tryb(marpaESLIFRecognizer_t *m
 short marpaESLIFRecognizer_lexeme_readb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFAlternative_t *marpaESLIFAlternativep, size_t lengthl)
 /*****************************************************************************/
 {
+  static const char *funcs = "marpaESLIFRecognizer_lexeme_readb";
+  short              rcb;
+
   if (marpaESLIFRecognizerp == NULL) {
     errno = EINVAL;
-    return 0;
+    rcb = 0;
+    goto fast_done;
   }
 
-  return
+  MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_INC;
+  MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "start");
+
+  rcb = 
     marpaESLIFRecognizer_lexeme_alternativeb(marpaESLIFRecognizerp, marpaESLIFAlternativep) &&
     marpaESLIFRecognizer_lexeme_completeb(marpaESLIFRecognizerp, lengthl);
+  goto done;
+
+ err:
+  rcb = 0;
+
+ done:
+  MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "return %d", (int) rcb);
+  MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_DEC;
+ fast_done:
+  return rcb;
 }
 
 /*****************************************************************************/
 short marpaESLIFRecognizer_lexeme_tryb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, char *lexemes, short *matchbp)
 /*****************************************************************************/
 {
+  static const char       *funcs = "marpaESLIFRecognizer_lexeme_tryb";
   marpaESLIF_t            *marpaESLIFp;
   marpaESLIFGrammar_t     *marpaESLIFGrammarp;
   marpaESLIF_grammar_t    *grammarp;
@@ -9257,8 +9363,13 @@ short marpaESLIFRecognizer_lexeme_tryb(marpaESLIFRecognizer_t *marpaESLIFRecogni
 
   if (marpaESLIFRecognizerp == NULL) {
     errno = EINVAL;
-    return 0;
+    rcb = 0;
+    goto fast_done;
   }
+
+  MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_INC;
+  MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "start");
+
   marpaESLIFp        = marpaESLIFRecognizerp->marpaESLIFp;
   marpaESLIFGrammarp = marpaESLIFRecognizerp->marpaESLIFGrammarp;
   grammarp           = marpaESLIFGrammarp->grammarp;
@@ -9289,6 +9400,9 @@ short marpaESLIFRecognizer_lexeme_tryb(marpaESLIFRecognizer_t *marpaESLIFRecogni
   rcb = 0;
 
  done:
+  MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "return %d", (int) rcb);
+  MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_DEC;
+ fast_done:
   return rcb;
 }
 
@@ -9296,13 +9410,18 @@ short marpaESLIFRecognizer_lexeme_tryb(marpaESLIFRecognizer_t *marpaESLIFRecogni
 short marpaESLIFRecognizer_discardb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, size_t *discardlp)
 /*****************************************************************************/
 {
-  size_t discardl;
-  short  rcb;
+  static const char *funcs = "marpaESLIFRecognizer_discardb";
+  size_t             discardl;
+  short              rcb;
 
   if (MARPAESLIF_UNLIKELY(marpaESLIFRecognizerp == NULL)) {
     errno = EINVAL;
-    return 0;
+    rcb = 0;
+    goto fast_done;
   }
+
+  MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_INC;
+  MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "start");
 
   if (! _marpaESLIFRecognizer_discardParseb(marpaESLIFRecognizerp, 0 /* minl */, &discardl)) {
     goto err;
@@ -9318,6 +9437,9 @@ short marpaESLIFRecognizer_discardb(marpaESLIFRecognizer_t *marpaESLIFRecognizer
   rcb = 0;
 
  done:
+  MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "return %d", (int) rcb);
+  MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_DEC;
+ fast_done:
   return rcb;
 }
 
@@ -9325,6 +9447,7 @@ short marpaESLIFRecognizer_discardb(marpaESLIFRecognizer_t *marpaESLIFRecognizer
 short marpaESLIFRecognizer_discard_tryb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, short *matchbp)
 /*****************************************************************************/
 {
+  static const char       *funcs = "marpaESLIFRecognizer_discard_tryb";
   marpaESLIF_t            *marpaESLIFp;
   marpaESLIFGrammar_t     *marpaESLIFGrammarp;
   marpaESLIF_grammar_t    *grammarp;
@@ -9332,8 +9455,12 @@ short marpaESLIFRecognizer_discard_tryb(marpaESLIFRecognizer_t *marpaESLIFRecogn
 
   if (MARPAESLIF_UNLIKELY(marpaESLIFRecognizerp == NULL)) {
     errno = EINVAL;
-    return 0;
+    rcb = 0;
+    goto fast_done;
   }
+
+  MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_INC;
+  MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "start");
 
   marpaESLIFp        = marpaESLIFRecognizerp->marpaESLIFp;
   marpaESLIFGrammarp = marpaESLIFRecognizerp->marpaESLIFGrammarp;
@@ -9354,6 +9481,9 @@ short marpaESLIFRecognizer_discard_tryb(marpaESLIFRecognizer_t *marpaESLIFRecogn
   rcb = 0;
 
  done:
+  MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "return %d", (int) rcb);
+  MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_DEC;
+ fast_done:
   return rcb;
 }
 
@@ -9372,8 +9502,13 @@ short marpaESLIFRecognizer_event_onoffb(marpaESLIFRecognizer_t *marpaESLIFRecogn
 
   if (marpaESLIFRecognizerp == NULL) {
     errno = EINVAL;
-    return 0;
+    rcb = 0;
+    goto fast_done;
   }
+
+  MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_INC;
+  MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "start");
+
   marpaESLIFp        = marpaESLIFRecognizerp->marpaESLIFp;
   marpaESLIFGrammarp = marpaESLIFRecognizerp->marpaESLIFGrammarp;
   grammarp           = marpaESLIFGrammarp->grammarp;
@@ -9427,6 +9562,7 @@ short marpaESLIFRecognizer_event_onoffb(marpaESLIFRecognizer_t *marpaESLIFRecogn
  done:
   MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "return %d", (int) rcb);
   MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_DEC;
+ fast_done:
   return rcb;
 }
 
@@ -9452,7 +9588,8 @@ short marpaESLIFRecognizer_lexeme_expectedb(marpaESLIFRecognizer_t *marpaESLIFRe
 
   if (MARPAESLIF_UNLIKELY(marpaESLIFRecognizerp == NULL)) {
     errno = EINVAL;
-    goto err;
+    rcb = 0;
+    goto fast_done;
   }
 
   MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_INC;
@@ -9526,6 +9663,7 @@ short marpaESLIFRecognizer_lexeme_expectedb(marpaESLIFRecognizer_t *marpaESLIFRe
  done:
   MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "return %d", (int) rcb);
   MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_DEC;
+ fast_done:
   return rcb;
 }
 
@@ -9796,7 +9934,8 @@ short marpaESLIFRecognizer_eventb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp,
 
   if (MARPAESLIF_UNLIKELY(marpaESLIFRecognizerp == NULL)) {
     errno = EINVAL;
-    goto err;
+    rcb = 0;
+    goto fast_done;
   }
 
   MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_INC;
@@ -9825,7 +9964,7 @@ short marpaESLIFRecognizer_eventb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp,
  done:
   MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "return %d", (int) rcb);
   MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_DEC;
-
+ fast_done:
   return rcb;
 }
 
@@ -10795,21 +10934,26 @@ short marpaESLIFRecognizer_set_exhausted_flagb(marpaESLIFRecognizer_t *marpaESLI
 /*****************************************************************************/
 {
   static const char *funcs = "marpaESLIFRecognizer_set_exhausted_flagb";
+  short              rcb;
 
   if (marpaESLIFRecognizerp == NULL) {
     errno = EINVAL;
-    return 0;
+    rcb = 0;
+    goto fast_done;
   }
 
   MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_INC;
   MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "start");
 
   marpaESLIFRecognizerp->marpaESLIFRecognizerOption.exhaustedb = exhaustedb;
+  rcb = 1;
+  goto done;
 
-  MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "return 1");
+ done:
+  MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "return %d", (int) rcb);
   MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_DEC;
-
-  return 1;
+ fast_done:
+  return rcb;
 }
 
 /*****************************************************************************/
@@ -10935,24 +11079,52 @@ static inline short _marpaESLIFRecognizer_isCanContinueb(marpaESLIFRecognizer_t 
 short marpaESLIFRecognizer_isCanContinueb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, short *isCanContinuebp)
 /*****************************************************************************/
 {
+  static const char *funcs = "marpaESLIFRecognizer_isCanContinueb";
+  short              rcb;
+
   if (marpaESLIFRecognizerp == NULL) {
     errno = EINVAL;
-    return 0;
+    rcb = 0;
+    goto fast_done;
   }
 
-  return _marpaESLIFRecognizer_isCanContinueb(marpaESLIFRecognizerp, isCanContinuebp, NULL /* eofbp */, NULL /* exhautedbp */);
+  MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_INC;
+  MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "start");
+
+  rcb = _marpaESLIFRecognizer_isCanContinueb(marpaESLIFRecognizerp, isCanContinuebp, NULL /* eofbp */, NULL /* exhautedbp */);
+  goto done;
+
+ done:
+  MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "return %d", (int) rcb);
+  MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_DEC;
+ fast_done:
+  return rcb;
 }
 
 /*****************************************************************************/
 short marpaESLIFRecognizer_isExhaustedb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, short *isExhaustedbp)
 /*****************************************************************************/
 {
+  static const char *funcs = "marpaESLIFRecognizer_isExhaustedb";
+  short              rcb;
+
   if (marpaESLIFRecognizerp == NULL) {
     errno = EINVAL;
-    return 0;
+    rcb = 0;
+    goto fast_done;
   }
 
-  return _marpaESLIFRecognizer_isExhaustedb(marpaESLIFRecognizerp, isExhaustedbp);
+  MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_INC;
+  MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "start");
+
+  rcb = _marpaESLIFRecognizer_isExhaustedb(marpaESLIFRecognizerp, isExhaustedbp);
+  goto done;
+
+ done:
+  MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "return %d", (int) rcb);
+  MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_DEC;
+ fast_done:
+  return rcb;
 }
 
 /*****************************************************************************/
@@ -11115,8 +11287,12 @@ static inline short _marpaESLIFGrammar_parseb(marpaESLIFGrammar_t *marpaESLIFGra
                                                      utfb, /* May be inherited from parent*/
                                                      grammarIsOnStackb);
   if (MARPAESLIF_UNLIKELY(marpaESLIFRecognizerp == NULL)) {
-    goto err;
+    rcb = 0;
+    goto fast_done;
   }
+
+  MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_INC;
+  MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "start");
 
   if (peekb) {
     /* By construction, there is a callp != NULL, when declp may be NULL - in any case we want to set a context. */
@@ -11178,6 +11354,9 @@ static inline short _marpaESLIFGrammar_parseb(marpaESLIFGrammar_t *marpaESLIFGra
   rcb = 0;
 
  done:
+  MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "return %d", (int) rcb);
+  MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_DEC;
+ fast_done:
   marpaESLIFValue_freev(marpaESLIFValuep);
 
 #ifndef MARPAESLIF_NTRACE
@@ -13717,7 +13896,8 @@ short marpaESLIFRecognizer_progressLogb(marpaESLIFRecognizer_t *marpaESLIFRecogn
 
   if (marpaESLIFRecognizerp == NULL) {
     errno = EINVAL;
-    return 0;
+    rcb = 0;
+    goto fast_done;
   }
 
   MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_INC;
@@ -13729,9 +13909,12 @@ short marpaESLIFRecognizer_progressLogb(marpaESLIFRecognizer_t *marpaESLIFRecogn
                                             logleveli,
                                             marpaESLIFRecognizerp->marpaESLIFGrammarp,
                                             _marpaESLIFGrammar_symbolDescriptionCallback);
+  goto done;
 
+ done:
   MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "return %d", (int) rcb);
   MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_DEC;
+ fast_done:
   return rcb;
 }
 
@@ -15234,14 +15417,26 @@ short marpaESLIFRecognizer_importb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp
 /*****************************************************************************/
 {
   static const char *funcs = "marpaESLIFRecognizer_importb";
+  short              rcb;
 
   /* Generic importation helper of a marpaESLIFValueResult during recognition */
   if (marpaESLIFRecognizerp == NULL) {
     errno = EINVAL;
-    return 0;
+    rcb = 0;
+    goto fast_done;
   }
 
-  return _marpaESLIFRecognizer_eslif2hostb(marpaESLIFRecognizerp, marpaESLIFValueResultp, NULL /* forcedUserDatavp */, NULL /* forcedImporterp */);
+  MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_INC;
+  MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "start");
+
+  rcb = _marpaESLIFRecognizer_eslif2hostb(marpaESLIFRecognizerp, marpaESLIFValueResultp, NULL /* forcedUserDatavp */, NULL /* forcedImporterp */);
+  goto done;
+
+ done:
+  MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "return %d", (int) rcb);
+  MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_DEC;
+ fast_done:
+  return rcb;
 }
 
 /*****************************************************************************/
@@ -17527,7 +17722,8 @@ short marpaESLIFRecognizer_readb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, 
 
   if (marpaESLIFRecognizerp == NULL) {
     errno = EINVAL;
-    return 0;
+    rcb = 0;
+    goto fast_done;
   }
 
   MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_INC;
@@ -17546,6 +17742,7 @@ short marpaESLIFRecognizer_readb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, 
  done:
   MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "return %d", (int) rcb);
   MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_DEC;
+ fast_done:
   return rcb;
 }
 
@@ -17616,25 +17813,43 @@ short marpaESLIFRecognizer_inputb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp,
 /*****************************************************************************/
 {
   static const char *funcs = "marpaESLIFRecognizer_inputb";
+  short              rcb;
 
   if (marpaESLIFRecognizerp == NULL) {
     errno = EINVAL;
-    return 0;
+    rcb = 0;
+    goto fast_done;
   }
 
-  return _marpaESLIFRecognizer_inputb(marpaESLIFRecognizerp, inputsp, inputlp);
+  MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_INC;
+  MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "start");
+
+  rcb = _marpaESLIFRecognizer_inputb(marpaESLIFRecognizerp, inputsp, inputlp);
+  goto done;
+
+ done:
+  MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "return %d", (int) rcb);
+  MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_DEC;
+ fast_done:
+  return rcb;
 }
 
 /*****************************************************************************/
 short marpaESLIFRecognizer_locationb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, size_t *linelp, size_t *columnlp)
 /*****************************************************************************/
 {
+  static const char   *funcs = "marpaESLIFRecognizer_locationb";
   marpaESLIF_stream_t *marpaESLIF_streamp;
+  short                rcb;
 
   if (marpaESLIFRecognizerp == NULL) {
     errno = EINVAL;
-    return 0;
+    rcb = 0;
+    goto fast_done;
   }
+
+  MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_INC;
+  MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "start");
 
   marpaESLIF_streamp = marpaESLIFRecognizerp->marpaESLIF_streamp;
 
@@ -17645,7 +17860,14 @@ short marpaESLIFRecognizer_locationb(marpaESLIFRecognizer_t *marpaESLIFRecognize
     *columnlp = marpaESLIF_streamp->columnl;
   }
 
-  return 1;
+  rcb = 1;
+  goto done;
+
+ done:
+  MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "return %d", (int) rcb);
+  MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_DEC;
+ fast_done:
+  return rcb;
 }
 
 /*****************************************************************************/
@@ -17753,48 +17975,104 @@ static inline short _marpaESLIFRecognizer_discard_lastb(marpaESLIFRecognizer_t *
 short marpaESLIFRecognizer_lexeme_last_pauseb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, char *lexemes, char **pausesp, size_t *pauselp)
 /*****************************************************************************/
 {
+  static const char *funcs = "marpaESLIFRecognizer_lexeme_last_pauseb";
+  short              rcb;
+
   if (marpaESLIFRecognizerp == NULL) {
     errno = EINVAL;
-    return 0;
+    rcb = 0;
+    goto fast_done;
   }
 
-  return _marpaESLIFRecognizer_last_lexemeDatab(marpaESLIFRecognizerp, lexemes, pausesp, pauselp, marpaESLIFRecognizerp->lastPausepp, 1 /* forPauseb */);
+  MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_INC;
+  MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "start");
+
+  rcb = _marpaESLIFRecognizer_last_lexemeDatab(marpaESLIFRecognizerp, lexemes, pausesp, pauselp, marpaESLIFRecognizerp->lastPausepp, 1 /* forPauseb */);
+  goto done;
+
+ done:
+  MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "return %d", (int) rcb);
+  MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_DEC;
+ fast_done:
+  return rcb;
 }
 
 /*****************************************************************************/
 short marpaESLIFRecognizer_lexeme_last_tryb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, char *lexemes, char **trysp, size_t *trylp)
 /*****************************************************************************/
 {
+  static const char *funcs = "marpaESLIFRecognizer_lexeme_last_pauseb";
+  short              rcb;
+
   if (marpaESLIFRecognizerp == NULL) {
     errno = EINVAL;
-    return 0;
+    rcb = 0;
+    goto fast_done;
   }
 
-  return _marpaESLIFRecognizer_last_lexemeDatab(marpaESLIFRecognizerp, lexemes, trysp, trylp, marpaESLIFRecognizerp->lastTrypp, 0 /* forPauseb */);
+  MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_INC;
+  MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "start");
+
+  rcb = _marpaESLIFRecognizer_last_lexemeDatab(marpaESLIFRecognizerp, lexemes, trysp, trylp, marpaESLIFRecognizerp->lastTrypp, 0 /* forPauseb */);
+  goto done;
+
+ done:
+  MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "return %d", (int) rcb);
+  MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_DEC;
+ fast_done:
+  return rcb;
 }
 
 /*****************************************************************************/
 short marpaESLIFRecognizer_discard_last_tryb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, char **trysp, size_t *trylp)
 /*****************************************************************************/
 {
+  static const char *funcs = "marpaESLIFRecognizer_discard_last_tryb";
+  short              rcb;
+
   if (marpaESLIFRecognizerp == NULL) {
     errno = EINVAL;
-    return 0;
+    rcb = 0;
+    goto fast_done;
   }
 
-  return _marpaESLIFRecognizer_last_lexemeDatab(marpaESLIFRecognizerp, ":discard", trysp, trylp, marpaESLIFRecognizerp->lastTrypp, 0 /* forPauseb */);
+  MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_INC;
+  MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "start");
+
+  rcb = _marpaESLIFRecognizer_last_lexemeDatab(marpaESLIFRecognizerp, ":discard", trysp, trylp, marpaESLIFRecognizerp->lastTrypp, 0 /* forPauseb */);
+  goto done;
+
+ done:
+  MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "return %d", (int) rcb);
+  MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_DEC;
+ fast_done:
+  return rcb;
 }
 
 /*****************************************************************************/
 short marpaESLIFRecognizer_discard_lastb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, char **trysp, size_t *trylp)
 /*****************************************************************************/
 {
+  static const char *funcs = "marpaESLIFRecognizer_discard_lastb";
+  short              rcb;
+
   if (marpaESLIFRecognizerp == NULL) {
     errno = EINVAL;
-    return 0;
+    rcb = 0;
+    goto fast_done;
   }
 
-  return _marpaESLIFRecognizer_discard_lastb(marpaESLIFRecognizerp, trysp, trylp);
+  MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_INC;
+  MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "start");
+
+  rcb = _marpaESLIFRecognizer_discard_lastb(marpaESLIFRecognizerp, trysp, trylp);
+  goto done;
+
+ done:
+  MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "return %d", (int) rcb);
+  MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_DEC;
+ fast_done:
+  return rcb;
 }
 
 /*****************************************************************************/
@@ -17940,6 +18218,7 @@ short marpaESLIFRecognizer_last_completedb(marpaESLIFRecognizer_t *marpaESLIFRec
 /*****************************************************************************/
 {
   /* This method work only for the CURRENT grammar of CURRENT recognizer */
+  static const char                *funcs = "marpaESLIFRecognizer_last_completedb";
   marpaESLIF_t                     *marpaESLIFp;
   marpaWrapperRecognizer_t         *marpaWrapperRecognizerp;
   marpaESLIFGrammar_t              *marpaESLIFGrammarp;
@@ -17972,8 +18251,13 @@ short marpaESLIFRecognizer_last_completedb(marpaESLIFRecognizer_t *marpaESLIFRec
 
   if (marpaESLIFRecognizerp == NULL) {
     errno = EINVAL;
-    return 0;
+    rcb = 0;
+    goto fast_done;
   }
+
+  MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_INC;
+  MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "start");
+
   marpaESLIFp             = marpaESLIFRecognizerp->marpaESLIFp;
   marpaWrapperRecognizerp = marpaESLIFRecognizerp->marpaWrapperRecognizerp;
   if (MARPAESLIF_UNLIKELY(! marpaESLIFRecognizerp->marpaESLIFRecognizerOption.trackb)) {
@@ -18089,6 +18373,9 @@ short marpaESLIFRecognizer_last_completedb(marpaESLIFRecognizer_t *marpaESLIFRec
   rcb = 0;
 
  done:
+  MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "return %d", (int) rcb);
+  MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_DEC;
+ fast_done:
   return rcb;
 }
 
@@ -18096,12 +18383,26 @@ short marpaESLIFRecognizer_last_completedb(marpaESLIFRecognizer_t *marpaESLIFRec
 short marpaESLIFRecognizer_hook_discardb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, short discardOnOffb)
 /*****************************************************************************/
 {
+  static const char *funcs = "marpaESLIFRecognizer_hook_discardb";
+  short              rcb;
+
   if (marpaESLIFRecognizerp == NULL) {
     errno = EINVAL;
-    return 0;
+    rcb = 0;
+    goto fast_done;
   }
 
-  return _marpaESLIFRecognizer_hook_discardb(marpaESLIFRecognizerp, discardOnOffb);
+  MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_INC;
+  MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "start");
+
+  rcb = _marpaESLIFRecognizer_hook_discardb(marpaESLIFRecognizerp, discardOnOffb);
+  goto done;
+
+ done:
+  MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "return %d", (int) rcb);
+  MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_DEC;
+ fast_done:
+  return rcb;
 }
 
 /*****************************************************************************/
@@ -18121,12 +18422,26 @@ static inline short _marpaESLIFRecognizer_hook_discardb(marpaESLIFRecognizer_t *
 short marpaESLIFRecognizer_hook_discard_switchb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp)
 /*****************************************************************************/
 {
+  static const char *funcs = "marpaESLIFRecognizer_hook_discard_switchb";
+  short              rcb;
+
   if (marpaESLIFRecognizerp == NULL) {
     errno = EINVAL;
-    return 0;
+    rcb = 0;
+    goto fast_done;
   }
 
-  return _marpaESLIFRecognizer_hook_discard_switchb(marpaESLIFRecognizerp);
+  MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_INC;
+  MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "start");
+
+  rcb = _marpaESLIFRecognizer_hook_discard_switchb(marpaESLIFRecognizerp);
+  goto done;
+
+ done:
+  MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "return %d", (int) rcb);
+  MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_DEC;
+ fast_done:
+  return rcb;
 }
 
 /*****************************************************************************/
@@ -20524,16 +20839,21 @@ short marpaESLIFSymbol_tryb(marpaESLIFSymbol_t *marpaESLIFSymbolp, char *inputs,
 short marpaESLIFRecognizer_symbol_tryb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFSymbol_t *marpaESLIFSymbolp, short *matchbp)
 /*****************************************************************************/
 {
-  marpaESLIF_matcher_value_t rci;
-  short                      rcb;
-  marpaESLIFValueResult_t    marpaESLIFValueResult = marpaESLIFValueResultUndef;
-  short                      rcMatcherb;
-  marpaESLIFRecognizer_t    *marpaESLIFRecognizerTmpp;
+  static const char          *funcs = "marpaESLIFRecognizer_symbol_tryb";
+  marpaESLIF_matcher_value_t  rci;
+  short                       rcb;
+  marpaESLIFValueResult_t     marpaESLIFValueResult = marpaESLIFValueResultUndef;
+  short                       rcMatcherb;
+  marpaESLIFRecognizer_t     *marpaESLIFRecognizerTmpp;
 
   if (MARPAESLIF_UNLIKELY((marpaESLIFRecognizerp == NULL) || (marpaESLIFSymbolp == NULL))) {
     errno = EINVAL;
-    goto err;
+    rcb = 0;
+    goto fast_done;
   }
+
+  MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_INC;
+  MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "start");
 
   if (marpaESLIFSymbolp->marpaESLIFGrammarp != NULL) {
     /* Case of meta symbol only - we create a temporary recognizer */
@@ -20602,9 +20922,12 @@ short marpaESLIFRecognizer_symbol_tryb(marpaESLIFRecognizer_t *marpaESLIFRecogni
   rcb = 0;
 
  done:
+  MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "return %d", (int) rcb);
+  MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_DEC;
   if (MARPAESLIF_LIKELY(marpaESLIFRecognizerp != NULL)) {
     _marpaESLIFRecognizer_valueResultFreev(marpaESLIFRecognizerp, &marpaESLIFValueResult);
   }
+ fast_done:
   return rcb;
 }
 
@@ -20650,6 +20973,7 @@ static inline void _marpaESLIF_guessNanv(marpaESLIF_t *marpaESLIFp)
 short marpaESLIFRecognizer_progressb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, int starti, int endi, size_t *progresslp, marpaESLIFRecognizerProgress_t **progresspp)
 /*****************************************************************************/
 {
+  static const char                *funcs = "marpaESLIFRecognizer_lexeme_last_pauseb";
   short                             rcb;
   marpaESLIF_t                     *marpaESLIFp;
   marpaWrapperRecognizer_t         *marpaWrapperRecognizerp;
@@ -20661,8 +20985,12 @@ short marpaESLIFRecognizer_progressb(marpaESLIFRecognizer_t *marpaESLIFRecognize
 
   if (MARPAESLIF_UNLIKELY(marpaESLIFRecognizerp == NULL)) {
     errno = EINVAL;
-    goto err;
+    rcb = 0;
+    goto fast_done;
   }
+
+  MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_INC;
+  MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "start");
 
   marpaESLIFp             = marpaESLIFRecognizerp->marpaESLIFp;
   marpaWrapperRecognizerp = marpaESLIFRecognizerp->marpaWrapperRecognizerp;
@@ -20717,6 +21045,9 @@ short marpaESLIFRecognizer_progressb(marpaESLIFRecognizer_t *marpaESLIFRecognize
   rcb = 0;
 
  done:
+  MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "return %d", (int) rcb);
+  MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_DEC;
+ fast_done:
   return rcb;
 }
 
@@ -21080,9 +21411,19 @@ static inline marpaESLIFValueResult_t *_marpaESLIFRecognizer_context_getp(marpaE
 short marpaESLIFRecognizer_context_setb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFValueResult_t *marpaESLIFValueResultp)
 /*****************************************************************************/
 {
-  short rcb;
+  static const char *funcs = "marpaESLIFRecognizer_context_setb";
+  short              rcb;
 
-  if (MARPAESLIF_UNLIKELY((marpaESLIFRecognizerp == NULL) || (marpaESLIFValueResultp == NULL))) {
+  if (MARPAESLIF_UNLIKELY(marpaESLIFRecognizerp == NULL)) {
+    errno = EINVAL;
+    rcb = 0;
+    goto fast_done;
+  }
+
+  MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_INC;
+  MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "start");
+
+  if (MARPAESLIF_UNLIKELY(marpaESLIFValueResultp == NULL)) {
     errno = EINVAL;
     goto err;
   }
@@ -21094,6 +21435,9 @@ short marpaESLIFRecognizer_context_setb(marpaESLIFRecognizer_t *marpaESLIFRecogn
   rcb = 0;
 
  done:
+  MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "return %d", (int) rcb);
+  MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_DEC;
+ fast_done:
   return rcb;
 }
 
