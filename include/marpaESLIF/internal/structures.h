@@ -182,9 +182,6 @@ struct marpaESLIFSymbol {
   short                          contentIsShallowb;
   marpaESLIFGrammar_t           *marpaESLIFGrammarp;     /* Shallow pointer, set by marpaESLIFSymbol_meta_newp() only */
   short                          verboseb;               /* Symbol is verbose */
-  marpaESLIF_symbol_t           *proxiedSymbolp;         /* Special case of parameterized symbols - used in validation of the exception rule */
-  marpaESLIF_symbol_t           *proxierSymbolp;         /* Special case of parameterized symbols - used in validation of the exception rule */
-  short                          proxyb;                 /* The technical symbol, one grammar later, that is used to join proxiedSymbolp and proxierSymbolp */
 };
 
 /* A rule */
@@ -344,11 +341,11 @@ struct marpaESLIF_meta {
   size_t                         nSymbolStartl;                   /* Number of lexemes at the very beginning of marpaWrapperGrammarStartp */
   int                           *symbolArrayStartp;               /* Lexemes at the very beginning of marpaWrapperGrammarStartp */
   short                          lazyb;                           /* Meta symbol is lazy - for internal usage only at bootstrap */
-  short                          terminalb;                       /* Meta terminal ? */
   int                            parami;                          /* Number of parameters, -1 when it is not parameterized */
-  marpaESLIF_lua_functioncall_t *callp;                           /* Only for RHS metas (they are unique) */
-  marpaESLIF_lua_functiondecl_t *declp;                           /* Only for RHS metas (they are unique) */
+  short                          joinb;                           /* Internal meta that is doing a join of parameters */
   marpaESLIF_action_t           *pushContextActionp;              /* Only for RHS metas (they are unique) */
+  marpaESLIF_lua_functioncall_t *joincallp;                       /* Only when joinb is true */
+  marpaESLIF_lua_functiondecl_t *joindeclp;                       /* Only when joinb is true */
 };
 
 struct marpaESLIF_stringGenerator {
