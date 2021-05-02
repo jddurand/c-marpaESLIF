@@ -1,6 +1,6 @@
 static const char *MARPAESLIFLUA_CONTEXTSTACK =
   "\n"
-  "local marpaESLIFContextStack = {}\n"
+  "local marpaESLIFContextStack = niledtablekv()\n"
   "marpaESLIFContextStack.new = function()\n"
   "   local stack = { table.pack() } -- Initial context is empty\n"
   "\n"

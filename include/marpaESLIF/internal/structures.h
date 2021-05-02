@@ -159,6 +159,7 @@ struct marpaESLIFSymbol {
   short                          eventNulledb;           /* Nulled initial state: 0: off, 1: on */
   char                          *eventCompleteds;        /* Event name for completion */
   short                          eventCompletedb;        /* Completion initial state: 0: off, 1: on */
+  marpaESLIF_lua_functiondecl_t *eventDeclp;             /* Specific to event declaration on parameterized LHSs */
   char                          *discardEvents;          /* Discard event name - shallow pointer to a :discard rule's discardEvents */
   short                          discardEventb;          /* Discard event initial state: 0: off, 1: on - copy of :discard's rule value */
   int                            lookupLevelDeltai;      /* Referenced grammar delta level */
@@ -342,10 +343,10 @@ struct marpaESLIF_meta {
   int                           *symbolArrayStartp;               /* Lexemes at the very beginning of marpaWrapperGrammarStartp */
   short                          lazyb;                           /* Meta symbol is lazy - for internal usage only at bootstrap */
   int                            parami;                          /* Number of parameters, -1 when it is not parameterized */
-  short                          joinb;                           /* Internal meta that is doing a join of parameters */
-  marpaESLIF_action_t           *pushContextActionp;              /* Only for RHS metas (they are unique) */
-  marpaESLIF_lua_functioncall_t *joincallp;                       /* Only when joinb is true */
-  marpaESLIF_lua_functiondecl_t *joindeclp;                       /* Only when joinb is true */
+  short                          terminalb;                       /* Forced terminal - only for parameterized RHSs */
+  marpaESLIF_lua_functioncall_t *callp;                           /* Call - only for parameterized RHSs */
+  marpaESLIF_lua_functiondecl_t *declp;                           /* Decl - only for parameterized RHSs */
+  marpaESLIF_action_t           *pushContextActionp;              /* Context - only for parameterized RHSs */
 };
 
 struct marpaESLIF_stringGenerator {
