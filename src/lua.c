@@ -365,7 +365,7 @@ static void _marpaESLIFValue_lua_freev(marpaESLIFValue_t *marpaESLIFValuep)
 static void _marpaESLIFRecognizer_lua_freev(marpaESLIFRecognizer_t *marpaESLIFRecognizerp)
 /*****************************************************************************/
 {
-  if (marpaESLIFRecognizerp->L != NULL) {
+  if ((marpaESLIFRecognizerp->L != NULL) && (! marpaESLIFRecognizerp->Lshallowb)) {
     /* It is owned by the top-level recognizer */
     if (marpaESLIFRecognizerp == marpaESLIFRecognizerp->marpaESLIFRecognizerTopp) {
       if (luaunpanic_close(marpaESLIFRecognizerp->L)) {

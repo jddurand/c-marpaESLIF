@@ -8835,7 +8835,7 @@ static inline marpaESLIF_rule_t *_marpaESLIF_bootstrap_check_rulep(marpaESLIF_t 
     for (rhsl = 0; rhsl < nrhsl; rhsl++) {
       if (callpp[rhsl] != NULL) {
         /* By definition this is parameterized RHS */
-        MARPAESLIF_INTERNAL_GET_SYMBOL_FROM_STACK(marpaESLIFp, symbolp, grammarp->symbolStackp, rhsl);
+        MARPAESLIF_INTERNAL_GET_SYMBOL_FROM_STACK(marpaESLIFp, symbolp, grammarp->symbolStackp, rhsip[rhsl]);
         symbolp->u.metap->declp = _marpaESLIF_lua_functiondecl_clonep(marpaESLIFp, declp);
         if (symbolp->u.metap->declp == NULL) {
           goto err;

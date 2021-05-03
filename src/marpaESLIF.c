@@ -10568,6 +10568,7 @@ static inline marpaESLIFRecognizer_t *_marpaESLIFRecognizer_newp(marpaESLIFGramm
   marpaESLIFRecognizerp->symbolArrayPristinep               = NULL;
   marpaESLIFRecognizerp->lastDiscardl                       = 0;
   marpaESLIFRecognizerp->lastDiscards                       = NULL;
+  marpaESLIFRecognizerp->Lshallowb                          = 0;
   marpaESLIFRecognizerp->L                                  = NULL;
   marpaESLIFRecognizerp->actions                            = NULL;
   marpaESLIFRecognizerp->actionp                            = NULL;
@@ -11291,6 +11292,12 @@ static inline short _marpaESLIFGrammar_parseb(marpaESLIFGrammar_t *marpaESLIFGra
   MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "start");
 
   if (peekb) {
+    /* Do as it we were a lexeme */
+    marpaESLIFRecognizerp->L = marpaESLIFRecognizerParentp->L;
+    if (marpaESLIFRecognizerp->L != NULL) {
+      marpaESLIFRecognizerp->Lshallowb = 1;
+    }
+
     /* By construction, there is a callp != NULL, when declp may be NULL - in any case we want to set a context. */
     /* In addition, this will be a peeked recognizer because we want to keep original grammar actions.           */
     if (! _marpaESLIFRecognizer_lua_push_contextb(marpaESLIFRecognizerp, declp, callp, pushContextActionpp)) {
@@ -11302,7 +11309,7 @@ static inline short _marpaESLIFGrammar_parseb(marpaESLIFGrammar_t *marpaESLIFGra
       goto err;
     }
     peekedb = 1;
-    /* Prevent unnecessary reload of common context pop function */
+    /* Share lua state and prevent unnecessary reload of common context pop function */
     marpaESLIFRecognizerp->popContextActionShallowb = 1;
     marpaESLIFRecognizerp->popContextActionpp       = marpaESLIFRecognizerParentp->popContextActionpp;
   }
@@ -13613,10 +13620,12 @@ static inline void _marpaESLIF_grammar_createshowv(marpaESLIFGrammar_t *marpaESL
       MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, symbolp->descp->asciis);
       MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, ">");
       MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "\n");
-      MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "# Nbparameters: ");
-      sprintf(tmps, "%d", symbolp->u.metap->parami);
-      MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, tmps);
-      MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "\n");
+      if (symbolp->u.metap->parami >= 0) {
+        MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "# Nbparameters: ");
+        sprintf(tmps, "%d", symbolp->u.metap->parami);
+        MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, tmps);
+        MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "\n");
+      }
       if (MARPAESLIF_IS_META_TERMINAL(symbolp)) {
         /* By definition it always has a callp, it may have a declp */
         MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "#      Context: ");
@@ -18921,6 +18930,7 @@ static inline marpaESLIFRecognizer_t *_marpaESLIFRecognizer_getPristineFromCache
           marpaESLIFRecognizerp->grammarDiscard                     = c.f. MARPAESLIFRECOGNIZER_GRAMMARDISCARD_INITIALIZER() macro
           marpaESLIFRecognizerp->marpaESLIFRecognizerOptionDiscard  = c.f. MARPAESLIFRECOGNIZER_GRAMMARDISCARD_INITIALIZER() macro
           marpaESLIFRecognizerp->marpaESLIFValueOptionDiscard       = c.f. MARPAESLIFRECOGNIZER_GRAMMARDISCARD_INITIALIZER() macro
+          marpaESLIFRecognizerp->Lshallowb                         = 0;
           marpaESLIFRecognizerp->L                                 = NULL;
         */
         marpaESLIFRecognizerp->marpaESLIFRecognizerTopp            = marpaESLIFRecognizerParentp->marpaESLIFRecognizerTopp;

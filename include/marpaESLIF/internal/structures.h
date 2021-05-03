@@ -501,6 +501,7 @@ struct marpaESLIFRecognizer {
   char                        *lastDiscards;    /* Bytes */
 
   /* For lua action callbacks */
+  short                        Lshallowb;      /* If the state is shallowed */
   lua_State                   *L;              /* Only owned by the top-level recognizer */
   char                        *actions;        /* Shallow pointer to action "name", depends on action type */
   marpaESLIF_action_t         *actionp;        /* Shallow pointer to action */
