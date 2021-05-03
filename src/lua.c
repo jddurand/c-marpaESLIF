@@ -365,7 +365,7 @@ static void _marpaESLIFValue_lua_freev(marpaESLIFValue_t *marpaESLIFValuep)
 static void _marpaESLIFRecognizer_lua_freev(marpaESLIFRecognizer_t *marpaESLIFRecognizerp)
 /*****************************************************************************/
 {
-  if ((marpaESLIFRecognizerp->L != NULL) && (! marpaESLIFRecognizerp->Lshallowb)) {
+  if (marpaESLIFRecognizerp->L != NULL) {
     /* It is owned by the top-level recognizer */
     if (marpaESLIFRecognizerp == marpaESLIFRecognizerp->marpaESLIFRecognizerTopp) {
       if (luaunpanic_close(marpaESLIFRecognizerp->L)) {
@@ -1684,7 +1684,6 @@ static short _marpaESLIFRecognizer_lua_function_loadb(marpaESLIFRecognizer_t *ma
 
   if (marpaESLIFRecognizerp->actionp->u.luaFunction.luacb) {
     if (marpaESLIFRecognizerp->actionp->u.luaFunction.luacp == NULL) {
-      MARPAESLIF_NOTICEF(marpaESLIFRecognizerp->marpaESLIFp, "Precompiling function:\n%s", actions);
       /* We precompile the unstripped version if not already done */
       if (! _marpaESLIFRecognizer_lua_function_precompileb(marpaESLIFRecognizerp, actions, strlen(actions), 0 /* stripb */, 0 /* popi */)) {
         goto err;
@@ -1699,7 +1698,6 @@ static short _marpaESLIFRecognizer_lua_function_loadb(marpaESLIFRecognizer_t *ma
       LUAL_LOADBUFFER(marpaESLIFRecognizerp, marpaESLIFRecognizerp->actionp->u.luaFunction.luacp, marpaESLIFRecognizerp->actionp->u.luaFunction.luacl, "=<luafunction/>");
     }
   } else {
-    MARPAESLIF_NOTICEF(marpaESLIFRecognizerp->marpaESLIFp, "Loading function:\n%s", actions);
     LUAL_LOADSTRING(marpaESLIFRecognizerp, actions);
   }
 
