@@ -928,7 +928,6 @@ static inline marpaESLIF_symbol_t *_marpaESLIF_bootstrap_check_meta_by_namep(mar
   marpaESLIF_symbol_t           *symbolp           = NULL;
   marpaESLIF_meta_t             *metap             = NULL;
   int                            parami;
-  short                          terminalb;
   marpaESLIF_symbol_t           *symbol_i_p;
   int                            i;
 
@@ -945,18 +944,15 @@ static inline marpaESLIF_symbol_t *_marpaESLIF_bootstrap_check_meta_by_namep(mar
       goto err;
     }
     parami = declp->sizei;
-    terminalb = 0;
   } else if (callp != NULL) {
     if (lhsb) {
       MARPAESLIF_ERROR(marpaESLIFp, "callp is set but this is an lhs context");
       goto err;
     }
     parami = callp->sizei;
-    terminalb = 1;
     forcecreateb = 1;
   } else {
     parami = -1;
-    terminalb = 0;
   }
   
   for (i = 0; i < GENERICSTACK_USED(symbolStackp); i++) {
@@ -980,7 +976,7 @@ static inline marpaESLIF_symbol_t *_marpaESLIF_bootstrap_check_meta_by_namep(mar
       goto err;
     }
 
-    MARPAESLIF_TRACEF(marpaESLIFp, funcs, "Creating %s symbol %s with %d parameters in grammar level %d", terminalb ? "meta terminal" : "meta", metap->descp->asciis, parami, grammarp->leveli);
+    MARPAESLIF_TRACEF(marpaESLIFp, funcs, "Creating meta symbol %s with %d parameters in grammar level %d", metap->descp->asciis, parami, grammarp->leveli);
     symbolp = _marpaESLIF_symbol_newp(marpaESLIFp, NULL /* marpaESLIFSymbolOptionp */);
     if (MARPAESLIF_UNLIKELY(symbolp == NULL)) {
       goto err;

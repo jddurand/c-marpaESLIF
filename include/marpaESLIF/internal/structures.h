@@ -343,10 +343,9 @@ struct marpaESLIF_meta {
   int                           *symbolArrayStartp;               /* Lexemes at the very beginning of marpaWrapperGrammarStartp */
   short                          lazyb;                           /* Meta symbol is lazy - for internal usage only at bootstrap */
   int                            parami;                          /* Number of parameters, -1 when it is not parameterized */
-  short                          terminalb;                       /* Forced terminal - only for parameterized RHSs */
-  marpaESLIF_lua_functioncall_t *callp;                           /* Call - only for parameterized RHSs */
-  marpaESLIF_lua_functiondecl_t *declp;                           /* Decl - only for parameterized RHSs */
-  marpaESLIF_action_t           *pushContextActionp;              /* Context - only for parameterized RHSs */
+  marpaESLIF_lua_functioncall_t *callp;                           /* Call - only for parameterized lexemes */
+  marpaESLIF_lua_functiondecl_t *declp;                           /* Decl - only for parameterized lexemes */
+  marpaESLIF_action_t           *pushContextActionp;              /* Context - only for parameterized lexemes */
 };
 
 struct marpaESLIF_stringGenerator {
