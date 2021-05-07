@@ -281,7 +281,7 @@ static marpaESLIFValueResult_t marpaESLIFValueResultLazy = {
 /* -------------------------------------------------------------------------------------------- */
 /* Make a marpaESLIFValueResultp shallow                                                        */
 /* -------------------------------------------------------------------------------------------- */
-#define MARPAESLIF_MAKE_MARPAESLIFVALUERESULT_SHALLOWP(marpaESLIFValueResultp) do { \
+#define MARPAESLIF_MAKE_MARPAESLIFVALUERESULTP_SHALLOW(marpaESLIFValueResultp) do { \
     if (marpaESLIFValueResultp != NULL) {                               \
       switch (marpaESLIFValueResult.type) {                             \
       case MARPAESLIF_VALUE_TYPE_PTR:                                   \
@@ -17552,7 +17552,7 @@ static short _marpaESLIF_symbol_action___transferb(void *userDatavp, marpaESLIFV
     /* It is in lexemeInputStack : If the transfer is successful, make the original shallow */
     rcb = _marpaESLIFValue_stack_setb(marpaESLIFValuep, resulti, marpaESLIFValueResultp);
     if (rcb) {
-      MARPAESLIF_MAKE_MARPAESLIFVALUERESULT_SHALLOWP(marpaESLIFValueResultp);
+      MARPAESLIF_MAKE_MARPAESLIFVALUERESULTP_SHALLOW(marpaESLIFValueResultp);
     }
   }
 
