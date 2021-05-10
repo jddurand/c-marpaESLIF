@@ -200,7 +200,7 @@ static        short _marpaESLIF_bootstrap_G1_action_lhs_1b(void *userDatavp, mar
 static        short _marpaESLIF_bootstrap_G1_action_lhs_2b(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
 static        short _marpaESLIF_bootstrap_G1_action_start_symbol_1b(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
 static        short _marpaESLIF_bootstrap_G1_action_start_symbol_2b(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
-static inline marpaESLIF_rule_t *_marpaESLIF_bootstrap_check_rulep(marpaESLIF_t *marpaESLIFp, marpaESLIFGrammar_t *marpaESLIFGrammarp, marpaESLIF_grammar_t *grammarp, char *descEncodings, char *descs, size_t descl, int lhsi, size_t nrhsl, int *rhsip, int exceptioni, int ranki, short nullRanksHighb, short sequenceb, int minimumi, int separatori, short properb, marpaESLIF_action_t *actionp, short passthroughb, short hideseparatorb, short *skipbp, marpaESLIF_lua_functiondecl_t *declp, marpaESLIF_lua_functioncall_t **callpp, marpaESLIF_lua_functioncall_t *exceptioncallp, marpaESLIF_lua_functioncall_t *separatorcallp);
+static inline marpaESLIF_rule_t *_marpaESLIF_bootstrap_check_rulep(marpaESLIF_t *marpaESLIFp, marpaESLIFGrammar_t *marpaESLIFGrammarp, marpaESLIF_grammar_t *grammarp, char *descEncodings, char *descs, size_t descl, int lhsi, size_t nrhsl, int *rhsip, int exceptioni, int ranki, short nullRanksHighb, short sequenceb, int minimumi, int separatori, short properb, marpaESLIF_action_t *actionp, short passthroughb, short hideseparatorb, short *skipbp, marpaESLIF_lua_functiondecl_t *declp, marpaESLIF_lua_functioncall_t **callpp, marpaESLIF_lua_functioncall_t *separatorcallp);
 static short marpaESLIFValueImport(marpaESLIFValue_t *marpaESLIFValuep, void *userDatavp, marpaESLIFValueResult_t *marpaESLIFValueResultp);
 static inline marpaESLIF_string_t *_marpaESLIF_terminal2stringp(marpaESLIF_t *marpaESLIFp, marpaESLIF_bootstrap_terminal_t *terminalp);
 
@@ -1040,7 +1040,6 @@ static inline marpaESLIF_symbol_t *_marpaESLIF_bootstrap_check_meta_by_namep(mar
                                               NULL, /* skipbp */
                                               NULL, /* To be filled later */
                                               NULL, /* callpp */
-                                              NULL, /* exceptioncallp */
                                               NULL /* separatorcallp */);
     if (MARPAESLIF_UNLIKELY(rulep == NULL)) {
       goto err;
@@ -1510,7 +1509,7 @@ static inline marpaESLIF_symbol_t  *_marpaESLIF_bootstrap_check_rhsAlternativep(
       goto err;
     }
     /* If naming is not NULL, it is guaranteed to be an UTF-8 thingy */
-    MARPAESLIF_TRACEF(marpaESLIFp, funcs, "Creating exception rule %s(declp) ::= %s(callp) - %s(exceptioncallp)", symbolp->descp->asciis, rhsp->descp->asciis, rhsExceptionp->descp->asciis);
+    MARPAESLIF_TRACEF(marpaESLIFp, funcs, "Creating exception rule %s(declp) ::= %s - %s", symbolp->descp->asciis, rhsp->descp->asciis, rhsExceptionp->descp->asciis);
     rulep = _marpaESLIF_bootstrap_check_rulep(marpaESLIFp,
                                               marpaESLIFGrammarp,
                                               grammarp,
@@ -1532,8 +1531,7 @@ static inline marpaESLIF_symbol_t  *_marpaESLIF_bootstrap_check_rhsAlternativep(
                                               0 /* hideseparatorb */,
                                               NULL, /* skipbp */
                                               declp,
-                                              &(rhsAlternativep->u.exception.rhsPrimaryp->callp),
-                                              rhsAlternativep->u.exception.rhsPrimaryExceptionp->callp,
+                                              NULL, /* callpp - An exception consist only of lexemes, that can never be parameterized */
                                               NULL /* separatorcallp */);
     if (MARPAESLIF_UNLIKELY(rulep == NULL)) {
       goto err;
@@ -1628,7 +1626,6 @@ static inline marpaESLIF_symbol_t  *_marpaESLIF_bootstrap_check_rhsAlternativep(
                                               NULL, /* skipbp */
                                               declp,
                                               &(rhsAlternativep->u.quantified.rhsPrimaryp->callp),
-                                              NULL, /* exceptioncallp */
                                               (rhsAlternativep->u.quantified.separatorRhsPrimaryp != NULL) ? rhsAlternativep->u.quantified.separatorRhsPrimaryp->callp : NULL);
     if (MARPAESLIF_UNLIKELY(rulep == NULL)) {
       goto err;
@@ -4069,7 +4066,6 @@ static inline short _marpaESLIF_bootstrap_G1_action_priority_loosen_ruleb(marpaE
                                             NULL, /* skipbp */
                                             declp,
                                             &decl2callp,
-                                            NULL, /* exceptioncallp */
                                             NULL /* separatorcallp */);
   if (MARPAESLIF_UNLIKELY(rulep == NULL)) {
     goto err;
@@ -4159,7 +4155,6 @@ static inline short _marpaESLIF_bootstrap_G1_action_priority_loosen_ruleb(marpaE
                                               NULL, /* skipbp */
                                               declp,
                                               &decl2callp,
-                                              NULL, /* exceptioncallp */
                                               NULL /* separatorcallp */);
     if (MARPAESLIF_UNLIKELY(rulep == NULL)) {
       goto err;
@@ -4460,7 +4455,6 @@ static inline short _marpaESLIF_bootstrap_G1_action_priority_flat_ruleb(marpaESL
   marpaESLIF_rule_t                       *rulep             = NULL;
   int                                     *rhsip             = NULL;
   marpaESLIF_lua_functioncall_t          **callpp            = NULL;
-  marpaESLIF_lua_functioncall_t           *exceptioncallp    = NULL;
   marpaESLIF_lua_functioncall_t           *separatorcallp    = NULL;
   short                                   *skipbp            = NULL;
   marpaESLIF_symbol_t                    **rhsp              = NULL;
@@ -4586,7 +4580,6 @@ static inline short _marpaESLIF_bootstrap_G1_action_priority_flat_ruleb(marpaESL
         case MARPAESLIF_BOOTSTRAP_RHS_ALTERNATIVE_TYPE_RHS_PRIMARY:
           skipbp[rhsAlternativei] = 0;
           callpp[rhsAlternativei] = rhsAlternativep->u.rhsPrimaryp->callp;
-          exceptioncallp = NULL;
           separatorcallp = NULL;
           break;
         case MARPAESLIF_BOOTSTRAP_RHS_ALTERNATIVE_TYPE_PRIORITIES:
@@ -4594,7 +4587,6 @@ static inline short _marpaESLIF_bootstrap_G1_action_priority_flat_ruleb(marpaESL
             have_skipb = 1;
           }
           callpp[rhsAlternativei] = decl2callp;
-          exceptioncallp = NULL;
           separatorcallp = NULL;
         break;
         case MARPAESLIF_BOOTSTRAP_RHS_ALTERNATIVE_TYPE_EXCEPTION:
@@ -4602,7 +4594,7 @@ static inline short _marpaESLIF_bootstrap_G1_action_priority_flat_ruleb(marpaESL
             have_skipb = 1;
           }
           callpp[rhsAlternativei] = rhsAlternativep->u.exception.rhsPrimaryp->callp;
-          exceptioncallp = rhsAlternativep->u.exception.rhsPrimaryExceptionp->callp;
+          /* An exception consist only of lexemes, that can never be parameterized */
           separatorcallp = NULL;
           break;
         case MARPAESLIF_BOOTSTRAP_RHS_ALTERNATIVE_TYPE_QUANTIFIED:
@@ -4610,7 +4602,6 @@ static inline short _marpaESLIF_bootstrap_G1_action_priority_flat_ruleb(marpaESL
             have_skipb = 1;
           }
           callpp[rhsAlternativei] = rhsAlternativep->u.quantified.rhsPrimaryp->callp;
-          exceptioncallp = NULL;
           separatorcallp = (rhsAlternativep->u.quantified.separatorRhsPrimaryp != NULL) ? rhsAlternativep->u.quantified.separatorRhsPrimaryp->callp : NULL;
           break;
         default:
@@ -4685,7 +4676,6 @@ static inline short _marpaESLIF_bootstrap_G1_action_priority_flat_ruleb(marpaESL
                                                 have_skipb ? skipbp : NULL,
                                                 declp,
                                                 callpp,
-                                                NULL, /* exceptioncallp */
                                                 NULL /* separatorcallp */);
       if (MARPAESLIF_UNLIKELY(rulep == NULL)) {
         goto err;
@@ -5690,7 +5680,6 @@ static short _marpaESLIF_bootstrap_G1_action_quantified_ruleb(void *userDatavp, 
                                             NULL, /* skipbp */
                                             bootstrapLhsp->declp,
                                             &(rhsPrimaryp->callp),
-                                            NULL, /* exceptioncallp */
                                             (separatorRhsPrimaryp != NULL) ? separatorRhsPrimaryp->callp : NULL);
   if (MARPAESLIF_UNLIKELY(rulep == NULL)) {
     goto err;
@@ -5779,7 +5768,6 @@ static short _marpaESLIF_bootstrap_G1_action_start_ruleb(void *userDatavp, marpa
                                               NULL, /* skipbp */
                                               NULL, /* declp */
                                               &(startSymbolp->callp),
-                                              NULL, /* exceptioncallp */
                                               NULL /* separatorcallp */);
     if (MARPAESLIF_UNLIKELY(rulep == NULL)) {
       goto err;
@@ -5973,7 +5961,6 @@ static short _marpaESLIF_bootstrap_G1_action_empty_ruleb(void *userDatavp, marpa
                                             NULL, /* skipbp */
                                             bootstrapLhsp->declp,
                                             NULL, /* callpp */
-                                            NULL, /* exceptioncallp */
                                             NULL /* separatorcallp */);
   if (MARPAESLIF_UNLIKELY(rulep == NULL)) {
     goto err;
@@ -7134,7 +7121,6 @@ static short _marpaESLIF_bootstrap_G1_action_discard_ruleb(void *userDatavp, mar
                                             NULL, /* skipbp */
                                             NULL, /* declp */
                                             &(rhsPrimaryp->callp),
-                                            NULL, /* exceptioncallp */
                                             NULL /* separatorcallp */);
   if (MARPAESLIF_UNLIKELY(rulep == NULL)) {
     goto err;
@@ -7594,8 +7580,7 @@ static short _marpaESLIF_bootstrap_G1_action_exception_statementb(void *userData
                                             0 /* hideseparatorb */,
                                             NULL, /* skipbp */
                                             bootstrapLhsp->declp,
-                                            &(rhsPrimaryp->callp),
-                                            rhsPrimaryExceptionp->callp,
+                                            NULL, /* An exception consist only of lexemes, that can never be parameterized */
                                             NULL /* separatorcallp */);
   if (MARPAESLIF_UNLIKELY(rulep == NULL)) {
     goto err;
@@ -8886,17 +8871,16 @@ static short _marpaESLIF_bootstrap_G1_action_start_symbol_2b(void *userDatavp, m
 }
 
 /*****************************************************************************/
-static inline marpaESLIF_rule_t *_marpaESLIF_bootstrap_check_rulep(marpaESLIF_t *marpaESLIFp, marpaESLIFGrammar_t *marpaESLIFGrammarp, marpaESLIF_grammar_t *grammarp, char *descEncodings, char *descs, size_t descl, int lhsi, size_t nrhsl, int *rhsip, int exceptioni, int ranki, short nullRanksHighb, short sequenceb, int minimumi, int separatori, short properb, marpaESLIF_action_t *actionp, short passthroughb, short hideseparatorb, short *skipbp, marpaESLIF_lua_functiondecl_t *declp, marpaESLIF_lua_functioncall_t **callpp, marpaESLIF_lua_functioncall_t *exceptioncallp, marpaESLIF_lua_functioncall_t *separatorcallp)
+static inline marpaESLIF_rule_t *_marpaESLIF_bootstrap_check_rulep(marpaESLIF_t *marpaESLIFp, marpaESLIFGrammar_t *marpaESLIFGrammarp, marpaESLIF_grammar_t *grammarp, char *descEncodings, char *descs, size_t descl, int lhsi, size_t nrhsl, int *rhsip, int exceptioni, int ranki, short nullRanksHighb, short sequenceb, int minimumi, int separatori, short properb, marpaESLIF_action_t *actionp, short passthroughb, short hideseparatorb, short *skipbp, marpaESLIF_lua_functiondecl_t *declp, marpaESLIF_lua_functioncall_t **callpp, marpaESLIF_lua_functioncall_t *separatorcallp)
 {
   marpaESLIF_lua_functioncall_t **callclonepp         = NULL;
-  marpaESLIF_lua_functioncall_t  *exceptioncallclonep = NULL;
   marpaESLIF_lua_functioncall_t  *separatorcallclonep = NULL;
   marpaESLIF_rule_t              *rulep;
   marpaESLIF_symbol_t            *rhsp;
   size_t                          rhsl;
   marpaESLIF_lua_functioncall_t  *callp;
 
-  if ((callpp != NULL) || (exceptioncallp != NULL) || (separatorcallp != NULL)) {
+  if ((callpp != NULL) || (separatorcallp != NULL)) {
     if (callpp != NULL) {
       callclonepp = (marpaESLIF_lua_functioncall_t **) malloc(sizeof(marpaESLIF_lua_functioncall_t *) * nrhsl);
       if (MARPAESLIF_UNLIKELY(callclonepp == NULL)) {
@@ -8951,48 +8935,6 @@ static inline marpaESLIF_rule_t *_marpaESLIF_bootstrap_check_rulep(marpaESLIF_t 
             MARPAESLIF_ERRORF(marpaESLIFp, "strdup failure, %s", strerror(errno));
             goto err;
           }
-        }
-      }
-    }
-
-    /* Idem for exceptioncallp */
-    if (exceptioncallp != NULL) {
-      MARPAESLIF_INTERNAL_GET_SYMBOL_FROM_STACK(marpaESLIFp, rhsp, grammarp->symbolStackp, exceptioni);
-      if (rhsp->lazydeclrulep == NULL) {
-        /* By definition this must not be NULL: this is parameterized RHS */
-        MARPAESLIF_ERRORF(marpaESLIFp, "Internal lazy decl exception rule is NULL for symbol %s", rhsp->descp->asciis);
-        goto err;
-      }
-      if (declp != NULL) {
-        rhsp->lazydeclrulep->declp = _marpaESLIF_lua_functiondecl_clonep(marpaESLIFp, declp);
-        if (rhsp->lazydeclrulep->declp == NULL) {
-          goto err;
-        }
-      }
-      rhsp->lazydeclrulep->callpp = (marpaESLIF_lua_functioncall_t **) malloc(sizeof(marpaESLIF_lua_functioncall_t *));
-      if (rhsp->lazydeclrulep->callpp == NULL) {
-        MARPAESLIF_ERRORF(marpaESLIFp, "malloc failure, %s", strerror(errno));
-        goto err;
-      }
-      rhsp->lazydeclrulep->callpp[0] = _marpaESLIF_lua_functioncall_clonep(marpaESLIFp, exceptioncallp);
-      if (rhsp->lazydeclrulep->callpp[0] == NULL) {
-        goto err;
-      }
-      /* Replace current exceptioncallp with a decl2call */
-      if (declp != NULL) {
-        exceptioncallclonep = (marpaESLIF_lua_functioncall_t *) malloc(sizeof(marpaESLIF_lua_functioncall_t));
-        if (MARPAESLIF_UNLIKELY(exceptioncallclonep == NULL)) {
-          MARPAESLIF_ERRORF(marpaESLIFp, "malloc failure, %s", strerror(errno));
-          goto err;
-        }
-        exceptioncallclonep->luaexplists  = strdup(declp->luaparlists);
-        exceptioncallclonep->luaexplistcb = declp->luaparlistcb;
-        exceptioncallclonep->sizei        = declp->sizei;
-        exceptioncallclonep->luap         = NULL;
-        exceptioncallclonep->lual         = 0;
-        if (MARPAESLIF_UNLIKELY(exceptioncallclonep->luaexplists == NULL)) {
-          MARPAESLIF_ERRORF(marpaESLIFp, "strdup failure, %s", strerror(errno));
-          goto err;
         }
       }
     }
@@ -9061,7 +9003,6 @@ static inline marpaESLIF_rule_t *_marpaESLIF_bootstrap_check_rulep(marpaESLIF_t 
                                 skipbp,
                                 declp,
                                 callclonepp,
-                                exceptioncallclonep,
                                 separatorcallclonep);
 
   if (rulep == NULL) {
@@ -9080,7 +9021,6 @@ static inline marpaESLIF_rule_t *_marpaESLIF_bootstrap_check_rulep(marpaESLIF_t 
     }
     free(callclonepp);
   }
-  _marpaESLIF_lua_functioncall_freev(exceptioncallclonep);
   _marpaESLIF_lua_functioncall_freev(separatorcallclonep);
   return rulep;
 }

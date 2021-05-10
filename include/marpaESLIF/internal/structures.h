@@ -214,7 +214,6 @@ struct marpaESLIF_rule {
   short                           hideseparatorb;
   marpaESLIF_lua_functiondecl_t  *declp;
   marpaESLIF_lua_functioncall_t **callpp;
-  marpaESLIF_lua_functioncall_t  *exceptioncallp;
   marpaESLIF_lua_functioncall_t  *separatorcallp;
   short                           internalb;                   /* Internal rule (:discard and :start cases) */
   marpaESLIF_action_t            *contextActionp;              /* Context action - only for parameterized rules */
