@@ -8909,9 +8909,9 @@ static inline marpaESLIF_rule_t *_marpaESLIF_bootstrap_check_rulep(marpaESLIF_t 
             goto err;
           }
         }
-        rhsp->lazydeclrulep->callpp = (marpaESLIF_lua_functioncall_t **) malloc(sizeof(marpaESLIF_lua_functioncall_t *));
         if (rhsp->lazydeclrulep->callpp == NULL) {
-          MARPAESLIF_ERRORF(marpaESLIFp, "malloc failure, %s", strerror(errno));
+          /* This should never happen: create a rule always allocates a callpp */
+          MARPAESLIF_ERROR(marpaESLIFp, "rhsp->lazydeclrulep->callpp is NULL");
           goto err;
         }
         rhsp->lazydeclrulep->callpp[0] = _marpaESLIF_lua_functioncall_clonep(marpaESLIFp, callpp[rhsl]);
@@ -8953,9 +8953,9 @@ static inline marpaESLIF_rule_t *_marpaESLIF_bootstrap_check_rulep(marpaESLIF_t 
           goto err;
         }
       }
-      rhsp->lazydeclrulep->callpp = (marpaESLIF_lua_functioncall_t **) malloc(sizeof(marpaESLIF_lua_functioncall_t *));
       if (rhsp->lazydeclrulep->callpp == NULL) {
-        MARPAESLIF_ERRORF(marpaESLIFp, "malloc failure, %s", strerror(errno));
+        /* This should never happen: create a rule always allocates a callpp */
+        MARPAESLIF_ERROR(marpaESLIFp, "rhsp->lazydeclrulep->callpp is NULL");
         goto err;
       }
       rhsp->lazydeclrulep->callpp[0] = _marpaESLIF_lua_functioncall_clonep(marpaESLIFp, separatorcallp);

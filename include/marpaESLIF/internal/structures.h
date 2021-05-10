@@ -115,6 +115,7 @@ struct marpaESLIF_terminal {
   char                          *bytes;               /* Original UTF-8 bytes, used for memcmp() when possible */
   size_t                         bytel;               /* i.e. when this is a string terminal without modifier */
   short                          pseudob;             /* Pseudo terminal */
+  int                            eventSeti;           /* Remember eventSeti */
 };
 
 /* Matcher return values */
@@ -344,6 +345,7 @@ struct marpaESLIF_meta {
   size_t                         nSymbolStartl;                   /* Number of lexemes at the very beginning of marpaWrapperGrammarStartp */
   int                           *symbolArrayStartp;               /* Lexemes at the very beginning of marpaWrapperGrammarStartp */
   short                          lazyb;                           /* Meta symbol is lazy - for internal usage only at bootstrap */
+  int                            eventSeti;                       /* Remember eventSeti */
 };
 
 struct marpaESLIF_stringGenerator {

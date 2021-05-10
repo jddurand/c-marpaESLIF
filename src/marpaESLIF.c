@@ -1198,6 +1198,7 @@ static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *mar
   terminalp->bytes               = NULL;
   terminalp->bytel               = 0;
   terminalp->pseudob             = pseudob;
+  terminalp->eventSeti           = eventSeti;
 
   /* ----------- Modifiers ------------ */
   if (modifiers != NULL) {
@@ -1999,6 +2000,7 @@ static inline marpaESLIF_meta_t *_marpaESLIF_meta_newp(marpaESLIF_t *marpaESLIFp
   metap->nTerminall                      = 0;    /* Total number of marpa terminals */
   metap->terminalArrayShallowp           = NULL; /* Marpa terminals */
   metap->lazyb                           = lazyb;
+  metap->eventSeti                       = eventSeti;
 
   marpaWrapperGrammarSymbolOption.terminalb = 0;
   marpaWrapperGrammarSymbolOption.startb    = 0;
@@ -2971,6 +2973,8 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
   size_t                            tmpl;
   short                             fastDiscardb;
   marpaESLIF_symbol_t              *trueSymbolp;
+  marpaESLIF_meta_t                *subMetap;
+  marpaESLIF_terminal_t            *subTerminalp;
 
   marpaESLIF_cloneContext.marpaESLIFp = marpaESLIFp;
   marpaESLIF_cloneContext.grammarp    = NULL;
@@ -3099,6 +3103,66 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
       }
     }
 
+    /* Scan all rules: every terminal or lexeme that is in the RHS of a parameterized rule */
+    /* is duplicated into a new symbol.                                                    */
+    for (rulei = 0; rulei < GENERICSTACK_USED(ruleStackp); rulei++) {
+      MARPAESLIF_INTERNAL_GET_RULE_FROM_STACK(marpaESLIFp, rulep, ruleStackp, rulei);
+      if (rulep->declp == NULL) {
+        continue;
+      }
+      for (rhsl = 0; rhsl < rulep->nrhsl; rhsl++) {
+        MARPAESLIF_INTERNAL_GET_SYMBOL_FROM_STACK(marpaESLIFp, symbolp, grammarp->symbolStackp, rulep->rhsip[rhsl]);
+        if (symbolp->lhsb) {
+          continue;
+        }
+        subSymbolp = _marpaESLIF_symbol_newp(marpaESLIFp, NULL /* marpaESLIFSymbolOptionp */);
+        if (MARPAESLIF_UNLIKELY(symbolp == NULL)) {
+          goto err;
+        }
+        subSymbolp->type              = symbolp->type;
+        subSymbolp->parami            = symbolp->parami;
+
+        if (symbolp->type == MARPAESLIF_SYMBOL_TYPE_META) {
+          MARPAESLIF_NOTICEF(marpaESLIFp, "Rule No %d (%s%s) is parameterized and has lexeme %s", (int) rhsl, rulep->lhsp->descp->asciis, rulep->declp->luaparlists, symbolp->descp->asciis);
+          subMetap = _marpaESLIF_meta_newp(marpaESLIFp,
+                                           grammarp,
+                                           symbolp->u.metap->eventSeti,
+                                           symbolp->u.metap->asciinames,
+                                           "ASCII", /* descEncodings */
+                                           symbolp->u.metap->descp->asciis, /* descs */
+                                           strlen(symbolp->u.metap->descp->asciis), /* descl */
+                                           0 /* lazyb */);
+          if (subMetap == NULL) {
+            goto err;
+          }
+          subSymbolp->u.metap              = subMetap;
+          subSymbolp->idi                  = subMetap->idi;
+          subSymbolp->descp                = subMetap->descp;
+        } else {
+          MARPAESLIF_NOTICEF(marpaESLIFp, "Rule No %d (%s%s) is parameterized and has terminal %s", (int) rhsl, rulep->lhsp->descp->asciis, rulep->declp->luaparlists, symbolp->descp->asciis);
+          subTerminalp = _marpaESLIF_terminal_newp(marpaESLIFp,
+                                                   grammarp,
+                                                   symbolp->u.terminalp->eventSeti,
+                                                   "ASCII", /* descEncodings */
+                                                   symbolp->u.terminalp->descp->asciis,
+                                                   strlen(symbolp->u.terminalp->descp->asciis),
+                                                   symbolp->u.terminalp->type,
+                                                   symbolp->u.terminalp->modifiers,
+                                                   symbolp->u.terminalp->patterns,
+                                                   symbolp->u.terminalp->patternl,
+                                                   NULL, /* testFullMatchs */
+                                                   NULL, /* testPartialMatchs */
+                                                   symbolp->u.terminalp->pseudob);
+          if (subSymbolp == NULL) {
+            goto err;
+          }
+          subSymbolp->u.terminalp = subTerminalp;
+          subSymbolp->idi         = subTerminalp->idi;
+          subSymbolp->descp       = subTerminalp->descp;
+        }
+      }
+    }
+    
     if (grammarp->defaultRuleActionp == NULL) {
       if (grammarp->defaultRuleActionp != NULL) {
         free(grammarp->defaultRuleActionp);
@@ -8227,13 +8291,14 @@ static inline short _marpaESLIFRecognizer_resume_oneb(marpaESLIFRecognizer_t *ma
     goto err;
   }
 
-#ifndef MARPAESLIF_NTRACE
+  // JDD #ifndef MARPAESLIF_NTRACE
   for (symboll = 0; symboll < nSymboll; symboll++) {
     symboli = symbolArrayp[symboll];
     MARPAESLIF_INTERNAL_GET_SYMBOL_FROM_STACK(marpaESLIFp, symbolp, symbolStackp, symboli);
     MARPAESLIF_TRACEF(marpaESLIFp, funcs, "Expected terminal: %s", symbolp->descp->asciis);
+    MARPAESLIF_NOTICEF(marpaESLIFp, "Expected terminal: %s", symbolp->descp->asciis);
   }
-#endif
+  // #endif
 
   if (nSymboll <= 0) {
     /* No symbol expected: this is an error unless:
