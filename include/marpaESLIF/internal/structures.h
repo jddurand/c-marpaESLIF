@@ -183,6 +183,8 @@ struct marpaESLIFSymbol {
   short                          contentIsShallowb;
   marpaESLIFGrammar_t           *marpaESLIFGrammarp;     /* Shallow pointer, set by marpaESLIFSymbol_meta_newp() only */
   short                          verboseb;               /* Symbol is verbose */
+  int                            parami;                 /* -1 when none */
+  marpaESLIF_rule_t             *lazydeclrulep;          /* A flag to identify the case <Internal[]>(declp) ::= RHS(callp): declp is unknown when <Internal[]> is created */
 };
 
 /* A rule */
@@ -215,6 +217,7 @@ struct marpaESLIF_rule {
   marpaESLIF_lua_functioncall_t  *exceptioncallp;
   marpaESLIF_lua_functioncall_t  *separatorcallp;
   short                           internalb;                   /* Internal rule (:discard and :start cases) */
+  marpaESLIF_action_t            *contextActionp;              /* Context action - only for parameterized rules */
 };
 
 /* A grammar */
@@ -342,10 +345,6 @@ struct marpaESLIF_meta {
   size_t                         nSymbolStartl;                   /* Number of lexemes at the very beginning of marpaWrapperGrammarStartp */
   int                           *symbolArrayStartp;               /* Lexemes at the very beginning of marpaWrapperGrammarStartp */
   short                          lazyb;                           /* Meta symbol is lazy - for internal usage only at bootstrap */
-  int                            parami;                          /* Number of parameters, -1 when it is not parameterized */
-  marpaESLIF_lua_functioncall_t *callp;                           /* Call - only for parameterized lexemes */
-  marpaESLIF_lua_functiondecl_t *declp;                           /* Decl - only for parameterized lexemes */
-  marpaESLIF_action_t           *pushContextActionp;              /* Context - only for parameterized lexemes */
 };
 
 struct marpaESLIF_stringGenerator {

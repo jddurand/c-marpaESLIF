@@ -5316,7 +5316,6 @@ static int marpaESLIFLua_marpaESLIFRecognizer_eventOnOffi(lua_State *L)
   marpaESLIFEventType_t             eventSeti = MARPAESLIF_EVENTTYPE_NONE;
   marpaESLIFLuaRecognizerContext_t *marpaESLIFLuaRecognizerContextp;
   const char                       *symbols;
-  int                               parami;
   int                               isNumi;
   int                               codei;
   int                               typei;
@@ -5328,8 +5327,8 @@ static int marpaESLIFLua_marpaESLIFRecognizer_eventOnOffi(lua_State *L)
   int                               statevariablei;
 
   if (! marpaESLIFLua_lua_gettop(&topi, L)) goto err;
-  if (topi != 5) {
-    marpaESLIFLua_luaL_error(L, "Usage: marpaESLIFRecognizer_eventOnOff(marpaESLIFRecognizerp, symbol, parami, eventTypes, onOff)");
+  if (topi != 4) {
+    marpaESLIFLua_luaL_error(L, "Usage: marpaESLIFRecognizer_eventOnOff(marpaESLIFRecognizerp, symbol, eventTypes, onOff)");
     goto err;
   }
 
@@ -5350,25 +5349,13 @@ static int marpaESLIFLua_marpaESLIFRecognizer_eventOnOffi(lua_State *L)
   if (! marpaESLIFLua_lua_tostring(&symbols, L, 2)) goto err;
 
   if (! marpaESLIFLua_lua_type(&typei, L, 3)) goto err;
-  if (typei != LUA_TNUMBER) {
-    marpaESLIFLua_luaL_error(L, "parami must be a number");
-    goto err;
-  }
-  if (! marpaESLIFLua_lua_tointegerx(&tmpi, L, 3, &isNumi)) goto err;
-  if (! isNumi) {
-    marpaESLIFLua_luaL_error(L, "Failed to convert parami to an integer");
-    goto err;
-  }
-  parami = (int) tmpi;
-
-  if (! marpaESLIFLua_lua_type(&typei, L, 4)) goto err;
   if (typei != LUA_TTABLE) {
     marpaESLIFLua_luaL_error(L, "eventTypes must be a table");
     goto err;
   }
   if (! marpaESLIFLua_lua_pushnil(L)) goto err;
   while (1) {
-    if (! marpaESLIFLua_pairsb(&nexti, L, 4, &iteratori, &statevariablei)) goto err;
+    if (! marpaESLIFLua_pairsb(&nexti, L, 3, &iteratori, &statevariablei)) goto err;
     if (nexti == 0) break;
     if (! marpaESLIFLua_lua_tointegerx(&tmpi, L, -1, &isNumi)) goto err;
     if (! isNumi) {
@@ -5395,17 +5382,17 @@ static int marpaESLIFLua_marpaESLIFRecognizer_eventOnOffi(lua_State *L)
     if (! marpaESLIFLua_lua_pop(L, 1)) goto err;
   }
 
-  if (! marpaESLIFLua_lua_type(&typei, L, 5)) goto err;
+  if (! marpaESLIFLua_lua_type(&typei, L, 4)) goto err;
   if (typei != LUA_TBOOLEAN) {
     marpaESLIFLua_luaL_error(L, "onOff must be a boolean");
     goto err;
   }
-  if (! marpaESLIFLua_lua_toboolean(&tmpb, L, 5)) goto err;
+  if (! marpaESLIFLua_lua_toboolean(&tmpb, L, 4)) goto err;
 
   /* Clear the stack */
   if (! marpaESLIFLua_lua_settop(L, 0)) goto err;
 
-  if (! marpaESLIFRecognizer_event_onoffb(marpaESLIFLuaRecognizerContextp->marpaESLIFRecognizerp, (char *) symbols, parami, eventSeti, (tmpb != 0) ? 1 : 0)) {
+  if (! marpaESLIFRecognizer_event_onoffb(marpaESLIFLuaRecognizerContextp->marpaESLIFRecognizerp, (char *) symbols, eventSeti, (tmpb != 0) ? 1 : 0)) {
     marpaESLIFLua_luaL_errorf(L, "marpaESLIFRecognizer_event_onoffb failure, %s", strerror(errno));
     goto err;
   }
@@ -6180,13 +6167,12 @@ static int marpaESLIFLua_marpaESLIFRecognizer_lastCompletedOffseti(lua_State *L)
   int                               rci;
   int                               typei;
   int                               topi;
-  int                               parami = -1;
   int                               isNumi;
   lua_Integer                       tmpi;
  
   if (! marpaESLIFLua_lua_gettop(&topi, L)) goto err;
-  if ((topi != 3) && (topi != 2)) {
-    marpaESLIFLua_luaL_error(L, "Usage: marpaESLIFRecognizer_lastCompletedOffset(marpaESLIFRecognizerp, name[, parami])");
+  if (topi != 2) {
+    marpaESLIFLua_luaL_error(L, "Usage: marpaESLIFRecognizer_lastCompletedOffset(marpaESLIFRecognizerp, name)");
     goto err;
   }
   
@@ -6206,24 +6192,10 @@ static int marpaESLIFLua_marpaESLIFRecognizer_lastCompletedOffseti(lua_State *L)
   }
   if (! marpaESLIFLua_lua_tostring(&names, L, 2)) goto err;
 
-  if (topi == 3) {
-    if (! marpaESLIFLua_lua_type(&typei, L, 3)) goto err;
-    if (typei != LUA_TNUMBER) {
-      marpaESLIFLua_luaL_error(L, "parami must be a number");
-      goto err;
-    }
-    if (! marpaESLIFLua_lua_tointegerx(&tmpi, L, 3, &isNumi)) goto err;
-    if (! isNumi) {
-      marpaESLIFLua_luaL_error(L, "Failed to convert parami to an integer");
-      goto err;
-    }
-    parami = (int) tmpi;
-  }
-
   /* Clear the stack */
   if (! marpaESLIFLua_lua_settop(L, 0)) goto err;
 
-  if (! marpaESLIFRecognizer_last_completedb(marpaESLIFLuaRecognizerContextp->marpaESLIFRecognizerp, (char *) names, parami, &offsetp, NULL /* lengthlp */)) {
+  if (! marpaESLIFRecognizer_last_completedb(marpaESLIFLuaRecognizerContextp->marpaESLIFRecognizerp, (char *) names, &offsetp, NULL /* lengthlp */)) {
     marpaESLIFLua_luaL_errorf(L, "marpaESLIFRecognizer_last_completedb failure, %s", strerror(errno));
     goto err;
   }
@@ -6253,13 +6225,12 @@ static int marpaESLIFLua_marpaESLIFRecognizer_lastCompletedLengthi(lua_State *L)
   int                               rci;
   int                               typei;
   int                               topi;
-  int                               parami = -1;
   int                               isNumi;
   lua_Integer                       tmpi;
  
   if (! marpaESLIFLua_lua_gettop(&topi, L)) goto err;
-  if ((topi != 3) && (topi != 2)) {
-    marpaESLIFLua_luaL_error(L, "Usage: marpaESLIFRecognizer_lastCompletedLength(marpaESLIFRecognizerp, name[, parami])");
+  if (topi != 2) {
+    marpaESLIFLua_luaL_error(L, "Usage: marpaESLIFRecognizer_lastCompletedLength(marpaESLIFRecognizerp, name)");
     goto err;
   }
   
@@ -6279,24 +6250,10 @@ static int marpaESLIFLua_marpaESLIFRecognizer_lastCompletedLengthi(lua_State *L)
   }
   if (! marpaESLIFLua_lua_tostring(&names, L, 2)) goto err;
 
-  if (topi == 3) {
-    if (! marpaESLIFLua_lua_type(&typei, L, 3)) goto err;
-    if (typei != LUA_TNUMBER) {
-      marpaESLIFLua_luaL_error(L, "parami must be a number");
-      goto err;
-    }
-    if (! marpaESLIFLua_lua_tointegerx(&tmpi, L, 3, &isNumi)) goto err;
-    if (! isNumi) {
-      marpaESLIFLua_luaL_error(L, "Failed to convert parami to an integer");
-      goto err;
-    }
-    parami = (int) tmpi;
-  }
-
   /* Clear the stack */
   if (! marpaESLIFLua_lua_settop(L, 0)) goto err;
 
-  if (! marpaESLIFRecognizer_last_completedb(marpaESLIFLuaRecognizerContextp->marpaESLIFRecognizerp, (char *) names, parami, NULL /* offsetpp */, &lengthl)) {
+  if (! marpaESLIFRecognizer_last_completedb(marpaESLIFLuaRecognizerContextp->marpaESLIFRecognizerp, (char *) names, NULL /* offsetpp */, &lengthl)) {
     marpaESLIFLua_luaL_errorf(L, "marpaESLIFRecognizer_last_completedb failure, %s", strerror(errno));
     goto err;
   }
@@ -6326,13 +6283,12 @@ static int marpaESLIFLua_marpaESLIFRecognizer_lastCompletedLocationi(lua_State *
   int                               rci;
   int                               typei;
   int                               topi;
-  int                               parami = -1;
   int                               isNumi;
   lua_Integer                       tmpi;
  
   if (! marpaESLIFLua_lua_gettop(&topi, L)) goto err;
-  if ((topi != 3) && (topi != 2)) {
-    marpaESLIFLua_luaL_error(L, "Usage: marpaESLIFRecognizer_lastCompletedLocation(marpaESLIFRecognizerp, name[, parami])");
+  if (topi != 2) {
+    marpaESLIFLua_luaL_error(L, "Usage: marpaESLIFRecognizer_lastCompletedLocation(marpaESLIFRecognizerp, name)");
     goto err;
   }
   
@@ -6352,24 +6308,10 @@ static int marpaESLIFLua_marpaESLIFRecognizer_lastCompletedLocationi(lua_State *
   }
   if (! marpaESLIFLua_lua_tostring(&names, L, 2)) goto err;
 
-  if (topi == 3) {
-    if (! marpaESLIFLua_lua_type(&typei, L, 3)) goto err;
-    if (typei != LUA_TNUMBER) {
-      marpaESLIFLua_luaL_error(L, "parami must be a number");
-      goto err;
-    }
-    if (! marpaESLIFLua_lua_tointegerx(&tmpi, L, 3, &isNumi)) goto err;
-    if (! isNumi) {
-      marpaESLIFLua_luaL_error(L, "Failed to convert parami to an integer");
-      goto err;
-    }
-    parami = (int) tmpi;
-  }
-
   /* Clear the stack */
   if (! marpaESLIFLua_lua_settop(L, 0)) goto err;
 
-  if (! marpaESLIFRecognizer_last_completedb(marpaESLIFLuaRecognizerContextp->marpaESLIFRecognizerp, (char *) names, parami, &offsetp, &lengthl)) {
+  if (! marpaESLIFRecognizer_last_completedb(marpaESLIFLuaRecognizerContextp->marpaESLIFRecognizerp, (char *) names, &offsetp, &lengthl)) {
     marpaESLIFLua_luaL_errorf(L, "marpaESLIFRecognizer_last_completedb failure, %s", strerror(errno));
     goto err;
   }
