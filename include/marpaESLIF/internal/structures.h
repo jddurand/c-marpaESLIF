@@ -185,7 +185,7 @@ struct marpaESLIFSymbol {
   marpaESLIFGrammar_t           *marpaESLIFGrammarp;     /* Shallow pointer, set by marpaESLIFSymbol_meta_newp() only */
   short                          verboseb;               /* Symbol is verbose */
   int                            parami;                 /* -1 when none */
-  marpaESLIF_rule_t             *lazydeclrulep;          /* A flag to identify the case <Internal[]>(declp) ::= RHS(callp): declp is unknown when <Internal[]> is created */
+  short                          parameterizedRhsb;
 };
 
 /* A rule */
