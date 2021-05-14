@@ -160,7 +160,7 @@ static marpaESLIFValueResult_t marpaESLIFValueResultLazy = {
 /* Util macros on symbol                                                                        */
 /* -------------------------------------------------------------------------------------------- */
 #define MARPAESLIF_IS_META(symbolp)            ((symbolp)->type == MARPAESLIF_SYMBOL_TYPE_META)
-#define MARPAESLIF_IS_LEXEME(symbolp)          (MARPAESLIF_IS_META(symbolp) && ((! (symbolp)->lhsb) || (symbolp)->parameterizedRhsb))
+#define MARPAESLIF_IS_LEXEME(symbolp)          (MARPAESLIF_IS_META(symbolp) && (! (symbolp)->lhsb))
 #define MARPAESLIF_IS_TERMINAL(symbolp)        ((symbolp)->type == MARPAESLIF_SYMBOL_TYPE_TERMINAL)
 #define MARPAESLIF_IS_PSEUDO_TERMINAL(symbolp) (MARPAESLIF_IS_TERMINAL(symbolp) && (symbolp)->u.terminalp->pseudob)
 #define MARPAESLIF_IS_DISCARD(symbolp)         (symbolp)->discardb
@@ -3118,6 +3118,10 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
       if (MARPAESLIF_UNLIKELY(rulep == NULL)) {
 	goto err;
       }
+
+      /* Make it internal */
+      rulep->internalb = 1;
+
       GENERICSTACK_SET_PTR(ruleStackp, rulep, rulep->idi);
       if (MARPAESLIF_UNLIKELY(GENERICSTACK_ERROR(grammarp->ruleStackp))) {
 	MARPAESLIF_ERRORF(marpaESLIFp, "ruleStackp set failure, %s", strerror(errno));
@@ -3218,7 +3222,7 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
       rulep = NULL;
       for (rulei = 0; rulei < GENERICSTACK_USED(ruleStackp); rulei++) {
         MARPAESLIF_INTERNAL_GET_RULE_FROM_STACK(marpaESLIFp, rulep, ruleStackp, rulei);
-        /* :discard and :start rules cases */
+        /* :discard, :start and proxy rules */
         if (rulep->internalb) {
           rulep = NULL;
           continue;
@@ -3459,7 +3463,6 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
       MARPAESLIF_INTERNAL_GET_SYMBOL_FROM_STACK(marpaESLIFp, symbolp, symbolStackp, symboli);
       /* Only meta symbols should be looked at: if not an LHS then it is a dependency on a LHS of another grammar */
       if (symbolp->type != MARPAESLIF_SYMBOL_TYPE_META) {
-        /* ESLIF terminals cannot be parameterized */
         continue;
       }
 
@@ -3468,7 +3471,7 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
       for (rulei = 0; rulei < GENERICSTACK_USED(ruleStackp); rulei++) {
         MARPAESLIF_INTERNAL_GET_RULE_FROM_STACK(marpaESLIFp, rulep, ruleStackp, rulei);
         lhsp = rulep->lhsp;
-        if (_marpaESLIF_string_utf8_eqb(lhsp->descp, symbolp->descp)) {
+        if (lhsp->idi == symbolp->idi) {
           /* Found */
           MARPAESLIF_TRACEF(marpaESLIFp, funcs, "Grammar level %d (%s): symbol %d (%s) marked as LHS", grammari, grammarp->descp->asciis, lhsp->idi, lhsp->descp->asciis);
           lhsb = 1;
@@ -12863,6 +12866,10 @@ static inline void _marpaESLIF_rule_createshowv(marpaESLIF_t *marpaESLIFp, marpa
       MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "=off");
     }
   }
+  if (rulep->internalb) {
+    MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, " /* Internal rule */");
+  }
+
   asciishowl++; /* NUL byte */
 
   if (asciishowlp != NULL) {
