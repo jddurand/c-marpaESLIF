@@ -966,8 +966,11 @@ static inline marpaESLIF_symbol_t *_marpaESLIF_bootstrap_check_meta_by_namep(mar
       continue;
     }
     if (strcmp(symbol_i_p->u.metap->asciinames, asciinames) == 0) {
-      symbolp = symbol_i_p;
-      break;
+      /* We do not want to reuse a parameterized RHS that would match the name if we are in an LHS context */
+      if ((! lhsb) || (! symbol_i_p->parameterizedRhsb)) {
+	symbolp = symbol_i_p;
+	break;
+      }
     }
   }
 
@@ -6589,6 +6592,12 @@ static short _marpaESLIF_bootstrap_G1_action_lexeme_ruleb(void *userDatavp, marp
   /* Check grammar at that level exist */
   grammarp = _marpaESLIF_bootstrap_check_grammarp(marpaESLIFp, marpaESLIFGrammarp, leveli, NULL);
   if (MARPAESLIF_UNLIKELY(grammarp == NULL)) {
+    goto err;
+  }
+
+  /* It is illegal to set a lexeme event on a parameterized RHS */
+  if (rhsPrimaryp->callp != NULL) {
+    MARPAESLIF_ERROR(marpaESLIFp, "A :lexeme rule cannot exist on a parameterized symbol");
     goto err;
   }
 
