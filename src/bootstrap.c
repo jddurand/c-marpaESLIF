@@ -1593,6 +1593,9 @@ static inline marpaESLIF_symbol_t  *_marpaESLIF_bootstrap_check_rhsPrimaryp(marp
   switch (rhsPrimaryp->type) {
   case MARPAESLIF_BOOTSTRAP_RHS_PRIMARY_TYPE_SINGLE_SYMBOL:
     symbolp = _marpaESLIF_bootstrap_check_singleSymbolp(marpaESLIFp, marpaESLIFGrammarp, grammarp, rhsPrimaryp->u.singleSymbolp, createb, forcecreateb, 0 /* lhsb */, NULL /* declp */, 1 /* rhsb */, rhsPrimaryp->callp);
+    if (MARPAESLIF_UNLIKELY(symbolp == NULL)) {
+      goto err;
+    }
     break;
   case MARPAESLIF_BOOTSTRAP_RHS_PRIMARY_TYPE_SYMBOL_AND_REFERENCE:
     /* We want to check if referenced grammar is current grammar */
@@ -1619,28 +1622,28 @@ static inline marpaESLIF_symbol_t  *_marpaESLIF_bootstrap_check_rhsPrimaryp(marp
       MARPAESLIF_ERRORF(marpaESLIFp, "Unsupported grammar reference type (%d)", rhsPrimaryp->u.symbolAndReferencep->grammarReferencep->type);
       goto err;
     }
-    singleSymbol.type = MARPAESLIF_BOOTSTRAP_SINGLE_SYMBOL_TYPE_SYMBOL;
-    singleSymbol.u.symbolp = rhsPrimaryp->u.symbolAndReferencep->symbolp;
-    if (rhsPrimaryp->callp != NULL) {
-      call2decl.luaparlists  = NULL;
-      call2decl.luaparlistcb = 0;
-      call2decl.sizei        = rhsPrimaryp->callp->sizei;
-      call2decl.luap         = NULL;
-      call2decl.lual         = 0;
 
-      call2declp             = &call2decl;
-    } else {
-      call2declp = NULL;
-    }
+    if (referencedGrammarp != grammarp) {
+      /* Create a single symbol in the referenced grammar with this number of parameters */
+      singleSymbol.type = MARPAESLIF_BOOTSTRAP_SINGLE_SYMBOL_TYPE_SYMBOL;
+      singleSymbol.u.symbolp = rhsPrimaryp->u.symbolAndReferencep->symbolp;
+      if (rhsPrimaryp->callp != NULL) {
+        call2decl.luaparlists  = NULL;
+        call2decl.luaparlistcb = 0;
+        call2decl.sizei        = rhsPrimaryp->callp->sizei;
+        call2decl.luap         = NULL;
+        call2decl.lual         = 0;
+        call2declp             = &call2decl;
+      } else {
+        call2declp = NULL;
+      }
     
-    referencedSymbolp = _marpaESLIF_bootstrap_check_singleSymbolp(marpaESLIFp, marpaESLIFGrammarp, referencedGrammarp, &singleSymbol, 1 /* createb */, forcecreateb, 1 /* lhsb */, call2declp, 0 /* rhsb */, NULL /* callp */);
-    if (MARPAESLIF_UNLIKELY(referencedSymbolp == NULL)) {
-      goto err;
-    }
-    if (referencedGrammarp == grammarp) {
-      symbolp = referencedSymbolp;
-    } else {
-      /* Create the symbol in the other grammar */
+      referencedSymbolp = _marpaESLIF_bootstrap_check_singleSymbolp(marpaESLIFp, marpaESLIFGrammarp, referencedGrammarp, &singleSymbol, 1 /* createb */, forcecreateb, 1 /* lhsb */, call2declp, 0 /* rhsb */, NULL /* callp */);
+      if (MARPAESLIF_UNLIKELY(referencedSymbolp == NULL)) {
+        goto err;
+      }
+
+      /* Create the symbol in the current grammar */
       singleSymbol.type = MARPAESLIF_BOOTSTRAP_SINGLE_SYMBOL_TYPE_NA;
       singleSymbol.u.symbolp = (marpaESLIF_bootstrap_symbol_t *) malloc(sizeof(marpaESLIF_bootstrap_symbol_t));
       if (MARPAESLIF_UNLIKELY(singleSymbol.u.symbolp == NULL)) {
@@ -1653,7 +1656,7 @@ static inline marpaESLIF_symbol_t  *_marpaESLIF_bootstrap_check_rhsPrimaryp(marp
         MARPAESLIF_ERRORF(marpaESLIFp, "strdup failure, %s", strerror(errno));
         goto err;
       }
-      symbolp = _marpaESLIF_bootstrap_check_singleSymbolp(marpaESLIFp, marpaESLIFGrammarp, grammarp, &singleSymbol, 1 /* createb */, forcecreateb, 1 /* lhsb */, call2declp, 0 /* rhsb */, NULL /* callp */);
+      symbolp = _marpaESLIF_bootstrap_check_singleSymbolp(marpaESLIFp, marpaESLIFGrammarp, grammarp, &singleSymbol, 1 /* createb */, forcecreateb, 0 /* lhsb */, NULL, 1 /* rhsb */, rhsPrimaryp->callp);
       _marpaESLIF_bootstrap_symbol_freev(singleSymbol.u.symbolp);
       if (MARPAESLIF_UNLIKELY(symbolp == NULL)) {
         goto err;

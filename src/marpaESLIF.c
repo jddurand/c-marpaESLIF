@@ -3041,7 +3041,8 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
     goto err;
   }
 
-  /* For every parameterized RHS(luaexplists), if it is not a lexeme, do a proxy rule           */
+  /* For every parameterized RHS(luaexplists), do a proxy rule.                                 */
+  /* It is here that we check that a parameterized RHS only access current grammar.             */
   /* By construction a parameterised RHS is unique. So it must belong to one and only one rule. */
   /* We recuperate the rule's parlists, and change                                              */
   /* rule(parlists) ::= ... RHS(explists) ...                                                   */
@@ -3073,9 +3074,12 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
 	}
       }
       if (symbol2p == NULL) {
-	/* We are lucky, this is a lexeme. _marpaESLIF_resolveSymbolp() will do the job later in this method */
-	continue;
+	/* No matching symbol in the same grammar and this is illegal: a parameterized RHS */
+        /* is meaningfull only within the same grammar.                                    */
+        MARPAESLIF_ERRORF(marpaESLIFp, "Looking at grammar level %d (%s) and parameterized RHS symbol %d <%s>: no corresponding parameterized LHS in the same grammar", grammari, grammarp->descp->asciis, symbolp->idi, symbolp->descp->asciis);
+        goto err;
       }
+
       /* We found an LHS with the same name as the parameterized RHS and the same number of parameters. */
       MARPAESLIF_TRACEF(marpaESLIFp, funcs, "Linking symbol No %d to symbol No %d at grammar level %d (%s)",
 			symbolp->idi,
