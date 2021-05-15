@@ -186,6 +186,9 @@ struct marpaESLIFSymbol {
   short                          verboseb;               /* Symbol is verbose */
   int                            parami;                 /* -1 when none */
   short                          parameterizedRhsb;
+  marpaESLIF_lua_functiondecl_t *declp;                  /* For parameterized symbols, shallow pointer to declp */
+  marpaESLIF_lua_functioncall_t *callp;                  /* For parameterized symbols, shallow pointer to callp */
+  marpaESLIFAction_t            *contextActionp;         /* For parameterized symbols, context action */
 };
 
 /* A rule */
@@ -258,8 +261,6 @@ struct marpaESLIF_grammar {
   char                  *defaultEncodings;                   /* Default encoding is reader returns NULL */
   char                  *fallbackEncodings;                  /* Fallback encoding is reader returns NULL and tconv fails to detect encoding */
   short                  fastDiscardb;                       /* True when :discard can be done in the context of the current recognizer */
-  genericStack_t         _parameterizedRuleStack;            /* Stack of parameterized rules - Filled by grammar parsing and consumed by grammar validation */
-  genericStack_t        *parameterizedRuleStackp;            /* Pointer to stack of parameterized rules */
 };
 
 /* ----------------------------------- */

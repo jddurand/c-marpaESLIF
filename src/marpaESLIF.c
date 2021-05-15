@@ -651,7 +651,6 @@ static inline marpaESLIF_grammar_t  *_marpaESLIF_grammar_newp(marpaESLIFGrammar_
 static inline void                   _marpaESLIF_grammar_freev(marpaESLIF_grammar_t *grammarp);
 
 static inline void                   _marpaESLIF_ruleStack_freev(genericStack_t *ruleStackp);
-static inline void                   _marpaESLIF_parameterizedRuleStack_freev(genericStack_t *parameterizedRuleStackp);
 static inline void                   _marpaESLIFRecognizer_lexemeStack_freev(marpaESLIFRecognizer_t *marpaESLIFRecognizerp);
 static inline void                   _marpaESLIFRecognizer_lexemeStack_resetv(marpaESLIFRecognizer_t *marpaESLIFRecognizerp);
 
@@ -696,7 +695,7 @@ static inline short                  _marpaESLIFGrammar_haveLexemeb(marpaESLIFGr
 static inline marpaESLIFGrammar_t   *_marpaESLIFGrammar_newp(marpaESLIF_t *marpaESLIFp, marpaESLIFGrammarOption_t *marpaESLIFGrammarOptionp, marpaESLIFGrammar_t *marpaESLIfGrammarPreviousp);
 
 static inline short                  _marpaESLIFRecognizer_terminal_matcherb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIF_stream_t *marpaESLIF_streamp, marpaESLIF_terminal_t *terminalp, char *inputs, size_t inputl, short eofb, marpaESLIF_matcher_value_t *rcip, marpaESLIFValueResult_t *marpaESLIFValueResultp, size_t *matchedLengthlp);
-static inline short                  _marpaESLIFRecognizer_meta_matcherb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIF_symbol_t *symbolp, marpaESLIF_matcher_value_t *rcip, marpaESLIFValueResult_t *marpaESLIFValueResultp, short *isExhaustedbp, int maxStartCompletionsi, size_t *lastSizeBeforeCompletionlp, int *numberOfStartCompletionsip, short paramb);
+static inline short                  _marpaESLIFRecognizer_meta_matcherb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIF_symbol_t *symbolp, marpaESLIF_matcher_value_t *rcip, marpaESLIFValueResult_t *marpaESLIFValueResultp, short *isExhaustedbp, int maxStartCompletionsi, size_t *lastSizeBeforeCompletionlp, int *numberOfStartCompletionsip);
 static inline short                  _marpaESLIFRecognizer_symbol_matcherb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIF_stream_t *marpaESLIF_streamp, marpaESLIF_symbol_t *symbolp, marpaESLIF_matcher_value_t *rcip, marpaESLIFValueResult_t *marpaESLIFValueResultArrayp, marpaESLIFValueResult_t *marpaESLIFValueResultParameterizedp, int maxStartCompletionsi, size_t *lastSizeBeforeCompletionlp, int *numberOfStartCompletionsip);
 
 static const  char                  *_marpaESLIF_utf82printableascii_defaultp = "<!NOT TRANSLATED!>";
@@ -3004,7 +3003,6 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
   marpaESLIF_meta_t                *metap;
   genericStack_t                   *symbolStackp;
   genericStack_t                   *ruleStackp;
-  genericStack_t                   *parameterizedRuleStackp;
   genericStack_t                   *lhsRuleStackp;
   int                               lhsRuleStacki;
   int                               grammari;
@@ -4108,7 +4106,6 @@ static inline marpaESLIF_grammar_t *_marpaESLIF_grammar_newp(marpaESLIFGrammar_t
   grammarp->defaultEncodings                   = NULL;
   grammarp->fallbackEncodings                  = NULL;
   grammarp->fastDiscardb                       = 0;    /* Filled by grammar validation */
-  grammarp->parameterizedRuleStackp            = NULL;
 
   grammarp->marpaWrapperGrammarStartp = marpaWrapperGrammar_newp(marpaWrapperGrammarOptionp);
   if (MARPAESLIF_UNLIKELY(grammarp->marpaWrapperGrammarStartp == NULL)) {
@@ -4215,14 +4212,6 @@ static inline marpaESLIF_grammar_t *_marpaESLIF_grammar_newp(marpaESLIFGrammar_t
     }
   }
 
-  grammarp->parameterizedRuleStackp = &(grammarp->_parameterizedRuleStack);
-  GENERICSTACK_INIT(grammarp->parameterizedRuleStackp);
-  if (MARPAESLIF_UNLIKELY(GENERICSTACK_ERROR(grammarp->parameterizedRuleStackp))) {
-    MARPAESLIF_ERRORF(marpaESLIFp, "parameterizedRuleStackp initialization failure, %s", strerror(errno));
-    grammarp->parameterizedRuleStackp = NULL;
-    goto err;
-  }
-
   goto done;
 
  err:
@@ -4283,7 +4272,6 @@ static inline void _marpaESLIF_grammar_freev(marpaESLIF_grammar_t *grammarp)
     if (grammarp->terminalArrayp != NULL) {
       free(grammarp->terminalArrayp);
     }
-    _marpaESLIF_parameterizedRuleStack_freev(grammarp->parameterizedRuleStackp);
     free(grammarp);
   }
 }
@@ -4302,15 +4290,6 @@ static inline void _marpaESLIF_ruleStack_freev(genericStack_t *ruleStackp)
       }
     }
     GENERICSTACK_RESET(ruleStackp); /* Take care, ruleStackp is a pointer to a stack inside grammar structure */
-  }
-}
-
-/*****************************************************************************/
-static inline void _marpaESLIF_parameterizedRuleStack_freev(genericStack_t *parameterizedRuleStackp)
-/*****************************************************************************/
-{
-  if (parameterizedRuleStackp != NULL) {
-    GENERICSTACK_RESET(parameterizedRuleStackp); /* Take care, parameterizedRuleStackp is a pointer to a stack inside grammar structure */
   }
 }
 
@@ -4699,6 +4678,9 @@ static inline marpaESLIF_symbol_t *_marpaESLIF_symbol_newp(marpaESLIF_t *marpaES
   symbolp->verboseb               = 0; /* Default verbose is 0 */
   symbolp->parami                 = -1;
   symbolp->parameterizedRhsb      = 0;
+  symbolp->declp                  = NULL;
+  symbolp->callp                  = NULL;
+  symbolp->contextActionp         = NULL;
 
   symbolp->nullableRuleStackp = &(symbolp->_nullableRuleStack);
   GENERICSTACK_INIT(symbolp->nullableRuleStackp);
@@ -4762,6 +4744,7 @@ static inline void _marpaESLIF_symbol_freev(marpaESLIF_symbol_t *symbolp)
       _marpaESLIF_lua_functiondecl_freev(symbolp->eventDeclp);
       _marpaESLIF_action_freev(symbolp->symbolActionp);
       _marpaESLIF_action_freev(symbolp->ifActionp);
+      _marpaESLIF_action_freev(symbolp->contextActionp);
 
       GENERICSTACK_RESET(symbolp->nullableRuleStackp); /* Take care, this is a pointer to stack internal to symbol structure */
       GENERICSTACK_RESET(symbolp->lhsRuleStackp); /* Take care, this is a pointer to stack internal to symbol structure */
@@ -5881,7 +5864,7 @@ static inline short _marpaESLIFRecognizer_terminal_matcherb(marpaESLIFRecognizer
 }
 
 /*****************************************************************************/
-static inline short _marpaESLIFRecognizer_meta_matcherb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIF_symbol_t *symbolp, marpaESLIF_matcher_value_t *rcip, marpaESLIFValueResult_t *marpaESLIFValueResultp, short *isExhaustedbp, int maxStartCompletionsi, size_t *lastSizeBeforeCompletionlp, int *numberOfStartCompletionsip, short paramb)
+static inline short _marpaESLIFRecognizer_meta_matcherb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIF_symbol_t *symbolp, marpaESLIF_matcher_value_t *rcip, marpaESLIFValueResult_t *marpaESLIFValueResultp, short *isExhaustedbp, int maxStartCompletionsi, size_t *lastSizeBeforeCompletionlp, int *numberOfStartCompletionsip)
 /*****************************************************************************/
 {
   /* All in all, this routine is the core of this module, and the cause of recursion -; */
@@ -5904,28 +5887,26 @@ static inline short _marpaESLIFRecognizer_meta_matcherb(marpaESLIFRecognizer_t *
   }
 #endif
 
-  /* Push context if any */
-  /* JDD
-  if (symbolp->callp != NULL) {
-#ifndef MARPAESLIF_NTRACE
-    if (symbolp->declp != NULL) {
-      MARPAESLIF_TRACEF(marpaESLIFRecognizerp->marpaESLIFp, funcs, "%s<-%s->%s", funcs, symbolp->declp->luaparlists, symbolp->descp->asciis, symbolp->callp->luaexplists);
-    } else {
-      MARPAESLIF_TRACEF(marpaESLIFRecognizerp->marpaESLIFp, funcs, "[no parameter]<-%s->%s", funcs, symbolp->descp->asciis, symbolp->callp->luaexplists);
-    }
-#endif
-    if (! _marpaESLIFRecognizer_lua_push_contextb(marpaESLIFRecognizerp, symbolp->declp, symbolp->callp, &(symbolp->contextActionp))) {
-      goto err;
-    }
-  }
-  */
-
   /* We want to run an internal recognizer */
   marpaESLIFRecognizerOption = marpaESLIFRecognizerp->marpaESLIFRecognizerOption;
 
   /* In any care we are in a lexeme mode: disable threshold warning and allow remaining data after completion */
   marpaESLIFRecognizerOption.disableThresholdb = 1;
   marpaESLIFRecognizerOption.exhaustedb        = 1;
+
+  /* Push eventual context */
+  if (symbolp->parameterizedRhsb) {
+#ifndef MARPAESLIF_NTRACE
+    if (symbolp->declp != NULL) {
+      MARPAESLIF_TRACEF(marpaESLIFRecognizerp->marpaESLIFp, funcs, "%s<-%s->%s", symbolp->declp->luaparlists, symbolp->descp->asciis, symbolp->callp->luaexplists);
+    } else {
+      MARPAESLIF_TRACEF(marpaESLIFRecognizerp->marpaESLIFp, funcs, "[no parameter]<-%s->%s", symbolp->descp->asciis, symbolp->callp->luaexplists);
+    }
+#endif
+    if (! _marpaESLIFRecognizer_lua_push_contextb(marpaESLIFRecognizerp, symbolp->declp, symbolp->callp, &(symbolp->contextActionp))) {
+      goto err;
+    }
+  }
 
   rcb =_marpaESLIFGrammar_parseb(symbolp->u.metap->marpaESLIFGrammarLexemeClonep,
                                  &marpaESLIFRecognizerOption,
@@ -5941,7 +5922,14 @@ static inline short _marpaESLIFRecognizer_meta_matcherb(marpaESLIFRecognizer_t *
                                  numberOfStartCompletionsip,
                                  0, /* grammarIsOnStackb */
                                  symbolp->verboseb,
-                                 paramb);
+                                 symbolp->parameterizedRhsb);
+
+  /* Pop eventual context */
+  if (symbolp->parameterizedRhsb) {
+    if (! _marpaESLIFRecognizer_lua_pop_contextb(marpaESLIFRecognizerp)) {
+      goto err;
+    }
+  }
 
   if (MARPAESLIF_UNLIKELY(! rcb)) {
     goto err;
@@ -6051,8 +6039,7 @@ static inline short _marpaESLIFRecognizer_symbol_matcherb(marpaESLIFRecognizer_t
                                                                   NULL /* isExhaustedbp */,
                                                                   maxStartCompletionsi,
                                                                   &lastSizeBeforeCompletionl,
-                                                                  &numberOfStartCompletionsi,
-                                                                  0 /* paramb */))) {
+                                                                  &numberOfStartCompletionsi))) {
       goto err;
     }
 

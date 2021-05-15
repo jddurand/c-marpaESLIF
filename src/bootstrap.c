@@ -8807,7 +8807,9 @@ static short _marpaESLIF_bootstrap_G1_action_start_symbol_2b(void *userDatavp, m
 /*****************************************************************************/
 static inline marpaESLIF_rule_t *_marpaESLIF_bootstrap_check_rulep(marpaESLIF_t *marpaESLIFp, marpaESLIFGrammar_t *marpaESLIFGrammarp, marpaESLIF_grammar_t *grammarp, char *descEncodings, char *descs, size_t descl, int lhsi, size_t nrhsl, int *rhsip, int exceptioni, int ranki, short nullRanksHighb, short sequenceb, int minimumi, int separatori, short properb, marpaESLIF_action_t *actionp, short passthroughb, short hideseparatorb, short *skipbp, marpaESLIF_lua_functiondecl_t *declp, marpaESLIF_lua_functioncall_t **callpp, marpaESLIF_lua_functioncall_t *separatorcallp)
 {
-  marpaESLIF_rule_t              *rulep;
+  size_t               rhsl;
+  marpaESLIF_symbol_t *rhsp;
+  marpaESLIF_rule_t   *rulep;
 
   rulep = _marpaESLIF_rule_newp(marpaESLIFp,
                                 grammarp,
@@ -8834,6 +8836,15 @@ static inline marpaESLIF_rule_t *_marpaESLIF_bootstrap_check_rulep(marpaESLIF_t 
 
   if (rulep == NULL) {
     goto err;
+  }
+
+  /* For every parameterized symbol, that is unique in the grammar, associate shallow pointers to decl and call */
+  for (rhsl = 0; rhsl < nrhsl; rhsl++) {
+    MARPAESLIF_INTERNAL_GET_SYMBOL_FROM_STACK(marpaESLIFp, rhsp, grammarp->symbolStackp, rhsip[rhsl]);
+    if (rhsp->parameterizedRhsb) {
+      rhsp->declp = rulep->declp;        /* May be NULL */
+      rhsp->callp = rulep->callpp[rhsl]; /* Never null by definition when it is a parameterized symbol */
+    }
   }
 
   goto done;
