@@ -926,11 +926,12 @@ static inline marpaESLIF_symbol_t *_marpaESLIF_bootstrap_check_meta_by_namep(mar
   genericStack_t                *symbolStackp      = grammarp->symbolStackp;
   marpaESLIF_symbol_t           *symbolp           = NULL;
   marpaESLIF_meta_t             *metap             = NULL;
-  marpaESLIF_symbol_t           *symbol_i_p;
   marpaESLIF_symbol_t           *lhsp;
+  marpaESLIF_symbol_t           *symbol_i_p;
   int                            parami;
   int                            i;
   short                          parameterizedRhsb;
+  marpaESLIF_lua_functiondecl_t  call2decl;
 
   /* It is not legal to have both lhsb and rshb */
   if (lhsb && rhsb) {
@@ -999,13 +1000,30 @@ static inline marpaESLIF_symbol_t *_marpaESLIF_bootstrap_check_meta_by_namep(mar
     symbolp->idi               = metap->idi;
     symbolp->descp             = metap->descp;
     symbolp->parameterizedRhsb = parameterizedRhsb;
-
     metap = NULL; /* metap is now in symbolp */
 
     GENERICSTACK_SET_PTR(grammarp->symbolStackp, symbolp, symbolp->idi);
     if (MARPAESLIF_UNLIKELY(GENERICSTACK_ERROR(grammarp->symbolStackp))) {
       MARPAESLIF_ERRORF(marpaESLIFp, "symbolStackp push failure, %s", strerror(errno));
       goto err;
+    }
+
+    /* If the RHS is parameterized we force the lookup symbol to a corresponding LHS that will exist in the same grammar */
+    if (parameterizedRhsb) {
+      call2decl.luaparlists  = NULL;
+      call2decl.luaparlistcb = 0;
+      call2decl.sizei        = callp->sizei;
+      call2decl.luap         = NULL;
+      call2decl.lual         = 0;
+
+      lhsp = _marpaESLIF_bootstrap_check_meta_by_namep(marpaESLIFp, marpaESLIFGrammarp, grammarp, asciinames, 1 /* createb */, 0 /* forcecreateb */, 1 /* lhsb */, &call2decl, 0 /* rhsb */, NULL);
+      if (lhsp == NULL) {
+        goto err;
+      }
+
+      /* Force the lookup */
+      symbolp->lookupLevelDeltai = 0;
+      symbolp->lookupSymbolp     = lhsp;
     }
   }
 
