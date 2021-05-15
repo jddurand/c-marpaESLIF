@@ -11276,13 +11276,17 @@ static inline short _marpaESLIFGrammar_parseb(marpaESLIFGrammar_t *marpaESLIFGra
 #endif
   }
 
-  /* Force unambiguity */
-  marpaESLIFValueOption.ambiguousb = 0;
+  /* If there is no parent, force unambiguity. Else this is the lexeme mode, and all we want to know is if */
+  /* it valuates. In the later case, if the anwser is yes there is no need to call for valuation: per def  */
+  /* the value is the stream that matched.                                                                 */
+
+  marpaESLIFValueOption.ambiguousb = (marpaESLIFRecognizerParentp != NULL) ? 1 : 0;
   marpaESLIFValuep = _marpaESLIFValue_newp(marpaESLIFRecognizerp, &marpaESLIFValueOption, silentb, 0 /* fakeb */, paramb);
   if (MARPAESLIF_UNLIKELY(marpaESLIFValuep == NULL)) {
     goto err;
   }
-  /* No loop because we ask for a non-ambigous parse tree value */
+  /* No loop because we asked either for a non-ambigous parse tree value, either _marpaESLIFValue_valueb enters a hook that */
+  /* knows we are in a lexeme mode (marpaESLIFRecognizerParentp != NULL).                                                   */
   if (MARPAESLIF_UNLIKELY(_marpaESLIFValue_valueb(marpaESLIFValuep, marpaESLIFValueResultp) <= 0)) {
     goto err;
   }
@@ -11510,6 +11514,27 @@ static inline short _marpaESLIFValue_valueb(marpaESLIFValue_t *marpaESLIFValuep,
   MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_INC;
   MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "start");
 
+  /* Lexeme short cut for maximum performance */
+  if ((marpaESLIFValueResultp != NULL) && (marpaESLIFRecognizerp->marpaESLIFRecognizerParentp != NULL) && (! marpaESLIFValuep->paramb)) {
+    rcb = marpaWrapperValue_valueb(marpaESLIFValuep->marpaWrapperValuep,
+                                   (void *) marpaESLIFValuep,
+                                   NULL,
+                                   NULL,
+                                   NULL);
+    if (rcb > 0) {
+      marpaESLIFValueResultp->contextp           = NULL;
+      marpaESLIFValueResultp->representationp    = NULL;
+      marpaESLIFValueResultp->type               = MARPAESLIF_VALUE_TYPE_ARRAY;
+      marpaESLIFValueResultp->u.a.p              = marpaESLIFRecognizerp->marpaESLIF_streamp->buffers + marpaESLIFRecognizerp->parentDeltal;
+      marpaESLIFValueResultp->u.a.freeUserDatavp = NULL;
+      marpaESLIFValueResultp->u.a.freeCallbackp  = NULL;
+      marpaESLIFValueResultp->u.a.shallowb       = 1;
+      marpaESLIFValueResultp->u.a.sizel          = marpaESLIFRecognizerp->marpaESLIF_streamp->inputs - marpaESLIFValueResultp->u.a.p;
+    }
+
+    goto fast_done;
+  }
+
   if (MARPAESLIF_UNLIKELY(! _marpaESLIFValue_stack_newb(marpaESLIFValuep))) {
     goto err;
   }
@@ -11588,6 +11613,7 @@ static inline short _marpaESLIFValue_valueb(marpaESLIFValue_t *marpaESLIFValuep,
   if (! _marpaESLIFValue_stack_freeb(marpaESLIFValuep)) {
     rcb = -1;
   }
+ fast_done:
   MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "return %d", (int) rcb);
   MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_DEC;
   return rcb;
