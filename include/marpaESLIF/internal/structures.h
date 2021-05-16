@@ -188,7 +188,8 @@ struct marpaESLIFSymbol {
   short                          parameterizedRhsb;
   marpaESLIF_lua_functiondecl_t *declp;                  /* For parameterized symbols, shallow pointer to declp */
   marpaESLIF_lua_functioncall_t *callp;                  /* For parameterized symbols, shallow pointer to callp */
-  marpaESLIFAction_t            *contextActionp;         /* For parameterized symbols, context action */
+  marpaESLIFAction_t            *pushContextActionp;     /* For parameterized symbols, push context action */
+  marpaESLIFAction_t            *popContextActionp;      /* For parameterized symbols, pop context action */
 };
 
 /* A rule */
@@ -220,7 +221,6 @@ struct marpaESLIF_rule {
   marpaESLIF_lua_functioncall_t **callpp;
   marpaESLIF_lua_functioncall_t  *separatorcallp;
   short                           internalb;                   /* Internal rule (:discard and :start cases) */
-  marpaESLIF_action_t            *contextActionp;              /* Context action - only for parameterized rules */
 };
 
 /* A grammar */
@@ -530,9 +530,6 @@ struct marpaESLIFRecognizer {
 
   char                           *luaprecompiledp;    /* Lua script source precompiled */
   size_t                          luaprecompiledl;    /* Lua script source precompiled length in byte */
-  short                           popContextActionShallowb;  /* Only when this is an internal peeked recognizer for parameterized RHS: inherit parent popContextActionp if any */
-  marpaESLIF_action_t            *_popContextActionp;  /* Hack to allow pookng recognizers to share popContextActionp */
-  marpaESLIF_action_t           **popContextActionpp;  /* Hack to allow pookng recognizers to share popContextActionp */
   };
 
 struct marpaESLIF_lexeme_data {

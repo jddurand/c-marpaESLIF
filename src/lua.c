@@ -1840,6 +1840,7 @@ static short _marpaESLIFRecognizer_lua_push_contextb(marpaESLIFRecognizer_t *mar
     }
 
     *pushContextActionpp = pushContextActionp;
+    pushContextActionp = NULL; /* pushContextActionp is in *pushContextActionpp */
   }
 
   /* Call the context action and recuperate latest context */
@@ -1855,10 +1856,7 @@ static short _marpaESLIFRecognizer_lua_push_contextb(marpaESLIFRecognizer_t *mar
   LUA_SETTOP(marpaESLIFRecognizerp, topi);
 
   if (rcb) {
-    /* We use the indice 0 of lexemeInputStack to store the context: it is NEVER used by marpa low-level */
-    if (MARPAESLIF_UNLIKELY(! _marpaESLIFRecognizer_lexemeStack_i_setb(marpaESLIFRecognizerp, 0, &marpaESLIFValueResult))) {
-      goto err;
-    }
+    _marpaESLIFRecognizer_context_setb(marpaESLIFRecognizerp, &marpaESLIFValueResult);
   }
 
   goto done;
@@ -1874,15 +1872,16 @@ static short _marpaESLIFRecognizer_lua_push_contextb(marpaESLIFRecognizer_t *mar
   if (parlistWithoutParens != NULL) {
     free(parlistWithoutParens);
   }
+  _marpaESLIF_action_freev(pushContextActionp);
   return rcb;
 }
 
 /*****************************************************************************/
-static short _marpaESLIFRecognizer_lua_pop_contextb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp)
+static short _marpaESLIFRecognizer_lua_pop_contextb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIF_action_t **popContextActionpp)
 /*****************************************************************************/
 {
-  genericLogger_t              *genericLoggerp = NULL;
-  marpaESLIF_action_t          *popContextActionp;
+  genericLogger_t              *genericLoggerp    = NULL;
+  marpaESLIF_action_t          *popContextActionp = NULL;
   marpaESLIF_stringGenerator_t  marpaESLIF_stringGenerator;
   int                           topi;
   marpaESLIFValueResult_t       marpaESLIFValueResult;
@@ -1905,7 +1904,7 @@ static short _marpaESLIFRecognizer_lua_pop_contextb(marpaESLIFRecognizer_t *marp
   /* Note that since this function is always the same, we allocate it      */
   /* once only, in the top-level recognizer.                               */
   /* --------------------------------------------------------------------- */
-  if (*(marpaESLIFRecognizerp->popContextActionpp) == NULL) {
+  if (*popContextActionpp == NULL) {
     /* We initialize the correct action content. */
     popContextActionp = (marpaESLIF_action_t *) malloc(sizeof(marpaESLIF_action_t));
     if (popContextActionp == NULL) {
@@ -1951,11 +1950,12 @@ static short _marpaESLIFRecognizer_lua_pop_contextb(marpaESLIFRecognizer_t *marp
     /* Action is always precompiled */
     popContextActionp->u.luaFunction.luacb = 1;
 
-    *(marpaESLIFRecognizerp->popContextActionpp) = popContextActionp;
+    *popContextActionpp = popContextActionp;
+    popContextActionp = NULL; /* popContextActionp is in *popContextActionpp */
   }
 
   /* Call the context action and recuperate latest context */
-  marpaESLIFRecognizerp->actionp = *(marpaESLIFRecognizerp->popContextActionpp);
+  marpaESLIFRecognizerp->actionp = *popContextActionpp;
   LUA_GETTOP(marpaESLIFRecognizerp, &topi);
   if (! _marpaESLIFRecognizer_lua_function_loadb(marpaESLIFRecognizerp)) {
     goto err;
@@ -1967,10 +1967,7 @@ static short _marpaESLIFRecognizer_lua_pop_contextb(marpaESLIFRecognizer_t *marp
   LUA_SETTOP(marpaESLIFRecognizerp, topi);
 
   if (rcb) {
-    /* We use the indice 0 of lexemeInputStack to store the context: it is NEVER used by marpa low-level */
-    if (MARPAESLIF_UNLIKELY(! _marpaESLIFRecognizer_lexemeStack_i_setb(marpaESLIFRecognizerp, 0, &marpaESLIFValueResult))) {
-      goto err;
-    }
+    _marpaESLIFRecognizer_context_setb(marpaESLIFRecognizerp, &marpaESLIFValueResult);
   }
 
   goto done;
@@ -1983,5 +1980,6 @@ static short _marpaESLIFRecognizer_lua_pop_contextb(marpaESLIFRecognizer_t *marp
     free(marpaESLIF_stringGenerator.s);
   }
   GENERICLOGGER_FREE(genericLoggerp);
+  _marpaESLIF_action_freev(popContextActionp);
   return rcb;
 }
