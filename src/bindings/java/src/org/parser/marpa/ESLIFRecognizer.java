@@ -46,8 +46,6 @@ public class ESLIFRecognizer {
 	private native boolean 			 jniResume(int deltaLength) throws ESLIFException;
 	private native ESLIFEvent[]      jniEvent() throws ESLIFException;
 	private native ESLIFProgress[]   jniProgress(int start, int end) throws ESLIFException;
-	private native int               jniLatestEarleySetId() throws ESLIFException;
-	private native int               jniEarleme(int earleySetId) throws ESLIFException;
 	private native void              jniEventOnOff(String symbol, ESLIFEventType[] eventTypes, boolean onOff) throws ESLIFException;
 	private native void              jniHookDiscard(boolean onOff) throws ESLIFException;
 	private native void              jniHookDiscardSwitch() throws ESLIFException;
@@ -230,27 +228,6 @@ public class ESLIFRecognizer {
 	 */
 	public synchronized ESLIFProgress[] progress(int start, int end) throws ESLIFException {
 		return jniProgress(start, end);
-	}
-
-	/**
-	 * Asks to get the latest Earley Set Id.
-	 * 
-	 * @return the latest Earley Set Id
-	 * @throws ESLIFException if the interface failed
-	 */
-	public synchronized int latestEarleySetId() throws ESLIFException {
-		return jniLatestEarleySetId();
-	}
-
-	/**
-	 * Asks to get the earleme of an Earley Set Id.
-	 * 
-	 * @param earleySetId the Earley Set Id
-	 * @return the earleme Id
-	 * @throws ESLIFException if the interface failed
-	 */
-	public synchronized int earleme(int earleySetId) throws ESLIFException {
-		return jniEarleme(earleySetId);
 	}
 
 	/**

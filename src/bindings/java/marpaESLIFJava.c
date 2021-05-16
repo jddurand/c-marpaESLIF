@@ -92,8 +92,6 @@ JNIEXPORT void         JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniHookDisc
 JNIEXPORT void         JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniHookDiscardSwitch      (JNIEnv *envp, jobject eslifRecognizerp);
 JNIEXPORT void         JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniProgressLog            (JNIEnv *envp, jobject eslifRecognizerp, jint starti, jint endi, jobject levelp);
 JNIEXPORT jobject      JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniSymbolTry              (JNIEnv *envp, jobject eslifRecognizerp, jobject eslifSymbolp);
-JNIEXPORT jint         JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniLatestEarleySetId      (JNIEnv *envp, jobject eslifRecognizerp);
-JNIEXPORT jint         JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniEarleme                (JNIEnv *envp, jobject eslifRecognizerp, jint earleySetId);
 JNIEXPORT void         JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniFree                   (JNIEnv *envp, jobject eslifRecognizerp);
 JNIEXPORT void         JNICALL Java_org_parser_marpa_ESLIFValue_jniNew                         (JNIEnv *envp, jobject eslifValuep, jobject eslifRecognizerp);
 JNIEXPORT jboolean     JNICALL Java_org_parser_marpa_ESLIFValue_jniValue                       (JNIEnv *envp, jobject eslifValuep);
@@ -4013,46 +4011,6 @@ JNIEXPORT void JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniHookDiscardSwitc
  err: /* err and done share the same code */
 
   return;
-}
-
-/*****************************************************************************/
-JNIEXPORT jint JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniLatestEarleySetId(JNIEnv *envp, jobject eslifRecognizerp)
-/*****************************************************************************/
-{
-  static const char      *funcs = "Java_org_parser_marpa_ESLIFRecognizer_jniLatestEarleySetId";
-  marpaESLIFRecognizer_t *marpaESLIFRecognizerp;
-  int                     latestEarleySetIdi;
-
-  if (! ESLIFRecognizer_contextb(envp, eslifRecognizerp, &marpaESLIFRecognizerp, NULL /* marpaESLIFJavaRecognizerContextpp */)) {
-    goto err;
-  }
-
-  if (!  marpaESLIFRecognizer_latestEarleySetIdb(marpaESLIFRecognizerp, &latestEarleySetIdi)) {
-    RAISEEXCEPTION(envp, "marpaESLIFRecognizer_latestEarleySetIdb failure");
-  }
-
- err: /* err and done share the same code */
-  return (jint) latestEarleySetIdi;
-}
-
-/*****************************************************************************/
-JNIEXPORT jint JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniEarleme(JNIEnv *envp, jobject eslifRecognizerp, jint earleySetId)
-/*****************************************************************************/
-{
-  static const char      *funcs = "Java_org_parser_marpa_ESLIFRecognizer_jniEarleme";
-  marpaESLIFRecognizer_t *marpaESLIFRecognizerp;
-  int                     earlemei;
-
-  if (! ESLIFRecognizer_contextb(envp, eslifRecognizerp, &marpaESLIFRecognizerp, NULL /* marpaESLIFJavaRecognizerContextpp */)) {
-    goto err;
-  }
-
-  if (!  marpaESLIFRecognizer_earlemeb(marpaESLIFRecognizerp, (int) earleySetId, &earlemei)) {
-    RAISEEXCEPTION(envp, "marpaESLIFRecognizer_earlemeb failure");
-  }
-
- err: /* err and done share the same code */
-  return (jint) earlemei;
 }
 
 /*****************************************************************************/

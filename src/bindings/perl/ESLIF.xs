@@ -5485,51 +5485,6 @@ OUTPUT:
 
 =for comment
   /* ----------------------------------------------------------------------- */
-  /* MarpaX::ESLIF::Recognizer::latestEarleySetId                            */
-  /* ----------------------------------------------------------------------- */
-=cut
-
-IV
-latestEarleySetId(p)
-  SV   *p;
-PREINIT:
-  static const char *funcs = "MarpaX::ESLIF::Recognizer::latestEarleySetId";
-CODE:
-  MarpaX_ESLIF_Recognizer_t *MarpaX_ESLIF_Recognizerp = marpaESLIFPerl_engine(aTHX_ p);
-  int                        latestEarleySetIdi;
-
-  if (MARPAESLIF_UNLIKELY(! marpaESLIFRecognizer_latestEarleySetIdb(MarpaX_ESLIF_Recognizerp->marpaESLIFRecognizerp, &latestEarleySetIdi))) {
-    MARPAESLIFPERL_CROAKF("marpaESLIFRecognizer_latestEarleySetIdb failure, %s", strerror(errno));
-  }
-  RETVAL = (IV) latestEarleySetIdi;
-OUTPUT:
-  RETVAL
-
-=for comment
-  /* ----------------------------------------------------------------------- */
-  /* MarpaX::ESLIF::Recognizer::earleme                                      */
-  /* ----------------------------------------------------------------------- */
-=cut
-
-IV
-earleme(p, earleySetIdi)
-  SV  *p;
-  int earleySetIdi;
-PREINIT:
-  static const char *funcs = "MarpaX::ESLIF::Recognizer::earleme";
-CODE:
-  MarpaX_ESLIF_Recognizer_t *MarpaX_ESLIF_Recognizerp = marpaESLIFPerl_engine(aTHX_ p);
-  int                        earlemei;
-
-  if (MARPAESLIF_UNLIKELY(! marpaESLIFRecognizer_earlemeb(MarpaX_ESLIF_Recognizerp->marpaESLIFRecognizerp, earleySetIdi, &earlemei))) {
-    MARPAESLIFPERL_CROAKF("marpaESLIFRecognizer_earlemeb failure, %s", strerror(errno));
-  }
-  RETVAL = (IV) earlemei;
-OUTPUT:
-  RETVAL
-
-=for comment
-  /* ----------------------------------------------------------------------- */
   /* MarpaX::ESLIF::Recognizer::lastCompletedLength                          */
   /* ----------------------------------------------------------------------- */
 =cut

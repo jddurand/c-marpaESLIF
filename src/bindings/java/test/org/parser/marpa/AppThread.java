@@ -224,10 +224,6 @@ public class AppThread implements Runnable {
 						for (int k = 0; k < progress.length; k++) {
 							eslifLogger.notice("Progress[" + k + "]: " + progress[k]);
 						}
-						int latestEarleySetId = eslifRecognizer.latestEarleySetId();
-						eslifLogger.notice("Latest Earley Set: " + latestEarleySetId);
-						int earleme = eslifRecognizer.earleme(latestEarleySetId);
-						eslifLogger.notice("Earleme: " + earleme);
 						if (! doResume(eslifLogger, eslifRecognizer, 0)) {
 							break;
 						}
