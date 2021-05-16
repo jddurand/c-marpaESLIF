@@ -283,31 +283,31 @@ static marpaESLIFValueResult_t marpaESLIFValueResultLazy = {
 /* -------------------------------------------------------------------------------------------- */
 #define MARPAESLIF_MAKE_MARPAESLIFVALUERESULTP_SHALLOW(marpaESLIFValueResultp) do { \
     if (marpaESLIFValueResultp != NULL) {                               \
-      switch (marpaESLIFValueResult.type) {                             \
+      switch (marpaESLIFValueResultp->type) {                           \
       case MARPAESLIF_VALUE_TYPE_PTR:                                   \
-        (marpaESLIFValueResult).u.p.shallowb       = 1;			\
-        (marpaESLIFValueResult).u.p.freeUserDatavp = NULL;              \
-        (marpaESLIFValueResult).u.p.freeCallbackp  = NULL;              \
+        marpaESLIFValueResultp->u.p.shallowb       = 1;			\
+        marpaESLIFValueResultp->u.p.freeUserDatavp = NULL;              \
+        marpaESLIFValueResultp->u.p.freeCallbackp  = NULL;              \
         break;                                                          \
       case MARPAESLIF_VALUE_TYPE_ARRAY:                                 \
-        (marpaESLIFValueResult).u.a.shallowb       = 1;			\
-        (marpaESLIFValueResult).u.a.freeUserDatavp = NULL;              \
-        (marpaESLIFValueResult).u.a.freeCallbackp  = NULL;              \
+        marpaESLIFValueResultp->u.a.shallowb       = 1;			\
+        marpaESLIFValueResultp->u.a.freeUserDatavp = NULL;              \
+        marpaESLIFValueResultp->u.a.freeCallbackp  = NULL;              \
         break;                                                          \
       case MARPAESLIF_VALUE_TYPE_STRING:                                \
-        (marpaESLIFValueResult).u.s.shallowb       = 1;			\
-        (marpaESLIFValueResult).u.s.freeUserDatavp = NULL;              \
-        (marpaESLIFValueResult).u.s.freeCallbackp  = NULL;              \
+        marpaESLIFValueResultp->u.s.shallowb       = 1;			\
+        marpaESLIFValueResultp->u.s.freeUserDatavp = NULL;              \
+        marpaESLIFValueResultp->u.s.freeCallbackp  = NULL;              \
         break;                                                          \
       case MARPAESLIF_VALUE_TYPE_ROW:                                   \
-        (marpaESLIFValueResult).u.r.shallowb       = 1;			\
-        (marpaESLIFValueResult).u.r.freeUserDatavp = NULL;              \
-        (marpaESLIFValueResult).u.r.freeCallbackp  = NULL;              \
+        marpaESLIFValueResultp->u.r.shallowb       = 1;			\
+        marpaESLIFValueResultp->u.r.freeUserDatavp = NULL;              \
+        marpaESLIFValueResultp->u.r.freeCallbackp  = NULL;              \
         break;                                                          \
       case MARPAESLIF_VALUE_TYPE_TABLE:                                 \
-        (marpaESLIFValueResult).u.t.shallowb       = 1;			\
-        (marpaESLIFValueResult).u.t.freeUserDatavp = NULL;              \
-        (marpaESLIFValueResult).u.t.freeCallbackp  = NULL;              \
+        marpaESLIFValueResultp->u.t.shallowb       = 1;			\
+        marpaESLIFValueResultp->u.t.freeUserDatavp = NULL;              \
+        marpaESLIFValueResultp->u.t.freeCallbackp  = NULL;              \
         break;                                                          \
       default:                                                          \
         break;                                                          \
