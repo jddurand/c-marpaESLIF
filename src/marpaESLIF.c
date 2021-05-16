@@ -3186,6 +3186,7 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
         MARPAESLIF_ERRORF(marpaESLIFp, "Precomputing \"no event\" grammar level %d (%s) at its default start symbol %d <%s> failure", grammari, grammarp->descp->asciis, rulep->lhsp->idi, rulep->lhsp->descp->asciis);
         goto err;
       }
+      rulep->lhsp->topb = 1;
       grammarp->starti = rulep->lhsp->idi;
       grammarp->starts = rulep->lhsp->descp->asciis;
     } else {
@@ -3199,6 +3200,7 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
         MARPAESLIF_ERRORF(marpaESLIFp, "Precomputing \"no event\" grammar level %d (%s) at start symbol %d <%s> failure", grammari, grammarp->descp->asciis, startp->idi, startp->descp->asciis);
         goto err;
       }
+      startp->topb = 1;
       grammarp->starti = startp->idi;
       grammarp->starts = startp->descp->asciis;
     }
