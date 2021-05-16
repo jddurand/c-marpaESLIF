@@ -706,10 +706,6 @@ for _, localstring in pairs(strings) do
          eslifRecognizer:progressLog(-1, -1, GENERICLOGGER_LOGLEVEL_NOTICE)
          local progress = eslifRecognizer:progress(-1, -1)
          logger:infof('Progress: %s', tableDump(progress))
-         local latestEarleySetId = eslifRecognizer:latestEarleySetId()
-         logger:infof('Latest Earley Set Id: %d', latestEarleySetId)
-         local earleme = eslifRecognizer:earleme(latestEarleySetId)
-         logger:infof('Earleme: %d', earleme)
          if (not doResume(eslifRecognizer, 0)) then
             break
          end
