@@ -1007,6 +1007,8 @@ static int marpaESLIFLua_installi(lua_State *L)
   /* NiledTable in on the stack */                                         /* Stack: NiledTable */
   if (! marpaESLIFLua_lua_getfield(NULL, L, -1, "niledarray")) goto err;   /* Stack: NiledTable, NiledTable.niledarray */
   if (! marpaESLIFLua_lua_getfield(NULL, L, -2, "niledtablekv")) goto err; /* Stack: NiledTable, NiledTable.niledarray, NiledTable.niledtablekv */
+  if (! marpaESLIFLua_lua_getfield(NULL, L, -3, "niledtablek")) goto err;  /* Stack: NiledTable, NiledTable.niledarray, NiledTable.niledtablekv, NiledTable.niledtablek */
+  if (! marpaESLIFLua_lua_setglobal(L, "niledtablek")) goto err;           /* Stack: NiledTable, NiledTable.niledarray, NiledTable.niledtablekv */
   if (! marpaESLIFLua_lua_setglobal(L, "niledtablekv")) goto err;          /* Stack: NiledTable, NiledTable.niledarray */
   if (! marpaESLIFLua_lua_setglobal(L, "niledarray")) goto err;            /* Stack: NiledTable */
   if (! marpaESLIFLua_lua_setglobal(L, "NiledTable")) goto err;            /* Stack: */
