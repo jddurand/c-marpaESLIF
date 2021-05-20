@@ -426,8 +426,8 @@ struct marpaESLIFRecognizer {
   marpaESLIFRecognizerOption_t marpaESLIFRecognizerOption;
   marpaWrapperRecognizer_t    *marpaWrapperRecognizerp; /* Current recognizer */
   marpaWrapperGrammar_t       *marpaWrapperGrammarp; /* Shallow copy of cached grammar in use */
-  genericStack_t               _lexemeInputStack;  /* Internal input stack of lexemes */
-  genericStack_t              *lexemeInputStackp;  /* Pointer to internal input stack of lexemes */
+  genericStack_t               _lexemeStack;       /* Internal input stack of lexemes */
+  genericStack_t              *lexemeStackp;       /* Pointer to internal input stack of lexemes */
   marpaESLIFEvent_t           *eventArrayp;        /* For the events */
   size_t                       eventArrayl;        /* Current number of events */
   size_t                       eventArraySizel;    /* Real allocated size (to avoid constant free/deletes) */

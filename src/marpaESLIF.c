@@ -1394,7 +1394,7 @@ static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *mar
         errno = EINVAL;
         goto err;
       }
-      if (MARPAESLIF_UNLIKELY(! _marpaESLIFRecognizer_lexemeStack_i_setb(marpaESLIFRecognizerp, GENERICSTACK_USED(marpaESLIFRecognizerp->lexemeInputStackp), &marpaESLIFValueResult))) {
+      if (MARPAESLIF_UNLIKELY(! _marpaESLIFRecognizer_lexemeStack_i_setb(marpaESLIFRecognizerp, GENERICSTACK_USED(marpaESLIFRecognizerp->lexemeStackp), &marpaESLIFValueResult))) {
         if ((! marpaESLIFValueResult.u.a.shallowb) && (marpaESLIFValueResult.u.a.p != NULL)) {
           free(marpaESLIFValueResult.u.a.p);
         }
@@ -1408,7 +1408,7 @@ static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *mar
     stringl = 0;
     backslashb = 0;
     /* Remember that lexeme input stack is putting a fake value at indice 0, because marpa does not like it */
-    for (i = 1; i < GENERICSTACK_USED(marpaESLIFRecognizerp->lexemeInputStackp); i++) {
+    for (i = 1; i < GENERICSTACK_USED(marpaESLIFRecognizerp->lexemeStackp); i++) {
       if (MARPAESLIF_UNLIKELY(! _marpaESLIFRecognizer_lexemeStack_i_p_and_sizeb(marpaESLIFRecognizerp, i, &matchedp, &matchedl))) {
         goto err;
       }
@@ -1450,7 +1450,7 @@ static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *mar
           }
         }
         continue;
-      } else if (i == (GENERICSTACK_USED(marpaESLIFRecognizerp->lexemeInputStackp) - 1)) {
+      } else if (i == (GENERICSTACK_USED(marpaESLIFRecognizerp->lexemeStackp) - 1)) {
         /* Trailing backslash ? */
         if (MARPAESLIF_UNLIKELY(backslashb)) {
           MARPAESLIF_ERROR(marpaESLIFp, "Trailing backslash in string is not allowed");
@@ -1658,7 +1658,7 @@ static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *mar
           errno = EINVAL;
           goto err;
         }
-        if (MARPAESLIF_UNLIKELY(! _marpaESLIFRecognizer_lexemeStack_i_setb(marpaESLIFRecognizerp, GENERICSTACK_USED(marpaESLIFRecognizerp->lexemeInputStackp), &marpaESLIFValueResult))) {
+        if (MARPAESLIF_UNLIKELY(! _marpaESLIFRecognizer_lexemeStack_i_setb(marpaESLIFRecognizerp, GENERICSTACK_USED(marpaESLIFRecognizerp->lexemeStackp), &marpaESLIFValueResult))) {
           if ((! marpaESLIFValueResult.u.a.shallowb) && (marpaESLIFValueResult.u.a.p != NULL)) {
             free(marpaESLIFValueResult.u.a.p);
           }
@@ -1670,7 +1670,7 @@ static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *mar
       /* All matches are in the recognizer's lexeme input stack, in order. Take all unicode code points. */
       utfflagb = 0;
       /* Remember that lexeme input stack is putting a fake value at indice 0, because marpa does not like it */
-      for (i = 1; i < GENERICSTACK_USED(marpaESLIFRecognizerp->lexemeInputStackp); i++) {
+      for (i = 1; i < GENERICSTACK_USED(marpaESLIFRecognizerp->lexemeStackp); i++) {
         if (MARPAESLIF_UNLIKELY(! _marpaESLIFRecognizer_lexemeStack_i_p_and_sizeb(marpaESLIFRecognizerp, i, &matchedp, &matchedl))) {
           goto err;
         }
@@ -4301,12 +4301,12 @@ static inline void _marpaESLIFRecognizer_lexemeStack_freev(marpaESLIFRecognizer_
 {
   static const char *funcs = "_marpaESLIFRecognizer_lexemeStack_freev";
 
-  if (marpaESLIFRecognizerp->lexemeInputStackp != NULL) {
+  if (marpaESLIFRecognizerp->lexemeStackp != NULL) {
     MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_INC;
     MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "start");
 
     _marpaESLIFRecognizer_lexemeStack_resetv(marpaESLIFRecognizerp);
-    GENERICSTACK_RESET(marpaESLIFRecognizerp->lexemeInputStackp); /* Take care, lexemeStackp is a pointer to a static genericStack_t in recognizer's structure */
+    GENERICSTACK_RESET(marpaESLIFRecognizerp->lexemeStackp); /* Take care, lexemeStackp is a pointer to a static genericStack_t in recognizer's structure */
 
     MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "return");
     MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_DEC;
@@ -4324,16 +4324,16 @@ static inline void _marpaESLIFRecognizer_lexemeStack_resetv(marpaESLIFRecognizer
   int                i;
   int                usedi;
 
-  if (marpaESLIFRecognizerp->lexemeInputStackp != NULL) {
+  if (marpaESLIFRecognizerp->lexemeStackp != NULL) {
 
     beforePtrStackp = marpaESLIFRecognizerp->beforePtrStackp;
     afterPtrHashp   = marpaESLIFRecognizerp->afterPtrHashp;
-    usedi           = GENERICSTACK_USED(marpaESLIFRecognizerp->lexemeInputStackp);
+    usedi           = GENERICSTACK_USED(marpaESLIFRecognizerp->lexemeStackp);
 
     if (usedi > 0) {
       for (i = usedi - 1; i >= 0; i--) {
         _marpaESLIFRecognizer_internalStack_i_setb(marpaESLIFRecognizerp,
-                                                   marpaESLIFRecognizerp->lexemeInputStackp,
+                                                   marpaESLIFRecognizerp->lexemeStackp,
                                                    i,
                                                    (marpaESLIFValueResult_t *) &marpaESLIFValueResultUndef,
                                                    0, /* forgetb */
@@ -4342,7 +4342,7 @@ static inline void _marpaESLIFRecognizer_lexemeStack_resetv(marpaESLIFRecognizer
                                                    NULL /* marpaESLIFValueResultOrigp */);
       }
     }
-    GENERICSTACK_RELAX(marpaESLIFRecognizerp->lexemeInputStackp);
+    GENERICSTACK_RELAX(marpaESLIFRecognizerp->lexemeStackp);
   }
 }
 
@@ -4363,7 +4363,7 @@ static inline short _marpaESLIFRecognizer_lexemeStack_i_setb(marpaESLIFRecognize
 
   /* Lexeme input stack is a stack of marpaESLIFValueResult */
   rcb = _marpaESLIFRecognizer_internalStack_i_setb(marpaESLIFRecognizerp,
-						   marpaESLIFRecognizerp->lexemeInputStackp,
+						   marpaESLIFRecognizerp->lexemeStackp,
 						   i,
 						   marpaESLIFValueResultp,
 						   0, /* forgetb */
@@ -8780,21 +8780,21 @@ static inline short _marpaESLIF_recognizer_start_is_completeb(marpaESLIFRecogniz
 static inline short _marpaESLIFRecognizer_lexeme_alternativeb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIF_alternative_t *alternativep)
 /*****************************************************************************/
 {
-  static const char    *funcs              = "_marpaESLIFRecognizer_lexeme_alternativeb";
-  genericStack_t       *lexemeInputStackp  = marpaESLIFRecognizerp->lexemeInputStackp;
+  static const char    *funcs         = "_marpaESLIFRecognizer_lexeme_alternativeb";
+  genericStack_t       *lexemeStackp  = marpaESLIFRecognizerp->lexemeStackp;
   size_t                lastSizel;
   short                 rcb;
 
   MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_INC;
   MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "start");
 
-  if (MARPAESLIF_UNLIKELY(! _marpaESLIFRecognizer_lexemeStack_i_setb(marpaESLIFRecognizerp, GENERICSTACK_USED(lexemeInputStackp), &(alternativep->marpaESLIFValueResult)))) {
+  if (MARPAESLIF_UNLIKELY(! _marpaESLIFRecognizer_lexemeStack_i_setb(marpaESLIFRecognizerp, GENERICSTACK_USED(lexemeStackp), &(alternativep->marpaESLIFValueResult)))) {
     goto err;
   }
   /* alternative is now in the lexemeStack - remember that */
   MARPAESLIF_MAKE_MARPAESLIFVALUERESULT_SHALLOW(alternativep->marpaESLIFValueResult);
 
-  if (MARPAESLIF_UNLIKELY(! _marpaESLIFRecognizer_alternative_and_valueb(marpaESLIFRecognizerp, alternativep, GENERICSTACK_USED(lexemeInputStackp) - 1))) {
+  if (MARPAESLIF_UNLIKELY(! _marpaESLIFRecognizer_alternative_and_valueb(marpaESLIFRecognizerp, alternativep, GENERICSTACK_USED(lexemeStackp) - 1))) {
     goto err;
   }
 
@@ -10486,7 +10486,7 @@ static inline marpaESLIFRecognizer_t *_marpaESLIFRecognizer_newp(marpaESLIFGramm
   _marpaESLIFRecognizer_redoGrammarv(marpaESLIFRecognizerp, marpaESLIFGrammarp, fakeb, grammarIsOnStackb);
   marpaESLIFRecognizerp->marpaESLIFRecognizerOption      = *marpaESLIFRecognizerOptionp;
   marpaESLIFRecognizerp->marpaWrapperRecognizerp         = NULL;
-  marpaESLIFRecognizerp->lexemeInputStackp               = NULL;  /* Take care, it is pointer to internal _lexemeInputstack if stack init is ok */
+  marpaESLIFRecognizerp->lexemeStackp                    = NULL;  /* Take care, it is pointer to internal _lexemeStack if stack init is ok */
   marpaESLIFRecognizerp->eventArrayp                     = NULL;
   marpaESLIFRecognizerp->eventArrayl                     = 0;
   marpaESLIFRecognizerp->eventArraySizel                 = 0;
@@ -10714,18 +10714,18 @@ static inline marpaESLIFRecognizer_t *_marpaESLIFRecognizer_newp(marpaESLIFGramm
     }
   }
 
-  marpaESLIFRecognizerp->lexemeInputStackp = &(marpaESLIFRecognizerp->_lexemeInputStack);
-  GENERICSTACK_INIT(marpaESLIFRecognizerp->lexemeInputStackp);
-  if (MARPAESLIF_UNLIKELY(GENERICSTACK_ERROR(marpaESLIFRecognizerp->lexemeInputStackp))) {
-    MARPAESLIF_ERRORF(marpaESLIFp, "lexemeInputStackp initialization failure, %s", strerror(errno));
-    marpaESLIFRecognizerp->lexemeInputStackp = NULL;
+  marpaESLIFRecognizerp->lexemeStackp = &(marpaESLIFRecognizerp->_lexemeStack);
+  GENERICSTACK_INIT(marpaESLIFRecognizerp->lexemeStackp);
+  if (MARPAESLIF_UNLIKELY(GENERICSTACK_ERROR(marpaESLIFRecognizerp->lexemeStackp))) {
+    MARPAESLIF_ERRORF(marpaESLIFp, "lexemeStackp initialization failure, %s", strerror(errno));
+    marpaESLIFRecognizerp->lexemeStackp = NULL;
     goto err;
   }
 
   /* Marpa does not use the indice 0 - we put recognizer context there */
-  GENERICSTACK_PUSH_CUSTOM(marpaESLIFRecognizerp->lexemeInputStackp, marpaESLIFValueResultUndef);
-  if (MARPAESLIF_UNLIKELY(GENERICSTACK_ERROR(marpaESLIFRecognizerp->lexemeInputStackp))) {
-    MARPAESLIF_ERRORF(marpaESLIFp, "lexemeInputStackp push failure, %s", strerror(errno));
+  GENERICSTACK_PUSH_CUSTOM(marpaESLIFRecognizerp->lexemeStackp, marpaESLIFValueResultUndef);
+  if (MARPAESLIF_UNLIKELY(GENERICSTACK_ERROR(marpaESLIFRecognizerp->lexemeStackp))) {
+    MARPAESLIF_ERRORF(marpaESLIFp, "lexemeStackp push failure, %s", strerror(errno));
     goto err;
   }
 
@@ -12049,12 +12049,12 @@ static inline marpaESLIFValueResult_t *_marpaESLIFRecognizer_lexemeStack_i_getp(
 
 #ifndef MARPAESLIF_NTRACE
   /* Should never happen */
-  if (MARPAESLIF_UNLIKELY(! GENERICSTACK_IS_CUSTOM(marpaESLIFRecognizerp->lexemeInputStackp, i))) {
+  if (MARPAESLIF_UNLIKELY(! GENERICSTACK_IS_CUSTOM(marpaESLIFRecognizerp->lexemeStackp, i))) {
     MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "No such indice %d in lexeme stack", i);
     goto err;
   }
 #endif
-  rcp = GENERICSTACK_GET_CUSTOMP(marpaESLIFRecognizerp->lexemeInputStackp, i);
+  rcp = GENERICSTACK_GET_CUSTOMP(marpaESLIFRecognizerp->lexemeStackp, i);
 
 #ifndef MARPAESLIF_NTRACE
   goto done;
@@ -17519,7 +17519,7 @@ static short _marpaESLIF_symbol_action___transferb(void *userDatavp, marpaESLIFV
 
     rcb = _marpaESLIFValue_stack_setb(marpaESLIFValuep, resulti, &marpaESLIFValueResult);
   } else {
-    /* It is in lexemeInputStack : If the transfer is successful, make the original shallow */
+    /* It is in lexemeStack : If the transfer is successful, make the original shallow */
     rcb = _marpaESLIFValue_stack_setb(marpaESLIFValuep, resulti, marpaESLIFValueResultp);
     if (rcb) {
       MARPAESLIF_MAKE_MARPAESLIFVALUERESULTP_SHALLOW(marpaESLIFValueResultp);
@@ -18830,7 +18830,7 @@ static inline marpaESLIFRecognizer_t *_marpaESLIFRecognizer_getPristineFromCache
         /* marpaESLIFRecognizerp->marpaESLIFRecognizerOption   = *marpaESLIFRecognizerOptionp; */
         /* marpaESLIFRecognizerp->marpaWrapperRecognizerp      = NULL; */
         /* marpaESLIFRecognizerp->marpaWrapperGrammarp         = NULL; */
-        /* marpaESLIFRecognizerp->lexemeInputStackp            = NULL; */
+        /* marpaESLIFRecognizerp->lexemeStackp                 = NULL; */
         /* marpaESLIFRecognizerp->eventArrayp                  = NULL; */
         /* marpaESLIFRecognizerp->eventArrayl                  = 0; */
         /* marpaESLIFRecognizerp->eventArraySizel              = 0; */
@@ -21337,9 +21337,9 @@ static inline void _marpaESLIF_lua_functioncall_freev(marpaESLIF_lua_functioncal
 static inline short _marpaESLIFRecognizer_context_setb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFValueResult_t *marpaESLIFValueResultp)
 /*****************************************************************************/
 {
-  /* We use indice 0 of lexemeInputStackp, that is not used by the interface to marpa */
+  /* We use indice 0 of lexemeStackp, that is not used by the interface to marpa */
   return _marpaESLIFRecognizer_internalStack_i_setb(marpaESLIFRecognizerp,
-                                                    marpaESLIFRecognizerp->lexemeInputStackp,
+                                                    marpaESLIFRecognizerp->lexemeStackp,
                                                     0, /* indicei */
                                                     marpaESLIFValueResultp,
                                                     0, /* forgetb */
@@ -21352,7 +21352,7 @@ static inline short _marpaESLIFRecognizer_context_setb(marpaESLIFRecognizer_t *m
 static inline marpaESLIFValueResult_t *_marpaESLIFRecognizer_context_getp(marpaESLIFRecognizer_t *marpaESLIFRecognizerp)
 /*****************************************************************************/
 {
-  /* This is in lexemeInputStackp at indice 0 */
+  /* This is in lexemeStackp at indice 0 */
   return _marpaESLIFRecognizer_lexemeStack_i_getp(marpaESLIFRecognizerp, 0);
 }
 
