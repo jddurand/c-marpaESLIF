@@ -10024,6 +10024,7 @@ short marpaESLIFRecognizer_eventb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp,
   short                     rcb;
   marpaWrapperRecognizer_t *marpaWrapperRecognizerp;
   int                       latestEarleySetIdi;
+  int                       earlemei;
 
   MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_INC;
   MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "start");
@@ -10087,6 +10088,10 @@ short marpaESLIFRecognizer_eventb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp,
         if (MARPAESLIF_UNLIKELY(!  marpaWrapperRecognizer_latestb(marpaWrapperRecognizerp, &latestEarleySetIdi))) {
           goto err;
         }
+        if (! marpaWrapperRecognizer_earlemeb(marpaWrapperRecognizerp, latestEarleySetIdi, &earlemei)) {
+          goto err;
+        }
+        MARPAESLIF_NOTICEF(marpaESLIFRecognizerp->marpaESLIFp, "JDD Pushing context for Earley Set Id %d earleme %d %s<->%s", latestEarleySetIdi, earlemei, symbolp->declp != NULL ? symbolp->declp->luaparlists : "nil", symbolp->callp != NULL ? symbolp->callp->luaexplists : "nil");
         if (! _marpaESLIFRecognizer_lua_push_contextb(marpaESLIFRecognizerp, symbolp->declp, symbolp->callp, &(symbolp->pushContextActionp))) {
           goto err;
         }
