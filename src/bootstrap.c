@@ -1013,8 +1013,6 @@ static inline marpaESLIF_symbol_t *_marpaESLIF_bootstrap_check_meta_by_namep(mar
       call2decl.luaparlists  = NULL;
       call2decl.luaparlistcb = 0;
       call2decl.sizei        = callp->sizei;
-      call2decl.luap         = NULL;
-      call2decl.lual         = 0;
 
       lhsp = _marpaESLIF_bootstrap_check_meta_by_namep(marpaESLIFp, marpaESLIFGrammarp, grammarp, asciinames, 1 /* createb */, 0 /* forcecreateb */, 1 /* lhsb */, &call2decl, 0 /* rhsb */, NULL);
       if (lhsp == NULL) {
@@ -1649,8 +1647,6 @@ static inline marpaESLIF_symbol_t  *_marpaESLIF_bootstrap_check_rhsPrimaryp(marp
         call2decl.luaparlists  = NULL;
         call2decl.luaparlistcb = 0;
         call2decl.sizei        = rhsPrimaryp->callp->sizei;
-        call2decl.luap         = NULL;
-        call2decl.lual         = 0;
         call2declp             = &call2decl;
       } else {
         call2declp = NULL;
@@ -3938,8 +3934,6 @@ static inline short _marpaESLIF_bootstrap_G1_action_priority_loosen_ruleb(marpaE
     decl2call.luaexplists  = declp->luaparlists;
     decl2call.luaexplistcb = declp->luaparlistcb;
     decl2call.sizei        = declp->sizei;
-    decl2call.luap         = NULL;
-    decl2call.lual         = 0;
     decl2callp = &decl2call;
   } else {
     decl2callp = NULL;
@@ -4417,8 +4411,6 @@ static inline short _marpaESLIF_bootstrap_G1_action_priority_flat_ruleb(marpaESL
     decl2call.luaexplists  = declp->luaparlists;
     decl2call.luaexplistcb = declp->luaparlistcb;
     decl2call.sizei        = declp->sizei;
-    decl2call.luap         = NULL;
-    decl2call.lual         = 0;
     decl2callp = &decl2call;
   } else {
     decl2callp = NULL;
@@ -8501,7 +8493,7 @@ static short _marpaESLIF_bootstrap_G1_action_lua_functioncallb(void *userDatavp,
   }
   
   callp->luaexplists  = luaexplists;
-  callp->luaexplistcb = (strcmp(arg0s, "-->") == 0) ? 1 : 0;
+  callp->luaexplistcb = (strcmp(arg0s, "-->(") == 0) ? 1 : 0;
 
   luaexplists = NULL;
 
@@ -8592,7 +8584,7 @@ static short _marpaESLIF_bootstrap_G1_action_lua_functiondeclb(void *userDatavp,
   }
   
   declp->luaparlists  = luaparlists;
-  declp->luaparlistcb = (strcmp(arg0s, "<--") == 0) ? 1 : 0;
+  declp->luaparlistcb = (strcmp(arg0s, "<--(") == 0) ? 1 : 0;
 
   luaparlists   = NULL;
 
@@ -8844,6 +8836,13 @@ static inline marpaESLIF_rule_t *_marpaESLIF_bootstrap_check_rulep(marpaESLIF_t 
     if (rhsp->parameterizedRhsb) {
       rhsp->declp = rulep->declp;        /* May be NULL */
       rhsp->callp = rulep->callpp[rhsl]; /* Never null by definition when it is a parameterized symbol */
+    }
+  }
+  if (rulep->separatorp != NULL) {
+    rhsp = rulep->separatorp;
+    if (rhsp->parameterizedRhsb) {
+      rhsp->declp = rulep->declp;          /* May be NULL */
+      rhsp->callp = rulep->separatorcallp; /* Never null by definition when it is a parameterized symbol */
     }
   }
 

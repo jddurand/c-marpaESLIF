@@ -624,16 +624,12 @@ struct marpaESLIF_lua_functioncall {
   char   *luaexplists;
   short   luaexplistcb;
   int     sizei;   /* Number of top expressions */
-  char   *luap;    /* Lua function call source precompiled */
-  size_t  lual;    /* Lua function call source precompiled length in byte */
 };
 
 struct marpaESLIF_lua_functiondecl {
   char   *luaparlists;
   short   luaparlistcb;
   int     sizei;   /* Number of parameters */
-  char   *luap;    /* Lua function decl source precompiled */
-  size_t  lual;    /* Lua function decl source precompiled length in byte */
 };
 
 #include "marpaESLIF/internal/eslif.h"

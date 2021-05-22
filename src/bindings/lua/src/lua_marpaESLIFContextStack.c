@@ -7,6 +7,8 @@ static const char *MARPAESLIFLUA_CONTEXTSTACK =
   "   local self = {}\n"
   "\n"
   "   function self.get()\n"
+  "      print('Context at indice '..#stack..' is :')\n"
+  "      print(tableDump(stack[#stack]))\n"
   "      return stack[#stack]\n"
   "   end\n"
   "\n"
