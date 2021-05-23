@@ -1,3 +1,4 @@
+/* C.f. http://lua-users.org/wiki/StoringNilsInTables */
 static const char *MARPAESLIFLUA_NILEDTABLE =
   "\n"
   "-- NiledTable.lua\n"
