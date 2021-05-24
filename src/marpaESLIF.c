@@ -3040,8 +3040,7 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
   marpaESLIF_meta_t                *subMetap;
   marpaESLIF_terminal_t            *subTerminalp;
   marpaESLIF_action_t               action;
-  marpaESLIF_lua_functioncall_t     decl2call;
-  marpaESLIF_lua_functioncall_t    *decl2callp = &decl2call;
+  marpaESLIF_lua_functiondecl_t    *declp;
 
   /* Constant action */
   action.type    = MARPAESLIF_ACTION_TYPE_NAME;
@@ -3078,8 +3077,9 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
   /* and create an additional rule with a prediction event, which is unique per parameterized RHS */
   /* because a parameterized RHS is itself unique.                                                */
   /* Exception rules are explicitly skipped because we impose they must contain only pure grammar */
-  /* terminals, and grammar terminals cannot be parameterized.                                    */
+  /* terminals, and grammar terminals cannot be parameterized. This is done in src/bootstrap.c.   */
   /* Separators, on the other hand, are checked as well.                                          */
+  /* We take the opportunity of this symbol loop to check terminals: the cannot be parameterized. */
   for (grammari = 0; grammari < GENERICSTACK_USED(grammarStackp); grammari++) {
     if (! GENERICSTACK_IS_PTR(grammarStackp, grammari)) {
       /* Sparse item in grammarStackp -; */
@@ -3095,37 +3095,52 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
         continue;
       }
 
-      lhsp                  = NULL;
-      parameterizedRhsRulep = NULL;
+      lhsp  = NULL;
+      declp = NULL;
 
+      /* Search for the LHS that maps to RHS(callp) and for current declp */
       for (rulei = 0; rulei < GENERICSTACK_USED(ruleStackp); rulei++) {
         MARPAESLIF_INTERNAL_GET_RULE_FROM_STACK(marpaESLIFp, rulep, ruleStackp, rulei);
+        /*
+         * Not needed
+         */
+        /*
+        if (rulep->exceptionp != NULL) {
+          continue;
+        }
+        */
         if ((rulep->declp != NULL) &&
             (strcmp(rulep->lhsp->descp->asciis, symbolp->descp->asciis) == 0) &&
             (rulep->declp->sizei == symbolp->callp->sizei)) {
           lhsp = rulep->lhsp;
         }
         if (rulep->separatorp == symbolp) {
-          parameterizedRhsRulep = rulep;
+          declp = rulep->declp;
         } else {
           for (rhsl = 0; rhsl < rulep->nrhsl; rhsl++) {
             if (rulep->rhspp[rhsl] == symbolp) {
-              parameterizedRhsRulep = rulep;
+              declp = rulep->declp;
             }
           }
         }
       }
 
       if (lhsp == NULL) {
-        MARPAESLIF_ERRORF(marpaESLIFp, "Parameterized RHS <%s> with parameters %s must refer to an LHS with the same number of parameters (%d)", symbolp->descp->asciis, symbolp->callp->luaexplists, symbolp->callp->sizei);
+        MARPAESLIF_ERRORF(marpaESLIFp, "At grammar level %d (%s), parameterized RHS <%s>%s%s must refer to an LHS with the same number of parameters in the same grammar", grammari, grammarp->descp->asciis, symbolp->descp->asciis, symbolp->callp->luaexplistcb ? "-->" : "->", symbolp->callp->luaexplists);
         goto err;
       }
 
-      if (parameterizedRhsRulep == NULL) {
-        MARPAESLIF_ERRORF(marpaESLIFp, "Parameterized RHS <%s> with parameters %s cannot be re-assosiated with a rule", symbolp->descp->asciis, symbolp->callp->luaexplists);
-        goto err;
-      }
-
+      /* For any RHS(callp) we searched for the dependency: */
+      /* LHS(declp maybe) ::= ... RHS(callp) ...            */
+      /* or                                                 */
+      /* LHS(declp maybe) ::= ... separator => RHS(callp)   */
+      /* We create the rule                                 */
+      /* RHS              ::= RHSLOOKUP action => ::shift   */
+      /* with a prediction event on RHS(callp) to get the   */
+      /* context:                                           */
+      /* (declp maybe)<-[Lua]->(callp)                      */
+      /* Note that this event will NEVER go up to the end   */
+      /* user.                                              */
       rulep = _marpaESLIF_rule_newp(marpaESLIFp,
                                     grammarp,
                                     NULL, /* descEncodings */
@@ -3145,13 +3160,13 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
                                     0, /* passthroughb */
                                     0, /* hideseparatorb */
                                     NULL, /* skipbp */
-                                    parameterizedRhsRulep->declp,
+                                    declp,
                                     &(symbolp->callp),
                                     NULL /* separatorcallp */);
       if (MARPAESLIF_UNLIKELY(rulep == NULL)) {
         goto err;
       }
-      /* Just to show that this is an internal rule in the grammar show */
+      /* Make this rule internal */
       rulep->internalb = 1;
       GENERICSTACK_SET_PTR(ruleStackp, rulep, rulep->idi);
       if (MARPAESLIF_UNLIKELY(GENERICSTACK_ERROR(grammarp->ruleStackp))) {
@@ -3165,7 +3180,6 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
       }
     }
   }
-
 
   /* Set default symbol and rule action if not done */
   for (grammari = 0; grammari < GENERICSTACK_USED(grammarStackp); grammari++) {
@@ -3542,10 +3556,16 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
     for (symboli = 0; symboli < GENERICSTACK_USED(symbolStackp); symboli++) {
       MARPAESLIF_INTERNAL_GET_SYMBOL_FROM_STACK(marpaESLIFp, symbolp, symbolStackp, symboli);
 
-      /* Only lexemes or parameterized symbols should be looked */
+      /* Only lexemes should be looked */
       if (! MARPAESLIF_IS_LEXEME(symbolp)) {
         symbolp->lookupResolvedLeveli = grammarp->leveli;
         continue;
+      }
+
+      /* It is illegal to have a parameterized lexeme */
+      if (symbolp->parameterizedRhsb) {
+        MARPAESLIF_ERRORF(marpaESLIFp, "Looking at symbols in grammar level %d (%s): Symbol %s% is a lexeme, it cannot be parameterized", grammari, grammarp->descp->asciis, symbolp->descp->asciis, symbolp->callp->luaexplists);
+        goto err;
       }
 
       /* In any case, this is a a meta symbol */
@@ -3577,24 +3597,8 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
         MARPAESLIF_TRACEF(marpaESLIFp, funcs, "Grammar level %d (%s): symbol %d <%s> must be symbol <%s> in grammar level %d", grammari, grammarp->descp->asciis, symbolp->idi, symbolp->descp->asciis, symbolp->u.metap->asciinames, grammarp->leveli + symbolp->lookupLevelDeltai);
         subSymbolp = _marpaESLIF_resolveSymbolp(marpaESLIFp, grammarStackp, grammarp, symbolp->u.metap->asciinames, symbolp->parami, symbolp->lookupLevelDeltai, NULL, &subGrammarp, 1 /* silentb */);
 
-        if (subSymbolp == NULL) {
-          /* If not a true lexeme, then it must be a parameterized RHS and it must resolve to the same grammar */
-          if (MARPAESLIF_LIKELY(symbolp->parameterizedRhsb)) {
-            symbolp->lookupLevelDeltai = 0;
-            MARPAESLIF_TRACEF(marpaESLIFp, funcs, "Grammar level %d (%s): symbol %d <%s> must be symbol <%s> in same grammar level %d", grammari, grammarp->descp->asciis, symbolp->idi, symbolp->descp->asciis, symbolp->u.metap->asciinames, grammarp->leveli);
-            subSymbolp = _marpaESLIF_resolveSymbolp(marpaESLIFp, grammarStackp, grammarp, symbolp->u.metap->asciinames, symbolp->parami, symbolp->lookupLevelDeltai, NULL, &subGrammarp, 0 /* silentb */);
-            if (MARPAESLIF_UNLIKELY(subSymbolp == NULL)) {
-              MARPAESLIF_ERRORF(marpaESLIFp, "Looking at rules in grammar level %d (%s): symbol %d <%s> with %d parameters must be resolved as <%s> in same grammar level %d with %d parameters", grammari, grammarp->descp->asciis, symbolp->idi, symbolp->descp->asciis, symbolp->parami, symbolp->u.metap->asciinames, grammarp->leveli + symbolp->lookupLevelDeltai, symbolp->parami);
-              goto err;
-            }
-          } else {
-            MARPAESLIF_ERRORF(marpaESLIFp, "Looking at rules in grammar level %d (%s): symbol %d <%s> with no parameter must be resolved as <%s> in grammar at level %d with no parameters", grammari, grammarp->descp->asciis, symbolp->idi, symbolp->descp->asciis, symbolp->u.metap->asciinames, grammarp->leveli + symbolp->lookupLevelDeltai);
-            goto err;
-          }
-        }
-
-        if (MARPAESLIF_UNLIKELY(! subSymbolp->lhsb)) {
-          MARPAESLIF_ERRORF(marpaESLIFp, "Looking at rules in grammar level %d (%s): symbol %d <%s> with %d parameters is referencing existing symbol %d <%s> at grammar level %d (%s) but it is not an LHS", grammari, grammarp->descp->asciis, symbolp->idi, symbolp->descp->asciis, symbolp->parami, subSymbolp->idi, subSymbolp->descp->asciis, subGrammarp->leveli, subGrammarp->descp->asciis);
+        if (MARPAESLIF_UNLIKELY(subSymbolp == NULL)) {
+          MARPAESLIF_ERRORF(marpaESLIFp, "Looking at rules in grammar level %d (%s): symbol %d (%s) must be resolved as <%s> in grammar at level %d", grammari, grammarp->descp->asciis, symbolp->idi, symbolp->descp->asciis, symbolp->descp->asciis, grammarp->leveli + symbolp->lookupLevelDeltai);
           goto err;
         }
       }
@@ -10091,7 +10095,7 @@ short marpaESLIFRecognizer_eventb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp,
         if (! marpaWrapperRecognizer_earlemeb(marpaWrapperRecognizerp, latestEarleySetIdi, &earlemei)) {
           goto err;
         }
-        MARPAESLIF_NOTICEF(marpaESLIFRecognizerp->marpaESLIFp, "JDD Pushing context for Earley Set Id %d earleme %d %s<->%s", latestEarleySetIdi, earlemei, symbolp->declp != NULL ? symbolp->declp->luaparlists : "nil", symbolp->callp != NULL ? symbolp->callp->luaexplists : "nil");
+        MARPAESLIF_NOTICEF(marpaESLIFRecognizerp->marpaESLIFp, "JDD Pushing context for Earley Set Id %d earleme %d for symbol %s: %s<->%s", latestEarleySetIdi, earlemei, symbolp->descp->asciis, symbolp->declp != NULL ? symbolp->declp->luaparlists : "nil", symbolp->callp != NULL ? symbolp->callp->luaexplists : "nil");
         if (! _marpaESLIFRecognizer_lua_push_contextb(marpaESLIFRecognizerp, symbolp->declp, symbolp->callp, &(symbolp->pushContextActionp))) {
           goto err;
         }
