@@ -186,6 +186,7 @@ struct marpaESLIFSymbol {
   short                          verboseb;               /* Symbol is verbose */
   int                            parami;                 /* -1 when none */
   short                          parameterizedRhsb;
+  marpaESLIF_symbol_t           *parameterizedRhsToLhsp; /* A parameterized RHS is unique and corresponds to an LHS in the same grammar */
   marpaESLIF_lua_functiondecl_t *declp;                  /* For parameterized symbols, shallow pointer to declp */
   marpaESLIF_lua_functioncall_t *callp;                  /* For parameterized symbols, shallow pointer to callp */
   marpaESLIFAction_t            *pushContextActionp;     /* For parameterized symbols, push context action */

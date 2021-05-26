@@ -160,7 +160,7 @@ static marpaESLIFValueResult_t marpaESLIFValueResultLazy = {
 /* Util macros on symbol                                                                        */
 /* -------------------------------------------------------------------------------------------- */
 #define MARPAESLIF_IS_META(symbolp)            ((symbolp)->type == MARPAESLIF_SYMBOL_TYPE_META)
-#define MARPAESLIF_IS_LEXEME(symbolp)          (MARPAESLIF_IS_META(symbolp) && (! (symbolp)->lhsb))
+#define MARPAESLIF_IS_LEXEME(symbolp)          (MARPAESLIF_IS_META(symbolp) && (symbolp->parameterizedRhsb || (! (symbolp)->lhsb)))
 #define MARPAESLIF_IS_TERMINAL(symbolp)        ((symbolp)->type == MARPAESLIF_SYMBOL_TYPE_TERMINAL)
 #define MARPAESLIF_IS_PSEUDO_TERMINAL(symbolp) (MARPAESLIF_IS_TERMINAL(symbolp) && (symbolp)->u.terminalp->pseudob)
 #define MARPAESLIF_IS_DISCARD(symbolp)         (symbolp)->discardb
@@ -3130,6 +3130,9 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
         goto err;
       }
 
+      /* Remember this LHS */
+      symbolp->parameterizedRhsToLhsp = lhsp;
+#if JDD
       /* For any RHS(callp) we searched for the dependency: */
       /* LHS(declp maybe) ::= ... RHS(callp) ...            */
       /* or                                                 */
@@ -3178,6 +3181,7 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
         MARPAESLIF_ERRORF(marpaESLIFp, "strdup failure, %s", strerror(errno));
         goto err;
       }
+#endif
     }
   }
 
@@ -3562,12 +3566,6 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
         continue;
       }
 
-      /* It is illegal to have a parameterized lexeme */
-      if (symbolp->parameterizedRhsb) {
-        MARPAESLIF_ERRORF(marpaESLIFp, "Looking at symbols in grammar level %d (%s): Symbol %s% is a lexeme, it cannot be parameterized", grammari, grammarp->descp->asciis, symbolp->descp->asciis, symbolp->callp->luaexplists);
-        goto err;
-      }
-
       /* In any case, this is a a meta symbol */
       metap = symbolp->u.metap;
 
@@ -3584,7 +3582,11 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
         continue;
       }
 
-      if (symbolp->lookupSymbolp != NULL) {
+      /* Parameterized RHSs always refer to an LHS in the same grammar */
+      if (symbolp->parameterizedRhsb) {
+        subSymbolp = symbolp->parameterizedRhsToLhsp;
+        subGrammarp = grammarp;
+      } else if (symbolp->lookupSymbolp != NULL) {
         subSymbolp = symbolp->lookupSymbolp;
         subGrammarp = _marpaESLIFGrammar_grammar_findp(marpaESLIFGrammarp, grammarp->leveli + symbolp->lookupLevelDeltai, NULL /* descp */);
 
@@ -4778,6 +4780,7 @@ static inline marpaESLIF_symbol_t *_marpaESLIF_symbol_newp(marpaESLIF_t *marpaES
   symbolp->verboseb               = 0; /* Default verbose is 0 */
   symbolp->parami                 = -1;
   symbolp->parameterizedRhsb      = 0;
+  symbolp->parameterizedRhsToLhsp = NULL;
   symbolp->declp                  = NULL;
   symbolp->callp                  = NULL;
   symbolp->pushContextActionp     = NULL;
@@ -5989,6 +5992,20 @@ static inline short _marpaESLIFRecognizer_meta_matcherb(marpaESLIFRecognizer_t *
   }
 #endif
 
+  if (symbolp->parameterizedRhsb) {
+    /* Push the context */
+    MARPAESLIF_NOTICEF(marpaESLIFRecognizerp->marpaESLIFp,
+                       "%s%s[%s]%s%s",
+                       (symbolp->declp != NULL) ? symbolp->declp->luaparlists : "",
+                       (symbolp->declp != NULL) ? (symbolp->declp->luaparlistcb ? "<--" : "<-") : "",
+                       symbolp->descp->asciis,
+                       symbolp->callp->luaexplistcb ? "-->" : "->",
+                       symbolp->callp->luaexplists);
+    if (! _marpaESLIFRecognizer_lua_push_contextb(marpaESLIFRecognizerp, symbolp->declp, symbolp->callp, &(symbolp->pushContextActionp))) {
+      goto err;
+    }
+  }
+
   /* We want to run an internal recognizer */
   marpaESLIFRecognizerOption = marpaESLIFRecognizerp->marpaESLIFRecognizerOption;
 
@@ -6011,6 +6028,13 @@ static inline short _marpaESLIFRecognizer_meta_matcherb(marpaESLIFRecognizer_t *
                                  0, /* grammarIsOnStackb */
                                  symbolp->verboseb,
                                  paramb);
+
+  if (symbolp->parameterizedRhsb) {
+    /* Pop the context */
+    if (! _marpaESLIFRecognizer_lua_pop_contextb(marpaESLIFRecognizerp, &(symbolp->popContextActionp))) {
+      goto err;
+    }
+  }
 
   if (MARPAESLIF_UNLIKELY(! rcb)) {
     goto err;
@@ -6136,7 +6160,11 @@ static inline short _marpaESLIFRecognizer_symbol_matcherb(marpaESLIFRecognizer_t
 
   if (rci == MARPAESLIF_MATCH_OK) {
     /* If symbol has an if-action and we are the lop-level recognizer, check it */
-    if ((symbolp->ifActionp != NULL) && (marpaESLIFRecognizerp->marpaESLIFRecognizerTopp == marpaESLIFRecognizerp)) {
+    /* if-action is also active when we are not the top-level recognizer only if this is a parameterized symbolp and the action is writen in Lua */
+    if ((symbolp->ifActionp != NULL) &&
+        ((marpaESLIFRecognizerp->marpaESLIFRecognizerTopp == marpaESLIFRecognizerp)
+         ||
+         (paramb && (symbolp->ifActionp != NULL) && ((symbolp->ifActionp->type == MARPAESLIF_ACTION_TYPE_LUA) || (symbolp->ifActionp->type == MARPAESLIF_ACTION_TYPE_LUA_FUNCTION))))) {
       if (MARPAESLIF_UNLIKELY(! _marpaESLIFRecognizer_recognizerIfActionCallbackb(marpaESLIFRecognizerp, symbolp->descp->asciis, symbolp->ifActionp, &ifCallbackp))) {
         goto err;
       }
