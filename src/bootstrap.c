@@ -7136,7 +7136,7 @@ static inline short _marpaESLIF_bootstrap_G1_action_event_declarationb(void *use
   MARPAESLIF_BOOTSTRAP_GET_PTR(marpaESLIFValuep, arg0i+1, eventInitializationp);
   /* It is a non-sense to have a null information */
   if (MARPAESLIF_UNLIKELY(eventInitializationp == NULL)) {
-    MARPAESLIF_ERRORF(marpaESLIFp, "_marpaESLIFValue_stack_getAndForgetb at indice %d returned NULL", arg0i+2);
+    MARPAESLIF_ERRORF(marpaESLIFp, "eventInitializationp at indice %d returned NULL", arg0i+2);
     goto err;
   }
   MARPAESLIF_BOOTSTRAP_IS_INT(marpaESLIFValuep, arg0i+2, intb);
