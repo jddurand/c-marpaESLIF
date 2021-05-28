@@ -160,7 +160,7 @@ static marpaESLIFValueResult_t marpaESLIFValueResultLazy = {
 /* Util macros on symbol                                                                        */
 /* -------------------------------------------------------------------------------------------- */
 #define MARPAESLIF_IS_META(symbolp)            ((symbolp)->type == MARPAESLIF_SYMBOL_TYPE_META)
-#define MARPAESLIF_IS_LEXEME(symbolp)          (MARPAESLIF_IS_META(symbolp) && (symbolp->parameterizedRhsb || (! (symbolp)->lhsb)))
+#define MARPAESLIF_IS_LEXEME(symbolp)          (MARPAESLIF_IS_META(symbolp) && (! (symbolp)->lhsb))
 #define MARPAESLIF_IS_TERMINAL(symbolp)        ((symbolp)->type == MARPAESLIF_SYMBOL_TYPE_TERMINAL)
 #define MARPAESLIF_IS_PSEUDO_TERMINAL(symbolp) (MARPAESLIF_IS_TERMINAL(symbolp) && (symbolp)->u.terminalp->pseudob)
 #define MARPAESLIF_IS_DISCARD(symbolp)         (symbolp)->discardb
@@ -3114,6 +3114,10 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
             (rulep->declp->sizei == symbolp->callp->sizei)) {
           lhsp = rulep->lhsp;
         }
+
+        /* Note that a parameterized RHS (or separator) always has an unique Id in the grammar. */
+        /* This is why it is an if/else sequence.                                               */
+        
         if (rulep->separatorp == symbolp) {
           declp = rulep->declp;
         } else {
@@ -3132,16 +3136,17 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
 
       /* Remember this LHS */
       symbolp->parameterizedRhsToLhsp = lhsp;
-#if JDD
       /* For any RHS(callp) we searched for the dependency: */
       /* LHS(declp maybe) ::= ... RHS(callp) ...            */
       /* or                                                 */
       /* LHS(declp maybe) ::= ... separator => RHS(callp)   */
-      /* We create the rule                                 */
-      /* RHS              ::= RHSLOOKUP action => ::shift   */
-      /* with a prediction event on RHS(callp) to get the   */
-      /* context:                                           */
-      /* (declp maybe)<-[Lua]->(callp)                      */
+      /* We create the rule that will prevent RHS(callp) to */
+      /* be a terminal:                                     */
+      /* Id(declp maybe)  ::= RHSLOOKUP(callp)              */
+      /* with the ::shift action.                           */
+      /* - Id is the symbol Id of RHS(callp).               */
+      /* - We add ::context predicsion event on RHS(callp)  */
+      /*   that will compute (declp maybe)<-[Lua]->(callp)  */
       /* Note that this event will NEVER go up to the end   */
       /* user.                                              */
       rulep = _marpaESLIF_rule_newp(marpaESLIFp,
@@ -3181,7 +3186,23 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
         MARPAESLIF_ERRORF(marpaESLIFp, "strdup failure, %s", strerror(errno));
         goto err;
       }
-#endif
+      MARPAESLIF_NOTICEF(marpaESLIFp,
+                         "At grammar level %d (%s), parameterized RHS <%s>%s%s (Id=%d) linked with rule <%s>%s%s (Id=%d) ::= <%s>%s%s (Id=%d)",
+                         grammari,
+                         grammarp->descp->asciis,
+                         symbolp->descp->asciis,
+                         symbolp->callp->luaexplistcb ? "-->" : "->",
+                         symbolp->callp->luaexplists,
+                         symbolp->idi,
+                         symbolp->descp->asciis,
+                         (declp != NULL) ? (declp->luaparlistcb ? "<--" : "<-") : "",
+                         (declp != NULL) ? declp->luaparlists : "",
+                         symbolp->idi,
+                         lhsp->descp->asciis,
+                         symbolp->callp->luaexplistcb ? "-->" : "->",
+                         symbolp->callp->luaexplists,
+                         lhsp->idi
+                         );
     }
   }
 
