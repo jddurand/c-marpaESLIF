@@ -1,3 +1,5 @@
+#undef MARPAESLIF_NTRACE
+
 #include <stdlib.h>
 #include <errno.h>
 #include <string.h>
@@ -2329,12 +2331,12 @@ static inline marpaESLIF_grammar_t *_marpaESLIF_bootstrap_grammarp(marpaESLIFGra
       goto err;
     }
 
-    symbolp->type     = MARPAESLIF_SYMBOL_TYPE_META;
-    symbolp->startb   = bootstrap_grammar_metap[i].startb;
-    symbolp->discardb = bootstrap_grammar_metap[i].discardb;
-    symbolp->u.metap  = metap;
-    symbolp->idi      = metap->idi;
-    symbolp->descp    = metap->descp;
+    symbolp->type       = MARPAESLIF_SYMBOL_TYPE_META;
+    symbolp->startb     = bootstrap_grammar_metap[i].startb;
+    symbolp->discardb   = bootstrap_grammar_metap[i].discardb;
+    symbolp->u.metap    = metap;
+    symbolp->idi        = metap->idi;
+    symbolp->descp      = metap->descp;
     /* Meta is now in symbol */
     metap = NULL;
 
@@ -3041,6 +3043,8 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
   marpaESLIF_terminal_t            *subTerminalp;
   marpaESLIF_action_t               action;
   marpaESLIF_lua_functiondecl_t    *declp;
+  int                               contextRulei;
+  int                               contextPositioni;
 
   /* Constant action */
   action.type    = MARPAESLIF_ACTION_TYPE_NAME;
@@ -3120,10 +3124,12 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
         
         if (rulep->separatorp == symbolp) {
           declp = rulep->declp;
+          symbolp->parameterizedRhsRulep = rulep;
         } else {
           for (rhsl = 0; rhsl < rulep->nrhsl; rhsl++) {
             if (rulep->rhspp[rhsl] == symbolp) {
               declp = rulep->declp;
+              symbolp->parameterizedRhsRulep = rulep;
             }
           }
         }
@@ -3134,8 +3140,6 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
         goto err;
       }
 
-      /* Remember this LHS */
-      symbolp->parameterizedRhsToLhsp = lhsp;
       /* For any RHS(callp) we searched for the dependency: */
       /* LHS(declp maybe) ::= ... RHS(callp) ...            */
       /* or                                                 */
@@ -3281,7 +3285,7 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
 
     /* Same but with no event */
     marpaWrapperGrammarCloneOption.grammarOptionSetterp = NULL;
-    marpaWrapperGrammarCloneOption.symbolOptionSetterp = _marpaESLIFGrammar_symbolOptionSetterInternalb; /* No event but internal :discard[on/off/switch] */
+    marpaWrapperGrammarCloneOption.symbolOptionSetterp = _marpaESLIFGrammar_symbolOptionSetterInternalb; /* No event but internal :discard[on/off/switch] and :context */
     marpaWrapperGrammarClonep = marpaWrapperGrammar_clonep(grammarp->marpaWrapperGrammarStartp, &marpaWrapperGrammarCloneOption);
     if (MARPAESLIF_UNLIKELY(marpaWrapperGrammarClonep == NULL)) {
         MARPAESLIF_ERRORF(marpaESLIFp, "Grammar level %d (%s): cloning failure", grammari, grammarp->descp->asciis);
@@ -3605,7 +3609,7 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
 
       /* Parameterized RHSs always refer to an LHS in the same grammar */
       if (symbolp->parameterizedRhsb) {
-        subSymbolp = symbolp->parameterizedRhsToLhsp;
+        subSymbolp = symbolp->parameterizedRhsRulep->lhsp;
         subGrammarp = grammarp;
       } else if (symbolp->lookupSymbolp != NULL) {
         subSymbolp = symbolp->lookupSymbolp;
@@ -4559,6 +4563,7 @@ static inline marpaESLIF_rule_t *_marpaESLIF_rule_newp(marpaESLIF_t *marpaESLIFp
   rulep->callpp            = NULL;
   rulep->separatorcallp    = NULL;
   rulep->internalb         = 0;
+  rulep->contextActionp    = NULL;
 
   if (nrhsl > 0) {
     rulep->rhspp = (marpaESLIF_symbol_t **) malloc(nrhsl * sizeof(marpaESLIF_symbol_t *));
@@ -4741,6 +4746,7 @@ static inline void _marpaESLIF_rule_freev(marpaESLIF_rule_t *rulep)
       free(rulep->callpp);
     }
     _marpaESLIF_lua_functioncall_freev(rulep->separatorcallp);
+    _marpaESLIF_action_freev(rulep->contextActionp);
     free(rulep);
   }
 }
@@ -4762,50 +4768,49 @@ static inline marpaESLIF_symbol_t *_marpaESLIF_symbol_newp(marpaESLIF_t *marpaES
 
   symbolp->type                   = MARPAESLIF_SYMBOL_TYPE_NA;
   /* Union itself is undetermined at this stage */
-  symbolp->marpaESLIFp            = marpaESLIFp;
-  symbolp->startb                 = 0;
-  symbolp->discardb               = 0;
-  symbolp->discardRhsb            = 0;
-  symbolp->lhsb                   = 0;
-  symbolp->topb                   = 0; /* Revisited by grammar validation */
-  symbolp->idi                    = -1;
-  symbolp->descp                  = NULL;
-  symbolp->eventBefores           = NULL;
-  symbolp->eventBeforeb           = 1; /* An event is on by default */
-  symbolp->eventAfters            = NULL;
-  symbolp->eventAfterb            = 1; /* An event is on by default */
-  symbolp->eventPredicteds        = NULL;
-  symbolp->eventPredictedb        = 1; /* An event is on by default */
-  symbolp->eventNulleds           = NULL;
-  symbolp->eventNulledb           = 1; /* An event is on by default */
-  symbolp->eventCompleteds        = NULL;
-  symbolp->eventCompletedb        = 1; /* An event is on by default */
-  symbolp->eventDeclp             = NULL;
-  symbolp->discardEvents          = NULL; /* Shallow copy */
-  symbolp->discardEventb          = 1; /* An event is on by default */
-  symbolp->lookupLevelDeltai      = 1;   /* Default lookup is the next grammar level */
-  symbolp->lookupSymbolp          = NULL;
-  symbolp->lookupResolvedLeveli   = 0; /* This will be overwriten by _marpaESLIFGrammar_validateb() and used only when symbol is a lexeme from another grammar */
-  symbolp->priorityi              = 0; /* Default priority is 0 */
-  symbolp->nullableRuleStackp     = NULL; /* Take care, this is a pointer to an stack inside symbol structure */
-  symbolp->nullableActionp        = NULL;
-  symbolp->propertyBitSet         = 0; /* Filled by grammar validation */
-  symbolp->eventBitSet            = 0; /* Filled by grammar validation */
-  symbolp->lhsRuleStackp          = NULL;
-  symbolp->exceptionp             = NULL;
-  symbolp->symbolActionp          = NULL;
-  symbolp->ifActionp              = NULL;
-  symbolp->marpaESLIFSymbolOption = marpaESLIFSymbolOptionp != NULL ? *marpaESLIFSymbolOptionp : marpaESLIFSymbolOption_default_template;
-  symbolp->contentIsShallowb      = 0;
-  symbolp->marpaESLIFGrammarp     = NULL; /* Shallow pointer, set by marpaESLIFSymbol_meta_newp() only */
-  symbolp->verboseb               = 0; /* Default verbose is 0 */
-  symbolp->parami                 = -1;
-  symbolp->parameterizedRhsb      = 0;
-  symbolp->parameterizedRhsToLhsp = NULL;
-  symbolp->declp                  = NULL;
-  symbolp->callp                  = NULL;
-  symbolp->pushContextActionp     = NULL;
-  symbolp->popContextActionp      = NULL;
+  symbolp->marpaESLIFp             = marpaESLIFp;
+  symbolp->startb                  = 0;
+  symbolp->discardb                = 0;
+  symbolp->discardRhsb             = 0;
+  symbolp->lhsb                    = 0;
+  symbolp->topb                    = 0; /* Revisited by grammar validation */
+  symbolp->idi                     = -1;
+  symbolp->descp                   = NULL;
+  symbolp->eventBefores            = NULL;
+  symbolp->eventBeforeb            = 1; /* An event is on by default */
+  symbolp->eventAfters             = NULL;
+  symbolp->eventAfterb             = 1; /* An event is on by default */
+  symbolp->eventPredicteds         = NULL;
+  symbolp->eventPredictedb         = 1; /* An event is on by default */
+  symbolp->eventNulleds            = NULL;
+  symbolp->eventNulledb            = 1; /* An event is on by default */
+  symbolp->eventCompleteds         = NULL;
+  symbolp->eventCompletedb         = 1; /* An event is on by default */
+  symbolp->eventDeclp              = NULL;
+  symbolp->discardEvents           = NULL; /* Shallow copy */
+  symbolp->discardEventb           = 1; /* An event is on by default */
+  symbolp->lookupLevelDeltai       = 1;   /* Default lookup is the next grammar level */
+  symbolp->lookupSymbolp           = NULL;
+  symbolp->lookupResolvedLeveli    = 0; /* This will be overwriten by _marpaESLIFGrammar_validateb() and used only when symbol is a lexeme from another grammar */
+  symbolp->priorityi               = 0; /* Default priority is 0 */
+  symbolp->nullableRuleStackp      = NULL; /* Take care, this is a pointer to an stack inside symbol structure */
+  symbolp->nullableActionp         = NULL;
+  symbolp->propertyBitSet          = 0; /* Filled by grammar validation */
+  symbolp->eventBitSet             = 0; /* Filled by grammar validation */
+  symbolp->lhsRuleStackp           = NULL;
+  symbolp->exceptionp              = NULL;
+  symbolp->symbolActionp           = NULL;
+  symbolp->ifActionp               = NULL;
+  symbolp->marpaESLIFSymbolOption  = marpaESLIFSymbolOptionp != NULL ? *marpaESLIFSymbolOptionp : marpaESLIFSymbolOption_default_template;
+  symbolp->contentIsShallowb       = 0;
+  symbolp->marpaESLIFGrammarp      = NULL; /* Shallow pointer, set by marpaESLIFSymbol_meta_newp() only */
+  symbolp->verboseb                = 0; /* Default verbose is 0 */
+  symbolp->parami                  = -1;
+  symbolp->parameterizedRhsb       = 0;
+  symbolp->parameterizedRhsRulep   = NULL;
+  symbolp->declp                   = NULL;
+  symbolp->callp                   = NULL;
+  symbolp->contextActionp          = NULL;
 
   symbolp->nullableRuleStackp = &(symbolp->_nullableRuleStack);
   GENERICSTACK_INIT(symbolp->nullableRuleStackp);
@@ -4869,8 +4874,7 @@ static inline void _marpaESLIF_symbol_freev(marpaESLIF_symbol_t *symbolp)
       _marpaESLIF_lua_functiondecl_freev(symbolp->eventDeclp);
       _marpaESLIF_action_freev(symbolp->symbolActionp);
       _marpaESLIF_action_freev(symbolp->ifActionp);
-      _marpaESLIF_action_freev(symbolp->pushContextActionp);
-      _marpaESLIF_action_freev(symbolp->popContextActionp);
+      _marpaESLIF_action_freev(symbolp->contextActionp);
 
       GENERICSTACK_RESET(symbolp->nullableRuleStackp); /* Take care, this is a pointer to stack internal to symbol structure */
       GENERICSTACK_RESET(symbolp->lhsRuleStackp); /* Take care, this is a pointer to stack internal to symbol structure */
@@ -6013,20 +6017,6 @@ static inline short _marpaESLIFRecognizer_meta_matcherb(marpaESLIFRecognizer_t *
   }
 #endif
 
-  if (symbolp->parameterizedRhsb) {
-    /* Push the context */
-    MARPAESLIF_NOTICEF(marpaESLIFRecognizerp->marpaESLIFp,
-                       "%s%s[%s]%s%s",
-                       (symbolp->declp != NULL) ? symbolp->declp->luaparlists : "",
-                       (symbolp->declp != NULL) ? (symbolp->declp->luaparlistcb ? "<--" : "<-") : "",
-                       symbolp->descp->asciis,
-                       symbolp->callp->luaexplistcb ? "-->" : "->",
-                       symbolp->callp->luaexplists);
-    if (! _marpaESLIFRecognizer_lua_push_contextb(marpaESLIFRecognizerp, symbolp->declp, symbolp->callp, &(symbolp->pushContextActionp))) {
-      goto err;
-    }
-  }
-
   /* We want to run an internal recognizer */
   marpaESLIFRecognizerOption = marpaESLIFRecognizerp->marpaESLIFRecognizerOption;
 
@@ -6049,13 +6039,6 @@ static inline short _marpaESLIFRecognizer_meta_matcherb(marpaESLIFRecognizer_t *
                                  0, /* grammarIsOnStackb */
                                  symbolp->verboseb,
                                  paramb);
-
-  if (symbolp->parameterizedRhsb) {
-    /* Pop the context */
-    if (! _marpaESLIFRecognizer_lua_pop_contextb(marpaESLIFRecognizerp, &(symbolp->popContextActionp))) {
-      goto err;
-    }
-  }
 
   if (MARPAESLIF_UNLIKELY(! rcb)) {
     goto err;
@@ -10144,8 +10127,15 @@ short marpaESLIFRecognizer_eventb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp,
         if (! marpaWrapperRecognizer_earlemeb(marpaWrapperRecognizerp, latestEarleySetIdi, &earlemei)) {
           goto err;
         }
-        MARPAESLIF_NOTICEF(marpaESLIFRecognizerp->marpaESLIFp, "JDD Pushing context for Earley Set Id %d earleme %d for symbol %s: %s<->%s", latestEarleySetIdi, earlemei, symbolp->descp->asciis, symbolp->declp != NULL ? symbolp->declp->luaparlists : "nil", symbolp->callp != NULL ? symbolp->callp->luaexplists : "nil");
-        if (! _marpaESLIFRecognizer_lua_push_contextb(marpaESLIFRecognizerp, symbolp->declp, symbolp->callp, &(symbolp->pushContextActionp))) {
+        MARPAESLIF_NOTICEF(marpaESLIFRecognizerp->marpaESLIFp, "JDD Pushing context for Earley Set Id %d earleme %d for symbol %s%s%s: %s<->%s",
+                           latestEarleySetIdi,
+                           earlemei,
+                           symbolp->descp->asciis,
+                           symbolp->callp->luaexplistcb ? "-->" : "->",
+                           symbolp->callp->luaexplists,
+                           symbolp->declp != NULL ? symbolp->declp->luaparlists : "nil",
+                           symbolp->callp->luaexplists);
+        if (! _marpaESLIFRecognizer_lua_set_contextb(marpaESLIFRecognizerp, symbolp)) {
           goto err;
         }
       }
@@ -12432,17 +12422,24 @@ static char *_marpaESLIFGrammar_symbolDescriptionCallback(void *userDatavp, int 
   marpaWrapperGrammarSymbolOptionp->eventSeti = MARPAWRAPPERGRAMMAR_EVENTTYPE_NONE;
 
   if ((symbolp->eventNulleds != NULL) &&
-      ((strcmp(symbolp->eventNulleds, ":discard[on]") == 0) || (strcmp(symbolp->eventNulleds, ":discard[off]") == 0) || (strcmp(symbolp->eventNulleds, ":discard[switch]") == 0))) {
+      ((strcmp(symbolp->eventNulleds, ":discard[on]") == 0) ||
+       (strcmp(symbolp->eventNulleds, ":discard[off]") == 0) ||
+       (strcmp(symbolp->eventNulleds, ":discard[switch]") == 0))) {
     MARPAESLIF_TRACEF(marpaESLIF_cloneContextp->marpaESLIFp, funcs, "Setting nullabled event %s for symbol %d <%s> at grammar level %d (%s)", symbolp->eventNulleds, symbolp->idi, symbolp->descp->asciis, grammarp->leveli, grammarp->descp->asciis);
     marpaWrapperGrammarSymbolOptionp->eventSeti |= MARPAWRAPPERGRAMMAR_EVENTTYPE_NULLED;
   }
   if ((symbolp->eventPredicteds != NULL) &&
-      ((strcmp(symbolp->eventPredicteds, ":discard[on]") == 0) || (strcmp(symbolp->eventPredicteds, ":discard[off]") == 0) || (strcmp(symbolp->eventPredicteds, ":discard[switch]") == 0))) {
+      ((strcmp(symbolp->eventPredicteds, ":context") == 0) ||
+       (strcmp(symbolp->eventPredicteds, ":discard[on]") == 0) ||
+       (strcmp(symbolp->eventPredicteds, ":discard[off]") == 0) ||
+       (strcmp(symbolp->eventPredicteds, ":discard[switch]") == 0))) {
     MARPAESLIF_TRACEF(marpaESLIF_cloneContextp->marpaESLIFp, funcs, "Setting prediction event %s for symbol %d <%s> at grammar level %d (%s)", symbolp->eventPredicteds, symbolp->idi, symbolp->descp->asciis, grammarp->leveli, grammarp->descp->asciis);
     marpaWrapperGrammarSymbolOptionp->eventSeti |= MARPAWRAPPERGRAMMAR_EVENTTYPE_PREDICTION;
   }
   if ((symbolp->eventCompleteds != NULL) &&
-      ((strcmp(symbolp->eventCompleteds, ":discard[on]") == 0) || (strcmp(symbolp->eventCompleteds, ":discard[off]") == 0) || (strcmp(symbolp->eventCompleteds, ":discard[switch]") == 0))) {
+      ((strcmp(symbolp->eventCompleteds, ":discard[on]") == 0) ||
+       (strcmp(symbolp->eventCompleteds, ":discard[off]") == 0) ||
+       (strcmp(symbolp->eventCompleteds, ":discard[switch]") == 0))) {
     MARPAESLIF_TRACEF(marpaESLIF_cloneContextp->marpaESLIFp, funcs, "Setting completiong event %s for symbol %d <%s> at grammar level %d (%s)", symbolp->eventCompleteds, symbolp->idi, symbolp->descp->asciis, grammarp->leveli, grammarp->descp->asciis);
     marpaWrapperGrammarSymbolOptionp->eventSeti |= MARPAWRAPPERGRAMMAR_EVENTTYPE_COMPLETION;
   }

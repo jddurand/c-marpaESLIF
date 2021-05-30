@@ -186,11 +186,10 @@ struct marpaESLIFSymbol {
   short                          verboseb;               /* Symbol is verbose */
   int                            parami;                 /* -1 when none */
   short                          parameterizedRhsb;
-  marpaESLIF_symbol_t           *parameterizedRhsToLhsp; /* A parameterized RHS is unique and corresponds to an LHS in the same grammar */
+  marpaESLIF_rule_t             *parameterizedRhsRulep;  /* A parameterized RHS is unique and corresponds to a single rule the same grammar */
   marpaESLIF_lua_functiondecl_t *declp;                  /* For parameterized symbols, shallow pointer to declp */
   marpaESLIF_lua_functioncall_t *callp;                  /* For parameterized symbols, shallow pointer to callp */
-  marpaESLIFAction_t            *pushContextActionp;     /* For parameterized symbols, push context action */
-  marpaESLIFAction_t            *popContextActionp;      /* For parameterized symbols, pop context action */
+  marpaESLIFAction_t            *contextActionp;         /* For parameterized symbols, context action */
 };
 
 /* A rule */
@@ -222,6 +221,7 @@ struct marpaESLIF_rule {
   marpaESLIF_lua_functioncall_t **callpp;
   marpaESLIF_lua_functioncall_t  *separatorcallp;
   short                           internalb;                   /* Internal rule (:discard and :start cases) */
+  marpaESLIFAction_t             *contextActionp;              /* Get current rule context */
 };
 
 /* A grammar */
@@ -335,7 +335,7 @@ struct marpaESLIFGrammar {
 struct marpaESLIF_meta {
   int                            idi;                             /* Non-terminal Id */
   char                          *asciinames;
-  marpaESLIF_string_t           *descp;                           /* Non-terminal description */
+  marpaESLIF_string_t           *descp;                           /* Meta description */
   marpaWrapperGrammar_t         *marpaWrapperGrammarLexemeClonep; /* Cloned low-level grammar in lexeme search mode (no event) */
   int                            lexemeIdi;                       /* Lexeme Id in this cloned grammar */
   short                         *prioritizedb;                    /* Internal flag to prevent a prioritized symbol to appear more than once as an LHS */

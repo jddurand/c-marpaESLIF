@@ -1007,9 +1007,9 @@ static int marpaESLIFLua_installi(lua_State *L)
   /* NiledTable in on the stack */                                         /* Stack: NiledTable */
   if (! marpaESLIFLua_lua_getfield(NULL, L, -1, "niledarray")) goto err;   /* Stack: NiledTable, NiledTable.niledarray */
   if (! marpaESLIFLua_lua_getfield(NULL, L, -2, "niledtablekv")) goto err; /* Stack: NiledTable, NiledTable.niledarray, NiledTable.niledtablekv */
-  if (! marpaESLIFLua_lua_getfield(NULL, L, -3, "niledtablek")) goto err;  /* Stack: NiledTable, NiledTable.niledarray, NiledTable.niledtablekv, NiledTable.niledtablek */
+  if (! marpaESLIFLua_lua_getfield(NULL, L, -3, "niledtablekv2")) goto err;  /* Stack: NiledTable, NiledTable.niledarray, NiledTable.niledtablekv, NiledTable.niledtablek */
   if (! marpaESLIFLua_lua_setglobal(L, "niledtablek")) goto err;           /* Stack: NiledTable, NiledTable.niledarray, NiledTable.niledtablekv */
-  if (! marpaESLIFLua_lua_setglobal(L, "niledtablekv")) goto err;          /* Stack: NiledTable, NiledTable.niledarray */
+  if (! marpaESLIFLua_lua_setglobal(L, "niledtablekv2")) goto err;         /* Stack: NiledTable, NiledTable.niledarray */
   if (! marpaESLIFLua_lua_setglobal(L, "niledarray")) goto err;            /* Stack: NiledTable */
   if (! marpaESLIFLua_lua_setglobal(L, "NiledTable")) goto err;            /* Stack: */
 
@@ -9656,13 +9656,14 @@ static short marpaESLIFLua_contextCallbackb(marpaESLIFRecognizer_t *marpaESLIFRe
     goto err;
   }
 
-  if (! marpaESLIFLua_stack_setb(L, marpaESLIFLuaRecognizerContextp->marpaESLIFp, NULL /* marpaESLIFValuep */, -1 /* resulti */, marpaESLIFValueResultOutputp)) goto err;
+  if (marpaESLIFValueResultOutputp != NULL) {
+    if (! marpaESLIFLua_stack_setb(L, marpaESLIFLuaRecognizerContextp->marpaESLIFp, NULL /* marpaESLIFValuep */, -1 /* resulti */, marpaESLIFValueResultOutputp)) goto err;
+    /* Clean the MARPAESLIFOPAQUETABLE global table */
+    if (! marpaESLIFLua_lua_pushnil(L)) goto err;
+    if (! marpaESLIFLua_lua_setglobal(L, MARPAESLIFOPAQUETABLE)) goto err;
+  }
 
   if (! marpaESLIFLua_lua_settop(L, topi)) goto err;
-
-  /* Clean the MARPAESLIFOPAQUETABLE global table */
-  if (! marpaESLIFLua_lua_pushnil(L)) goto err;
-  if (! marpaESLIFLua_lua_setglobal(L, MARPAESLIFOPAQUETABLE)) goto err;
 
   rcb = 1;
   goto done;
