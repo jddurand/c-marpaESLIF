@@ -189,7 +189,8 @@ struct marpaESLIFSymbol {
   marpaESLIF_rule_t             *parameterizedRhsRulep;  /* A parameterized RHS is unique and corresponds to a single rule the same grammar */
   marpaESLIF_lua_functiondecl_t *declp;                  /* For parameterized symbols, shallow pointer to declp */
   marpaESLIF_lua_functioncall_t *callp;                  /* For parameterized symbols, shallow pointer to callp */
-  marpaESLIFAction_t            *contextActionp;         /* For parameterized symbols, context action */
+  marpaESLIFAction_t            *pushContextActionp;     /* For parameterized symbols, context push action */
+  marpaESLIFAction_t            *popContextActionp;      /* For parameterized symbols, context pop action */
 };
 
 /* A rule */
