@@ -259,6 +259,7 @@ static int                                marpaESLIFLua_marpaESLIFRecognizer_hoo
 static int                                marpaESLIFLua_marpaESLIFValue_newi(lua_State *L);
 static int                                marpaESLIFLua_marpaESLIFRecognizer_symbolTryi(lua_State *L);
 static int                                marpaESLIFLua_marpaESLIFRecognizer_progressi(lua_State *L);
+static int                                marpaESLIFLua_marpaESLIFRecognizer_contexti(lua_State *L);
 static int                                marpaESLIFLua_marpaESLIFRecognizer_latestEarleySetIdi(lua_State *L);
 static int                                marpaESLIFLua_marpaESLIFRecognizer_earlemei(lua_State *L);
 #ifdef MARPAESLIFLUA_EMBEDDED
@@ -620,6 +621,7 @@ static short marpaESLIFLua_lua_isinteger(int *rcip, lua_State *L, int idx);
     }                                                                   \
     if (! marpaESLIFLua_lua_type(&_typei, L, -1)) goto err;             \
     if (_typei != LUA_TBOOLEAN) {                                       \
+      marpaESLIFLua_stackdumpv(L, 0);                                   \
       if ((interface_r != LUA_NOREF) && (funcs != NULL)) {              \
         marpaESLIFLua_luaL_errorf(L, "Method %s must return a boolean value, got %s", funcs, lua_typename(L, _typei)); \
       } else if (funcs != NULL) {                                       \
@@ -894,6 +896,7 @@ static short marpaESLIFLua_lua_isinteger(int *rcip, lua_State *L, int idx);
   MARPAESLIFLUA_STORE_FUNCTION(L, "marpaESLIFValue_new",             marpaESLIFLua_marpaESLIFValue_newi); \
   MARPAESLIFLUA_STORE_FUNCTION(L, "symbolTry",                       marpaESLIFLua_marpaESLIFRecognizer_symbolTryi); \
   MARPAESLIFLUA_STORE_FUNCTION(L, "progress",                        marpaESLIFLua_marpaESLIFRecognizer_progressi); \
+  MARPAESLIFLUA_STORE_FUNCTION(L, "context",                         marpaESLIFLua_marpaESLIFRecognizer_contexti); \
   if (! marpaESLIFLua_lua_setfield(L, -2, "__index")) goto err;         \
   if (! marpaESLIFLua_lua_setmetatable(L, -2)) goto err;                \
   } while (0)
@@ -1004,14 +1007,14 @@ static int marpaESLIFLua_installi(lua_State *L)
     marpaESLIFLua_luaL_errorf(L, "Loading niled table source failed with status %d", dostringi);
     goto err;
   }
-  /* NiledTable in on the stack */                                         /* Stack: NiledTable */
-  if (! marpaESLIFLua_lua_getfield(NULL, L, -1, "niledarray")) goto err;   /* Stack: NiledTable, NiledTable.niledarray */
-  if (! marpaESLIFLua_lua_getfield(NULL, L, -2, "niledtablekv")) goto err; /* Stack: NiledTable, NiledTable.niledarray, NiledTable.niledtablekv */
-  if (! marpaESLIFLua_lua_getfield(NULL, L, -3, "niledtablekv2")) goto err;  /* Stack: NiledTable, NiledTable.niledarray, NiledTable.niledtablekv, NiledTable.niledtablek */
-  if (! marpaESLIFLua_lua_setglobal(L, "niledtablek")) goto err;           /* Stack: NiledTable, NiledTable.niledarray, NiledTable.niledtablekv */
-  if (! marpaESLIFLua_lua_setglobal(L, "niledtablekv2")) goto err;         /* Stack: NiledTable, NiledTable.niledarray */
-  if (! marpaESLIFLua_lua_setglobal(L, "niledarray")) goto err;            /* Stack: NiledTable */
-  if (! marpaESLIFLua_lua_setglobal(L, "NiledTable")) goto err;            /* Stack: */
+  /* NiledTable in on the stack */                                          /* Stack: NiledTable */
+  if (! marpaESLIFLua_lua_getfield(NULL, L, -1, "niledarray")) goto err;    /* Stack: NiledTable, NiledTable.niledarray */
+  if (! marpaESLIFLua_lua_getfield(NULL, L, -2, "niledtablekv")) goto err;  /* Stack: NiledTable, NiledTable.niledarray, NiledTable.niledtablekv */
+  if (! marpaESLIFLua_lua_getfield(NULL, L, -3, "niledtablekv2")) goto err; /* Stack: NiledTable, NiledTable.niledarray, NiledTable.niledtablekv, NiledTable.niledtablekv2 */
+  if (! marpaESLIFLua_lua_setglobal(L, "niledtablekv2")) goto err;          /* Stack: NiledTable, NiledTable.niledarray, NiledTable.niledtablekv */
+  if (! marpaESLIFLua_lua_setglobal(L, "niledtablekv")) goto err;           /* Stack: NiledTable, NiledTable.niledarray */
+  if (! marpaESLIFLua_lua_setglobal(L, "niledarray")) goto err;             /* Stack: NiledTable */
+  if (! marpaESLIFLua_lua_setglobal(L, "NiledTable")) goto err;             /* Stack: */
 
   /* We load the marpaESLIFJSON implementation */
   if (! marpaESLIFLua_luaL_dostring(&dostringi, L, MARPAESLIFLUA_MARPAESLIFJSON)) goto err;
@@ -5298,6 +5301,55 @@ static int marpaESLIFLua_marpaESLIFRecognizer_progressi(lua_State *L)
     MARPAESLIFLUA_STORE_INTEGER(L, "rule", progressp[i].rulei);
     MARPAESLIFLUA_STORE_INTEGER(L, "position", progressp[i].positioni);
     if (! marpaESLIFLua_lua_seti(L, -2, (lua_Integer) i)) goto err;           /* Stack: {i => {"type" => type, and so on }} */
+  }
+
+  rci = 1;
+  goto done;
+
+ err:
+  rci = 0;
+
+ done:
+  return rci;
+}
+
+/*****************************************************************************/
+static int marpaESLIFLua_marpaESLIFRecognizer_contexti(lua_State *L)
+/*****************************************************************************/
+{
+  static const char                *funcs = "marpaESLIFLua_marpaESLIFRecognizer_contexti";
+  marpaESLIFLuaRecognizerContext_t *marpaESLIFLuaRecognizerContextp;
+  marpaESLIFValueResult_t          *marpaESLIFValueResultp;
+  int                               rci;
+  int                               typei;
+  int                               topi;
+
+  if (! marpaESLIFLua_lua_gettop(&topi, L)) goto err;
+  if (topi != 1) {
+    marpaESLIFLua_luaL_error(L, "Usage: marpaESLIFRecognizer_context(marpaESLIFRecognizerp)");
+    goto err;
+  }
+
+  if (! marpaESLIFLua_lua_type(&typei, L, 1)) goto err;
+  if (typei != LUA_TTABLE) {
+    marpaESLIFLua_luaL_error(L, "marpaESLIFRecognizerp must be a table");
+    goto err;
+  }
+  if (! marpaESLIFLua_lua_getfield(NULL,L, 1, "marpaESLIFLuaRecognizerContextp")) goto err;
+  if (! marpaESLIFLua_lua_touserdata((void **) &marpaESLIFLuaRecognizerContextp, L, -1)) goto err;
+  if (! marpaESLIFLua_lua_pop(L, 1)) goto err;
+
+  /* Clear the stack */
+  if (! marpaESLIFLua_lua_settop(L, 0)) goto err;
+
+  marpaESLIFValueResultp = marpaESLIFRecognizer_contextb(marpaESLIFLuaRecognizerContextp->marpaESLIFRecognizerp);
+  if (marpaESLIFValueResultp == NULL) {
+    marpaESLIFLua_luaL_errorf(L, "marpaESLIFRecognizer_contextb failure, %s", strerror(errno));
+    goto err;
+  }
+
+  if (! marpaESLIFLua_pushRecognizerb(marpaESLIFLuaRecognizerContextp, marpaESLIFLuaRecognizerContextp->marpaESLIFRecognizerp, marpaESLIFValueResultp)) {
+    goto err;
   }
 
   rci = 1;

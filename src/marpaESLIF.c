@@ -1,5 +1,3 @@
-#undef MARPAESLIF_NTRACE
-
 #include <stdlib.h>
 #include <errno.h>
 #include <string.h>
@@ -818,8 +816,7 @@ static        void                   _marpaESLIF_generic_freeCallbackv(void *use
 static inline marpaESLIFValue_t     *_marpaESLIFValue_newp(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFValueOption_t *marpaESLIFValueOptionp, short silentb, short fakeb, short paramb);
 static inline short                  _marpaESLIFValue_stack_newb(marpaESLIFValue_t *marpaESLIFValuep);
 static inline short                  _marpaESLIFValue_stack_freeb(marpaESLIFValue_t *marpaESLIFValuep);
-static inline short                  _marpaESLIFRecognizer_context_setb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFValueResult_t *marpaESLIFValueResultp);
-static inline marpaESLIFValueResult_t *_marpaESLIFRecognizer_context_getp(marpaESLIFRecognizer_t *marpaESLIFRecognizerp);
+static inline marpaESLIFValueResult_t *_marpaESLIFRecognizer_contextb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp);
 static inline short                  _marpaESLIFValue_stack_setb(marpaESLIFValue_t *marpaESLIFValuep, int indicei, marpaESLIFValueResult_t *marpaESLIFValueResultp);
 static inline short                  _marpaESLIFValue_stack_getb(marpaESLIFValue_t *marpaESLIFValuep, int indicei, marpaESLIFValueResult_t *marpaESLIFValueResultp);
 static inline short                  _marpaESLIFValue_stack_getAndForgetb(marpaESLIFValue_t *marpaESLIFValuep, int indicei, marpaESLIFValueResult_t *marpaESLIFValueResultp);
@@ -3080,227 +3077,6 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
     goto err;
   }
 
-  /* For every parameterized RHS, we search for the corresponding LHS in the SAME grammar         */
-  /* and create an additional rule with a prediction event, which is unique per parameterized RHS */
-  /* because a parameterized RHS is itself unique.                                                */
-  /* Exception rules are explicitly skipped because we impose they must contain only pure grammar */
-  /* terminals, and grammar terminals cannot be parameterized. This is done in src/bootstrap.c.   */
-  /* Separators, on the other hand, are checked as well.                                          */
-  /* We take the opportunity of this symbol loop to check terminals: the cannot be parameterized. */
-  goto jdd;
-  for (grammari = 0; grammari < GENERICSTACK_USED(grammarStackp); grammari++) {
-    if (! GENERICSTACK_IS_PTR(grammarStackp, grammari)) {
-      /* Sparse item in grammarStackp -; */
-      continue;
-    }
-    grammarp = (marpaESLIF_grammar_t *) GENERICSTACK_GET_PTR(grammarStackp, grammari);
-    symbolStackp = grammarp->symbolStackp;
-    ruleStackp = grammarp->ruleStackp;
-
-    for (symboli = 0; symboli < GENERICSTACK_USED(symbolStackp); symboli++) {
-      MARPAESLIF_INTERNAL_GET_SYMBOL_FROM_STACK(marpaESLIFp, symbolp, symbolStackp, symboli);
-      MARPAESLIF_NOTICEF(marpaESLIFp, "At grammar level %d (%s), Got symbol <%s>%s%s (Id=%d, parameterizedRhsb=%d)",
-                         grammari,
-                         grammarp->descp->asciis,
-                         symbolp->descp->asciis,
-                         symbolp->callp != NULL ? symbolp->callp->luaexplistcb ? "-->" : "->" : "",
-                         symbolp->callp != NULL ? symbolp->callp->luaexplists : "",
-                         symbolp->idi,
-                         (int) symbolp->parameterizedRhsb);
-      if (! symbolp->parameterizedRhsb) {
-        continue;
-      }
-
-      lhsp  = NULL;
-      declp = NULL;
-
-      /* Search for the LHS that maps to RHS(callp) and for current declp */
-      for (rulei = 0; rulei < GENERICSTACK_USED(ruleStackp); rulei++) {
-        MARPAESLIF_INTERNAL_GET_RULE_FROM_STACK(marpaESLIFp, rulep, ruleStackp, rulei);
-        /*
-         * Not needed
-         */
-        /*
-        if (rulep->exceptionp != NULL) {
-          continue;
-        }
-        */
-        if ((rulep->declp != NULL) &&
-            (strcmp(rulep->lhsp->descp->asciis, symbolp->descp->asciis) == 0) &&
-            (rulep->declp->sizei == symbolp->callp->sizei)) {
-          lhsp = rulep->lhsp;
-        }
-
-        /* Note that a parameterized RHS (or separator) always has an unique Id in the grammar. */
-        /* This is why it is an if/else sequence.                                               */
-        
-        if (rulep->separatorp == symbolp) {
-          declp = rulep->declp;
-          symbolp->parameterizedRhsRulep = rulep;
-        } else {
-          for (rhsl = 0; rhsl < rulep->nrhsl; rhsl++) {
-            if (rulep->rhspp[rhsl] == symbolp) {
-              declp = rulep->declp;
-              symbolp->parameterizedRhsRulep = rulep;
-            }
-          }
-        }
-      }
-
-      if (lhsp == NULL) {
-        MARPAESLIF_ERRORF(marpaESLIFp, "At grammar level %d (%s), parameterized RHS <%s>%s%s must refer to an LHS with the same number of parameters in the same grammar", grammari, grammarp->descp->asciis, symbolp->descp->asciis, symbolp->callp->luaexplistcb ? "-->" : "->", symbolp->callp->luaexplists);
-        goto err;
-      }
-      MARPAESLIF_NOTICEF(marpaESLIFp, "At grammar level %d (%s), parameterized RHS <%s>%s%s (Id=%d) refers to LHS <%s> (Id=%d)",
-                         grammari,
-                         grammarp->descp->asciis,
-                         symbolp->descp->asciis,
-                         symbolp->callp->luaexplistcb ? "-->" : "->",
-                         symbolp->callp->luaexplists,
-                         symbolp->idi,
-                         lhsp->descp->asciis,
-                         lhsp->idi);
-
-      /* For any RHS(callp) we searched for the dependency: */
-      /* LHS(declp maybe) ::= ... RHS(callp) ...            */
-      /* or                                                 */
-      /* LHS(declp maybe) ::= ... separator => RHS(callp)   */
-      /* We create the rule that will prevent RHS(callp) to */
-      /* be a terminal:                                     */
-      /* Id(declp maybe)  ::= CONTEXT RHSLOOKUP(callp)      */
-      /* with the ::copy[1] action.                         */
-      /* - Id is the symbol Id of RHS(callp).               */
-      /* - CONTEXT is a nullable with a :context event      */
-      sprintf(tmps, "Internal[%d]", marpaESLIFGrammarp->internalRuleCounti++);
-      metap = _marpaESLIF_meta_newp(marpaESLIFp,
-                                    grammarp,
-                                    MARPAWRAPPERGRAMMAR_EVENTTYPE_NONE,
-                                    tmps,
-                                    NULL, /* descEncodings */
-                                    NULL, /* descs */
-                                    0, /* descl */
-                                    0 /* lazyb */);
-      if (MARPAESLIF_UNLIKELY(metap == NULL)) {
-        goto err;
-      }
-      nullablep = _marpaESLIF_symbol_newp(marpaESLIFp, NULL /* marpaESLIFSymbolOptionp */);
-      if (MARPAESLIF_UNLIKELY(nullablep == NULL)) {
-        goto err;
-      }
-
-      nullablep->type              = MARPAESLIF_SYMBOL_TYPE_META;
-      nullablep->u.metap           = metap;
-      nullablep->idi               = metap->idi;
-      nullablep->descp             = metap->descp;
-      nullablep->eventNulleds      = strdup(":context");
-
-      /* Transfer call and decl information from symbolp to nullablep */
-      nullablep->declp             = declp;
-      nullablep->callp             = symbolp->callp;
-      
-      if (MARPAESLIF_UNLIKELY(nullablep->eventNulleds == NULL)) {
-        MARPAESLIF_ERRORF(marpaESLIFp, "strdup failure, %s", strerror(errno));
-        goto err;
-      }
-      GENERICSTACK_SET_PTR(symbolStackp, nullablep, nullablep->idi);
-      if (MARPAESLIF_UNLIKELY(GENERICSTACK_ERROR(symbolStackp))) {
-        MARPAESLIF_ERRORF(marpaESLIFp, "symbolStackp push failure, %s", strerror(errno));
-        goto err;
-      }
-      rulep = _marpaESLIF_rule_newp(marpaESLIFp,
-                                    grammarp,
-                                    NULL, /* descEncodings */
-                                    NULL, /* descs */
-                                    0, /* descl */
-                                    nullablep->idi, /* lshi */
-                                    0, /* nrhsl */
-                                    NULL, /* rhsip */
-                                    -1, /* exceptioni */
-                                    0, /* ranki */
-                                    0, /* nullRanksHighb */
-                                    0, /* sequenceb */
-                                    -1, /* minimumi */
-                                    -1, /* separatori */
-                                    0, /* properb */
-                                    &action,
-                                    0, /* passthroughb */
-                                    0, /* hideseparatorb */
-                                    NULL, /* skipbp */
-                                    declp,
-                                    &(symbolp->callp),
-                                    NULL /* separatorcallp */);
-      if (MARPAESLIF_UNLIKELY(rulep == NULL)) {
-        goto err;
-      }
-      /* Make this rule internal */
-      rulep->internalb = 1;
-      GENERICSTACK_SET_PTR(ruleStackp, rulep, rulep->idi);
-      if (MARPAESLIF_UNLIKELY(GENERICSTACK_ERROR(ruleStackp))) {
-        MARPAESLIF_ERRORF(marpaESLIFp, "ruleStackp set failure, %s", strerror(errno));
-        goto err;
-      }
-
-      rhsip[0] = nullablep->idi;
-      rhsip[1] = symbolp->idi;
-      callp[0] = symbolp->callp;
-      callp[1] = NULL;
-
-      rulep = _marpaESLIF_rule_newp(marpaESLIFp,
-                                    grammarp,
-                                    NULL, /* descEncodings */
-                                    NULL, /* descs */
-                                    0, /* descl */
-                                    symbolp->idi, /* lshi */
-                                    2, /* nrhsl */
-                                    rhsip, /* rhsip */
-                                    -1, /* exceptioni */
-                                    0, /* ranki */
-                                    0, /* nullRanksHighb */
-                                    0, /* sequenceb */
-                                    -1, /* minimumi */
-                                    -1, /* separatori */
-                                    0, /* properb */
-                                    &action,
-                                    0, /* passthroughb */
-                                    0, /* hideseparatorb */
-                                    NULL, /* skipbp */
-                                    declp,
-                                    callp,
-                                    NULL /* separatorcallp */);
-      if (MARPAESLIF_UNLIKELY(rulep == NULL)) {
-        goto err;
-      }
-      /* Make this rule internal */
-      rulep->internalb = 1;
-      GENERICSTACK_SET_PTR(ruleStackp, rulep, rulep->idi);
-      if (MARPAESLIF_UNLIKELY(GENERICSTACK_ERROR(grammarp->ruleStackp))) {
-        MARPAESLIF_ERRORF(marpaESLIFp, "ruleStackp set failure, %s", strerror(errno));
-        goto err;
-      }
-
-      MARPAESLIF_NOTICEF(marpaESLIFp,
-                         "At grammar level %d (%s), parameterized RHS <%s>%s%s (Id=%d) linked with rule <%s>%s%s (Id=%d) ::= <%s>%s%s (Id=%d) <%s> (Id=%d)",
-                         grammari,
-                         grammarp->descp->asciis,
-                         symbolp->descp->asciis,
-                         symbolp->callp->luaexplistcb ? "-->" : "->",
-                         symbolp->callp->luaexplists,
-                         symbolp->idi,
-                         symbolp->descp->asciis,
-                         (declp != NULL) ? (declp->luaparlistcb ? "<--" : "<-") : "",
-                         (declp != NULL) ? declp->luaparlists : "",
-                         symbolp->idi,
-                         nullablep->descp->asciis,
-                         nullablep->callp->luaexplistcb ? "-->" : "->",
-                         nullablep->callp->luaexplists,
-                         nullablep->idi,
-                         lhsp->descp->asciis,
-                         lhsp->idi
-                         );
-    }
-  }
-
- jdd:
   /* Set default symbol and rule action if not done */
   for (grammari = 0; grammari < GENERICSTACK_USED(grammarStackp); grammari++) {
     if (! GENERICSTACK_IS_PTR(grammarStackp, grammari)) {
@@ -3698,11 +3474,7 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
         continue;
       }
 
-      /* Parameterized RHSs always refer to an LHS in the same grammar */
-      if (symbolp->parameterizedRhsb) {
-        subSymbolp = symbolp->parameterizedRhsRulep->lhsp;
-        subGrammarp = grammarp;
-      } else if (symbolp->lookupSymbolp != NULL) {
+      if (symbolp->lookupSymbolp != NULL) {
         subSymbolp = symbolp->lookupSymbolp;
         subGrammarp = _marpaESLIFGrammar_grammar_findp(marpaESLIFGrammarp, grammarp->leveli + symbolp->lookupLevelDeltai, NULL /* descp */);
 
@@ -4901,6 +4673,7 @@ static inline marpaESLIF_symbol_t *_marpaESLIF_symbol_newp(marpaESLIF_t *marpaES
   symbolp->callp                   = NULL;
   symbolp->pushContextActionp      = NULL;
   symbolp->popContextActionp       = NULL;
+  symbolp->getContextActionp       = NULL;
 
   symbolp->nullableRuleStackp = &(symbolp->_nullableRuleStack);
   GENERICSTACK_INIT(symbolp->nullableRuleStackp);
@@ -4966,6 +4739,7 @@ static inline void _marpaESLIF_symbol_freev(marpaESLIF_symbol_t *symbolp)
       _marpaESLIF_action_freev(symbolp->ifActionp);
       _marpaESLIF_action_freev(symbolp->pushContextActionp);
       _marpaESLIF_action_freev(symbolp->popContextActionp);
+      _marpaESLIF_action_freev(symbolp->getContextActionp);
 
       GENERICSTACK_RESET(symbolp->nullableRuleStackp); /* Take care, this is a pointer to stack internal to symbol structure */
       GENERICSTACK_RESET(symbolp->lhsRuleStackp); /* Take care, this is a pointer to stack internal to symbol structure */
@@ -6147,7 +5921,7 @@ static inline short _marpaESLIFRecognizer_meta_matcherb(marpaESLIFRecognizer_t *
 
   /* Pop context, if any */
   if (symbolp->parameterizedRhsb) {
-    MARPAESLIF_NOTICEF(marpaESLIFRecognizerp->marpaESLIFp, "JDD Pushing context for symbol %s%s%s: %s<->%s",
+    MARPAESLIF_NOTICEF(marpaESLIFRecognizerp->marpaESLIFp, "JDD Popping context for symbol %s%s%s: %s<->%s",
                        symbolp->descp->asciis,
                        symbolp->callp->luaexplistcb ? "-->" : "->",
                        symbolp->callp->luaexplists,
@@ -6282,15 +6056,17 @@ static inline short _marpaESLIFRecognizer_symbol_matcherb(marpaESLIFRecognizer_t
   MARPAESLIF_CHECK_MATCH_RESULT(funcs, marpaESLIFRecognizerp, marpaESLIF_streamp->inputs, symbolp, rci, marpaESLIFValueResultp);
 
   if (rci == MARPAESLIF_MATCH_OK) {
-    /* If symbol has an if-action and we are the lop-level recognizer, check it */
-    /* if-action is also active when we are not the top-level recognizer only if this is a parameterized symbolp and the action is writen in Lua */
-    if ((symbolp->ifActionp != NULL) &&
-        ((marpaESLIFRecognizerp->marpaESLIFRecognizerTopp == marpaESLIFRecognizerp)
-         ||
-         (paramb && (symbolp->ifActionp != NULL) && ((symbolp->ifActionp->type == MARPAESLIF_ACTION_TYPE_LUA) || (symbolp->ifActionp->type == MARPAESLIF_ACTION_TYPE_LUA_FUNCTION))))) {
+    /* If symbol has an if-action, check it if we are the top-level recognizer */
+    // JDD if ((symbolp->ifActionp != NULL) && (marpaESLIFRecognizerp->marpaESLIFRecognizerTopp == marpaESLIFRecognizerp)) {
+    if (symbolp->ifActionp != NULL) {
+      /* Get this symbol's context */
+      if (! _marpaESLIFRecognizer_lua_get_contextb(marpaESLIFRecognizerp, symbolp)) {
+        goto err;
+      }
       if (MARPAESLIF_UNLIKELY(! _marpaESLIFRecognizer_recognizerIfActionCallbackb(marpaESLIFRecognizerp, symbolp->descp->asciis, symbolp->ifActionp, &ifCallbackp))) {
         goto err;
       }
+      /* Call the action */
       if (MARPAESLIF_UNLIKELY(! ifCallbackp(marpaESLIFRecognizerp->marpaESLIFRecognizerOption.userDatavp, marpaESLIFRecognizerp, marpaESLIFValueResultp, &marpaESLIFValueResultBool))) {
         goto err;
       }
@@ -19779,7 +19555,7 @@ static inline short _marpaESLIFRecognizer_recognizerIfActionCallbackb(marpaESLIF
     marpaESLIFRecognizerp->actionp = ifActionp;
     break;
   case MARPAESLIF_ACTION_TYPE_LUA_FUNCTION:
-    /* Lua action: this is a built-in */
+    /* Lua inline function: this is a built-in */
     ifCallbackp                    = _marpaESLIFRecognizer_lua_ifaction_functionb;
     marpaESLIFRecognizerp->actions = ifActionp->u.luaFunction.luas;
     marpaESLIFRecognizerp->actionp = ifActionp;
@@ -21553,22 +21329,7 @@ static inline void _marpaESLIF_lua_functioncall_freev(marpaESLIF_lua_functioncal
 }
 
 /*****************************************************************************/
-static inline short _marpaESLIFRecognizer_context_setb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFValueResult_t *marpaESLIFValueResultp)
-/*****************************************************************************/
-{
-  /* We use indice 0 of lexemeStackp, that is not used by the interface to marpa */
-  return _marpaESLIFRecognizer_internalStack_i_setb(marpaESLIFRecognizerp,
-                                                    marpaESLIFRecognizerp->lexemeStackp,
-                                                    0, /* indicei */
-                                                    marpaESLIFValueResultp,
-                                                    0, /* forgetb */
-                                                    marpaESLIFRecognizerp->beforePtrStackp,
-                                                    marpaESLIFRecognizerp->afterPtrHashp,
-                                                    NULL /* marpaESLIFValueResultOrigp */);
-}
-
-/*****************************************************************************/
-static inline marpaESLIFValueResult_t *_marpaESLIFRecognizer_context_getp(marpaESLIFRecognizer_t *marpaESLIFRecognizerp)
+static inline marpaESLIFValueResult_t *_marpaESLIFRecognizer_contextb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp)
 /*****************************************************************************/
 {
   /* This is in lexemeStackp at indice 0 */
@@ -21576,41 +21337,7 @@ static inline marpaESLIFValueResult_t *_marpaESLIFRecognizer_context_getp(marpaE
 }
 
 /*****************************************************************************/
-short marpaESLIFRecognizer_context_setb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFValueResult_t *marpaESLIFValueResultp)
-/*****************************************************************************/
-{
-  static const char *funcs = "marpaESLIFRecognizer_context_setb";
-  short              rcb;
-
-  if (MARPAESLIF_UNLIKELY(marpaESLIFRecognizerp == NULL)) {
-    errno = EINVAL;
-    rcb = 0;
-    goto fast_done;
-  }
-
-  MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_INC;
-  MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "start");
-
-  if (MARPAESLIF_UNLIKELY(marpaESLIFValueResultp == NULL)) {
-    errno = EINVAL;
-    goto err;
-  }
-
-  rcb = _marpaESLIFRecognizer_context_setb(marpaESLIFRecognizerp, marpaESLIFValueResultp);
-  goto done;
-
- err:
-  rcb = 0;
-
- done:
-  MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "return %d", (int) rcb);
-  MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_DEC;
- fast_done:
-  return rcb;
-}
-
-/*****************************************************************************/
-marpaESLIFValueResult_t *marpaESLIFRecognizer_context_getp(marpaESLIFRecognizer_t *marpaESLIFRecognizerp)
+marpaESLIFValueResult_t *marpaESLIFRecognizer_contextb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp)
 /*****************************************************************************/
 {
   marpaESLIFValueResult_t *rcp;
@@ -21620,7 +21347,7 @@ marpaESLIFValueResult_t *marpaESLIFRecognizer_context_getp(marpaESLIFRecognizer_
     goto err;
   }
 
-  rcp = _marpaESLIFRecognizer_context_getp(marpaESLIFRecognizerp);
+  rcp = _marpaESLIFRecognizer_contextb(marpaESLIFRecognizerp);
   goto done;
 
  err:

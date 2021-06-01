@@ -191,6 +191,7 @@ struct marpaESLIFSymbol {
   marpaESLIF_lua_functioncall_t *callp;                  /* For parameterized symbols, shallow pointer to callp */
   marpaESLIFAction_t            *pushContextActionp;     /* For parameterized symbols, context push action */
   marpaESLIFAction_t            *popContextActionp;      /* For parameterized symbols, context pop action */
+  marpaESLIFAction_t            *getContextActionp;      /* For parameterized symbols, context get action */
 };
 
 /* A rule */
