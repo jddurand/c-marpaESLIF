@@ -531,6 +531,44 @@ static short _marpaESLIFRecognizer_lua_regexactionb(void *userDatavp, marpaESLIF
 }
 
 /*****************************************************************************/
+static marpaESLIFSymbol_t *_marpaESLIFRecognizer_lua_symbolGeneratoractionb(void *userDatavp, marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFValueResult_t *contextp)
+/*****************************************************************************/
+{
+  static const char                             *funcs = "_marpaESLIFRecognizer_lua_symbolGeneratoractionb";
+  int                                            topi  = -1;
+  marpaESLIFRecognizerSymbolGeneratorCallback_t  symbolGeneratorCallbackp;
+  marpaESLIFSymbol_t                            *rcp;
+
+  /* Create the lua state if needed */
+  if (MARPAESLIF_UNLIKELY(! _marpaESLIFRecognizer_lua_newb(marpaESLIFRecognizerp))) {
+    goto err;
+  }
+  LUA_GETTOP(marpaESLIFRecognizerp, &topi);
+
+  symbolGeneratorCallbackp = marpaESLIFLua_recognizerSymbolGeneratorActionResolver(userDatavp, marpaESLIFRecognizerp, marpaESLIFRecognizerp->actions);
+  if (MARPAESLIF_UNLIKELY(symbolGeneratorCallbackp == NULL)) {
+    MARPAESLIF_ERROR(marpaESLIFRecognizerp->marpaESLIFp, "Lua bindings returned no symbol-generator callback");
+    goto err; /* Lua will shutdown anyway */
+  }
+
+  rcp = symbolGeneratorCallbackp(userDatavp, marpaESLIFRecognizerp, contextp);
+
+  if (MARPAESLIF_UNLIKELY(rcp == NULL)) goto err;
+
+  goto done;
+
+ err:
+  MARPAESLIFLUA_LOG_LATEST_ERROR(marpaESLIFRecognizerp);
+  rcp = NULL;
+
+ done:
+  if (topi >= 0) {
+    LUA_SETTOP(marpaESLIFRecognizerp, topi);
+  }
+  return rcp;
+}
+
+/*****************************************************************************/
 static short _marpaESLIFGrammar_lua_precompileb(marpaESLIFGrammar_t *marpaESLIFGrammarp, int popi)
 /*****************************************************************************/
 {
@@ -1630,6 +1668,41 @@ static short _marpaESLIFRecognizer_lua_regexaction_functionb(void *userDatavp, m
     LUA_SETTOP(marpaESLIFRecognizerp, topi);
   }
   return rcb;
+}
+
+/*****************************************************************************/
+static marpaESLIFSymbol_t *_marpaESLIFRecognizer_lua_symbolGeneratoraction_functionb(void *userDatavp, marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFValueResult_t *contextp)
+/*****************************************************************************/
+{
+  static const char  *funcs = "_marpaESLIFRecognizer_lua_symbolGeneratoraction_functionb";
+  int                 topi  = -1;
+  marpaESLIFSymbol_t *rcp;
+
+  /* Create the lua state if needed */
+  if (MARPAESLIF_UNLIKELY(! _marpaESLIFRecognizer_lua_newb(marpaESLIFRecognizerp))) {
+    goto err;
+  }
+  LUA_GETTOP(marpaESLIFRecognizerp, &topi);
+
+  if (! _marpaESLIFRecognizer_lua_function_loadb(marpaESLIFRecognizerp)) {
+    goto err;
+  }
+  rcp = marpaESLIFLua_symbolGeneratorCallbackb(userDatavp, marpaESLIFRecognizerp, contextp, 1 /* precompiledb */);
+  if (MARPAESLIF_UNLIKELY(rcp == NULL)) {
+    goto err;
+  }
+
+  goto done;
+
+ err:
+  MARPAESLIFLUA_LOG_LATEST_ERROR(marpaESLIFRecognizerp);
+  rcp = NULL;
+
+ done:
+  if (topi >= 0) {
+    LUA_SETTOP(marpaESLIFRecognizerp, topi);
+  }
+  return rcp;
 }
 
 /*****************************************************************************/

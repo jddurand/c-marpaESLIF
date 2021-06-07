@@ -647,7 +647,7 @@ static inline marpaESLIF_meta_t     *_marpaESLIF_meta_newp(marpaESLIF_t *marpaES
 static inline marpaESLIF_meta_t     *_marpaESLIF_meta_clonep(marpaESLIF_t *marpaESLIFp, marpaESLIF_grammar_t *grammarp, marpaESLIF_meta_t *metap);
 static inline void                   _marpaESLIF_meta_freev(marpaESLIF_meta_t *metap);
 
-static inline marpaESLIF_grammar_t  *_marpaESLIF_grammar_newp(marpaESLIFGrammar_t *marpaESLIFGrammarp, marpaWrapperGrammarOption_t *marpaWrapperGrammarOptionp, int leveli, char *descEncodings, char *descs, size_t descl, marpaESLIF_action_t *defaultSymbolActionp, marpaESLIF_action_t *defaultRuleActionp, marpaESLIF_action_t *defaultEventActionp, marpaESLIF_action_t *defaultRegexActionp, char *defaultEncodings, char *fallbackEncodings);
+static inline marpaESLIF_grammar_t  *_marpaESLIF_grammar_newp(marpaESLIFGrammar_t *marpaESLIFGrammarp, marpaWrapperGrammarOption_t *marpaWrapperGrammarOptionp, int leveli, char *descEncodings, char *descs, size_t descl, marpaESLIF_action_t *defaultSymbolActionp, marpaESLIF_action_t *defaultRuleActionp, marpaESLIF_action_t *defaultEventActionp, marpaESLIF_action_t *defaultRegexActionp, marpaESLIF_action_t *defaultSymbolGeneratorActionp, char *defaultEncodings, char *fallbackEncodings);
 static inline void                   _marpaESLIF_grammar_freev(marpaESLIF_grammar_t *grammarp);
 
 static inline void                   _marpaESLIF_ruleStack_freev(genericStack_t *ruleStackp);
@@ -687,6 +687,7 @@ static inline marpaESLIF_grammar_t  *_marpaESLIF_bootstrap_grammarp(marpaESLIFGr
                                                                     marpaESLIF_action_t *defaultRuleActionp,
                                                                     marpaESLIF_action_t *defaultEventActionp,
                                                                     marpaESLIF_action_t *defaultRegexActionp,
+                                                                    marpaESLIF_action_t *defaultSymbolGeneratorActionp,
                                                                     char *defaultEncodings,
                                                                     char *fallbackEncodings);
 static inline short                  _marpaESLIF_numberb(marpaESLIF_t *marpaESLIFp, char *s, marpaESLIFValueResult_t *marpaESLIFValueResultp, short *confidencebp);
@@ -766,6 +767,7 @@ static inline short                  _marpaESLIFValue_symbolActionCallbackb(marp
 static inline short                  _marpaESLIFRecognizer_recognizerIfActionCallbackb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, char *asciishows, marpaESLIF_action_t *ifActionp, marpaESLIFRecognizerIfCallback_t *ifCallbackpp);
 static inline short                  _marpaESLIFRecognizer_recognizerEventActionCallbackb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIF_action_t *eventActionp, marpaESLIFRecognizerEventCallback_t *eventCallbackpp);
 static inline short                  _marpaESLIFRecognizer_recognizerRegexActionCallbackb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, char *asciishows, marpaESLIF_action_t *regexActionp, marpaESLIFRecognizerRegexCallback_t *regexCallbackpp);
+static inline short                  _marpaESLIFRecognizer_recognizerSymbolGeneratorActionCallbackb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, char *asciishows, marpaESLIF_action_t *symbolGeneratorActionp, marpaESLIFRecognizerSymbolGeneratorCallback_t *symbolGeneratorCallbackpp);
 static inline short                  _marpaESLIFValue_eslif2hostb(marpaESLIFValue_t *marpaESLIFValuep, marpaESLIFValueResult_t *marpaESLIFValueResultp, void *forcedUserDatavp, marpaESLIFValueImport_t forcedImporterp);
 static inline short                  _marpaESLIFRecognizer_eslif2hostb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFValueResult_t *marpaESLIFValueResultp, void *forcedUserDatavp, marpaESLIFRecognizerImport_t forcedImporterp);
 static inline short                  _marpaESLIFSymbol_eslif2hostb(marpaESLIFSymbol_t *marpaESLIFSymbolp, marpaESLIFValueResult_t *marpaESLIFValueResultp, void *forcedUserDatavp, marpaESLIFSymbolImport_t forcedImporterp);
@@ -2151,6 +2153,7 @@ static inline marpaESLIF_grammar_t *_marpaESLIF_bootstrap_grammar_L0p(marpaESLIF
                                         NULL, /* defaultRuleActionp */
                                         NULL, /* defaultEventActionp */
                                         NULL, /* defaultRegexActionp */
+                                        NULL, /* defaultSymbolGeneratorActionp */
                                         "ASCII", /* defaultEncodings" */
                                         NULL /* fallbackEncodings */ );
 }
@@ -2179,6 +2182,7 @@ static inline marpaESLIF_grammar_t *_marpaESLIF_bootstrap_grammar_G1p(marpaESLIF
                                         NULL, /* defaultRuleActionp */
                                         NULL, /* defaultEventActionp */
                                         NULL, /* defaultRegexActionp */
+                                        NULL, /* defaultSymbolGeneratorActionp */
                                         "ASCII", /* defaultEncodings" */
                                         NULL /* fallbackEncodings */ );
 }
@@ -2200,6 +2204,7 @@ static inline marpaESLIF_grammar_t *_marpaESLIF_bootstrap_grammarp(marpaESLIFGra
                                                                    marpaESLIF_action_t *defaultRuleActionp,
                                                                    marpaESLIF_action_t *defaultEventActionp,
                                                                    marpaESLIF_action_t *defaultRegexActionp,
+                                                                   marpaESLIF_action_t *defaultSymbolGeneratorActionp,
                                                                    char *defaultEncodings,
                                                                    char *fallbackEncodings)
 /*****************************************************************************/
@@ -2225,7 +2230,7 @@ static inline marpaESLIF_grammar_t *_marpaESLIF_bootstrap_grammarp(marpaESLIFGra
   /* Default type of rule action, value itself is filled in the loop */
   ruleAction.type = MARPAESLIF_ACTION_TYPE_NAME;
   
-  grammarp = _marpaESLIF_grammar_newp(marpaESLIFGrammarp, &marpaWrapperGrammarOption, leveli, descEncodings, descs, descl, defaultSymbolActionp, defaultRuleActionp, defaultEventActionp, defaultRegexActionp, defaultEncodings, fallbackEncodings);
+  grammarp = _marpaESLIF_grammar_newp(marpaESLIFGrammarp, &marpaWrapperGrammarOption, leveli, descEncodings, descs, descl, defaultSymbolActionp, defaultRuleActionp, defaultEventActionp, defaultRegexActionp, defaultSymbolGeneratorActionp, defaultEncodings, fallbackEncodings);
   if (MARPAESLIF_UNLIKELY(grammarp == NULL)) {
     goto err;
   }
@@ -3119,6 +3124,7 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
 
     /* Nothing on defaultEventActionp - it can be NULL */
     /* Nothing on defaultRegexActionp - it can be NULL */
+    /* Nothing on defaultSymbolGeneratorActionp - it can be NULL */
     /* Nothing on defaultEncodings - it can be NULL */
     /* Nothing on fallbackEncodings - it can be NULL */
 
@@ -4042,7 +4048,7 @@ static inline short _marpaESLIFGrammar_haveLexemeb(marpaESLIFGrammar_t *marpaESL
 }
 
 /*****************************************************************************/
-static inline marpaESLIF_grammar_t *_marpaESLIF_grammar_newp(marpaESLIFGrammar_t *marpaESLIFGrammarp, marpaWrapperGrammarOption_t *marpaWrapperGrammarOptionp, int leveli, char *descEncodings, char *descs, size_t descl, marpaESLIF_action_t *defaultSymbolActionp, marpaESLIF_action_t *defaultRuleActionp, marpaESLIF_action_t *defaultEventActionp, marpaESLIF_action_t *defaultRegexActionp, char *defaultEncodings, char *fallbackEncodings)
+static inline marpaESLIF_grammar_t *_marpaESLIF_grammar_newp(marpaESLIFGrammar_t *marpaESLIFGrammarp, marpaWrapperGrammarOption_t *marpaWrapperGrammarOptionp, int leveli, char *descEncodings, char *descs, size_t descl, marpaESLIF_action_t *defaultSymbolActionp, marpaESLIF_action_t *defaultRuleActionp, marpaESLIF_action_t *defaultEventActionp, marpaESLIF_action_t *defaultRegexActionp, marpaESLIF_action_t *defaultSymbolGeneratorActionp, char *defaultEncodings, char *fallbackEncodings)
 /*****************************************************************************/
 {
   static const char             *funcs          = "_marpaESLIF_grammar_newp";
@@ -4086,6 +4092,7 @@ static inline marpaESLIF_grammar_t *_marpaESLIF_grammar_newp(marpaESLIFGrammar_t
   grammarp->defaultRuleActionp                 = NULL;
   grammarp->defaultEventActionp                = NULL;
   grammarp->defaultRegexActionp                = NULL;
+  grammarp->defaultSymbolGeneratorActionp      = NULL;
   grammarp->starti                             = 0;    /* Filled during grammar validation */
   grammarp->starts                             = NULL; /* Filled during grammar validation - shallow pointer */
   grammarp->symbolip                           = NULL; /* Filled by grammar validation */
@@ -4188,6 +4195,16 @@ static inline marpaESLIF_grammar_t *_marpaESLIF_grammar_newp(marpaESLIFGrammar_t
     }
   }
 
+  if (defaultSymbolGeneratorActionp != NULL) {
+    if (MARPAESLIF_UNLIKELY(! _marpaESLIF_action_validb(marpaESLIFp, defaultSymbolGeneratorActionp))) {
+      goto err;
+    }
+    grammarp->defaultSymbolGeneratorActionp = _marpaESLIF_action_clonep(marpaESLIFp, defaultSymbolGeneratorActionp);
+    if (MARPAESLIF_UNLIKELY(grammarp->defaultSymbolGeneratorActionp == NULL)) {
+      goto err;
+    }
+  }
+
   if (defaultEncodings != NULL) {
     grammarp->defaultEncodings = strdup(defaultEncodings);
     if (MARPAESLIF_UNLIKELY(grammarp->defaultEncodings == NULL)) {
@@ -4252,6 +4269,7 @@ static inline void _marpaESLIF_grammar_freev(marpaESLIF_grammar_t *grammarp)
     _marpaESLIF_action_freev(grammarp->defaultRuleActionp);
     _marpaESLIF_action_freev(grammarp->defaultEventActionp);
     _marpaESLIF_action_freev(grammarp->defaultRegexActionp);
+    _marpaESLIF_action_freev(grammarp->defaultSymbolGeneratorActionp);
     if (grammarp->defaultEncodings != NULL) {
       free(grammarp->defaultEncodings);
     }
@@ -6985,22 +7003,23 @@ short marpaESLIFGrammar_grammarproperty_by_levelb(marpaESLIFGrammar_t *marpaESLI
   grammarStackp = marpaESLIFGrammarp->grammarStackp;
  
   if (grammarPropertyp != NULL) {
-    grammarPropertyp->leveli                = grammarp->leveli;
-    grammarPropertyp->maxLeveli             = GENERICSTACK_USED(grammarStackp) - 1; /* Per def it is > 0 here */
-    grammarPropertyp->descp                 = grammarp->descp;
-    grammarPropertyp->latmb                 = grammarp->latmb;
-    grammarPropertyp->defaultSymbolActionp  = grammarp->defaultSymbolActionp;
-    grammarPropertyp->defaultRuleActionp    = grammarp->defaultRuleActionp;
-    grammarPropertyp->defaultEventActionp   = grammarp->defaultEventActionp;
-    grammarPropertyp->defaultRegexActionp   = grammarp->defaultRegexActionp;
-    grammarPropertyp->starti                = grammarp->starti;
-    grammarPropertyp->discardi              = grammarp->discardi;
-    grammarPropertyp->nrulel                = grammarp->nrulel;
-    grammarPropertyp->ruleip                = grammarp->ruleip;
-    grammarPropertyp->nsymboll              = grammarp->nsymboll;
-    grammarPropertyp->symbolip              = grammarp->symbolip;
-    grammarPropertyp->defaultEncodings      = grammarp->defaultEncodings;
-    grammarPropertyp->fallbackEncodings     = grammarp->fallbackEncodings;
+    grammarPropertyp->leveli                        = grammarp->leveli;
+    grammarPropertyp->maxLeveli                     = GENERICSTACK_USED(grammarStackp) - 1; /* Per def it is > 0 here */
+    grammarPropertyp->descp                         = grammarp->descp;
+    grammarPropertyp->latmb                         = grammarp->latmb;
+    grammarPropertyp->defaultSymbolActionp          = grammarp->defaultSymbolActionp;
+    grammarPropertyp->defaultRuleActionp            = grammarp->defaultRuleActionp;
+    grammarPropertyp->defaultEventActionp           = grammarp->defaultEventActionp;
+    grammarPropertyp->defaultRegexActionp           = grammarp->defaultRegexActionp;
+    grammarPropertyp->defaultSymbolGeneratorActionp = grammarp->defaultSymbolGeneratorActionp;
+    grammarPropertyp->starti                        = grammarp->starti;
+    grammarPropertyp->discardi                      = grammarp->discardi;
+    grammarPropertyp->nrulel                        = grammarp->nrulel;
+    grammarPropertyp->ruleip                        = grammarp->ruleip;
+    grammarPropertyp->nsymboll                      = grammarp->nsymboll;
+    grammarPropertyp->symbolip                      = grammarp->symbolip;
+    grammarPropertyp->defaultEncodings              = grammarp->defaultEncodings;
+    grammarPropertyp->fallbackEncodings             = grammarp->fallbackEncodings;
   }
   rcb = 1;
   goto done;
@@ -12913,6 +12932,8 @@ static inline void _marpaESLIF_grammar_createshowv(marpaESLIFGrammar_t *marpaESL
       ||
       (grammarp->defaultRegexActionp != NULL)
       ||
+      (grammarp->defaultSymbolGeneratorActionp != NULL)
+      ||
       (grammarp->defaultSymbolActionp != NULL)
       ||
       (grammarp->latmb)
@@ -12984,6 +13005,28 @@ static inline void _marpaESLIF_grammar_createshowv(marpaESLIFGrammar_t *marpaESL
         break;
       case MARPAESLIF_ACTION_TYPE_LUA_FUNCTION:
         MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, grammarp->defaultRegexActionp->u.luaFunction.actions);
+        break;
+      default:
+        break;
+      }
+    }
+    if (grammarp->defaultSymbolGeneratorActionp != NULL) {
+      MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "\n  symbol-generator => ");
+      switch (grammarp->defaultSymbolGeneratorActionp->type) {
+      case MARPAESLIF_ACTION_TYPE_NAME:
+        MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, grammarp->defaultSymbolGeneratorActionp->u.names);
+        break;
+      case MARPAESLIF_ACTION_TYPE_STRING:
+        MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "::u8\"");
+        MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, grammarp->defaultSymbolGeneratorActionp->u.stringp->asciis); /* Best effort ASCII */
+        MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "\"");
+        break;
+      case MARPAESLIF_ACTION_TYPE_LUA:
+        MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "::lua->");
+        MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, grammarp->defaultSymbolGeneratorActionp->u.luas);
+        break;
+      case MARPAESLIF_ACTION_TYPE_LUA_FUNCTION:
+        MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, grammarp->defaultSymbolGeneratorActionp->u.luaFunction.actions);
         break;
       default:
         break;
@@ -14642,12 +14685,13 @@ short marpaESLIFGrammar_defaults_by_levelb(marpaESLIFGrammar_t *marpaESLIFGramma
     goto err;
   }
 
-  marpaESLIFGrammarDefaults.defaultRuleActionp    = grammarp->defaultRuleActionp;
-  marpaESLIFGrammarDefaults.defaultEventActionp   = grammarp->defaultEventActionp;
-  marpaESLIFGrammarDefaults.defaultRegexActionp   = grammarp->defaultRegexActionp;
-  marpaESLIFGrammarDefaults.defaultSymbolActionp  = grammarp->defaultSymbolActionp;
-  marpaESLIFGrammarDefaults.defaultEncodings      = grammarp->defaultEncodings;
-  marpaESLIFGrammarDefaults.fallbackEncodings     = grammarp->fallbackEncodings;
+  marpaESLIFGrammarDefaults.defaultRuleActionp            = grammarp->defaultRuleActionp;
+  marpaESLIFGrammarDefaults.defaultEventActionp           = grammarp->defaultEventActionp;
+  marpaESLIFGrammarDefaults.defaultRegexActionp           = grammarp->defaultRegexActionp;
+  marpaESLIFGrammarDefaults.defaultSymbolGeneratorActionp = grammarp->defaultSymbolGeneratorActionp;
+  marpaESLIFGrammarDefaults.defaultSymbolActionp          = grammarp->defaultSymbolActionp;
+  marpaESLIFGrammarDefaults.defaultEncodings              = grammarp->defaultEncodings;
+  marpaESLIFGrammarDefaults.fallbackEncodings             = grammarp->fallbackEncodings;
 
   if (marpaESLIFGrammarDefaultsp != NULL) {
     *marpaESLIFGrammarDefaultsp = marpaESLIFGrammarDefaults;
@@ -14754,6 +14798,22 @@ short marpaESLIFGrammar_defaults_by_level_setb(marpaESLIFGrammar_t *marpaESLIFGr
     } else {
       _marpaESLIF_action_freev(grammarp->defaultRegexActionp);
       grammarp->defaultRegexActionp = NULL;
+    }
+
+    if (marpaESLIFGrammarDefaultsp->defaultSymbolGeneratorActionp != NULL) {
+      if (MARPAESLIF_UNLIKELY(! _marpaESLIF_action_validb(marpaESLIFp, marpaESLIFGrammarDefaultsp->defaultSymbolGeneratorActionp))) {
+        goto err;
+      }
+      previousActionp = grammarp->defaultSymbolGeneratorActionp;
+      grammarp->defaultSymbolGeneratorActionp = _marpaESLIF_action_clonep(marpaESLIFp, marpaESLIFGrammarDefaultsp->defaultSymbolGeneratorActionp);
+      if (MARPAESLIF_UNLIKELY(grammarp->defaultSymbolGeneratorActionp == NULL)) {
+        grammarp->defaultSymbolGeneratorActionp = previousActionp;
+        goto err;
+      }
+      _marpaESLIF_action_freev(previousActionp);
+    } else {
+      _marpaESLIF_action_freev(grammarp->defaultSymbolGeneratorActionp);
+      grammarp->defaultSymbolGeneratorActionp = NULL;
     }
 
     if (marpaESLIFGrammarDefaultsp->defaultSymbolActionp != NULL) {
@@ -19658,6 +19718,66 @@ static inline short _marpaESLIFRecognizer_recognizerRegexActionCallbackb(marpaES
   }
 
   *regexCallbackpp = regexCallbackp;
+
+  rcb = 1;
+  goto done;
+
+ err:
+  rcb = 0;
+
+ done:
+  return rcb;
+}
+
+/*****************************************************************************/
+static inline short _marpaESLIFRecognizer_recognizerSymbolGeneratorActionCallbackb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, char *asciishows, marpaESLIF_action_t *symbolGeneratorActionp, marpaESLIFRecognizerSymbolGeneratorCallback_t *symbolGeneratorCallbackpp)
+/*****************************************************************************/
+{
+  static const char                                   *funcs                          = "_marpaESLIFRecognizer_recognizerSymbolGeneratorActionCallbackb";
+  marpaESLIFRecognizerOption_t                         marpaESLIFRecognizerOption     = marpaESLIFRecognizerp->marpaESLIFRecognizerOption;
+  marpaESLIFRecognizerSymbolGeneratorActionResolver_t  symbolGeneratorActionResolverp = marpaESLIFRecognizerOption.symbolGeneratorActionResolverp;
+  marpaESLIFGrammar_t                                 *marpaESLIFGrammarp             = marpaESLIFRecognizerp->marpaESLIFGrammarp;
+  marpaESLIF_grammar_t                                *grammarp                       = marpaESLIFGrammarp->grammarp;
+  marpaESLIFRecognizerSymbolGeneratorCallback_t        symbolGeneratorCallbackp       = NULL;
+  char                                                *symbolGeneratoractions;
+  short                                                rcb;
+
+  switch (symbolGeneratorActionp->type) {
+  case MARPAESLIF_ACTION_TYPE_NAME:
+    /* Action is a normal name */
+    symbolGeneratoractions = symbolGeneratorActionp->u.names;
+    /* Get the callback pointer */
+    if (MARPAESLIF_UNLIKELY(symbolGeneratorActionResolverp == NULL)) {
+      MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "Cannot execute symbol generator action \"%s\": no symbol generator action resolver", symbolGeneratoractions);
+      goto err;
+    }
+    symbolGeneratorCallbackp = symbolGeneratorActionResolverp(marpaESLIFRecognizerOption.userDatavp, marpaESLIFRecognizerp, symbolGeneratoractions);
+    if (MARPAESLIF_UNLIKELY(symbolGeneratorCallbackp == NULL)) {
+      MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "%s: action \"%s\" resolved to NULL", asciishows, symbolGeneratoractions);
+      goto err;
+    } else {
+      MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "%s: action \"%s\" resolved to %p", asciishows, symbolGeneratoractions, symbolGeneratorCallbackp);
+    }
+    marpaESLIFRecognizerp->actionp = symbolGeneratorActionp;
+    break;
+  case MARPAESLIF_ACTION_TYPE_LUA:
+    /* Lua action: this is a built-in */
+    symbolGeneratorCallbackp       = _marpaESLIFRecognizer_lua_symbolGeneratoractionb;
+    marpaESLIFRecognizerp->actions = symbolGeneratorActionp->u.luas;
+    marpaESLIFRecognizerp->actionp = symbolGeneratorActionp;
+    break;
+  case MARPAESLIF_ACTION_TYPE_LUA_FUNCTION:
+    /* Lua action: this is a built-in */
+    symbolGeneratorCallbackp       = _marpaESLIFRecognizer_lua_symbolGeneratoraction_functionb;
+    marpaESLIFRecognizerp->actions = symbolGeneratorActionp->u.luaFunction.luas;
+    marpaESLIFRecognizerp->actionp = symbolGeneratorActionp;
+    break;
+  default:
+    MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "Invalid action type %d", symbolGeneratorActionp->type);
+    goto err;
+  }
+
+  *symbolGeneratorCallbackpp = symbolGeneratorCallbackp;
 
   rcb = 1;
   goto done;
