@@ -107,7 +107,7 @@ typedef enum bootstrap_grammar_G1_enum {
   G1_TERMINAL___TABLE,
   G1_TERMINAL_IF_ACTION,
   G1_TERMINAL_REGEX_ACTION,
-  G1_TERMINAL_SYMBOLGENERATOR_ACTION,
+  G1_TERMINAL_GENERATOR_ACTION,
   G1_TERMINAL___AST,
   G1_TERMINAL_EVENT_ACTION,
   G1_TERMINAL_DEFAULT_ENCODING,
@@ -206,8 +206,8 @@ typedef enum bootstrap_grammar_G1_enum {
   G1_META_IFACTION_NAME,
   G1_META_REGEX_ACTION,
   G1_META_REGEXACTION_NAME,
-  G1_META_SYMBOLGENERATOR_ACTION,
-  G1_META_SYMBOLGENERATORACTION_NAME,
+  G1_META_GENERATOR_ACTION,
+  G1_META_GENERATORACTION_NAME,
   G1_META_EVENT_ACTION,
   G1_META_EVENTACTION_NAME,
   G1_META_DEFAULT_ENCODING,
@@ -323,8 +323,8 @@ bootstrap_grammar_meta_t bootstrap_grammar_G1_metas[] = {
   { G1_META_IFACTION_NAME,                    "if action name",                            0,       0,           0,            0,    0,               -1,       0,        NULL,       NULL },
   { G1_META_REGEX_ACTION,                     "regex action",                              0,       0,           0,            0,    0,               -1,       0,        NULL,       NULL },
   { G1_META_REGEXACTION_NAME,                 "regex action name",                         0,       0,           0,            0,    0,               -1,       0,        NULL,       NULL },
-  { G1_META_SYMBOLGENERATOR_ACTION,           "symbol generator action",                   0,       0,           0,            0,    0,               -1,       0,        NULL,       NULL },
-  { G1_META_SYMBOLGENERATORACTION_NAME,       "symbol generator action name",              0,       0,           0,            0,    0,               -1,       0,        NULL,       NULL },
+  { G1_META_GENERATOR_ACTION,                 "generator action",                          0,       0,           0,            0,    0,               -1,       0,        NULL,       NULL },
+  { G1_META_GENERATORACTION_NAME,             "generator action name",                     0,       0,           0,            0,    0,               -1,       0,        NULL,       NULL },
   { G1_META_EVENT_ACTION,                     "event action",                              0,       0,           0,            0,    0,               -1,       0,        NULL,       NULL },
   { G1_META_EVENTACTION_NAME,                 "event action name",                         0,       0,           0,            0,    0,               -1,       0,        NULL,       NULL },
   { G1_META_DEFAULT_ENCODING,                 "default encoding",                          0,       0,           0,            0,    0,               -1,       0,        NULL,       NULL },
@@ -1075,10 +1075,10 @@ bootstrap_grammar_terminal_t bootstrap_grammar_G1_terminals[] = {
     NULL, NULL
 #endif
   },
-  { G1_TERMINAL_SYMBOLGENERATOR_ACTION, MARPAESLIF_TERMINAL_TYPE_STRING, NULL,
-    "'symbol-generator-action'", NULL, NULL,
+  { G1_TERMINAL_GENERATOR_ACTION, MARPAESLIF_TERMINAL_TYPE_STRING, NULL,
+    "'generator-action'", NULL, NULL,
 #ifndef MARPAESLIF_NTRACE
-    "symbol-generator-action", "symbol-generator"
+    "generator-action", "generator"
 #else
     NULL, NULL
 #endif
@@ -1372,7 +1372,7 @@ bootstrap_grammar_rule_t bootstrap_grammar_G1_rules[] = {
   { G1_META_ADVERB_ITEM,                      G1_RULE_ADVERB_ITEM_21,                         MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_FALLBACK_ENCODING                    }, -1,                        -1,      -1,              0, G1_ACTION_ADVERB_ITEM_21 },
   { G1_META_ADVERB_ITEM,                      G1_RULE_ADVERB_ITEM_22,                         MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_REGEX_ACTION                         }, -1,                        -1,      -1,              0, G1_ACTION_ADVERB_ITEM_22 },
   { G1_META_ADVERB_ITEM,                      G1_RULE_ADVERB_ITEM_23,                         MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_VERBOSE_SPECIFICATION                }, -1,                        -1,      -1,              0, G1_ACTION_ADVERB_ITEM_23 },
-  { G1_META_ADVERB_ITEM,                      G1_RULE_ADVERB_ITEM_24,                         MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_SYMBOLGENERATOR_ACTION               }, -1,                        -1,      -1,              0, G1_ACTION_ADVERB_ITEM_24 },
+  { G1_META_ADVERB_ITEM,                      G1_RULE_ADVERB_ITEM_24,                         MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_GENERATOR_ACTION                     }, -1,                        -1,      -1,              0, G1_ACTION_ADVERB_ITEM_24 },
   { G1_META_ACTION,                           G1_RULE_ACTION_1,                               MARPAESLIF_RULE_TYPE_ALTERNATIVE, 3, { G1_TERMINAL_ACTION,
                                                                                                                                      G1_TERMINAL_THEN,
                                                                                                                                      G1_META_ACTION_NAME                          }, -1,                        -1,      -1,              0, G1_ACTION_ACTION_1 },
@@ -1483,9 +1483,9 @@ bootstrap_grammar_rule_t bootstrap_grammar_G1_rules[] = {
   { G1_META_REGEX_ACTION,                     G1_RULE_REGEX_ACTION,                           MARPAESLIF_RULE_TYPE_ALTERNATIVE, 3, { G1_TERMINAL_REGEX_ACTION,
                                                                                                                                      G1_TERMINAL_THEN,
                                                                                                                                      G1_META_REGEXACTION_NAME                     }, -1,                        -1,      -1,              0, G1_ACTION_REGEXACTION },
-  { G1_META_SYMBOLGENERATOR_ACTION,           G1_RULE_SYMBOLGENERATOR_ACTION,                 MARPAESLIF_RULE_TYPE_ALTERNATIVE, 3, { G1_TERMINAL_SYMBOLGENERATOR_ACTION,
+  { G1_META_GENERATOR_ACTION,                 G1_RULE_GENERATOR_ACTION,                       MARPAESLIF_RULE_TYPE_ALTERNATIVE, 3, { G1_TERMINAL_GENERATOR_ACTION,
                                                                                                                                      G1_TERMINAL_THEN,
-                                                                                                                                     G1_META_SYMBOLGENERATORACTION_NAME           }, -1,                        -1,      -1,              0, G1_ACTION_SYMBOLGENERATORACTION },
+                                                                                                                                     G1_META_GENERATORACTION_NAME                 }, -1,                        -1,      -1,              0, G1_ACTION_GENERATORACTION },
   { G1_META_ALTERNATIVE_NAME,                 G1_RULE_ALTERNATIVE_NAME_1,                     MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_STANDARD_NAME                        }, -1,                        -1,      -1,              0, G1_ACTION_ALTERNATIVE_NAME_1 },
   /*
     lhsi                                      descs                                           type                          nrhsl  { rhsi }                                       }  minimumi           separatori  properb hideseparatorb  actions
@@ -1587,8 +1587,8 @@ bootstrap_grammar_rule_t bootstrap_grammar_G1_rules[] = {
   { G1_META_IFACTION_NAME,                    G1_RULE_IFACTION_NAME_2,                        MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_LUA_ACTION_NAME                      }, -1,                        -1,      -1,              0, G1_ACTION_IFACTION_NAME_2 },
   { G1_META_REGEXACTION_NAME,                 G1_RULE_REGEXACTION_NAME_1,                     MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_RESTRICTED_ASCII_GRAPH_NAME          }, -1,                        -1,      -1,              0, G1_ACTION_REGEXACTION_NAME_1 },
   { G1_META_REGEXACTION_NAME,                 G1_RULE_REGEXACTION_NAME_2,                     MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_LUA_ACTION_NAME                      }, -1,                        -1,      -1,              0, G1_ACTION_REGEXACTION_NAME_2 },
-  { G1_META_SYMBOLGENERATORACTION_NAME,       G1_RULE_SYMBOLGENERATORACTION_NAME_1,           MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_RESTRICTED_ASCII_GRAPH_NAME          }, -1,                        -1,      -1,              0, G1_ACTION_SYMBOLGENERATORACTION_NAME_1 },
-  { G1_META_SYMBOLGENERATORACTION_NAME,       G1_RULE_SYMBOLGENERATORACTION_NAME_2,           MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_LUA_ACTION_NAME                      }, -1,                        -1,      -1,              0, G1_ACTION_SYMBOLGENERATORACTION_NAME_2 },
+  { G1_META_GENERATORACTION_NAME,             G1_RULE_GENERATORACTION_NAME_1,                 MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_RESTRICTED_ASCII_GRAPH_NAME          }, -1,                        -1,      -1,              0, G1_ACTION_GENERATORACTION_NAME_1 },
+  { G1_META_GENERATORACTION_NAME,             G1_RULE_GENERATORACTION_NAME_2,                 MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_LUA_ACTION_NAME                      }, -1,                        -1,      -1,              0, G1_ACTION_GENERATORACTION_NAME_2 },
   /*
     lhsi                                      descs                                           type                          nrhsl  { rhsi }                                       }  minimumi           separatori  properb hideseparatorb  actions
   */
@@ -1666,7 +1666,7 @@ bootstrap_grammar_rule_t bootstrap_grammar_G1_lazy_rules[] = {
   { G1_META_SYMBOLACTION_NAME,                G1_RULE_SYMBOLACTION_NAME_12,                   MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_LUA_FUNCTION                         }, -1,                        -1,      -1,              0, G1_ACTION_SYMBOLACTION_NAME_12 },
   { G1_META_IFACTION_NAME,                    G1_RULE_IFACTION_NAME_3,                        MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_LUA_FUNCTION                         }, -1,                        -1,      -1,              0, G1_ACTION_IFACTION_NAME_3 },
   { G1_META_REGEXACTION_NAME,                 G1_RULE_REGEXACTION_NAME_3,                     MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_LUA_FUNCTION                         }, -1,                        -1,      -1,              0, G1_ACTION_REGEXACTION_NAME_3 },
-  { G1_META_SYMBOLGENERATORACTION_NAME,       G1_RULE_SYMBOLGENERATORACTION_NAME_3,           MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_LUA_FUNCTION                         }, -1,                        -1,      -1,              0, G1_ACTION_SYMBOLGENERATORACTION_NAME_3 },
+  { G1_META_GENERATORACTION_NAME,             G1_RULE_GENERATORACTION_NAME_3,                 MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_LUA_FUNCTION                         }, -1,                        -1,      -1,              0, G1_ACTION_GENERATORACTION_NAME_3 },
   { G1_META_EVENTACTION_NAME,                 G1_RULE_EVENTACTION_NAME_3,                     MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_LUA_FUNCTION                         }, -1,                        -1,      -1,              0, G1_ACTION_EVENTACTION_NAME_3 },
   { G1_META_LUA_FUNCTION,                     G1_RULE_LUA_FUNCTION,                           MARPAESLIF_RULE_TYPE_ALTERNATIVE, 2, { G1_TERMINAL_LUA_FUNCTION,
                                                                                                                                      G1_META_LUA_FUNCBODY_AFTER_LPAREN            }, -1,                        -1,      -1,              0, G1_ACTION_LUA_FUNCTION   },

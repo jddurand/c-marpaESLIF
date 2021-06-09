@@ -202,10 +202,10 @@
 #define G1_RULE_REGEXACTION_NAME_1               "G1_rule_regexaction_name_1"
 #define G1_RULE_REGEXACTION_NAME_2               "G1_rule_regexaction_name_2"
 #define G1_RULE_REGEXACTION_NAME_3               "G1_rule_regexaction_name_3"
-#define G1_RULE_SYMBOLGENERATOR_ACTION           "G1_rule_symbolgenerator_action"
-#define G1_RULE_SYMBOLGENERATORACTION_NAME_1     "G1_rule_symbolgeneratoraction_name_1"
-#define G1_RULE_SYMBOLGENERATORACTION_NAME_2     "G1_rule_symbolgeneratoraction_name_2"
-#define G1_RULE_SYMBOLGENERATORACTION_NAME_3     "G1_rule_symbolgeneratoraction_name_3"
+#define G1_RULE_GENERATOR_ACTION                 "G1_rule_generator_action"
+#define G1_RULE_GENERATORACTION_NAME_1           "G1_rule_generatoraction_name_1"
+#define G1_RULE_GENERATORACTION_NAME_2           "G1_rule_generatoraction_name_2"
+#define G1_RULE_GENERATORACTION_NAME_3           "G1_rule_generatoraction_name_3"
 #define G1_RULE_EVENT_ACTION                     "G1_rule_event_action"
 #define G1_RULE_EVENTACTION_NAME_1               "G1_rule_eventaction_name_1"
 #define G1_RULE_EVENTACTION_NAME_2               "G1_rule_eventaction_name_2"
@@ -415,10 +415,10 @@
 #define G1_ACTION_REGEXACTION_NAME_2               "::ascii" /* <regex action name> ::= <lua action name> */
 #define G1_ACTION_REGEXACTION_NAME_3               "::shift" /* <regex action name> ::= <lua function> */
 #define G1_ACTION_REGEXACTION                      "G1_action_regexaction"                       /* done */
-#define G1_ACTION_SYMBOLGENERATORACTION_NAME_1     "::ascii" /* <symbol generator action name> ::= <ascii graph name> */
-#define G1_ACTION_SYMBOLGENERATORACTION_NAME_2     "::ascii" /* <symbol generator action name> ::= <lua action name> */
-#define G1_ACTION_SYMBOLGENERATORACTION_NAME_3     "::shift" /* <symbol generator action name> ::= <lua function> */
-#define G1_ACTION_SYMBOLGENERATORACTION            "G1_action_symbolgeneratoraction"                       /* done */
+#define G1_ACTION_GENERATORACTION_NAME_1           "::ascii" /* <generator action name> ::= <ascii graph name> */
+#define G1_ACTION_GENERATORACTION_NAME_2           "::ascii" /* <generator action name> ::= <lua action name> */
+#define G1_ACTION_GENERATORACTION_NAME_3           "::shift" /* <generator action name> ::= <lua function> */
+#define G1_ACTION_GENERATORACTION                  "G1_action_generatoraction"                       /* done */
 #define G1_ACTION_EVENTACTION_NAME_1               "::ascii" /* <event action name> ::= <ascii graph name> */
 #define G1_ACTION_EVENTACTION_NAME_2               "::ascii" /* <event action name> ::= <lua identifier> */
 #define G1_ACTION_EVENTACTION_NAME_3               "::shift" /* <event action name> ::= <lua function> */

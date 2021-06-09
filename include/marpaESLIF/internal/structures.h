@@ -175,8 +175,9 @@ struct marpaESLIFSymbol {
   genericStack_t                 _lhsRuleStack;          /* Stack of rules having this symbol as LHS */
   genericStack_t                *lhsRuleStackp;          /* Pointer to stack of rules having this symbol as LHS */
   marpaESLIF_symbol_t           *exceptionp;             /* Pointer to an exception itself, the one after the '-' character */
-  marpaESLIFAction_t            *symbolActionp;          /* Custom symbol, only for terminals or lexemes */
-  marpaESLIFAction_t            *ifActionp;              /* if semantic, only for meta symbols that are lexemes or terminals */
+  marpaESLIFAction_t            *symbolActionp;          /* symbol-action, only for terminals or lexemes */
+  marpaESLIFAction_t            *ifActionp;              /* if-action, only for terminals or lexemes */
+  marpaESLIFAction_t            *generatorActionp; /* generator-action, only for terminals or lexemes */
   marpaESLIFSymbolOption_t       marpaESLIFSymbolOption;
   /* Embedded lua - c.f. src/bindings/src/marpaESLIFLua.c */
   void                          *marpaESLIFLuaSymbolContextp;
@@ -251,7 +252,6 @@ struct marpaESLIF_grammar {
   marpaESLIFAction_t    *defaultRuleActionp;                 /* Default action for rules - never NULL */
   marpaESLIFAction_t    *defaultEventActionp;                /* Default action for events - can be NULL */
   marpaESLIFAction_t    *defaultRegexActionp;                /* Default regex action, it is transversal and applies to all regexes of a grammar - can be NULL */
-  marpaESLIFAction_t    *defaultSymbolGeneratorActionp;      /* Default symbol generator action, it is transversal and applies to all regexes of a grammar - can be NULL */
   int                    starti;                             /* Default start symbol ID - filled during grammar validation */
   char                  *starts;                             /* Default start symbol name - filled during grammar validation - shallow pointer */
   int                   *ruleip;                             /* Array of rule IDs - filled by grammar validation */
@@ -597,7 +597,7 @@ marpaESLIFRecognizerOption_t marpaESLIFRecognizerOption_default_template = {
   NULL,              /* ifActionResolverp */
   NULL,              /* eventActionResolverp */
   NULL,              /* regexActionResolverp */
-  NULL,              /* symbolGeneratorActionResolverp */
+  NULL,              /* generatorActionResolverp */
   NULL               /* importerp */
 };
 

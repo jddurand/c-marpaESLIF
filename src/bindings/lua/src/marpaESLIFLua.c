@@ -197,18 +197,18 @@ static marpaESLIFValueSymbolCallback_t    marpaESLIFLua_valueSymbolActionResolve
 static marpaESLIFRecognizerIfCallback_t   marpaESLIFLua_recognizerIfActionResolver(void *userDatavp, marpaESLIFRecognizer_t *marpaESLIFRecognizerp, char *actions);
 static marpaESLIFRecognizerEventCallback_t marpaESLIFLua_recognizerEventActionResolver(void *userDatavp, marpaESLIFRecognizer_t *marpaESLIFRecognizerp, char *actions);
 static marpaESLIFRecognizerRegexCallback_t marpaESLIFLua_recognizerRegexActionResolver(void *userDatavp, marpaESLIFRecognizer_t *marpaESLIFRecognizerp, char *actions);
-static marpaESLIFRecognizerSymbolGeneratorCallback_t marpaESLIFLua_recognizerSymbolGeneratorActionResolver(void *userDatavp, marpaESLIFRecognizer_t *marpaESLIFRecognizerp, char *actions);
+static marpaESLIFRecognizerGeneratorCallback_t marpaESLIFLua_recognizerGeneratorActionResolver(void *userDatavp, marpaESLIFRecognizer_t *marpaESLIFRecognizerp, char *actions);
 static short                              marpaESLIFLua_valueRuleCallbackb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
 static short                              marpaESLIFLua_valueSymbolCallbackb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, marpaESLIFValueResult_t *marpaESLIFValueResultp, int resulti);
 static short                              marpaESLIFLua_recognizerIfCallbackb(void *userDatavp, marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFValueResult_t *marpaESLIFValueResultLexemep, marpaESLIFValueResultBool_t *marpaESLIFValueResultBoolp);
 static short                              marpaESLIFLua_recognizerEventCallbackb(void *userDatavp, marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFEvent_t *eventArrayp, size_t eventArrayl, marpaESLIFValueResultBool_t *marpaESLIFValueResultBoolp);
 static short                              marpaESLIFLua_recognizerRegexCallbackb(void *userDatavp, marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFValueResult_t *marpaESLIFCalloutBlockp, marpaESLIFValueResultInt_t *marpaESLIFValueResultOutp);
-static marpaESLIFSymbol_t                *marpaESLIFLua_recognizerSymbolGeneratorCallbackb(void *userDatavp, marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFValueResult_t *contextp);
+static marpaESLIFSymbol_t                *marpaESLIFLua_recognizerGeneratorCallbackb(void *userDatavp, marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFValueResult_t *contextp);
 static short                              marpaESLIFLua_valueCallbackb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, marpaESLIFValueResult_t *marpaESLIFValueResultLexemep, int resulti, short nullableb, short symbolb, short precompiledb);
 static short                              marpaESLIFLua_ifCallbackb(void *userDatavp, marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFValueResult_t *marpaESLIFValueResultLexemep, marpaESLIFValueResultBool_t *marpaESLIFValueResultBoolp, short precompiledb);
 static short                              marpaESLIFLua_eventCallbackb(void *userDatavp, marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFEvent_t *eventArrayp, size_t eventArrayl, marpaESLIFValueResultBool_t *marpaESLIFValueResultBoolp, short precompiledb);
 static short                              marpaESLIFLua_regexCallbackb(void *userDatavp, marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFValueResult_t *marpaESLIFCalloutBlockp, marpaESLIFValueResultInt_t *marpaESLIFValueResultOutp, short precompiledb);
-static marpaESLIFSymbol_t                *marpaESLIFLua_symbolGeneratorCallbackb(void *userDatavp, marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFValueResult_t *contextp, short precompiledb);
+static marpaESLIFSymbol_t                *marpaESLIFLua_generatorCallbackb(void *userDatavp, marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFValueResult_t *contextp, short precompiledb);
 static void                               marpaESLIFLua_valueFreeCallbackv(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, marpaESLIFValueResult_t *marpaESLIFValueResultp);
 static void                               marpaESLIFLua_recognizerFreeCallbackv(void *userDatavp, marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFValueResult_t *marpaESLIFValueResultp);
 static void                               marpaESLIFLua_genericFreeCallbackv(void *userDatavp, marpaESLIFValueResult_t *marpaESLIFValueResultp);
@@ -3228,6 +3228,7 @@ static int  marpaESLIFLua_marpaESLIFGrammar_currentSymbolPropertiesi(lua_State *
   MARPAESLIFLUA_STORE_INTEGER      (L, "eventBitSet",                symbolProperty.eventBitSet);
   MARPAESLIFLUA_STORE_ACTION       (L, "symbolAction",               symbolProperty.symbolActionp);
   MARPAESLIFLUA_STORE_ACTION       (L, "ifAction",                   symbolProperty.ifActionp);
+  MARPAESLIFLUA_STORE_ACTION       (L, "generatorAction",            symbolProperty.generatorActionp);
   MARPAESLIFLUA_STORE_BOOLEAN      (L, "verbose",                    symbolProperty.verboseb);
 
   rci = 1;
@@ -3304,6 +3305,7 @@ static int  marpaESLIFLua_marpaESLIFGrammar_symbolPropertiesByLeveli(lua_State *
   MARPAESLIFLUA_STORE_INTEGER      (L, "eventBitSet",                symbolProperty.eventBitSet);
   MARPAESLIFLUA_STORE_ACTION       (L, "symbolAction",               symbolProperty.symbolActionp);
   MARPAESLIFLUA_STORE_ACTION       (L, "ifAction",                   symbolProperty.ifActionp);
+  MARPAESLIFLUA_STORE_ACTION       (L, "generatorAction",            symbolProperty.generatorActionp);
   MARPAESLIFLUA_STORE_BOOLEAN      (L, "verbose",                    symbolProperty.verboseb);
 
   rci = 1;
@@ -3693,14 +3695,14 @@ static int  marpaESLIFLua_marpaESLIFGrammar_parsei(lua_State *L)
   MARPAESLIFLUA_CALLBACKB(L, marpaESLIFLuaRecognizerContext.recognizerInterface_r, "isWithExhaustion",       0 /* nargs */, MARPAESLIFLUA_NOOP, &(marpaESLIFRecognizerOption.exhaustedb));
   MARPAESLIFLUA_CALLBACKB(L, marpaESLIFLuaRecognizerContext.recognizerInterface_r, "isWithNewline",          0 /* nargs */, MARPAESLIFLUA_NOOP, &(marpaESLIFRecognizerOption.newlineb));
   MARPAESLIFLUA_CALLBACKB(L, marpaESLIFLuaRecognizerContext.recognizerInterface_r, "isWithTrack",            0 /* nargs */, MARPAESLIFLUA_NOOP, &(marpaESLIFRecognizerOption.trackb));
-  marpaESLIFRecognizerOption.bufsizl                        = 0; /* Recommended value */
-  marpaESLIFRecognizerOption.buftriggerperci                = 50; /* Recommended value */
-  marpaESLIFRecognizerOption.bufaddperci                    = 50; /* Recommended value */
-  marpaESLIFRecognizerOption.ifActionResolverp              = marpaESLIFLua_recognizerIfActionResolver;
-  marpaESLIFRecognizerOption.eventActionResolverp           = marpaESLIFLua_recognizerEventActionResolver;
-  marpaESLIFRecognizerOption.regexActionResolverp           = marpaESLIFLua_recognizerRegexActionResolver;
-  marpaESLIFRecognizerOption.symbolGeneratorActionResolverp = marpaESLIFLua_recognizerSymbolGeneratorActionResolver;
-  marpaESLIFRecognizerOption.importerp                      = marpaESLIFLua_recognizerImporterb;
+  marpaESLIFRecognizerOption.bufsizl                  = 0; /* Recommended value */
+  marpaESLIFRecognizerOption.buftriggerperci          = 50; /* Recommended value */
+  marpaESLIFRecognizerOption.bufaddperci              = 50; /* Recommended value */
+  marpaESLIFRecognizerOption.ifActionResolverp        = marpaESLIFLua_recognizerIfActionResolver;
+  marpaESLIFRecognizerOption.eventActionResolverp     = marpaESLIFLua_recognizerEventActionResolver;
+  marpaESLIFRecognizerOption.regexActionResolverp     = marpaESLIFLua_recognizerRegexActionResolver;
+  marpaESLIFRecognizerOption.generatorActionResolverp = marpaESLIFLua_recognizerGeneratorActionResolver;
+  marpaESLIFRecognizerOption.importerp                = marpaESLIFLua_recognizerImporterb;
 
   marpaESLIFValueOption.userDatavp             = &marpaESLIFLuaValueContext;
   marpaESLIFValueOption.ruleActionResolverp    = marpaESLIFLua_valueRuleActionResolver;
@@ -3907,10 +3909,10 @@ static marpaESLIFRecognizerRegexCallback_t marpaESLIFLua_recognizerRegexActionRe
 }
 
 /*****************************************************************************/
-static marpaESLIFRecognizerSymbolGeneratorCallback_t marpaESLIFLua_recognizerSymbolGeneratorActionResolver(void *userDatavp, marpaESLIFRecognizer_t *marpaESLIFRecognizerp, char *actions)
+static marpaESLIFRecognizerGeneratorCallback_t marpaESLIFLua_recognizerGeneratorActionResolver(void *userDatavp, marpaESLIFRecognizer_t *marpaESLIFRecognizerp, char *actions)
 /*****************************************************************************/
 {
-  static const char           *funcs                      = "marpaESLIFLua_recognizerSymbolGeneratorActionResolver";
+  static const char           *funcs                      = "marpaESLIFLua_recognizerGeneratorActionResolver";
 #ifdef MARPAESLIFLUA_EMBEDDED
   marpaESLIFLuaRecognizerContext_t *marpaESLIFLuaRecognizerContextp = (marpaESLIFLuaRecognizerContext_t *) marpaESLIFRecognizerp->marpaESLIFLuaRecognizerContextp;
   /* When running embedded, the context can be injected by ESLIF or directly created inside Lua */
@@ -3925,7 +3927,7 @@ static marpaESLIFRecognizerSymbolGeneratorCallback_t marpaESLIFLua_recognizerSym
   /* Just remember the action name - lua will croak if calling this method fails */
   marpaESLIFLuaRecognizerContextp->actions = actions;
 
-  return marpaESLIFLua_recognizerSymbolGeneratorCallbackb;
+  return marpaESLIFLua_recognizerGeneratorCallbackb;
 }
 
 /*****************************************************************************/
@@ -3957,10 +3959,10 @@ static short marpaESLIFLua_recognizerRegexCallbackb(void *userDatavp, marpaESLIF
 }
 
 /*****************************************************************************/
-static marpaESLIFSymbol_t *marpaESLIFLua_recognizerSymbolGeneratorCallbackb(void *userDatavp, marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFValueResult_t *contextp)
+static marpaESLIFSymbol_t *marpaESLIFLua_recognizerGeneratorCallbackb(void *userDatavp, marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFValueResult_t *contextp)
 /*****************************************************************************/
 {
-  return marpaESLIFLua_symbolGeneratorCallbackb(userDatavp, marpaESLIFRecognizerp, contextp, 0 /* precompiledb */);
+  return marpaESLIFLua_generatorCallbackb(userDatavp, marpaESLIFRecognizerp, contextp, 0 /* precompiledb */);
 }
 
 /*****************************************************************************/
@@ -4158,10 +4160,10 @@ static short marpaESLIFLua_regexCallbackb(void *userDatavp, marpaESLIFRecognizer
 }
 
 /*****************************************************************************/
-static marpaESLIFSymbol_t *marpaESLIFLua_symbolGeneratorCallbackb(void *userDatavp, marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFValueResult_t *contextp, short precompiledb)
+static marpaESLIFSymbol_t *marpaESLIFLua_generatorCallbackb(void *userDatavp, marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFValueResult_t *contextp, short precompiledb)
 /*****************************************************************************/
 {
-  static const char           *funcs                      = "marpaESLIFLua_symbolGeneratorCallbackb";
+  static const char           *funcs                      = "marpaESLIFLua_generatorCallbackb";
 #ifdef MARPAESLIFLUA_EMBEDDED
   marpaESLIFLuaRecognizerContext_t *marpaESLIFLuaRecognizerContextp = (marpaESLIFLuaRecognizerContext_t *) marpaESLIFRecognizerp->marpaESLIFLuaRecognizerContextp;
   /* When running embedded, the context can be injected by ESLIF or directly created inside Lua */
@@ -4766,14 +4768,14 @@ static int marpaESLIFLua_marpaESLIFRecognizer_newi(lua_State *L)
   MARPAESLIFLUA_CALLBACKB(L, marpaESLIFLuaRecognizerContextp->recognizerInterface_r, "isWithExhaustion",       0 /* nargs */, MARPAESLIFLUA_NOOP, &(marpaESLIFRecognizerOption.exhaustedb));
   MARPAESLIFLUA_CALLBACKB(L, marpaESLIFLuaRecognizerContextp->recognizerInterface_r, "isWithNewline",          0 /* nargs */, MARPAESLIFLUA_NOOP, &(marpaESLIFRecognizerOption.newlineb));
   MARPAESLIFLUA_CALLBACKB(L, marpaESLIFLuaRecognizerContextp->recognizerInterface_r, "isWithTrack",            0 /* nargs */, MARPAESLIFLUA_NOOP, &(marpaESLIFRecognizerOption.trackb));
-  marpaESLIFRecognizerOption.bufsizl                        = 0; /* Recommended value */
-  marpaESLIFRecognizerOption.buftriggerperci                = 50; /* Recommended value */
-  marpaESLIFRecognizerOption.bufaddperci                    = 50; /* Recommended value */
-  marpaESLIFRecognizerOption.ifActionResolverp              = marpaESLIFLua_recognizerIfActionResolver;
-  marpaESLIFRecognizerOption.eventActionResolverp           = marpaESLIFLua_recognizerEventActionResolver;
-  marpaESLIFRecognizerOption.regexActionResolverp           = marpaESLIFLua_recognizerRegexActionResolver;
-  marpaESLIFRecognizerOption.symbolGeneratorActionResolverp = marpaESLIFLua_recognizerSymbolGeneratorActionResolver;
-  marpaESLIFRecognizerOption.importerp                      = marpaESLIFLua_recognizerImporterb;
+  marpaESLIFRecognizerOption.bufsizl                  = 0; /* Recommended value */
+  marpaESLIFRecognizerOption.buftriggerperci          = 50; /* Recommended value */
+  marpaESLIFRecognizerOption.bufaddperci              = 50; /* Recommended value */
+  marpaESLIFRecognizerOption.ifActionResolverp        = marpaESLIFLua_recognizerIfActionResolver;
+  marpaESLIFRecognizerOption.eventActionResolverp     = marpaESLIFLua_recognizerEventActionResolver;
+  marpaESLIFRecognizerOption.regexActionResolverp     = marpaESLIFLua_recognizerRegexActionResolver;
+  marpaESLIFRecognizerOption.generatorActionResolverp = marpaESLIFLua_recognizerGeneratorActionResolver;
+  marpaESLIFRecognizerOption.importerp                = marpaESLIFLua_recognizerImporterb;
 
   marpaESLIFLuaRecognizerContextp->marpaESLIFRecognizerp = marpaESLIFRecognizer_newp(marpaESLIFLuaGrammarContextp->marpaESLIFGrammarp, &marpaESLIFRecognizerOption);
   marpaESLIFLuaRecognizerContextp->managedb = 1;
@@ -9447,20 +9449,20 @@ static int marpaESLIFLuaJSONDecoder_decodei(lua_State *L)
   marpaESLIFLuaJsonDecoderReaderContext.encodings = encodingheaps;
   marpaESLIFLuaJsonDecoderReaderContext.encodingl = encodingl;
 
-  marpaESLIFRecognizerOption.userDatavp                     = &marpaESLIFLuaJsonDecoderReaderContext;
-  marpaESLIFRecognizerOption.readerCallbackp                = marpaESLIFLuaJSONDecoder_readerb;
-  marpaESLIFRecognizerOption.disableThresholdb              = 1;
-  marpaESLIFRecognizerOption.exhaustedb                     = 0;
-  marpaESLIFRecognizerOption.newlineb                       = 1;
-  marpaESLIFRecognizerOption.trackb                         = 0;
-  marpaESLIFRecognizerOption.bufsizl                        = 0; /* Recommended value */
-  marpaESLIFRecognizerOption.buftriggerperci                = 50; /* Recommended value */
-  marpaESLIFRecognizerOption.bufaddperci                    = 50; /* Recommended value */
-  marpaESLIFRecognizerOption.ifActionResolverp              = NULL;
-  marpaESLIFRecognizerOption.eventActionResolverp           = NULL;
-  marpaESLIFRecognizerOption.regexActionResolverp           = NULL;
-  marpaESLIFRecognizerOption.symbolGeneratorActionResolverp = NULL;
-  marpaESLIFRecognizerOption.importerp                      = NULL;
+  marpaESLIFRecognizerOption.userDatavp               = &marpaESLIFLuaJsonDecoderReaderContext;
+  marpaESLIFRecognizerOption.readerCallbackp          = marpaESLIFLuaJSONDecoder_readerb;
+  marpaESLIFRecognizerOption.disableThresholdb        = 1;
+  marpaESLIFRecognizerOption.exhaustedb               = 0;
+  marpaESLIFRecognizerOption.newlineb                 = 1;
+  marpaESLIFRecognizerOption.trackb                   = 0;
+  marpaESLIFRecognizerOption.bufsizl                  = 0; /* Recommended value */
+  marpaESLIFRecognizerOption.buftriggerperci          = 50; /* Recommended value */
+  marpaESLIFRecognizerOption.bufaddperci              = 50; /* Recommended value */
+  marpaESLIFRecognizerOption.ifActionResolverp        = NULL;
+  marpaESLIFRecognizerOption.eventActionResolverp     = NULL;
+  marpaESLIFRecognizerOption.regexActionResolverp     = NULL;
+  marpaESLIFRecognizerOption.generatorActionResolverp = NULL;
+  marpaESLIFRecognizerOption.importerp                = NULL;
 
   marpaESLIFValueOption.userDatavp = &marpaESLIFLuaValueContext;
   marpaESLIFValueOption.importerp  = marpaESLIFLua_valueImporterb;
