@@ -4987,7 +4987,8 @@ static short _marpaESLIF_bootstrap_G1_action_terminal_3b(void *userDatavp, marpa
                                                      0, /* wantedStartCompletionsi */
                                                      1, /* A grammar is always transformed to valid UTF-8 before being parsed */
                                                      1, /* grammmarIsOnStackb */
-                                                     NULL /* contextp */);
+                                                     NULL, /* contextp */
+                                                     0 /* forceShallowContextb */);
   if (MARPAESLIF_UNLIKELY(marpaESLIFRecognizerp == NULL)) {
     goto err;
   }
@@ -7633,7 +7634,8 @@ static inline marpaESLIF_bootstrap_utf_string_t *_marpaESLIF_bootstrap_regex_to_
                                                      0, /* wantedStartCompletionsi */
                                                      1, /* A grammar is always transformed to valid UTF-8 before being parsed */
                                                      1, /* grammmarIsOnStackb */
-                                                     NULL /* contextp */);
+                                                     NULL, /* contextp */
+                                                     0 /* forceShallowContextb */);
   if (MARPAESLIF_UNLIKELY(marpaESLIFRecognizerp == NULL)) {
     goto err;
   }
@@ -7779,7 +7781,8 @@ static inline marpaESLIF_bootstrap_utf_string_t *_marpaESLIF_bootstrap_character
                                                      0, /* wantedStartCompletionsi */
                                                      1, /* A grammar is always transformed to valid UTF-8 before being parsed */
                                                      1, /* grammmarIsOnStackb */
-                                                     NULL /* contextp */);
+                                                     NULL, /* contextp */
+                                                     0 /* forceShallowContextb */);
   if (MARPAESLIF_UNLIKELY(marpaESLIFRecognizerp == NULL)) {
     goto err;
   }
