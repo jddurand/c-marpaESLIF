@@ -531,7 +531,7 @@ static short _marpaESLIFRecognizer_lua_regexactionb(void *userDatavp, marpaESLIF
 }
 
 /*****************************************************************************/
-static marpaESLIFSymbol_t *_marpaESLIFRecognizer_lua_generatoractionb(void *userDatavp, marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFValueResult_t *contextp)
+static marpaESLIFSymbol_t *_marpaESLIFRecognizer_lua_generatoractionb(void *userDatavp, marpaESLIFRecognizer_t *marpaESLIFRecognizerp)
 /*****************************************************************************/
 {
   static const char                       *funcs = "_marpaESLIFRecognizer_lua_generatoractionb";
@@ -551,7 +551,7 @@ static marpaESLIFSymbol_t *_marpaESLIFRecognizer_lua_generatoractionb(void *user
     goto err; /* Lua will shutdown anyway */
   }
 
-  rcp = generatorCallbackp(userDatavp, marpaESLIFRecognizerp, contextp);
+  rcp = generatorCallbackp(userDatavp, marpaESLIFRecognizerp);
 
   if (MARPAESLIF_UNLIKELY(rcp == NULL)) goto err;
 
@@ -1671,7 +1671,7 @@ static short _marpaESLIFRecognizer_lua_regexaction_functionb(void *userDatavp, m
 }
 
 /*****************************************************************************/
-static marpaESLIFSymbol_t *_marpaESLIFRecognizer_lua_generatoraction_functionb(void *userDatavp, marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFValueResult_t *contextp)
+static marpaESLIFSymbol_t *_marpaESLIFRecognizer_lua_generatoraction_functionb(void *userDatavp, marpaESLIFRecognizer_t *marpaESLIFRecognizerp)
 /*****************************************************************************/
 {
   static const char  *funcs = "_marpaESLIFRecognizer_lua_generatoraction_functionb";
@@ -1687,7 +1687,7 @@ static marpaESLIFSymbol_t *_marpaESLIFRecognizer_lua_generatoraction_functionb(v
   if (! _marpaESLIFRecognizer_lua_function_loadb(marpaESLIFRecognizerp)) {
     goto err;
   }
-  rcp = marpaESLIFLua_generatorCallbackb(userDatavp, marpaESLIFRecognizerp, contextp, 1 /* precompiledb */);
+  rcp = marpaESLIFLua_generatorCallbackb(userDatavp, marpaESLIFRecognizerp, 1 /* precompiledb */);
   if (MARPAESLIF_UNLIKELY(rcp == NULL)) {
     goto err;
   }

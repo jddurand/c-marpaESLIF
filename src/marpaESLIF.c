@@ -5983,7 +5983,6 @@ static inline short _marpaESLIFRecognizer_symbol_matcherb(marpaESLIFRecognizer_t
   int                                      numberOfStartCompletionsi;
   marpaESLIFRecognizerIfCallback_t         ifCallbackp;
   marpaESLIFRecognizerGeneratorCallback_t  generatorCallbackp;
-  marpaESLIFValueResult_t                 *contextp;
   marpaESLIFValueResultBool_t              marpaESLIFValueResultBool;
   short                                    rcMatcherb;
 
@@ -5999,8 +5998,7 @@ static inline short _marpaESLIFRecognizer_symbol_matcherb(marpaESLIFRecognizer_t
     if (MARPAESLIF_UNLIKELY(! _marpaESLIFRecognizer_recognizerGeneratorActionCallbackb(marpaESLIFRecognizerp, symbolp->descp->asciis, symbolp->generatorActionp, &generatorCallbackp))) {
       goto err;
     }
-    contextp = _marpaESLIFRecognizer_context_getp(marpaESLIFRecognizerp);
-    symbolp = generatorCallbackp(marpaESLIFRecognizerp->marpaESLIFRecognizerOption.userDatavp, marpaESLIFRecognizerp, contextp);
+    symbolp = generatorCallbackp(marpaESLIFRecognizerp->marpaESLIFRecognizerOption.userDatavp, marpaESLIFRecognizerp);
     if (MARPAESLIF_UNLIKELY(symbolp == NULL)) {
       MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Symbol %s generation returned NULL", symbolp->descp->asciis);
       goto err;
