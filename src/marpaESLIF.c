@@ -12835,7 +12835,7 @@ static inline void _marpaESLIF_rule_createshowv(marpaESLIF_t *marpaESLIFp, marpa
     MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, " null-ranking => high");
   }
   if (rulep->actionp != NULL) {
-    MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, " action => ");
+    MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "\n action => ");
     switch (rulep->actionp->type) {
     case MARPAESLIF_ACTION_TYPE_NAME:
       MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, rulep->actionp->u.names);
@@ -13125,7 +13125,7 @@ static inline void _marpaESLIF_grammar_createshowv(marpaESLIFGrammar_t *marpaESL
         MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, tmps);
       }
       if (symbolp->symbolActionp != NULL) {
-        MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, " symbol-action => ");
+        MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "\n symbol-action => ");
         switch (symbolp->symbolActionp->type) {
         case MARPAESLIF_ACTION_TYPE_NAME:
           MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, symbolp->symbolActionp->u.names);
@@ -13147,7 +13147,7 @@ static inline void _marpaESLIF_grammar_createshowv(marpaESLIFGrammar_t *marpaESL
         }
       }
       if (symbolp->ifActionp != NULL) {
-        MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, " if-action => ");
+        MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "\n if-action => ");
         switch (symbolp->ifActionp->type) {
         case MARPAESLIF_ACTION_TYPE_NAME:
           MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, symbolp->ifActionp->u.names);
@@ -13169,22 +13169,22 @@ static inline void _marpaESLIF_grammar_createshowv(marpaESLIFGrammar_t *marpaESL
         }
       }
       if (symbolp->generatorActionp != NULL) {
-        MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, " generator-action => ");
+        MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "\n generator-action => ");
         switch (symbolp->ifActionp->type) {
         case MARPAESLIF_ACTION_TYPE_NAME:
-          MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, symbolp->ifActionp->u.names);
+          MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, symbolp->generatorActionp->u.names);
           break;
         case MARPAESLIF_ACTION_TYPE_STRING:
           MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "::u8\"");
-          MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, symbolp->ifActionp->u.stringp->asciis); /* Best effort ASCII */
+          MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, symbolp->generatorActionp->u.stringp->asciis); /* Best effort ASCII */
           MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "\"");
           break;
         case MARPAESLIF_ACTION_TYPE_LUA:
           MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "::lua->");
-          MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, symbolp->ifActionp->u.luas);
+          MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, symbolp->generatorActionp->u.luas);
           break;
         case MARPAESLIF_ACTION_TYPE_LUA_FUNCTION:
-          MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, symbolp->ifActionp->u.luaFunction.actions);
+          MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, symbolp->generatorActionp->u.luaFunction.actions);
           break;
         default:
           break;
