@@ -5895,12 +5895,14 @@ static inline short _marpaESLIFRecognizer_meta_matcherb(marpaESLIFRecognizer_t *
 
   /* Push context, if any */
   if (symbolp->parameterizedRhsb) {
-    MARPAESLIF_NOTICEF(marpaESLIFRecognizerp->marpaESLIFp, "JDD Pushing context for symbol %s%s%s: %s<->%s",
-                       symbolp->descp->asciis,
-                       symbolp->callp->luaexplistcb ? "-->" : "->",
-                       symbolp->callp->luaexplists,
-                       symbolp->declp != NULL ? symbolp->declp->luaparlists : "nil",
-                       symbolp->callp->luaexplists);
+    MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp,
+                                funcs,
+                                "Pushing context for symbol %s%s%s: %s<->%s",
+                                symbolp->descp->asciis,
+                                symbolp->callp->luaexplistcb ? "-->" : "->",
+                                symbolp->callp->luaexplists,
+                                symbolp->declp != NULL ? symbolp->declp->luaparlists : "nil",
+                                symbolp->callp->luaexplists);
     if (! _marpaESLIFRecognizer_lua_push_contextb(marpaESLIFRecognizerp, symbolp, &context)) {
       goto err;
     }
@@ -5934,12 +5936,14 @@ static inline short _marpaESLIFRecognizer_meta_matcherb(marpaESLIFRecognizer_t *
 
   /* Pop context, if any */
   if (symbolp->parameterizedRhsb) {
-    MARPAESLIF_NOTICEF(marpaESLIFRecognizerp->marpaESLIFp, "JDD Popping context for symbol %s%s%s: %s<->%s",
-                       symbolp->descp->asciis,
-                       symbolp->callp->luaexplistcb ? "-->" : "->",
-                       symbolp->callp->luaexplists,
-                       symbolp->declp != NULL ? symbolp->declp->luaparlists : "nil",
-                       symbolp->callp->luaexplists);
+    MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp,
+                                funcs,
+                                "Popping context for symbol %s%s%s: %s<->%s",
+                                symbolp->descp->asciis,
+                                symbolp->callp->luaexplistcb ? "-->" : "->",
+                                symbolp->callp->luaexplists,
+                                symbolp->declp != NULL ? symbolp->declp->luaparlists : "nil",
+                                symbolp->callp->luaexplists);
     if (! _marpaESLIFRecognizer_lua_pop_contextb(marpaESLIFRecognizerp, symbolp)) {
       goto err;
     }
@@ -6083,7 +6087,6 @@ static inline short _marpaESLIFRecognizer_symbol_matcherb(marpaESLIFRecognizer_t
   if (rci == MARPAESLIF_MATCH_OK) {
     /* If symbol has an if-action, check it if we are the top-level recognizer */
     if ((symbolp->ifActionp != NULL) && (marpaESLIFRecognizerp->marpaESLIFRecognizerTopp == marpaESLIFRecognizerp)) {
-      // JDD if (symbolp->ifActionp != NULL) {
       if (MARPAESLIF_UNLIKELY(! _marpaESLIFRecognizer_recognizerIfActionCallbackb(marpaESLIFRecognizerp, symbolp->descp->asciis, symbolp->ifActionp, &ifCallbackp))) {
         goto err;
       }

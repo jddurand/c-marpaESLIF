@@ -1856,6 +1856,7 @@ static short _marpaESLIFRecognizer_lua_push_contextb(marpaESLIFRecognizer_t *mar
 /* symbolp->parameterizedRhsLhsp is != NULL                                  */
 /*****************************************************************************/
 {
+  static const char            *funcs                = "_marpaESLIFRecognizer_lua_push_contextb";
   genericLogger_t              *genericLoggerp       = NULL;
   char                         *parlistWithoutParens = NULL;
   int                           topi                 = -1;
@@ -1990,7 +1991,7 @@ static short _marpaESLIFRecognizer_lua_push_contextb(marpaESLIFRecognizer_t *mar
     symbolp->pushContextActionp->u.luaFunction.actions = marpaESLIF_stringGenerator.s;
     marpaESLIF_stringGenerator.s = NULL;
 
-    MARPAESLIF_NOTICEF(marpaESLIFRecognizerp->marpaESLIFp, "Generated action:\n%s", symbolp->pushContextActionp->u.luaFunction.actions);
+    MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Generated action:\n%s", symbolp->pushContextActionp->u.luaFunction.actions);
   }
 
   /* Call the context action */
@@ -2027,8 +2028,9 @@ static short _marpaESLIFRecognizer_lua_push_contextb(marpaESLIFRecognizer_t *mar
 static short _marpaESLIFRecognizer_lua_pop_contextb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIF_symbol_t *symbolp)
 /*****************************************************************************/
 {
-  int         topi = -1;
-  const char *pops =
+  static const char *funcs = "_marpaESLIFRecognizer_lua_pop_contextb";
+  int                topi  = -1;
+  const char        *pops  =
     "return function()\n"
     "  marpaESLIFContextStackp:pop()\n"
     "end\n";
@@ -2067,7 +2069,7 @@ static short _marpaESLIFRecognizer_lua_pop_contextb(marpaESLIFRecognizer_t *marp
       goto err;
     }
 
-    MARPAESLIF_NOTICEF(marpaESLIFRecognizerp->marpaESLIFp, "Generated action:\n%s", symbolp->popContextActionp->u.luaFunction.actions);
+    MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Generated action:\n%s", symbolp->popContextActionp->u.luaFunction.actions);
   }
 
   marpaESLIFRecognizerp->actionp = symbolp->popContextActionp;
