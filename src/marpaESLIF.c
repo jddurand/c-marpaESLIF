@@ -3011,14 +3011,11 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
   genericStack_t                   *symbolStackp;
   genericStack_t                   *ruleStackp;
   genericStack_t                   *lhsRuleStackp;
-  int                               lhsRuleStacki;
   int                               grammari;
   int                               grammarj;
   marpaESLIF_symbol_t              *symbolp;
-  marpaESLIF_symbol_t              *symbol2p;
   marpaESLIF_symbol_t              *subSymbolp;
   int                               symboli;
-  int                               symbol2i;
   marpaESLIF_rule_t                *rulep;
   marpaESLIF_rule_t                *ruletmpp;
   int                               rulei;
@@ -3043,16 +3040,8 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
   size_t                            tmpl;
   short                             fastDiscardb;
   marpaESLIF_symbol_t              *trueSymbolp;
-  marpaESLIF_meta_t                *subMetap;
-  marpaESLIF_terminal_t            *subTerminalp;
   marpaESLIF_action_t               action;
-  marpaESLIF_lua_functiondecl_t    *declp;
-  int                               contextRulei;
-  int                               contextPositioni;
-  char                              tmps[1024];
-  marpaESLIF_symbol_t              *nullablep;
-  int                               rhsip[2];
-  marpaESLIF_lua_functioncall_t    *callp[2];
+
   /* Constant action */
   action.type    = MARPAESLIF_ACTION_TYPE_NAME;
   action.u.names = "::copy[1]";
@@ -5878,8 +5867,6 @@ static inline short _marpaESLIFRecognizer_meta_matcherb(marpaESLIFRecognizer_t *
   marpaESLIFRecognizerOption_t    marpaESLIFRecognizerOption = marpaESLIFRecognizerp->marpaESLIFRecognizerOption; /* This is an internal recognizer */
   marpaESLIFValueOption_t         marpaESLIFValueOption      = marpaESLIFValueOption_default_template;
   marpaESLIFValueResult_t         context                    = marpaESLIFValueResultUndef;
-  marpaESLIFValueResult_t         childContext;
-  marpaESLIF_alternative_t        alternative;
   short                           rcb;
 
   MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_INC;
@@ -5953,7 +5940,6 @@ static inline short _marpaESLIFRecognizer_meta_matcherb(marpaESLIFRecognizer_t *
     goto err;
   }
 
- fast_done:
   if (rcip != NULL) {
     *rcip = MARPAESLIF_MATCH_OK;
   }
@@ -9987,9 +9973,6 @@ short marpaESLIFRecognizer_eventb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp,
   marpaESLIFEvent_t         eventArray;
   char                     *tmpp;
   short                     rcb;
-  marpaWrapperRecognizer_t *marpaWrapperRecognizerp;
-  int                       latestEarleySetIdi;
-  int                       earlemei;
 
   MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_INC;
   MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "start");
@@ -10937,7 +10920,7 @@ marpaESLIFRecognizer_t *marpaESLIFRecognizer_newFromp(marpaESLIFGrammar_t *marpa
     goto err;
   }
 
-  return marpaESLIFRecognizerp;
+  goto done;
 
  err:
   marpaESLIFRecognizer_freev(marpaESLIFRecognizerp);

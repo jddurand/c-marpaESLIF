@@ -594,7 +594,6 @@ static short marpaESLIFLua_lua_isinteger(int *rcip, lua_State *L, int idx);
     int _newtopi;                                                       \
     int _expectedtopi;                                                  \
     int _typei;                                                         \
-    int _tmpi;                                                          \
                                                                         \
     if (! marpaESLIFLua_lua_gettop(&_topi, L)) goto err;                \
     if ((interface_r != LUA_NOREF) && (funcs != NULL)) {                \
@@ -6423,8 +6422,6 @@ static int marpaESLIFLua_marpaESLIFRecognizer_lastCompletedOffseti(lua_State *L)
   int                               rci;
   int                               typei;
   int                               topi;
-  int                               isNumi;
-  lua_Integer                       tmpi;
  
   if (! marpaESLIFLua_lua_gettop(&topi, L)) goto err;
   if (topi != 2) {
@@ -6481,8 +6478,6 @@ static int marpaESLIFLua_marpaESLIFRecognizer_lastCompletedLengthi(lua_State *L)
   int                               rci;
   int                               typei;
   int                               topi;
-  int                               isNumi;
-  lua_Integer                       tmpi;
  
   if (! marpaESLIFLua_lua_gettop(&topi, L)) goto err;
   if (topi != 2) {
@@ -6539,8 +6534,6 @@ static int marpaESLIFLua_marpaESLIFRecognizer_lastCompletedLocationi(lua_State *
   int                               rci;
   int                               typei;
   int                               topi;
-  int                               isNumi;
-  lua_Integer                       tmpi;
  
   if (! marpaESLIFLua_lua_gettop(&topi, L)) goto err;
   if (topi != 2) {
