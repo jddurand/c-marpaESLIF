@@ -33,8 +33,6 @@ const static char *selfs = "# Self grammar\n"
   " * Meta-grammar settings:\n"
   " * **********************\n"
   " */\n"
-  "# :start ::= <start>\n"
-  "# :start ::= <lhs with rhs call>-->(0, '0')\n"
   ":desc    ::= 'G1 TEST'\n"
   ":default ::=\n"
   "  action           => ::lua->function(...)\n"
@@ -57,35 +55,13 @@ const static char *selfs = "# Self grammar\n"
   "                               return true\n"
   "                             end\n"
   ":lexeme ::= <op declare any grammar> if-action => ::lua->function(...)\n"
-  "                                                           print('if-action on :lexeme called with '..select('#', ...)..' arguments: '..concat(...))\n"
+  "                                                           print('if-action on <op declare any grammar> called with '..select('#', ...)..' arguments: '..concat(...))\n"
   "                                                           return true\n"
   "                                                         end\n"
-  ":terminal ::= 'if-action' if-action => ::lua->function(...)\n"
-  "                                                print('if-action on :terminal called with '..select('#', ...)..' arguments: '..concat(...))\n"
+  ":terminal ::= ':desc' if-action => ::lua->function(...)\n"
+  "                                                print('if-action on \":desc\" called with '..select('#', ...)..' arguments: '..concat(...))\n"
   "                                                return true\n"
   "                                              end\n"
-  "event ^lhs_with_rhs_call = predicted <lhs with rhs call><-(x, y)\n"
-  "event lhs_with_rhs_call$ = completed <lhs with rhs call><-(x, y)\n"
-  ":lexeme ::= <ANYTHING UP TO NEWLINE> pause => after event => ANYTHING_UP_TO_NEWLINE$\n"
-  "   if-action => ::lua->function(...)\n"
-  "                         local context = marpaESLIFRecognizer:context()\n"
-  "                         if (context ~= nil) then\n"
-  "                           print('Current context: '..tableDump(context))\n"
-  "                         else\n"
-  "                           print('Current context is nil')\n"
-  "                         end\n"
-  "                         return true\n"
-  "                       end\n"
-  "  generator-action => ::luac->function()\n"
-  "                               local context = marpaESLIFRecognizer:context()\n"
-  "                               local symbol = marpaESLIF:marpaESLIFSymbol_new('regex', '[^\\\\n]*')\n"
-  "                               -- print('symbol generator context dump is:\\n'..tableDump(context))\n"
-  "                               return symbol\n"
-  "                             end\n"
-  "# :lexeme ::= <lhs with rhs call><-(x, y) if-action => ::lua->function(...)\n"
-  "#                                                print('if-action on <lhs with rhs call> called with '..select('#', ...)..' arguments: '..concat(...))\n"
-  "#                                                return true\n"
-  "#                                              end\n"
   "\n"
   "/*\n"
   " * ****************\n"
@@ -106,9 +82,8 @@ const static char *selfs = "# Self grammar\n"
   " * Rules:\n"
   " * ******\n"
   " */\n"
-  "<start>                        ::= <statements>->(0)\n"
-  "<statements><-(x)              ::= <statement>->(x)*\n"
-  "<statement><-(x)               ::= <start rule>\n"
+  "<statements>                   ::= <statement>*\n"
+  "<statement>                    ::= <start rule>\n"
   "                                 | <desc rule>\n"
   "                                 | <empty rule>\n"
   "                                 | <null statement>\n"
@@ -126,18 +101,13 @@ const static char *selfs = "# Self grammar\n"
   "                                 | <autorank statement>\n"
   "                                 | <lua script statement>\n"
   "                                 | <terminal rule>\n"
-  "                                 | <lhs with rhs call>-->(x + 1, 'v1')\n"
-  "                                 | <lhs with rhs call>-->(x + 2, 'v2')\n"
-  "<quantified test rule 1>       ::= 'JDD'* separator => <lhs with rhs call>-->(x + 3, 'v3')\n"
-  "<quantified test rule 2>       ::= <lhs with rhs call>-->(x + 4, 'v4')* separator => 'JDD'\n"
-  "<quantified test rule 3>       ::= <lhs with rhs call>-->(x + 5, 'v5')+ separator => <lhs with rhs call>-->(x + 6, 'v6')\n"
   "<start rule>                   ::= ':start' <op declare> <start symbol>\n"
   "<start symbol>                 ::= <symbol>\n"
   "                                 | <start symbol> <lua functioncall>\n"
   "<desc rule>                    ::= ':desc' <op declare> <quoted string literal>\n"
   "<empty rule>                   ::= <lhs> <op declare> <adverb list>\n"
   "<null statement>               ::= ';'\n"
-  "<statement group>              ::= '{' <statements>->(1) '}'\n"
+  "<statement group>              ::= '{' <statements> '}'\n"
   "<priority rule>                ::= <lhs> <op declare> <priorities>\n"
   "<quantified rule>              ::= <lhs> <op declare> <rhs primary> <quantifier> <adverb list>\n"
   "<discard rule>                 ::= ':discard' <op declare> <rhs primary> <adverb list>\n"
@@ -569,11 +539,6 @@ const static char *selfs = "# Self grammar\n"
   "# For tests\n"
   "# ---------\n"
   "\n"
-  "<anything up to newline><-(pNumber,pString) ::= <anything up to newline v2>->(pNumber+1,pString..'+1')\n"
-  "<anything up to newline v2><-(pNumber,pString) ::= <anything up to newline v3>->(pNumber+1,pString..'+1')\n"
-  "<anything up to newline v3><-(pNumber,pString) ::= <ANYTHING UP TO NEWLINE>\n"
-  "                                              | 'JDD'\n"
-  "<ANYTHING UP TO NEWLINE>          ~ /[^\\n]*/\n"
   "test_group                           ::= 'X' (  'Y' action => ::convert[UTF-8]\n"
   "                                       |  'Z'\n"
   "                                       || (-'yy'-)\n"
@@ -587,8 +552,6 @@ const static char *selfs = "# Self grammar\n"
   "TEST_GROUP_FOR_ACTION_0          ~ 'X' action => '\xE2\x99\xA5\x21" "X!'\n"
   "TEST_GROUP_FOR_ACTION_1          ~ 'X' action => \"\xE2\x99\xA5\x21" "Y!\"\n"
   "TEST_GROUP_FOR_ACTION_2          ~ 'X' action => \xE2\x80\x9C\x21Z\x21\xE2\x80\x9D\n"
-  "<lhs with rhs call><-(pNumber, pString) ::= <anything up to newline>-->(pNumber + 1, pString..'+1')  \n"
-  "<lhs with eof>                 ::= :eof\n"
   "\n"
   "<luascript>\n"
   "function tableDump(node)\n"
@@ -703,7 +666,6 @@ int main() {
   marpaESLIFSymbol_t          *stringSymbolp = NULL;
   marpaESLIFSymbol_t          *stringSymbol2p = NULL;
   marpaESLIFSymbol_t          *regexSymbolp = NULL;
-  marpaESLIFSymbol_t          *metaSymbolp = NULL;
   marpaESLIFString_t           string;
   marpaESLIFRecognizer_t      *marpaESLIFRecognizerp = NULL;
   short                        matchb;
@@ -903,12 +865,6 @@ int main() {
     goto err;
   }
 
-  GENERICLOGGER_INFO(marpaESLIFOption.genericLoggerp, "Creating meta symbol at \"ANYTHING UP TO NEWLINE\" in our grammar");
-  metaSymbolp = marpaESLIFSymbol_meta_newp(marpaESLIFp, marpaESLIFGrammarp, "ANYTHING UP TO NEWLINE", &marpaESLIFSymbolOption);
-  if (metaSymbolp == NULL) {
-    goto err;
-  }
-
   /* Reset the context for the new recognizer */
   marpaESLIFTester_context.firstb         = 1;
   marpaESLIFTester_context.inputs         = (char *) selfs;
@@ -944,11 +900,6 @@ int main() {
     goto err;
   }
 
-  GENERICLOGGER_INFO(marpaESLIFOption.genericLoggerp, "Trying external meta symbol match on recognizer");
-  if (! marpaESLIFRecognizer_symbol_tryb(marpaESLIFRecognizerp, metaSymbolp, &matchb)) {
-    goto err;
-  }
-
   GENERICLOGGER_INFO(marpaESLIFOption.genericLoggerp, "Trying external string symbol match on itself");
   if (! marpaESLIFSymbol_tryb(stringSymbolp, STRING, strlen(STRING), &matchb)) {
     goto err;
@@ -956,11 +907,6 @@ int main() {
 
   GENERICLOGGER_INFO(marpaESLIFOption.genericLoggerp, "Trying external regex symbol match on itself");
   if (! marpaESLIFSymbol_tryb(regexSymbolp, SUBJECT, strlen(SUBJECT), &matchb)) {
-    goto err;
-  }
-
-  GENERICLOGGER_INFO(marpaESLIFOption.genericLoggerp, "Trying external meta symbol match on our grammar");
-  if (! marpaESLIFSymbol_tryb(metaSymbolp, (char *) selfs, strlen(selfs), &matchb)) {
     goto err;
   }
 
@@ -982,9 +928,6 @@ int main() {
   }
   if (regexSymbolp != NULL) {
     marpaESLIFSymbol_freev(regexSymbolp);
-  }
-  if (metaSymbolp != NULL) {
-    marpaESLIFSymbol_freev(metaSymbolp);
   }
   GENERICLOGGER_LEVEL_SET(marpaESLIFOption.genericLoggerp, GENERICLOGGER_LOGLEVEL_INFO);
   marpaESLIFGrammar_freev(marpaESLIFGrammarp);
