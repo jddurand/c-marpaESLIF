@@ -92,6 +92,7 @@ MYPACKAGETESTEXECUTABLE(exceptionTester            test/exceptionTester.c)
 MYPACKAGETESTEXECUTABLE(exceptionTester2           test/exceptionTester2.c)
 MYPACKAGETESTEXECUTABLE(exceptionTester3           test/exceptionTester3.c)
 MYPACKAGETESTEXECUTABLE(exceptionTester4           test/exceptionTester4.c)
+MYPACKAGETESTEXECUTABLE(yamlTester                 test/yamlTester.c)
 
 ################
 # Dependencies #
