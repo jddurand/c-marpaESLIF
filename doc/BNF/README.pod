@@ -533,7 +533,7 @@ Constraints are:
 
 =over
 
-=item Both C<RHS1> and C<RHS2> must be lexemes
+=item Both C<RHS1> and C<RHS2> must be a lexeme or a terminal
 
 =item Both C<RHS1> and C<RHS2> must not contain sub-lexemes
 
@@ -543,7 +543,34 @@ This mean that the C<LHS> of an exception statement can never be nullable. You m
 
   LHS ::=
 
-Note that managing an exception can be consuming, eventually reading the whole data if it is writen without special care. Trying to minimize the number of characters needed and/or using well-thinked regular expressions often lead to the same result with better performance. Internally it is implemented like this: First the longest C<RHS1> is matched, then ESLIF rollbacks to every C<RHS1>'s start completion until C<RHS2> does not match.
+To understand how ESLIF proceeds, everytime the left-side of an exception reaches the start completion, the left-side match is checked against the right-side of the exception. The longest match that does not match the exception is the winner.
+
+Simple case is when a exception applies to a full match, e.g. the PITarget of XML language:
+
+  <PITarget>              ::= <NAME> - 'xml':i
+  <NAME>                   ~ /[:A-Z_a-z\x{C0}-\x{D6}\x{D8}-\x{F6}\x{F8}-\x{2FF}\x{370}-\x{37D}\x{37F}-\x{1FFF}\x{200C}-\x{200D}\x{2070}-\x{218F}\x{2C00}-\x{2FEF}\x{3001}-\x{D7FF}\x{F900}-\x{FDCF}\x{FDF0}-\x{FFFD}\x{10000}-\x{EFFFF}][:A-Z_a-z\x{C0}-\x{D6}\x{D8}-\x{F6}\x{F8}-\x{2FF}\x{370}-\x{37D}\x{37F}-\x{1FFF}\x{200C}-\x{200D}\x{2070}-\x{218F}\x{2C00}-\x{2FEF}\x{3001}-\x{D7FF}\x{F900}-\x{FDCF}\x{FDF0}-\x{FFFD}\x{10000}-\x{EFFFF}\-.0-9\x{B7}\x{0300}-\x{036F}\x{203F}-\x{2040}]*/u
+
+Or any number but '23':
+
+  number ::= /\\d+/ - '23'
+
+More complex is when the exception is floating, e.g. the CData of XML language:
+
+  CData           ::= CHARDATA - CHARDATAEXCEPTION
+  CData           ::= # Using CHARDATA removed CData nullable aspect
+  CHARDATA          ~ [\x{9}\x{A}\x{D}\x{20}-\x{D7FF}\x{E000}-\x{FFFD}\x{10000}-\x{10FFFF}]:u*
+  CHARDATAEXCEPTION ~ CHARDATA ']]>' CHARDATA
+
+In the above example note that CHARDATA is writen as a sequence rule, allowing ESLIF to detect every CHARDATA completion, and match it against CHARDATAEXCEPTION. Although very closed, the following would I<not> work:
+
+  CData           ::= CHARDATA - CHARDATAEXCEPTION
+  CData           ::= # Using CHARDATA removed CData nullable aspect
+  CHARDATA          ~ /[\x{9}\x{A}\x{D}\x{20}-\x{D7FF}\x{E000}-\x{FFFD}\x{10000}-\x{10FFFF}]*/u
+  CHARDATAEXCEPTION ~ CHARDATA ']]>' CHARDATA
+
+An exception can be consuming, eventually reading the whole data if it is writen without special care. Trying to minimize the number of characters needed and/or using well-thinked regular expressions often lead to the same result with better performance.
+
+Internally, the longest C<RHS1> is first matched, then ESLIF rollbacks to every previous C<RHS1>'s completion as long as C<RHS2> matches.
 
 =item The I<sequence statement>
 

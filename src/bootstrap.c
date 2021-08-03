@@ -1403,11 +1403,12 @@ static inline marpaESLIF_symbol_t  *_marpaESLIF_bootstrap_check_rhsAlternativep(
       MARPAESLIF_ERROR(marpaESLIFp, "Left side of an exception rule cannot be parameterized");
       goto err;
     }
-    rhsp = _marpaESLIF_bootstrap_check_rhsPrimaryp(marpaESLIFp, marpaESLIFGrammarp, grammarp, rhsAlternativep->u.exception.rhsPrimaryp, 1 /* createb */, 0 /* forcecreateb */);
+    /* Note that we force the symbol to be unique - this is because the exception is part of the symbol definition */
+    rhsp = _marpaESLIF_bootstrap_check_rhsPrimaryp(marpaESLIFp, marpaESLIFGrammarp, grammarp, rhsAlternativep->u.exception.rhsPrimaryp, 1 /* createb */, 1 /* forcecreateb */);
     if (MARPAESLIF_UNLIKELY(rhsp == NULL)) {
       goto err;
     }
-    /* Check the rhs primary exception - we know it has to be a lexeme, and a lexeme cannot be parameterized. */
+    /* Check the rhs primary exception. */
     if (rhsAlternativep->u.exception.rhsPrimaryExceptionp->callp != NULL) {
       MARPAESLIF_ERROR(marpaESLIFp, "Right side of an exception rule cannot be parameterized");
       goto err;
@@ -7502,12 +7503,13 @@ static short _marpaESLIF_bootstrap_G1_action_exception_statementb(void *userData
     MARPAESLIF_ERROR(marpaESLIFp, "Left side of an exception rule cannot be parameterized");
     goto err;
   }
-  rhsp = _marpaESLIF_bootstrap_check_rhsPrimaryp(marpaESLIFp, marpaESLIFGrammarp, grammarp, rhsPrimaryp, 1 /* createb */, 0 /* forcecreateb */);
+  /* Note that we force the symbol to be unique - this is because the exception is part of the symbol definition */
+  rhsp = _marpaESLIF_bootstrap_check_rhsPrimaryp(marpaESLIFp, marpaESLIFGrammarp, grammarp, rhsPrimaryp, 1 /* createb */, 1 /* forcecreateb */);
   if (MARPAESLIF_UNLIKELY(rhsp == NULL)) {
     goto err;
   }
 
-  /* Check the rhs primary exception - we know it has to be a lexeme, and a lexeme cannot be parameterized. */
+  /* Check the rhs primary exception. */
   if (rhsPrimaryExceptionp->callp != NULL) {
     MARPAESLIF_ERROR(marpaESLIFp, "Right side of an exception rule cannot be parameterized");
     goto err;

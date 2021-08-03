@@ -23,8 +23,7 @@ const static char *selfs =
   "CData           ::= CHARDATA - CHARDATAEXCEPTION\n"
   "CData           ::= # Using CHARDATA removed CData nullable aspect\n"
   "CDEnd           ::= ']]>'\n"
-  "_CHARDATA         ~ [\\x{9}\\x{A}\\x{D}\\x{20}-\\x{D7FF}\\x{E000}-\\x{FFFD}\\x{10000}-\\x{10FFFF}]:u\n"
-  "CHARDATA          ~ _CHARDATA*\n"
+  "CHARDATA          ~ [\\x{9}\\x{A}\\x{D}\\x{20}-\\x{D7FF}\\x{E000}-\\x{FFFD}\\x{10000}-\\x{10FFFF}]:u*\n"
   "CHARDATAEXCEPTION ~ CHARDATA ']]>' CHARDATA\n"
 #ifdef TEST_STACKOVERFLOW
   "CHARDATAEXCEPTION ~ CData@-1 - CData@-1\n"

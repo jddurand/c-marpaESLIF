@@ -159,11 +159,12 @@ static marpaESLIFValueResult_t marpaESLIFValueResultLazy = {
 /* -------------------------------------------------------------------------------------------- */
 /* Util macros on symbol                                                                        */
 /* -------------------------------------------------------------------------------------------- */
-#define MARPAESLIF_IS_META(symbolp)            ((symbolp)->type == MARPAESLIF_SYMBOL_TYPE_META)
-#define MARPAESLIF_IS_LEXEME(symbolp)          (MARPAESLIF_IS_META(symbolp) && (! (symbolp)->lhsb))
-#define MARPAESLIF_IS_TERMINAL(symbolp)        ((symbolp)->type == MARPAESLIF_SYMBOL_TYPE_TERMINAL)
-#define MARPAESLIF_IS_PSEUDO_TERMINAL(symbolp) (MARPAESLIF_IS_TERMINAL(symbolp) && (symbolp)->u.terminalp->pseudob)
-#define MARPAESLIF_IS_DISCARD(symbolp)         (symbolp)->discardb
+#define MARPAESLIF_IS_META(symbolp)               ((symbolp)->type == MARPAESLIF_SYMBOL_TYPE_META)
+#define MARPAESLIF_IS_LEXEME(symbolp)             (MARPAESLIF_IS_META(symbolp) && (! (symbolp)->lhsb))
+#define MARPAESLIF_IS_TERMINAL(symbolp)           ((symbolp)->type == MARPAESLIF_SYMBOL_TYPE_TERMINAL)
+#define MARPAESLIF_IS_LEXEME_OR_TERMINAL(symbolp) (MARPAESLIF_IS_LEXEME(symbolp) || MARPAESLIF_IS_TERMINAL(symbolp))
+#define MARPAESLIF_IS_PSEUDO_TERMINAL(symbolp)    (MARPAESLIF_IS_TERMINAL(symbolp) && (symbolp)->u.terminalp->pseudob)
+#define MARPAESLIF_IS_DISCARD(symbolp)            (symbolp)->discardb
 
 /* -------------------------------------------------------------------------------------------- */
 /* In theory, when rci is MARPAESLIF_MATCH_OK, marpaESLIFValueResult type must be a valid ARRAY */
@@ -3040,7 +3041,6 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
   int                              *symbolArrayp;
   size_t                            tmpl;
   short                             fastDiscardb;
-  marpaESLIF_symbol_t              *trueSymbolp;
   marpaESLIF_action_t               action;
 
   /* Constant action */
@@ -3595,15 +3595,18 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
 
       symbolp = rulep->rhspp[0];
 
-      /* -------------------------- */
-      /* Both sides must be lexemes */
-      /* -------------------------- */
-      if (MARPAESLIF_UNLIKELY(! MARPAESLIF_IS_LEXEME(symbolp))) {
-        MARPAESLIF_ERRORF(marpaESLIFp, "At grammar level %d (%s), symbol %d <%s> is on the left side of an exception and must be a lexeme", grammari, grammarp->descp->asciis, symbolp->idi, symbolp->descp->asciis);
+      /* ---------------------------------------- */
+      /* Left side must be a lexeme or a terminal */
+      /* ---------------------------------------- */
+      if (MARPAESLIF_UNLIKELY(! MARPAESLIF_IS_LEXEME_OR_TERMINAL(symbolp))) {
+        MARPAESLIF_ERRORF(marpaESLIFp, "At grammar level %d (%s), symbol %d <%s> is on the left side of an exception and must be a lexeme or a terminal", grammari, grammarp->descp->asciis, symbolp->idi, symbolp->descp->asciis);
         goto err;
       }
-      if (MARPAESLIF_UNLIKELY(! MARPAESLIF_IS_LEXEME(exceptionp))) {
-        MARPAESLIF_ERRORF(marpaESLIFp, "At grammar level %d (%s), symbol %d <%s> is on the right side of an exception and must be a lexeme", grammari, grammarp->descp->asciis, exceptionp->idi, exceptionp->descp->asciis);
+      /* ----------------------------------------- */
+      /* Right side must be a lexeme or a terminal */
+      /* ----------------------------------------- */
+      if (MARPAESLIF_UNLIKELY(! MARPAESLIF_IS_LEXEME_OR_TERMINAL(exceptionp))) {
+        MARPAESLIF_ERRORF(marpaESLIFp, "At grammar level %d (%s), symbol %d <%s> is on the right side of an exception and must be a lexeme or a terminal", grammari, grammarp->descp->asciis, exceptionp->idi, exceptionp->descp->asciis);
         goto err;
       }
       /* --------------------------------------------------------- */
@@ -3622,45 +3625,29 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
           }
         }
       }
-      /* ---------------------------------------------------------- */
-      /* right side of the exception is unique in the whole grammar */
-      /* ---------------------------------------------------------- */
-      for (rulej = 0; rulej < GENERICSTACK_USED(ruleStackp); rulej++) {
-        if (rulei == rulej) {
-          continue;
-        }
-        MARPAESLIF_INTERNAL_GET_RULE_FROM_STACK(marpaESLIFp, ruletmpp, ruleStackp, rulej);
-        for (rhsl = 0; rhsl < ruletmpp->nrhsl; rhsl++) {
-          if (MARPAESLIF_UNLIKELY(ruletmpp->rhspp[rhsl] == exceptionp)) {
-            MARPAESLIF_ERRORF(marpaESLIFp, "At grammar level %d (%s), symbol %d <%s> is on the right side of an exception: it must be a lexeme that does not appear anywhere else in the grammar, because the exception is considered as being part of the lexeme definition", grammari, grammarp->descp->asciis, exceptionp->idi, exceptionp->descp->asciis);
-            MARPAESLIF_ERRORF(marpaESLIFp, "It has been found in a rule that have this LHS: %s", ruletmpp->lhsp->descp->asciis);
-            goto err;
-          }
-        }
-      }
 
       /* -------------------------------------------- */
       /* both sides must must not have any sub lexeme */
       /* -------------------------------------------- */
       /* They are lexemes, so per def metap->marpaWrapperGrammarLexemeClonep is not NULL */
       /* A special case is with parameterized symbol - we use a double indirection */
-      trueSymbolp = symbolp;
-
-      if (MARPAESLIF_UNLIKELY(! _marpaESLIFGrammar_haveLexemeb(marpaESLIFGrammarp, grammarp->leveli + trueSymbolp->lookupLevelDeltai, trueSymbolp->u.metap->marpaWrapperGrammarLexemeClonep, &haveLexemeb))) {
-        goto err;
+      if (MARPAESLIF_IS_LEXEME(symbolp)) {
+        if (MARPAESLIF_UNLIKELY(! _marpaESLIFGrammar_haveLexemeb(marpaESLIFGrammarp, grammarp->leveli + symbolp->lookupLevelDeltai, symbolp->u.metap->marpaWrapperGrammarLexemeClonep, &haveLexemeb))) {
+          goto err;
+        }
+        if (MARPAESLIF_UNLIKELY(haveLexemeb)) {
+          MARPAESLIF_ERRORF(marpaESLIFp, "At grammar level %d (%s), symbol %d <%s> is on the left side of an exception: it must have no sub-lexeme", grammari, grammarp->descp->asciis, symbolp->idi, symbolp->descp->asciis);
+          goto err;
+        }
       }
-      if (MARPAESLIF_UNLIKELY(haveLexemeb)) {
-        MARPAESLIF_ERRORF(marpaESLIFp, "At grammar level %d (%s), symbol %d <%s> is on the left side of an exception: it must have no sub-lexeme", grammari, grammarp->descp->asciis, trueSymbolp->idi, trueSymbolp->descp->asciis);
-        goto err;
-      }
-
-      trueSymbolp = exceptionp;
-      if (MARPAESLIF_UNLIKELY(! _marpaESLIFGrammar_haveLexemeb(marpaESLIFGrammarp, grammarp->leveli + trueSymbolp->lookupLevelDeltai, trueSymbolp->u.metap->marpaWrapperGrammarLexemeClonep, &haveLexemeb))) {
-        goto err;
-      }
-      if (MARPAESLIF_UNLIKELY(haveLexemeb)) {
-        MARPAESLIF_ERRORF(marpaESLIFp, "At grammar level %d (%s), symbol %d <%s> is on the right side of an exception: it must have no sub-lexeme", grammari, grammarp->descp->asciis, trueSymbolp->idi, trueSymbolp->descp->asciis);
-        goto err;
+      if (MARPAESLIF_IS_LEXEME(exceptionp)) {
+        if (MARPAESLIF_UNLIKELY(! _marpaESLIFGrammar_haveLexemeb(marpaESLIFGrammarp, grammarp->leveli + exceptionp->lookupLevelDeltai, exceptionp->u.metap->marpaWrapperGrammarLexemeClonep, &haveLexemeb))) {
+          goto err;
+        }
+        if (MARPAESLIF_UNLIKELY(haveLexemeb)) {
+          MARPAESLIF_ERRORF(marpaESLIFp, "At grammar level %d (%s), symbol %d <%s> is on the right side of an exception: it must have no sub-lexeme", grammari, grammarp->descp->asciis, exceptionp->idi, exceptionp->descp->asciis);
+          goto err;
+        }
       }
 
       /* Remember that this RHS is the member of an exception */
@@ -8297,7 +8284,7 @@ static inline short _marpaESLIFRecognizer_resume_oneb(marpaESLIFRecognizer_t *ma
         continue;
       }
     } else {
-      /* Exception rules are always true lexemes, that are not allowed to be parameterized */
+      /* Exception rules are always true lexemes or terminals, that are not allowed to be parameterized */
       rcMatcherb = _marpaESLIFRecognizer_symbol_matcherb(marpaESLIFRecognizerp, marpaESLIF_streamp, symbolp, &rci, &marpaESLIFValueResultArray, -1, NULL /* lastSizeBeforeCompletionlp */, &numberOfStartCompletionsi, NULL /* marpaESLIFValueResultForcedValuationp */);
       if (MARPAESLIF_UNLIKELY(rcMatcherb < 0)) {
         goto err;

@@ -477,7 +477,7 @@ const static char *xmls =
 "## event for PITarget\n"
 "<_XML>                     ~ [Xx] [Mm] [Ll]\n"
 "# event PITarget$ = completed PITarget\n"
-"<PITarget>              ::= <_NAME> - <_XML>\n"
+"<PITarget>              ::= <_NAME> - 'xml':i\n"
 "\n"
 "#\n"
 "# If you like to handle this in user-space, this could be... with an event on PITarget$, then getting lastLexemePause('PITarget'):\n"
@@ -578,6 +578,7 @@ int main() {
   marpaESLIFTester_context.genericLoggerp = genericLoggerp;
   marpaESLIFTester_context.inputs         =
 "<?xml version=\"1.0\"?>\n"
+"<?xml-stylesheet type=\"text/xsl\" href=\"style.xsl\"?>\n"
 "\n"
 "<gutenprint xmlns=\"http://gimp-print.sourceforge.net/xsd/gp.xsd-1.0\"\n"
 "xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\n"

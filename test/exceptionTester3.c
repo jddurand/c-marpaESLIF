@@ -17,9 +17,8 @@ typedef struct marpaESLIFTester_context {
 
 const static char *selfs =
   "\n"
-  "syntax      ::= NAME - NAMEEXCEPTION\n"
+  "syntax      ::= NAME - /A(?:BC)?/i\n"
   "NAME          ~ /\\w/*\n"
-  "NAMEEXCEPTION ~ 'A':i | 'ABC':i\n"
   "\n";
 
 int main() {
