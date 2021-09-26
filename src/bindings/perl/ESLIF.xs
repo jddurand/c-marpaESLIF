@@ -4291,7 +4291,7 @@ marpaESLIFRecognizerOption.disableThresholdb    = marpaESLIFPerl_call_methodb(aT
     MARPAESLIFPERL_CROAKF("Internal value stack is %d instead of 1", marpaESLIFPerl_GENERICSTACK_USED(marpaESLIFValueContext.internalStackp));
   }
   svp = (SV *) marpaESLIFPerl_GENERICSTACK_POP_PTR(marpaESLIFValueContext.internalStackp);
-marpaESLIFPerl_call_methodv(aTHX_ Perl_valueInterfacep, "setResult", svp, marpaESLIFValueContext.setResultSvp);
+  marpaESLIFPerl_call_methodv(aTHX_ Perl_valueInterfacep, "setResult", svp, marpaESLIFValueContext.setResultSvp);
 
   rcb = 1;
   goto done;
