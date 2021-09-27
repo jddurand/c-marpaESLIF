@@ -140,6 +140,7 @@ typedef struct marpaESLIF_bootstrap_rhs_alternative            marpaESLIF_bootst
 typedef struct marpaESLIF_bootstrap_rhs_alternative_priorities marpaESLIF_bootstrap_rhs_alternative_priorities_t;
 typedef struct marpaESLIF_bootstrap_rhs_alternative_exception  marpaESLIF_bootstrap_rhs_alternative_exception_t;
 typedef struct marpaESLIF_bootstrap_rhs_alternative_quantified marpaESLIF_bootstrap_rhs_alternative_quantified_t;
+typedef struct marpaESLIF_bootstrap_rhs_alternative_lookahead  marpaESLIF_bootstrap_rhs_alternative_lookahead_t;
 typedef struct marpaESLIF_bootstrap_alternative                marpaESLIF_bootstrap_alternative_t;
 typedef struct marpaESLIF_bootstrap_event_initialization       marpaESLIF_bootstrap_event_initialization_t;
 typedef struct marpaESLIF_bootstrap_lua_function               marpaESLIF_bootstrap_lua_function_t;
@@ -262,7 +263,8 @@ enum marpaESLIF_bootstrap_rhs_alternative_type {
   MARPAESLIF_BOOTSTRAP_RHS_ALTERNATIVE_TYPE_RHS_PRIMARY,
   MARPAESLIF_BOOTSTRAP_RHS_ALTERNATIVE_TYPE_PRIORITIES,
   MARPAESLIF_BOOTSTRAP_RHS_ALTERNATIVE_TYPE_EXCEPTION,
-  MARPAESLIF_BOOTSTRAP_RHS_ALTERNATIVE_TYPE_QUANTIFIED
+  MARPAESLIF_BOOTSTRAP_RHS_ALTERNATIVE_TYPE_QUANTIFIED,
+  MARPAESLIF_BOOTSTRAP_RHS_ALTERNATIVE_TYPE_LOOKAHEAD
 };
 
 enum marpaESLIF_bootstrap_rhs_primary_type {
@@ -318,6 +320,12 @@ struct marpaESLIF_bootstrap_rhs_alternative_quantified {
   genericStack_t                     *adverbListItemStackp;
 };
 
+struct marpaESLIF_bootstrap_rhs_alternative_lookahead {
+  short                               positivelookaheadb;
+  marpaESLIF_bootstrap_rhs_primary_t *rhsPrimaryp;
+  genericStack_t                     *adverbListItemStackp;
+};
+
 struct marpaESLIF_bootstrap_rhs_primary {
   marpaESLIF_symbol_t                     *symbolShallowp; /* To avoid possible recursion */
   marpaESLIF_lua_functioncall_t           *callp;
@@ -336,6 +344,7 @@ struct marpaESLIF_bootstrap_rhs_alternative {
     marpaESLIF_bootstrap_rhs_alternative_priorities_t  priorities;
     marpaESLIF_bootstrap_rhs_alternative_exception_t   exception;
     marpaESLIF_bootstrap_rhs_alternative_quantified_t  quantified;
+    marpaESLIF_bootstrap_rhs_alternative_lookahead_t   lookahead;
   } u;
 };
 

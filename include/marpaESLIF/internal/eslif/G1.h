@@ -121,6 +121,8 @@ typedef enum bootstrap_grammar_G1_enum {
   G1_TERMINAL_LUA_FUNCTION,
   G1_TERMINAL_LUA_FUNCTIONCALL,
   G1_TERMINAL_LUA_FUNCTIONDECL,
+  G1_TERMINAL_POSITIVE_LOOKAHEAD,
+  G1_TERMINAL_NEGATIVE_LOOKAHEAD,
   /* ----- Non terminals ------ */
   G1_META_STATEMENTS,
   G1_META_STATEMENT,
@@ -132,6 +134,7 @@ typedef enum bootstrap_grammar_G1_enum {
   G1_META_STATEMENT_GROUP,
   G1_META_PRIORITY_RULE,
   G1_META_QUANTIFIED_RULE,
+  G1_META_LOOKAHEAD_RULE,
   G1_META_DISCARD_RULE,
   G1_META_DEFAULT_RULE,
   G1_META_LEXEME_RULE,
@@ -249,6 +252,7 @@ bootstrap_grammar_meta_t bootstrap_grammar_G1_metas[] = {
   { G1_META_STATEMENT_GROUP,                  "statement group",                           0,       0,           0,            0,    0,               -1,       0,        NULL,       NULL },
   { G1_META_PRIORITY_RULE,                    "priority rule",                             0,       0,           0,            0,    0,               -1,       0,        NULL,       NULL },
   { G1_META_QUANTIFIED_RULE,                  "quantified rule",                           0,       0,           0,            0,    0,               -1,       0,        NULL,       NULL },
+  { G1_META_LOOKAHEAD_RULE,                   "lookahead rule",                            0,       0,           0,            0,    0,               -1,       0,        NULL,       NULL },
   { G1_META_DISCARD_RULE,                     "discard rule",                              0,       0,           0,            0,    0,               -1,       0,        NULL,       NULL },
   { G1_META_DEFAULT_RULE,                     "default rule",                              0,       0,           0,            0,    0,               -1,       0,        NULL,       NULL },
   { G1_META_LEXEME_RULE,                      "lexeme rule",                               0,       0,           0,            0,    0,               -1,       0,        NULL,       NULL },
@@ -1192,6 +1196,22 @@ bootstrap_grammar_terminal_t bootstrap_grammar_G1_terminals[] = {
 #else
     NULL, NULL
 #endif
+  },
+  { G1_TERMINAL_POSITIVE_LOOKAHEAD, MARPAESLIF_TERMINAL_TYPE_STRING, NULL,
+    "'?='", NULL, NULL,
+#ifndef MARPAESLIF_NTRACE
+    "?=", "?"
+#else
+    NULL, NULL
+#endif
+  },
+  { G1_TERMINAL_NEGATIVE_LOOKAHEAD, MARPAESLIF_TERMINAL_TYPE_STRING, NULL,
+    "'?!'", NULL, NULL,
+#ifndef MARPAESLIF_NTRACE
+    "?!", "?"
+#else
+    NULL, NULL
+#endif
   }
 };
 
@@ -1228,6 +1248,7 @@ bootstrap_grammar_rule_t bootstrap_grammar_G1_rules[] = {
   { G1_META_STATEMENT,                        G1_RULE_STATEMENT_18,                           MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_AUTORANK_STATEMENT                   }, -1,                        -1,      -1,              0, G1_ACTION_STATEMENT_18 },
   { G1_META_STATEMENT,                        G1_RULE_STATEMENT_19,                           MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_LUASCRIPT_STATEMENT                  }, -1,                        -1,      -1,              0, G1_ACTION_STATEMENT_19 },
   { G1_META_STATEMENT,                        G1_RULE_STATEMENT_20,                           MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_TERMINAL_RULE                        }, -1,                        -1,      -1,              0, G1_ACTION_STATEMENT_20 },
+  { G1_META_STATEMENT,                        G1_RULE_STATEMENT_21,                           MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_LOOKAHEAD_RULE                       }, -1,                        -1,      -1,              0, G1_ACTION_STATEMENT_21 },
   { G1_META_START_RULE,                       G1_RULE_START_RULE,                             MARPAESLIF_RULE_TYPE_ALTERNATIVE, 3, { G1_TERMINAL__START,
                                                                                                                                      G1_META_OP_DECLARE,
                                                                                                                                      G1_META_START_SYMBOL                         }, -1,                        -1,      -1,              0, G1_ACTION_START_RULE },
@@ -1256,11 +1277,21 @@ bootstrap_grammar_rule_t bootstrap_grammar_G1_rules[] = {
                                                                                                                                      G1_META_RHS_PRIMARY,
                                                                                                                                      G1_META_QUANTIFIER,
                                                                                                                                      G1_META_ADVERB_LIST                          }, -1,                        -1,      -1,              0, G1_ACTION_QUANTIFIED_RULE },
+  { G1_META_LOOKAHEAD_RULE,                   G1_RULE_LOOKAHEAD_RULE_1,                       MARPAESLIF_RULE_TYPE_ALTERNATIVE, 5, { G1_META_LHS,
+                                                                                                                                     G1_META_OP_DECLARE,
+                                                                                                                                     G1_TERMINAL_POSITIVE_LOOKAHEAD,
+                                                                                                                                     G1_META_RHS_PRIMARY,
+                                                                                                                                     G1_META_ADVERB_LIST                          }, -1,                        -1,      -1,              0, G1_ACTION_LOOKAHEAD_RULE_1 },
+  { G1_META_LOOKAHEAD_RULE,                   G1_RULE_LOOKAHEAD_RULE_2,                       MARPAESLIF_RULE_TYPE_ALTERNATIVE, 5, { G1_META_LHS,
+                                                                                                                                     G1_META_OP_DECLARE,
+                                                                                                                                     G1_TERMINAL_NEGATIVE_LOOKAHEAD,
+                                                                                                                                     G1_META_RHS_PRIMARY,
+                                                                                                                                     G1_META_ADVERB_LIST                          }, -1,                        -1,      -1,              0, G1_ACTION_LOOKAHEAD_RULE_2 },
   { G1_META_DISCARD_RULE,                     G1_RULE_DISCARD_RULE,                           MARPAESLIF_RULE_TYPE_ALTERNATIVE, 4, { G1_TERMINAL__DISCARD,
                                                                                                                                      G1_META_OP_DECLARE,
                                                                                                                                      G1_META_RHS_PRIMARY,
                                                                                                                                      G1_META_ADVERB_LIST                          }, -1,                        -1,      -1,              0, G1_ACTION_DISCARD_RULE },
-  { G1_META_DEFAULT_RULE,                     G1_RULE_DEFAULT_RULE,                          MARPAESLIF_RULE_TYPE_ALTERNATIVE, 3, { G1_TERMINAL__DEFAULT,
+  { G1_META_DEFAULT_RULE,                     G1_RULE_DEFAULT_RULE,                           MARPAESLIF_RULE_TYPE_ALTERNATIVE, 3, { G1_TERMINAL__DEFAULT,
                                                                                                                                      G1_META_OP_DECLARE,
                                                                                                                                      G1_META_ADVERB_LIST                          }, -1,                        -1,      -1,              0, G1_ACTION_DEFAULT_RULE },
   /*
@@ -1534,6 +1565,16 @@ bootstrap_grammar_rule_t bootstrap_grammar_G1_rules[] = {
                                                                                                                                      G1_META_QUANTIFIER,
                                                                                                                                      G1_META_ADVERB_LIST,
                                                                                                                                      G1_TERMINAL_RPAREN                           }, -1,                        -1,      -1,              0, G1_ACTION_RHS_ALTERNATIVE_7 },
+  { G1_META_RHS_ALTERNATIVE,                  G1_RULE_RHS_ALTERNATIVE_8,                      MARPAESLIF_RULE_TYPE_ALTERNATIVE, 5, { G1_TERMINAL_LPAREN,
+                                                                                                                                     G1_TERMINAL_POSITIVE_LOOKAHEAD,
+                                                                                                                                     G1_META_RHS_PRIMARY,
+                                                                                                                                     G1_META_ADVERB_LIST,
+                                                                                                                                     G1_TERMINAL_RPAREN                           }, -1,                        -1,      -1,              0, G1_ACTION_RHS_ALTERNATIVE_8 },
+  { G1_META_RHS_ALTERNATIVE,                  G1_RULE_RHS_ALTERNATIVE_9,                      MARPAESLIF_RULE_TYPE_ALTERNATIVE, 5, { G1_TERMINAL_LPAREN,
+                                                                                                                                     G1_TERMINAL_NEGATIVE_LOOKAHEAD,
+                                                                                                                                     G1_META_RHS_PRIMARY,
+                                                                                                                                     G1_META_ADVERB_LIST,
+                                                                                                                                     G1_TERMINAL_RPAREN                           }, -1,                        -1,      -1,              0, G1_ACTION_RHS_ALTERNATIVE_9 },
   { G1_META_RHS_PRIMARY_NO_PARAMETER,         G1_RULE_RHS_PRIMARY_NO_PARAMETER_1,             MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_SINGLE_SYMBOL                        }, -1,                        -1,      -1,              0, G1_ACTION_RHS_PRIMARY_NO_PARAMETER_1 },
   { G1_META_RHS_PRIMARY_NO_PARAMETER,         G1_RULE_RHS_PRIMARY_NO_PARAMETER_2,             MARPAESLIF_RULE_TYPE_ALTERNATIVE, 3, { G1_META_SYMBOL,
                                                                                                                                      G1_TERMINAL_AT_SIGN,

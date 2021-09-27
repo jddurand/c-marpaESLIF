@@ -22,6 +22,7 @@
 #define G1_RULE_STATEMENT_18                     "G1_rule_statement_18"
 #define G1_RULE_STATEMENT_19                     "G1_rule_statement_19"
 #define G1_RULE_STATEMENT_20                     "G1_rule_statement_20"
+#define G1_RULE_STATEMENT_21                     "G1_rule_statement_21"
 #define G1_RULE_START_RULE                       "G1_rule_start_rule"
 #define G1_RULE_START_SYMBOL_1                   "G1_rule_start_symbol_1"
 #define G1_RULE_START_SYMBOL_2                   "G1_rule_start_symbol_2"
@@ -31,6 +32,8 @@
 #define G1_RULE_STATEMENT_GROUP                  "G1_rule_statement_group"
 #define G1_RULE_PRIORITY_RULE                    "G1_rule_priority_rule"
 #define G1_RULE_QUANTIFIED_RULE                  "G1_rule_quantified_rule"
+#define G1_RULE_LOOKAHEAD_RULE_1                 "G1_rule_lookahead_rule_1"
+#define G1_RULE_LOOKAHEAD_RULE_2                 "G1_rule_lookahead_rule_2"
 #define G1_RULE_DISCARD_RULE                     "G1_rule_discard_rule"
 #define G1_RULE_DEFAULT_RULE                     "G1_rule_default_rule"
 #define G1_RULE_LEXEME_RULE                      "G1_rule_lexeme_rule"
@@ -130,6 +133,8 @@
 #define G1_RULE_RHS_ALTERNATIVE_5                "G1_rule_rhs_alternative_5"
 #define G1_RULE_RHS_ALTERNATIVE_6                "G1_rule_rhs_alternative_6"
 #define G1_RULE_RHS_ALTERNATIVE_7                "G1_rule_rhs_alternative_7"
+#define G1_RULE_RHS_ALTERNATIVE_8                "G1_rule_rhs_alternative_8"
+#define G1_RULE_RHS_ALTERNATIVE_9                "G1_rule_rhs_alternative_9"
 #define G1_RULE_RHS_PRIMARY_NO_PARAMETER_1       "G1_rule_rhs_primary_no_parameter_1"
 #define G1_RULE_RHS_PRIMARY_NO_PARAMETER_2       "G1_rule_rhs_primary_no_parameter_2"
 #define G1_RULE_RHS_PRIMARY_1                    "G1_rule_rhs_primary_1"
@@ -239,6 +244,7 @@
 #define G1_ACTION_STATEMENT_18                     "::undef"
 #define G1_ACTION_STATEMENT_19                     "::undef"
 #define G1_ACTION_STATEMENT_20                     "::undef"
+#define G1_ACTION_STATEMENT_21                     "::undef"
 #define G1_ACTION_START_RULE                       "G1_action_start_rule"                       /* done */
 #define G1_ACTION_START_SYMBOL_1                   "G1_action_start_symbol_1"                   /* done */
 #define G1_ACTION_START_SYMBOL_2                   "G1_action_start_symbol_2"                   /* done */
@@ -248,6 +254,8 @@
 #define G1_ACTION_STATEMENT_GROUP                  "::undef"
 #define G1_ACTION_PRIORITY_RULE                    "G1_action_priority_rule"                    /* done */
 #define G1_ACTION_QUANTIFIED_RULE                  "G1_action_quantified_rule"                  /* done */
+#define G1_ACTION_LOOKAHEAD_RULE_1                 "G1_action_lookahead_rule_1"                 /* done */
+#define G1_ACTION_LOOKAHEAD_RULE_2                 "G1_action_lookahead_rule_2"                 /* done */
 #define G1_ACTION_DISCARD_RULE                     "G1_action_discard_rule"                     /* done */
 #define G1_ACTION_DEFAULT_RULE                     "G1_action_default_rule"                     /* done */
 #define G1_ACTION_LEXEME_RULE                      "G1_action_lexeme_rule"                      /* done */
@@ -346,6 +354,8 @@
 #define G1_ACTION_RHS_ALTERNATIVE_5                "G1_action_rhs_alternative_5"                /* done */
 #define G1_ACTION_RHS_ALTERNATIVE_6                "G1_action_rhs_alternative_6"                /* done */
 #define G1_ACTION_RHS_ALTERNATIVE_7                "G1_action_rhs_alternative_7"                /* done */
+#define G1_ACTION_RHS_ALTERNATIVE_8                "G1_action_rhs_alternative_8"                /* done */
+#define G1_ACTION_RHS_ALTERNATIVE_9                "G1_action_rhs_alternative_9"                /* done */
 #define G1_ACTION_RHS_PRIMARY_NO_PARAMETER_1       "G1_action_rhs_primary_no_parameter_1"       /* done */
 #define G1_ACTION_RHS_PRIMARY_NO_PARAMETER_2       "G1_action_rhs_primary_no_parameter_2"       /* done */
 #define G1_ACTION_RHS_PRIMARY_1                    "::shift"                                    /* done */

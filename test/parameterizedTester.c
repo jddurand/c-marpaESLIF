@@ -17,9 +17,9 @@ const static char *grammars = "# Parameterized grammar\n"
   "a ::= b\n"
   "b ::= c->(1)\n"
   "    | c->(2)\n"
-  "c<-(x) ::= d->(x,1)\n"
+  "c<-(x)   ~ d->(x,1)\n"
   "         | d->(x,2)\n"
-  "d<-(x,y) ::= 'E'\n"
+  "d<-(x,y) ~ 'E'\n"
   ;
 
 const static char *inputs = "E";

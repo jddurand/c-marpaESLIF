@@ -5543,9 +5543,9 @@ static int marpaESLIFLua_marpaESLIFRecognizer_contexti(lua_State *L)
   /* Clear the stack */
   if (! marpaESLIFLua_lua_settop(L, 0)) goto err;
 
-  marpaESLIFValueResultp = marpaESLIFRecognizer_contextb(marpaESLIFLuaRecognizerContextp->marpaESLIFRecognizerp);
+  marpaESLIFValueResultp = marpaESLIFRecognizer_contextp(marpaESLIFLuaRecognizerContextp->marpaESLIFRecognizerp);
   if (marpaESLIFValueResultp == NULL) {
-    marpaESLIFLua_luaL_errorf(L, "marpaESLIFRecognizer_contextb failure, %s", strerror(errno));
+    marpaESLIFLua_luaL_errorf(L, "marpaESLIFRecognizer_contextp failure, %s", strerror(errno));
     goto err;
   }
 
