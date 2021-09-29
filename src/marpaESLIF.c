@@ -533,6 +533,8 @@ static const marpaESLIF_uint32_t pcre2_option_partial_default = PCRE2_NOTEMPTY|P
 static const char *MARPAESLIF_TERMINAL__EOF = ":eof";
 static const char *MARPAESLIF_TERMINAL__EOL = ":eol";
 static const char *MARPAESLIF_TERMINAL__SOL = ":sol";
+static const char *MARPAESLIF_TERMINAL__OK  = ":ok";
+static const char *MARPAESLIF_TERMINAL__KO  = ":ko";
 
 /* For reset of values in the stack, it is okay to not care about the union -; */
 static const marpaESLIFValueResult_t marpaESLIFValueResultUndef = {
@@ -1163,6 +1165,14 @@ static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *mar
       utf8s = (char *) MARPAESLIF_TERMINAL__SOL;
       utf8l = strlen(MARPAESLIF_TERMINAL__SOL);
       break;
+    case MARPAESLIF_TERMINAL_TYPE__OK:
+      utf8s = (char *) MARPAESLIF_TERMINAL__OK;
+      utf8l = strlen(MARPAESLIF_TERMINAL__OK);
+      break;
+    case MARPAESLIF_TERMINAL_TYPE__KO:
+      utf8s = (char *) MARPAESLIF_TERMINAL__KO;
+      utf8l = strlen(MARPAESLIF_TERMINAL__KO);
+      break;
     default:
       MARPAESLIF_ERRORF(marpaESLIFp, "Invalid builtin terminal type %d", type);
       errno = EINVAL;
@@ -1250,19 +1260,13 @@ static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *mar
           goto err;
         }
       }
-    } else if (type == MARPAESLIF_TERMINAL_TYPE__EOF) {
-      generatedasciis = strdup(content2descp->asciis);
-      if (MARPAESLIF_UNLIKELY(generatedasciis == NULL)) {
-        MARPAESLIF_ERRORF(marpaESLIFp, "strdup failure, %s", strerror(errno));
-        goto err;
-      }
-    } else if (type == MARPAESLIF_TERMINAL_TYPE__EOL) {
-      generatedasciis = strdup(content2descp->asciis);
-      if (MARPAESLIF_UNLIKELY(generatedasciis == NULL)) {
-        MARPAESLIF_ERRORF(marpaESLIFp, "strdup failure, %s", strerror(errno));
-        goto err;
-      }
-    } else if (type == MARPAESLIF_TERMINAL_TYPE__SOL) {
+    } else if ((type == MARPAESLIF_TERMINAL_TYPE__EOF)
+               ||
+               (type == MARPAESLIF_TERMINAL_TYPE__SOL)
+               ||
+               (type == MARPAESLIF_TERMINAL_TYPE__OK)
+               ||
+               (type == MARPAESLIF_TERMINAL_TYPE__KO)) {
       generatedasciis = strdup(content2descp->asciis);
       if (MARPAESLIF_UNLIKELY(generatedasciis == NULL)) {
         MARPAESLIF_ERRORF(marpaESLIFp, "strdup failure, %s", strerror(errno));
@@ -1322,14 +1326,10 @@ static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *mar
   switch (type) {
 
   case MARPAESLIF_TERMINAL_TYPE__EOF:
-    /* No op */
-    break;
-
   case MARPAESLIF_TERMINAL_TYPE__EOL:
-    /* No op */
-    break;
-
   case MARPAESLIF_TERMINAL_TYPE__SOL:
+  case MARPAESLIF_TERMINAL_TYPE__OK:
+  case MARPAESLIF_TERMINAL_TYPE__KO:
     /* No op */
     break;
 
@@ -1883,6 +1883,8 @@ static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *mar
     marpaESLIFGrammar.hasEofPseudoTerminalb = 0;
     marpaESLIFGrammar.hasEolPseudoTerminalb = 0;
     marpaESLIFGrammar.hasSolPseudoTerminalb = 0;
+    marpaESLIFGrammar.hasOkPseudoTerminalb  = 0;
+    marpaESLIFGrammar.hasKoPseudoTerminalb  = 0;
 
     /* Fake a recognizer. EOF flag will be set automatically in fake mode */
     marpaESLIFRecognizerTestp = _marpaESLIFRecognizer_newp(&marpaESLIFGrammar,
@@ -5169,6 +5171,8 @@ static inline marpaESLIF_t *_marpaESLIF_newp(marpaESLIFOption_t *marpaESLIFOptio
   marpaESLIFp->marpaESLIFGrammarp->hasEofPseudoTerminalb   = 0;
   marpaESLIFp->marpaESLIFGrammarp->hasEolPseudoTerminalb   = 0;
   marpaESLIFp->marpaESLIFGrammarp->hasSolPseudoTerminalb   = 0;
+  marpaESLIFp->marpaESLIFGrammarp->hasOkPseudoTerminalb    = 0;
+  marpaESLIFp->marpaESLIFGrammarp->hasKoPseudoTerminalb    = 0;
 
   marpaESLIFp->marpaESLIFGrammarp->grammarStackp = &(marpaESLIFp->marpaESLIFGrammarp->_grammarStack);
   GENERICSTACK_INIT(marpaESLIFp->marpaESLIFGrammarp->grammarStackp);
@@ -5514,6 +5518,18 @@ static inline short _marpaESLIFRecognizer_terminal_matcherb(marpaESLIFRecognizer
         matchedp       = (char *) MARPAESLIF_EMPTY_STRING;
         matchedLengthl = 0;
       }
+      break;
+
+    case MARPAESLIF_TERMINAL_TYPE__OK:
+      MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, ":ok forced match");
+      rci            = MARPAESLIF_MATCH_OK;
+      matchedp       = (char *) MARPAESLIF_EMPTY_STRING;
+      matchedLengthl = 0;
+      break;
+
+    case MARPAESLIF_TERMINAL_TYPE__KO:
+      MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, ":ko forced failure");
+      rci            = MARPAESLIF_MATCH_FAILURE;
       break;
 
     default:
@@ -6618,6 +6634,8 @@ static inline marpaESLIFGrammar_t *_marpaESLIFGrammar_newp(marpaESLIF_t *marpaES
     marpaESLIFGrammarp->hasEofPseudoTerminalb   = 0;
     marpaESLIFGrammarp->hasEolPseudoTerminalb   = 0;
     marpaESLIFGrammarp->hasSolPseudoTerminalb   = 0;
+    marpaESLIFGrammarp->hasOkPseudoTerminalb    = 0;
+    marpaESLIFGrammarp->hasKoPseudoTerminalb    = 0;
   } else {
     marpaESLIFGrammarp = marpaESLIfGrammarPreviousp;
   }
@@ -13570,7 +13588,9 @@ static inline void _marpaESLIF_grammar_createshowv(marpaESLIFGrammar_t *marpaESL
         case MARPAESLIF_TERMINAL_TYPE__EOF:
         case MARPAESLIF_TERMINAL_TYPE__EOL:
         case MARPAESLIF_TERMINAL_TYPE__SOL:
-          /* We know we made a 100% ASCII compatible pattern that is the builtin lexeme itself when the original type is _EOF, _EOL or _SOL */
+        case MARPAESLIF_TERMINAL_TYPE__OK:
+        case MARPAESLIF_TERMINAL_TYPE__KO:
+          /* We know we made a 100% ASCII compatible pattern that is the builtin lexeme itself when the original type is _EOF, _EOL, _SOL, _OK or _KO */
           MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, " ");
           MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, symbolp->u.terminalp->patterns);
           MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "\n");
@@ -20928,6 +20948,8 @@ short marpaESLIFSymbol_tryb(marpaESLIFSymbol_t *marpaESLIFSymbolp, char *inputs,
     marpaESLIFGrammar.hasEofPseudoTerminalb = 0;
     marpaESLIFGrammar.hasEolPseudoTerminalb = 0;
     marpaESLIFGrammar.hasSolPseudoTerminalb = 0;
+    marpaESLIFGrammar.hasOkPseudoTerminalb  = 0;
+    marpaESLIFGrammar.hasKoPseudoTerminalb  = 0;
   }
 
   

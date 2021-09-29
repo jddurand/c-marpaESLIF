@@ -69,6 +69,14 @@ Note that the newline is hardcoded to be any unicode newline, i.e. C<(*BSR_UNICO
 
 The presence of :sol pseudo-terminal anywhere in the grammar enforces the C<newlineb> flag in recognizers, because a C<:discard> rule can contain C<(*BSR_UNICODE)\R> characters, and then only newline count can safely indicate the beginning of a line. On the contrary C<:eof> and C<:eol> work regardless of recognizer's C<newlineb> flag. In particular C<:eol> is doing a positive look-forward of C<(*BSR_UNICODE)\R> in the stream.
 
+=item :ok
+
+A zero-length terminal that always matches.
+
+=item :ko
+
+A zero-length terminal that never matches.
+
 =back
 
 =item * Strings
@@ -961,6 +969,8 @@ marpaESLIF BNF can be expressed in itself:
                                    | ':eof'
                                    | ':eol'
                                    | ':sol'
+                                   | ':ok'
+                                   | ':ko'
   <symbol>                       ::= <symbol name>
   <symbol name>                  ::= <bare name>
                                    | <bracketed name>
