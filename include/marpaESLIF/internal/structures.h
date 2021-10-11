@@ -211,7 +211,6 @@ struct marpaESLIF_rule {
   int                            *rhsip;                        /* Convenient array for rule property */
   short                          *skipbp;                       /* Skip booleans */
   marpaESLIF_symbol_t            *exceptionp;                   /* Exception symbol */
-  int                             exceptionIdi;                 /* Exception symbol Id */
   marpaESLIFAction_t             *actionp;                      /* Action */
   char                           *discardEvents;                /* Discard event name - shallowed to its RHS */
   short                           discardEventb;                /* Discard event initial state: 0: off, 1: on - copied to its RHS */
@@ -392,7 +391,6 @@ struct marpaESLIFValue {
   genericLogger_t             *stringGeneratorLoggerp; /* Internal string generator logger, put here to avoid unnecessary genericLogger_newp()/genericLogger_freev() calls */
   char                        *luaprecompiledp;    /* Lua script source precompiled */
   size_t                       luaprecompiledl;    /* Lua script source precompiled length in byte */
-  marpaESLIFValueResult_t     *marpaESLIFValueResultForcedValuationp;   /* Forced valuation - only when the start symbol is a parameterized symbol. */
 };
 
 struct marpaESLIF_stream {

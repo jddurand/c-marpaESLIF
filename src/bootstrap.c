@@ -966,7 +966,7 @@ static inline marpaESLIF_symbol_t *_marpaESLIF_bootstrap_check_meta_by_namep(mar
     }
     parami            = callp->sizei;
     parameterizedRhsb = 1;
-    /* We always force the creation of a parameterized RHS, so that is is always a grammar terminal */
+    /* We always force the creation of a parameterized RHS: grammar validation will relink to a duplicated LHS if needed */
     forcecreateb = 1;
   } else {
     parami = -1;
@@ -1031,7 +1031,8 @@ static inline marpaESLIF_symbol_t *_marpaESLIF_bootstrap_check_meta_by_namep(mar
       goto err;
     }
 
-    /* If the RHS is parameterized we force the lookup symbol to a corresponding LHS that will exist in the same grammar */
+    /* If the RHS is parameterized we force the lookup symbol to a corresponding LHS that must exist in the same grammar */
+#ifdef JDD
     if (parameterizedRhsb) {
 
       call2decl.luaparlists  = NULL;
@@ -1057,6 +1058,7 @@ static inline marpaESLIF_symbol_t *_marpaESLIF_bootstrap_check_meta_by_namep(mar
       symbolp->lookupLevelDeltai = 0;
       symbolp->lookupSymbolp     = lhsp;
     }
+#endif
   }
 
   goto done;
@@ -1675,7 +1677,7 @@ static inline marpaESLIF_symbol_t  *_marpaESLIF_bootstrap_check_rhsAlternativep(
     }
     /* If naming is not NULL, it is guaranteed to be an UTF-8 thingy */
 #ifndef MARPAESLIF_NTRACE
-    MARPAESLIF_TRACEF(marpaESLIFp, funcs, "Creating lookahead rule %s ::= ?%s %s ranki=>%d at grammar level %d", symbolp->descp->asciis, rhsAlternativep->u.lookaheade.positivelookaheadb ? "=" : "!", rhsp->descp->asciis, ranki, grammarp->leveli);
+    MARPAESLIF_TRACEF(marpaESLIFp, funcs, "Creating lookahead rule %s ::= ?%s %s ranki=>%d at grammar level %d", symbolp->descp->asciis, rhsAlternativep->u.lookahead.positivelookaheadb ? "=" : "!", rhsp->descp->asciis, ranki, grammarp->leveli);
 #endif
     rulep = _marpaESLIF_bootstrap_check_rulep(marpaESLIFp,
                                               marpaESLIFGrammarp,
@@ -9301,6 +9303,7 @@ static inline marpaESLIF_rule_t *_marpaESLIF_bootstrap_check_rulep(marpaESLIF_t 
       rhsp->callp = rulep->separatorcallp; /* Never null by definition when it is a parameterized symbol */
     }
   }
+  rulep->lhsp->declp = rulep->declp;
 
   goto done;
 
