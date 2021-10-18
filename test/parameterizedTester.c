@@ -14,12 +14,14 @@ typedef struct marpaESLIF_context {
 } marpaESLIF_context_t;
 
 const static char *grammars = "# Parameterized grammar\n"
-  "a        ::= b\n"
+  "a<-(x)        ::= b\n"
   "b        ::= c->(1)\n"
-  "#           | c->(2)\n"
+  "           | c->(2)\n"
   "c<-(x)   ::= d->(x,1)\n"
-  "#           | d->(x,2)\n"
-  "d<-(x,y) ::= 'E'\n"
+  "           | d->(x,2)\n"
+  "c<-(y)   ::= d->(x,3)\n"
+  "d<-(a,b)   ~ 'E' # ::lua->[[toto]]\n"
+  "d<-(c,d)   ~ 'F' # ::lua->[[toto]]\n"
   ;
 
 const static char *inputs = "E";

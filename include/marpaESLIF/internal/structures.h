@@ -162,7 +162,6 @@ struct marpaESLIFSymbol {
   short                          eventNulledb;           /* Nulled initial state: 0: off, 1: on */
   char                          *eventCompleteds;        /* Event name for completion */
   short                          eventCompletedb;        /* Completion initial state: 0: off, 1: on */
-  marpaESLIF_lua_functiondecl_t *eventDeclp;             /* Specific to event declaration on parameterized LHSs */
   char                          *discardEvents;          /* Discard event name - shallow pointer to a :discard rule's discardEvents */
   short                          discardEventb;          /* Discard event initial state: 0: off, 1: on - copy of :discard's rule value */
   int                            lookupLevelDeltai;      /* Referenced grammar delta level */
@@ -189,13 +188,14 @@ struct marpaESLIFSymbol {
   short                          verboseb;               /* Symbol is verbose */
   int                            parami;                 /* -1 when none */
   short                          parameterizedRhsb;
-  marpaESLIF_lua_functiondecl_t *declp;                  /* For parameterized symbols, shallow pointer to declp */
-  marpaESLIF_lua_functioncall_t *callp;                  /* For parameterized symbols, shallow pointer to callp */
-  marpaESLIFAction_t            *pushContextActionp;     /* For parameterized symbols, context push action */
-  marpaESLIFAction_t            *popContextActionp;      /* For parameterized symbols, context pop action */
-  marpaESLIFAction_t            *getContextActionp;      /* For parameterized symbols, context get action */
+  marpaESLIF_lua_functiondecl_t *declp;                  /* For context symbols, shallow pointer to declp */
+  marpaESLIF_lua_functioncall_t *callp;                  /* For context symbols, shallow pointer to callp */
+  marpaESLIFAction_t            *pushContextActionp;     /* For context symbols, context push action */
+  marpaESLIFAction_t            *popContextActionp;      /* For context symbols, context pop action */
+  marpaESLIFAction_t            *getContextActionp;      /* For context symbols, context get action */
   short                          lookaheadb;             /* For lookahead symbols */
   char                          *asciishows;             /* Symbol show (ASCII) */
+  short                          contextb;               /* Context internal symbol ? */
 };
 
 /* A rule */
@@ -638,6 +638,12 @@ struct marpaESLIF_lua_functiondecl {
   char   *luaparlists;
   short   luaparlistcb;
   int     sizei;   /* Number of parameters */
+};
+
+static marpaESLIF_lua_functiondecl_t marpaESLIF_lua_functiondecl_varargs = {
+  "(...)",
+  1,
+  1
 };
 
 #include "marpaESLIF/internal/eslif.h"

@@ -1879,7 +1879,7 @@ static short _marpaESLIFRecognizer_lua_push_contextb(marpaESLIFRecognizer_t *mar
   /* return function()                                                                             */
   /*   local PARLIST = table.unpack(marpaESLIFContextStackp:get())                                 */
   /*   marpaESLIFContextStackp:push(table.pack(EXPLIST))                                           */
-  /*   return niledtablekv2(PARLIST, PARLIST)                                                      */
+  /*   return niledtablekv('PARLIST[0]', PARLIST[0], etc..., 'PARLIST[n]', PARLIST(n))             */
   /* end                                                                                           */
   /* --------------------------------------------------------------------------------------------- */
   if (symbolp->pushContextActionp == NULL) {
@@ -2030,7 +2030,7 @@ static short _marpaESLIFRecognizer_lua_pop_contextb(marpaESLIFRecognizer_t *marp
 {
   static const char *funcs = "_marpaESLIFRecognizer_lua_pop_contextb";
   int                topi  = -1;
-  const char        *pops  =
+  static const char *pops  =
     "return function()\n"
     "  marpaESLIFContextStackp:pop()\n"
     "end\n";
