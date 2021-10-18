@@ -17,11 +17,8 @@ const static char *grammars = "# Parameterized grammar\n"
   "a<-(x)        ::= b\n"
   "b        ::= c->(1)\n"
   "           | c->(2)\n"
-  "c<-(x)   ::= d->(x,1)\n"
-  "           | d->(x,2)\n"
-  "c<-(y)   ::= d->(x,3)\n"
-  "d<-(a,b)   ~ 'E' # ::lua->[[toto]]\n"
-  "d<-(c,d)   ~ 'F' # ::lua->[[toto]]\n"
+  "c<-(x)   ::= d\n"
+  "d          ~ 'E' # ::lua->[[toto]]\n"
   ;
 
 const static char *inputs = "E";

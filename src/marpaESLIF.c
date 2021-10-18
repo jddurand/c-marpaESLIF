@@ -1,7 +1,7 @@
 // #undef MARPAESLIF_NTRACE
 // #define JDD_PARAMETERIZED_RHS_AS_LEXEME
 // #define JDD_PARAMETERIZED_RHS_AS_DUPLICATED_RULE
-#define JDD_PARAMETERIZED_LEXEMES_ARE_UNIQUE
+#define JDD_PARAMETERIZED_LEXEMES_ARE_NOT_ALLOWED
 
 #include <stdlib.h>
 #include <errno.h>
@@ -3581,6 +3581,13 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
         symbolp->lookupResolvedLeveli = grammarp->leveli;
         continue;
       }
+
+#ifdef JDD_PARAMETERIZED_LEXEMES_ARE_NOT_ALLOWED
+      if (symbolp->parami >= 0) {
+        MARPAESLIF_ERRORF(marpaESLIFp, "Looking at rules in grammar level %d (%s): Symbol No %d (%s) is a lexeme and cannot be parameterized", grammari, grammarp->descp->asciis, symbolp->idi, symbolp->descp->asciis);
+        goto err;
+      }
+#endif
 
       /* In any case, this is a a meta symbol */
       metap = symbolp->u.metap;
