@@ -14,7 +14,7 @@ typedef struct marpaESLIF_context {
 } marpaESLIF_context_t;
 
 const static char *grammars = "# Parameterized grammar\n"
-  ":discard ::= ' '\n"
+  ":start ::= a->(0)\n"
   "a<-(x)   ::= b->(x+1)\n"
   "b<-(x)   ::= c->(x, 1)\n"
   "#           | c->(x, 1)\n"
