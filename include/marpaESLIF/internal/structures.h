@@ -195,6 +195,7 @@ struct marpaESLIFSymbol {
   marpaESLIFAction_t            *getContextActionp;      /* For context symbols, context get action */
   short                          lookaheadb;             /* For lookahead symbols */
   char                          *asciishows;             /* Symbol show (ASCII) */
+  short                          internalb;              /* Internal symbol ? */
   short                          contextb;               /* Context internal symbol ? */
 };
 

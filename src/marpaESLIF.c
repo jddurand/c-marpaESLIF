@@ -1,4 +1,4 @@
-// #undef MARPAESLIF_NTRACE
+#undef MARPAESLIF_NTRACE
 // #define JDD_PARAMETERIZED_RHS_AS_LEXEME
 // #define JDD_PARAMETERIZED_RHS_AS_DUPLICATED_RULE
 #define JDD_PARAMETERIZED_LEXEMES_ARE_NOT_ALLOWED
@@ -164,12 +164,13 @@ static marpaESLIFValueResult_t marpaESLIFValueResultLazy = {
 /* -------------------------------------------------------------------------------------------- */
 /* Util macros on symbol                                                                        */
 /* -------------------------------------------------------------------------------------------- */
-#define MARPAESLIF_IS_META(symbolp)               ((symbolp)->type == MARPAESLIF_SYMBOL_TYPE_META)
-#define MARPAESLIF_IS_LEXEME(symbolp)             (MARPAESLIF_IS_META(symbolp) && (! (symbolp)->lhsb))
-#define MARPAESLIF_IS_TERMINAL(symbolp)           ((symbolp)->type == MARPAESLIF_SYMBOL_TYPE_TERMINAL)
-#define MARPAESLIF_IS_LEXEME_OR_TERMINAL(symbolp) (MARPAESLIF_IS_LEXEME(symbolp) || MARPAESLIF_IS_TERMINAL(symbolp))
-#define MARPAESLIF_IS_PSEUDO_TERMINAL(symbolp)    (MARPAESLIF_IS_TERMINAL(symbolp) && (symbolp)->u.terminalp->pseudob)
-#define MARPAESLIF_IS_DISCARD(symbolp)            (symbolp)->discardb
+#define MARPAESLIFSYMBOL_IS_META(symbolp)               ((symbolp)->type == MARPAESLIF_SYMBOL_TYPE_META)
+#define MARPAESLIFSYMBOL_IS_LEXEME(symbolp)             (MARPAESLIFSYMBOL_IS_META(symbolp) && (! (symbolp)->lhsb))
+#define MARPAESLIFSYMBOL_IS_INTERNAL(symbolp)           (MARPAESLIFSYMBOL_IS_META(symbolp) && symbolp->internalb)
+#define MARPAESLIFSYMBOL_IS_TERMINAL(symbolp)           ((symbolp)->type == MARPAESLIF_SYMBOL_TYPE_TERMINAL)
+#define MARPAESLIFSYMBOL_IS_LEXEME_OR_TERMINAL(symbolp) (MARPAESLIFSYMBOL_IS_LEXEME(symbolp) || MARPAESLIFSYMBOL_IS_TERMINAL(symbolp))
+#define MARPAESLIFSYMBOL_IS_PSEUDO_TERMINAL(symbolp)    (MARPAESLIFSYMBOL_IS_TERMINAL(symbolp) && (symbolp)->u.terminalp->pseudob)
+#define MARPAESLIFSYMBOL_IS_DISCARD(symbolp)            (symbolp)->discardb
 
 /* -------------------------------------------------------------------------------------------- */
 /* In theory, when rci is MARPAESLIF_MATCH_OK, marpaESLIFValueResult type must be a valid ARRAY */
@@ -185,7 +186,7 @@ static marpaESLIFValueResult_t marpaESLIFValueResultLazy = {
         goto err;                                                       \
       } else if (marpaESLIFValueResultp->u.a.sizel <= 0) {                \
         /* This is an error unless symbol is :eof */                    \
-        if (MARPAESLIF_UNLIKELY(! MARPAESLIF_IS_PSEUDO_TERMINAL(symbolp))) { \
+        if (MARPAESLIF_UNLIKELY(! MARPAESLIFSYMBOL_IS_PSEUDO_TERMINAL(symbolp))) { \
           MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Match ok for pseudo-terminal %s", symbolp->descp->asciis); \
           goto err;                                                     \
         }                                                               \
@@ -3256,6 +3257,25 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
         }
       }
     }
+    if (startp == NULL) {
+      /* By default it is first first not internal meta symbol - */
+      for (symboli = 0; symboli < GENERICSTACK_USED(symbolStackp); symboli++) {
+	MARPAESLIF_INTERNAL_GET_SYMBOL_FROM_STACK(marpaESLIFp, symbolp, symbolStackp, symboli);
+	if (! MARPAESLIFSYMBOL_IS_META(symbolp)) {
+	  continue;
+	}
+	if (MARPAESLIFSYMBOL_IS_INTERNAL(symbolp)) {
+	  continue;
+	}
+	startp = symbolp;
+	break;
+      }
+    }
+    if (startp == NULL) {
+      MARPAESLIF_ERRORF(marpaESLIFp, "No :start symbol at grammar level %d (%s)", grammari, grammarp->descp->asciis);
+      goto err;
+    }
+    MARPAESLIF_TRACEF(marpaESLIFp, funcs, "Precomputing grammar level %d (%s): Start symbol is No %d <%s>", grammari, grammarp->descp->asciis, startp->idi, startp->descp->asciis);
 
     /* Before precomputing we have to clone. Why ? This is because the bootstrap is changing symbols event behaviours after creating them. */
     /* But Marpa does not know about it. */
@@ -3341,6 +3361,8 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
       marpaWrapperRecognizer_freev(marpaWrapperRecognizerp);
       goto err;
     }
+    MARPAESLIF_TRACEF(marpaESLIFp, funcs, "Getting start first grammar terminals in grammar level %d (%s): Got %ld grammar terminals", grammari, grammarp->descp->asciis, (unsigned long) nSymboll);
+
     if ((nSymboll > 0) && (symbolArrayp != NULL)) {
       tmpl = nSymboll * sizeof(int);
       if (grammarp->symbolArrayStartp != NULL) {
@@ -3368,6 +3390,7 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
         grammarp->nTerminall++;
       }
     }
+    MARPAESLIF_TRACEF(marpaESLIFp, funcs, "Getting all grammar terminals in grammar level %d (%s): Got %ld grammar terminals", grammari, grammarp->descp->asciis, grammarp->nTerminall);
     if (grammarp->nTerminall > 0) {
       if (grammarp->terminalArrayp != NULL) {
         free(grammarp->terminalArrayp);
@@ -3430,7 +3453,7 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
         symbolp->discardEvents = rulep->discardEvents;
         symbolp->discardEventb = rulep->discardEventb;
 
-        if (! MARPAESLIF_IS_TERMINAL(symbolp)) {
+        if (! MARPAESLIFSYMBOL_IS_TERMINAL(symbolp)) {
           fastDiscardb = 0;
         }
       }
@@ -3577,7 +3600,7 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
       MARPAESLIF_INTERNAL_GET_SYMBOL_FROM_STACK(marpaESLIFp, symbolp, symbolStackp, symboli);
 
       /* Only lexemes should be looked */
-      if (! MARPAESLIF_IS_LEXEME(symbolp)) {
+      if (! MARPAESLIFSYMBOL_IS_LEXEME(symbolp)) {
         symbolp->lookupResolvedLeveli = grammarp->leveli;
         continue;
       }
@@ -3623,7 +3646,9 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
           goto err;
         }
         MARPAESLIF_TRACEF(marpaESLIFp, funcs, "Grammar level %d (%s): symbol %d <%s> resolved as symbol %d <%s> in grammar level %d", grammari, grammarp->descp->asciis, symbolp->idi, symbolp->descp->asciis, subSymbolp->idi, subSymbolp->u.metap->asciinames, subGrammarp->leveli);
+	symbolp->lookupSymbolp = subSymbolp;
       }
+      symbolp->lookupResolvedLeveli = subGrammarp->leveli;
 
       /* Clone for the symbol in lexeme mode: no event except when this is on the left side of an exception character '-' */
       /* meta terminals are an exception: they will raised a peeking recognizer, then we want to keep everything intact.  */
@@ -3696,10 +3721,7 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
 
       marpaWrapperGrammarClonep = NULL;
 
-      /* Commit resolved level in symbol */
-      symbolp->lookupResolvedLeveli = subGrammarp->leveli;
-
-      MARPAESLIF_TRACEF(marpaESLIFp,  funcs, "... Grammar level %d (%s): symbol %d (%s) have grammar resolved level set to   %d", grammari, grammarp->descp->asciis, symbolp->idi, symbolp->descp->asciis, symbolp->lookupResolvedLeveli);
+      MARPAESLIF_TRACEF(marpaESLIFp,  funcs, "... Grammar level %d (%s): symbol %d (%s) have grammar resolved level set to %d", grammari, grammarp->descp->asciis, symbolp->idi, symbolp->descp->asciis, symbolp->lookupResolvedLeveli);
     }
   }
 
@@ -3733,14 +3755,14 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
       /* ---------------------------------------- */
       /* Left side must be a lexeme or a terminal */
       /* ---------------------------------------- */
-      if (MARPAESLIF_UNLIKELY(! MARPAESLIF_IS_LEXEME_OR_TERMINAL(symbolp))) {
+      if (MARPAESLIF_UNLIKELY(! MARPAESLIFSYMBOL_IS_LEXEME_OR_TERMINAL(symbolp))) {
         MARPAESLIF_ERRORF(marpaESLIFp, "At grammar level %d (%s), symbol %d <%s> is on the left side of an exception and must be a lexeme or a terminal", grammari, grammarp->descp->asciis, symbolp->idi, symbolp->descp->asciis);
         goto err;
       }
       /* ----------------------------------------- */
       /* Right side must be a lexeme or a terminal */
       /* ----------------------------------------- */
-      if (MARPAESLIF_UNLIKELY(! MARPAESLIF_IS_LEXEME_OR_TERMINAL(exceptionp))) {
+      if (MARPAESLIF_UNLIKELY(! MARPAESLIFSYMBOL_IS_LEXEME_OR_TERMINAL(exceptionp))) {
         MARPAESLIF_ERRORF(marpaESLIFp, "At grammar level %d (%s), symbol %d <%s> is on the right side of an exception and must be a lexeme or a terminal", grammari, grammarp->descp->asciis, exceptionp->idi, exceptionp->descp->asciis);
         goto err;
       }
@@ -3766,7 +3788,7 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
       /* -------------------------------------------- */
       /* They are lexemes, so per def metap->marpaWrapperGrammarLexemeClonep is not NULL */
       /* A special case is with parameterized symbol - we use a double indirection */
-      if (MARPAESLIF_IS_LEXEME(symbolp)) {
+      if (MARPAESLIFSYMBOL_IS_LEXEME(symbolp)) {
         if (MARPAESLIF_UNLIKELY(! _marpaESLIFGrammar_haveLexemeb(marpaESLIFGrammarp, grammarp->leveli + symbolp->lookupLevelDeltai, symbolp->u.metap->marpaWrapperGrammarLexemeClonep, &haveLexemeb))) {
           goto err;
         }
@@ -3775,7 +3797,7 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
           goto err;
         }
       }
-      if (MARPAESLIF_IS_LEXEME(exceptionp)) {
+      if (MARPAESLIFSYMBOL_IS_LEXEME(exceptionp)) {
         if (MARPAESLIF_UNLIKELY(! _marpaESLIFGrammar_haveLexemeb(marpaESLIFGrammarp, grammarp->leveli + exceptionp->lookupLevelDeltai, exceptionp->u.metap->marpaWrapperGrammarLexemeClonep, &haveLexemeb))) {
           goto err;
         }
@@ -3950,12 +3972,12 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
     symbolStackp = grammarp->symbolStackp;
     for (symboli = 0; symboli < GENERICSTACK_USED(symbolStackp); symboli++) {
       MARPAESLIF_INTERNAL_GET_SYMBOL_FROM_STACK(marpaESLIFp, symbolp, symbolStackp, symboli);
-      if (MARPAESLIF_IS_LEXEME(symbolp)) {
+      if (MARPAESLIFSYMBOL_IS_LEXEME(symbolp)) {
         if (MARPAESLIF_UNLIKELY((symbolp->eventPredicteds != NULL) || (symbolp->eventNulleds != NULL) || (symbolp->eventCompleteds != NULL))) {
           MARPAESLIF_ERRORF(marpaESLIFp, "Event on symbol <%s> at grammar level %d (%s) but it is a lexeme, you must use the \":lexeme <%s> pause => eventType event => eventName\" form", symbolp->descp->asciis, grammari, grammarp->descp->asciis, symbolp->descp->asciis);
           goto err;
         }
-      } else if (MARPAESLIF_UNLIKELY(MARPAESLIF_IS_TERMINAL(symbolp))) {
+      } else if (MARPAESLIF_UNLIKELY(MARPAESLIFSYMBOL_IS_TERMINAL(symbolp))) {
         if ((symbolp->eventPredicteds != NULL) || (symbolp->eventNulleds != NULL) || (symbolp->eventCompleteds != NULL)) {
           MARPAESLIF_ERRORF(marpaESLIFp, "Event on symbol <%s> at grammar level %d (%s) but it is a terminal, you must use the \":terminal <%s> pause => eventType event => eventName\" form", symbolp->descp->asciis, grammari, grammarp->descp->asciis, symbolp->descp->asciis);
           goto err;
@@ -4017,7 +4039,7 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
       if (MARPAESLIF_UNLIKELY(! symbolp->lhsb)) {
         /* The bootstrap grammar made sure that, if this is a terminal, it is unique in this grammar, so that is ok to */
         /* have an associated event */
-        if (MARPAESLIF_UNLIKELY(! MARPAESLIF_IS_TERMINAL(symbolp))) {
+        if (MARPAESLIF_UNLIKELY(! MARPAESLIFSYMBOL_IS_TERMINAL(symbolp))) {
           /* This symbol is not an lhs in this grammar */
           MARPAESLIF_ERRORF(marpaESLIFp, "Discard event \"%s\" is not possible unless the RHS is also an LHS at grammar level %d (%s)", symbolp->discardEvents, grammari, grammarp->descp->asciis);
           goto err;
@@ -4139,7 +4161,7 @@ static inline short _marpaESLIFGrammar_haveLexemeb(marpaESLIFGrammar_t *marpaESL
       continue;
     }
 
-    if (MARPAESLIF_IS_LEXEME(symbolp)) {
+    if (MARPAESLIFSYMBOL_IS_LEXEME(symbolp)) {
       haveLexemeb = 1;
       break;
     }
@@ -4793,6 +4815,7 @@ static inline marpaESLIF_symbol_t *_marpaESLIF_symbol_newp(marpaESLIF_t *marpaES
   symbolp->getContextActionp       = NULL;
   symbolp->lookaheadb              = 0;
   symbolp->asciishows              = NULL;
+  symbolp->internalb               = 0;
   symbolp->contextb                = 0;
 
   symbolp->nullableRuleStackp = &(symbolp->_nullableRuleStack);
@@ -8078,7 +8101,7 @@ static inline short __marpaESLIFRecognizer_isPseudoTerminalExpectedb(marpaESLIFR
 
     switch (symbolp->type) {
     case MARPAESLIF_SYMBOL_TYPE_TERMINAL:
-      if (MARPAESLIF_IS_PSEUDO_TERMINAL(symbolp)) {
+      if (MARPAESLIFSYMBOL_IS_PSEUDO_TERMINAL(symbolp)) {
         isPseudoTerminalExpectedb = 1;
       }
       break;
@@ -8585,7 +8608,7 @@ static inline short _marpaESLIFRecognizer_resume_oneb(marpaESLIFRecognizer_t *ma
 
       /* Remember if we matched a pseudo terminal */
       if (! isPseudoTerminalMatchb) {
-        isPseudoTerminalMatchb = MARPAESLIF_IS_PSEUDO_TERMINAL(symbolp);
+        isPseudoTerminalMatchb = MARPAESLIFSYMBOL_IS_PSEUDO_TERMINAL(symbolp);
       }
 
       break;
@@ -9041,7 +9064,7 @@ short marpaESLIFRecognizer_lexeme_alternativeb(marpaESLIFRecognizer_t *marpaESLI
     goto err;
   }
 
-  if (MARPAESLIF_UNLIKELY(! MARPAESLIF_IS_LEXEME(symbolp))) {
+  if (MARPAESLIF_UNLIKELY(! MARPAESLIFSYMBOL_IS_LEXEME(symbolp))) {
     MARPAESLIF_ERRORF(marpaESLIFp, "Symbol <%s> is not a lexeme", lexemes);
     goto err;
   }
@@ -9511,7 +9534,7 @@ short marpaESLIFRecognizer_lexeme_tryb(marpaESLIFRecognizer_t *marpaESLIFRecogni
     goto err;
   }
 
-  if (MARPAESLIF_UNLIKELY(! MARPAESLIF_IS_LEXEME(symbolp))) {
+  if (MARPAESLIF_UNLIKELY(! MARPAESLIFSYMBOL_IS_LEXEME(symbolp))) {
     MARPAESLIF_ERRORF(marpaESLIFp, "Symbol <%s> is not a lexeme", lexemes);
     goto err;
   }
@@ -9751,7 +9774,7 @@ short marpaESLIFRecognizer_lexeme_expectedb(marpaESLIFRecognizer_t *marpaESLIFRe
     if (MARPAESLIF_UNLIKELY(symbolp == NULL)) {
       goto err;
     }
-    if (! MARPAESLIF_IS_LEXEME(symbolp)) {
+    if (! MARPAESLIFSYMBOL_IS_LEXEME(symbolp)) {
       continue;
     }
 
@@ -12962,7 +12985,7 @@ static inline short _marpaESLIFRecognizer_readb(marpaESLIFRecognizer_t *marpaESL
         MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, symbolp->u.metap->asciinames); \
         MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, ">");      \
       }                                                                 \
-      if (MARPAESLIF_IS_LEXEME(symbolp)) {                              \
+      if (MARPAESLIFSYMBOL_IS_LEXEME(symbolp)) {                              \
         /* Default lookup is grammarp->leveli + 1 : we output the @deltaLeveli information if this is not the case */ \
         /* When lookup is grammarp->leveli, this is a forced lookup in grammar at the same level: no need of @ character neither */ \
         if ((symbolp->lookupResolvedLeveli != grammarp->leveli) && (symbolp->lookupResolvedLeveli != (grammarp->leveli + 1))) { \
@@ -13303,7 +13326,7 @@ static inline void _marpaESLIF_grammar_createshowv(marpaESLIFGrammar_t *marpaESL
         ||
         (symbolp->generatorActionp!= NULL)
         ) {
-      MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, MARPAESLIF_IS_LEXEME(symbolp) ? ":lexeme" : ":terminal");
+      MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, MARPAESLIFSYMBOL_IS_LEXEME(symbolp) ? ":lexeme" : ":terminal");
       MARPAESLIF_LEVEL_CREATESHOW(grammarp, asciishowl, asciishows);
       MARPAESLIF_SYMBOL_CREATESHOW(asciishowl, asciishows, grammarp, symbolp);
 
@@ -13506,7 +13529,7 @@ static inline void _marpaESLIF_grammar_createshowv(marpaESLIFGrammar_t *marpaESL
     if (symbolp->lhsb) {
       continue;
     }
-    if (symbolp->type != MARPAESLIF_SYMBOL_TYPE_META) {
+    if (! MARPAESLIFSYMBOL_IS_META(symbolp)) {
       continue;
     }
     if (symbolp->lookupSymbolp != NULL) {
@@ -18143,7 +18166,7 @@ static inline short _marpaESLIFRecognizer_last_lexemeDatab(marpaESLIFRecognizer_
     MARPAESLIF_ERRORF(marpaESLIFp, "Failed to find <%s>", lexemes);
     goto err;
   }
-  if (! MARPAESLIF_IS_LEXEME(symbolp)) {
+  if (! MARPAESLIFSYMBOL_IS_LEXEME(symbolp)) {
     MARPAESLIF_ERRORF(marpaESLIFp, "Symbol <%s> is not a lexeme", lexemes);
     goto err;
   }
@@ -18152,7 +18175,7 @@ static inline short _marpaESLIFRecognizer_last_lexemeDatab(marpaESLIFRecognizer_
     conditionb = (symbolp->eventBefores != NULL) || (symbolp->eventAfters != NULL);
   } else {
     /* Any symbol that is a lexeme or the :discard entry */
-    conditionb = MARPAESLIF_IS_LEXEME(symbolp) || MARPAESLIF_IS_DISCARD(symbolp);
+    conditionb = MARPAESLIFSYMBOL_IS_LEXEME(symbolp) || MARPAESLIFSYMBOL_IS_DISCARD(symbolp);
   }
 
   lexemeDatap = lexemeDatapp[symbolp->idi];
@@ -20979,7 +21002,7 @@ static inline marpaESLIFSymbol_t *_marpaESLIFSymbol_meta_newp(marpaESLIF_t *marp
   }
 
   /* This must be a lexeme */
-  if (! MARPAESLIF_IS_LEXEME(foundSymbolp)) {
+  if (! MARPAESLIFSYMBOL_IS_LEXEME(foundSymbolp)) {
     MARPAESLIF_ERRORF(marpaESLIFp, "Symbol <%s> must be a lexeme", symbols);
     goto err;
   }

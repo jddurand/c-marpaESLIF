@@ -7327,8 +7327,9 @@ static short _marpaESLIF_bootstrap_G1_action_discard_ruleb(void *userDatavp, mar
   if (MARPAESLIF_UNLIKELY(discardp == NULL)) {
     goto err;
   }
-  /* Make sure it has the internal discard flag */
+  /* Make sure it has the internal and discard flags */
   MARPAESLIF_TRACEF(marpaESLIFp, funcs, "Marking meta symbol %s in grammar level %d as :discard symbol", discardp->descp->asciis, grammarp->leveli);
+  discardp->internalb = 1;
   discardp->discardb = 1;
 
   /* Check the rhs primary */
@@ -9284,6 +9285,7 @@ static marpaESLIF_rule_t *_marpaESLIF_bootstrap_check_rulep(marpaESLIF_t *marpaE
         MARPAESLIF_ERRORF(marpaESLIFp, "symbolStackp push failure, %s", strerror(errno));
         goto err;
       }
+      symbolp->internalb = 1;
       symbolp->contextb = 1;
 
       /* We attach a nullable event to this symbol */

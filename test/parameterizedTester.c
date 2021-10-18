@@ -14,10 +14,11 @@ typedef struct marpaESLIF_context {
 } marpaESLIF_context_t;
 
 const static char *grammars = "# Parameterized grammar\n"
-  "a<-(x)        ::= b\n"
-  "b        ::= c->(1)\n"
-  "           | c->(2)\n"
-  "c<-(x)   ::= d\n"
+  ":discard ::= ' '\n"
+  "a<-(x)   ::= b->(x+1)\n"
+  "b<-(x)   ::= c->(x, 1)\n"
+  "#           | c->(x, 1)\n"
+  "c<-(x,y) ::= d\n"
   "d          ~ 'E' # ::lua->[[toto]]\n"
   ;
 
@@ -45,13 +46,14 @@ int main() {
   short                        exhaustedb;
 
   genericLoggerp = GENERICLOGGER_NEW(GENERICLOGGER_LOGLEVEL_INFO);
-  GENERICLOGGER_LEVEL_SET(genericLoggerp, GENERICLOGGER_LOGLEVEL_TRACE);
 
   marpaESLIFOption.genericLoggerp = genericLoggerp;
   marpaESLIFp = marpaESLIF_newp(&marpaESLIFOption);
   if (marpaESLIFp == NULL) {
     goto err;
   }
+
+  GENERICLOGGER_LEVEL_SET(genericLoggerp, GENERICLOGGER_LOGLEVEL_TRACE);
 
   marpaESLIFGrammarOption.bytep               = (void *) grammars;
   marpaESLIFGrammarOption.bytel               = strlen(grammars);
@@ -92,7 +94,6 @@ int main() {
   marpaESLIFRecognizerOption.regexActionResolverp = NULL;
   marpaESLIFRecognizerOption.importerp            = NULL;
 
-  GENERICLOGGER_LEVEL_SET(genericLoggerp, GENERICLOGGER_LOGLEVEL_TRACE);
   GENERICLOGGER_NOTICE(genericLoggerp, "Testing interactive recognizer");
   marpaESLIFRecognizerp = marpaESLIFRecognizer_newp(marpaESLIFGrammarp, &marpaESLIFRecognizerOption);
   if (marpaESLIFRecognizerp == NULL) {
