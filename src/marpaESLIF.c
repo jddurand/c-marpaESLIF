@@ -5360,9 +5360,9 @@ static inline marpaESLIF_t *_marpaESLIF_newp(marpaESLIFOption_t *marpaESLIFOptio
   marpaESLIFp->marpaESLIFGrammarp->grammarp = (marpaESLIF_grammar_t *) GENERICSTACK_GET_PTR(marpaESLIFp->marpaESLIFGrammarp->grammarStackp, 0);
 
 #ifndef MARPAESLIF_NTRACE
-  GENERICLOGGER_INFO(marpaESLIFp->marpaESLIFOption.genericLoggerp, "=====================");
-  GENERICLOGGER_INFO(marpaESLIFp->marpaESLIFOption.genericLoggerp, "ESLIF phase 1 follows");
-  GENERICLOGGER_INFO(marpaESLIFp->marpaESLIFOption.genericLoggerp, "=====================");
+  GENERICLOGGER_TRACE(marpaESLIFp->marpaESLIFOption.genericLoggerp, "=====================");
+  GENERICLOGGER_TRACE(marpaESLIFp->marpaESLIFOption.genericLoggerp, "ESLIF phase 1 follows");
+  GENERICLOGGER_TRACE(marpaESLIFp->marpaESLIFOption.genericLoggerp, "=====================");
   _marpaESLIF_dump(marpaESLIFp);
 #endif
 
@@ -5458,9 +5458,9 @@ static inline marpaESLIF_t *_marpaESLIF_newp(marpaESLIFOption_t *marpaESLIFOptio
 
   
 #ifndef MARPAESLIF_NTRACE
-  GENERICLOGGER_INFO(marpaESLIFp->marpaESLIFOption.genericLoggerp, "=====================");
-  GENERICLOGGER_INFO(marpaESLIFp->marpaESLIFOption.genericLoggerp, "ESLIF phase 2 follows");
-  GENERICLOGGER_INFO(marpaESLIFp->marpaESLIFOption.genericLoggerp, "=====================");
+  GENERICLOGGER_TRACE(marpaESLIFp->marpaESLIFOption.genericLoggerp, "=====================");
+  GENERICLOGGER_TRACE(marpaESLIFp->marpaESLIFOption.genericLoggerp, "ESLIF phase 2 follows");
+  GENERICLOGGER_TRACE(marpaESLIFp->marpaESLIFOption.genericLoggerp, "=====================");
   _marpaESLIF_dump(marpaESLIFp);
 #endif
 
@@ -10116,6 +10116,9 @@ short marpaESLIFRecognizer_eventb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp,
   marpaESLIFEvent_t         eventArray;
   char                     *tmpp;
   short                     rcb;
+#ifndef MARPAESLIF_NTRACE
+  char                     *symbols = (symbolp != NULL) ? _marpaESLIFGrammar_symbolDescriptionCallbacks(marpaESLIFRecognizerp->marpaESLIFGrammarp, symbolp->idi) : "??";
+#endif
 
   MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_INC;
   MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "start");
@@ -10142,25 +10145,25 @@ short marpaESLIFRecognizer_eventb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp,
   /* Detect hook events and process them instead of pushing to the end-user */
   if ((events != NULL) && (events[0] == ':')) {
     if (strcmp(events, ":discard[on]") == 0) {
-      MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "%s: event %s: enabling discard", (symbolp != NULL) ? symbolp->descp->asciis : "??", events);
+      MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "%s: event %s: enabling discard", symbols, events);
       if (MARPAESLIF_UNLIKELY(! _marpaESLIFRecognizer_hook_discardb(marpaESLIFRecognizerp, 1))) {
         goto err;
       }
       goto no_push;
     } else if (strcmp(events, ":discard[off]") == 0) {
-      MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "%s: event %s: disabling discard", (symbolp != NULL) ? symbolp->descp->asciis : "??", events);
+      MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "%s: event %s: disabling discard", symbols, events);
       if (MARPAESLIF_UNLIKELY(! _marpaESLIFRecognizer_hook_discardb(marpaESLIFRecognizerp, 0))) {
         goto err;
       }
       goto no_push;
     } else if (strcmp(events, ":discard[switch]") == 0) {
-      MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "%s: event %s: switching discard", (symbolp != NULL) ? symbolp->descp->asciis : "??", events);
+      MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "%s: event %s: switching discard", symbols, events);
       if (MARPAESLIF_UNLIKELY(! _marpaESLIFRecognizer_hook_discard_switchb(marpaESLIFRecognizerp))) {
         goto err;
       }
       goto no_push;
     } else if (strcmp(events, ":context") == 0) {
-      MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "%s: event %s: saving context", (symbolp != NULL) ? symbolp->descp->asciis : "??", events);
+      MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "%s: event %s: saving context", symbols, events);
       /* abort(); */
       goto no_push;
     }
@@ -10358,6 +10361,9 @@ static inline short _marpaESLIFRecognizer_push_grammar_eventsb(marpaESLIFRecogni
   marpaESLIFEventType_t         type;
   short                         continue_last_discard_loopb;
   size_t                        discardl;
+#ifndef MARPAESLIF_NTRACE
+  char                         *symbols;
+#endif
 
   MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_INC;
   MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "start");
@@ -10384,8 +10390,14 @@ static inline short _marpaESLIFRecognizer_push_grammar_eventsb(marpaESLIFRecogni
       if (symboli >= 0) {
         /* Look for the symbol */
         MARPAESLIF_INTERNAL_GET_SYMBOL_FROM_STACK(marpaESLIFRecognizerp->marpaESLIFp, symbolp, symbolStackp, symboli);
+#ifndef MARPAESLIF_NTRACE
+        symbols = _marpaESLIFGrammar_symbolDescriptionCallbacks(marpaESLIFRecognizerp->marpaESLIFGrammarp, symbolp->idi);
+#endif
       } else {
         symbolp = NULL;
+#ifndef MARPAESLIF_NTRACE
+        symbols = "??";
+#endif
       }
 
       /* Our grammar made sure there can by only one named event per symbol */
@@ -10400,21 +10412,21 @@ static inline short _marpaESLIFRecognizer_push_grammar_eventsb(marpaESLIFRecogni
           marpaESLIFRecognizerp->lastCompletionSymbolp = symbolp;
         }
         marpaESLIFRecognizerp->completedb = 1;
-        MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "%s: completion event", (symbolp != NULL) ? symbolp->descp->asciis : "??");
+        MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "%s: completion event", symbols);
         break;
       case MARPAWRAPPERGRAMMAR_EVENT_NULLED:
         type        = MARPAESLIF_EVENTTYPE_NULLED;
         if (symbolp != NULL) {
           events = symbolp->eventNulleds;
         }
-        MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "%s: nullable event", (symbolp != NULL) ? symbolp->descp->asciis : "??");
+        MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "%s: nullable event", symbols);
         break;
       case MARPAWRAPPERGRAMMAR_EVENT_EXPECTED:
         type        = MARPAESLIF_EVENTTYPE_PREDICTED;
         if (symbolp != NULL) {
           events = symbolp->eventPredicteds;
         }
-        MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "%s: prediction event", (symbolp != NULL) ? symbolp->descp->asciis : "??");
+        MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "%s: prediction event", symbols);
         break;
       case MARPAWRAPPERGRAMMAR_EVENT_EXHAUSTED:
         type         = MARPAESLIF_EVENTTYPE_EXHAUSTED;
@@ -10426,7 +10438,7 @@ static inline short _marpaESLIFRecognizer_push_grammar_eventsb(marpaESLIFRecogni
         /* symboli will be -1 as per marpaWrapper spec */
         break;
       default:
-        MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "%s: unsupported event type %d", (symbolp != NULL) ? symbolp->descp->asciis : "??", grammarEventp[i].eventType);
+        MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "%s: unsupported event type %d", symbols, grammarEventp[i].eventType);
         break;
       }
       if (MARPAESLIF_UNLIKELY(! _marpaESLIFRecognizer_push_eventb(marpaESLIFRecognizerp, type, symbolp, events, NULL /* discardArrayp */))) {
@@ -12977,6 +12989,12 @@ static inline void _marpaESLIF_symbol_createshowv(marpaESLIF_symbol_t *marpaESLI
   size_t asciishowl = 0;
 
   MARPAESLIF_SYMBOL_CREATESHOW(asciishowl, asciishows, grammarp, marpaESLIF_symbolp);
+
+  asciishowl++; /* NUL byte */
+
+  if (asciishowlp != NULL) {
+    *asciishowlp = asciishowl;
+  }
 }
 
 /*****************************************************************************/
@@ -21502,12 +21520,12 @@ static inline void _marpaESLIF_dump(marpaESLIF_t *marpaESLIFp)
   char *grammarscripts;
 
   if (marpaESLIFGrammar_ngrammarib(marpaESLIF_grammarp(marpaESLIFp), &ngrammari)) {
-    GENERICLOGGER_NOTICEF(marpaESLIFp->marpaESLIFOption.genericLoggerp, "ESLIF's ngrammari is %d", ngrammari);
+    GENERICLOGGER_TRACEF(marpaESLIFp->marpaESLIFOption.genericLoggerp, "ESLIF's ngrammari is %d", ngrammari);
     for (leveli = 0; leveli < ngrammari; leveli++) {
       if (marpaESLIFGrammar_grammarshowform_by_levelb(marpaESLIF_grammarp(marpaESLIFp), &grammarshows, leveli, NULL)) {
-        GENERICLOGGER_NOTICE (marpaESLIFp->marpaESLIFOption.genericLoggerp, "-------------------------");
-        GENERICLOGGER_NOTICEF(marpaESLIFp->marpaESLIFOption.genericLoggerp, "ESLIF grammar at level %d:", leveli);
-        GENERICLOGGER_NOTICEF(marpaESLIFp->marpaESLIFOption.genericLoggerp, "-------------------------\n%s", grammarshows);
+        GENERICLOGGER_TRACE (marpaESLIFp->marpaESLIFOption.genericLoggerp, "-------------------------");
+        GENERICLOGGER_TRACEF(marpaESLIFp->marpaESLIFOption.genericLoggerp, "ESLIF grammar at level %d:", leveli);
+        GENERICLOGGER_TRACEF(marpaESLIFp->marpaESLIFOption.genericLoggerp, "-------------------------\n%s", grammarshows);
       } else {
         GENERICLOGGER_ERRORF(marpaESLIFp->marpaESLIFOption.genericLoggerp, "marpaESLIFGrammar_grammarshowform_by_levelb(marpaESLIF_grammarp(marpaESLIFp), &grammarshows, leveli, NULL) failure, %s", strerror(errno));
         goto err;
@@ -21523,9 +21541,9 @@ static inline void _marpaESLIF_dump(marpaESLIF_t *marpaESLIFp)
     GENERICLOGGER_ERRORF(marpaESLIFp->marpaESLIFOption.genericLoggerp, "marpaESLIFGrammar_grammarshowscriptb failure, %s", strerror(errno));
     goto err;
   }
-  GENERICLOGGER_NOTICE (marpaESLIFp->marpaESLIFOption.genericLoggerp, "-------------------------");
-  GENERICLOGGER_NOTICE (marpaESLIFp->marpaESLIFOption.genericLoggerp, "ESLIF grammar script:");
-  GENERICLOGGER_NOTICEF(marpaESLIFp->marpaESLIFOption.genericLoggerp, "-------------------------\n%s", grammarscripts);
+  GENERICLOGGER_TRACE (marpaESLIFp->marpaESLIFOption.genericLoggerp, "-------------------------");
+  GENERICLOGGER_TRACE (marpaESLIFp->marpaESLIFOption.genericLoggerp, "ESLIF grammar script:");
+  GENERICLOGGER_TRACEF(marpaESLIFp->marpaESLIFOption.genericLoggerp, "-------------------------\n%s", grammarscripts);
 
  err:
   return;
