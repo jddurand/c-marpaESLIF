@@ -1,4 +1,4 @@
-#undef MARPAESLIF_NTRACE
+// #undef MARPAESLIF_NTRACE
 // #define JDD_PARAMETERIZED_RHS_AS_LEXEME
 // #define JDD_PARAMETERIZED_RHS_AS_DUPLICATED_RULE
 #define JDD_PARAMETERIZED_LEXEMES_ARE_NOT_ALLOWED
@@ -541,8 +541,6 @@ static const char *MARPAESLIF_TERMINAL__EOL = ":eol";
 static const char *MARPAESLIF_TERMINAL__SOL = ":sol";
 static const char *MARPAESLIF_TERMINAL__OK  = ":ok";
 static const char *MARPAESLIF_TERMINAL__KO  = ":ko";
-
-static const char *MARPAESLIF_CONTEXT_INJECTION_SYMBOL  = "$";
 
 /* For reset of values in the stack, it is okay to not care about the union -; */
 static const marpaESLIFValueResult_t marpaESLIFValueResultUndef = {
@@ -4206,6 +4204,7 @@ static inline marpaESLIF_grammar_t *_marpaESLIF_grammar_newp(marpaESLIFGrammar_t
   grammarp->defaultEncodings                   = NULL;
   grammarp->fallbackEncodings                  = NULL;
   grammarp->fastDiscardb                       = 0;    /* Filled by grammar validation */
+  grammarp->parameterizedb                     = 0;    /* Filled by grammar parsing */
 
   grammarp->marpaWrapperGrammarStartp = marpaWrapperGrammar_newp(marpaWrapperGrammarOptionp);
   if (MARPAESLIF_UNLIKELY(grammarp->marpaWrapperGrammarStartp == NULL)) {
@@ -8360,6 +8359,11 @@ static inline short _marpaESLIFRecognizer_resume_oneb(marpaESLIFRecognizer_t *ma
       rcb = 1;
       goto done;
     }
+  } else if (grammarp->parameterizedb) {
+    /* If the grammar is parameterized we want to catch the eventual :context first events in any case */
+    if (MARPAESLIF_UNLIKELY(! _marpaESLIFRecognizer_push_grammar_eventsb(marpaESLIFRecognizerp))) {
+      goto err;
+    }
   }
   
   /* Ask for expected grammar terminals */
@@ -12491,11 +12495,6 @@ static char *_marpaESLIFGrammar_symbolDescriptionCallbacks(void *userDatavp, int
     }
   }
 
-  /* We always force a parameterized symbol to be an LHS terminal */
-  if (symbolp->parameterizedRhsb) {
-    // JDD marpaWrapperGrammarSymbolOptionp->terminalb = 1;
-  }
-
   rcb = 1;
   goto done;
 
@@ -12951,8 +12950,17 @@ static inline short _marpaESLIFRecognizer_readb(marpaESLIFRecognizer_t *marpaESL
     }                                                           \
   } while (0)
 
+#define MARPAESLIF_CONTEXT_CREATESHOW(asciishowl, asciishows, symbolp) do { \
+    if (symbolp->contextb) {                                            \
+      MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, " /* ");     \
+      MARPAESLIF_DECL_CREATESHOW(asciishowl, asciishows, symbolp->declp); \
+      MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "$");        \
+      MARPAESLIF_CALL_CREATESHOW(asciishowl, asciishows, symbolp->callp); \
+      MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, " */ ");     \
+    }                                                                   \
+  } while (0)
+
 #define MARPAESLIF_SYMBOL_CREATESHOW(asciishowl, asciishows, grammarp, symbolp) do { \
-    MARPAESLIF_DECL_CREATESHOW(asciishowl, asciishows, symbolp->declp); \
     switch (symbolp->type) {                                            \
     case MARPAESLIF_SYMBOL_TYPE_TERMINAL:                               \
       MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, symbolp->descp->asciis); \
@@ -12979,7 +12987,7 @@ static inline short _marpaESLIFRecognizer_readb(marpaESLIFRecognizer_t *marpaESL
     default:                                                            \
       break;                                                            \
     }                                                                   \
-    MARPAESLIF_CALL_CREATESHOW(asciishowl, asciishows, symbolp->callp); \
+    MARPAESLIF_CONTEXT_CREATESHOW(asciishowl, asciishows, symbolp);     \
    } while (0)
 
 /*****************************************************************************/

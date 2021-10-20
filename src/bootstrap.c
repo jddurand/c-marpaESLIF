@@ -957,12 +957,14 @@ static inline marpaESLIF_symbol_t *_marpaESLIF_bootstrap_check_meta_by_namep(mar
       goto err;
     }
     parami = declp->sizei;
+    grammarp->parameterizedb = 1;
   } else if (callp != NULL) {
     if (lhsb) {
       MARPAESLIF_ERROR(marpaESLIFp, "callp is set but this is an lhs context");
       goto err;
     }
     parami = callp->sizei;
+    grammarp->parameterizedb = 1;
   } else {
     parami = -1;
   }
@@ -9223,8 +9225,9 @@ static marpaESLIF_rule_t *_marpaESLIF_bootstrap_check_rulep(marpaESLIF_t *marpaE
   size_t                          rhstmpl;
   size_t                          rhsl;
   marpaESLIF_symbol_t            *rhsp;
+  char                            tmps[1024];
 
-  /* First we check if the separator is parameterized */
+  /* Check existence of parameters for separator and RHS's */
   if (separatorcallp != NULL) {
   } else {
     separatortmpi = separatori;
@@ -9248,6 +9251,8 @@ static marpaESLIF_rule_t *_marpaESLIF_bootstrap_check_rulep(marpaESLIF_t *marpaE
     skipbtmpp = skipbp;
     callptmpp = callpp;
   } else {
+    /* We will inject nrhsparaml symbols to current rule. */
+    /* Every new symbol will be a nullable LHS that has a ":context" event */
     nrhstmpl   = nrhsl + nrhsparaml;
     rhsitmpp  = malloc(sizeof(int) * nrhstmpl);
     if (rhsitmpp == NULL) {
@@ -9275,8 +9280,9 @@ static marpaESLIF_rule_t *_marpaESLIF_bootstrap_check_rulep(marpaESLIF_t *marpaE
         continue;
       }
 
-      /* Create an internal context symbol - note that forcecreateb option */
-      symbolp = _marpaESLIF_bootstrap_check_meta_by_namep(marpaESLIFp, marpaESLIFGrammarp, grammarp, (char *) MARPAESLIF_CONTEXT_INJECTION_SYMBOL, 1 /* createb */, 1 /* forcecreateb */, 0 /* lhsb */, NULL /* declp */, 1 /* rhsb */, callpp[rhsl], 0 /* lookaheadb */);
+      /* Create an internal context symbol */
+      sprintf(tmps, "Internal[%d]", marpaESLIFGrammarp->internalRuleCounti++);
+      symbolp = _marpaESLIF_bootstrap_check_meta_by_namep(marpaESLIFp, marpaESLIFGrammarp, grammarp, tmps, 1 /* createb */, 0 /* forcecreateb */, 0 /* lhsb */, NULL /* declp */, 1 /* rhsb */, callpp[rhsl], 0 /* lookaheadb */);
       if (MARPAESLIF_UNLIKELY(symbolp == NULL)) {
         goto err;
       }
