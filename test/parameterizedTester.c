@@ -22,7 +22,7 @@ const static char *grammars = "# Parameterized grammar\n"
   "c<-(y) ::= d->(y,1)\n"
   "         | d->(y,2)\n"
   "d<-(x,y) ~ E->(x*1, y*2)\n"
-  "E<-(X,Y) ~ 'E'\n"
+  "E<-(X,Y) ~ 'E'->(x)\n"
   ;
 
 const static char *inputs = "E";
@@ -55,6 +55,8 @@ int main() {
   if (marpaESLIFp == NULL) {
     goto err;
   }
+
+  GENERICLOGGER_LEVEL_SET(genericLoggerp, GENERICLOGGER_LOGLEVEL_TRACE);
 
   marpaESLIFGrammarOption.bytep               = (void *) grammars;
   marpaESLIFGrammarOption.bytel               = strlen(grammars);

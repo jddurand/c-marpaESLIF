@@ -1,4 +1,4 @@
-/* #undef MARPAESLIF_NTRACE */
+#undef MARPAESLIF_NTRACE
 
 #include <stdlib.h>
 #include <errno.h>
@@ -3408,15 +3408,11 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
     ruleStackp = grammarp->ruleStackp;
     for (symboli = 0; symboli < GENERICSTACK_USED(symbolStackp); symboli++) {
       MARPAESLIF_INTERNAL_GET_SYMBOL_FROM_STACK(marpaESLIFp, symbolp, symbolStackp, symboli);
-      if (! symbolp->lhsb) {
-        continue;
-      }
 
       lhsRuleStackp = symbolp->lhsRuleStackp;
       for (rulei = 0; rulei < GENERICSTACK_USED(ruleStackp); rulei++) {
         MARPAESLIF_INTERNAL_GET_RULE_FROM_STACK(marpaESLIFp, rulep, ruleStackp, rulei);
-        lhsp = rulep->lhsp;
-        if (lhsp->idi == symbolp->idi) {
+        if (rulep->lhsp == symbolp) {
           GENERICSTACK_PUSH_PTR(lhsRuleStackp, rulep);
           if (MARPAESLIF_UNLIKELY(GENERICSTACK_ERROR(lhsRuleStackp))) {
             MARPAESLIF_ERRORF(marpaESLIFp, "lhsRuleStackp push failure, %s", strerror(errno));
@@ -3424,6 +3420,9 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
           }
         }
       }
+
+      symbolp->lhsb = GENERICSTACK_USED(lhsRuleStackp) > 0 ? 1 : 0;
+      MARPAESLIF_TRACEF(marpaESLIFp, funcs, "Looking at rules in grammar level %d (%s): Symbol No %d (%s) lhsb flag set to %d", grammari, grammarp->descp->asciis, symbolp->idi, symbolp->descp->asciis, (int) symbolp->lhsb);
     }
   }
 
@@ -3447,6 +3446,7 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
       /* Only lexemes should be looked */
       if (! MARPAESLIF_IS_LEXEME(symbolp)) {
         symbolp->lookupResolvedLeveli = grammarp->leveli;
+        symbolp->lookupLevelDeltai = 0;
         continue;
       }
 
@@ -3565,9 +3565,11 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
       marpaWrapperGrammarClonep = NULL;
 
       /* Commit resolved level in symbol */
+      symbolp->lookupSymbolp = subSymbolp;
       symbolp->lookupResolvedLeveli = subGrammarp->leveli;
+      symbolp->lookupLevelDeltai = subGrammarp->leveli - grammarp->leveli;
 
-      MARPAESLIF_TRACEF(marpaESLIFp,  funcs, "... Grammar level %d (%s): symbol %d (%s) have grammar resolved level set to   %d", grammari, grammarp->descp->asciis, symbolp->idi, symbolp->descp->asciis, symbolp->lookupResolvedLeveli);
+      MARPAESLIF_TRACEF(marpaESLIFp,  funcs, "... Grammar level %d (%s): symbol %d (%s) have grammar resolved level set to %d", grammari, grammarp->descp->asciis, symbolp->idi, symbolp->descp->asciis, symbolp->lookupResolvedLeveli);
     }
   }
 
@@ -4435,22 +4437,24 @@ static inline marpaESLIF_rule_t *_marpaESLIF_rule_newp(marpaESLIF_t *marpaESLIFp
     }
   }
 
-  /* Verify symbol Ids */
+  /* Set LHS symbol in rule */
   MARPAESLIF_INTERNAL_GET_SYMBOL_FROM_STACK(marpaESLIFp, symbolp, symbolStackp, lhsi);
-  symbolp->lhsb = 1;
   rulep->lhsp = symbolp;
 
+  /* Set separator symbol in rule */
   if (sequenceb && (separatori >= 0)) {
     MARPAESLIF_INTERNAL_GET_SYMBOL_FROM_STACK(marpaESLIFp, symbolp, symbolStackp, separatori);
     rulep->separatorp = symbolp;
   }
 
+  /* Set RHS symbols and ids in rule */
   for (i = 0; i < nrhsl; i++) {
     MARPAESLIF_INTERNAL_GET_SYMBOL_FROM_STACK(marpaESLIFp, symbolp, symbolStackp, rhsip[i]);
     rulep->rhspp[i] = symbolp;
     rulep->rhsip[i] = symbolp->idi;
   }
 
+  /* Set eventual skipped symbols */
   if (nrhsl > 0) {
     if (skipbp != NULL) {
       rulep->skipbp = (short *) malloc(sizeof(short) * nrhsl);
@@ -12955,26 +12959,27 @@ static inline void _marpaESLIF_rule_createshowv(marpaESLIF_t *marpaESLIFp, marpa
 static inline void _marpaESLIF_grammar_createshowv(marpaESLIFGrammar_t *marpaESLIFGrammarp, marpaESLIF_grammar_t *grammarp, char *asciishows, size_t *asciishowlp)
 /*****************************************************************************/
 {
-  marpaESLIF_t                 *marpaESLIFp = marpaESLIFGrammarp->marpaESLIFp;
-  size_t                        asciishowl = 0;
+  static const char            *funcs          = "_marpaESLIF_grammar_createshowv";
+  marpaESLIF_t                 *marpaESLIFp    = marpaESLIFGrammarp->marpaESLIFp;
+  genericStack_t               *symbolStackp   = grammarp->symbolStackp;
+  genericStack_t               *ruleStackp     = grammarp->ruleStackp;
+  genericLogger_t              *genericLoggerp = NULL;
+  size_t                        asciishowl     = 0;
+  marpaESLIF_uint32_t           pcre2Optioni   = 0;
+  int                           pcre2Errornumberi;
   char                          tmps[1024];
   int                          *ruleip;
   size_t                        rulel;
   char                         *ruleshows;
   size_t                        l;
   char                          quote[2][2];
-  genericStack_t               *symbolStackp = grammarp->symbolStackp;
   marpaESLIF_symbol_t          *symbolp;
   int                           symboli;
-  genericStack_t               *ruleStackp = grammarp->ruleStackp;
   marpaESLIF_rule_t            *rulep;
   int                           rulei;
   int                           npropertyi;
   int                           neventi;
-  genericLogger_t              *genericLoggerp = NULL;
   marpaESLIF_stringGenerator_t  marpaESLIF_stringGenerator;
-  marpaESLIF_uint32_t           pcre2Optioni = 0;
-  int                           pcre2Errornumberi;
   short                         skipb;
   marpaESLIF_pcre2_callout_enumerate_context_t enumerate_context;
 
@@ -13135,6 +13140,7 @@ static inline void _marpaESLIF_grammar_createshowv(marpaESLIFGrammar_t *marpaESL
 #ifndef MARPAESLIF_NTRACE
     /* Should never happen */
     if (! GENERICSTACK_IS_PTR(symbolStackp, symboli)) {
+      MARPAESLIF_TRACEF(marpaESLIFp, funcs, "At grammar level %d (%s): No PTR in symbolStackp[%d] ?", grammarp->leveli, grammarp->descp->asciis, symboli);
       continue;
     }
 #endif
@@ -13260,6 +13266,7 @@ static inline void _marpaESLIF_grammar_createshowv(marpaESLIFGrammar_t *marpaESL
 #ifndef MARPAESLIF_NTRACE
     /* Should never happen */
     if (! GENERICSTACK_IS_PTR(symbolStackp, symboli)) {
+      MARPAESLIF_TRACEF(marpaESLIFp, funcs, "At grammar level %d (%s): No PTR in symbolStackp[%d] ?", grammarp->leveli, grammarp->descp->asciis, symboli);
       continue;
     }
 #endif
@@ -13351,6 +13358,7 @@ static inline void _marpaESLIF_grammar_createshowv(marpaESLIFGrammar_t *marpaESL
 #ifndef MARPAESLIF_NTRACE
     /* Should never happen */
     if (! GENERICSTACK_IS_PTR(symbolStackp, symboli)) {
+      MARPAESLIF_TRACEF(marpaESLIFp, funcs, "At grammar level %d (%s): No PTR in symbolStackp[%d] ?", grammarp->leveli, grammarp->descp->asciis, symboli);
       continue;
     }
 #endif
@@ -13373,16 +13381,19 @@ static inline void _marpaESLIF_grammar_createshowv(marpaESLIFGrammar_t *marpaESL
       MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "@");
       sprintf(tmps, "%+d", symbolp->lookupLevelDeltai);
       MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, tmps);
-      MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, " /* Forced lookup ");
+      MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, " /* Symbol No ");
       sprintf(tmps, "%d", symbolp->idi);
       MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, tmps);
-      MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, " => ");
+      sprintf(tmps, "@=%d", grammarp->leveli);
+      MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, tmps);
+      MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, " => Symbol No ");
       sprintf(tmps, "%d", symbolp->lookupSymbolp->idi);
       MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, tmps);
-      MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "@");
-      sprintf(tmps, "%+d", symbolp->lookupLevelDeltai);
+      sprintf(tmps, "@=%d", symbolp->lookupResolvedLeveli);
       MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, tmps);
       MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, " */\n");
+    } else {
+      MARPAESLIF_TRACEF(marpaESLIFp, funcs, "At grammar level %d (%s): Symbol No %d (%s) is not an LHS nor an ESLIF META but has no lookup symbol", grammarp->leveli, grammarp->descp->asciis, symboli, symbolp->descp->asciis);
     }
   }
 
@@ -13396,6 +13407,7 @@ static inline void _marpaESLIF_grammar_createshowv(marpaESLIFGrammar_t *marpaESL
 #ifndef MARPAESLIF_NTRACE
     /* Should never happen */
     if (! GENERICSTACK_IS_PTR(ruleStackp, rulei)) {
+      MARPAESLIF_TRACEF(marpaESLIFp, funcs, "At grammar level %d (%s): No PTR in ruleStackp[%d] ?", grammarp->leveli, grammarp->descp->asciis, rulei);
       continue;
     }
 #endif
@@ -13488,6 +13500,7 @@ static inline void _marpaESLIF_grammar_createshowv(marpaESLIFGrammar_t *marpaESL
 #ifndef MARPAESLIF_NTRACE
     /* Should never happen */
     if (! GENERICSTACK_IS_PTR(symbolStackp, symboli)) {
+      MARPAESLIF_TRACEF(marpaESLIFp, funcs, "At grammar level %d (%s): No PTR in symbolStackp[%d] ?", grammarp->leveli, grammarp->descp->asciis, symboli);
       continue;
     }
 #endif
@@ -13732,15 +13745,24 @@ static inline void _marpaESLIF_grammar_createshowv(marpaESLIFGrammar_t *marpaESL
       MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, ">");
       MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "\n");
     }
-    if ((symbolp->lookupSymbolp != NULL) && (symbolp->lookupResolvedLeveli != grammarp->leveli)) {
+    if (symbolp->lookupSymbolp != NULL) {
       MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "#       Lookup: ");
       MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "<");
       MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, symbolp->lookupSymbolp->descp->asciis);
       MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, ">");
-      MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "@");
-      sprintf(tmps, "%+d", symbolp->lookupLevelDeltai);
+      sprintf(tmps, "@=%d", symbolp->lookupResolvedLeveli);
       MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, tmps);
-      MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "\n");
+      MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, " /* Symbol No ");
+      sprintf(tmps, "%d", symbolp->idi);
+      MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, tmps);
+      sprintf(tmps, "@=%d", grammarp->leveli);
+      MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, tmps);
+      MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, " => Symbol No ");
+      sprintf(tmps, "%d", symbolp->lookupSymbolp->idi);
+      MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, tmps);
+      sprintf(tmps, "@=%d", symbolp->lookupResolvedLeveli);
+      MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, tmps);
+      MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, " */\n");
     }
     if (symbolp->parami >= 0) {
       sprintf(tmps, "%d", symbolp->parami);
