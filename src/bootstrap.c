@@ -1274,11 +1274,11 @@ static inline marpaESLIF_symbol_t *_marpaESLIF_bootstrap_check_singleSymbolp(mar
     break;
   case MARPAESLIF_BOOTSTRAP_SINGLE_SYMBOL_TYPE_TERMINAL:
     symbolp = _marpaESLIF_bootstrap_check_terminalp(marpaESLIFp, marpaESLIFGrammarp, grammarp, singleSymbolp->u.terminalp, createb, forcecreateb, lhsb, declp, rhsb, callp);
-    // if ((symbolp != NULL) && (callp != NULL)) {
-    //   /* A terminal cannot be parameterized */
-    //   MARPAESLIF_ERRORF(marpaESLIFp, "Terminal %s%s%s cannot be parameterized", symbolp->descp->asciis, callp->luaexplistcb ? "-->" : "->", callp->luaexplists);
-    //   goto err;
-    // }
+    if ((symbolp != NULL) && (callp != NULL)) {
+      /* A terminal cannot be parameterized */
+      MARPAESLIF_ERRORF(marpaESLIFp, "Terminal %s%s%s cannot be parameterized", symbolp->descp->asciis, callp->luaexplistcb ? "-->" : "->", callp->luaexplists);
+      goto err;
+    }
     break;
   default:
     MARPAESLIF_ERRORF(marpaESLIFp, "Unsupported singleSymbolp->type = %d", singleSymbolp->type);

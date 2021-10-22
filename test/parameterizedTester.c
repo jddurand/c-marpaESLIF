@@ -22,7 +22,7 @@ const static char *grammars = "# Parameterized grammar\n"
   "c<-(y) ::= d->(y,1)\n"
   "         | d->(y,2)\n"
   "d<-(x,y) ~ E->(x*1, y*2)\n"
-  "E<-(X,Y) ~ 'E'->(x)\n"
+  "E<-(X,Y) ~ 'E'\n"
   ;
 
 const static char *inputs = "E";
