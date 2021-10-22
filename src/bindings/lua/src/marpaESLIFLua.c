@@ -14,7 +14,10 @@
 #include "lua_newkeywords.c"
 #include "lua_niledtable.c"
 #include "lua_marpaESLIFJSON.c"
+#ifdef MARPAESLIFLUA_EMBEDDED
 #include "lua_marpaESLIFContextStack.c"
+#include "lua_template_engine.c"
+#endif
 
 /* Shall this module determine automatically string encoding ? */
 /* #define MARPAESLIFLUA_AUTO_ENCODING_DETECT */
@@ -1163,6 +1166,17 @@ static int marpaESLIFLua_installi(lua_State *L)
   if (! marpaESLIFLua_lua_setglobal(L, "marpaESLIFContextStack")) goto err; /* Stack: */
 #endif
 
+  /* We load the lua-template-engine implementation when we are embedded */
+#ifdef MARPAESLIFLUA_EMBEDDED
+  if (! marpaESLIFLua_luaL_dostring(&dostringi, L, MARPAESLIFLUA_TEMPLATE_ENGINE)) goto err;
+  if (dostringi != LUA_OK) {
+    marpaESLIFLua_luaL_errorf(L, "Loading lua-template-engine source failed with status %d", dostringi);
+    goto err;
+  }
+  /* lua-template-engine in on the stack */                                      /* Stack: lua-template-engine */
+  if (! marpaESLIFLua_lua_setglobal(L, "marpaESLIFLuaTemplateEngine")) goto err; /* Stack: */
+#endif
+
   /* Install marpaESLIF main entry points */
   if (! marpaESLIFLua_luaL_newlib(L, marpaESLIFLua_installTable)) goto err;
 
@@ -1243,8 +1257,6 @@ static int marpaESLIFLua_installi(lua_State *L)
       if (! marpaESLIFLua_lua_pop(L, 3)) goto err;                                        /* Stack: marpaESLIFLuaTable */
     }
   }
-
-  /* We create the marpaESLIFContextStack object */
 
   rci = 1;
   goto done;
