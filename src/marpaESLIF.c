@@ -5888,7 +5888,7 @@ static inline short _marpaESLIFRecognizer_meta_matcherb(marpaESLIFRecognizer_t *
   /* We want to run an internal recognizer */
   marpaESLIFRecognizerOption = marpaESLIFRecognizerp->marpaESLIFRecognizerOption;
 
-  /* In any care we are in a lexeme mode: disable threshold warning and allow remaining data after completion */
+  /* In any case we are in a lexeme mode: disable threshold warning and allow remaining data after completion */
   marpaESLIFRecognizerOption.disableThresholdb = 1;
   marpaESLIFRecognizerOption.exhaustedb        = 1;
 
@@ -7562,6 +7562,13 @@ short marpaESLIFRecognizer_shareb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp,
     goto fast_done;
   }
 
+  /* Not allowed if there is a parent recognizer */
+  if (marpaESLIFRecognizerp->marpaESLIFRecognizerParentp != NULL) {
+    errno = EPERM;
+    rcb = 0;
+    goto fast_done;
+  }
+
   MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_INC;
   MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "start");
 
@@ -7592,6 +7599,13 @@ short marpaESLIFRecognizer_peekb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, 
 
   if (MARPAESLIF_UNLIKELY(marpaESLIFRecognizerp == NULL)) {
     errno = EINVAL;
+    rcb = 0;
+    goto fast_done;
+  }
+
+  /* Not allowed if there is a parent recognizer */
+  if (marpaESLIFRecognizerp->marpaESLIFRecognizerParentp != NULL) {
+    errno = EPERM;
     rcb = 0;
     goto fast_done;
   }
@@ -7654,6 +7668,13 @@ short marpaESLIFRecognizer_scanb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, 
     goto fast_done;
   }
 
+  /* Not allowed if there is a parent recognizer */
+  if (marpaESLIFRecognizerp->marpaESLIFRecognizerParentp != NULL) {
+    errno = EPERM;
+    rcb = 0;
+    goto fast_done;
+  }
+
   MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_INC;
   MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "start");
 
@@ -7679,6 +7700,13 @@ short marpaESLIFRecognizer_resumeb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp
 
   if (MARPAESLIF_UNLIKELY(marpaESLIFRecognizerp == NULL)) {
     errno = EINVAL;
+    rcb = 0;
+    goto fast_done;
+  }
+
+  /* Not allowed if there is a parent recognizer */
+  if (marpaESLIFRecognizerp->marpaESLIFRecognizerParentp != NULL) {
+    errno = EPERM;
     rcb = 0;
     goto fast_done;
   }
@@ -8851,6 +8879,13 @@ short marpaESLIFRecognizer_lexeme_alternativeb(marpaESLIFRecognizer_t *marpaESLI
     goto fast_done;
   }
 
+  /* Not allowed if there is a parent recognizer */
+  if (marpaESLIFRecognizerp->marpaESLIFRecognizerParentp != NULL) {
+    errno = EPERM;
+    rcb = 0;
+    goto fast_done;
+  }
+
   MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_INC;
   MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "start");
 
@@ -9011,6 +9046,13 @@ short marpaESLIFRecognizer_lexeme_completeb(marpaESLIFRecognizer_t *marpaESLIFRe
 
   if (marpaESLIFRecognizerp == NULL) {
     errno = EINVAL;
+    rcb = 0;
+    goto fast_done;
+  }
+
+  /* Not allowed if there is a parent recognizer */
+  if (marpaESLIFRecognizerp->marpaESLIFRecognizerParentp != NULL) {
+    errno = EPERM;
     rcb = 0;
     goto fast_done;
   }
@@ -9303,6 +9345,13 @@ short marpaESLIFRecognizer_lexeme_readb(marpaESLIFRecognizer_t *marpaESLIFRecogn
     goto fast_done;
   }
 
+  /* Not allowed if there is a parent recognizer */
+  if (marpaESLIFRecognizerp->marpaESLIFRecognizerParentp != NULL) {
+    errno = EPERM;
+    rcb = 0;
+    goto fast_done;
+  }
+
   MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_INC;
   MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "start");
 
@@ -9469,6 +9518,13 @@ short marpaESLIFRecognizer_event_onoffb(marpaESLIFRecognizer_t *marpaESLIFRecogn
 
   if (marpaESLIFRecognizerp == NULL) {
     errno = EINVAL;
+    rcb = 0;
+    goto fast_done;
+  }
+
+  /* Not allowed if there is a parent recognizer */
+  if (marpaESLIFRecognizerp->marpaESLIFRecognizerParentp != NULL) {
+    errno = EPERM;
     rcb = 0;
     goto fast_done;
   }
@@ -10924,6 +10980,13 @@ short marpaESLIFRecognizer_set_exhausted_flagb(marpaESLIFRecognizer_t *marpaESLI
 
   if (marpaESLIFRecognizerp == NULL) {
     errno = EINVAL;
+    rcb = 0;
+    goto fast_done;
+  }
+
+  /* Not allowed if there is a parent recognizer */
+  if (marpaESLIFRecognizerp->marpaESLIFRecognizerParentp != NULL) {
+    errno = EPERM;
     rcb = 0;
     goto fast_done;
   }
@@ -18395,6 +18458,13 @@ short marpaESLIFRecognizer_hook_discardb(marpaESLIFRecognizer_t *marpaESLIFRecog
     goto fast_done;
   }
 
+  /* Not allowed if there is a parent recognizer */
+  if (marpaESLIFRecognizerp->marpaESLIFRecognizerParentp != NULL) {
+    errno = EPERM;
+    rcb = 0;
+    goto fast_done;
+  }
+
   MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_INC;
   MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "start");
 
@@ -18430,6 +18500,13 @@ short marpaESLIFRecognizer_hook_discard_switchb(marpaESLIFRecognizer_t *marpaESL
 
   if (marpaESLIFRecognizerp == NULL) {
     errno = EINVAL;
+    rcb = 0;
+    goto fast_done;
+  }
+
+  /* Not allowed if there is a parent recognizer */
+  if (marpaESLIFRecognizerp->marpaESLIFRecognizerParentp != NULL) {
+    errno = EPERM;
     rcb = 0;
     goto fast_done;
   }
