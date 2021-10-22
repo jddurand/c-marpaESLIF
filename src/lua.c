@@ -1867,6 +1867,9 @@ static short _marpaESLIFRecognizer_lua_push_contextb(marpaESLIFRecognizer_t *mar
   marpaESLIF_stringGenerator_t  marpaESLIF_stringGenerator;
   short                         rcb;
 
+  MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_INC;
+  MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "start");
+
   marpaESLIF_stringGenerator.s = NULL;
 
   /* Create the lua state if needed - this is a lua state using ESLIF internal's, i.e. there is no </luascript> in it. */
@@ -1928,15 +1931,49 @@ static short _marpaESLIFRecognizer_lua_push_contextb(marpaESLIFRecognizer_t *mar
         goto err;
       }
     }
+#ifndef MARPAESLIF_NTRACE
+    if (parlistWithoutParens != NULL) {
+      /* Enclose parlist members with '' */
+      p = parlistWithoutParens;
+      for (i = 0; i < symbolp->declp->sizei; i++) {
+        /* Get start of symbol */
+        c = *p;
+        while (1) {
+          if ((c == '_') || ((c >= '0') && (c <= '9')) || ((c >= 'a') && (c <= 'z')) || ((c >= 'A') && (c <= 'Z'))) {
+            break;
+          }
+          c = *++p;
+        }
+        /* Put NUL at end of symbol */
+        p2 = p;
+        c = *++p2;
+        while (1) {
+          if ((c == '_') || ((c >= '0') && (c <= '9')) || ((c >= 'a') && (c <= 'z')) || ((c >= 'A') && (c <= 'Z'))) {
+            c = *++p2;
+            continue;
+          }
+          break;
+        }
+        *p2 = '\0';
+        GENERICLOGGER_TRACEF(genericLoggerp, "  print('[%d][lua] Parameter %s = '..tostring(%s))\n", marpaESLIFRecognizerp->leveli, p, p);
+        if (MARPAESLIF_UNLIKELY(! marpaESLIF_stringGenerator.okb)) {
+          goto err;
+        }
+        *p2 = c;
+        p = ++p2;
+      }
+    }
+    GENERICLOGGER_TRACEF(genericLoggerp, "  print('[%d][lua] Pushed: %s')\n", marpaESLIFRecognizerp->leveli, symbolp->callp->luaexplists);
+#endif
     GENERICLOGGER_TRACEF(genericLoggerp, "  marpaESLIFContextStackp:push(table.pack%s)\n", symbolp->callp->luaexplists);
     if (MARPAESLIF_UNLIKELY(! marpaESLIF_stringGenerator.okb)) {
       goto err;
     }
+    GENERICLOGGER_TRACE(genericLoggerp, "  return niledtablekv(");
+    if (MARPAESLIF_UNLIKELY(! marpaESLIF_stringGenerator.okb)) {
+      goto err;
+    }
     if (parlistWithoutParens != NULL) {
-      GENERICLOGGER_TRACE(genericLoggerp, "  return niledtablekv(");
-      if (MARPAESLIF_UNLIKELY(! marpaESLIF_stringGenerator.okb)) {
-        goto err;
-      }
       /* Enclose parlist members with '' */
       p = parlistWithoutParens;
       for (i = 0; i < symbolp->declp->sizei; i++) {
@@ -1966,15 +2003,10 @@ static short _marpaESLIFRecognizer_lua_push_contextb(marpaESLIFRecognizer_t *mar
         *p2 = c;
         p = ++p2;
       }
-      GENERICLOGGER_TRACE(genericLoggerp, ")\n");
-      if (MARPAESLIF_UNLIKELY(! marpaESLIF_stringGenerator.okb)) {
-        goto err;
-      }
-    } else {
-      GENERICLOGGER_TRACE(genericLoggerp, "  return {}\n");
-      if (MARPAESLIF_UNLIKELY(! marpaESLIF_stringGenerator.okb)) {
-        goto err;
-      }
+    }
+    GENERICLOGGER_TRACE(genericLoggerp, ")\n");
+    if (MARPAESLIF_UNLIKELY(! marpaESLIF_stringGenerator.okb)) {
+      goto err;
     }
     GENERICLOGGER_TRACE(genericLoggerp, "end\n");
     if (MARPAESLIF_UNLIKELY(! marpaESLIF_stringGenerator.okb)) {
@@ -2011,6 +2043,9 @@ static short _marpaESLIFRecognizer_lua_push_contextb(marpaESLIFRecognizer_t *mar
   rcb = 0;
 
  done:
+  MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "return %d", (int) rcb);
+  MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_DEC;
+
   if (marpaESLIF_stringGenerator.s != NULL) {
     free(marpaESLIF_stringGenerator.s);
   }

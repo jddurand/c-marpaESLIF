@@ -386,7 +386,6 @@ struct marpaESLIFValue {
   genericLogger_t             *stringGeneratorLoggerp; /* Internal string generator logger, put here to avoid unnecessary genericLogger_newp()/genericLogger_freev() calls */
   char                        *luaprecompiledp;    /* Lua script source precompiled */
   size_t                       luaprecompiledl;    /* Lua script source precompiled length in byte */
-  marpaESLIFValueResult_t     *marpaESLIFValueResultForcedValuationp;   /* Forced valuation - only when the start symbol is a parameterized symbol. */
 };
 
 struct marpaESLIF_stream {

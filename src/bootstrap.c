@@ -1020,10 +1020,6 @@ static inline marpaESLIF_symbol_t *_marpaESLIF_bootstrap_check_meta_by_namep(mar
       if (lhsp == NULL) {
         goto err;
       }
-
-      /* Force the lookup */
-      symbolp->lookupLevelDeltai = 0;
-      symbolp->lookupSymbolp     = lhsp;
     }
   }
 
