@@ -92,7 +92,6 @@ MYPACKAGETESTEXECUTABLE(exceptionTester            test/exceptionTester.c)
 MYPACKAGETESTEXECUTABLE(exceptionTester2           test/exceptionTester2.c)
 MYPACKAGETESTEXECUTABLE(exceptionTester3           test/exceptionTester3.c)
 MYPACKAGETESTEXECUTABLE(exceptionTester4           test/exceptionTester4.c)
-MYPACKAGETESTEXECUTABLE(exceptionTester5           test/exceptionTester5.c)
 MYPACKAGETESTEXECUTABLE(yamlTester                 test/yamlTester.c)
 MYPACKAGETESTEXECUTABLE(parameterizedTester        test/parameterizedTester.c)
 
@@ -151,7 +150,6 @@ MYPACKAGECHECK(exceptionTester)
 MYPACKAGECHECK(exceptionTester2)
 MYPACKAGECHECK(exceptionTester3)
 MYPACKAGECHECK(exceptionTester4)
-MYPACKAGECHECK(exceptionTester5)
 MYPACKAGECHECK(parameterizedTester)
 
 ###########
