@@ -1,4 +1,4 @@
-#undef MARPAESLIF_NTRACE
+/* #undef MARPAESLIF_NTRACE */
 
 #include <stdlib.h>
 #include <errno.h>
@@ -163,6 +163,7 @@ static marpaESLIFValueResult_t marpaESLIFValueResultLazy = {
 /* -------------------------------------------------------------------------------------------- */
 #define MARPAESLIF_IS_META(symbolp)               ((symbolp)->type == MARPAESLIF_SYMBOL_TYPE_META)
 #define MARPAESLIF_IS_LEXEME(symbolp)             (MARPAESLIF_IS_META(symbolp) && (! (symbolp)->lhsb))
+#define MARPAESLIF_IS_LUA(symbolp)                (MARPAESLIF_IS_META(symbolp) && (! (symbolp)->luab))
 #define MARPAESLIF_IS_TERMINAL(symbolp)           ((symbolp)->type == MARPAESLIF_SYMBOL_TYPE_TERMINAL)
 #define MARPAESLIF_IS_LEXEME_OR_TERMINAL(symbolp) (MARPAESLIF_IS_LEXEME(symbolp) || MARPAESLIF_IS_TERMINAL(symbolp))
 #define MARPAESLIF_IS_PSEUDO_TERMINAL(symbolp)    (MARPAESLIF_IS_TERMINAL(symbolp) && (symbolp)->u.terminalp->pseudob)
@@ -3450,6 +3451,13 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
         continue;
       }
 
+      /* Lua symbols are special: they have no correspondance in the grammar. _marpaESLIFRecognizer_meta_matcherb() will catch them */
+      if (MARPAESLIF_IS_LUA(symbolp)) {
+        symbolp->lookupResolvedLeveli = grammarp->leveli;
+        symbolp->lookupLevelDeltai = 0;
+        continue;
+      }
+
       /* In any case, this is a a meta symbol */
       metap = symbolp->u.metap;
 
@@ -4665,6 +4673,7 @@ static inline marpaESLIF_symbol_t *_marpaESLIF_symbol_newp(marpaESLIF_t *marpaES
   symbolp->pushContextActionp      = NULL;
   symbolp->popContextActionp       = NULL;
   symbolp->getContextActionp       = NULL;
+  symbolp->luab                    = 0;
 
   symbolp->nullableRuleStackp = &(symbolp->_nullableRuleStack);
   GENERICSTACK_INIT(symbolp->nullableRuleStackp);
@@ -5887,6 +5896,11 @@ static inline short _marpaESLIFRecognizer_meta_matcherb(marpaESLIFRecognizer_t *
     if (! _marpaESLIFRecognizer_lua_push_contextb(marpaESLIFRecognizerp, symbolp, &context)) {
       goto err;
     }
+  }
+
+  /* If this is a lua symbol - call lua to get the symbol definition */
+  if (MARPAESLIF_IS_LUA(symbolp)) {
+    abort(); /* JDD */
   }
 
   /* We want to run an internal recognizer */

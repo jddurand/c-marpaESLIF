@@ -853,7 +853,7 @@ marpaESLIF BNF can be expressed in itself:
   <quantified rule>              ::= <lhs> <op declare> <rhs primary> <quantifier> <adverb list>
   <discard rule>                 ::= ':discard' <op declare> <rhs primary> <adverb list>
   <default rule>                 ::= ':default' <op declare> <adverb list>
-  <lexeme rule>                  ::= ':lexeme' <op declare> <rhs primary> <adverb list>
+  <lexeme rule>                  ::= ':lexeme' <op declare> <rhs primary no parameter> <adverb list>
   <terminal rule>                ::= ':terminal' <op declare> <terminal> <adverb list>
   <completion event declaration> ::= 'event' <event initialization> '=' 'completed' <symbol>
                                    | 'event' <event initialization> <op declare> 'completed' <symbol>
@@ -950,9 +950,11 @@ marpaESLIF BNF can be expressed in itself:
                                    | '(' <rhs primary> '-' <rhs primary> <adverb list> ')'
                                    | '(-' <rhs primary> <quantifier> <adverb list> '-)'
                                    | '(' <rhs primary> <quantifier> <adverb list> ')'
-  <rhs primary>                  ::= <single symbol>
+  <rhs primary no parameter>     ::= <single symbol>
                                    | <symbol> '@' <grammar reference>
-                                   | <rhs primary> <lua functioncall>
+  <rhs primary>                  ::= <rhs primary no parameter>
+                                   | <rhs primary no parameter> <lua functioncall>
+                                   | <lua action name> <lua functioncall>
   <single symbol>                ::= <symbol>
                                    | <terminal>
   <terminal>                     ::= <character class>

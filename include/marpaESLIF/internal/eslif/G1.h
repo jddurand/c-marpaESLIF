@@ -1679,7 +1679,9 @@ bootstrap_grammar_rule_t bootstrap_grammar_G1_lazy_rules[] = {
   { G1_META_LUA_FUNCTIONDECL,                 G1_RULE_LUA_FUNCTIONDECL,                       MARPAESLIF_RULE_TYPE_ALTERNATIVE, 2, { G1_TERMINAL_LUA_FUNCTIONDECL,
                                                                                                                                      G1_META_LUA_OPTIONAL_PARLIST_AFTER_LPAREN    }, -1,                        -1,      -1,              0, G1_ACTION_LUA_FUNCTIONDECL },
   { G1_META_START_SYMBOL,                     G1_RULE_START_SYMBOL_2,                         MARPAESLIF_RULE_TYPE_ALTERNATIVE, 2, { G1_META_START_SYMBOL,
-                                                                                                                                     G1_META_LUA_FUNCTIONCALL                     }, -1,                        -1,      -1,              0, G1_ACTION_START_SYMBOL_2 }
+                                                                                                                                     G1_META_LUA_FUNCTIONCALL                     }, -1,                        -1,      -1,              0, G1_ACTION_START_SYMBOL_2 },
+  { G1_META_RHS_PRIMARY,                      G1_RULE_RHS_PRIMARY_3,                          MARPAESLIF_RULE_TYPE_ALTERNATIVE, 2, { G1_META_LUA_ACTION_NAME,
+                                                                                                                                     G1_META_LUA_FUNCTIONCALL                     }, -1,                        -1,      -1,              0, G1_ACTION_RHS_PRIMARY_3 }
 };
 
 #endif /* MARPAESLIF_INTERNAL_ESLIF_G1_H */

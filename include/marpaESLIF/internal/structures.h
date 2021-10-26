@@ -192,6 +192,7 @@ struct marpaESLIFSymbol {
   marpaESLIFAction_t            *pushContextActionp;     /* For parameterized symbols, context push action */
   marpaESLIFAction_t            *popContextActionp;      /* For parameterized symbols, context pop action */
   marpaESLIFAction_t            *getContextActionp;      /* For parameterized symbols, context get action */
+  short                          luab;                   /* This is a "lua" symbol */
 };
 
 /* A rule */
