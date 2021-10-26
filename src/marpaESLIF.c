@@ -162,8 +162,8 @@ static marpaESLIFValueResult_t marpaESLIFValueResultLazy = {
 /* Util macros on symbol                                                                        */
 /* -------------------------------------------------------------------------------------------- */
 #define MARPAESLIF_IS_META(symbolp)               ((symbolp)->type == MARPAESLIF_SYMBOL_TYPE_META)
-#define MARPAESLIF_IS_LEXEME(symbolp)             (MARPAESLIF_IS_META(symbolp) && (! (symbolp)->lhsb))
-#define MARPAESLIF_IS_LUA(symbolp)                (MARPAESLIF_IS_META(symbolp) && (! (symbolp)->luab))
+#define MARPAESLIF_IS_LEXEME(symbolp)             (MARPAESLIF_IS_META(symbolp) && (! (symbolp)->lhsb) && (! (symbolp)->luab))
+#define MARPAESLIF_IS_LUA(symbolp)                (MARPAESLIF_IS_META(symbolp) && (symbolp)->luab)
 #define MARPAESLIF_IS_TERMINAL(symbolp)           ((symbolp)->type == MARPAESLIF_SYMBOL_TYPE_TERMINAL)
 #define MARPAESLIF_IS_LEXEME_OR_TERMINAL(symbolp) (MARPAESLIF_IS_LEXEME(symbolp) || MARPAESLIF_IS_TERMINAL(symbolp))
 #define MARPAESLIF_IS_PSEUDO_TERMINAL(symbolp)    (MARPAESLIF_IS_TERMINAL(symbolp) && (symbolp)->u.terminalp->pseudob)
@@ -5898,7 +5898,7 @@ static inline short _marpaESLIFRecognizer_meta_matcherb(marpaESLIFRecognizer_t *
     }
   }
 
-  /* If this is a lua symbol - call lua to get the symbol definition */
+  /* If this is a lua symbol - get output string out of lua */
   if (MARPAESLIF_IS_LUA(symbolp)) {
     abort(); /* JDD */
   }
@@ -12822,8 +12822,12 @@ static inline short _marpaESLIFRecognizer_readb(marpaESLIFRecognizer_t *marpaESL
       MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, symbolp->descp->asciis); \
       break;                                                            \
     case MARPAESLIF_SYMBOL_TYPE_META:                                   \
-      /* Special case of ":discard" that we want to shown as is */      \
       if (symbolp->discardb) {                                          \
+        /* Special case of ":discard" that we want to shown as is */    \
+        MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, symbolp->u.metap->asciinames); \
+      } if (symbolp->luab) {                                            \
+        /* Special case of lua symbol that we want to shown as is */    \
+        MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "::lua->"); \
         MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, symbolp->u.metap->asciinames); \
       } else {                                                          \
         MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "<");      \

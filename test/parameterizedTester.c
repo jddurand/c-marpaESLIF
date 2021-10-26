@@ -23,7 +23,7 @@ const static char *grammars = "# Parameterized grammar\n"
   "         | d->(y,2)\n"
   "d<-(x,y) ~ E->(x*1, y*2)\n"
   "E<-(X,Y) ~ 'E'\n"
-  "         | ::lua->myGenerator-->(x + 1, y * 2)\n"
+  "         | ::lua->myGenerator-->(X + 1, Y * 2)\n"
   ;
 
 const static char *inputs = "E";

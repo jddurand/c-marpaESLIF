@@ -132,7 +132,6 @@ typedef struct marpaESLIF_bootstrap_single_symbol              marpaESLIF_bootst
 typedef struct marpaESLIF_bootstrap_symbol                     marpaESLIF_bootstrap_symbol_t;
 typedef struct marpaESLIF_bootstrap_lhs                        marpaESLIF_bootstrap_lhs_t;
 typedef struct marpaESLIF_bootstrap_start_symbol               marpaESLIF_bootstrap_start_symbol_t;
-typedef struct marpaESLIF_bootstrap_lua_symbol                 marpaESLIF_bootstrap_lua_symbol_t;
 typedef struct marpaESLIF_bootstrap_terminal                   marpaESLIF_bootstrap_terminal_t;
 typedef struct marpaESLIF_bootstrap_adverb_list_item           marpaESLIF_bootstrap_adverb_list_item_t;
 typedef struct marpaESLIF_bootstrap_grammar_reference          marpaESLIF_bootstrap_grammar_reference_t;
@@ -202,11 +201,6 @@ struct marpaESLIF_bootstrap_lhs {
 
 struct marpaESLIF_bootstrap_start_symbol {
   char                          *symbols;
-  marpaESLIF_lua_functioncall_t *callp;
-};
-
-struct marpaESLIF_bootstrap_lua_symbol {
-  char                          *identifiers;
   marpaESLIF_lua_functioncall_t *callp;
 };
 
@@ -334,7 +328,7 @@ struct marpaESLIF_bootstrap_rhs_primary {
   union {
     marpaESLIF_bootstrap_single_symbol_t        *singleSymbolp;
     marpaESLIF_bootstrap_symbol_and_reference_t *symbolAndReferencep;
-    marpaESLIF_bootstrap_lua_symbol_t           *luaSymbolp;
+    char                                        *luaIdentifiers;
   } u;
 };
 
