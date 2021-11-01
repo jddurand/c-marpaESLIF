@@ -177,7 +177,7 @@ struct marpaESLIFSymbol {
   marpaESLIF_symbol_t           *exceptionp;             /* Pointer to an exception itself, the one after the '-' character */
   marpaESLIFAction_t            *symbolActionp;          /* symbol-action, only for terminals or lexemes */
   marpaESLIFAction_t            *ifActionp;              /* if-action, only for terminals or lexemes */
-  marpaESLIFAction_t            *generatorActionp; /* generator-action, only for terminals or lexemes */
+  marpaESLIFAction_t            *generatorActionp;       /* generator-action */
   marpaESLIFSymbolOption_t       marpaESLIFSymbolOption;
   /* Embedded lua - c.f. src/bindings/src/marpaESLIFLua.c */
   void                          *marpaESLIFLuaSymbolContextp;
@@ -192,7 +192,6 @@ struct marpaESLIFSymbol {
   marpaESLIFAction_t            *pushContextActionp;     /* For parameterized symbols, context push action */
   marpaESLIFAction_t            *popContextActionp;      /* For parameterized symbols, context pop action */
   marpaESLIFAction_t            *getContextActionp;      /* For parameterized symbols, context get action */
-  short                          luab;                   /* This is a "lua" symbol */
 };
 
 /* A rule */
@@ -431,6 +430,8 @@ struct marpaESLIFRecognizer {
   marpaWrapperGrammar_t       *marpaWrapperGrammarp; /* Shallow copy of cached grammar in use */
   genericStack_t               _lexemeStack;       /* Internal input stack of lexemes */
   genericStack_t              *lexemeStackp;       /* Pointer to internal input stack of lexemes */
+  genericStack_t               _contextStack;       /* Internal input stack for the context */
+  genericStack_t              *contextStackp;       /* Pointer to internal input stack for context */
   marpaESLIFEvent_t           *eventArrayp;        /* For the events */
   size_t                       eventArrayl;        /* Current number of events */
   size_t                       eventArraySizel;    /* Real allocated size (to avoid constant free/deletes) */

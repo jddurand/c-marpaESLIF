@@ -36,7 +36,6 @@ typedef enum _marpaESLIFBootstrapStackTypeEnum {
   marpaESLIFBootstrapStackTypeEnum_ADVERB_ITEM_EVENT_INITIALIZATION,
   marpaESLIFBootstrapStackTypeEnum_ADVERB_ITEM_IFACTION,
   marpaESLIFBootstrapStackTypeEnum_ADVERB_ITEM_REGEXACTION,
-  marpaESLIFBootstrapStackTypeEnum_ADVERB_ITEM_GENERATORACTION,
   marpaESLIFBootstrapStackTypeEnum_ADVERB_ITEM_EVENTACTION,
   marpaESLIFBootstrapStackTypeEnum_ADVERB_ITEM_DEFAULTENCODING,
   marpaESLIFBootstrapStackTypeEnum_ADVERB_ITEM_FALLBACKENCODING,
@@ -57,6 +56,7 @@ typedef enum _marpaESLIFBootstrapStackTypeEnum {
   marpaESLIFBootstrapStackTypeEnum_ARRAY,
   marpaESLIFBootstrapStackTypeEnum_STRING,
   marpaESLIFBootstrapStackTypeEnum_LUA_FUNCTION,
+  marpaESLIFBootstrapStackTypeEnum_ACTION,
   _marpaESLIFBootstrapStackTypeEnum_LAST
 } marpaESLIFBootstrapStackTypeEnum_t;
 
@@ -91,7 +91,6 @@ static char _MARPAESLIF_BOOTSTRAP_STACK_TYPE[_marpaESLIFBootstrapStackTypeEnum_L
 #define MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_ITEM_EVENT_INITIALIZATION  &(_MARPAESLIF_BOOTSTRAP_STACK_TYPE[marpaESLIFBootstrapStackTypeEnum_ADVERB_ITEM_EVENT_INITIALIZATION])
 #define MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_ITEM_IFACTION              &(_MARPAESLIF_BOOTSTRAP_STACK_TYPE[marpaESLIFBootstrapStackTypeEnum_ADVERB_ITEM_IFACTION])
 #define MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_ITEM_REGEXACTION           &(_MARPAESLIF_BOOTSTRAP_STACK_TYPE[marpaESLIFBootstrapStackTypeEnum_ADVERB_ITEM_REGEXACTION])
-#define MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_ITEM_GENERATORACTION       &(_MARPAESLIF_BOOTSTRAP_STACK_TYPE[marpaESLIFBootstrapStackTypeEnum_ADVERB_ITEM_GENERATORACTION])
 #define MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_ITEM_EVENTACTION           &(_MARPAESLIF_BOOTSTRAP_STACK_TYPE[marpaESLIFBootstrapStackTypeEnum_ADVERB_ITEM_EVENTACTION])
 #define MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_ITEM_DEFAULTENCODING       &(_MARPAESLIF_BOOTSTRAP_STACK_TYPE[marpaESLIFBootstrapStackTypeEnum_ADVERB_ITEM_DEFAULTENCODING])
 #define MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_ITEM_FALLBACKENCODING      &(_MARPAESLIF_BOOTSTRAP_STACK_TYPE[marpaESLIFBootstrapStackTypeEnum_ADVERB_ITEM_FALLBACKENCODING])
@@ -112,6 +111,7 @@ static char _MARPAESLIF_BOOTSTRAP_STACK_TYPE[_marpaESLIFBootstrapStackTypeEnum_L
 #define MARPAESLIF_BOOTSTRAP_STACK_TYPE_ARRAY                             &(_MARPAESLIF_BOOTSTRAP_STACK_TYPE[marpaESLIFBootstrapStackTypeEnum_ARRAY])
 #define MARPAESLIF_BOOTSTRAP_STACK_TYPE_STRING                            &(_MARPAESLIF_BOOTSTRAP_STACK_TYPE[marpaESLIFBootstrapStackTypeEnum_STRING])
 #define MARPAESLIF_BOOTSTRAP_STACK_TYPE_LUA_FUNCTION                      &(_MARPAESLIF_BOOTSTRAP_STACK_TYPE[marpaESLIFBootstrapStackTypeEnum_LUA_FUNCTION])
+#define MARPAESLIF_BOOTSTRAP_STACK_TYPE_ACTION                            &(_MARPAESLIF_BOOTSTRAP_STACK_TYPE[marpaESLIFBootstrapStackTypeEnum_ACTION])
 
 /* Forward declarations */
 typedef enum   marpaESLIF_bootstrap_stack_context               marpaESLIF_bootstrap_stack_context_t;
@@ -166,7 +166,6 @@ enum marpaESLIF_bootstrap_adverb_list_item_type {
   MARPAESLIF_BOOTSTRAP_ADVERB_LIST_ITEM_TYPE_EVENT_INITIALIZATION,
   MARPAESLIF_BOOTSTRAP_ADVERB_LIST_ITEM_TYPE_IFACTION,
   MARPAESLIF_BOOTSTRAP_ADVERB_LIST_ITEM_TYPE_REGEXACTION,
-  MARPAESLIF_BOOTSTRAP_ADVERB_LIST_ITEM_TYPE_GENERATORACTION,
   MARPAESLIF_BOOTSTRAP_ADVERB_LIST_ITEM_TYPE_EVENTACTION,
   MARPAESLIF_BOOTSTRAP_ADVERB_LIST_ITEM_TYPE_DEFAULTENCODING,
   MARPAESLIF_BOOTSTRAP_ADVERB_LIST_ITEM_TYPE_FALLBACKENCODING
@@ -252,7 +251,6 @@ struct marpaESLIF_bootstrap_adverb_list_item {
     marpaESLIF_bootstrap_event_initialization_t *eventInitializationp;
     marpaESLIF_action_t                         *ifactionp;
     marpaESLIF_action_t                         *regexactionp;
-    marpaESLIF_action_t                         *generatoractionp;
     marpaESLIF_action_t                         *eventactionp;
     char                                        *defaultEncodings;
     char                                        *fallbackEncodings;
@@ -271,7 +269,7 @@ enum marpaESLIF_bootstrap_rhs_primary_type {
   MARPAESLIF_BOOTSTRAP_RHS_PRIMARY_TYPE_NA = 0,
   MARPAESLIF_BOOTSTRAP_RHS_PRIMARY_TYPE_SINGLE_SYMBOL,
   MARPAESLIF_BOOTSTRAP_RHS_PRIMARY_TYPE_SYMBOL_AND_REFERENCE,
-  MARPAESLIF_BOOTSTRAP_RHS_PRIMARY_TYPE_LUA_SYMBOL
+  MARPAESLIF_BOOTSTRAP_RHS_PRIMARY_TYPE_GENERATOR_ACTION
 };
 
 enum marpaESLIF_bootstrap_grammar_reference_type {
@@ -328,7 +326,7 @@ struct marpaESLIF_bootstrap_rhs_primary {
   union {
     marpaESLIF_bootstrap_single_symbol_t        *singleSymbolp;
     marpaESLIF_bootstrap_symbol_and_reference_t *symbolAndReferencep;
-    char                                        *luaIdentifiers;
+    marpaESLIF_action_t                         *generatorActionp;
   } u;
 };
 

@@ -77,7 +77,6 @@ static inline short _marpaESLIF_bootstrap_unpack_adverbListItemStackb(marpaESLIF
                                                                       marpaESLIF_bootstrap_event_initialization_t **eventInitializationpp,
                                                                       marpaESLIF_action_t                         **ifactionpp,
                                                                       marpaESLIF_action_t                         **regexactionpp,
-                                                                      marpaESLIF_action_t                         **generatoractionpp,
                                                                       marpaESLIF_action_t                         **eventactionpp,
                                                                       char                                        **defaultEncodingsp,
                                                                       char                                        **fallbackEncodingsp
@@ -196,7 +195,7 @@ static        short _marpaESLIF_bootstrap_G1_action_eventactionb(void *userDatav
 static        short _marpaESLIF_bootstrap_G1_action_defaultencodingb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
 static        short _marpaESLIF_bootstrap_G1_action_fallbackencodingb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
 static        short _marpaESLIF_bootstrap_G1_action_lua_functionb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
-static inline short _marpaESLIF_bootstrap_G1_action_generic_1b(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb, char *contexts, void *contextp);
+static inline short _marpaESLIF_bootstrap_G1_action_genericb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb, char *contexts, void *contextp);
 static        short _marpaESLIF_bootstrap_G1_action_lua_functioncallb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
 static        short _marpaESLIF_bootstrap_G1_action_lua_functiondeclb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
 static        short _marpaESLIF_bootstrap_G1_action_lhs_1b(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
@@ -572,10 +571,8 @@ static inline void  _marpaESLIF_bootstrap_rhs_primary_freev(marpaESLIF_bootstrap
     case MARPAESLIF_BOOTSTRAP_RHS_PRIMARY_TYPE_SYMBOL_AND_REFERENCE:
       _marpaESLIF_bootstrap_symbol_and_reference_freev(rhsPrimaryp->u.symbolAndReferencep);
       break;
-    case MARPAESLIF_BOOTSTRAP_RHS_PRIMARY_TYPE_LUA_SYMBOL:
-      if (rhsPrimaryp->u.luaIdentifiers != NULL) {
-        free(rhsPrimaryp->u.luaIdentifiers);
-      }
+    case MARPAESLIF_BOOTSTRAP_RHS_PRIMARY_TYPE_GENERATOR_ACTION:
+      _marpaESLIF_action_freev(rhsPrimaryp->u.generatorActionp);
       break;
     default:
       break;
@@ -1441,7 +1438,6 @@ static inline marpaESLIF_symbol_t  *_marpaESLIF_bootstrap_check_rhsAlternativep(
                                                                                 NULL, /* eventInitializationpp */
                                                                                 NULL, /* ifactionpp */
                                                                                 NULL, /* regexactionpp */
-                                                                                NULL, /* generatoractionpp */
                                                                                 NULL, /* eventactionpp */
                                                                                 NULL, /* defaultEncodingsp */
                                                                                 NULL /* fallbackEncodings */
@@ -1521,7 +1517,6 @@ static inline marpaESLIF_symbol_t  *_marpaESLIF_bootstrap_check_rhsAlternativep(
                                                                                 NULL, /* eventInitializationpp */
                                                                                 NULL, /* ifactionpp */
                                                                                 NULL, /* regexactionpp */
-                                                                                NULL, /* generatoractionpp */
                                                                                 NULL, /* eventactionpp */
                                                                                 NULL, /* defaultEncodingsp */
                                                                                 NULL /* fallbackEncodings */
@@ -1611,6 +1606,7 @@ static inline marpaESLIF_symbol_t  *_marpaESLIF_bootstrap_check_rhsPrimaryp(marp
   short                                 hideseparatorb = 0;
   marpaESLIF_lua_functiondecl_t         call2decl;
   marpaESLIF_lua_functiondecl_t        *call2declp;
+  marpaESLIF_action_t                  *generatorActionp = NULL;
 
   /* This can recurse, we want to avoid that */
   if (rhsPrimaryp->symbolShallowp != NULL) {
@@ -1693,14 +1689,20 @@ static inline marpaESLIF_symbol_t  *_marpaESLIF_bootstrap_check_rhsPrimaryp(marp
       symbolp->lookupSymbolp     = referencedSymbolp;
     }
     break;
-  case MARPAESLIF_BOOTSTRAP_RHS_PRIMARY_TYPE_LUA_SYMBOL:
-    /* Note that, by definition, callp is not NULL: this is parameterized RHS */
-    symbolp = _marpaESLIF_bootstrap_check_meta_by_namep(marpaESLIFp, marpaESLIFGrammarp, grammarp, rhsPrimaryp->u.luaIdentifiers, 1 /* createb */, 0 /* forcecreateb */, 0 /* lhsb */, NULL /* declp */, 1 /* rhsb */, rhsPrimaryp->callp);
+  case MARPAESLIF_BOOTSTRAP_RHS_PRIMARY_TYPE_GENERATOR_ACTION:
+    /* Clone action */
+    generatorActionp = _marpaESLIF_action_clonep(marpaESLIFp, rhsPrimaryp->u.generatorActionp);
+    if (generatorActionp == NULL) {
+      goto err;
+    }
+    /* Note that, by definition, callp is not NULL: this is a parameterized RHS */
+    symbolp = _marpaESLIF_bootstrap_check_meta_by_namep(marpaESLIFp, marpaESLIFGrammarp, grammarp, ".", 1 /* createb */, 0 /* forcecreateb */, 0 /* lhsb */, NULL /* declp */, 1 /* rhsb */, rhsPrimaryp->callp);
     if (MARPAESLIF_UNLIKELY(symbolp == NULL)) {
       goto err;
     }
-    /* Mark it as a "lua" symbol */
-    symbolp->luab = 1;
+    /* Remember the associated generator action */
+    symbolp->generatorActionp = generatorActionp;
+    generatorActionp = NULL;
     break;
   default:
     MARPAESLIF_ERRORF(marpaESLIFp, "Unsupported RHS primary type (%d)", rhsPrimaryp->type);
@@ -1714,6 +1716,7 @@ static inline marpaESLIF_symbol_t  *_marpaESLIF_bootstrap_check_rhsPrimaryp(marp
   symbolp = NULL;
 
  done:
+  _marpaESLIF_action_freev(generatorActionp);
   return symbolp;
 }
 
@@ -1739,7 +1742,6 @@ static inline short _marpaESLIF_bootstrap_unpack_adverbListItemStackb(marpaESLIF
                                                                       marpaESLIF_bootstrap_event_initialization_t **eventInitializationpp,
                                                                       marpaESLIF_action_t                         **ifactionpp,
                                                                       marpaESLIF_action_t                         **regexactionpp,
-                                                                      marpaESLIF_action_t                         **generatoractionpp,
                                                                       marpaESLIF_action_t                         **eventactionpp,
                                                                       char                                        **defaultEncodingsp,
                                                                       char                                        **fallbackEncodingsp
@@ -1804,9 +1806,6 @@ static inline short _marpaESLIF_bootstrap_unpack_adverbListItemStackb(marpaESLIF
   }
   if (regexactionpp != NULL) {
     *regexactionpp = NULL;
-  }
-  if (generatoractionpp != NULL) {
-    *generatoractionpp = NULL;
   }
   if (eventactionpp != NULL) {
     *eventactionpp = NULL;
@@ -1955,13 +1954,6 @@ static inline short _marpaESLIF_bootstrap_unpack_adverbListItemStackb(marpaESLIF
         }
         *regexactionpp = adverbListItemp->u.regexactionp;
         break;
-      case MARPAESLIF_BOOTSTRAP_ADVERB_LIST_ITEM_TYPE_GENERATORACTION:
-        if (MARPAESLIF_UNLIKELY(generatoractionpp == NULL)) {
-          MARPAESLIF_ERRORF(marpaESLIFp, "generator-action adverb is not allowed in %s context", contexts);
-          goto err;
-        }
-        *generatoractionpp = adverbListItemp->u.generatoractionp;
-        break;
       case MARPAESLIF_BOOTSTRAP_ADVERB_LIST_ITEM_TYPE_EVENTACTION:
         if (MARPAESLIF_UNLIKELY(eventactionpp == NULL)) {
           MARPAESLIF_ERRORF(marpaESLIFp, "event-action adverb is not allowed in %s context", contexts);
@@ -2046,9 +2038,6 @@ static inline void _marpaESLIF_bootstrap_adverb_list_item_freev(marpaESLIF_boots
     case MARPAESLIF_BOOTSTRAP_ADVERB_LIST_ITEM_TYPE_REGEXACTION:
       _marpaESLIF_action_freev(adverbListItemp->u.regexactionp);
       break;
-    case MARPAESLIF_BOOTSTRAP_ADVERB_LIST_ITEM_TYPE_GENERATORACTION:
-      _marpaESLIF_action_freev(adverbListItemp->u.generatoractionp);
-      break;
     case MARPAESLIF_BOOTSTRAP_ADVERB_LIST_ITEM_TYPE_EVENTACTION:
       _marpaESLIF_action_freev(adverbListItemp->u.eventactionp);
       break;
@@ -2097,7 +2086,6 @@ static void _marpaESLIF_bootstrap_freeDefaultActionv(void *userDatavNotUsedp, ma
   else if (marpaESLIFValueResultp->contextp == MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_ITEM_EVENT_INITIALIZATION) { _marpaESLIF_bootstrap_event_initialization_freev((marpaESLIF_bootstrap_event_initialization_t *) marpaESLIFValueResultp->u.p.p); }
   else if (marpaESLIFValueResultp->contextp == MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_ITEM_IFACTION            ) { free(marpaESLIFValueResultp->u.p.p); }
   else if (marpaESLIFValueResultp->contextp == MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_ITEM_REGEXACTION         ) { free(marpaESLIFValueResultp->u.p.p); }
-  else if (marpaESLIFValueResultp->contextp == MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_ITEM_GENERATORACTION     ) { free(marpaESLIFValueResultp->u.p.p); }
   else if (marpaESLIFValueResultp->contextp == MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_ITEM_EVENTACTION         ) { free(marpaESLIFValueResultp->u.p.p); }
   else if (marpaESLIFValueResultp->contextp == MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_ITEM_DEFAULTENCODING     ) { free(marpaESLIFValueResultp->u.p.p); }
   else if (marpaESLIFValueResultp->contextp == MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_ITEM_FALLBACKENCODING    ) { free(marpaESLIFValueResultp->u.p.p); }
@@ -2118,6 +2106,7 @@ static void _marpaESLIF_bootstrap_freeDefaultActionv(void *userDatavNotUsedp, ma
   else if (marpaESLIFValueResultp->contextp == MARPAESLIF_BOOTSTRAP_STACK_TYPE_ARRAY                           ) { free(marpaESLIFValueResultp->u.a.p); }
   else if (marpaESLIFValueResultp->contextp == MARPAESLIF_BOOTSTRAP_STACK_TYPE_STRING                          ) { _marpaESLIF_string_freev((marpaESLIF_string_t *) marpaESLIFValueResultp->u.p.p, 0 /* onStackb */); }
   else if (marpaESLIFValueResultp->contextp == MARPAESLIF_BOOTSTRAP_STACK_TYPE_LUA_FUNCTION                    ) { _marpaESLIF_bootstrap_lua_function_freev((marpaESLIF_bootstrap_lua_function_t *) marpaESLIFValueResultp->u.p.p); }
+  else if (marpaESLIFValueResultp->contextp == MARPAESLIF_BOOTSTRAP_STACK_TYPE_ACTION                          ) { _marpaESLIF_action_freev((marpaESLIF_action_t *) marpaESLIFValueResultp->u.p.p); }
   else                                                                                   { }
 }
 
@@ -2597,7 +2586,6 @@ static short _marpaESLIF_bootstrap_G1_action_adverb_list_itemsb(void *userDatavp
   marpaESLIF_action_t                         *symbolactionp          = NULL;
   marpaESLIF_action_t                         *ifactionp              = NULL;
   marpaESLIF_action_t                         *regexactionp           = NULL;
-  marpaESLIF_action_t                         *generatoractionp       = NULL;
   marpaESLIF_action_t                         *eventactionp           = NULL;
   char                                        *defaultEncodings       = NULL;
   char                                        *fallbackEncodings      = NULL;
@@ -2739,15 +2727,6 @@ static short _marpaESLIF_bootstrap_G1_action_adverb_list_itemsb(void *userDatavp
         adverbListItemp->type           = MARPAESLIF_BOOTSTRAP_ADVERB_LIST_ITEM_TYPE_REGEXACTION;
         adverbListItemp->u.regexactionp = regexactionp;
         regexactionp = NULL; /* regexactionp is now in adverbListItemp */
-      } else if (contextp == MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_ITEM_GENERATORACTION) {
-        MARPAESLIF_BOOTSTRAP_GETANDFORGET_PTR(marpaESLIFValuep, i, generatoractionp);
-        if (MARPAESLIF_UNLIKELY(generatoractionp == NULL)) { /* Not possible */
-          MARPAESLIF_ERROR(marpaESLIFp, "Adverb list item generator-action is NULL");
-          goto err;
-        }
-        adverbListItemp->type               = MARPAESLIF_BOOTSTRAP_ADVERB_LIST_ITEM_TYPE_GENERATORACTION;
-        adverbListItemp->u.generatoractionp = generatoractionp;
-        generatoractionp = NULL; /* generatoractionp is now in adverbListItemp */
       } else if (contextp == MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_ITEM_EVENTACTION) {
         MARPAESLIF_BOOTSTRAP_GETANDFORGET_PTR(marpaESLIFValuep, i, eventactionp);
         if (MARPAESLIF_UNLIKELY(eventactionp == NULL)) { /* Not possible */
@@ -2806,7 +2785,6 @@ static short _marpaESLIF_bootstrap_G1_action_adverb_list_itemsb(void *userDatavp
   _marpaESLIF_action_freev(symbolactionp);
   _marpaESLIF_action_freev(ifactionp);
   _marpaESLIF_action_freev(regexactionp);
-  _marpaESLIF_action_freev(generatoractionp);
   _marpaESLIF_action_freev(eventactionp);
   if (defaultEncodings != NULL) {
     free(defaultEncodings);
@@ -2829,7 +2807,7 @@ static short _marpaESLIF_bootstrap_G1_action_adverb_list_itemsb(void *userDatavp
 static short _marpaESLIF_bootstrap_G1_action_action_1b(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb)
 /*****************************************************************************/
 {
-  return _marpaESLIF_bootstrap_G1_action_generic_1b(userDatavp, marpaESLIFValuep, arg0i, argni, resulti, nullableb, "action", MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_ITEM_ACTION);
+  return _marpaESLIF_bootstrap_G1_action_genericb(userDatavp, marpaESLIFValuep, arg0i, argni, resulti, nullableb, "action", MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_ITEM_ACTION);
 }
 
 /*****************************************************************************/
@@ -3330,7 +3308,7 @@ static short _marpaESLIF_bootstrap_G1_action_symbolaction_1b(void *userDatavp, m
 /*****************************************************************************/
 {
   /* action ::= 'symbol-action' '=>' <action name> */
-  return _marpaESLIF_bootstrap_G1_action_generic_1b(userDatavp, marpaESLIFValuep, arg0i, argni, resulti, nullableb, "symbol-action", MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_ITEM_SYMBOLACTION);
+  return _marpaESLIF_bootstrap_G1_action_genericb(userDatavp, marpaESLIFValuep, arg0i, argni, resulti, nullableb, "symbol-action", MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_ITEM_SYMBOLACTION);
 }
 
 /*****************************************************************************/
@@ -3799,14 +3777,10 @@ static short _marpaESLIF_bootstrap_G1_action_rhs_primary_2b(void *userDatavp, ma
 static short _marpaESLIF_bootstrap_G1_action_rhs_primary_3b(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb)
 /*****************************************************************************/
 {
-  /* <rhs primary> ::= <lua action name> <lua functioncall> */
+  /* <rhs primary> ::= <generator action> <lua functioncall> */
   marpaESLIF_bootstrap_rhs_primary_t       *rhsPrimaryp    = NULL;
   marpaESLIF_t                             *marpaESLIFp    = marpaESLIFValuep->marpaESLIFp; /* marpaESLIFGrammar_eslifp(marpaESLIFRecognizer_grammarp(marpaESLIFValue_recognizerp(marpaESLIFValuep))); */
-  void                                     *bytep          = NULL;
-  size_t                                    bytel;
-  short                                     shallowb       = 0;
-  char                                     *luaIdentifiers = NULL;
-  size_t                                    luaIdentifierl;
+  marpaESLIF_action_t                      *generatorActionp = NULL;
   marpaESLIF_lua_functioncall_t            *callp          = NULL;
   short                                     rcb;
 
@@ -3816,23 +3790,13 @@ static short _marpaESLIF_bootstrap_G1_action_rhs_primary_3b(void *userDatavp, ma
     goto err;
   }
 
-  MARPAESLIF_BOOTSTRAP_GETANDFORGET_ARRAY(marpaESLIFValuep, arg0i, bytep, bytel, shallowb);
+  MARPAESLIF_BOOTSTRAP_GETANDFORGET_PTR(marpaESLIFValuep, arg0i, generatorActionp);
   /* It is a non-sense to not have valid information */
-  if (MARPAESLIF_UNLIKELY(bytep == NULL)) {
-    MARPAESLIF_ERRORF(marpaESLIFp, "bytep at indice %d is NULL", arg0i);
+  if (MARPAESLIF_UNLIKELY(generatorActionp == NULL)) {
+    MARPAESLIF_ERRORF(marpaESLIFp, "generatorActionp at indice %d is NULL", arg0i);
     goto err;
   }
 
-  /* We must have matched something like ::lua->luaIdentifiers */
-  luaIdentifierl = bytel - strlen(LUA_ACTION_PREFIX);
-  luaIdentifiers = (char *) malloc(luaIdentifierl + 1);
-  if (MARPAESLIF_UNLIKELY(luaIdentifiers == NULL)) {
-    MARPAESLIF_ERRORF(marpaESLIFp, "malloc failure, %s", strerror(errno));
-    goto err;
-  }
-  memcpy(luaIdentifiers, bytep + strlen(LUA_ACTION_PREFIX), luaIdentifierl);
-  luaIdentifiers[luaIdentifierl] = '\0';
-  
   MARPAESLIF_BOOTSTRAP_GETANDFORGET_PTR(marpaESLIFValuep, arg0i + 1, callp);
   /* It is a non-sense to not have valid information */
   if (MARPAESLIF_UNLIKELY(callp == NULL)) {
@@ -3847,11 +3811,11 @@ static short _marpaESLIF_bootstrap_G1_action_rhs_primary_3b(void *userDatavp, ma
     goto err;
   }
 
-  rhsPrimaryp->symbolShallowp   = NULL;
-  rhsPrimaryp->callp            = callp;
-  rhsPrimaryp->type             = MARPAESLIF_BOOTSTRAP_RHS_PRIMARY_TYPE_LUA_SYMBOL;
-  rhsPrimaryp->u.luaIdentifiers = luaIdentifiers;
-  luaIdentifiers = NULL; /* luaIdentifiers is in rhsPrimary */
+  rhsPrimaryp->symbolShallowp     = NULL;
+  rhsPrimaryp->callp              = callp;
+  rhsPrimaryp->type               = MARPAESLIF_BOOTSTRAP_RHS_PRIMARY_TYPE_GENERATOR_ACTION;
+  rhsPrimaryp->u.generatorActionp = generatorActionp;
+  generatorActionp = NULL; /* generatorActionp is in rhsPrimary */
   callp = NULL; /* callp  is in luaSymbolp */
 
   MARPAESLIF_BOOTSTRAP_SET_PTR(marpaESLIFValuep, resulti, MARPAESLIF_BOOTSTRAP_STACK_TYPE_RHS_PRIMARY, rhsPrimaryp);
@@ -3864,12 +3828,7 @@ static short _marpaESLIF_bootstrap_G1_action_rhs_primary_3b(void *userDatavp, ma
   rcb = 0;
 
  done:
-  if ((! shallowb) && (bytep != NULL)) {
-    free(bytep);
-  }
-  if (luaIdentifiers != NULL) {
-    free(luaIdentifiers);
-  }
+  _marpaESLIF_action_freev(generatorActionp);
   _marpaESLIF_lua_functioncall_freev(callp);
   return rcb;
 }
@@ -4351,7 +4310,6 @@ static inline short _marpaESLIF_bootstrap_G1_action_priority_loosen_ruleb(marpaE
                                                                                   NULL, /* eventInitializationpp */
                                                                                   NULL, /* ifactionpp */
                                                                                   NULL, /* regexactionpp */
-                                                                                  NULL, /* generatoractionpp */
                                                                                   NULL, /* eventactionpp */
                                                                                   NULL, /* defaultEncodingsp */
                                                                                   NULL /* fallbackEncodingsp */
@@ -4696,7 +4654,6 @@ static inline short _marpaESLIF_bootstrap_G1_action_priority_flat_ruleb(marpaESL
                                                                                   NULL, /* eventInitializationpp */
                                                                                   NULL, /* ifactionpp */
                                                                                   NULL, /* regexactionpp */
-                                                                                  NULL, /* generatoractionpp */
                                                                                   NULL, /* eventactionpp */
                                                                                   NULL, /* defaultEncodingsp */
                                                                                   NULL /* fallbackEncodingsp */
@@ -5692,7 +5649,6 @@ static short _marpaESLIF_bootstrap_G1_action_quantified_ruleb(void *userDatavp, 
                                                                               NULL, /* eventInitializationpp */
                                                                               NULL, /* ifactionpp */
                                                                               NULL, /* regexactionpp */
-                                                                              NULL, /* generatoractionpp */
                                                                               NULL, /* eventactionpp */
                                                                               NULL, /* defaultEncodingsp */
                                                                               NULL /* fallbackEncodingsp */
@@ -5989,7 +5945,6 @@ static short _marpaESLIF_bootstrap_G1_action_empty_ruleb(void *userDatavp, marpa
                                                                               NULL, /* eventInitializationpp */
                                                                               NULL, /* ifactionpp */
                                                                               NULL, /* regexactionpp */
-                                                                              NULL, /* generatoractionpp */
                                                                               NULL, /* eventactionpp */
                                                                               NULL, /* defaultEncodingsp */
                                                                               NULL /* fallbackEncodingsp */
@@ -6118,7 +6073,6 @@ static short _marpaESLIF_bootstrap_G1_action_default_ruleb(void *userDatavp, mar
                                                                               NULL, /* eventInitializationpp */
                                                                               NULL, /* ifactionpp */
                                                                               &regexactionp,
-                                                                              NULL, /* generatoractionpp */
                                                                               &eventactionp,
                                                                               &defaultEncodings,
                                                                               &fallbackEncodings
@@ -6722,7 +6676,6 @@ static short _marpaESLIF_bootstrap_G1_action_lexeme_ruleb(void *userDatavp, marp
   short                                        undefb;
   marpaESLIF_action_t                         *symbolactionp;
   marpaESLIF_action_t                         *ifactionp;
-  marpaESLIF_action_t                         *generatoractionp;
   short                                       *verbosebp;
   short                                        rcb;
 
@@ -6779,7 +6732,6 @@ static short _marpaESLIF_bootstrap_G1_action_lexeme_ruleb(void *userDatavp, marp
                                                                               &eventInitializationp,
                                                                               &ifactionp,
                                                                               NULL, /* regexactionpp */
-                                                                              &generatoractionp,
                                                                               NULL, /* eventactionpp */
                                                                               NULL, /* defaultEncodingsp */
                                                                               NULL /* fallbackEncodingsp */
@@ -6807,14 +6759,6 @@ static short _marpaESLIF_bootstrap_G1_action_lexeme_ruleb(void *userDatavp, marp
     _marpaESLIF_action_freev(symbolp->ifActionp);
     symbolp->ifActionp = _marpaESLIF_action_clonep(marpaESLIFp, ifactionp);
     if (MARPAESLIF_UNLIKELY(symbolp->ifActionp == NULL)) {
-      goto err;
-    }
-  }
-
-  if (generatoractionp != NULL) {
-    _marpaESLIF_action_freev(symbolp->generatorActionp);
-    symbolp->generatorActionp = _marpaESLIF_action_clonep(marpaESLIFp, generatoractionp);
-    if (MARPAESLIF_UNLIKELY(symbolp->generatorActionp == NULL)) {
       goto err;
     }
   }
@@ -6919,7 +6863,6 @@ static short _marpaESLIF_bootstrap_G1_action_terminal_ruleb(void *userDatavp, ma
   short                                        undefb;
   marpaESLIF_action_t                         *symbolactionp;
   marpaESLIF_action_t                         *ifactionp;
-  marpaESLIF_action_t                         *generatoractionp;
   short                                        rcb;
 
   MARPAESLIF_BOOTSTRAP_GET_INT(marpaESLIFValuep, arg0i+1, leveli);
@@ -6970,7 +6913,6 @@ static short _marpaESLIF_bootstrap_G1_action_terminal_ruleb(void *userDatavp, ma
                                                                               &eventInitializationp,
                                                                               &ifactionp,
                                                                               NULL, /* regexactionpp */
-                                                                              &generatoractionp,
                                                                               NULL, /* eventactionpp */
                                                                               NULL, /* defaultEncodingsp */
                                                                               NULL /* fallbackEncodingsp */
@@ -6995,14 +6937,6 @@ static short _marpaESLIF_bootstrap_G1_action_terminal_ruleb(void *userDatavp, ma
     _marpaESLIF_action_freev(symbolp->ifActionp);
     symbolp->ifActionp = _marpaESLIF_action_clonep(marpaESLIFp, ifactionp);
     if (MARPAESLIF_UNLIKELY(symbolp->ifActionp == NULL)) {
-      goto err;
-    }
-  }
-
-  if (generatoractionp != NULL) {
-    _marpaESLIF_action_freev(symbolp->generatorActionp);
-    symbolp->generatorActionp = _marpaESLIF_action_clonep(marpaESLIFp, generatoractionp);
-    if (MARPAESLIF_UNLIKELY(symbolp->generatorActionp == NULL)) {
       goto err;
     }
   }
@@ -7172,7 +7106,6 @@ static short _marpaESLIF_bootstrap_G1_action_discard_ruleb(void *userDatavp, mar
                                                                               &eventInitializationp,
                                                                               NULL, /* ifactionpp */
                                                                               NULL, /* regexactionpp */
-                                                                              NULL, /* generatoractionpp */
                                                                               NULL, /* eventactionpp */
                                                                               NULL, /* defaultEncodingsp */
                                                                               NULL /* fallbackEncodingsp */
@@ -7634,7 +7567,6 @@ static short _marpaESLIF_bootstrap_G1_action_exception_statementb(void *userData
                                                                               NULL, /* eventInitializationpp */
                                                                               NULL, /* ifactionpp */
                                                                               NULL, /* regexactionpp */
-                                                                              NULL, /* generatoractionpp */
                                                                               NULL, /* eventactionpp */
                                                                               NULL, /* defaultEncodingsp */
                                                                               NULL /* fallbackEncodingsp */
@@ -8228,7 +8160,7 @@ static short _marpaESLIF_bootstrap_G1_action_ifactionb(void *userDatavp, marpaES
 /*****************************************************************************/
 {
   /* <if action> ::= 'if-action' '=>' <if action name> */
-  return _marpaESLIF_bootstrap_G1_action_generic_1b(userDatavp, marpaESLIFValuep, arg0i, argni, resulti, nullableb, "if-action", MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_ITEM_IFACTION);
+  return _marpaESLIF_bootstrap_G1_action_genericb(userDatavp, marpaESLIFValuep, arg0i, argni, resulti, nullableb, "if-action", MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_ITEM_IFACTION);
 }
 
 /*****************************************************************************/
@@ -8236,15 +8168,15 @@ static short _marpaESLIF_bootstrap_G1_action_regexactionb(void *userDatavp, marp
 /*****************************************************************************/
 {
   /* <regex action> ::= 'regex-action' '=>' <regex action name> */
-  return _marpaESLIF_bootstrap_G1_action_generic_1b(userDatavp, marpaESLIFValuep, arg0i, argni, resulti, nullableb, "regex-action", MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_ITEM_REGEXACTION);
+  return _marpaESLIF_bootstrap_G1_action_genericb(userDatavp, marpaESLIFValuep, arg0i, argni, resulti, nullableb, "regex-action", MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_ITEM_REGEXACTION);
 }
 
 /*****************************************************************************/
 static short _marpaESLIF_bootstrap_G1_action_generatoractionb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb)
 /*****************************************************************************/
 {
-  /* <symbol generator action> ::= 'generator-action' '=>' <generator action name> */
-  return _marpaESLIF_bootstrap_G1_action_generic_1b(userDatavp, marpaESLIFValuep, arg0i, argni, resulti, nullableb, "generator-action", MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_ITEM_GENERATORACTION);
+  /* <generator action> ::= '.' '=>' <generator action name> */
+  return _marpaESLIF_bootstrap_G1_action_genericb(userDatavp, marpaESLIFValuep, arg0i, argni, resulti, nullableb, ".", MARPAESLIF_BOOTSTRAP_STACK_TYPE_ACTION);
 }
 
 /*****************************************************************************/
@@ -8252,7 +8184,7 @@ static short _marpaESLIF_bootstrap_G1_action_eventactionb(void *userDatavp, marp
 /*****************************************************************************/
 {
   /* <event action> ::= 'event-action' '=>' <event action name> */
-  return _marpaESLIF_bootstrap_G1_action_generic_1b(userDatavp, marpaESLIFValuep, arg0i, argni, resulti, nullableb, "event-action", MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_ITEM_EVENTACTION);
+  return _marpaESLIF_bootstrap_G1_action_genericb(userDatavp, marpaESLIFValuep, arg0i, argni, resulti, nullableb, "event-action", MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_ITEM_EVENTACTION);
 }
 
 /*****************************************************************************/
@@ -8467,7 +8399,7 @@ static short _marpaESLIF_bootstrap_G1_action_lua_functionb(void *userDatavp, mar
 }
 
 /*****************************************************************************/
-static inline short _marpaESLIF_bootstrap_G1_action_generic_1b(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb, char *contexts, void *contextp)
+static inline short _marpaESLIF_bootstrap_G1_action_genericb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb, char *contexts, void *contextp)
 /*****************************************************************************/
 {
   /* ... ::= contexts '=>' <action name> */

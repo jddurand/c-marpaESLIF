@@ -933,6 +933,7 @@ marpaESLIF BNF can be expressed in itself:
                                    | 'symbol-action' /=>|\x{21D2}/u <quoted string literal>
   <if action>                    ::= 'if-action' /=>|\x{21D2}/u <if action name>
   <regex action>                 ::= 'regex-action' /=>|\x{21D2}/u <regex action name>
+  <generator action>             ::= '.' /=>|\x{21D2}/u <generator action name>
   <alternative name>             ::= <standard name>
                                    | <quoted string literal>
   <event name>                   ::= <restricted ascii graph name>
@@ -954,7 +955,7 @@ marpaESLIF BNF can be expressed in itself:
                                    | <symbol> '@' <grammar reference>
   <rhs primary>                  ::= <rhs primary no parameter>
                                    | <rhs primary no parameter> <lua functioncall>
-                                   | <lua action name> <lua functioncall>
+                                   | <generator action>
   <single symbol>                ::= <symbol>
                                    | <terminal>
   <terminal>                     ::= <character class>
@@ -995,6 +996,9 @@ marpaESLIF BNF can be expressed in itself:
                                    | '::jsonf'
                                    | <lua function>
   <if action name>               ::= <restricted ascii graph name>
+                                   | <lua action name>
+                                   | <lua function>
+  <generator action name>        ::= <restricted ascii graph name>
                                    | <lua action name>
                                    | <lua function>
   <regex action name>            ::= <restricted ascii graph name>
