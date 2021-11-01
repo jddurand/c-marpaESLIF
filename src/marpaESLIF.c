@@ -21698,7 +21698,7 @@ static inline short _marpaESLIFRecognizer_context_setb(marpaESLIFRecognizer_t *m
 }
 
 /*****************************************************************************/
-marpaESLIFValueResult_t *marpaESLIFRecognizer_contextb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp)
+marpaESLIFValueResult_t *marpaESLIFRecognizer_context_getp(marpaESLIFRecognizer_t *marpaESLIFRecognizerp)
 /*****************************************************************************/
 {
   marpaESLIFValueResult_t *rcp;
