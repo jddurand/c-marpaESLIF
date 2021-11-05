@@ -10,15 +10,6 @@
 #include <stdio.h>
 #include <luaunpanic.h>
 
-#define PRINT_PANIC_STRING(L, f) do {					\
-    char *panicstring;							\
-    if (luaunpanic_panicstring(&panicstring, L)) {                      \
-      fprintf(stderr, "%s panic\n", #f);				\
-    } else {								\
-      fprintf(stderr, "%s panic: %s\n", #f, panicstring);               \
-    }									\
-  } while (0)
-
 #define PRINT_ERROR_STRING(L, f) do {					\
     char *errorstring = (char *) lua_tostring(L, -1);;			\
     if (errorstring == NULL) {                                          \
@@ -55,16 +46,12 @@ int main(int argc, char *argv[])
 
   /* load Lua base libraries */
   if (luaunpanicL_openlibs(L)) {
-    PRINT_PANIC_STRING(L, luaunpanicL_openlibs);
+    PRINT_ERROR_STRING(L, luaunpanicL_openlibs);
     exit(1);
   }
 
   /* Load the file containing the script we are going to run */
-  if (luaunpanicL_loadfile(&status, L, argv[1])) {
-    PRINT_PANIC_STRING(L, luaunpanicL_loadfile);
-    exit(1);
-  }
-  if (status) {
+  if (luaunpanicL_loadfile(&status, L, argv[1]) || status) {
     PRINT_ERROR_STRING(L, luaunpanicL_loadfile);
     exit(1);
   }
@@ -75,7 +62,7 @@ int main(int argc, char *argv[])
    * want the script to receive it, then ask Lua to run it.
    */
   if (luaunpanic_newtable(L)) {    /* We will pass a table */
-    PRINT_PANIC_STRING(L, luaunpanic_newtable);
+    PRINT_ERROR_STRING(L, luaunpanic_newtable);
     exit(1);
   }
 
@@ -96,38 +83,34 @@ int main(int argc, char *argv[])
    */
   for (i = 1; i <= 5; i++) {
     if (luaunpanic_pushnumber(L, (lua_Number) i)) {   /* Push the table index */
-      PRINT_PANIC_STRING(L, luaunpanic_pushnumber);
+      PRINT_ERROR_STRING(L, luaunpanic_pushnumber);
       exit(1);
     }
     if (luaunpanic_pushnumber(L, (lua_Number) i*2)) { /* Push the cell value */
-      PRINT_PANIC_STRING(L, luaunpanic_pushnumber);
+      PRINT_ERROR_STRING(L, luaunpanic_pushnumber);
       exit(1);
     }
     if (luaunpanic_rawset(L, -3)) {      /* Stores the pair in the table */
-      PRINT_PANIC_STRING(L, luaunpanic_rawset);
+      PRINT_ERROR_STRING(L, luaunpanic_rawset);
       exit(1);
     }
   }
 
   /* By what name is the script going to reference our table? */
   if (luaunpanic_setglobal(L, "foo")) {
-    PRINT_PANIC_STRING(L, luaunpanic_setglobal);
+    PRINT_ERROR_STRING(L, luaunpanic_setglobal);
     exit(1);
   }
 
   /* Ask Lua to run our little script */
-  if (luaunpanic_pcall(&result, L, 0, LUA_MULTRET, 0)) {
-    PRINT_PANIC_STRING(L, luaunpanic_pcall);
-    exit(1);
-  }
-  if (result) {
-    fprintf(stderr, "Failed to run script: %s\n", lua_tostring(L, -1));
+  if (luaunpanic_pcall(&result, L, 0, LUA_MULTRET, 0) || result) {
+    PRINT_ERROR_STRING(L, luaunpanic_pcall);
     exit(1);
   }
 
   /* Get the returned value at the top of the stack (index -1) */
   if (luaunpanic_tonumber(&luaSum, L, -1)) {
-    PRINT_PANIC_STRING(L, luaunpanic_tonumber);
+    PRINT_ERROR_STRING(L, luaunpanic_tonumber);
     exit(1);
   }
   sum = (double) luaSum;
@@ -135,11 +118,11 @@ int main(int argc, char *argv[])
   printf("Script returned: %.0f\n", sum);
 
   if (luaunpanic_pop(L, 1)) {  /* Take the returned value out of the stack */
-    PRINT_PANIC_STRING(L, luaunpanic_pop);
+    PRINT_ERROR_STRING(L, luaunpanic_pop);
     exit(1);
   }
   if (luaunpanic_close(L)) {   /* Cya, Lua */
-    PRINT_PANIC_STRING(L, luaunpanic_close);
+    PRINT_ERROR_STRING(L, luaunpanic_close);
     exit(1);
   }
 
