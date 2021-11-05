@@ -1,7 +1,7 @@
 #ifndef luaunpanic_macros_h
 #define luaunpanic_macros_h
 
-#define LUAUNPANIC_ON_VOID_FUNCTION(wrapper, L_decl_hook, call, ...)    \
+#define _LUAUNPANIC_ON_VOID_FUNCTION(wrapper, L_decl_hook, call, luaunpanic_rc_if_success, ...) \
   short wrapper(__VA_ARGS__) {                                          \
     L_decl_hook                                                         \
     short rc = 1;                                                       \
@@ -14,19 +14,22 @@
       if (LW != NULL) {                                                 \
         TRY(LW) {                                                       \
           call;                                                         \
-          rc = 0;                                                       \
+          rc = luaunpanic_rc_if_success;                                \
         }                                                               \
         ETRY(LW);							\
       } else {                                                          \
         call;                                                           \
-        rc = 0;                                                         \
+        rc = luaunpanic_rc_if_success;                                  \
       }                                                                 \
     }                                                                   \
                                                                         \
     return rc;                                                          \
   }
 
-#define LUAUNPANIC_ON_NON_VOID_FUNCTION(wrapper, L_decl_hook, type, call, ...) \
+#define LUAUNPANIC_ON_VOID_FUNCTION(wrapper, L_decl_hook, call, ...)       _LUAUNPANIC_ON_VOID_FUNCTION(wrapper, L_decl_hook, call, 0, __VA_ARGS__)
+#define LUAUNPANIC_ON_VOID_ERROR_FUNCTION(wrapper, L_decl_hook, call, ...) _LUAUNPANIC_ON_VOID_FUNCTION(wrapper, L_decl_hook, call, 1, __VA_ARGS__)
+
+#define _LUAUNPANIC_ON_NON_VOID_FUNCTION(wrapper, L_decl_hook, type, luaunpanic_rc_if_success, call, ...) \
   short wrapper(type *luarcp, __VA_ARGS__) {                            \
     L_decl_hook                                                         \
     short rc = 1;                                                       \
@@ -40,7 +43,7 @@
         TRY(LW) {                                                       \
           type luarc;							\
           luarc = call;							\
-          rc = 0;                                                       \
+          rc = luaunpanic_rc_if_success;                                \
           if (luarcp != NULL) {                                         \
             *luarcp = luarc;                                            \
           }                                                             \
@@ -49,7 +52,7 @@
       } else {                                                          \
         type luarc;							\
         luarc = call;							\
-        rc = 0;                                                         \
+        rc = luaunpanic_rc_if_success;                                  \
         if (luarcp != NULL) {                                           \
           *luarcp = luarc;                                              \
         }                                                               \
@@ -58,6 +61,9 @@
                                                                         \
     return rc;                                                          \
   }
+
+#define LUAUNPANIC_ON_NON_VOID_FUNCTION(wrapper, L_decl_hook, type, call, ...)       _LUAUNPANIC_ON_NON_VOID_FUNCTION(wrapper, L_decl_hook, type, 0, call, __VA_ARGS__)
+#define LUAUNPANIC_ON_NON_VOID_ERROR_FUNCTION(wrapper, L_decl_hook, type, call, ...) _LUAUNPANIC_ON_NON_VOID_FUNCTION(wrapper, L_decl_hook, type, 1, call, __VA_ARGS__)
 
 /* Special macro when the lua prototype ends with va_list */
 #ifdef C_VA_COPY

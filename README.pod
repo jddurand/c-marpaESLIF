@@ -24,11 +24,19 @@ Return code is C<0> if C<luaunpanic_xxx> did panic, C<1> if <luaunpanic_xxx> suc
 
 In other words, non-void native calls such as:
 
-  if (lua_call(xxx)) { yyy /* failure */} else { zzz /* success */ }
+  if (lua_call(xxx)) {
+     yyy /* failure */
+  } else {
+     zzz /* success */
+  }
 
 should be translated to:
 
-  if (luaunpanic_call(&luarc, xxx) || luarcrc) { yyy /* failure */ } else { zzz /* success */ }
+  if (luaunpanic_call(&luarc, xxx) || luarcrc) {
+    yyy /* failure */
+  } else {
+    zzz /* success */
+  }
 
 =item
 
@@ -42,11 +50,13 @@ In other words, void native calls such as:
 
 should be translated to:
 
-  if (luaunpanic_call(xxx)) { /* failure */ }
+  if (luaunpanic_call(xxx)) {
+    /* failure */
+  }
 
 =item
 
-Exceptions are lua calls that will do an abort: if you look to the documentation, despite they have a return code for semantic purpose, they will I<never> return: they exist only for the purpose of generating an exception. These functions are:
+Exceptions are lua calls that will do an abort: if you look to the documentation, despite they have a return code for semantic purpose, they will I<never> return in Lua: they exist only for the purpose of generating an exception. These functions are:
 
 =over
 
@@ -58,11 +68,22 @@ Exceptions are lua calls that will do an abort: if you look to the documentation
 
 =back
 
-The corresponding luaunpanic_wrappers exist solely for coherency but they will wrap nothing because the semantic of breaking the program must not change, i.e. the wrappers are proxy macros:
+The corresponding luaunpanic_wrappers will, on the contrary, always return the value 1 to indicate a failure. The argument C<&luarc> itself will I<not> be updated. Therefore the usage for such functions is e.g;:
 
-  #define luaunpanicL_argerror(rcp, L, arg, extramsg) luaL_argerror(L, arg, extramsg)
-  #define luaunpanicL_error(rcp, L, fmt, ...)         luaL_error(L, fmt, __VA_ARGS__)
-  #define luaunpanic_error(rcp, L)                    lua_error(L)
+  if (luaunpanicL_argerror(&luarc, L, arg, extramsg)) {
+    /* failure */
+  } else {
+    /* cannot happen */
+  }
+
+and since it is guaranteed that C<rc> is not updated, it is equivalent, but quite false to be writen like in the general case:
+
+  if (luaunpanicL_argerror(&luarc, L, arg, extramsg) || luarc) {
+    /* failure */
+  } else {
+    /* cannot happen */
+  }
+
 
 =back
 
@@ -82,33 +103,9 @@ The C<lua_State> pointer returned with the unpanic versions of C<lua_State> crea
 
 Anything that would abort will not if it is done using a luaunpanic method.
 
-=item
-
-In case a luaunpanic method fails, which should be extremely rare, a new method exist when the wrapper itself panics:
-
-  short luaunpanic_panicstring(char **panicstringp, lua_State *L)
-
 =back
 
-=head2 Wrapper usage
-
-In other words, non-void native calls such as:
-
-  if (lua_call(xxx)) { yyy /* failure */} else { zzz /* success */ }
-
-should be translated to:
-
-  if (luaunpanic_call(&luarc, xxx) || luarcrc) { yyy /* failure */ } else { zzz /* success */ }
-
-Similary for void native lua calls:
-
-  lua_call(xxx);
-
-should be translated to:
-
-  if (luaunpanic_call(xxx)) { /* failure */ }
-
-=head1 USAGE
+=head1 NOTES
 
 Obviously, this is targetting embedded lua interpreters into third-party libraries: by using luaunpanic, you make sure that your library will never exit because of lua default I<abort()> behaviour.
 
