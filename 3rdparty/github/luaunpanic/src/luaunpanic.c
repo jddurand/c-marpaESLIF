@@ -349,6 +349,7 @@ LUAUNPANIC_ON_NON_VOID_FUNCTION(luaunpanic_gc,           ,                int,  
 /*
 ** miscellaneous functions
 */
+LUAUNPANIC_ON_NON_VOID_ERROR_FUNCTION(luaunpanic_error,  ,                int,                lua_error(L),                   lua_State *L)
 LUAUNPANIC_ON_NON_VOID_FUNCTION(luaunpanic_next,         ,                int,                lua_next(L, idx),               lua_State *L, int idx)
 LUAUNPANIC_ON_VOID_FUNCTION    (luaunpanic_concat,       ,                                    lua_concat(L, n),               lua_State *L, int n)
 LUAUNPANIC_ON_VOID_FUNCTION    (luaunpanic_len,          ,                                    lua_len(L, idx),                lua_State *L, int idx)
@@ -414,6 +415,7 @@ LUAUNPANIC_ON_VOID_FUNCTION    (luaunpanicL_checkversion_,,                     
 LUAUNPANIC_ON_NON_VOID_FUNCTION(luaunpanicL_getmetafield,,                int,                luaL_getmetafield(L, obj, e),   lua_State *L, int obj, const char *e)
 LUAUNPANIC_ON_NON_VOID_FUNCTION(luaunpanicL_callmeta,    ,                int,                luaL_callmeta(L, obj, e),       lua_State *L, int obj, const char *e)
 LUAUNPANIC_ON_NON_VOID_FUNCTION(luaunpanicL_tolstring,   ,                const char *,       luaL_tolstring(L, idx, len),    lua_State *L, int idx, size_t *len)
+LUAUNPANIC_ON_NON_VOID_ERROR_FUNCTION(luaunpanicL_argerror,,              int,                luaL_argerror(L, arg, extramsg), lua_State *L, int arg, const char *extramsg)
 LUAUNPANIC_ON_NON_VOID_FUNCTION(luaunpanicL_checklstring,,                const char *,       luaL_checklstring(L, arg, l),   lua_State *L, int arg, size_t *l)
 LUAUNPANIC_ON_NON_VOID_FUNCTION(luaunpanicL_optlstring,  ,                const char *,       luaL_optlstring(L, arg, def, l), lua_State *L, int arg, const char *def, size_t *l)
 LUAUNPANIC_ON_NON_VOID_FUNCTION(luaunpanicL_checknumber, ,                lua_Number,         luaL_checknumber(L, arg),       lua_State *L, int arg)
@@ -428,6 +430,25 @@ LUAUNPANIC_ON_VOID_FUNCTION    (luaunpanicL_setmetatable,,                      
 LUAUNPANIC_ON_NON_VOID_FUNCTION(luaunpanicL_testudata,   ,                void *,             luaL_testudata(L, ud, tname),   lua_State *L, int ud, const char *tname)
 LUAUNPANIC_ON_NON_VOID_FUNCTION(luaunpanicL_checkudata,  ,                void *,             luaL_checkudata(L, ud, tname),  lua_State *L, int ud, const char *tname)
 LUAUNPANIC_ON_VOID_FUNCTION    (luaunpanicL_where,       ,                                    luaL_where(L, lvl),             lua_State *L, int lvl)
+
+/* This function needs to be writen explicitly because of the ellipsis ... */
+short luaunpanicL_error (int *rcp, lua_State *L, const char *fmt, ...)
+{
+  luaunpanic_userdata_t *LW;
+  va_list                argp;
+
+  if (L == NULL) {
+    errno = EINVAL;
+    return 1;
+  }
+
+  luaL_where(L, 1);
+  va_start(argp, fmt);
+  lua_pushvfstring(L, fmt, argp);
+  va_end(argp);
+  lua_concat(L, 2);
+  return luaunpanic_error(rcp, L);
+}
 
 /* LUAUNPANIC_ON_NON_VOID_FUNCTION(luaunpanicL_error(int *rcp,lua_State *L, const char *fmt, ...); */
 LUAUNPANIC_ON_NON_VOID_FUNCTION(luaunpanicL_checkoption, ,      int,                luaL_checkoption(L, arg, def, lst), lua_State *L, int arg, const char *def, const char *const lst[])

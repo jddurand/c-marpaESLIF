@@ -74,12 +74,12 @@ short luadoerror()
   /* the function name */
   if (luaunpanic_getglobal(&rc, L, "doerror")) {
     PRINT_ERROR_STRING(L, luaunpanic_getglobal);
-    return -1;
+    return 1;
   }
 
   if (rc != LUA_TFUNCTION) {
     fprintf(stderr, "\"doerror\" is not a function, type is %d != LUA_TFUNCTION\n", rc);
-    return -1;
+    return 1;
   }
 
   /* call the function with 0 arguments, ignore result */
@@ -132,6 +132,51 @@ int main(int argc, char *argv[])
   if (luadoerror() != 0) {
     fprintf(stderr, "luadoerror error\n");
     exit(1);
+  }
+
+  /* Clear the stack */
+  if (luaunpanic_settop(L, 0)) {
+    PRINT_ERROR_STRING(L, luaunpanic_settop);
+    exit(1);
+  }
+
+  /* call an explicit error function to verify they do not abort */
+  if (! luaunpanic_error(&rc, L)) {
+    fprintf(stderr, "luaunpanic_error returns success!?\n");
+    exit(1);
+  } else {
+    fprintf(stdout, "luaunpanic_error returns failure, error string follows: \n");
+    PRINT_ERROR_STRING(L, luaunpanic_error);
+  }
+
+  /* Clear the stack */
+  if (luaunpanic_settop(L, 0)) {
+    PRINT_ERROR_STRING(L, luaunpanic_settop);
+    exit(1);
+  }
+
+  /* call an explicit error function to verify they do not abort */
+  if (! luaunpanicL_argerror(&rc, L, 1, "extramsg")) {
+    fprintf(stderr, "luaunpanicL_argerror returns success!?\n");
+    exit(1);
+  } else {
+    fprintf(stdout, "luaunpanicL_argerror returns failure, error string follows: \n");
+    PRINT_ERROR_STRING(L, luaunpanic_error);
+  }
+
+  /* Clear the stack */
+  if (luaunpanic_settop(L, 0)) {
+    PRINT_ERROR_STRING(L, luaunpanic_settop);
+    exit(1);
+  }
+
+  /* call an explicit error function to verify they do not abort */
+  if (! luaunpanicL_error (&rc, L, "%s %s %s", "My", "private", "error string")) {
+    fprintf(stderr, "luaunpanicL_error returns success!?\n");
+    exit(1);
+  } else {
+    fprintf(stdout, "luaunpanicL_error returns failure, error string follows: \n");
+    PRINT_ERROR_STRING(L, luaunpanic_error);
   }
 
   /* cleanup Lua */
