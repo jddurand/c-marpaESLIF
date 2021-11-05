@@ -190,8 +190,6 @@ struct marpaESLIFSymbol {
   marpaESLIF_lua_functiondecl_t *declp;                  /* For parameterized symbols, shallow pointer to declp */
   marpaESLIF_lua_functioncall_t *callp;                  /* For parameterized symbols, shallow pointer to callp */
   marpaESLIFAction_t            *pushContextActionp;     /* For parameterized symbols, context push action */
-  marpaESLIFAction_t            *popContextActionp;      /* For parameterized symbols, context pop action */
-  marpaESLIFAction_t            *getContextActionp;      /* For parameterized symbols, context get action */
 };
 
 /* A rule */
@@ -430,8 +428,6 @@ struct marpaESLIFRecognizer {
   marpaWrapperGrammar_t       *marpaWrapperGrammarp; /* Shallow copy of cached grammar in use */
   genericStack_t               _lexemeStack;       /* Internal input stack of lexemes */
   genericStack_t              *lexemeStackp;       /* Pointer to internal input stack of lexemes */
-  genericStack_t               _contextStack;       /* Internal input stack for the context */
-  genericStack_t              *contextStackp;       /* Pointer to internal input stack for context */
   marpaESLIFEvent_t           *eventArrayp;        /* For the events */
   size_t                       eventArrayl;        /* Current number of events */
   size_t                       eventArraySizel;    /* Real allocated size (to avoid constant free/deletes) */
@@ -534,6 +530,8 @@ struct marpaESLIFRecognizer {
 
   char                           *luaprecompiledp;    /* Lua script source precompiled */
   size_t                          luaprecompiledl;    /* Lua script source precompiled length in byte */
+  marpaESLIFAction_t             *getContextActionp;  /* Getting the context is a common function that is stored at recognizer level */
+  marpaESLIFAction_t             *popContextActionp;  /* Getting the context is a common function that is stored at recognizer level */
   };
 
 struct marpaESLIF_lexeme_data {

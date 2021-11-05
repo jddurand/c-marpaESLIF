@@ -206,12 +206,12 @@ static short                              marpaESLIFLua_valueSymbolCallbackb(voi
 static short                              marpaESLIFLua_recognizerIfCallbackb(void *userDatavp, marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFValueResult_t *marpaESLIFValueResultLexemep, marpaESLIFValueResultBool_t *marpaESLIFValueResultBoolp);
 static short                              marpaESLIFLua_recognizerEventCallbackb(void *userDatavp, marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFEvent_t *eventArrayp, size_t eventArrayl, marpaESLIFValueResultBool_t *marpaESLIFValueResultBoolp);
 static short                              marpaESLIFLua_recognizerRegexCallbackb(void *userDatavp, marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFValueResult_t *marpaESLIFCalloutBlockp, marpaESLIFValueResultInt_t *marpaESLIFValueResultOutp);
-static marpaESLIFSymbol_t                *marpaESLIFLua_recognizerGeneratorCallbackb(void *userDatavp, marpaESLIFRecognizer_t *marpaESLIFRecognizerp);
+static marpaESLIFSymbol_t                *marpaESLIFLua_recognizerGeneratorCallbackb(void *userDatavp, marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFValueResult_t *contextp);
 static short                              marpaESLIFLua_valueCallbackb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, marpaESLIFValueResult_t *marpaESLIFValueResultLexemep, int resulti, short nullableb, short symbolb, short precompiledb);
 static short                              marpaESLIFLua_ifCallbackb(void *userDatavp, marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFValueResult_t *marpaESLIFValueResultLexemep, marpaESLIFValueResultBool_t *marpaESLIFValueResultBoolp, short precompiledb);
 static short                              marpaESLIFLua_eventCallbackb(void *userDatavp, marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFEvent_t *eventArrayp, size_t eventArrayl, marpaESLIFValueResultBool_t *marpaESLIFValueResultBoolp, short precompiledb);
 static short                              marpaESLIFLua_regexCallbackb(void *userDatavp, marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFValueResult_t *marpaESLIFCalloutBlockp, marpaESLIFValueResultInt_t *marpaESLIFValueResultOutp, short precompiledb);
-static marpaESLIFSymbol_t                *marpaESLIFLua_generatorCallbackb(void *userDatavp, marpaESLIFRecognizer_t *marpaESLIFRecognizerp, short precompiledb);
+static marpaESLIFSymbol_t                *marpaESLIFLua_generatorCallbackb(void *userDatavp, marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFValueResult_t *contextp, short precompiledb);
 static void                               marpaESLIFLua_valueFreeCallbackv(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, marpaESLIFValueResult_t *marpaESLIFValueResultp);
 static void                               marpaESLIFLua_recognizerFreeCallbackv(void *userDatavp, marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFValueResult_t *marpaESLIFValueResultp);
 static void                               marpaESLIFLua_genericFreeCallbackv(void *userDatavp, marpaESLIFValueResult_t *marpaESLIFValueResultp);
@@ -265,7 +265,7 @@ static int                                marpaESLIFLua_marpaESLIFRecognizer_hoo
 static int                                marpaESLIFLua_marpaESLIFValue_newi(lua_State *L);
 static int                                marpaESLIFLua_marpaESLIFRecognizer_symbolTryi(lua_State *L);
 static int                                marpaESLIFLua_marpaESLIFRecognizer_progressi(lua_State *L);
-static int                                marpaESLIFLua_marpaESLIFRecognizer_contexti(lua_State *L);
+static int                                marpaESLIFLua_marpaESLIFRecognizer_contextGeti(lua_State *L);
 static int                                marpaESLIFLua_marpaESLIFRecognizer_latestEarleySetIdi(lua_State *L);
 static int                                marpaESLIFLua_marpaESLIFRecognizer_earlemei(lua_State *L);
 #ifdef MARPAESLIFLUA_EMBEDDED
@@ -315,8 +315,9 @@ static int                                marpaESLIFLua_marpaESLIFSymbol_newFrom
 static int                                marpaESLIFLua_marpaESLIFSymbol_tryi(lua_State *L);
 static int                                marpaESLIFLua_marpaESLIFSymbol_freei(lua_State *L);
 #ifdef MARPAESLIFLUA_EMBEDDED
-static short                              marpaESLIFLua_pushContextb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFValueResult_t *marpaESLIFValueResultOutputp);
+static short                              marpaESLIFLua_pushContextb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp);
 static short                              marpaESLIFLua_popContextb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp);
+static short                              marpaESLIFLua_getContextb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFValueResult_t *contextp);
 #endif
 
 #define MARPAESLIFLUA_NOOP
@@ -1028,7 +1029,7 @@ static short marpaESLIFLua_lua_isinteger(int *rcip, lua_State *L, int idx);
   MARPAESLIFLUA_STORE_FUNCTION(L, "marpaESLIFValue_new",             marpaESLIFLua_marpaESLIFValue_newi); \
   MARPAESLIFLUA_STORE_FUNCTION(L, "symbolTry",                       marpaESLIFLua_marpaESLIFRecognizer_symbolTryi); \
   MARPAESLIFLUA_STORE_FUNCTION(L, "progress",                        marpaESLIFLua_marpaESLIFRecognizer_progressi); \
-  MARPAESLIFLUA_STORE_FUNCTION(L, "context",                         marpaESLIFLua_marpaESLIFRecognizer_contexti); \
+  MARPAESLIFLUA_STORE_FUNCTION(L, "contextGet",                      marpaESLIFLua_marpaESLIFRecognizer_contextGeti); \
   if (! marpaESLIFLua_lua_setfield(L, -2, "__index")) goto err;         \
   if (! marpaESLIFLua_lua_setmetatable(L, -2)) goto err;                \
   } while (0)
@@ -1141,9 +1142,9 @@ static int marpaESLIFLua_installi(lua_State *L)
   }
   /* NiledTable in on the stack */                                          /* Stack: NiledTable */
   if (! marpaESLIFLua_lua_getfield(NULL, L, -1, "niledarray")) goto err;    /* Stack: NiledTable, NiledTable.niledarray */
-  if (! marpaESLIFLua_lua_getfield(NULL, L, -2, "niledtablekv")) goto err;  /* Stack: NiledTable, NiledTable.niledarray, NiledTable.niledtablekv */
-  if (! marpaESLIFLua_lua_setglobal(L, "niledtablekv")) goto err;           /* Stack: NiledTable, NiledTable.niledarray */
   if (! marpaESLIFLua_lua_setglobal(L, "niledarray")) goto err;             /* Stack: NiledTable */
+  if (! marpaESLIFLua_lua_getfield(NULL, L, -1, "niledtablekv")) goto err;  /* Stack: NiledTable, NiledTable.niledtablekv */
+  if (! marpaESLIFLua_lua_setglobal(L, "niledtablekv")) goto err;           /* Stack: NiledTable */
   if (! marpaESLIFLua_lua_setglobal(L, "NiledTable")) goto err;             /* Stack: */
 
   /* We load the marpaESLIFJSON implementation */
@@ -3970,10 +3971,10 @@ static short marpaESLIFLua_recognizerRegexCallbackb(void *userDatavp, marpaESLIF
 }
 
 /*****************************************************************************/
-static marpaESLIFSymbol_t *marpaESLIFLua_recognizerGeneratorCallbackb(void *userDatavp, marpaESLIFRecognizer_t *marpaESLIFRecognizerp)
+static marpaESLIFSymbol_t *marpaESLIFLua_recognizerGeneratorCallbackb(void *userDatavp, marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFValueResult_t *contextp)
 /*****************************************************************************/
 {
-  return marpaESLIFLua_generatorCallbackb(userDatavp, marpaESLIFRecognizerp, 0 /* precompiledb */);
+  return marpaESLIFLua_generatorCallbackb(userDatavp, marpaESLIFRecognizerp, contextp, 0 /* precompiledb */);
 }
 
 /*****************************************************************************/
@@ -4171,7 +4172,7 @@ static short marpaESLIFLua_regexCallbackb(void *userDatavp, marpaESLIFRecognizer
 }
 
 /*****************************************************************************/
-static marpaESLIFSymbol_t *marpaESLIFLua_generatorCallbackb(void *userDatavp, marpaESLIFRecognizer_t *marpaESLIFRecognizerp, short precompiledb)
+static marpaESLIFSymbol_t *marpaESLIFLua_generatorCallbackb(void *userDatavp, marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFValueResult_t *contextp, short precompiledb)
 /*****************************************************************************/
 {
   static const char           *funcs                      = "marpaESLIFLua_generatorCallbackb";
@@ -4188,13 +4189,21 @@ static marpaESLIFSymbol_t *marpaESLIFLua_generatorCallbackb(void *userDatavp, ma
   char                         *actions                    = precompiledb ? NULL : marpaESLIFLuaRecognizerContextp->actions;
   marpaESLIFLuaSymbolContext_t *marpaESLIFLuaSymbolContextp;
   marpaESLIFSymbol_t           *rcp;
+  /* Note that ESLIF guarantees that contextp is never NULL and is either of type UNDEF or of type ROW */
+  int                           nargs = (contextp->type == MARPAESLIF_VALUE_TYPE_ROW) ? (int) contextp->u.r.sizel : 0;
+  int                           i;
 
   /* fprintf(stdout, "... action %s start\n", marpaESLIFLuaRecognizerContextp->actions); fflush(stdout); fflush(stderr); */
 
   MARPAESLIFLUA_CALLBACKT(L,
                           marpaESLIFLuaRecognizerContextp->recognizerInterface_r,
                           actions,
-                          0, /* nargs */
+                          nargs,
+                          if (contextp->type == MARPAESLIF_VALUE_TYPE_ROW) {
+                            for (i = 0; i < nargs; i++) {
+                              if (! marpaESLIFLua_pushRecognizerb(marpaESLIFLuaRecognizerContextp, marpaESLIFRecognizerp, &(contextp->u.r.p[i]))) goto err;
+                            }
+                          }
                           ,
                           {
                             if (! marpaESLIFLua_lua_getfield(NULL,L, -1, "marpaESLIFLuaSymbolContextp")) goto err; /* Stack: {...}, marpaESLIFLuaSymbolContextp */
@@ -5527,10 +5536,10 @@ static int marpaESLIFLua_marpaESLIFRecognizer_progressi(lua_State *L)
 }
 
 /*****************************************************************************/
-static int marpaESLIFLua_marpaESLIFRecognizer_contexti(lua_State *L)
+static int marpaESLIFLua_marpaESLIFRecognizer_contextGeti(lua_State *L)
 /*****************************************************************************/
 {
-  static const char                *funcs = "marpaESLIFLua_marpaESLIFRecognizer_contexti";
+  static const char                *funcs = "marpaESLIFLua_marpaESLIFRecognizer_contextGeti";
   marpaESLIFLuaRecognizerContext_t *marpaESLIFLuaRecognizerContextp;
   marpaESLIFValueResult_t          *marpaESLIFValueResultp;
   int                               rci;
@@ -9880,22 +9889,15 @@ static int marpaESLIFLua_marpaESLIFSymbol_freei(lua_State *L)
 
 #ifdef MARPAESLIFLUA_EMBEDDED
 /*****************************************************************************/
-static short marpaESLIFLua_pushContextb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFValueResult_t *marpaESLIFValueResultOutputp)
+static short marpaESLIFLua_pushContextb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp)
+/*****************************************************************************/
+/* Caller is expected to have pushed a function at its top, the latest returns nothing */
 /*****************************************************************************/
 {
-  static const char                *funcs                           = "marpaESLIFLua_pushContextb";
   /* We are called by ESLIF by definition, it has injected the context */
   marpaESLIFLuaRecognizerContext_t *marpaESLIFLuaRecognizerContextp = (marpaESLIFLuaRecognizerContext_t *) marpaESLIFRecognizerp->marpaESLIFLuaRecognizerContextp;
   lua_State                        *L                               = marpaESLIFLuaRecognizerContextp->L;
   short                             rcb;
-  int                               expectedtopi;
-  int                               topi;
-  int                               newtopi;
-  int                               typei;
-
-  if (! marpaESLIFLua_lua_gettop(&topi, L)) goto err;
-  /* We pushed nothing to the stack: caller is expected to have pushed a function at its top, this got replaced by result */
-  expectedtopi = topi;
 
   MARPAESLIFLUA_CALLBACK(L,
                          LUA_NOREF, /* interface_r */
@@ -9904,26 +9906,8 @@ static short marpaESLIFLua_pushContextb(marpaESLIFRecognizer_t *marpaESLIFRecogn
                          /* parameters */
                          );
 
-  if (! marpaESLIFLua_lua_gettop(&newtopi, L)) goto err;
-  if (newtopi != expectedtopi) {
-    marpaESLIFLua_luaL_error(L, "Context function must return exactly one value");
-    goto err;
-  }
-
-  if (! marpaESLIFLua_lua_type(&typei, L, -1)) goto err;
-  if (typei != LUA_TTABLE) {
-    marpaESLIFLua_luaL_error(L, "Context function return value must be a table");
-    goto err;
-  }
-
-  if (marpaESLIFValueResultOutputp != NULL) {
-    if (! marpaESLIFLua_stack_setb(L, marpaESLIFLuaRecognizerContextp->marpaESLIFp, NULL /* marpaESLIFValuep */, -1 /* resulti */, marpaESLIFValueResultOutputp)) goto err;
-    /* Clean the MARPAESLIFOPAQUETABLE global table */
-    if (! marpaESLIFLua_lua_pushnil(L)) goto err;
-    if (! marpaESLIFLua_lua_setglobal(L, MARPAESLIFOPAQUETABLE)) goto err;
-  }
-
-  if (! marpaESLIFLua_lua_settop(L, topi)) goto err;
+  /* Clear the stack */
+  if (! marpaESLIFLua_lua_settop(L, 0)) goto err;
 
   rcb = 1;
   goto done;
@@ -9938,24 +9922,60 @@ static short marpaESLIFLua_pushContextb(marpaESLIFRecognizer_t *marpaESLIFRecogn
 /*****************************************************************************/
 static short marpaESLIFLua_popContextb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp)
 /*****************************************************************************/
+/* Caller is expected to have pushed a function at its top, the latest returns nothing */
+/*****************************************************************************/
 {
-  static const char                *funcs                           = "marpaESLIFLua_popContextb";
   /* We are called by ESLIF by definition, it has injected the context */
   marpaESLIFLuaRecognizerContext_t *marpaESLIFLuaRecognizerContextp = (marpaESLIFLuaRecognizerContext_t *) marpaESLIFRecognizerp->marpaESLIFLuaRecognizerContextp;
   lua_State                        *L                               = marpaESLIFLuaRecognizerContextp->L;
   short                             rcb;
-  int                               topi;
 
-  if (! marpaESLIFLua_lua_gettop(&topi, L)) goto err;
+  MARPAESLIFLUA_CALLBACK(L,
+                         LUA_NOREF, /* interface_r */
+                         NULL, /* funcs */
+                         0, /* nargs */
+                         /* parameters */
+                         );
 
-  MARPAESLIFLUA_CALLBACKV(L,
-                          LUA_NOREF, /* interface_r */
-                          NULL, /* funcs */
-                          0, /* nargs */
-                          /* parameters */
-                          );
+  /* Clear the stack */
+  if (! marpaESLIFLua_lua_settop(L, 0)) goto err;
 
-  if (! marpaESLIFLua_lua_settop(L, topi)) goto err;
+  rcb = 1;
+  goto done;
+
+ err:
+  rcb = 0;
+
+ done:
+  return rcb;
+}
+
+/*****************************************************************************/
+static short marpaESLIFLua_getContextb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFValueResult_t *contextp)
+/*****************************************************************************/
+/* Caller is expected to have pushed a function at its top, the latest returns the context (nil or a niled array) */
+/*****************************************************************************/
+{
+  /* We are called by ESLIF by definition, it has injected the context */
+  marpaESLIFLuaRecognizerContext_t *marpaESLIFLuaRecognizerContextp = (marpaESLIFLuaRecognizerContext_t *) marpaESLIFRecognizerp->marpaESLIFLuaRecognizerContextp;
+  lua_State                        *L                               = marpaESLIFLuaRecognizerContextp->L;
+  short                             rcb;
+
+  MARPAESLIFLUA_CALLBACK(L,
+                         LUA_NOREF, /* interface_r */
+                         NULL, /* funcs */
+                         0, /* nargs */
+                         /* parameters */
+                         );
+
+  /* It is never called with context == NULL */
+  if (! marpaESLIFLua_stack_setb(L, marpaESLIFLuaRecognizerContextp->marpaESLIFp, NULL /* marpaESLIFValuep */, -1 /* resulti */, contextp)) goto err;
+  /* Clean the MARPAESLIFOPAQUETABLE global table */
+  if (! marpaESLIFLua_lua_pushnil(L)) goto err;
+  if (! marpaESLIFLua_lua_setglobal(L, MARPAESLIFOPAQUETABLE)) goto err;
+
+  /* Clear the stack */
+  if (! marpaESLIFLua_lua_settop(L, 0)) goto err;
 
   rcb = 1;
   goto done;
