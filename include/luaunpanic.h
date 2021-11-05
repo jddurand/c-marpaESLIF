@@ -42,6 +42,15 @@
  * 
  */
 
+  /*
+  ** error functions are special: if we are already using a luaunpanic state, error will be managed naturally
+  ** else we want the default behaviour
+  ** Note that these function never returns intentionnaly...
+  */
+#define luaunpanicL_argerror(rcp, L, arg, extramsg) luaL_argerror(L, arg, extramsg)
+#define luaunpanicL_error(rcp, L, fmt, ...) luaL_error(L, fmt, __VA_ARGS__)
+#define luaunpanic_error(rcp, L) lua_error(L)
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -162,7 +171,6 @@ extern "C" {
   /*
   ** miscellaneous functions
   */
-  luaunpanic_EXPORT short luaunpanic_error(int *rcp, lua_State *L);
   luaunpanic_EXPORT short luaunpanic_next(int *rcp, lua_State *L, int idx);
   luaunpanic_EXPORT short luaunpanic_concat(lua_State *L, int n);
   luaunpanic_EXPORT short luaunpanic_len(lua_State *L, int idx);
@@ -210,7 +218,6 @@ extern "C" {
   luaunpanic_EXPORT short luaunpanicL_getmetafield(int *rcp, lua_State *L, int obj, const char *e);
   luaunpanic_EXPORT short luaunpanicL_callmeta(int *rcp, lua_State *L, int obj, const char *e);
   luaunpanic_EXPORT short luaunpanicL_tolstring(const char **rcp, lua_State *L, int idx, size_t *len);
-  luaunpanic_EXPORT short luaunpanicL_argerror(int *rcp, lua_State *L, int arg, const char *extramsg);
   luaunpanic_EXPORT short luaunpanicL_checklstring(const char **rcp, lua_State *L, int arg, size_t *l);
   luaunpanic_EXPORT short luaunpanicL_optlstring(const char **rcp, lua_State *L, int arg, const char *def, size_t *l);
   luaunpanic_EXPORT short luaunpanicL_checknumber(lua_Number *rcp, lua_State *L, int arg);
@@ -225,7 +232,6 @@ extern "C" {
   luaunpanic_EXPORT short luaunpanicL_testudata(void **rcp, lua_State *L, int ud, const char *tname);
   luaunpanic_EXPORT short luaunpanicL_checkudata(void **rcp, lua_State *L, int ud, const char *tname);
   luaunpanic_EXPORT short luaunpanicL_where(lua_State *L, int lvl);
-  luaunpanic_EXPORT short luaunpanicL_error(int *rcp, lua_State *L, const char *fmt, ...);
   luaunpanic_EXPORT short luaunpanicL_checkoption(int *rcp, lua_State *L, int arg, const char *def, const char *const lst[]);
   luaunpanic_EXPORT short luaunpanicL_fileresult(int *rcp, lua_State *L, int stat, const char *fname);
   luaunpanic_EXPORT short luaunpanicL_execresult(int *rcp, lua_State *L, int stat);

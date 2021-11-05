@@ -20,9 +20,49 @@ Because playing with C<abort()> try catch in C is not easy, this library hides a
 
 Any function like C<type lua_xxx(...args...)> has a wrapper like C<short luaunpanic_xxx(type *luaunpanic_result, ...args...)>.
 
+Return code is C<0> if C<luaunpanic_xxx> did panic, C<1> if <luaunpanic_xxx> succeeded. In the later case C<*luaunpanic_result> contains the result.
+
+In other words, non-void native calls such as:
+
+  if (lua_call(xxx)) { yyy /* failure */} else { zzz /* success */ }
+
+should be translated to:
+
+  if (luaunpanic_call(&luarc, xxx) || luarcrc) { yyy /* failure */ } else { zzz /* success */ }
+
 =item
 
 Any function like C<void lua_xxx(...args...)> has a wrapper like C<short luaunpanic_xxx(...args...)>.
+
+Return code is C<0> if C<luaunpanic_xxx> did panic, C<1> if <luaunpanic_xxx> succeeded.
+
+In other words, void native calls such as:
+
+  lua_call(xxx);
+
+should be translated to:
+
+  if (luaunpanic_call(xxx)) { /* failure */ }
+
+=item
+
+Exceptions are lua calls that will do an abort: if you look to the documentation, despite they have a return code for semantic purpose, they will I<never> return: they exist only for the purpose of generating an exception. These functions are:
+
+=over
+
+=item C<lua_error>
+
+=item C<luaL_error>
+
+=item C<luaL_argerror>
+
+=back
+
+The corresponding luaunpanic_wrappers exist solely for coherency but they will wrap nothing because the semantic of breaking the program must not change, i.e. the wrappers are proxy macros:
+
+  #define luaunpanicL_argerror(rcp, L, arg, extramsg) luaL_argerror(L, arg, extramsg)
+  #define luaunpanicL_error(rcp, L, fmt, ...)         luaL_error(L, fmt, __VA_ARGS__)
+  #define luaunpanic_error(rcp, L)                    lua_error(L)
 
 =back
 
@@ -36,11 +76,15 @@ luaunpanic wrappers always return C<0> in case of success, C<1> in case of failu
 
 =item
 
-The C<lua_State> pointer returned with the unpanic versions of C<lua_State> creation methods can still be used with I<native> lua methods, available within the library.
+The C<lua_State> pointer returned with the unpanic versions of C<lua_State> creation methods can still be used with I<native> lua methods.
 
 =item
 
-A new method to retreive the latest panic string exists:
+Anything that would abort will not if it is done using a luaunpanic method.
+
+=item
+
+In case a luaunpanic method fails, which should be extremely rare, a new method exist when the wrapper itself panics:
 
   short luaunpanic_panicstring(char **panicstringp, lua_State *L)
 
