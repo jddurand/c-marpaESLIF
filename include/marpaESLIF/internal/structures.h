@@ -531,6 +531,7 @@ struct marpaESLIFRecognizer {
   char                           *luaprecompiledp;    /* Lua script source precompiled */
   size_t                          luaprecompiledl;    /* Lua script source precompiled length in byte */
   marpaESLIFAction_t             *getContextActionp;  /* Getting the context is a common function that is stored at recognizer level */
+  marpaESLIFAction_t             *setContextActionp;  /* Setting the context is a common function that is stored at recognizer level */
   marpaESLIFAction_t             *popContextActionp;  /* Getting the context is a common function that is stored at recognizer level */
   };
 

@@ -2130,3 +2130,74 @@ static short _marpaESLIFRecognizer_lua_get_contextp(marpaESLIFRecognizer_t *marp
   }
   return rcb;
 }
+
+/*****************************************************************************/
+static short _marpaESLIFRecognizer_lua_set_contextb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFValueResult_t *contextp)
+/*****************************************************************************/
+{
+  static const char *funcs = "_marpaESLIFRecognizer_lua_set_contextb";
+  int                topi  = -1;
+  const char        *sets  =
+    "return function(context)\n"
+    "  marpaESLIFContextStackp:set(context)\n"
+    "end\n";
+  short              rcb;
+
+  /* Create the lua state if needed - this is a lua state using ESLIF internal's, i.e. there is no </luascript> in it. */
+  if (MARPAESLIF_UNLIKELY(! _marpaESLIFRecognizer_lua_newb(marpaESLIFRecognizerp))) {
+    goto err;
+  }
+  LUA_GETTOP(marpaESLIFRecognizerp, &topi);
+
+  /* ---------------------------------------------------------------------------------------------------------------- */
+  /* return function()                                                                                                */
+  /*   return marpaESLIFContextStackp:set()                                                                           */
+  /* end                                                                                                              */
+  /* ---------------------------------------------------------------------------------------------------------------- */
+  if (marpaESLIFRecognizerp->setContextActionp == NULL) {
+    /* We initialize the correct action content. */
+    marpaESLIFRecognizerp->setContextActionp = (marpaESLIF_action_t *) malloc(sizeof(marpaESLIF_action_t));
+    if (marpaESLIFRecognizerp->setContextActionp == NULL) {
+      MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "malloc failure, %s", strerror(errno));
+      goto err;
+    }
+    marpaESLIFRecognizerp->setContextActionp->type                     = MARPAESLIF_ACTION_TYPE_LUA_FUNCTION;
+    marpaESLIFRecognizerp->setContextActionp->u.luaFunction.luas       = NULL; /* Original action as per the grammar - not used */
+    marpaESLIFRecognizerp->setContextActionp->u.luaFunction.actions    = NULL; /* The action injected into lua */
+    marpaESLIFRecognizerp->setContextActionp->u.luaFunction.luacb      = 1;    /* True if action is precompiled */
+    marpaESLIFRecognizerp->setContextActionp->u.luaFunction.luacp      = NULL; /* Precompiled chunk. Not NULL only when luacb is true and action as been used at least once */
+    marpaESLIFRecognizerp->setContextActionp->u.luaFunction.luacl      = 0;    /* Precompiled chunk length */
+    marpaESLIFRecognizerp->setContextActionp->u.luaFunction.luacstripp = NULL; /* Precompiled stripped chunk - not used */
+    marpaESLIFRecognizerp->setContextActionp->u.luaFunction.luacstripl = 0;    /* Precompiled stripped chunk length */
+
+    marpaESLIFRecognizerp->setContextActionp->u.luaFunction.actions = strdup(sets);
+    if (MARPAESLIF_UNLIKELY(marpaESLIFRecognizerp->setContextActionp->u.luaFunction.actions == NULL)) {
+      MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "strdup failure, %s", strerror(errno));
+      goto err;
+    }
+
+    MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Generated action:\n%s", marpaESLIFRecognizerp->setContextActionp->u.luaFunction.actions);
+  }
+
+  marpaESLIFRecognizerp->actionp = marpaESLIFRecognizerp->setContextActionp;
+  if (! _marpaESLIFRecognizer_lua_function_loadb(marpaESLIFRecognizerp)) {
+    goto err;
+  }
+
+  if (MARPAESLIF_UNLIKELY(! marpaESLIFLua_setContextb(marpaESLIFRecognizerp, contextp))) {
+    goto err;
+  }
+
+  rcb = 1;
+  goto done;
+
+ err:
+  MARPAESLIFLUA_LOG_LATEST_ERROR(marpaESLIFRecognizerp);
+  rcb = 0;
+
+ done:
+  if (topi >= 0) {
+    LUA_SETTOP(marpaESLIFRecognizerp, topi);
+  }
+  return rcb;
+}

@@ -821,7 +821,6 @@ static inline marpaESLIFValue_t     *_marpaESLIFValue_newp(marpaESLIFRecognizer_
 static inline short                  _marpaESLIFValue_stack_newb(marpaESLIFValue_t *marpaESLIFValuep);
 static inline short                  _marpaESLIFValue_stack_freeb(marpaESLIFValue_t *marpaESLIFValuep);
 static inline marpaESLIFValueResult_t *_marpaESLIFRecognizer_context_getp(marpaESLIFRecognizer_t *marpaESLIFRecognizerp);
-static inline short                   _marpaESLIFRecognizer_context_setb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFValueResult_t *contextp);
 static inline short                  _marpaESLIFValue_stack_setb(marpaESLIFValue_t *marpaESLIFValuep, int indicei, marpaESLIFValueResult_t *marpaESLIFValueResultp);
 static inline short                  _marpaESLIFValue_stack_getb(marpaESLIFValue_t *marpaESLIFValuep, int indicei, marpaESLIFValueResult_t *marpaESLIFValueResultp);
 static inline short                  _marpaESLIFValue_stack_getAndForgetb(marpaESLIFValue_t *marpaESLIFValuep, int indicei, marpaESLIFValueResult_t *marpaESLIFValueResultp);
@@ -5860,7 +5859,9 @@ static inline short _marpaESLIFRecognizer_meta_matcherb(marpaESLIFRecognizer_t *
   marpaESLIFRecognizerGeneratorCallback_t  generatorCallbackp;
   marpaESLIF_symbol_t                     *generatedSymbolp;
   marpaESLIFValueResult_t                 *contextp;
+  short                                    generatedSymbolMatchb;
   short                                    rcb;
+  int                                      generatedSymbolRci;
 
   MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_INC;
   MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "start");
@@ -5890,10 +5891,11 @@ static inline short _marpaESLIFRecognizer_meta_matcherb(marpaESLIFRecognizer_t *
   }
 
   if (symbolp->generatorActionp != NULL) {
+    /* Note that by definition when a generator action is attached to a symbol, the symbol is parameterized */
     if (MARPAESLIF_UNLIKELY(! _marpaESLIFRecognizer_recognizerGeneratorActionCallbackb(marpaESLIFRecognizerp, symbolp->descp->asciis, symbolp->generatorActionp, &generatorCallbackp))) {
       goto err;
     }
-    /* Recuperate the context */
+    /* Recuperate the context - it is a marpaESLIFValueResult that we own, stored in lexeme input stack at indice 0 */
     contextp = _marpaESLIFRecognizer_context_getp(marpaESLIFRecognizerp);
     if (contextp == NULL) {
       goto err;
@@ -5904,33 +5906,41 @@ static inline short _marpaESLIFRecognizer_meta_matcherb(marpaESLIFRecognizer_t *
       MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Symbol %s generation returned NULL", symbolp->descp->asciis);
       goto err;
     }
-  }
 
-  /* We want to run an internal recognizer */
-  marpaESLIFRecognizerOption = marpaESLIFRecognizerp->marpaESLIFRecognizerOption;
+    if (MARPAESLIF_UNLIKELY(_marpaESLIFRecognizer_symbol_matcherb(marpaESLIFRecognizerp, marpaESLIFRecognizerp->marpaESLIF_streamp, generatedSymbolp, &generatedSymbolRci, marpaESLIFValueResultp, maxStartCompletionsi, lastSizeBeforeCompletionlp, numberOfStartCompletionsip) < 0)) {
+      goto err;
+    }
 
-  /* In any case we are in a lexeme mode: disable threshold warning and allow remaining data after completion */
-  marpaESLIFRecognizerOption.disableThresholdb = 1;
-  marpaESLIFRecognizerOption.exhaustedb        = 1;
+    if (generatedSymbolRci != MARPAESLIF_MATCH_OK) {
+      goto err;
+    }
 
-  /* We want the child recognizer to take ownership of the context */
-  rcb =_marpaESLIFGrammar_parseb(symbolp->u.metap->marpaESLIFGrammarLexemeClonep,
-                                 &marpaESLIFRecognizerOption,
-                                 &marpaESLIFValueOption,
-                                 0 /* discardb */,
-                                 1, /* noEventb */
-                                 1, /* silentb */
-                                 marpaESLIFRecognizerp /* marpaESLIFRecognizerParentp */,
-                                 isExhaustedbp,
-                                 marpaESLIFValueResultp,
-                                 maxStartCompletionsi,
-                                 lastSizeBeforeCompletionlp,
-                                 numberOfStartCompletionsip,
-                                 0, /* grammarIsOnStackb */
-                                 symbolp->verboseb);
+  } else {
 
-  if (MARPAESLIF_UNLIKELY(! rcb)) {
-    goto err;
+    /* We want to run an internal recognizer */
+    marpaESLIFRecognizerOption = marpaESLIFRecognizerp->marpaESLIFRecognizerOption;
+
+    /* In any case we are in a lexeme mode: disable threshold warning and allow remaining data after completion */
+    marpaESLIFRecognizerOption.disableThresholdb = 1;
+    marpaESLIFRecognizerOption.exhaustedb        = 1;
+
+    /* We want the child recognizer to take ownership of the context */
+    if (! _marpaESLIFGrammar_parseb(symbolp->u.metap->marpaESLIFGrammarLexemeClonep,
+                                    &marpaESLIFRecognizerOption,
+                                    &marpaESLIFValueOption,
+                                    0 /* discardb */,
+                                    1, /* noEventb */
+                                    1, /* silentb */
+                                    marpaESLIFRecognizerp /* marpaESLIFRecognizerParentp */,
+                                    isExhaustedbp,
+                                    marpaESLIFValueResultp,
+                                    maxStartCompletionsi,
+                                    lastSizeBeforeCompletionlp,
+                                    numberOfStartCompletionsip,
+                                    0, /* grammarIsOnStackb */
+                                    symbolp->verboseb)) {
+      goto err;
+    }
   }
 
   if (rcip != NULL) {
@@ -10616,6 +10626,7 @@ static inline marpaESLIFRecognizer_t *_marpaESLIFRecognizer_newp(marpaESLIFGramm
   marpaESLIFRecognizerp->luaprecompiledp                    = NULL;    /* Lua script source precompiled */
   marpaESLIFRecognizerp->luaprecompiledl                    = 0;    /* Lua script source precompiled length in byte */
   marpaESLIFRecognizerp->getContextActionp                  = NULL;
+  marpaESLIFRecognizerp->setContextActionp                  = NULL;
   marpaESLIFRecognizerp->popContextActionp                  = NULL;
 
   marpaWrapperRecognizerOption.genericLoggerp            = silentb ? NULL : marpaESLIFp->marpaESLIFOption.genericLoggerp;
@@ -10941,6 +10952,8 @@ marpaESLIFRecognizer_t *marpaESLIFRecognizer_newFromp(marpaESLIFGrammar_t *marpa
 /*****************************************************************************/
 {
   marpaESLIFRecognizer_t  *marpaESLIFRecognizerp = NULL;
+  marpaESLIFValueResult_t *contextp;
+  marpaESLIFValueResult_t  context;
 
   if (marpaESLIFRecognizerSharedp == NULL) {
     errno = EINVAL;
@@ -10952,8 +10965,21 @@ marpaESLIFRecognizer_t *marpaESLIFRecognizer_newFromp(marpaESLIFGrammar_t *marpa
     goto err;
   }
 
-  /* Inherit current context in our own lua interpreter */
-  if (! _marpaESLIFRecognizer_context_setb(marpaESLIFRecognizerp, _marpaESLIFRecognizer_context_getp(marpaESLIFRecognizerSharedp))) {
+  /* Recuperate current context, owned by the shared recognizer */
+  contextp = _marpaESLIFRecognizer_context_getp(marpaESLIFRecognizerSharedp);
+  if (contextp == NULL) {
+    goto err;
+  }
+
+  /* Get a copy of it */
+  context = *contextp;
+
+  /* Make it shallow - lifetime of our context depend on general shared recognizer's lifetime: */
+  /* Behaviour is undefined if the shared recognizer would leave short than us. */
+  MARPAESLIF_MAKE_MARPAESLIFVALUERESULT_SHALLOW(context);
+
+  /* Inject is in our own lua interpreter */
+  if (! _marpaESLIFRecognizer_lua_set_contextb(marpaESLIFRecognizerp, &context)) {
     goto err;
   }
 
@@ -18949,6 +18975,7 @@ static inline void _marpaESLIFRecognizer_freev(marpaESLIFRecognizer_t *marpaESLI
   }
 
   _marpaESLIF_action_freev(marpaESLIFRecognizerp->getContextActionp);
+  _marpaESLIF_action_freev(marpaESLIFRecognizerp->setContextActionp);
   _marpaESLIF_action_freev(marpaESLIFRecognizerp->popContextActionp);
 
   MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "return");
@@ -21563,7 +21590,8 @@ static inline marpaESLIFValueResult_t *_marpaESLIFRecognizer_context_getp(marpaE
     goto err;
   }
 
-  /* So this is in lexemeStackp at indice 0 - it is guaranteed to be either UNDEF or ROW */
+  /* So this is in lexemeStackp at indice 0 - it is guaranteed to be a ROW because it is exported by our embedded Lua */
+  /* and in there, a context is always a niled array.                                                                 */
   rcp = _marpaESLIFRecognizer_lexemeStack_i_getp(marpaESLIFRecognizerp, 0);
   goto done;
 
@@ -21572,66 +21600,6 @@ static inline marpaESLIFValueResult_t *_marpaESLIFRecognizer_context_getp(marpaE
 
  done:
   return rcp;
-}
-
-/*****************************************************************************/
-static inline short _marpaESLIFRecognizer_context_setb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFValueResult_t *contextp)
-/*****************************************************************************/
-{
-  abort(); /* JDD */
-  /* return _marpaESLIFRecognizer_lua_set_contextb(marpaESLIFRecognizerp, contextp); */
-}
-
-/*****************************************************************************/
-marpaESLIFValueResult_t *marpaESLIFRecognizer_context_getp(marpaESLIFRecognizer_t *marpaESLIFRecognizerp)
-/*****************************************************************************/
-{
-  marpaESLIFValueResult_t *rcp;
-
-  if (MARPAESLIF_UNLIKELY(marpaESLIFRecognizerp == NULL)) {
-    errno = EINVAL;
-    goto err;
-  }
-
-  rcp = _marpaESLIFRecognizer_context_getp(marpaESLIFRecognizerp);
-  goto done;
-
- err:
-  rcp = NULL;
-
- done:
-  return rcp;
-}
-
-/*****************************************************************************/
-short marpaESLIFRecognizer_context_setb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFValueResult_t *contextp)
-/*****************************************************************************/
-{
-  short rcb;
-
-  if (MARPAESLIF_UNLIKELY(marpaESLIFRecognizerp == NULL)) {
-    errno = EINVAL;
-    goto err;
-  }
-
-  if (contextp == NULL) {
-    contextp = (marpaESLIFValueResult_t *) &marpaESLIFValueResultUndef;
-  }
-
-  if ((contextp->type != MARPAESLIF_VALUE_TYPE_UNDEF) && (contextp->type != MARPAESLIF_VALUE_TYPE_ROW)) {
-    MARPAESLIF_ERROR(marpaESLIFRecognizerp->marpaESLIFp, "Context must be NULL, or a marpaESLIFValueResult objet of type UNDEF or ROW");
-    errno = EINVAL;
-    goto err;
-  }
-
-  rcb = _marpaESLIFRecognizer_context_setb(marpaESLIFRecognizerp, contextp);
-  goto done;
-
- err:
-  rcb = 0;
-
- done:
-  return rcb;
 }
 
 #include "bootstrap.c"
