@@ -955,7 +955,7 @@ marpaESLIF BNF can be expressed in itself:
                                    | <symbol> '@' <grammar reference>
   <rhs primary>                  ::= <rhs primary no parameter>
                                    | <rhs primary no parameter> <lua functioncall>
-                                   | <generator action>
+                                   | <generator action> <lua functioncall>
   <single symbol>                ::= <symbol>
                                    | <terminal>
   <terminal>                     ::= <character class>
