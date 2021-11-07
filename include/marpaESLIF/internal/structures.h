@@ -466,6 +466,8 @@ struct marpaESLIFRecognizer {
   short                        pristineb;           /* 1: pristine, i.e. can be reused, 0: have at least one thing that happened at the raw grammar level, modulo the eventual initial events */
   genericHash_t                _marpaESLIFRecognizerHash; /* Cache of recognizers ready for re-use - shared with all children (lexeme mode) */
   genericHash_t               *marpaESLIFRecognizerHashp;
+  genericHash_t                _lexemeGrammarHash; /* Cache of string <=> lexeme grammars - shared with all children (lexeme mode) */
+  genericHash_t               *lexemeGrammarHashp;
   marpaESLIF_stream_t          _marpaESLIF_stream;  /* A stream is always owned by one recognizer */
   marpaESLIF_stream_t         *marpaESLIF_streamp;  /* ... But the stream pointer can be shared with others */
   size_t                       previousMaxMatchedl;       /* Always computed */
@@ -533,7 +535,7 @@ struct marpaESLIFRecognizer {
   marpaESLIFAction_t             *getContextActionp;  /* Getting the context is a common function that is stored at recognizer level */
   marpaESLIFAction_t             *setContextActionp;  /* Setting the context is a common function that is stored at recognizer level */
   marpaESLIFAction_t             *popContextActionp;  /* Getting the context is a common function that is stored at recognizer level */
-  };
+};
 
 struct marpaESLIF_lexeme_data {
   char   *bytes;        /* Data */
