@@ -206,12 +206,12 @@ static short                              marpaESLIFLua_valueSymbolCallbackb(voi
 static short                              marpaESLIFLua_recognizerIfCallbackb(void *userDatavp, marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFValueResult_t *marpaESLIFValueResultLexemep, marpaESLIFValueResultBool_t *marpaESLIFValueResultBoolp);
 static short                              marpaESLIFLua_recognizerEventCallbackb(void *userDatavp, marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFEvent_t *eventArrayp, size_t eventArrayl, marpaESLIFValueResultBool_t *marpaESLIFValueResultBoolp);
 static short                              marpaESLIFLua_recognizerRegexCallbackb(void *userDatavp, marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFValueResult_t *marpaESLIFCalloutBlockp, marpaESLIFValueResultInt_t *marpaESLIFValueResultOutp);
-static marpaESLIFSymbol_t                *marpaESLIFLua_recognizerGeneratorCallbackb(void *userDatavp, marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFValueResult_t *contextp);
+static short                              marpaESLIFLua_recognizerGeneratorCallbackb(void *userDatavp, marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFValueResult_t *contextp, marpaESLIFValueResultString_t *marpaESLIFValueResultOutp);
 static short                              marpaESLIFLua_valueCallbackb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, marpaESLIFValueResult_t *marpaESLIFValueResultLexemep, int resulti, short nullableb, short symbolb, short precompiledb);
 static short                              marpaESLIFLua_ifCallbackb(void *userDatavp, marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFValueResult_t *marpaESLIFValueResultLexemep, marpaESLIFValueResultBool_t *marpaESLIFValueResultBoolp, short precompiledb);
 static short                              marpaESLIFLua_eventCallbackb(void *userDatavp, marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFEvent_t *eventArrayp, size_t eventArrayl, marpaESLIFValueResultBool_t *marpaESLIFValueResultBoolp, short precompiledb);
 static short                              marpaESLIFLua_regexCallbackb(void *userDatavp, marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFValueResult_t *marpaESLIFCalloutBlockp, marpaESLIFValueResultInt_t *marpaESLIFValueResultOutp, short precompiledb);
-static marpaESLIFSymbol_t                *marpaESLIFLua_generatorCallbackb(void *userDatavp, marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFValueResult_t *contextp, short precompiledb);
+static short                              marpaESLIFLua_generatorCallbackb(void *userDatavp, marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFValueResult_t *contextp, short precompiledb, marpaESLIFValueResultString_t *marpaESLIFValueResultOutp);
 static void                               marpaESLIFLua_valueFreeCallbackv(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, marpaESLIFValueResult_t *marpaESLIFValueResultp);
 static void                               marpaESLIFLua_recognizerFreeCallbackv(void *userDatavp, marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFValueResult_t *marpaESLIFValueResultp);
 static void                               marpaESLIFLua_genericFreeCallbackv(void *userDatavp, marpaESLIFValueResult_t *marpaESLIFValueResultp);
@@ -3970,10 +3970,10 @@ static short marpaESLIFLua_recognizerRegexCallbackb(void *userDatavp, marpaESLIF
 }
 
 /*****************************************************************************/
-static marpaESLIFSymbol_t *marpaESLIFLua_recognizerGeneratorCallbackb(void *userDatavp, marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFValueResult_t *contextp)
+static short marpaESLIFLua_recognizerGeneratorCallbackb(void *userDatavp, marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFValueResult_t *contextp, marpaESLIFValueResultString_t *marpaESLIFValueResultOutp)
 /*****************************************************************************/
 {
-  return marpaESLIFLua_generatorCallbackb(userDatavp, marpaESLIFRecognizerp, contextp, 0 /* precompiledb */);
+  return marpaESLIFLua_generatorCallbackb(userDatavp, marpaESLIFRecognizerp, contextp, 0 /* precompiledb */, marpaESLIFValueResultOutp);
 }
 
 /*****************************************************************************/
@@ -4171,7 +4171,7 @@ static short marpaESLIFLua_regexCallbackb(void *userDatavp, marpaESLIFRecognizer
 }
 
 /*****************************************************************************/
-static marpaESLIFSymbol_t *marpaESLIFLua_generatorCallbackb(void *userDatavp, marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFValueResult_t *contextp, short precompiledb)
+static short marpaESLIFLua_generatorCallbackb(void *userDatavp, marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFValueResult_t *contextp, short precompiledb, marpaESLIFValueResultString_t *marpaESLIFValueResultOutp)
 /*****************************************************************************/
 {
   static const char           *funcs                      = "marpaESLIFLua_generatorCallbackb";
@@ -4186,15 +4186,17 @@ static marpaESLIFSymbol_t *marpaESLIFLua_generatorCallbackb(void *userDatavp, ma
 #endif
   lua_State                    *L                          = marpaESLIFLuaRecognizerContextp->L;
   char                         *actions                    = precompiledb ? NULL : marpaESLIFLuaRecognizerContextp->actions;
-  marpaESLIFLuaSymbolContext_t *marpaESLIFLuaSymbolContextp;
-  marpaESLIFSymbol_t           *rcp;
   /* Note that ESLIF guarantees that contextp is never NULL and is of type ROW */
-  int                           nargs = contextp->u.r.sizel;
+  int                                                      nargs = contextp->u.r.sizel;
+  char                         *strings;
+  size_t                        stringl;
+  marpaESLIFLuaSymbolContext_t *marpaESLIFLuaSymbolContextp;
+  short                         rcb;
   int                           i;
 
   /* fprintf(stdout, "... action %s start\n", marpaESLIFLuaRecognizerContextp->actions); fflush(stdout); fflush(stderr); */
 
-  MARPAESLIFLUA_CALLBACKT(L,
+  MARPAESLIFLUA_CALLBACKS(L,
                           marpaESLIFLuaRecognizerContextp->recognizerInterface_r,
                           actions,
                           nargs,
@@ -4202,32 +4204,27 @@ static marpaESLIFSymbol_t *marpaESLIFLua_generatorCallbackb(void *userDatavp, ma
                             if (! marpaESLIFLua_pushRecognizerb(marpaESLIFLuaRecognizerContextp, marpaESLIFRecognizerp, &(contextp->u.r.p[i]))) goto err;
                           }
                           ,
-                          {
-                            if (! marpaESLIFLua_lua_getfield(NULL,L, -1, "marpaESLIFLuaSymbolContextp")) goto err; /* Stack: {...}, marpaESLIFLuaSymbolContextp */
-                            if (! marpaESLIFLua_lua_touserdata((void **) &marpaESLIFLuaSymbolContextp, L, -1)) goto err;
-                            if (! marpaESLIFLua_lua_pop(L, 1)) goto err;         /* Stack: {...} */
-                          }
+                          &strings,
+                          &stringl
                           );
 
   /* fprintf(stdout, "... action %s done\n", marpaESLIFLuaRecognizerContextp->actions); fflush(stdout); fflush(stderr); */
 
-  if (marpaESLIFLuaSymbolContextp == NULL) {
-    if (actions != NULL) {
-      marpaESLIFLua_luaL_errorf(L, "Object returned by action %s does not look like a symbol", actions);
-    } else {
-      marpaESLIFLua_luaL_error(L, "Object returned does not look like a symbol");
-    }
-    goto err;
-  }
+  marpaESLIFValueResultOutp->p              = (unsigned char *) strings;
+  marpaESLIFValueResultOutp->shallowb       = 0;
+  marpaESLIFValueResultOutp->sizel          = stringl;
+  marpaESLIFValueResultOutp->encodingasciis = NULL;
+  marpaESLIFValueResultOutp->freeUserDatavp = L;
+  marpaESLIFValueResultOutp->freeCallbackp  = marpaESLIFLua_genericFreeCallbackv;
 
-  rcp = marpaESLIFLuaSymbolContextp->marpaESLIFSymbolp;
+  rcb = 1;
   goto done;
 
  err:
-  rcp = NULL;
+  rcb = 0;
 
  done:
-  return rcp;
+  return rcb;
 }
 
 /*****************************************************************************/

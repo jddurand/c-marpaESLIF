@@ -56,7 +56,7 @@ typedef struct marpaESLIFValue             marpaESLIFValue_t;
 typedef struct marpaESLIFValueResult       marpaESLIFValueResult_t;
 typedef enum   marpaESLIFValueResultBool   marpaESLIFValueResultBool_t;
 typedef int                                marpaESLIFValueResultInt_t;
-typedef struct marpaESLIFValueResultTable  marpaESLIFValueResultTable_t;
+typedef struct marpaESLIFValueResultString marpaESLIFValueResultString_t;
 typedef struct marpaESLIFEvent             marpaESLIFEvent_t;
 typedef struct marpaESLIFSymbol            marpaESLIFSymbol_t;
 typedef struct marpaESLIFString            marpaESLIFString_t;
@@ -143,7 +143,7 @@ typedef enum marpaESLIFCalloutBlockEnum {
 typedef short (*marpaESLIFRecognizerRegexCallback_t)(void *userDatavp, marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFValueResult_t *marpaESLIFCalloutBlockp, marpaESLIFValueResultInt_t *marpaESLIFValueResultOutp);
 typedef marpaESLIFRecognizerRegexCallback_t (*marpaESLIFRecognizerRegexActionResolver_t)(void *userDatavp, marpaESLIFRecognizer_t *marpaESLIFRecognizerp, char *actions);
 
-typedef marpaESLIFSymbol_t *(*marpaESLIFRecognizerGeneratorCallback_t)(void *userDatavp, marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFValueResult_t *contextp);
+typedef short (*marpaESLIFRecognizerGeneratorCallback_t)(void *userDatavp, marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFValueResult_t *contextp, marpaESLIFValueResultString_t *marpaESLIFValueResultOutp);
 typedef marpaESLIFRecognizerGeneratorCallback_t (*marpaESLIFRecognizerGeneratorActionResolver_t)(void *userDatavp, marpaESLIFRecognizer_t *marpaESLIFRecognizerp, char *actions);
 
 /* Ask the host system to import a marpaESLIFValueResult in the recognizer namespace */
@@ -279,13 +279,13 @@ typedef struct marpaESLIFValueResultRow {
   size_t                               sizel;
 } marpaESLIFValueResultRow_t;
 typedef struct marpaESLIFValueResultPair marpaESLIFValueResultPair_t;
-struct marpaESLIFValueResultTable {
+typedef struct marpaESLIFValueResultTable {
   marpaESLIFValueResultPair_t         *p;
   void                                *freeUserDatavp;
   marpaESLIFValueResultFreeCallback_t  freeCallbackp;
   short                                shallowb;
   size_t                               sizel;
-};
+} marpaESLIFValueResultTable_t;
 typedef long double marpaESLIFValueResultLongDouble_t;
 #ifdef MARPAESLIF_HAVE_LONG_LONG
 typedef MARPAESLIF_LONG_LONG marpaESLIFValueResultLongLong_t;

@@ -502,13 +502,13 @@ static short _marpaESLIFRecognizer_lua_regexactionb(void *userDatavp, marpaESLIF
 }
 
 /*****************************************************************************/
-static marpaESLIFSymbol_t *_marpaESLIFRecognizer_lua_generatoractionb(void *userDatavp, marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFValueResult_t *contextp)
+static short _marpaESLIFRecognizer_lua_generatoractionb(void *userDatavp, marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFValueResult_t *contextp, marpaESLIFValueResultString_t *marpaESLIFValueResultOutp)
 /*****************************************************************************/
 {
   static const char                       *funcs = "_marpaESLIFRecognizer_lua_generatoractionb";
   int                                      topi  = -1;
   marpaESLIFRecognizerGeneratorCallback_t  generatorCallbackp;
-  marpaESLIFSymbol_t                      *rcp;
+  short                                    rcb;
 
   /* Create the lua state if needed */
   if (MARPAESLIF_UNLIKELY(! _marpaESLIFRecognizer_lua_newb(marpaESLIFRecognizerp))) {
@@ -522,21 +522,18 @@ static marpaESLIFSymbol_t *_marpaESLIFRecognizer_lua_generatoractionb(void *user
     goto err; /* Lua will shutdown anyway */
   }
 
-  rcp = generatorCallbackp(userDatavp, marpaESLIFRecognizerp, contextp);
-
-  if (MARPAESLIF_UNLIKELY(rcp == NULL)) goto err;
-
+  rcb = generatorCallbackp(userDatavp, marpaESLIFRecognizerp, contextp, marpaESLIFValueResultOutp);
   goto done;
 
  err:
   MARPAESLIFLUA_LOG_LATEST_ERROR(marpaESLIFRecognizerp);
-  rcp = NULL;
+  rcb = 0;
 
  done:
   if (topi >= 0) {
     LUA_SETTOP(marpaESLIFRecognizerp, topi);
   }
-  return rcp;
+  return rcb;
 }
 
 /*****************************************************************************/
@@ -1485,10 +1482,10 @@ static marpaESLIFGrammar_t *_marpaESLIF_luaGrammarp(marpaESLIF_t *marpaESLIFp, c
   }
   marpaESLIFGrammarOption.bytep     = grammars;
   marpaESLIFGrammarOption.bytel     = grammarl;
-  marpaESLIFGrammarOption.encodings = NULL; /* ASCII is the default and is ok */
-  marpaESLIFGrammarOption.encodingl = 0; /* ASCII is the default */
+  marpaESLIFGrammarOption.encodings = "ASCII";
+  marpaESLIFGrammarOption.encodingl = 5;
 
-  rcp = marpaESLIFGrammar_newp(marpaESLIFp, &marpaESLIFGrammarOption);
+  rcp = _marpaESLIFGrammar_newp(marpaESLIFp, &marpaESLIFGrammarOption, 0 /* startGrammarIsLexemeb */);
   goto done;
 
  err:
@@ -1642,12 +1639,12 @@ static short _marpaESLIFRecognizer_lua_regexaction_functionb(void *userDatavp, m
 }
 
 /*****************************************************************************/
-static marpaESLIFSymbol_t *_marpaESLIFRecognizer_lua_generatoraction_functionb(void *userDatavp, marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFValueResult_t *contextp)
+static short _marpaESLIFRecognizer_lua_generatoraction_functionb(void *userDatavp, marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFValueResult_t *contextp, marpaESLIFValueResultString_t *marpaESLIFValueResultOutp)
 /*****************************************************************************/
 {
   static const char  *funcs = "_marpaESLIFRecognizer_lua_generatoraction_functionb";
   int                 topi  = -1;
-  marpaESLIFSymbol_t *rcp;
+  short               rcb;
 
   /* Create the lua state if needed */
   if (MARPAESLIF_UNLIKELY(! _marpaESLIFRecognizer_lua_newb(marpaESLIFRecognizerp))) {
@@ -1658,22 +1655,19 @@ static marpaESLIFSymbol_t *_marpaESLIFRecognizer_lua_generatoraction_functionb(v
   if (! _marpaESLIFRecognizer_lua_function_loadb(marpaESLIFRecognizerp)) {
     goto err;
   }
-  rcp = marpaESLIFLua_generatorCallbackb(userDatavp, marpaESLIFRecognizerp, contextp, 1 /* precompiledb */);
-  if (MARPAESLIF_UNLIKELY(rcp == NULL)) {
-    goto err;
-  }
 
+  rcb = marpaESLIFLua_generatorCallbackb(userDatavp, marpaESLIFRecognizerp, contextp, 1 /* precompiledb */, marpaESLIFValueResultOutp);
   goto done;
 
  err:
   MARPAESLIFLUA_LOG_LATEST_ERROR(marpaESLIFRecognizerp);
-  rcp = NULL;
+  rcb = 0;
 
  done:
   if (topi >= 0) {
     LUA_SETTOP(marpaESLIFRecognizerp, topi);
   }
-  return rcp;
+  return rcb;
 }
 
 /*****************************************************************************/
