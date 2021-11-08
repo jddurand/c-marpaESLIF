@@ -1318,6 +1318,9 @@ static inline short marpaESLIFPerl_recognizerGeneratorCallbackb(void *userDatavp
   SV                        *svp;
   SV                        *actionResult;
   marpaESLIFValueResult_t    marpaESLIFValueResult;
+  int                        typei;
+  char                      *strings = NULL;
+  STRLEN                     stringl = 0;
   dTHXa(MarpaX_ESLIF_Recognizerp->PerlInterpreterp);
 
   list = newAV();
@@ -1331,18 +1334,25 @@ static inline short marpaESLIFPerl_recognizerGeneratorCallbackb(void *userDatavp
   /* This will decrement by one the inner element reference count */
   av_undef(list);
 
-  marpaESLIFPerl_stack_setv(aTHX_ marpaESLIFGrammar_eslifp(marpaESLIFRecognizer_grammarp(marpaESLIFRecognizerp)), NULL /* marpaESLIFValuep */, -1 /* resulti */, actionResult, &marpaESLIFValueResult, 1 /* incb */, MarpaX_ESLIF_Recognizerp->constantsp);
+  typei = marpaESLIFPerl_getTypei(aTHX_ actionResult);
 
-  if (marpaESLIFValueResult.type != MARPAESLIF_VALUE_TYPE_STRING) {
-    MARPAESLIFPERL_CROAKF("Generator action %s did not return a string", MarpaX_ESLIF_Recognizerp->actions);
-  }
+  /* Call explicitly for stringification. If no encoding can be set, ESLIF will guess. */
+  marpaESLIFPerl_sv2byte(aTHX_ marpaESLIFGrammar_eslifp(marpaESLIFRecognizer_grammarp(marpaESLIFRecognizerp)),
+                         actionResult,
+                         (char **) &(marpaESLIFValueResultOutp->p),
+                         &(marpaESLIFValueResultOutp->sizel),
+                         1 /* encodingInformationb */,
+                         NULL /* characterStreambp */,
+                         &(marpaESLIFValueResultOutp->encodingasciis),
+                         NULL /* encodinglp */,
+                         0 /* warnIsFatalb */,
+                         marpaESLIFPerl_is_MarpaX__ESLIF__String(aTHX_ actionResult, typei) /* marpaESLIFStringb */,
+                         MarpaX_ESLIF_Recognizerp->constantsp);
 
-  marpaESLIFValueResultOutp->p              = marpaESLIFValueResult.u.s.p;
-  marpaESLIFValueResultOutp->freeUserDatavp = marpaESLIFValueResult.u.s.freeUserDatavp;
-  marpaESLIFValueResultOutp->freeCallbackp  = marpaESLIFValueResult.u.s.freeCallbackp;
-  marpaESLIFValueResultOutp->shallowb       = marpaESLIFValueResult.u.s.shallowb;
-  marpaESLIFValueResultOutp->sizel          = marpaESLIFValueResult.u.s.sizel;
-  marpaESLIFValueResultOutp->encodingasciis = marpaESLIFValueResult.u.s.encodingasciis;
+  /* Prepare for the callback: ESLIF will call for destruction after it is processed */
+  marpaESLIFValueResultOutp->freeUserDatavp = marpaESLIFPerlaTHX;
+  marpaESLIFValueResultOutp->freeCallbackp  = marpaESLIFPerl_genericFreeCallbackv;
+  marpaESLIFValueResultOutp->shallowb       = 0;
 
   MARPAESLIFPERL_REFCNT_DEC(actionResult);
 
