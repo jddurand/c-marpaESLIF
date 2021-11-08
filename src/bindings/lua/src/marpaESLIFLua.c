@@ -754,8 +754,7 @@ static short marpaESLIFLua_lua_isinteger(int *rcip, lua_State *L, int idx);
       _encodingasciis = NULL;                                           \
     } else {                                                            \
       MARPAESLIFLUA_GETORCREATEGLOBAL(L, MARPAESLIFSTRINGTOENCODINGTABLE, NULL /* gcp */, "k" /* mode */); /* Stack: ..., MARPAESLIFSTRINGTOENCODINGTABLE */ \
-      if (! marpaESLIFLua_lua_pushnil(L)) goto err;                                                        /* Stack: ..., MARPAESLIFSTRINGTOENCODINGTABLE, nil */ \
-      if (! marpaESLIFLua_lua_pushlstring(NULL, L, (const char *) bytep, bytel)) goto err; \
+      if (! marpaESLIFLua_lua_pushlstring(NULL, L, (const char *) bytep, bytel)) goto err;                 /* Stack: ..., MARPAESLIFSTRINGTOENCODINGTABLE, string */ \
       if (! marpaESLIFLua_lua_gettable(NULL, L, -2)) goto err;                                             /* Stack: ..., MARPAESLIFSTRINGTOENCODINGTABLE, encoding */ \
       if (! marpaESLIFLua_lua_type(&_encodingtypei, L, -1)) goto err;   \
       if (_encodingtypei == LUA_TSTRING) {                              \
@@ -780,6 +779,8 @@ static short marpaESLIFLua_lua_isinteger(int *rcip, lua_State *L, int idx);
       } else {                                                          \
         _encodingasciis = NULL;                                         \
       }                                                                 \
+                                                                        \
+      if (! marpaESLIFLua_lua_pop(L, 2)) goto err;                                                         /* Stack: ... */ \
     }                                                                   \
                                                                         \
     *ep = _encodingasciis;                                              \
@@ -794,8 +795,7 @@ static short marpaESLIFLua_lua_isinteger(int *rcip, lua_State *L, int idx);
       _encodingasciis = NULL;                                           \
     } else {                                                            \
       MARPAESLIFLUA_GETORCREATEGLOBAL(L, MARPAESLIFSTRINGTOENCODINGTABLE, NULL /* gcp */, "k" /* mode */); /* Stack: ..., MARPAESLIFSTRINGTOENCODINGTABLE */ \
-      if (! marpaESLIFLua_lua_pushnil(L)) goto err;                                                        /* Stack: ..., MARPAESLIFSTRINGTOENCODINGTABLE, nil */ \
-      if (! marpaESLIFLua_lua_pushlstring(NULL, L, (const char *) bytep, bytel)) goto err; \
+      if (! marpaESLIFLua_lua_pushlstring(NULL, L, (const char *) bytep, bytel)) goto err;                 /* Stack: ..., MARPAESLIFSTRINGTOENCODINGTABLE, string */ \
       if (! marpaESLIFLua_lua_gettable(NULL, L, -2)) goto err;                                             /* Stack: ..., MARPAESLIFSTRINGTOENCODINGTABLE, encoding */ \
       if (! marpaESLIFLua_lua_type(&_encodingtypei, L, -1)) goto err;   \
       if (_encodingtypei == LUA_TSTRING) {                              \
@@ -816,6 +816,8 @@ static short marpaESLIFLua_lua_isinteger(int *rcip, lua_State *L, int idx);
       } else {                                                          \
         _encodingasciis = NULL;                                         \
       }                                                                 \
+                                                                        \
+      if (! marpaESLIFLua_lua_pop(L, 2)) goto err;                                                         /* Stack: ... */ \
     }                                                                   \
                                                                         \
     *ep = _encodingasciis;                                              \
@@ -4192,6 +4194,7 @@ static short marpaESLIFLua_generatorCallbackb(void *userDatavp, marpaESLIFRecogn
   size_t                        stringl;
   marpaESLIFLuaSymbolContext_t *marpaESLIFLuaSymbolContextp;
   short                         rcb;
+  char                         *encodingasciis;
   int                           i;
 
   /* fprintf(stdout, "... action %s start\n", marpaESLIFLuaRecognizerContextp->actions); fflush(stdout); fflush(stderr); */
@@ -4208,12 +4211,14 @@ static short marpaESLIFLua_generatorCallbackb(void *userDatavp, marpaESLIFRecogn
                           &stringl
                           );
 
+  MARPAESLIFLUA_STRING_ENCODINGS(L, marpaESLIFp, strings, stringl, &encodingasciis);
+
   /* fprintf(stdout, "... action %s done\n", marpaESLIFLuaRecognizerContextp->actions); fflush(stdout); fflush(stderr); */
 
   marpaESLIFValueResultOutp->p              = (unsigned char *) strings;
   marpaESLIFValueResultOutp->shallowb       = 0;
   marpaESLIFValueResultOutp->sizel          = stringl;
-  marpaESLIFValueResultOutp->encodingasciis = NULL;
+  marpaESLIFValueResultOutp->encodingasciis = encodingasciis;
   marpaESLIFValueResultOutp->freeUserDatavp = L;
   marpaESLIFValueResultOutp->freeCallbackp  = marpaESLIFLua_genericFreeCallbackv;
 
