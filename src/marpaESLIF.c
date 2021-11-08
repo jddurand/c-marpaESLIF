@@ -5910,6 +5910,12 @@ static inline short _marpaESLIFRecognizer_meta_matcherb(marpaESLIFRecognizer_t *
     }
 
     /* Get the generated string - it is enough to set p member to NULL to check if the called tried to fool us */
+    generatedValueResult.u.s.p              = NULL;
+    generatedValueResult.u.s.freeUserDatavp = NULL;
+    generatedValueResult.u.s.freeCallbackp  = NULL;
+    generatedValueResult.u.s.shallowb       = 0;
+    generatedValueResult.u.s.sizel          = 0;
+    generatedValueResult.u.s.encodingasciis = NULL;
     if (! generatorCallbackp(marpaESLIFRecognizerp->marpaESLIFRecognizerOption.userDatavp, marpaESLIFRecognizerp, contextp, &(generatedValueResult.u.s))) {
       MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "%s callback failed", _marpaESLIF_action2asciis(symbolp->generatorActionp));
       goto err;
