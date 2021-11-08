@@ -4189,13 +4189,13 @@ static short marpaESLIFLua_generatorCallbackb(void *userDatavp, marpaESLIFRecogn
   lua_State                    *L                          = marpaESLIFLuaRecognizerContextp->L;
   char                         *actions                    = precompiledb ? NULL : marpaESLIFLuaRecognizerContextp->actions;
   /* Note that ESLIF guarantees that contextp is never NULL and is of type ROW */
-  int                                                      nargs = contextp->u.r.sizel;
+  size_t                        nargs                      = contextp->u.r.sizel;
   char                         *strings;
   size_t                        stringl;
   marpaESLIFLuaSymbolContext_t *marpaESLIFLuaSymbolContextp;
   short                         rcb;
   char                         *encodingasciis;
-  int                           i;
+  size_t                        i;
 
   /* fprintf(stdout, "... action %s start\n", marpaESLIFLuaRecognizerContextp->actions); fflush(stdout); fflush(stderr); */
 
