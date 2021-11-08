@@ -369,10 +369,11 @@ static short _marpaESLIFValue_lua_actionb(void *userDatavp, marpaESLIFValue_t *m
     goto err; /* Lua will shutdown anyway */
   }
 
-  rcb = ruleCallbackp(userDatavp, marpaESLIFValuep, arg0i, argni, resulti, nullableb);
+  if (MARPAESLIF_UNLIKELY(! ruleCallbackp(userDatavp, marpaESLIFValuep, arg0i, argni, resulti, nullableb))) {
+    goto err;
+  }
 
-  if (MARPAESLIF_UNLIKELY(! rcb)) goto err;
-
+  rcb = 1;
   goto done;
 
  err:
@@ -407,10 +408,11 @@ static short _marpaESLIFValue_lua_symbolb(void *userDatavp, marpaESLIFValue_t *m
     goto err; /* Lua will shutdown anyway */
   }
 
-  rcb = symbolCallbackp(userDatavp, marpaESLIFValuep, marpaESLIFValueResultp, resulti);
+  if (MARPAESLIF_UNLIKELY(! symbolCallbackp(userDatavp, marpaESLIFValuep, marpaESLIFValueResultp, resulti))) {
+    goto err;
+  }
 
-  if (MARPAESLIF_UNLIKELY(! rcb)) goto err;
-
+  rcb = 1;
   goto done;
 
  err:
@@ -445,11 +447,11 @@ static short _marpaESLIFRecognizer_lua_ifactionb(void *userDatavp, marpaESLIFRec
     goto err; /* Lua will shutdown anyway */
   }
 
-  rcb = ifCallbackp(userDatavp, marpaESLIFRecognizerp, marpaESLIFValueResultp, marpaESLIFValueResultBoolp);
-  if (MARPAESLIF_UNLIKELY(! rcb)) {
+  if (MARPAESLIF_UNLIKELY(! ifCallbackp(userDatavp, marpaESLIFRecognizerp, marpaESLIFValueResultp, marpaESLIFValueResultBoolp))) {
     goto err;
   }
 
+  rcb = 1;
   goto done;
 
  err:
@@ -484,10 +486,11 @@ static short _marpaESLIFRecognizer_lua_regexactionb(void *userDatavp, marpaESLIF
     goto err; /* Lua will shutdown anyway */
   }
 
-  rcb = regexCallbackp(userDatavp, marpaESLIFRecognizerp, marpaESLIFCalloutBlockp, marpaESLIFValueResultOutp);
+  if (MARPAESLIF_UNLIKELY(! regexCallbackp(userDatavp, marpaESLIFRecognizerp, marpaESLIFCalloutBlockp, marpaESLIFValueResultOutp))) {
+    goto err;
+  }
 
-  if (MARPAESLIF_UNLIKELY(! rcb)) goto err;
-
+  rcb = 1;
   goto done;
 
  err:
@@ -522,7 +525,11 @@ static short _marpaESLIFRecognizer_lua_generatoractionb(void *userDatavp, marpaE
     goto err; /* Lua will shutdown anyway */
   }
 
-  rcb = generatorCallbackp(userDatavp, marpaESLIFRecognizerp, contextp, marpaESLIFValueResultOutp);
+  if (MARPAESLIF_UNLIKELY(! generatorCallbackp(userDatavp, marpaESLIFRecognizerp, contextp, marpaESLIFValueResultOutp))) {
+    goto err;
+  }
+
+  rcb = 1;
   goto done;
 
  err:
@@ -941,9 +948,6 @@ static short marpaESLIFLua_luaL_unref(lua_State *L, int t, int ref)
 static short marpaESLIFLua_luaL_requiref(lua_State *L, const char *modname, lua_CFunction openf, int glb)
 /****************************************************************************/
 {
-  short rcb = marpaESLIFLua_luaL_checkstack(L, 1, "Cannot grow stack by 1") && (! luaunpanicL_requiref(L, modname, openf, glb));
-  fprintf(stderr, "marpaESLIFLua_luaL_requiref returns %d\n", rcb);
-  return rcb;
   return marpaESLIFLua_luaL_checkstack(L, 1, "Cannot grow stack by 1") && (! luaunpanicL_requiref(L, modname, openf, glb));
 }
 
@@ -1190,9 +1194,11 @@ static short _marpaESLIFValue_lua_representationb(void *userDatavp, marpaESLIFVa
   LUA_POP(marpaESLIFValuep, 2);                                                  /* stack: ... */
 
   /* Proxy to the lua representation callback action - then userDatavp has to be marpaESLIFLuaValueContextp */
-  rcb = marpaESLIFLua_representationb((void *) marpaESLIFLuaValueContextp /* userDatavp */, marpaESLIFValueResultp, inputcpp, inputlp, encodingasciisp, disposeCallbackpp, stringbp);
-  if (MARPAESLIF_UNLIKELY(! rcb)) goto err;
+  if (MARPAESLIF_UNLIKELY(! marpaESLIFLua_representationb((void *) marpaESLIFLuaValueContextp /* userDatavp */, marpaESLIFValueResultp, inputcpp, inputlp, encodingasciisp, disposeCallbackpp, stringbp))) {
+    goto err;
+  }
 
+  rcb = 1;
   goto done;
 
  err:
@@ -1222,10 +1228,11 @@ static short _marpaESLIFRecognizer_lua_eventactionb(void *userDatavp, marpaESLIF
     goto err; /* Lua will shutdown anyway */
   }
 
-  rcb = eventCallbackp(userDatavp, marpaESLIFRecognizerp, eventArrayp, eventArrayl, marpaESLIFValueResultBoolp);
+  if (MARPAESLIF_UNLIKELY(! eventCallbackp(userDatavp, marpaESLIFRecognizerp, eventArrayp, eventArrayl, marpaESLIFValueResultBoolp))) {
+    goto err;
+  }
 
-  if (MARPAESLIF_UNLIKELY(! rcb)) goto err;
-
+  rcb = 1;
   goto done;
 
  err:
@@ -1515,11 +1522,12 @@ static short _marpaESLIFValue_lua_action_functionb(void *userDatavp, marpaESLIFV
   if (! _marpaESLIFValue_lua_function_loadb(marpaESLIFValuep)) {
     goto err;
   }
-  rcb = marpaESLIFLua_valueCallbackb(userDatavp, marpaESLIFValuep, arg0i, argni, NULL /* marpaESLIFValueResultLexemep */, resulti, nullableb, 0 /* symbolb */, 1 /* precompiledb */);
-  if (MARPAESLIF_UNLIKELY(! rcb)) {
+
+  if (MARPAESLIF_UNLIKELY(! marpaESLIFLua_valueCallbackb(userDatavp, marpaESLIFValuep, arg0i, argni, NULL /* marpaESLIFValueResultLexemep */, resulti, nullableb, 0 /* symbolb */, 1 /* precompiledb */))) {
     goto err;
   }
 
+  rcb = 1;
   goto done;
 
  err:
@@ -1550,11 +1558,12 @@ static short _marpaESLIFValue_lua_symbol_functionb(void *userDatavp, marpaESLIFV
   if (! _marpaESLIFValue_lua_function_loadb(marpaESLIFValuep)) {
     goto err;
   }
-  rcb = marpaESLIFLua_valueCallbackb(userDatavp, marpaESLIFValuep, -1 /* arg0i */, -1 /* argni */, marpaESLIFValueResultp, resulti, 0 /* nullableb */, 1 /* symbolb */, 1 /* precompiledb */);
-  if (MARPAESLIF_UNLIKELY(! rcb)) {
+
+  if (MARPAESLIF_UNLIKELY(! marpaESLIFLua_valueCallbackb(userDatavp, marpaESLIFValuep, -1 /* arg0i */, -1 /* argni */, marpaESLIFValueResultp, resulti, 0 /* nullableb */, 1 /* symbolb */, 1 /* precompiledb */))) {
     goto err;
   }
 
+  rcb = 1;
   goto done;
 
  err:
@@ -1585,11 +1594,12 @@ static short _marpaESLIFRecognizer_lua_ifaction_functionb(void *userDatavp, marp
   if (! _marpaESLIFRecognizer_lua_function_loadb(marpaESLIFRecognizerp)) {
     goto err;
   }
-  rcb = marpaESLIFLua_ifCallbackb(userDatavp, marpaESLIFRecognizerp, marpaESLIFValueResultp, marpaESLIFValueResultBoolp, 1 /* precompiledb */);
-  if (MARPAESLIF_UNLIKELY(! rcb)) {
+
+  if (MARPAESLIF_UNLIKELY(! marpaESLIFLua_ifCallbackb(userDatavp, marpaESLIFRecognizerp, marpaESLIFValueResultp, marpaESLIFValueResultBoolp, 1 /* precompiledb */))) {
     goto err;
   }
 
+  rcb = 1;
   goto done;
 
  err:
@@ -1620,11 +1630,12 @@ static short _marpaESLIFRecognizer_lua_regexaction_functionb(void *userDatavp, m
   if (! _marpaESLIFRecognizer_lua_function_loadb(marpaESLIFRecognizerp)) {
     goto err;
   }
-  rcb = marpaESLIFLua_regexCallbackb(userDatavp, marpaESLIFRecognizerp, marpaESLIFCalloutBlockp, marpaESLIFValueResultOutp, 1 /* precompiledb */);
-  if (MARPAESLIF_UNLIKELY(! rcb)) {
+
+  if (MARPAESLIF_UNLIKELY(! marpaESLIFLua_regexCallbackb(userDatavp, marpaESLIFRecognizerp, marpaESLIFCalloutBlockp, marpaESLIFValueResultOutp, 1 /* precompiledb */))) {
     goto err;
   }
 
+  rcb = 1;
   goto done;
 
  err:
@@ -1656,7 +1667,11 @@ static short _marpaESLIFRecognizer_lua_generatoraction_functionb(void *userDatav
     goto err;
   }
 
-  rcb = marpaESLIFLua_generatorCallbackb(userDatavp, marpaESLIFRecognizerp, contextp, 1 /* precompiledb */, marpaESLIFValueResultOutp);
+  if (MARPAESLIF_UNLIKELY(! marpaESLIFLua_generatorCallbackb(userDatavp, marpaESLIFRecognizerp, contextp, 1 /* precompiledb */, marpaESLIFValueResultOutp))) {
+    goto err;
+  }
+
+  rcb = 1;
   goto done;
 
  err:
@@ -1687,11 +1702,12 @@ static short _marpaESLIFRecognizer_lua_eventaction_functionb(void *userDatavp, m
   if (! _marpaESLIFRecognizer_lua_function_loadb(marpaESLIFRecognizerp)) {
     goto err;
   }
-  rcb = marpaESLIFLua_eventCallbackb(userDatavp, marpaESLIFRecognizerp, eventArrayp, eventArrayl, marpaESLIFValueResultBoolp, 1 /* precompiledb */);
-  if (MARPAESLIF_UNLIKELY(! rcb)) {
+
+  if (MARPAESLIF_UNLIKELY(! marpaESLIFLua_eventCallbackb(userDatavp, marpaESLIFRecognizerp, eventArrayp, eventArrayl, marpaESLIFValueResultBoolp, 1 /* precompiledb */))) {
     goto err;
   }
 
+  rcb = 1;
   goto done;
 
  err:
@@ -1956,11 +1972,12 @@ static short _marpaESLIFRecognizer_lua_push_contextb(marpaESLIFRecognizer_t *mar
   if (! _marpaESLIFRecognizer_lua_function_loadb(marpaESLIFRecognizerp)) {
     goto err;
   }
-  rcb = marpaESLIFLua_pushContextb(marpaESLIFRecognizerp);
-  if (MARPAESLIF_UNLIKELY(! rcb)) {
+
+  if (MARPAESLIF_UNLIKELY(! marpaESLIFLua_pushContextb(marpaESLIFRecognizerp))) {
     goto err;
   }
 
+  rcb = 1;
   goto done;
 
  err:
@@ -2036,11 +2053,12 @@ static short _marpaESLIFRecognizer_lua_pop_contextb(marpaESLIFRecognizer_t *marp
   if (! _marpaESLIFRecognizer_lua_function_loadb(marpaESLIFRecognizerp)) {
     goto err;
   }
-  rcb = marpaESLIFLua_popContextb(marpaESLIFRecognizerp);
-  if (MARPAESLIF_UNLIKELY(! rcb)) {
+
+  if (MARPAESLIF_UNLIKELY(! marpaESLIFLua_popContextb(marpaESLIFRecognizerp))) {
     goto err;
   }
-  
+
+  rcb = 1;
   goto done;
 
  err:
