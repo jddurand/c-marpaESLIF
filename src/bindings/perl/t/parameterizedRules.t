@@ -16,14 +16,13 @@ sub isWithNewline          { 1 }
 sub isWithTrack            { 1 }
 sub rhs {
     my $self = shift;
-    $log->infof('In rhs, parameters: %s', \@_);
 
     my ($parameter, $undef, $explanation) = @_;
 
-    return "start ::= '$parameter'";
-    my $bnf = "start ::= '$parameter'";
-    return MarpaX::ESLIF::String->new($bnf, 'UTF-8');
-    return $bnf;
+    my $output = "start ::= LEXEME LEXEME ~ '$parameter'";
+    $log->infof('In rhs, parameters: %s => %s', \@_, $output);
+
+    return $output;
 }
 
 package MyValueInterface;
