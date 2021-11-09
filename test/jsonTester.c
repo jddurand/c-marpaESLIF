@@ -88,16 +88,17 @@ int main(int argc, char **argv) {
       chunkp++;
     }
 
-    marpaESLIFRecognizerOption.userDatavp        = &marpaESLIFTester_context;
-    marpaESLIFRecognizerOption.readerCallbackp   = inputReaderb;
-    marpaESLIFRecognizerOption.disableThresholdb = 0;
-    marpaESLIFRecognizerOption.exhaustedb        = 0;
-    marpaESLIFRecognizerOption.newlineb          = 1;
-    marpaESLIFRecognizerOption.trackb            = 0;
-    marpaESLIFRecognizerOption.bufsizl           = 0;
-    marpaESLIFRecognizerOption.buftriggerperci   = 50;
-    marpaESLIFRecognizerOption.bufaddperci       = 50;
-    marpaESLIFRecognizerOption.ifActionResolverp = NULL;
+    marpaESLIFRecognizerOption.userDatavp               = &marpaESLIFTester_context;
+    marpaESLIFRecognizerOption.readerCallbackp          = inputReaderb;
+    marpaESLIFRecognizerOption.disableThresholdb        = 0;
+    marpaESLIFRecognizerOption.exhaustedb               = 0;
+    marpaESLIFRecognizerOption.newlineb                 = 1;
+    marpaESLIFRecognizerOption.trackb                   = 0;
+    marpaESLIFRecognizerOption.bufsizl                  = 0;
+    marpaESLIFRecognizerOption.buftriggerperci          = 50;
+    marpaESLIFRecognizerOption.bufaddperci              = 50;
+    marpaESLIFRecognizerOption.ifActionResolverp        = NULL;
+    marpaESLIFRecognizerOption.generatorActionResolverp = NULL;
 
     marpaESLIFValueOption.userDatavp            = NULL; /* User specific context */
     marpaESLIFValueOption.ruleActionResolverp   = NULL; /* Will return the function doing the wanted rule action */

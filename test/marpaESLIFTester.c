@@ -300,16 +300,17 @@ int main() {
   marpaESLIFTester_context.values         = NULL;
   marpaESLIFTester_context.valuel         = 0;
 
-  marpaESLIFRecognizerOption.userDatavp        = &marpaESLIFTester_context;
-  marpaESLIFRecognizerOption.readerCallbackp   = inputReaderb;
-  marpaESLIFRecognizerOption.disableThresholdb = 0;
-  marpaESLIFRecognizerOption.exhaustedb        = 1;
-  marpaESLIFRecognizerOption.newlineb          = 0; /* Voluntarily set to 0 to test the case when marpaESLIF enforces this flag */
-  marpaESLIFRecognizerOption.trackb            = 0;
-  marpaESLIFRecognizerOption.bufsizl           = 0;
-  marpaESLIFRecognizerOption.buftriggerperci   = 50;
-  marpaESLIFRecognizerOption.bufaddperci       = 50;
-  marpaESLIFRecognizerOption.ifActionResolverp = NULL;
+  marpaESLIFRecognizerOption.userDatavp               = &marpaESLIFTester_context;
+  marpaESLIFRecognizerOption.readerCallbackp          = inputReaderb;
+  marpaESLIFRecognizerOption.disableThresholdb        = 0;
+  marpaESLIFRecognizerOption.exhaustedb               = 1;
+  marpaESLIFRecognizerOption.newlineb                 = 0; /* Voluntarily set to 0 to test the case when marpaESLIF enforces this flag */
+  marpaESLIFRecognizerOption.trackb                   = 0;
+  marpaESLIFRecognizerOption.bufsizl                  = 0;
+  marpaESLIFRecognizerOption.buftriggerperci          = 50;
+  marpaESLIFRecognizerOption.bufaddperci              = 50;
+  marpaESLIFRecognizerOption.ifActionResolverp        = NULL;
+  marpaESLIFRecognizerOption.generatorActionResolverp = NULL;
 
   marpaESLIFRecognizerp = marpaESLIFRecognizer_newp(marpaESLIFGrammarp, &marpaESLIFRecognizerOption);
   if (marpaESLIFRecognizerp == NULL) {
@@ -325,16 +326,17 @@ int main() {
   if (marpaESLIFRecognizerOptionp == NULL) {
     goto err;
   }
-  if ((marpaESLIFRecognizerOption.userDatavp        != marpaESLIFRecognizerOption.userDatavp) ||
-      (marpaESLIFRecognizerOption.readerCallbackp   != marpaESLIFRecognizerOption.readerCallbackp) ||
-      (marpaESLIFRecognizerOption.disableThresholdb != marpaESLIFRecognizerOption.disableThresholdb) ||
-      (marpaESLIFRecognizerOption.exhaustedb        != marpaESLIFRecognizerOption.exhaustedb) ||
-      (marpaESLIFRecognizerOption.newlineb          != marpaESLIFRecognizerOption.newlineb) ||
-      (marpaESLIFRecognizerOption.trackb            != marpaESLIFRecognizerOption.trackb) ||
-      (marpaESLIFRecognizerOption.bufsizl           != marpaESLIFRecognizerOption.bufsizl) ||
-      (marpaESLIFRecognizerOption.buftriggerperci   != marpaESLIFRecognizerOption.buftriggerperci) ||
-      (marpaESLIFRecognizerOption.bufaddperci       != marpaESLIFRecognizerOption.bufaddperci) ||
-      (marpaESLIFRecognizerOption.ifActionResolverp != marpaESLIFRecognizerOption.ifActionResolverp)
+  if ((marpaESLIFRecognizerOption.userDatavp               != marpaESLIFRecognizerOption.userDatavp) ||
+      (marpaESLIFRecognizerOption.readerCallbackp          != marpaESLIFRecognizerOption.readerCallbackp) ||
+      (marpaESLIFRecognizerOption.disableThresholdb        != marpaESLIFRecognizerOption.disableThresholdb) ||
+      (marpaESLIFRecognizerOption.exhaustedb               != marpaESLIFRecognizerOption.exhaustedb) ||
+      (marpaESLIFRecognizerOption.newlineb                 != marpaESLIFRecognizerOption.newlineb) ||
+      (marpaESLIFRecognizerOption.trackb                   != marpaESLIFRecognizerOption.trackb) ||
+      (marpaESLIFRecognizerOption.bufsizl                  != marpaESLIFRecognizerOption.bufsizl) ||
+      (marpaESLIFRecognizerOption.buftriggerperci          != marpaESLIFRecognizerOption.buftriggerperci) ||
+      (marpaESLIFRecognizerOption.bufaddperci              != marpaESLIFRecognizerOption.bufaddperci) ||
+      (marpaESLIFRecognizerOption.ifActionResolverp        != marpaESLIFRecognizerOption.ifActionResolverp)
+      (marpaESLIFRecognizerOption.generatorActionResolverp != marpaESLIFRecognizerOption.generatorActionResolverp)
       ) {
     GENERICLOGGER_ERROR(marpaESLIFOption.genericLoggerp, "marpaESLIFRecognizer_optionp does have the correct content");
     goto err;

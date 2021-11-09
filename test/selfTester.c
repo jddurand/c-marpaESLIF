@@ -777,19 +777,20 @@ int main() {
   marpaESLIFTester_context.inputs         = (char *) selfs;
   marpaESLIFTester_context.inputl         = strlen(selfs);
 
-  marpaESLIFRecognizerOption.userDatavp        = &marpaESLIFTester_context; /* User specific context */
-  marpaESLIFRecognizerOption.readerCallbackp   = inputReaderb; /* Reader */
-  marpaESLIFRecognizerOption.disableThresholdb = 0; /* Default: 0 */
-  marpaESLIFRecognizerOption.exhaustedb        = 0; /* Exhaustion event. Default: 0 */
-  marpaESLIFRecognizerOption.newlineb          = 1; /* Count line/column numbers. Default: 0 */
-  marpaESLIFRecognizerOption.trackb            = 1; /* Absolute position tracking. Default: 0 */
-  marpaESLIFRecognizerOption.bufsizl           = 10; /* Minimum stream buffer size: Recommended: 0 (internally, a system default will apply) */
-  marpaESLIFRecognizerOption.buftriggerperci   = 50; /* Excess number of bytes, in percentage of bufsizl, where stream buffer size is reduced. Recommended: 50 */
-  marpaESLIFRecognizerOption.bufaddperci       = 50; /* Policy of minimum of bytes for increase, in percentage of current allocated size, when stream buffer size need to augment. Recommended: 50 */
-  marpaESLIFRecognizerOption.ifActionResolverp    = NULL;
-  marpaESLIFRecognizerOption.eventActionResolverp = NULL;
-  marpaESLIFRecognizerOption.regexActionResolverp = NULL;
-  marpaESLIFRecognizerOption.importerp            = NULL;
+  marpaESLIFRecognizerOption.userDatavp               = &marpaESLIFTester_context; /* User specific context */
+  marpaESLIFRecognizerOption.readerCallbackp          = inputReaderb; /* Reader */
+  marpaESLIFRecognizerOption.disableThresholdb        = 0; /* Default: 0 */
+  marpaESLIFRecognizerOption.exhaustedb               = 0; /* Exhaustion event. Default: 0 */
+  marpaESLIFRecognizerOption.newlineb                 = 1; /* Count line/column numbers. Default: 0 */
+  marpaESLIFRecognizerOption.trackb                   = 1; /* Absolute position tracking. Default: 0 */
+  marpaESLIFRecognizerOption.bufsizl                  = 10; /* Minimum stream buffer size: Recommended: 0 (internally, a system default will apply) */
+  marpaESLIFRecognizerOption.buftriggerperci          = 50; /* Excess number of bytes, in percentage of bufsizl, where stream buffer size is reduced. Recommended: 50 */
+  marpaESLIFRecognizerOption.bufaddperci              = 50; /* Policy of minimum of bytes for increase, in percentage of current allocated size, when stream buffer size need to augment. Recommended: 50 */
+  marpaESLIFRecognizerOption.ifActionResolverp        = NULL;
+  marpaESLIFRecognizerOption.eventActionResolverp     = NULL;
+  marpaESLIFRecognizerOption.regexActionResolverp     = NULL;
+  marpaESLIFRecognizerOption.generatorActionResolverp = NULL;
+  marpaESLIFRecognizerOption.importerp                = NULL;
 
   /* Test with events */
   GENERICLOGGER_LEVEL_SET(genericLoggerp, GENERICLOGGER_LOGLEVEL_TRACE);

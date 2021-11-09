@@ -486,16 +486,17 @@ int main() {
     marpaESLIFTester_context.inputs         = (char *) inputs[i];
     marpaESLIFTester_context.inputl         = (inputs[i] != NULL) ? strlen(inputs[i]) : 0;
 
-    marpaESLIFRecognizerOption.userDatavp        = &marpaESLIFTester_context;
-    marpaESLIFRecognizerOption.readerCallbackp   = inputReaderb;
-    marpaESLIFRecognizerOption.disableThresholdb = 0;
-    marpaESLIFRecognizerOption.exhaustedb        = 0;
-    marpaESLIFRecognizerOption.newlineb          = 1;
-    marpaESLIFRecognizerOption.trackb            = 1;
-    marpaESLIFRecognizerOption.bufsizl           = 0;
-    marpaESLIFRecognizerOption.buftriggerperci   = 50;
-    marpaESLIFRecognizerOption.bufaddperci       = 50;
-    marpaESLIFRecognizerOption.ifActionResolverp = NULL;
+    marpaESLIFRecognizerOption.userDatavp               = &marpaESLIFTester_context;
+    marpaESLIFRecognizerOption.readerCallbackp          = inputReaderb;
+    marpaESLIFRecognizerOption.disableThresholdb        = 0;
+    marpaESLIFRecognizerOption.exhaustedb               = 0;
+    marpaESLIFRecognizerOption.newlineb                 = 1;
+    marpaESLIFRecognizerOption.trackb                   = 1;
+    marpaESLIFRecognizerOption.bufsizl                  = 0;
+    marpaESLIFRecognizerOption.buftriggerperci          = 50;
+    marpaESLIFRecognizerOption.bufaddperci              = 50;
+    marpaESLIFRecognizerOption.ifActionResolverp        = NULL;
+    marpaESLIFRecognizerOption.generatorActionResolverp = NULL;
 
     /* Free previous round */
     if (marpaESLIFValuep != NULL) {
