@@ -19,7 +19,12 @@ sub rhs {
 
     my ($parameter, $undef, $explanation) = @_;
 
-    my $output = "start ::= LEXEME LEXEME ~ '$parameter'";
+    my $output;
+    if ($parameter > 4) {
+        $output = "start ::= '$parameter'\n";
+    } else {
+        $output = "start ::= . => rhs->(5, { x = 'Value of x', y = 'Value of y' }, 'Input should be \"5\"')\n";
+    }
     $log->infof('In rhs, parameters: %s => %s', \@_, $output);
 
     return $output;
@@ -68,10 +73,7 @@ my $eslifGrammar = MarpaX::ESLIF::Grammar->new($eslif, do { local $/; <DATA> });
 isa_ok($eslifGrammar, 'MarpaX::ESLIF::Grammar');
 
 my @strings = (
-    "1",
-    "2",
-    "3",
-    "4"
+    "5",
     );
 
 #
