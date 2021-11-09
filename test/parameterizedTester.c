@@ -14,30 +14,26 @@ typedef struct marpaESLIF_context {
 } marpaESLIF_context_t;
 
 const static char *grammars = "# Parameterized grammar\n"
-  "a<-(x) ::= b\n"
-  "b ::= c->(1)\n"
-  "    | c->(2)\n"
-  "c<-(x) ::= d->(x,1)\n"
-  "         | d->(x,2)\n"
-  "c<-(y) ::= d->(y,1)\n"
-  "         | d->(y,2)\n"
-  "d<-(x,y) ~ E->(x*1, y*2)\n"
-  "E<-(X,Y) ~ 'no match'\n"
-  "         | . => ::lua->myGenerator-->(X + 1, nil, Y * 2)\n"
+  ":discard ::= /[\\s]+/\n"
+  "\n"
+  "top  ::= rhs1\n"
+  "rhs1 ::= . => ::lua->rhs-->(1, nil, 'Input should be \"1\"')\n"
+  "       | . => ::lua->rhs-->(2, nil, 'Input should be \"2\"')\n"
+  "       | . => ::lua->rhs-->(3, nil, 'Input should be \"3\"')\n"
+  "       | . => ::lua->rhs-->(4, nil, 'Input should be \"4\"')\n"
   "\n"
   "<luascript>\n"
-  "function myGenerator(x,dummy,y)\n"
-  "  print('[lua] x='..tostring(x)..', dummy='..tostring(dummy)..', y='..tostring(y))\n"
-  "  output = 'JDD ::= \"E\"'\n"
+  "function rhs(parameter, undef, explanation)\n"
+  "  print('[lua] parameter='..tostring(parameter)..', undef='..tostring(undef)..', explanation='..tostring(explanation))\n"
+  "  local output = \"start ::= '\"..tostring(parameter)..\"'\"\n"
+  "  print('[lua] ==> '..tostring(output))\n"
   "  output:encoding('UTF-8') -- Just to verify that setting the encoding works and is propagated\n"
   "  return output\n"
-  "  -- return marpaESLIF:marpaESLIFSymbol_new('string', '\"test string\"')\n"
-  "  -- return {}\n"
   "end\n"
   "</luascript>\n"
   ;
 
-const static char *inputs = "E";
+const static char *inputs = "1";
 
 int main() {
   marpaESLIF_t                *marpaESLIFp        = NULL;
@@ -104,10 +100,11 @@ int main() {
   marpaESLIFRecognizerOption.bufsizl           = 10; /* Minimum stream buffer size: Recommended: 0 (internally, a system default will apply) */
   marpaESLIFRecognizerOption.buftriggerperci   = 50; /* Excess number of bytes, in percentage of bufsizl, where stream buffer size is reduced. Recommended: 50 */
   marpaESLIFRecognizerOption.bufaddperci       = 50; /* Policy of minimum of bytes for increase, in percentage of current allocated size, when stream buffer size need to augment. Recommended: 50 */
-  marpaESLIFRecognizerOption.ifActionResolverp    = NULL;
-  marpaESLIFRecognizerOption.eventActionResolverp = NULL;
-  marpaESLIFRecognizerOption.regexActionResolverp = NULL;
-  marpaESLIFRecognizerOption.importerp            = NULL;
+  marpaESLIFRecognizerOption.ifActionResolverp        = NULL;
+  marpaESLIFRecognizerOption.eventActionResolverp     = NULL;
+  marpaESLIFRecognizerOption.regexActionResolverp     = NULL;
+  marpaESLIFRecognizerOption.generatorActionResolverp = NULL;
+  marpaESLIFRecognizerOption.importerp                = NULL;
 
   GENERICLOGGER_LEVEL_SET(genericLoggerp, GENERICLOGGER_LOGLEVEL_TRACE);
   GENERICLOGGER_NOTICE(genericLoggerp, "Testing interactive recognizer");
