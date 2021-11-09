@@ -24,16 +24,21 @@ const static char *grammars = "# Parameterized grammar\n"
   "\n"
   "<luascript>\n"
   "function rhs(parameter, undef, explanation)\n"
-  "  print('[lua] parameter='..tostring(parameter)..', undef='..tostring(undef)..', explanation='..tostring(explanation))\n"
-  "  local output = \"start ::= '\"..tostring(parameter)..\"'\"\n"
-  "  print('[lua] ==> '..tostring(output))\n"
+  "  local output;\n"
+  "  if (parameter > 4) then\n"
+  "    output = \"start ::= '\"..tostring(parameter)..\"'\"\n"
+  "  else\n"
+  "    output = \"start ::= . => ::lua->rhs-->(5, { x = 'Value of x', y = 'Value of y' }, 'Input should be 5')\"\n"
+  "  end\n"
+  "\n"
+  "  print('[lua] parameter='..tostring(parameter)..', undef='..tostring(undef)..', explanation='..tostring(explanation)..' => '..tostring(output))\n"
   "  output:encoding('UTF-8') -- Just to verify that setting the encoding works and is propagated\n"
   "  return output\n"
   "end\n"
   "</luascript>\n"
   ;
 
-const static char *inputs = "1";
+const static char *inputs = "5";
 
 int main() {
   marpaESLIF_t                *marpaESLIFp        = NULL;
