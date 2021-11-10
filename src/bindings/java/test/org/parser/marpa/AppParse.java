@@ -29,7 +29,7 @@ public class AppParse  {
 			}
 		}
 
-		if (true) {
+		if (false) {
 			// This is the multi-threaded test
 			eslifLogger.info("Running over " + nbthread + " threads, using two loggers");
 			
@@ -66,7 +66,8 @@ public class AppParse  {
 					eslifLogger.info("All " + threadlist.size() + " threads finished");
 				}
 			}
-		}		
+		}
+		if (false) {
 		// Import/export test
 		new AppImportExport(eslifLogger).run();
 		// JSON test
@@ -77,5 +78,9 @@ public class AppParse  {
 		new AppJSONDecoder(eslifLogger).run();
 		// JSON handy class
 		new AppJSON(eslifLogger).run();
+		// Parameterized rules class
+		new AppParameterizedRules(eslifLogger).run();
+		}
+		new AppParameterizedRules(eslifLogger).run();
 	}
 }

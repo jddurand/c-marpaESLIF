@@ -4,7 +4,6 @@ import java.io.BufferedReader;
 import java.io.UnsupportedEncodingException;
 import java.nio.charset.Charset;
 import java.util.Arrays;
-import java.util.HashMap;
 
 /**
  * Test Application Recognizer
@@ -86,5 +85,34 @@ public class AppRecognizer implements ESLIFRecognizerInterface {
 		public int regex_action(ESLIFRegexCallout eSLIFRegexCallout) {
 			eslifLoggerInterface.debug("regex_action(" + eSLIFRegexCallout + ")");
 			return 0;
+		}	
+
+		public String rhs(Object...list) throws UnsupportedEncodingException {
+			eslifLoggerInterface.debug("rhs called with " + list.length + " objects");
+			for (int i = 0; i < list.length; i++) {
+				if (list[i] == null) {
+					eslifLoggerInterface.debug("... Object[" + i + "] is null");
+				} else {
+				    Describe d = new Describe();
+				    String resultDescribe = d.describe(list[i]);
+			    	Class resultClass = list[i].getClass();
+					eslifLoggerInterface.debug("... Object[" + i + "] is a " + resultClass + " and description: " + resultDescribe);
+				}
+			}
+			
+			Integer parameter = (Integer) list[0];
+			String explanation = (list[2] instanceof byte[]) ? new String((byte[]) list[2], "UTF-8") : (String) list[2];
+
+			eslifLoggerInterface.debug("... parameter=" + parameter + ", explanation=\"" + explanation + "\"");
+
+		    String output;
+		    if (parameter > 4) {
+		        output = "start ::= '" + parameter + "'\n";
+		    } else {
+		        output = "start ::= . => rhs->(5, { x = 'Value of x', y = 'Value of y' }, 'Input should be \"5\"')\n";
+		    }
+			eslifLoggerInterface.debug("  ==> " + output);
+
+		    return output;
 		}	
 }

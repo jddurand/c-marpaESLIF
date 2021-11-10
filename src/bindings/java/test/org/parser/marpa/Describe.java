@@ -70,7 +70,12 @@ import java.util.Map;
 		    sb.append(" Map[");
 		    Map map = (Map) o;
 		    Object[] keys = map.keySet().toArray();
-		    Arrays.sort(keys);
+		    try {
+		    	Arrays.sort(keys);
+		    } catch (Exception e) {
+		    	// ignored - this can fail if one of the key do not implement Comparable, and we do not really mind:
+		    	// in this case, keys will not be sorted.
+		    }
 		    for (int i = 0; i < keys.length; i++) {
 		    	Object key = keys[i];
 		    	Object value = map.get(keys[i]);
