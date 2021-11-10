@@ -335,7 +335,7 @@ int main() {
       (marpaESLIFRecognizerOption.bufsizl                  != marpaESLIFRecognizerOption.bufsizl) ||
       (marpaESLIFRecognizerOption.buftriggerperci          != marpaESLIFRecognizerOption.buftriggerperci) ||
       (marpaESLIFRecognizerOption.bufaddperci              != marpaESLIFRecognizerOption.bufaddperci) ||
-      (marpaESLIFRecognizerOption.ifActionResolverp        != marpaESLIFRecognizerOption.ifActionResolverp)
+      (marpaESLIFRecognizerOption.ifActionResolverp        != marpaESLIFRecognizerOption.ifActionResolverp) ||
       (marpaESLIFRecognizerOption.generatorActionResolverp != marpaESLIFRecognizerOption.generatorActionResolverp)
       ) {
     GENERICLOGGER_ERROR(marpaESLIFOption.genericLoggerp, "marpaESLIFRecognizer_optionp does have the correct content");
