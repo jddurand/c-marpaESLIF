@@ -753,6 +753,7 @@ static short marpaESLIFLua_lua_isinteger(int *rcip, lua_State *L, int idx);
     if ((bytep == NULL) || (bytel <= 0)) {                              \
       _encodingasciis = NULL;                                           \
     } else {                                                            \
+      /* Note that the key is weak, i.e. we do not maintain a reference to the string */ \
       MARPAESLIFLUA_GETORCREATEGLOBAL(L, MARPAESLIFSTRINGTOENCODINGTABLE, NULL /* gcp */, "k" /* mode */); /* Stack: ..., MARPAESLIFSTRINGTOENCODINGTABLE */ \
       if (! marpaESLIFLua_lua_pushlstring(NULL, L, (const char *) bytep, bytel)) goto err;                 /* Stack: ..., MARPAESLIFSTRINGTOENCODINGTABLE, string */ \
       if (! marpaESLIFLua_lua_gettable(NULL, L, -2)) goto err;                                             /* Stack: ..., MARPAESLIFSTRINGTOENCODINGTABLE, encoding */ \
@@ -794,6 +795,7 @@ static short marpaESLIFLua_lua_isinteger(int *rcip, lua_State *L, int idx);
     if ((bytep == NULL) || (bytel <= 0)) {                              \
       _encodingasciis = NULL;                                           \
     } else {                                                            \
+      /* Note that the key is weak, i.e. we do not maintain a reference to the string */ \
       MARPAESLIFLUA_GETORCREATEGLOBAL(L, MARPAESLIFSTRINGTOENCODINGTABLE, NULL /* gcp */, "k" /* mode */); /* Stack: ..., MARPAESLIFSTRINGTOENCODINGTABLE */ \
       if (! marpaESLIFLua_lua_pushlstring(NULL, L, (const char *) bytep, bytel)) goto err;                 /* Stack: ..., MARPAESLIFSTRINGTOENCODINGTABLE, string */ \
       if (! marpaESLIFLua_lua_gettable(NULL, L, -2)) goto err;                                             /* Stack: ..., MARPAESLIFSTRINGTOENCODINGTABLE, encoding */ \
@@ -1491,6 +1493,7 @@ static int marpaESLIFLua_string_encodingi(lua_State *L)
       goto err;
     }
     if (! marpaESLIFLua_lua_tostring(&encodings, L, 2)) goto err;
+    /* Note that the key is weak, i.e. we do not maintain a reference to the string */
     MARPAESLIFLUA_GETORCREATEGLOBAL(L, MARPAESLIFSTRINGTOENCODINGTABLE, NULL /* gcp */, "k" /* mode */); /* Stack: string, encoding, MARPAESLIFSTRINGTOENCODINGTABLE */
     if (! marpaESLIFLua_lua_insert(L, -3)) goto err;                                                     /* Stack: MARPAESLIFSTRINGTOENCODINGTABLE, string, encoding */
     if (! marpaESLIFLua_lua_settable(L, -3)) goto err;                                                   /* Stack: MARPAESLIFSTRINGTOENCODINGTABLE */
@@ -1503,6 +1506,7 @@ static int marpaESLIFLua_string_encodingi(lua_State *L)
       marpaESLIFLua_luaL_error(L, "First argument to string.encoding() must be a string");
       goto err;
     }
+    /* Note that the key is weak, i.e. we do not maintain a reference to the string */
     MARPAESLIFLUA_GETORCREATEGLOBAL(L, MARPAESLIFSTRINGTOENCODINGTABLE, NULL /* gcp */, "k" /* mode */); /* Stack: string, MARPAESLIFSTRINGTOENCODINGTABLE */
     if (! marpaESLIFLua_lua_insert(L, -2)) goto err;                                                     /* Stack: MARPAESLIFSTRINGTOENCODINGTABLE, string */
     if (! marpaESLIFLua_lua_gettable(NULL, L, -2)) goto err;                                             /* Stack: MARPAESLIFSTRINGTOENCODINGTABLE, encodings */
@@ -4442,7 +4446,8 @@ static short marpaESLIFLuaL_importb(lua_State *L, marpaESLIFValueResult_t *marpa
     break;
   case MARPAESLIF_VALUE_TYPE_STRING:
     /* fprintf(stdout, "import string\n"); fflush(stdout); fflush(stderr); */
-    /* We take register this string in our MARPAESLIFSTRINGTOENCODINGTABLE internal table */
+    /* We register this string in our MARPAESLIFSTRINGTOENCODINGTABLE internal table */
+    /* Note that the key is weak, i.e. we do not maintain a reference to the string */
     MARPAESLIFLUA_GETORCREATEGLOBAL(L, MARPAESLIFSTRINGTOENCODINGTABLE, NULL /* gcp */, "k" /* mode */);                      /* Stack: ..., MARPAESLIFSTRINGTOENCODINGTABLE */
     if ((marpaESLIFValueResultp->u.s.p != NULL) && (marpaESLIFValueResultp->u.s.sizel > 0)) {
       if (! marpaESLIFLua_lua_pushlstring(NULL, L, (const char *) marpaESLIFValueResultp->u.s.p, marpaESLIFValueResultp->u.s.sizel)) goto err; /* Stack: ..., MARPAESLIFSTRINGTOENCODINGTABLE, string */
@@ -8254,6 +8259,7 @@ static short marpaESLIFLua_stack_setb(lua_State *L, marpaESLIF_t *marpaESLIFp, m
 #ifdef MARPAESLIFLUA_AUTO_ENCODING_DETECT
       encodingheapb = 0;
 #endif
+      /* Note that the key is weak, i.e. we do not maintain a reference to the string */
       MARPAESLIFLUA_GETORCREATEGLOBAL(L, MARPAESLIFSTRINGTOENCODINGTABLE, NULL /* gcp */, "k" /* mode */); /* Stack: ..., MARPAESLIFSTRINGTOENCODINGTABLE */
       if (! marpaESLIFLua_lua_pushnil(L)) goto err;                                                        /* Stack: ..., MARPAESLIFSTRINGTOENCODINGTABLE, nil */
       if (! marpaESLIFLua_lua_copy(L, currenti, -1)) goto err;                                             /* Stack: ..., MARPAESLIFSTRINGTOENCODINGTABLE, string */
