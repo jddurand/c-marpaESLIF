@@ -16,6 +16,8 @@ typedef struct marpaESLIF_context {
   genericLogger_t *genericLoggerp;
   char            *inputs;
   size_t           inputl;
+  short            parsemodeb; /* Mark the test case using marpaESLIFGrammar_parseb */
+  int              parsemodei; /* To avoid ambiguity in the marpaESLIFGrammar_parseb case */
 } marpaESLIF_context_t;
 
 const static char *grammars = "# Parameterized grammar\n"
@@ -93,6 +95,8 @@ int main() {
   marpaESLIF_context.genericLoggerp = genericLoggerp;
   marpaESLIF_context.inputs         = (char *) inputs;
   marpaESLIF_context.inputl         = strlen(inputs);
+  marpaESLIF_context.parsemodeb     = 0;
+  marpaESLIF_context.parsemodei     = 0;
 
   marpaESLIFRecognizerOption.userDatavp        = &marpaESLIF_context; /* User specific context */
   marpaESLIFRecognizerOption.readerCallbackp   = inputReaderb; /* Reader */
@@ -131,6 +135,7 @@ int main() {
   GENERICLOGGER_NOTICE(genericLoggerp, "Testing parse");
   marpaESLIF_context.inputs         = (char *) inputs;
   marpaESLIF_context.inputl         = strlen(inputs);
+  marpaESLIF_context.parsemodeb     = 1;
   if (! marpaESLIFGrammar_parseb(marpaESLIFGrammarp, &marpaESLIFRecognizerOption, NULL /* marpaESLIFValueOptionp */, NULL /* exhaustedbp */)) {
     goto err;
   }
@@ -227,7 +232,17 @@ static short rhsb(void *userDatavp, marpaESLIFRecognizer_t *marpaESLIFRecognizer
   }
 
   if (parameteri > 4) {
-    sprintf(outputs, "start ::= '%d'", parameteri);
+    /* To avoid ambiguity in the marpaESLIFGrammar_parse test case, we generate only once the rhs that will match */
+    if (marpaESLIF_contextp->parsemodeb) {
+      if (marpaESLIF_contextp->parsemodei++ == 0) {
+        sprintf(outputs, "start ::= '%d'", parameteri);
+      } else {
+        sprintf(outputs, "start ::= '%d'", -1);
+      }
+    } else {
+      /* Ambiguity is ok when we use the scan mode */
+      sprintf(outputs, "start ::= '%d'", parameteri);
+    }
   } else {
     sprintf(outputs, "start ::= . => rhs->(5, { x = 'Value of x', y = 'Value of y' }, String('Input should be 5'))");
   }
