@@ -109,7 +109,7 @@ public class AppRecognizer implements ESLIFRecognizerInterface {
 		    if (parameter > 4) {
 		        output = "start ::= '" + parameter + "'\n";
 		    } else {
-		        output = "start ::= . => rhs->(5, { x = 'Value of x', y = 'Value of y' }, 'Input should be \"5\"')\n";
+		        output = "start ::= . => rhs->(5, { [String('x')] = String('Value of x'), [String('y')] = String('Value of y') }, String('Input should be \"5\"'))\n";
 		    }
 			eslifLoggerInterface.debug("  ==> " + output);
 

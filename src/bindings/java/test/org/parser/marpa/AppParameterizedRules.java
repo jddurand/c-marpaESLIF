@@ -42,10 +42,18 @@ public class AppParameterizedRules implements Runnable {
 				":discard ::= /[\\s]+/\n" +
 				"\n" +
 				"top  ::= rhs1\n" +
-				"rhs1 ::= . => rhs->(1, nil, 'Input should be \"1\"')\n" +
-				"       | . => rhs->(2, nil, 'Input should be \"2\"')\n" +
-				"       | . => rhs->(3, nil, 'Input should be \"3\"')\n" +
-				"       | . => rhs->(4, nil, 'Input should be \"4\"')\n" +
+				"rhs1 ::= . => rhs->(1, nil, String('Input should be \"1\"'))\n" +
+				"       | . => rhs->(2, nil, String('Input should be \"2\"'))\n" +
+				"       | . => rhs->(3, nil, String('Input should be \"3\"'))\n" +
+				"       | . => rhs->(4, nil, String('Input should be \"4\"'))\n" +
+			    "\n" +
+				"<luascript>\n" +
+				"function String(p_string, p_encoding)\n" +
+				"  local output = p_string\n" +
+				"  p_string:encoding(p_encoding or 'ASCII')\n" +
+				"  return output\n" +
+				"end\n" +
+				"</luascript>\n" +
 				"\n";
 
 		String[] strings = {
