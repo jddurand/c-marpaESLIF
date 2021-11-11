@@ -5,7 +5,12 @@
 #include <genericLogger.h>
 #include <marpaESLIF.h>
 
+static const char *ASCIIs = "ASCII";
+
 static short inputReaderb(void *userDatavp, char **inputsp, size_t *inputlp, short *eofbp, short *characterStreambp, char **encodingsp, size_t *encodinglp, marpaESLIFReaderDispose_t *disposeCallbackpp);
+static short rhsb(void *userDatavp, marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFValueResult_t *contextp, marpaESLIFValueResultString_t *marpaESLIFValueResultOutp);
+static marpaESLIFRecognizerGeneratorCallback_t generatorActionResolverp(void *userDatavp, marpaESLIFRecognizer_t *marpaESLIFRecognizerp, char *actions);
+static void  stringFreeCallbackv(void *userDatavp, marpaESLIFValueResult_t *marpaESLIFValueResultp);
 
 typedef struct marpaESLIF_context {
   genericLogger_t *genericLoggerp;
@@ -17,22 +22,15 @@ const static char *grammars = "# Parameterized grammar\n"
   ":discard ::= /[\\s]+/\n"
   "\n"
   "top  ::= rhs1\n"
-  "rhs1 ::= . => ::lua->rhs-->(1, nil, 'Input should be \"1\"')\n"
-  "       | . => ::lua->rhs-->(2, nil, 'Input should be \"2\"')\n"
-  "       | . => ::lua->rhs-->(3, nil, 'Input should be \"3\"')\n"
-  "       | . => ::lua->rhs-->(4, nil, 'Input should be \"4\"')\n"
+  "rhs1 ::= . => rhs-->(1, nil, String('Input should be \"1\"'))\n"
+  "       | . => rhs-->(2, nil, String('Input should be \"2\"'))\n"
+  "       | . => rhs-->(3, nil, String('Input should be \"3\"'))\n"
+  "       | . => rhs-->(4, nil, String('Input should be \"4\"'))\n"
   "\n"
   "<luascript>\n"
-  "function rhs(parameter, undef, explanation)\n"
-  "  local output;\n"
-  "  if (parameter > 4) then\n"
-  "    output = \"start ::= '\"..tostring(parameter)..\"'\"\n"
-  "  else\n"
-  "    output = \"start ::= . => ::lua->rhs-->(5, { x = 'Value of x', y = 'Value of y' }, 'Input should be 5')\"\n"
-  "  end\n"
-  "\n"
-  "  print('[lua] parameter='..tostring(parameter)..', undef='..tostring(undef)..', explanation='..tostring(explanation)..' => '..tostring(output))\n"
-  "  output:encoding('UTF-8') -- Just to verify that setting the encoding works and is propagated\n"
+  "function String(p_string, p_encoding)\n"
+  "  local output = p_string\n"
+  "  p_string:encoding(p_encoding or 'ASCII')\n"
   "  return output\n"
   "end\n"
   "</luascript>\n"
@@ -108,7 +106,7 @@ int main() {
   marpaESLIFRecognizerOption.ifActionResolverp        = NULL;
   marpaESLIFRecognizerOption.eventActionResolverp     = NULL;
   marpaESLIFRecognizerOption.regexActionResolverp     = NULL;
-  marpaESLIFRecognizerOption.generatorActionResolverp = NULL;
+  marpaESLIFRecognizerOption.generatorActionResolverp = generatorActionResolverp;
   marpaESLIFRecognizerOption.importerp                = NULL;
 
   GENERICLOGGER_LEVEL_SET(genericLoggerp, GENERICLOGGER_LOGLEVEL_TRACE);
@@ -171,4 +169,99 @@ static short inputReaderb(void *userDatavp, char **inputsp, size_t *inputlp, sho
   *eofbp = 1;
 
   return 1;
+}
+
+/*****************************************************************************/
+static short rhsb(void *userDatavp, marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFValueResult_t *contextp, marpaESLIFValueResultString_t *marpaESLIFValueResultOutp)
+/*****************************************************************************/
+{
+  marpaESLIF_context_t *marpaESLIF_contextp = (marpaESLIF_context_t *) userDatavp;
+  int                   parameteri;
+  char                 *outputs;
+  char                 *explanations;
+  char                 *explanation_encodingasciis;
+
+  /* ESLIF guarantees that contextp is not null and is a ROW */
+  /* ESLIF always tries to put a number in the lowest storage that it fits into */
+  if (contextp->type != MARPAESLIF_VALUE_TYPE_ROW) {
+    fprintf(stderr, "Unsupported type %d for first context argument\n", contextp[0].type);
+    return 0;
+  }
+  if (contextp->u.r.sizel != 3) {
+    fprintf(stderr, "Invalid number of items in context: got %ld, expected 3\n", (unsigned long) contextp->u.r.sizel);
+    return 0;
+  }
+
+  switch (contextp->u.r.p[0].type) {
+  case MARPAESLIF_VALUE_TYPE_SHORT:
+    parameteri = contextp->u.r.p[0].u.b;
+    break;
+  case MARPAESLIF_VALUE_TYPE_INT:
+    parameteri = contextp->u.r.p[0].u.i;
+    break;
+  default:
+    fprintf(stderr, "Unsupported type %d for first argument in context\n", contextp->u.r.p[0].type);
+    return 0;
+  }
+
+  switch (contextp->u.r.p[2].type) {
+  case MARPAESLIF_VALUE_TYPE_STRING:
+    explanations = (char *) contextp->u.r.p[2].u.s.p;
+    if (explanations == NULL) {
+      fprintf(stderr, "Explanation is NULL for third argument in context\n");
+    }
+    explanation_encodingasciis = contextp->u.r.p[2].u.s.encodingasciis;
+    if (explanation_encodingasciis == NULL) {
+      fprintf(stderr, "Explanation encoding is NULL for third argument in context\n");
+    }
+    break;
+  default:
+    fprintf(stderr, "Unsupported type %d for third argument in context\n", contextp->u.r.p[2].type);
+    return 0;
+  }
+
+  outputs = (char *) malloc(1000);
+  if (outputs == NULL) {
+    fprintf(stderr, "malloc failure, %s\n", strerror(errno));
+    return 0;
+  }
+
+  if (parameteri > 4) {
+    sprintf(outputs, "start ::= '%d'", parameteri);
+  } else {
+    sprintf(outputs, "start ::= . => rhs->(5, { x = 'Value of x', y = 'Value of y' }, String('Input should be 5'))");
+  }
+
+  marpaESLIFValueResultOutp->p              = (unsigned char *) outputs;
+  marpaESLIFValueResultOutp->freeUserDatavp = (void *) marpaESLIF_contextp;
+  marpaESLIFValueResultOutp->freeCallbackp  = stringFreeCallbackv;
+  marpaESLIFValueResultOutp->shallowb       = 0;
+  marpaESLIFValueResultOutp->sizel          = strlen(outputs);
+  marpaESLIFValueResultOutp->encodingasciis = (char *) ASCIIs;
+
+  fprintf(stdout, "[C] parameter=%d, explanation=%s [%s] => %s\n", parameteri, explanations, explanation_encodingasciis, outputs);
+
+  return 1;
+}
+
+/*****************************************************************************/
+static marpaESLIFRecognizerGeneratorCallback_t generatorActionResolverp(void *userDatavp, marpaESLIFRecognizer_t *marpaESLIFRecognizerp, char *actions)
+/*****************************************************************************/
+{
+  if (strcmp(actions, "rhs") == 0) {
+    return rhsb;
+  } else {
+    fprintf(stderr, "Unsupported generator action \"%s\"\n", actions);
+    return NULL;
+  }
+}
+
+/*****************************************************************************/
+static void stringFreeCallbackv(void *userDatavp, marpaESLIFValueResult_t *marpaESLIFValueResultp)
+/*****************************************************************************/
+{
+  free(marpaESLIFValueResultp->u.s.p);
+  if ((marpaESLIFValueResultp->u.s.encodingasciis != NULL) && (marpaESLIFValueResultp->u.s.encodingasciis != ASCIIs)) {
+    free(marpaESLIFValueResultp->u.s.encodingasciis);
+  }
 }
