@@ -8013,7 +8013,21 @@ static short marpaESLIFLua_lua_isinteger(int *rcip, lua_State *L, int idx)
 {
   int rci;
 
+#if LUA_VERSION_NUM < 503
+  lua_Number n;
+  lua_Integer i;
+
+  if (lua_type(L, idx) == LUA_TNUMBER) {
+    n = lua_tonumber(L, idx);
+    i = lua_tointeger(L, idx);
+    rci = (i == n) ? 1 : 0;
+  } else {
+    rci = 0;
+  }
+#else
   rci = lua_isinteger(L, idx);
+#endif
+
   if (rcip != NULL) *rcip = rci;
 
   return 1;
