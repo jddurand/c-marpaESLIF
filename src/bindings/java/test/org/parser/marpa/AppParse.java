@@ -67,7 +67,6 @@ public class AppParse  {
 				}
 			}
 		}
-		if (false) {
 		// Import/export test
 		new AppImportExport(eslifLogger).run();
 		// JSON test
@@ -79,8 +78,6 @@ public class AppParse  {
 		// JSON handy class
 		new AppJSON(eslifLogger).run();
 		// Parameterized rules class
-		new AppParameterizedRules(eslifLogger).run();
-		}
 		new AppParameterizedRules(eslifLogger).run();
 	}
 }
