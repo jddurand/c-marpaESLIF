@@ -220,7 +220,7 @@ The "canarray" boolean metadata is looked up on table, to determine if the the e
 
 =item opaque table metadata
 
-The "opaue" boolean metadata is looked up on table, to determine if the the end-user definitely wants the binding to never transform data when doing through marpaESLIF. Then only the lua interpreter will be able to understand what is behind, any other host language will see an opaque ununderstable pointer.
+The "opaque" boolean metadata is looked up on table, to determine if the the end-user definitely wants the binding to never transform data when going through marpaESLIF. Then only the lua interpreter will be able to understand what is behind, any other host language will see an opaque ununderstable pointer.
 
 =item Niled table support
 
