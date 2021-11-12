@@ -4690,7 +4690,7 @@ static inline short _marpaESLIF_bootstrap_G1_action_priority_flat_ruleb(marpaESL
                                                 have_skipb ? skipbp : NULL,
                                                 declp,
                                                 callpp,
-                                                separatorcallp);
+                                                /* separatorcallp JDD */);
       if (MARPAESLIF_UNLIKELY(rulep == NULL)) {
         goto err;
       }
