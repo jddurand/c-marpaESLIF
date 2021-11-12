@@ -2123,7 +2123,7 @@ static inline marpaESLIF_bootstrap_utf_string_t *_marpaESLIF_bootstrap_unquote_s
     MARPAESLIF_ERRORF(marpaESLIFp, "Invalid quoted string literal: bytep=%p, bytel=%ld", bytep, (unsigned long) bytel);
     goto err;
   }
-  p = (char *) bytep;
+  p = (unsigned char *) bytep;
 
   /* Supported cases are:
      "xxx"   " is \x{22}
@@ -2137,7 +2137,7 @@ static inline marpaESLIF_bootstrap_utf_string_t *_marpaESLIF_bootstrap_unquote_s
       MARPAESLIF_ERRORF(marpaESLIFp, "Invalid quoted string literal closing character 0x%02x instead of 0x%02x", p[bytel-1], p[0]);
       goto err;
     }
-    rc.bytep = ++p;
+    rc.bytep = (char *) ++p;
     rc.bytel = bytel - 2;
     break;
   case 0xE2:
@@ -2149,7 +2149,7 @@ static inline marpaESLIF_bootstrap_utf_string_t *_marpaESLIF_bootstrap_unquote_s
       MARPAESLIF_ERRORF(marpaESLIFp, "Invalid quoted string literal quotes: 0x%02x0x%02x0x%02x ... 0x%02x0x%02x0x%02x", p[0], p[1], p[2], p[bytel-3], p[bytel-2], p[bytel-1]);
       goto err;
     }
-    rc.bytep = p + 3;
+    rc.bytep = (char *) (p + 3);
     rc.bytel = bytel - 6;
     break;
   default:
@@ -4690,7 +4690,7 @@ static inline short _marpaESLIF_bootstrap_G1_action_priority_flat_ruleb(marpaESL
                                                 have_skipb ? skipbp : NULL,
                                                 declp,
                                                 callpp,
-                                                NULL /* separatorcallp */);
+                                                separatorcallp);
       if (MARPAESLIF_UNLIKELY(rulep == NULL)) {
         goto err;
       }

@@ -419,7 +419,7 @@ static marpaESLIFValueResult_t marpaESLIFValueResultLazy = {
     marpaESLIFValueResult.contextp           = NULL;                    \
     marpaESLIFValueResult.representationp    = NULL;                    \
     marpaESLIFValueResult.type               = MARPAESLIF_VALUE_TYPE_STRING; \
-    marpaESLIFValueResult.u.s.p              = (char *) (utf8s);        \
+    marpaESLIFValueResult.u.s.p              = (unsigned char *) (utf8s); \
     marpaESLIFValueResult.u.s.freeUserDatavp = NULL;                    \
     marpaESLIFValueResult.u.s.freeCallbackp  = NULL;                    \
     marpaESLIFValueResult.u.s.shallowb       = 1;                       \
@@ -3038,11 +3038,6 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
   int                              *symbolArrayp;
   size_t                            tmpl;
   short                             fastDiscardb;
-  marpaESLIF_action_t               action;
-
-  /* Constant action */
-  action.type    = MARPAESLIF_ACTION_TYPE_NAME;
-  action.u.names = "::copy[1]";
 
   marpaESLIF_cloneContext.marpaESLIFp = marpaESLIFp;
   marpaESLIF_cloneContext.grammarp    = NULL;
@@ -5935,7 +5930,7 @@ static inline short _marpaESLIFRecognizer_meta_matcherb(marpaESLIFRecognizer_t *
     }
 
     /* Convert it to UTF-8 */
-    generatedString.bytep          = generatedValueResult.u.s.p;
+    generatedString.bytep          = (char *) generatedValueResult.u.s.p;
     generatedString.bytel          = generatedValueResult.u.s.sizel;
     generatedString.encodingasciis = generatedValueResult.u.s.encodingasciis;
     generatedString.asciis         = NULL;
@@ -8148,7 +8143,6 @@ static inline short _marpaESLIFRecognizer_isDiscardExpectedb(marpaESLIFRecognize
   short                       fastDiscardb       = 0;
   size_t                      fastDiscardl       = 0;
   marpaESLIF_symbol_t        *fastDiscardSymbolp = NULL;
-  marpaESLIF_t               *marpaESLIFp;
   marpaESLIF_stream_t        *marpaESLIF_streamp;
   marpaESLIFGrammar_t        *marpaESLIFGrammarp;
   marpaESLIF_grammar_t       *grammarp;
@@ -8187,7 +8181,6 @@ static inline short _marpaESLIFRecognizer_isDiscardExpectedb(marpaESLIFRecognize
   }
 
   /* We now simulate what would do _marpaESLIFRecognizer_resume_oneb() at the very beginning. */
-  marpaESLIFp        = marpaESLIFRecognizerp->marpaESLIFp;
   marpaESLIF_streamp = marpaESLIFRecognizerp->marpaESLIF_streamp;
   symbolStackp       = grammarp->symbolStackp;
 
@@ -8196,7 +8189,7 @@ static inline short _marpaESLIFRecognizer_isDiscardExpectedb(marpaESLIFRecognize
 
   for (symboll = 0; symboll < nSymbolPristinel; symboll++) {
     symboli = symbolArrayPristinep[symboll];
-    MARPAESLIF_INTERNAL_GET_SYMBOL_FROM_STACK(marpaESLIFp, symbolp, symbolStackp, symboli);
+    MARPAESLIF_INTERNAL_GET_SYMBOL_FROM_STACK(marpaESLIFRecognizerp->marpaESLIFp, symbolp, symbolStackp, symboli);
     MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Expected discard terminal: %s", symbolp->descp->asciis);
     rcMatcherb = _marpaESLIFRecognizer_symbol_matcherb(marpaESLIFRecognizerp,
                                                        marpaESLIF_streamp,
@@ -19557,7 +19550,7 @@ static inline marpaESLIF_action_t *_marpaESLIF_action_clonep(marpaESLIF_t *marpa
         MARPAESLIF_ERRORF(marpaESLIFp, "malloc failure, %s", strerror(errno));
         goto err;
       }
-      memcmp(dup->u.luaFunction.luacp, actionp->u.luaFunction.luacp, actionp->u.luaFunction.luacl);
+      memcpy(dup->u.luaFunction.luacp, actionp->u.luaFunction.luacp, actionp->u.luaFunction.luacl);
     }
     if (actionp->u.luaFunction.luacstripp != NULL) {
       dup->u.luaFunction.luacstripp = (char *) malloc(actionp->u.luaFunction.luacstripl);
@@ -19565,7 +19558,7 @@ static inline marpaESLIF_action_t *_marpaESLIF_action_clonep(marpaESLIF_t *marpa
         MARPAESLIF_ERRORF(marpaESLIFp, "malloc failure, %s", strerror(errno));
         goto err;
       }
-      memcmp(dup->u.luaFunction.luacstripp, actionp->u.luaFunction.luacstripp, actionp->u.luaFunction.luacstripl);
+      memcpy(dup->u.luaFunction.luacstripp, actionp->u.luaFunction.luacstripp, actionp->u.luaFunction.luacstripl);
     }
     break;
   default:
@@ -20793,7 +20786,7 @@ static int _marpaESLIF_pcre2_callouti(pcre2_callout_block *blockp, void *userDat
     MARPAESLIFCALLOUTBLOCK_INIT_UNDEF (marpaESLIFValuePairsp[MARPAESLIFCALLOUTBLOCK_MARK].value);
   } else {
     /* As per the doc, mark is a pointer to a zero-terminated string */
-    MARPAESLIFCALLOUTBLOCK_INIT_STRING(marpaESLIFValuePairsp[MARPAESLIFCALLOUTBLOCK_MARK].value, blockp->mark, strlen(blockp->mark));
+    MARPAESLIFCALLOUTBLOCK_INIT_STRING(marpaESLIFValuePairsp[MARPAESLIFCALLOUTBLOCK_MARK].value, blockp->mark, strlen((char *) blockp->mark));
   }
   MARPAESLIFCALLOUTBLOCK_INIT_LONG (marpaESLIFValuePairsp[MARPAESLIFCALLOUTBLOCK_START_MATCH].value, blockp->start_match);
   MARPAESLIFCALLOUTBLOCK_INIT_LONG (marpaESLIFValuePairsp[MARPAESLIFCALLOUTBLOCK_CURRENT_POSITION].value, blockp->current_position);
