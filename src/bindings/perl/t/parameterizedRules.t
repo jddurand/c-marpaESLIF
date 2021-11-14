@@ -4,7 +4,7 @@ use diagnostics;
 use Log::Any qw/$log/;
 use Carp qw/croak/;
 
-sub new                    { my ($pkg, $string) = @_; bless { string => $string }, $pkg }
+sub new                    { my ($pkg, $string) = @_; bless { string => $string, nbParameterizedRhsCalls => 0 }, $pkg }
 sub read                   { 1 }
 sub isEof                  { 1 }
 sub isCharacterStream      { 1 }
@@ -14,16 +14,20 @@ sub isWithDisableThreshold { 0 }
 sub isWithExhaustion       { 0 }
 sub isWithNewline          { 1 }
 sub isWithTrack            { 1 }
-sub rhs {
+sub parameterizedRhs {
     my $self = shift;
 
     my ($parameter, $undef, $explanation) = @_;
 
     my $output;
-    if ($parameter > 4) {
-        $output = "start ::= '$parameter'\n";
+    $self->{nbParameterizedRhsCalls}++;
+    if ($self->{nbParameterizedRhsCalls} == 5) {
+        $output = "start ::= '5'\n";
+    } elsif ($self->{nbParameterizedRhsCalls} > 5) {
+        $output = "start ::= 'no match'\n";
     } else {
-        $output = "start ::= . => rhs->(5, { x = 'Value of x', y = 'Value of y' }, 'Input should be \"5\"')\n";
+        ++$parameter;
+        $output = "start ::= . => parameterizedRhs->($parameter, { x = 'Value of x', y = 'Value of y' }, 'Input should be \"$parameter\"')\n";
     }
     $log->infof('In rhs, parameters: %s => %s', \@_, $output);
 
@@ -109,6 +113,8 @@ for (my $i = 0; $i <= $#strings; $i++) {
       }
   }
   
+  $recognizerInterface = MyRecognizerInterface->new($string);
+  $valueInterface = MyValueInterface->new();
   if ($eslifGrammar->parse($recognizerInterface, $valueInterface)) {
     my $result = $valueInterface->getResult;
     if (defined($result)) {
@@ -128,7 +134,7 @@ __DATA__
 :discard ::= /[\s]+/
 
 top  ::= rhs1
-rhs1 ::= . => rhs->(1, nil, 'Input should be "1"')
-       | . => rhs->(2, nil, 'Input should be "2"')
-       | . => rhs->(3, nil, 'Input should be "3"')
-       | . => rhs->(4, nil, 'Input should be "4"')
+rhs1 ::= . => parameterizedRhs->(1, nil, 'Input should be "1"')
+       | . => parameterizedRhs->(2, nil, 'Input should be "2"')
+       | . => parameterizedRhs->(3, nil, 'Input should be "3"')
+       | . => parameterizedRhs->(4, nil, 'Input should be "4"')
