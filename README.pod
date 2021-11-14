@@ -53,6 +53,10 @@ The L<marpaESLIF BNF|https://github.com/jddurand/c-marpaESLIF/tree/master/doc/BN
 
 =item Declarative lua action directly into the grammar
 
+=item Parameterized rules
+
+=item Dynamic sub-grammars
+
 =back
 
 The following sections present the architecture of marpaESLIF architecture,
