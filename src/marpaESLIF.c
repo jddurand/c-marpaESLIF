@@ -5896,13 +5896,14 @@ static inline short _marpaESLIFRecognizer_meta_matcherb(marpaESLIFRecognizer_t *
   }
 
   if (symbolp->generatorActionp != NULL) {
-    /* Note that by definition when a generator action is attached to a symbol, the symbol is parameterized */
-    if (MARPAESLIF_UNLIKELY(! _marpaESLIFRecognizer_recognizerGeneratorActionCallbackb(marpaESLIFRecognizerp, symbolp->descp->asciis, symbolp->generatorActionp, &generatorCallbackp))) {
-      goto err;
-    }
     /* Recuperate the context - it is a marpaESLIFValueResult that we own, stored in lexeme input stack at indice 0 */
     contextp = _marpaESLIFRecognizer_context_getp(marpaESLIFRecognizerp);
     if (contextp == NULL) {
+      goto err;
+    }
+
+    /* Note that by definition when a generator action is attached to a symbol, the symbol is parameterized */
+    if (MARPAESLIF_UNLIKELY(! _marpaESLIFRecognizer_recognizerGeneratorActionCallbackb(marpaESLIFRecognizerp, symbolp->descp->asciis, symbolp->generatorActionp, &generatorCallbackp))) {
       goto err;
     }
 
