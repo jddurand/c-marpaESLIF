@@ -963,8 +963,8 @@ static inline marpaESLIF_symbol_t *_marpaESLIF_bootstrap_check_meta_by_namep(mar
     }
   }
 
-  /* If symbol already exist but with a different number of parameters, this is incoherent */
-  if ((symbolp != NULL) && (symbolp->parami != parami)) {
+  /* If symbol already exist but with a different number of parameters, this is incoherent unless we are in the generator action context */
+  if ((symbolp != NULL) && (symbolp->parami != parami) && (strcmp(asciinames, ".") != 0)) {
     MARPAESLIF_ERRORF(marpaESLIFp, "Symbol %s is defined multiple times with different number of parameters (%d != %d)", asciinames, symbolp->parami, parami);
     symbolp = NULL;
     goto err;
