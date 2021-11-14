@@ -566,15 +566,15 @@ static inline void  _marpaESLIF_bootstrap_rhs_primary_freev(marpaESLIF_bootstrap
 }
 
 /*****************************************************************************/
-static inline void _marpaESLIF_bootstrap_lhs_freev(marpaESLIF_bootstrap_lhs_t *lhsp)
+static inline void _marpaESLIF_bootstrap_lhs_freev(marpaESLIF_bootstrap_lhs_t *bootstrapLhsp)
 /*****************************************************************************/
 {
-  if (lhsp != NULL) {
-    if (lhsp->symbols != NULL) {
-      free(lhsp->symbols);
+  if (bootstrapLhsp != NULL) {
+    if (bootstrapLhsp->symbols != NULL) {
+      free(bootstrapLhsp->symbols);
     }
-    _marpaESLIF_lua_functiondecl_freev(lhsp->declp);
-    free(lhsp);
+    _marpaESLIF_lua_functiondecl_freev(bootstrapLhsp->declp);
+    free(bootstrapLhsp);
   }
 }
 
@@ -7197,7 +7197,7 @@ static short _marpaESLIF_bootstrap_G1_action_discard_ruleb(void *userDatavp, mar
 static inline short _marpaESLIF_bootstrap_G1_action_event_declarationb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb, marpaESLIF_bootstrap_event_declaration_type_t type)
 /*****************************************************************************/
 {
-  /* <TYPE event declaration> ::= 'event' <event initialization> {'=' OR <op_declare>} 'TYPE' <symbol name> */
+  /* <TYPE event declaration> ::= 'event' <event initialization> {'=' OR <op_declare>} 'TYPE' <lhs> */
   static const char                           *funcs                = "_marpaESLIF_bootstrap_G1_action_event_declarationb";
   marpaESLIFGrammar_t                         *marpaESLIFGrammarp   = (marpaESLIFGrammar_t *) userDatavp;
   marpaESLIF_t                                *marpaESLIFp          = marpaESLIFValuep->marpaESLIFp; /* marpaESLIFGrammar_eslifp(marpaESLIFRecognizer_grammarp(marpaESLIFValue_recognizerp(marpaESLIFValuep))); */
@@ -7327,6 +7327,7 @@ static inline short _marpaESLIF_bootstrap_G1_action_event_declarationb(void *use
 
  done:
   _marpaESLIF_bootstrap_event_initialization_freev(eventInitializationp);
+  _marpaESLIF_bootstrap_lhs_freev(bootstrapLhsp);
   return rcb;
 }
 
@@ -8719,9 +8720,9 @@ static short _marpaESLIF_bootstrap_G1_action_lhs_1b(void *userDatavp, marpaESLIF
 /*****************************************************************************/
 {
   /* <lhs> ::= <symbol name> */
-  marpaESLIF_bootstrap_lhs_t   *lhsp        = NULL;
-  marpaESLIF_t                 *marpaESLIFp = marpaESLIFValuep->marpaESLIFp; /* marpaESLIFGrammar_eslifp(marpaESLIFRecognizer_grammarp(marpaESLIFValue_recognizerp(marpaESLIFValuep))); */
-  char                         *symbols     = NULL;
+  marpaESLIF_bootstrap_lhs_t   *bootstrapLhsp = NULL;
+  marpaESLIF_t                 *marpaESLIFp   = marpaESLIFValuep->marpaESLIFp; /* marpaESLIFGrammar_eslifp(marpaESLIFRecognizer_grammarp(marpaESLIFValue_recognizerp(marpaESLIFValuep))); */
+  char                         *symbols       = NULL;
   short                         rcb;
 
   /* Cannot be nullable */
@@ -8738,27 +8739,27 @@ static short _marpaESLIF_bootstrap_G1_action_lhs_1b(void *userDatavp, marpaESLIF
   }
 
   /* Make that an lhs structure */
-  lhsp = (marpaESLIF_bootstrap_lhs_t *) malloc(sizeof(marpaESLIF_bootstrap_lhs_t));
-  if (MARPAESLIF_UNLIKELY(lhsp == NULL)) {
+  bootstrapLhsp = (marpaESLIF_bootstrap_lhs_t *) malloc(sizeof(marpaESLIF_bootstrap_lhs_t));
+  if (MARPAESLIF_UNLIKELY(bootstrapLhsp == NULL)) {
     MARPAESLIF_ERRORF(marpaESLIFp, "malloc failure, %s", strerror(errno));
     goto err;
   }
-  lhsp->symbols          = NULL;
-  lhsp->declp = NULL;
+  bootstrapLhsp->symbols = NULL;
+  bootstrapLhsp->declp   = NULL;
 
-  lhsp->symbols = strdup(symbols);
-  if (lhsp->symbols == NULL) {
+  bootstrapLhsp->symbols = strdup(symbols);
+  if (bootstrapLhsp->symbols == NULL) {
     MARPAESLIF_ERRORF(marpaESLIFp, "strdup failure, %s", strerror(errno));
     goto err;
   }
 
-  MARPAESLIF_BOOTSTRAP_SET_PTR(marpaESLIFValuep, resulti, MARPAESLIF_BOOTSTRAP_STACK_TYPE_LHS, lhsp);
+  MARPAESLIF_BOOTSTRAP_SET_PTR(marpaESLIFValuep, resulti, MARPAESLIF_BOOTSTRAP_STACK_TYPE_LHS, bootstrapLhsp);
 
   rcb = 1;
   goto done;
 
  err:
-  _marpaESLIF_bootstrap_lhs_freev(lhsp);
+  _marpaESLIF_bootstrap_lhs_freev(bootstrapLhsp);
   rcb = 0;
 
  done:
