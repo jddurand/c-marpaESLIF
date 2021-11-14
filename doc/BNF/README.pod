@@ -855,12 +855,12 @@ marpaESLIF BNF can be expressed in itself:
   <default rule>                 ::= ':default' <op declare> <adverb list>
   <lexeme rule>                  ::= ':lexeme' <op declare> <rhs primary no parameter> <adverb list>
   <terminal rule>                ::= ':terminal' <op declare> <terminal> <adverb list>
-  <completion event declaration> ::= 'event' <event initialization> '=' 'completed' <symbol>
-                                   | 'event' <event initialization> <op declare> 'completed' <symbol>
-  <nulled event declaration> ::= 'event' <event initialization> '=' 'nulled' <symbol>
-                                   | 'event' <event initialization> <op declare> 'nulled' <symbol>
-  <prediction event declaration> ::= 'event' <event initialization> '=' 'predicted' <symbol>
-                                   | 'event' <event initialization> <op declare> 'predicted' <symbol>
+  <completion event declaration> ::= 'event' <event initialization> '=' 'completed' <lhs>
+                                   | 'event' <event initialization> <op declare> 'completed' <lhs>
+  <nulled event declaration> ::= 'event' <event initialization> '=' 'nulled' <lhs>
+                                   | 'event' <event initialization> <op declare> 'nulled' <lhs>
+  <prediction event declaration> ::= 'event' <event initialization> '=' 'predicted' <lhs>
+                                   | 'event' <event initialization> <op declare> 'predicted' <lhs>
   <inaccessible statement>       ::= 'inaccessible' 'is' <inaccessible treatment> 'by' 'default'
   <inaccessible treatment>       ::= 'warn'
                                    | 'ok'
