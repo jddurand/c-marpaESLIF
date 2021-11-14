@@ -948,26 +948,29 @@ static inline marpaESLIF_symbol_t *_marpaESLIF_bootstrap_check_meta_by_namep(mar
     parami = -1;
     parameterizedRhsb = 0;
   }
-  
-  for (i = 0; i < GENERICSTACK_USED(symbolStackp); i++) {
-    MARPAESLIF_INTERNAL_GET_SYMBOL_FROM_STACK(marpaESLIFp, symbol_i_p, symbolStackp, i);
-    if (symbol_i_p->type != MARPAESLIF_SYMBOL_TYPE_META) {
-      continue;
-    }
-    if (strcmp(symbol_i_p->u.metap->asciinames, asciinames) == 0) {
-      /* We do not want to reuse a parameterized RHS that would match the name if we are in an LHS context */
-      if ((! lhsb) || (! symbol_i_p->parameterizedRhsb)) {
-	symbolp = symbol_i_p;
-	break;
+
+  /* Will the symbol be created anyway ? If yes, no need to look for it. */
+  if (! forcecreateb) {
+    for (i = 0; i < GENERICSTACK_USED(symbolStackp); i++) {
+      MARPAESLIF_INTERNAL_GET_SYMBOL_FROM_STACK(marpaESLIFp, symbol_i_p, symbolStackp, i);
+      if (symbol_i_p->type != MARPAESLIF_SYMBOL_TYPE_META) {
+        continue;
+      }
+      if (strcmp(symbol_i_p->u.metap->asciinames, asciinames) == 0) {
+        /* We do not want to reuse a parameterized RHS that would match the name if we are in an LHS context */
+        if ((! lhsb) || (! symbol_i_p->parameterizedRhsb)) {
+          symbolp = symbol_i_p;
+          break;
+        }
       }
     }
-  }
 
-  /* If symbol already exist but with a different number of parameters, this is incoherent */
-  if ((symbolp != NULL) && (symbolp->parami != parami)) {
-    MARPAESLIF_ERRORF(marpaESLIFp, "Symbol %s is defined multiple times with different number of parameters (%d != %d)", asciinames, symbolp->parami, parami);
-    symbolp = NULL;
-    goto err;
+    /* If symbol already exist but with a different number of parameters, this is incoherent */
+    if ((symbolp != NULL) && (symbolp->parami != parami)) {
+      MARPAESLIF_ERRORF(marpaESLIFp, "Symbol %s is defined multiple times with different number of parameters (%d != %d)", asciinames, symbolp->parami, parami);
+      symbolp = NULL;
+      goto err;
+    }
   }
 
   if (forcecreateb || (createb && (symbolp == NULL))) {
