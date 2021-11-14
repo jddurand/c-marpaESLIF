@@ -221,6 +221,166 @@ The unsigned integer is interpreted as an explicit grammar level.
 
 Everytime expected terminals cannot be match, marpaESLIF will try to match the special rule C<:discard>. The C<:discard> rule also have precedence if it matches longer than the longest acceptable lexeme or terminal. and can not be ambiguous (else discard silently fail).
 
+=item Parameterized Rules
+
+The important thing to remember is that parameterized rules parameters and expressions follow the lua semantics.
+
+A parameterized LHS must be writen in the form
+
+  LHS<-(lua optional parameter list)
+
+or
+
+  LHS<--(lua optional parameter list)
+
+A parameterized RHS must be writen in the form
+
+  RHS->(lua optional expression list)
+
+or
+
+  RHS-->(lua optional expression list)
+
+The C<--> indicates if the internal processing of context passing is a precompiled lua byte chunk or not. Most of the times you want to use the C<--> notation, as if it you would have been writen like a lua library that is loaded once, this is also the fastest mode. Otherwise the context passing is recompiled everytime, allowing to have runtime dependencies, sometimes useful for debugging, sometimes necessary for your application.
+
+The parameter and expression processings are done using an I<internal> lua interpreter, embedded into marpaESLIF. The output of this internal interpreter is then injected into host's VM using the language bindings.
+
+it is important to note that marpaESLIF will I<always> consider a parameterized RHS like a I<lexeme>, i.e. a grammar terminal bound to a sub-grammar. Therefore no interaction with the recognizer is possible until the lexeme sub-grammar is processed, with one exception: the dynamic lexeme, which is where the end-user may implement specific functionality with respect to parameters and expressions.
+This mean a parameterized rhs can also be writen in the form of a generation action name, e.g.:
+
+  /* Call host's recognizer action "external_action" */
+  LHS<-(x,y) ::= . => external_action->(x+1, y+2)
+
+  /* Embedded anonymous lua function */
+  LHS<-(x,y) ::= . => ::lua->function(x, y) return "read below!" end -> (x+1, y+2)
+
+  /* Embedded explicit lua function name "lua_action" writen inside your grammar */
+  LHS<-(x,y) ::= . => ::lua->lua_action->(x+1, y+2)
+
+<luascript>
+function lua_action(x,y)
+  return "
+</luascript>
+
+In any of these cases, the call must be successful a return a string that is a new grammar, that ESLIF will compile and execute as a lexeme. ESLIF will be try to clever to not recompile grammars everytime, though it will use a very basic check: the whole UTF-8 version of the grammar will be kept in memory, and only grammars with a different UTF-8 version will be recompiled.
+
+End-user must take care, because infinite recursivity is very easy with parameterized rules, and ESLIF is not protected against that.
+
+A concrete lua example is e.g.:
+
+  local recognizerInterface = {
+     ["init"] = function(self, input)
+        self._input = input
+        self._nbParameterizedRhsCalls = 0
+     end,
+     ["read"]                   = function(self) self._data = self._input return true end,
+     ["isEof"]                  = function(self) return true end,
+     ["isCharacterStream"]      = function(self) return true end,
+     ["encoding"]               = function(self) return nil end,
+     ["data"]                   = function(self) return self._data end,
+     ["isWithDisableThreshold"] = function(self) return false end,
+     ["isWithExhaustion"]       = function(self) return false end,
+     ["isWithNewline"]          = function(self) return true end,
+     ["isWithTrack"]            = function(self) return false end,
+     ["parameterizedRhs"]       = function(self, parameter)
+        self._nbParameterizedRhsCalls = self._nbParameterizedRhsCalls + 1
+  
+        local output
+        if (self._nbParameterizedRhsCalls == 5) then
+          output = "start ::= '5'"
+        elseif (self._nbParameterizedRhsCalls > 5) then
+          output = "start ::= 'no match'"
+        else
+          parameter = parameter + 1
+          output = "start ::= . => parameterizedRhs->("..parameter..")"
+        end
+        return output
+     end
+  }
+  
+  local valueInterface = {
+     ["isWithHighRankOnly"] = function(self) return true end,
+     ["isWithOrderByRank"]  = function(self) return true end,
+     ["isWithAmbiguous"]    = function(self) return false end,
+     ["isWithNull"]         = function(self) return false end,
+     ["maxParses"]          = function(self) return 0 end,
+     ["getResult"]          = function(self) return self._result end,
+     ["setResult"]          = function(self, result) self._result = result end,
+  }
+  
+  local logger = {
+     ["trace"]     = function(self, msgs) self:tracef("%s", msgs) end,
+     ["debug"]     = function(self, msgs) self:debugf("%s", msgs) end,
+     ["info"]      = function(self, msgs) self:infof("%s", msgs) end,
+     ["notice"]    = function(self, msgs) self:noticef("%s", msgs) end,
+     ["warning"]   = function(self, msgs) self:warningf("%s", msgs) end,
+     ["error"]     = function(self, msgs) self:errorf("%s", msgs) end,
+     ["critical"]  = function(self, msgs) self:criticalf("%s", msgs) end,
+     ["emergency"] = function(self, msgs) self:emergencyf("%s", msgs) end,
+     --
+     -- Used by us
+     --
+     ["tracef"]     = function(self, fmts, ...) print(string.format("%-9s "..fmts, 'TRACE', ...)) end,
+     ["debugf"]     = function(self, fmts, ...) print(string.format("%-9s "..fmts, 'DEBUG', ...)) end,
+     ["infof"]      = function(self, fmts, ...) print(string.format("%-9s "..fmts, 'INFO', ...)) end,
+     ["noticef"]    = function(self, fmts, ...) print(string.format("%-9s "..fmts, 'NOTICE', ...)) end,
+     ["warningf"]   = function(self, fmts, ...) print(string.format("%-9s "..fmts, 'WARN', ...)) end,
+     ["errorf"]     = function(self, fmts, ...) print(string.format("%-9s "..fmts, 'ERROR', ...)) end,
+     ["criticalf"]  = function(self, fmts, ...) print(string.format("%-9s "..fmts, 'CRITICAL', ...)) end,
+     ["emergencyf"] = function(self, fmts, ...) print(string.format("%-9s "..fmts, 'EMERGENCY', ...)) end
+  }
+  
+  local marpaESLIFLua = require 'marpaESLIFLua'
+  local marpaESLIFp = marpaESLIFLua.marpaESLIF_new(logger)
+  
+  marpaESLIFGrammarp = marpaESLIFp:marpaESLIFGrammar_new([[
+  :default ::= action => ::shift
+  top ::= . => parameterizedRhs->(1)
+        | . => parameterizedRhs->(2)
+        | . => parameterizedRhs->(3)
+        | . => parameterizedRhs->(4)
+        | . => ::luac->function(x)
+                         return "thisgrammar ::= 'will not match'"
+                       end
+               ->(5)
+        | . => ::luac->function(x)
+                         print('Called with x='..x)
+                         return "thisgrammar ::= 'will not match'"
+                       end
+               ->(15)
+        | . => ::lua->grammar_ok->(10,12)
+        | . => ::lua->grammar_ko->(10,12)
+        | . => ::lua->action_raising_error->(10,12)
+        | . => ::lua->unknown_action->(10,12)
+  
+  <luascript>
+  function grammar_ok(x,y)
+    return "x ::= 'Y'"
+  end
+  function grammar_ko(x,y)
+    return "x ::= Y"
+  end
+  function action_raising_error(x,y)
+    error('Errors are trapped...')
+  end
+  </luascript>
+  ]])
+  
+  recognizerInterface:init('5')
+  marpaESLIFGrammarp:parse(recognizerInterface, valueInterface)
+  logger:noticef('... Grammar parse result: %s', valueInterface:getResult())
+
+Output is:
+
+  Called with x=15
+  ERROR     Looking at rules in grammar level 0 (Grammar level 0): symbol 1 (Y) must be resolved as <Y> in grammar at level 0 or 1
+  ERROR     grammar_ko callback returned a string that cannot be converted to a grammar
+  ERROR     <luascript/>:9: Errors are trapped...
+  ERROR     action_raising_error callback failed
+  ERROR     <luascript/>:9: No such function unknown_action
+  ERROR     unknown_action callback failed
+  NOTICE    ... Grammar parse result: 5
+
 =back
 
 =head2 Grammar meta settings
