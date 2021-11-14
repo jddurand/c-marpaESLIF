@@ -389,6 +389,7 @@ valueInterface = {
 recognizerInterface = {
    ["init"] = function(self, input)
       self._magiclinesFunction = magiclines(input)
+      self._nbParameterizedRhsCalls = 0
    end,
    ["read"] = function(self)
       self._data = self._magiclinesFunction()
@@ -463,6 +464,21 @@ recognizerInterface = {
       logger:tracef('lua_regexaction: currentPosition = %s', tostring(block:getCurrentPosition()))
       logger:tracef('lua_regexaction: nextItem        = %s', tostring(block:getNextItem()))
       return 0
+   end,
+   ["parameterizedRhs"]             = function(self, parameter, undef, explanation)
+      self._nbParameterizedRhsCalls = self._nbParameterizedRhsCalls + 1
+
+      local output
+      if (self._nbParameterizedRhsCalls == 5) then
+        output = "start ::= '5'"
+      elseif (self._nbParameterizedRhsCalls > 5) then
+        output = "start ::= 'no match'"
+      else
+        parameter = parameter + 1
+        output = "start ::= . => parameterizedRhs->("..parameter..", { x = 'Value of x', y = 'Value of y' }, 'Input should be \""..parameter.."\"')"
+      end
+      logger:tracef("parameterizedRhs([%s] %s, [%s] %s, [%s] %s) => %s", type(parameter), tostring(parameter), type(undef), tostring(undef), type(explanation), tostring(explanation), output)
+      return output
    end
 }
 
@@ -868,3 +884,21 @@ stringencoded = marpaESLIFJSONp.encode(tniledarray)
 logger:infof('niledarray encoded: %s, encoding=%s', stringencoded, stringencoded:encoding())
 stringdecoded = marpaESLIFJSONp.decode(stringencoded)
 logger:infof('... decoded: %s', tableDump(stringdecoded))
+
+------------------------------------------------------------------------------
+::parameterizedRules::
+logger:infof('---------------------------------------------------------------------------------------')
+logger:infof('Testing parameterizedRules')
+logger:infof('---------------------------------------------------------------------------------------')
+
+marpaESLIFGrammarp = marpaESLIFp:marpaESLIFGrammar_new([[
+top  ::= rhs1
+rhs1 ::= . => parameterizedRhs->(1, nil, 'Input should be "1"')
+       | . => parameterizedRhs->(2, nil, 'Input should be "2"')
+       | . => parameterizedRhs->(3, nil, 'Input should be "3"')
+       | . => parameterizedRhs->(4, nil, 'Input should be "4"')
+]])
+logger:noticef('... Grammar show: %s', marpaESLIFGrammarp:show())
+recognizerInterface:init('5')
+marpaESLIFGrammarp:parse(recognizerInterface, valueInterface)
+logger:noticef('... Grammar parse result: %s', valueInterface:getResult())
