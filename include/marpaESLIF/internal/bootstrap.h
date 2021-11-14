@@ -314,7 +314,6 @@ struct marpaESLIF_bootstrap_rhs_alternative_exception {
 struct marpaESLIF_bootstrap_rhs_alternative_quantified {
   short                               skipb;
   marpaESLIF_bootstrap_rhs_primary_t *rhsPrimaryp;
-  marpaESLIF_bootstrap_rhs_primary_t *separatorRhsPrimaryp;
   int                                 minimumi;
   genericStack_t                     *adverbListItemStackp;
 };
