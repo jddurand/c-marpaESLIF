@@ -129,6 +129,9 @@
 #define G1_RULE_RHS_ALTERNATIVE_5                "G1_rule_rhs_alternative_5"
 #define G1_RULE_RHS_ALTERNATIVE_6                "G1_rule_rhs_alternative_6"
 #define G1_RULE_RHS_ALTERNATIVE_7                "G1_rule_rhs_alternative_7"
+#define G1_RULE_RHS_ALTERNATIVE_8                "G1_rule_rhs_alternative_8"
+#define G1_RULE_RHS_ALTERNATIVE_9                "G1_rule_rhs_alternative_9"
+#define G1_RULE_RHS_ALTERNATIVE_10               "G1_rule_rhs_alternative_10"
 #define G1_RULE_RHS_PRIMARY_NO_PARAMETER_1       "G1_rule_rhs_primary_no_parameter_1"
 #define G1_RULE_RHS_PRIMARY_NO_PARAMETER_2       "G1_rule_rhs_primary_no_parameter_2"
 #define G1_RULE_RHS_PRIMARY_1                    "G1_rule_rhs_primary_1"
@@ -348,6 +351,9 @@
 #define G1_ACTION_RHS_ALTERNATIVE_5                "G1_action_rhs_alternative_5"                /* done */
 #define G1_ACTION_RHS_ALTERNATIVE_6                "G1_action_rhs_alternative_6"                /* done */
 #define G1_ACTION_RHS_ALTERNATIVE_7                "G1_action_rhs_alternative_7"                /* done */
+#define G1_ACTION_RHS_ALTERNATIVE_8                "G1_action_rhs_alternative_8"                /* done */
+#define G1_ACTION_RHS_ALTERNATIVE_9                "G1_action_rhs_alternative_9"                /* done */
+#define G1_ACTION_RHS_ALTERNATIVE_10               "G1_action_rhs_alternative_10"               /* done */
 #define G1_ACTION_RHS_PRIMARY_NO_PARAMETER_1       "G1_action_rhs_primary_no_parameter_1"       /* done */
 #define G1_ACTION_RHS_PRIMARY_NO_PARAMETER_2       "G1_action_rhs_primary_no_parameter_2"       /* done */
 #define G1_ACTION_RHS_PRIMARY_1                    "::shift"                                    /* done */

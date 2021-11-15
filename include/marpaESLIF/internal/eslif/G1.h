@@ -66,6 +66,8 @@ typedef enum bootstrap_grammar_G1_enum {
   G1_TERMINAL_RPAREN,
   G1_TERMINAL_HIDE_LEFT,
   G1_TERMINAL_HIDE_RIGHT,
+  G1_TERMINAL_LOOKAHEAD_LEFT,
+  G1_TERMINAL_LOOKAHEAD_RIGHT,
   G1_TERMINAL_STAR,
   G1_TERMINAL_PLUS,
   G1_TERMINAL___SHIFT,
@@ -763,6 +765,22 @@ bootstrap_grammar_terminal_t bootstrap_grammar_G1_terminals[] = {
     "'-)'", NULL, NULL,
 #ifndef MARPAESLIF_NTRACE
     "-)", "-"
+#else
+    NULL, NULL
+#endif
+  },
+  { G1_TERMINAL_LOOKAHEAD_LEFT, MARPAESLIF_TERMINAL_TYPE_REGEX, NULL,
+    "\\(\\?[=!]", NULL, NULL,
+#ifndef MARPAESLIF_NTRACE
+    "(?=", "("
+#else
+    NULL, NULL
+#endif
+  },
+  { G1_TERMINAL_LOOKAHEAD_RIGHT, MARPAESLIF_TERMINAL_TYPE_STRING, NULL,
+    "')'", NULL, NULL,
+#ifndef MARPAESLIF_NTRACE
+    ")", NULL
 #else
     NULL, NULL
 #endif
@@ -1533,6 +1551,20 @@ bootstrap_grammar_rule_t bootstrap_grammar_G1_rules[] = {
                                                                                                                                      G1_META_QUANTIFIER,
                                                                                                                                      G1_META_ADVERB_LIST,
                                                                                                                                      G1_TERMINAL_RPAREN                           }, -1,                        -1,      -1,              0, G1_ACTION_RHS_ALTERNATIVE_7 },
+  { G1_META_RHS_ALTERNATIVE,                  G1_RULE_RHS_ALTERNATIVE_8,                      MARPAESLIF_RULE_TYPE_ALTERNATIVE, 3, { G1_TERMINAL_LOOKAHEAD_LEFT,
+                                                                                                                                     G1_META_PRIORITIES,
+                                                                                                                                     G1_TERMINAL_LOOKAHEAD_RIGHT                  }, -1,                        -1,      -1,              0, G1_ACTION_RHS_ALTERNATIVE_8 },
+  { G1_META_RHS_ALTERNATIVE,                  G1_RULE_RHS_ALTERNATIVE_9,                      MARPAESLIF_RULE_TYPE_ALTERNATIVE, 6, { G1_TERMINAL_LOOKAHEAD_LEFT,
+                                                                                                                                     G1_META_RHS_PRIMARY,
+                                                                                                                                     G1_TERMINAL_MINUS,
+                                                                                                                                     G1_META_RHS_PRIMARY,
+                                                                                                                                     G1_META_ADVERB_LIST,
+                                                                                                                                     G1_TERMINAL_LOOKAHEAD_RIGHT                  }, -1,                        -1,      -1,              0, G1_ACTION_RHS_ALTERNATIVE_9 },
+  { G1_META_RHS_ALTERNATIVE,                  G1_RULE_RHS_ALTERNATIVE_10,                     MARPAESLIF_RULE_TYPE_ALTERNATIVE, 5, { G1_TERMINAL_LOOKAHEAD_LEFT,
+                                                                                                                                     G1_META_RHS_PRIMARY,
+                                                                                                                                     G1_META_QUANTIFIER,
+                                                                                                                                     G1_META_ADVERB_LIST,
+                                                                                                                                     G1_TERMINAL_LOOKAHEAD_RIGHT                  }, -1,                        -1,      -1,              0, G1_ACTION_RHS_ALTERNATIVE_10 },
   { G1_META_RHS_PRIMARY_NO_PARAMETER,         G1_RULE_RHS_PRIMARY_NO_PARAMETER_1,             MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_SINGLE_SYMBOL                        }, -1,                        -1,      -1,              0, G1_ACTION_RHS_PRIMARY_NO_PARAMETER_1 },
   { G1_META_RHS_PRIMARY_NO_PARAMETER,         G1_RULE_RHS_PRIMARY_NO_PARAMETER_2,             MARPAESLIF_RULE_TYPE_ALTERNATIVE, 3, { G1_META_SYMBOL,
                                                                                                                                      G1_TERMINAL_AT_SIGN,

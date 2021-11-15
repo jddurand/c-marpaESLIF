@@ -301,11 +301,13 @@ struct marpaESLIF_bootstrap_symbol_and_reference {
 
 struct marpaESLIF_bootstrap_rhs_alternative_priorities {
   short                               skipb;
+  short                               lookaheadb;
   genericStack_t                     *alternativesStackp;
 };
 
 struct marpaESLIF_bootstrap_rhs_alternative_exception {
   short                               skipb;
+  short                               lookaheadb;
   marpaESLIF_bootstrap_rhs_primary_t *rhsPrimaryp;
   marpaESLIF_bootstrap_rhs_primary_t *rhsPrimaryExceptionp;
   genericStack_t                     *adverbListItemStackp;
@@ -313,6 +315,7 @@ struct marpaESLIF_bootstrap_rhs_alternative_exception {
 
 struct marpaESLIF_bootstrap_rhs_alternative_quantified {
   short                               skipb;
+  short                               lookaheadb;
   marpaESLIF_bootstrap_rhs_primary_t *rhsPrimaryp;
   int                                 minimumi;
   genericStack_t                     *adverbListItemStackp;

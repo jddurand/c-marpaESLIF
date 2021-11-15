@@ -85,9 +85,9 @@ static inline short _marpaESLIF_bootstrap_G1_action_event_declarationb(void *use
 static inline marpaESLIF_bootstrap_utf_string_t *_marpaESLIF_bootstrap_regex_to_stringb(marpaESLIF_t *marpaESLIFp, void *bytep, size_t bytel);
 static inline marpaESLIF_bootstrap_utf_string_t *_marpaESLIF_bootstrap_characterClass_to_stringb(marpaESLIF_t *marpaESLIFp, void *bytep, size_t bytel);
 static inline int _marpaESLIF_bootstrap_ord2utfb(marpaESLIF_uint32_t uint32, PCRE2_UCHAR *bufferp);
-static inline short _marpaESLIF_bootstrap_G1_action_rhs_alternative_2_and_3b(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb, short skipb);
-static inline short _marpaESLIF_bootstrap_G1_action_rhs_alternative_4_and_5b(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb, short skipb);
-static inline short _marpaESLIF_bootstrap_G1_action_rhs_alternative_6_and_7b(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb, short skipb);
+static inline short _marpaESLIF_bootstrap_G1_action_rhs_alternative_prioritiesb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb, short skipb, short lookaheadb);
+static inline short _marpaESLIF_bootstrap_G1_action_rhs_alternative_exceptionb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb, short skipb, short lookaheadb);
+static inline short _marpaESLIF_bootstrap_G1_action_rhs_alternative_quantifiedb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb, short skipb, short lookaheadb);
 static inline short _marpaESLIF_bootstrap_G1_action_terminal_pseudob(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, marpaESLIF_bootstrap_terminal_type_t type, int resulti);
 
 static        short _marpaESLIF_bootstrap_G1_action_symbol_name_1b(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
@@ -119,6 +119,9 @@ static        short _marpaESLIF_bootstrap_G1_action_rhs_alternative_4b(void *use
 static        short _marpaESLIF_bootstrap_G1_action_rhs_alternative_5b(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
 static        short _marpaESLIF_bootstrap_G1_action_rhs_alternative_6b(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
 static        short _marpaESLIF_bootstrap_G1_action_rhs_alternative_7b(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
+static        short _marpaESLIF_bootstrap_G1_action_rhs_alternative_8b(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
+static        short _marpaESLIF_bootstrap_G1_action_rhs_alternative_9b(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
+static        short _marpaESLIF_bootstrap_G1_action_rhs_alternative_10b(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
 static        short _marpaESLIF_bootstrap_G1_action_rhs_primary_no_parameter_1b(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
 static        short _marpaESLIF_bootstrap_G1_action_rhs_primary_no_parameter_2b(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
 static        short _marpaESLIF_bootstrap_G1_action_rhs_primary_2b(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
@@ -2205,6 +2208,9 @@ static marpaESLIFValueRuleCallback_t _marpaESLIF_bootstrap_ruleActionResolver(vo
   else if (strcmp(actions, "G1_action_rhs_alternative_5")                == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_action_rhs_alternative_5b;                }
   else if (strcmp(actions, "G1_action_rhs_alternative_6")                == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_action_rhs_alternative_6b;                }
   else if (strcmp(actions, "G1_action_rhs_alternative_7")                == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_action_rhs_alternative_7b;                }
+  else if (strcmp(actions, "G1_action_rhs_alternative_8")                == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_action_rhs_alternative_8b;                }
+  else if (strcmp(actions, "G1_action_rhs_alternative_9")                == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_action_rhs_alternative_9b;                }
+  else if (strcmp(actions, "G1_action_rhs_alternative_10")               == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_action_rhs_alternative_10b;               }
   else if (strcmp(actions, "G1_action_rhs_primary_no_parameter_1")       == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_action_rhs_primary_no_parameter_1b;       }
   else if (strcmp(actions, "G1_action_rhs_primary_no_parameter_2")       == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_action_rhs_primary_no_parameter_2b;       }
   else if (strcmp(actions, "G1_action_rhs_primary_2")                    == 0) { marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_action_rhs_primary_2b;                    }
@@ -3531,7 +3537,7 @@ static short _marpaESLIF_bootstrap_G1_action_rhs_alternative_2b(void *userDatavp
 /*****************************************************************************/
 {
   /* <rhs alternative> ::= '(-' <priorities> '-)' */
-  return _marpaESLIF_bootstrap_G1_action_rhs_alternative_2_and_3b(userDatavp, marpaESLIFValuep, arg0i, argni, resulti, nullableb, 1 /* skipb */);
+  return _marpaESLIF_bootstrap_G1_action_rhs_alternative_prioritiesb(userDatavp, marpaESLIFValuep, arg0i, argni, resulti, nullableb, 1 /* skipb */, 0 /* lookaheadb */);
 }
 
 /*****************************************************************************/
@@ -3539,7 +3545,7 @@ static short _marpaESLIF_bootstrap_G1_action_rhs_alternative_3b(void *userDatavp
 /*****************************************************************************/
 {
   /* <rhs alternative> ::= '(' <priorities> ')' */
-  return _marpaESLIF_bootstrap_G1_action_rhs_alternative_2_and_3b(userDatavp, marpaESLIFValuep, arg0i, argni, resulti, nullableb, 0 /* skipb */);
+  return _marpaESLIF_bootstrap_G1_action_rhs_alternative_prioritiesb(userDatavp, marpaESLIFValuep, arg0i, argni, resulti, nullableb, 0 /* skipb */, 0 /* lookaheadb */);
 }
 
 /*****************************************************************************/
@@ -3547,7 +3553,7 @@ static short _marpaESLIF_bootstrap_G1_action_rhs_alternative_4b(void *userDatavp
 /*****************************************************************************/
 {
   /* <rhs alternative> ::= '(-' <rhs primary> '-' <rhs primary> <adverb list> '-)' */
-  return _marpaESLIF_bootstrap_G1_action_rhs_alternative_4_and_5b(userDatavp, marpaESLIFValuep, arg0i, argni, resulti, nullableb, 1 /* skipb */);
+  return _marpaESLIF_bootstrap_G1_action_rhs_alternative_exceptionb(userDatavp, marpaESLIFValuep, arg0i, argni, resulti, nullableb, 1 /* skipb */, 0 /* lookaheadb */);
 }
 
 /*****************************************************************************/
@@ -3555,7 +3561,7 @@ static short _marpaESLIF_bootstrap_G1_action_rhs_alternative_5b(void *userDatavp
 /*****************************************************************************/
 {
   /* <rhs alternative> ::= '(' <rhs primary> '-' <rhs primary> <adverb list> ')' */
-  return _marpaESLIF_bootstrap_G1_action_rhs_alternative_4_and_5b(userDatavp, marpaESLIFValuep, arg0i, argni, resulti, nullableb, 0 /* skipb */);
+  return _marpaESLIF_bootstrap_G1_action_rhs_alternative_exceptionb(userDatavp, marpaESLIFValuep, arg0i, argni, resulti, nullableb, 0 /* skipb */, 0 /* lookaheadb */);
 }
 
 /*****************************************************************************/
@@ -3563,7 +3569,7 @@ static short _marpaESLIF_bootstrap_G1_action_rhs_alternative_6b(void *userDatavp
 /*****************************************************************************/
 {
   /* <rhs alternative> ::= '(-' <rhs primary> <quantifier> <adverb list> '-)' */
-  return _marpaESLIF_bootstrap_G1_action_rhs_alternative_6_and_7b(userDatavp, marpaESLIFValuep, arg0i, argni, resulti, nullableb, 1 /* skipb */);
+  return _marpaESLIF_bootstrap_G1_action_rhs_alternative_quantifiedb(userDatavp, marpaESLIFValuep, arg0i, argni, resulti, nullableb, 1 /* skipb */, 0 /* lookaheadb */);
 }
 
 /*****************************************************************************/
@@ -3571,7 +3577,7 @@ static short _marpaESLIF_bootstrap_G1_action_rhs_alternative_7b(void *userDatavp
 /*****************************************************************************/
 {
   /* <rhs alternative> ::= '(' <rhs primary> <quantifier> <adverb list> ')' */
-  return _marpaESLIF_bootstrap_G1_action_rhs_alternative_6_and_7b(userDatavp, marpaESLIFValuep, arg0i, argni, resulti, nullableb, 0 /* skipb */);
+  return _marpaESLIF_bootstrap_G1_action_rhs_alternative_quantifiedb(userDatavp, marpaESLIFValuep, arg0i, argni, resulti, nullableb, 0 /* skipb */, 0 /* lookaheadb */);
 }
 
 /*****************************************************************************/
@@ -7915,11 +7921,13 @@ static inline int _marpaESLIF_bootstrap_ord2utfb(marpaESLIF_uint32_t uint32, PCR
 }
 
 /*****************************************************************************/
-static inline short _marpaESLIF_bootstrap_G1_action_rhs_alternative_2_and_3b(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb, short skipb)
+static inline short _marpaESLIF_bootstrap_G1_action_rhs_alternative_prioritiesb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb, short skipb, short lookaheadb)
 /*****************************************************************************/
 {
-  /*  skipb: <rhs alternative> ::= '(-' <priorities> '-)' */
-  /* !skipb: <rhs alternative> ::= '('  <priorities> ')'  */
+  /*  skipb     : <rhs alternative> ::= '(-'  <priorities> '-)' */
+  /* !skipb     : <rhs alternative> ::= '('   <priorities>  ')' */
+  /*  lookaheadb: <rhs alternative> ::= '(?=' <priorities>  ')' */
+  /* !lookaheadb: <rhs alternative> ::= '(?!' <priorities>  ')' */
   marpaESLIF_t                             *marpaESLIFp        = marpaESLIFValuep->marpaESLIFp; /* marpaESLIFGrammar_eslifp(marpaESLIFRecognizer_grammarp(marpaESLIFValue_recognizerp(marpaESLIFValuep))); */
   genericStack_t                           *alternativesStackp = NULL;
   marpaESLIF_bootstrap_rhs_alternative_t   *rhsAlternativep    = NULL;
@@ -7945,6 +7953,7 @@ static inline short _marpaESLIF_bootstrap_G1_action_rhs_alternative_2_and_3b(voi
   }
   rhsAlternativep->type                            = MARPAESLIF_BOOTSTRAP_RHS_ALTERNATIVE_TYPE_PRIORITIES;
   rhsAlternativep->u.priorities.skipb              = skipb;
+  rhsAlternativep->u.priorities.lookaheadb         = lookaheadb;
   rhsAlternativep->u.priorities.alternativesStackp = alternativesStackp;
   alternativesStackp = NULL; /* alternativesStackp is now in rhsAlternativep */
 
@@ -7963,11 +7972,169 @@ static inline short _marpaESLIF_bootstrap_G1_action_rhs_alternative_2_and_3b(voi
 }
 
 /*****************************************************************************/
-static inline short _marpaESLIF_bootstrap_G1_action_rhs_alternative_4_and_5b(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb, short skipb)
+static short _marpaESLIF_bootstrap_G1_action_rhs_alternative_8b(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb)
 /*****************************************************************************/
 {
-  /*  skipb: <rhs alternative> ::= '(-' <rhs primary> '-' <rhs primary> <adverb list> '-)' */
-  /* !skipb: <rhs alternative> ::= '('  <rhs primary> '-' <rhs primary> <adverb list> ')'  */
+  /*  <rhs alternative> ::= /\(\?[=!]/ <priorities> ')' */
+  marpaESLIF_t *marpaESLIFp = marpaESLIFValuep->marpaESLIFp; /* marpaESLIFGrammar_eslifp(marpaESLIFRecognizer_grammarp(marpaESLIFValue_recognizerp(marpaESLIFValuep))); */
+  short         lookaheadb;
+  char         *asciis;
+  size_t        asciil;
+  short         rcb;
+
+  /* Cannot be nullable */
+  if (MARPAESLIF_UNLIKELY(nullableb)) {
+    MARPAESLIF_ERROR(marpaESLIFp, "Nullable mode is not supported");
+    goto err;
+  }
+
+  MARPAESLIF_BOOTSTRAP_GET_ARRAY(marpaESLIFValuep, arg0i, asciis, asciil); /* This is a terminal */
+
+  if (MARPAESLIF_UNLIKELY(asciis == NULL)) {
+    /* Should never happen */
+    MARPAESLIF_ERROR(marpaESLIFp, "Null terminal");
+    goto err;
+  }
+  if (MARPAESLIF_UNLIKELY(asciil < 3)) {
+    /* Should never happen as per the grammar */
+    MARPAESLIF_ERRORF(marpaESLIFp, "Too short terminal \"%s\"", asciis);
+    goto err;
+  }
+
+  switch (asciis[2]) {
+  case '=':
+    lookaheadb = 1; /* Positive lookahead */
+    break;
+  case '!':
+    lookaheadb = -1; /* Negative lookahead */
+    break;
+  default:
+    MARPAESLIF_ERRORF(marpaESLIFp, "Invalid 3rd character in terminal \"%s\"", asciis);
+    goto err;
+  }
+
+  rcb = _marpaESLIF_bootstrap_G1_action_rhs_alternative_prioritiesb(userDatavp, marpaESLIFValuep, arg0i, argni, resulti, nullableb, 0 /* skipb */, lookaheadb);
+  goto done;
+
+ err:
+  rcb = 0;
+
+ done:
+  return rcb;
+}
+
+/*****************************************************************************/
+static short _marpaESLIF_bootstrap_G1_action_rhs_alternative_9b(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb)
+/*****************************************************************************/
+{
+  /*  <rhs alternative> ::= /\(\?[=!]/ <rhs primary> '-' <rhs primary> <adverb list> ')' */
+  marpaESLIF_t *marpaESLIFp = marpaESLIFValuep->marpaESLIFp; /* marpaESLIFGrammar_eslifp(marpaESLIFRecognizer_grammarp(marpaESLIFValue_recognizerp(marpaESLIFValuep))); */
+  short         lookaheadb;
+  char         *asciis;
+  size_t        asciil;
+  short         rcb;
+
+  /* Cannot be nullable */
+  if (MARPAESLIF_UNLIKELY(nullableb)) {
+    MARPAESLIF_ERROR(marpaESLIFp, "Nullable mode is not supported");
+    goto err;
+  }
+
+  MARPAESLIF_BOOTSTRAP_GET_ARRAY(marpaESLIFValuep, arg0i, asciis, asciil); /* This is a terminal */
+
+  if (MARPAESLIF_UNLIKELY(asciis == NULL)) {
+    /* Should never happen */
+    MARPAESLIF_ERROR(marpaESLIFp, "Null terminal");
+    goto err;
+  }
+  if (MARPAESLIF_UNLIKELY(asciil < 3)) {
+    /* Should never happen as per the grammar */
+    MARPAESLIF_ERRORF(marpaESLIFp, "Too short terminal \"%s\"", asciis);
+    goto err;
+  }
+
+  switch (asciis[2]) {
+  case '=':
+    lookaheadb = 1; /* Positive lookahead */
+    break;
+  case '!':
+    lookaheadb = -1; /* Negative lookahead */
+    break;
+  default:
+    MARPAESLIF_ERRORF(marpaESLIFp, "Invalid 3rd character in terminal \"%s\"", asciis);
+    goto err;
+  }
+
+  rcb = _marpaESLIF_bootstrap_G1_action_rhs_alternative_exceptionb(userDatavp, marpaESLIFValuep, arg0i, argni, resulti, nullableb, 0 /* skipb */, lookaheadb);
+  goto done;
+
+ err:
+  rcb = 0;
+
+ done:
+  return rcb;
+}
+
+/*****************************************************************************/
+static short _marpaESLIF_bootstrap_G1_action_rhs_alternative_10b(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb)
+/*****************************************************************************/
+{
+  /* <rhs alternative> ::= /\(\?[=!]/ <rhs primary> <quantifier> <adverb list> ')' */
+  marpaESLIF_t *marpaESLIFp = marpaESLIFValuep->marpaESLIFp; /* marpaESLIFGrammar_eslifp(marpaESLIFRecognizer_grammarp(marpaESLIFValue_recognizerp(marpaESLIFValuep))); */
+  short         lookaheadb;
+  char         *asciis;
+  size_t        asciil;
+  short         rcb;
+
+  /* Cannot be nullable */
+  if (MARPAESLIF_UNLIKELY(nullableb)) {
+    MARPAESLIF_ERROR(marpaESLIFp, "Nullable mode is not supported");
+    goto err;
+  }
+
+  MARPAESLIF_BOOTSTRAP_GET_ARRAY(marpaESLIFValuep, arg0i, asciis, asciil); /* This is a terminal */
+
+  if (MARPAESLIF_UNLIKELY(asciis == NULL)) {
+    /* Should never happen */
+    MARPAESLIF_ERROR(marpaESLIFp, "Null terminal");
+    goto err;
+  }
+  if (MARPAESLIF_UNLIKELY(asciil < 3)) {
+    /* Should never happen as per the grammar */
+    MARPAESLIF_ERRORF(marpaESLIFp, "Too short terminal \"%s\"", asciis);
+    goto err;
+  }
+
+  switch (asciis[2]) {
+  case '=':
+    lookaheadb = 1; /* Positive lookahead */
+    break;
+  case '!':
+    lookaheadb = -1; /* Negative lookahead */
+    break;
+  default:
+    MARPAESLIF_ERRORF(marpaESLIFp, "Invalid 3rd character in terminal \"%s\"", asciis);
+    goto err;
+  }
+
+  rcb = _marpaESLIF_bootstrap_G1_action_rhs_alternative_quantifiedb(userDatavp, marpaESLIFValuep, arg0i, argni, resulti, nullableb, 0 /* skipb */, lookaheadb);
+  goto done;
+
+ err:
+  rcb = 0;
+
+ done:
+  return rcb;
+}
+
+/*****************************************************************************/
+static inline short _marpaESLIF_bootstrap_G1_action_rhs_alternative_exceptionb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb, short skipb, short lookaheadb)
+/*****************************************************************************/
+{
+  /*  skipb     : <rhs alternative> ::= '(-'  <rhs primary> '-' <rhs primary> <adverb list> '-)' */
+  /* !skipb     : <rhs alternative> ::= '('   <rhs primary> '-' <rhs primary> <adverb list>  ')' */
+  /*  lookaheadb: <rhs alternative> ::= '(?=' <rhs primary> '-' <rhs primary> <adverb list>  ')' */
+  /* !lookaheadb: <rhs alternative> ::= '(?!' <rhs primary> '-' <rhs primary> <adverb list>  ')' */
   marpaESLIF_t                             *marpaESLIFp          = marpaESLIFValuep->marpaESLIFp; /* marpaESLIFGrammar_eslifp(marpaESLIFRecognizer_grammarp(marpaESLIFValue_recognizerp(marpaESLIFValuep))); */
   marpaESLIF_bootstrap_rhs_primary_t       *rhsPrimaryp          = NULL;
   marpaESLIF_bootstrap_rhs_primary_t       *rhsPrimaryExceptionp = NULL;
@@ -7996,6 +8163,7 @@ static inline short _marpaESLIF_bootstrap_G1_action_rhs_alternative_4_and_5b(voi
   }
   rhsAlternativep->type                             = MARPAESLIF_BOOTSTRAP_RHS_ALTERNATIVE_TYPE_EXCEPTION;
   rhsAlternativep->u.exception.skipb                = skipb;
+  rhsAlternativep->u.exception.lookaheadb           = lookaheadb;
   rhsAlternativep->u.exception.rhsPrimaryp          = rhsPrimaryp;
   rhsAlternativep->u.exception.rhsPrimaryExceptionp = rhsPrimaryExceptionp;
   rhsAlternativep->u.exception.adverbListItemStackp = adverbListItemStackp;
@@ -8021,11 +8189,13 @@ static inline short _marpaESLIF_bootstrap_G1_action_rhs_alternative_4_and_5b(voi
 }
 
 /*****************************************************************************/
-static inline short _marpaESLIF_bootstrap_G1_action_rhs_alternative_6_and_7b(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb, short skipb)
+static inline short _marpaESLIF_bootstrap_G1_action_rhs_alternative_quantifiedb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb, short skipb, short lookaheadb)
 /*****************************************************************************/
 {
-  /*  skipb: <rhs alternative> ::= '(-' <rhs primary> <quantifier> <adverb list> '-)' */
-  /* !skipb: <rhs alternative> ::= '('  <rhs primary> <quantifier> <adverb list> ')'  */
+  /*  skipb     : <rhs alternative> ::= '(-'  <rhs primary> <quantifier> <adverb list> '-)' */
+  /* !skipb     : <rhs alternative> ::= '('   <rhs primary> <quantifier> <adverb list>  ')' */
+  /*  lookaheadb: <rhs alternative> ::= '(?=' <rhs primary> <quantifier> <adverb list>  ')' */
+  /* !lookaheadb: <rhs alternative> ::= '(?!' <rhs primary> <quantifier> <adverb list>  ')' */
   marpaESLIF_t                             *marpaESLIFp          = marpaESLIFValuep->marpaESLIFp; /* marpaESLIFGrammar_eslifp(marpaESLIFRecognizer_grammarp(marpaESLIFValue_recognizerp(marpaESLIFValuep))); */
   marpaESLIF_bootstrap_rhs_primary_t       *rhsPrimaryp          = NULL;
   int                                       minimumi;
@@ -8054,6 +8224,7 @@ static inline short _marpaESLIF_bootstrap_G1_action_rhs_alternative_6_and_7b(voi
   }
   rhsAlternativep->type                              = MARPAESLIF_BOOTSTRAP_RHS_ALTERNATIVE_TYPE_QUANTIFIED;
   rhsAlternativep->u.quantified.skipb                = skipb;
+  rhsAlternativep->u.quantified.lookaheadb           = lookaheadb;
   rhsAlternativep->u.quantified.rhsPrimaryp          = rhsPrimaryp;
   rhsAlternativep->u.quantified.minimumi             = minimumi;
   rhsAlternativep->u.quantified.adverbListItemStackp = adverbListItemStackp;
