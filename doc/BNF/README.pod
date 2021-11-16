@@ -381,6 +381,14 @@ Output is:
   ERROR     unknown_action callback failed
   NOTICE    ... Grammar parse result: 5
 
+=item Lookahead
+
+Any RHS surrounded by C<(?=...)> or C<(?!...)> is interpreted to a positive or negative lookahead, respectively. Internally, it is processed like a lexeme, and will result in a zero-length lexeme in case of match. You can skip it in the rule valuation by surrounding again with C<(-...-)>, e.g.:
+
+  lhs ::= (-(?= /anything/ )-)
+
+will do a positive lookahead of regular expression C</anything/> and skip it in the rule's valuation.
+
 =back
 
 =head2 Grammar meta settings

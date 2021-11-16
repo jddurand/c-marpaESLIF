@@ -57,6 +57,8 @@ The L<marpaESLIF BNF|https://github.com/jddurand/c-marpaESLIF/tree/master/doc/BN
 
 =item Dynamic sub-grammars
 
+=item Lookahead
+
 =back
 
 The following sections present the architecture of marpaESLIF architecture,
