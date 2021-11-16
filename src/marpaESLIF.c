@@ -166,6 +166,7 @@ static marpaESLIFValueResult_t marpaESLIFValueResultLazy = {
 #define MARPAESLIF_IS_TERMINAL(symbolp)           ((symbolp)->type == MARPAESLIF_SYMBOL_TYPE_TERMINAL)
 #define MARPAESLIF_IS_LEXEME_OR_TERMINAL(symbolp) (MARPAESLIF_IS_LEXEME(symbolp) || MARPAESLIF_IS_TERMINAL(symbolp))
 #define MARPAESLIF_IS_PSEUDO_TERMINAL(symbolp)    (MARPAESLIF_IS_TERMINAL(symbolp) && (symbolp)->u.terminalp->pseudob)
+#define MARPAESLIF_IS_LOOKAHEAD_META(symbolp)     (MARPAESLIF_IS_META(symbolp) && (symbolp)->lookaheadb)
 #define MARPAESLIF_IS_DISCARD(symbolp)            (symbolp)->discardb
 
 /* -------------------------------------------------------------------------------------------- */
@@ -4661,6 +4662,7 @@ static inline marpaESLIF_symbol_t *_marpaESLIF_symbol_newp(marpaESLIF_t *marpaES
   symbolp->declp                   = NULL;
   symbolp->callp                   = NULL;
   symbolp->pushContextActionp      = NULL;
+  symbolp->lookaheadb              = 0;
 
   symbolp->nullableRuleStackp = &(symbolp->_nullableRuleStack);
   GENERICSTACK_INIT(symbolp->nullableRuleStackp);
@@ -6055,6 +6057,7 @@ static inline short _marpaESLIFRecognizer_symbol_matcherb(marpaESLIFRecognizer_t
   marpaESLIFRecognizerIfCallback_t         ifCallbackp;
   marpaESLIFValueResultBool_t              marpaESLIFValueResultBool;
   short                                    rcMatcherb;
+  short                                    lookaheadMatchb;
 
   MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_INC;
   MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "start");
@@ -6117,15 +6120,64 @@ static inline short _marpaESLIFRecognizer_symbol_matcherb(marpaESLIFRecognizer_t
   case MARPAESLIF_SYMBOL_TYPE_META:
     /* A meta matcher calls recursively other recognizers, reading new data, etc... : this will update current recognizer inputs, inputl and eof. */
     /* The result will be a parse tree value, at indice 0 of outputStackp */
-    if (MARPAESLIF_UNLIKELY(! _marpaESLIFRecognizer_meta_matcherb(marpaESLIFRecognizerp,
-                                                                  symbolp,
-                                                                  &rci,
-                                                                  marpaESLIFValueResultp,
-                                                                  NULL /* isExhaustedbp */,
-                                                                  maxStartCompletionsi,
-                                                                  &lastSizeBeforeCompletionl,
-                                                                  &numberOfStartCompletionsi))) {
-      goto err;
+    /* Special case of lookahead - only meta symbols can have this flag - then we do not mind about what matched - only if it matched. */
+    if (! symbolp->lookaheadb) {
+      /* Not a lookahead */
+      if (! _marpaESLIFRecognizer_meta_matcherb(marpaESLIFRecognizerp,
+                                                symbolp,
+                                                &rci,
+                                                marpaESLIFValueResultp,
+                                                NULL /* isExhaustedbp */,
+                                                maxStartCompletionsi,
+                                                &lastSizeBeforeCompletionl,
+                                                &numberOfStartCompletionsi)) {
+        goto err;
+      }
+      lookaheadMatchb = 0;
+    } else if (symbolp->lookaheadb > 0) {
+      /* Positive lookahead */
+      if (! _marpaESLIFRecognizer_meta_matcherb(marpaESLIFRecognizerp,
+                                                symbolp,
+                                                &rci,
+                                                NULL, /* marpaESLIFValueResultp */
+                                                NULL /* isExhaustedbp */,
+                                                maxStartCompletionsi,
+                                                &lastSizeBeforeCompletionl,
+                                                &numberOfStartCompletionsi)) {
+        goto err;
+      }
+      if (rci != MARPAESLIF_MATCH_OK) {
+        goto err;
+      }
+      lookaheadMatchb = 1;
+    } else {
+      /* Negative lookahead */
+      if (_marpaESLIFRecognizer_meta_matcherb(marpaESLIFRecognizerp,
+                                              symbolp,
+                                              &rci,
+                                              NULL, /* marpaESLIFValueResultp */
+                                              NULL /* isExhaustedbp */,
+                                              maxStartCompletionsi,
+                                              &lastSizeBeforeCompletionl,
+                                              &numberOfStartCompletionsi)) {
+        goto err;
+      }
+
+      /* Invert rci */
+      rci = MARPAESLIF_MATCH_OK;
+      lookaheadMatchb = 1;
+    }
+    if (lookaheadMatchb && (marpaESLIFValueResultp != NULL)) {
+      /* Do like _marpaESLIFRecognizer_terminal_matcherb() when it matches */
+      marpaESLIFValueResultp->contextp           = NULL;
+      marpaESLIFValueResultp->representationp    = NULL;
+      marpaESLIFValueResultp->type               = MARPAESLIF_VALUE_TYPE_ARRAY;
+      marpaESLIFValueResultp->u.a.sizel          = 0;
+      marpaESLIFValueResultp->u.a.p              = (char *) MARPAESLIF_EMPTY_STRING;
+      marpaESLIFValueResultp->u.a.freeUserDatavp = NULL;
+      marpaESLIFValueResultp->u.a.freeCallbackp  = NULL;
+      marpaESLIFValueResultp->u.a.shallowb       = 1;
+      MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Lexeme lookahead mode: returning {%p,%ld}", NULL, marpaESLIFValueResultp->u.a.sizel);
     }
     break;
   default:
@@ -8298,6 +8350,7 @@ static inline short _marpaESLIFRecognizer_resume_oneb(marpaESLIFRecognizer_t *ma
   size_t                           offsetl;
   size_t                           discardl;
   short                            isPseudoTerminalMatchb;
+  short                            isLookupMetaMatchb;
 
   MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_INC;
   MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "start, maxStartCompletionsi=%d", maxStartCompletionsi);
@@ -8368,6 +8421,7 @@ static inline short _marpaESLIFRecognizer_resume_oneb(marpaESLIFRecognizer_t *ma
   /* Try to match */
   retry:
   isPseudoTerminalMatchb  = 0;
+  isLookupMetaMatchb      = 0;
   alternativeStackSymboli = 0;
   maxMatchedl             = 0;
   havePriorityb           = 0;
@@ -8548,6 +8602,11 @@ static inline short _marpaESLIFRecognizer_resume_oneb(marpaESLIFRecognizer_t *ma
         isPseudoTerminalMatchb = MARPAESLIF_IS_PSEUDO_TERMINAL(symbolp);
       }
 
+      /* Remember if we matched a lookup (which can never be a terminal) */
+      if (! isLookupMetaMatchb) {
+        isLookupMetaMatchb = MARPAESLIF_IS_LOOKAHEAD_META(symbolp);
+      }
+
       break;
     default:
       /* The case MARPAESLIF_MATCH_AGAIN is handled in the terminal section of _marpaESLIFRecognizer_symbol_matcherb() */
@@ -8692,9 +8751,9 @@ static inline short _marpaESLIFRecognizer_resume_oneb(marpaESLIFRecognizer_t *ma
   }
 
   /* It is a non-sense to have lexemes of length maxMatchedl and a discard rule that would be greater.  */
-  /* In this case, :discard have precedence. The exception is a match on pseudo-terminal, that is valid */
-  /* despite the fact the it matched zero bytes */
-  if (! isPseudoTerminalMatchb) {
+  /* In this case, :discard have precedence. The exception is a match on a pseudo-terminal, or on a */
+  /* lookup, that is valid despite the fact the it matched zero byte */
+  if (! (isPseudoTerminalMatchb || isLookupMetaMatchb)) {
     if (! _marpaESLIFRecognizer_discardParseb(marpaESLIFRecognizerp, maxMatchedl, &discardl)) {
       goto err;
     }
@@ -12898,6 +12957,11 @@ static inline short _marpaESLIFRecognizer_readb(marpaESLIFRecognizer_t *marpaESL
   } while (0)
 
 #define MARPAESLIF_SYMBOL_CREATESHOW(asciishowl, asciishows, symbolp) do { \
+    if (symbolp->lookaheadb > 0) {                                      \
+      MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "(?= ");     \
+    } else if (symbolp->lookaheadb < 0) {                               \
+      MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "(?! ");     \
+    }                                                                   \
     switch (symbolp->type) {                                            \
     case MARPAESLIF_SYMBOL_TYPE_TERMINAL:                               \
       MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, symbolp->descp->asciis); \
@@ -12921,6 +12985,9 @@ static inline short _marpaESLIFRecognizer_readb(marpaESLIFRecognizer_t *marpaESL
       }                                                                 \
     default:                                                            \
       break;                                                            \
+    }                                                                   \
+    if (symbolp->lookaheadb) {                                          \
+      MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, " )");       \
     }                                                                   \
    } while (0)
 
@@ -13486,7 +13553,13 @@ static inline void _marpaESLIF_grammar_createshowv(marpaESLIFGrammar_t *marpaESL
       MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, tmps);
       sprintf(tmps, "@=%d", symbolp->lookupResolvedLeveli);
       MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, tmps);
-      MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, " */\n");
+      MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, " (lookahead: ");
+      if (symbolp->lookaheadb) {
+        MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows,  "yes");
+      } else {
+        MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows,  "no");
+      }
+      MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, ") */\n");
     } else {
       MARPAESLIF_TRACEF(marpaESLIFp, funcs, "At grammar level %d (%s): Symbol No %d (%s) is not an LHS nor an ESLIF META but has no lookup symbol", grammarp->leveli, grammarp->descp->asciis, symboli, symbolp->descp->asciis);
     }
@@ -13857,7 +13930,13 @@ static inline void _marpaESLIF_grammar_createshowv(marpaESLIFGrammar_t *marpaESL
       MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, tmps);
       sprintf(tmps, "@=%d", symbolp->lookupResolvedLeveli);
       MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, tmps);
-      MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, " */\n");
+      MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, " (lookahead: ");
+      if (symbolp->lookaheadb) {
+        MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows,  "yes");
+      } else {
+        MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows,  "no");
+      }
+      MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, ") */\n");
     }
     if (symbolp->parami >= 0) {
       sprintf(tmps, "%d", symbolp->parami);

@@ -190,6 +190,7 @@ struct marpaESLIFSymbol {
   marpaESLIF_lua_functiondecl_t *declp;                  /* For parameterized symbols, shallow pointer to declp */
   marpaESLIF_lua_functioncall_t *callp;                  /* For parameterized symbols, shallow pointer to callp */
   marpaESLIFAction_t            *pushContextActionp;     /* For parameterized symbols, context push action */
+  short                          lookaheadb;             /* Lookahead symbol ? */
 };
 
 /* A rule */

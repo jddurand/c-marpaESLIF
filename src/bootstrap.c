@@ -917,12 +917,10 @@ static inline marpaESLIF_symbol_t *_marpaESLIF_bootstrap_check_meta_by_namep(mar
   genericStack_t                *symbolStackp      = grammarp->symbolStackp;
   marpaESLIF_symbol_t           *symbolp           = NULL;
   marpaESLIF_meta_t             *metap             = NULL;
-  marpaESLIF_symbol_t           *lhsp;
   marpaESLIF_symbol_t           *symbol_i_p;
   int                            parami;
   int                            i;
   short                          parameterizedRhsb;
-  marpaESLIF_lua_functiondecl_t  call2decl;
 
   /* It is not legal to have both lhsb and rshb */
   if (lhsb && rhsb) {
@@ -997,18 +995,6 @@ static inline marpaESLIF_symbol_t *_marpaESLIF_bootstrap_check_meta_by_namep(mar
     if (MARPAESLIF_UNLIKELY(GENERICSTACK_ERROR(grammarp->symbolStackp))) {
       MARPAESLIF_ERRORF(marpaESLIFp, "symbolStackp push failure, %s", strerror(errno));
       goto err;
-    }
-
-    /* If the RHS is parameterized we force the lookup symbol to a corresponding LHS that will exist in the same grammar */
-    if (0 && parameterizedRhsb) {
-      call2decl.luaparlists  = NULL;
-      call2decl.luaparlistcb = 0;
-      call2decl.sizei        = callp->sizei;
-
-      lhsp = _marpaESLIF_bootstrap_check_meta_by_namep(marpaESLIFp, marpaESLIFGrammarp, grammarp, asciinames, 1 /* createb */, 0 /* forcecreateb */, 1 /* lhsb */, &call2decl, 0 /* rhsb */, NULL);
-      if (lhsp == NULL) {
-        goto err;
-      }
     }
   }
 
@@ -1333,8 +1319,11 @@ static inline marpaESLIF_symbol_t *_marpaESLIF_bootstrap_check_terminalp(marpaES
 static inline marpaESLIF_symbol_t  *_marpaESLIF_bootstrap_check_rhsAlternativep(marpaESLIF_t *marpaESLIFp, marpaESLIFGrammar_t *marpaESLIFGrammarp, marpaESLIF_grammar_t *grammarp, marpaESLIF_bootstrap_rhs_alternative_t *rhsAlternativep, short createb, marpaESLIF_lua_functiondecl_t *declp)
 /*****************************************************************************/
 {
-  static const char                  *funcs                = "_marpaESLIF_bootstrap_check_rhsAlternativep";
-  marpaESLIF_symbol_t                *symbolp              = NULL;
+  static const char                  *funcs        = "_marpaESLIF_bootstrap_check_rhsAlternativep";
+  marpaESLIF_symbol_t                *symbolp      = NULL;
+  marpaESLIF_symbol_t                *lookaheadp   = NULL;
+  marpaESLIF_rule_t                  *rulep        = NULL;
+  marpaESLIF_symbol_t                *ruledSymbolp;
   char                                tmps[1024];
   marpaESLIF_symbol_t                *rhsp;
   marpaESLIF_symbol_t                *rhsExceptionp;
@@ -1344,7 +1333,6 @@ static inline marpaESLIF_symbol_t  *_marpaESLIF_bootstrap_check_rhsAlternativep(
   marpaESLIF_bootstrap_utf_string_t  *namingp;
   short                               properb;
   short                               hideseparatorb;
-  marpaESLIF_rule_t                  *rulep = NULL;
   marpaESLIF_symbol_t                *separatorp;
   marpaESLIF_bootstrap_rhs_primary_t *separatorRhsPrimaryp;
 
@@ -1363,7 +1351,23 @@ static inline marpaESLIF_symbol_t  *_marpaESLIF_bootstrap_check_rhsAlternativep(
     if (MARPAESLIF_UNLIKELY(symbolp == NULL)) {
       goto err;
     }
-    if (MARPAESLIF_UNLIKELY(! _marpaESLIF_bootstrap_G1_action_priority_loosen_ruleb(marpaESLIFp, marpaESLIFGrammarp, grammarp, symbolp, rhsAlternativep->u.priorities.alternativesStackp, declp))) {
+    if (rhsAlternativep->u.priorities.lookaheadb) {
+      /* We let previous symbol alone: this will become a lookahead symbol that is a lexeme and we will force it to point to a new symbol */
+      sprintf(tmps, "Internal[%d]", marpaESLIFGrammarp->internalRuleCounti++);
+      lookaheadp = _marpaESLIF_bootstrap_check_meta_by_namep(marpaESLIFp, marpaESLIFGrammarp, grammarp, tmps, 1 /* createb */, 0 /* forcecreateb */, 1 /* lhsb */, declp, 0 /* rhsb */, NULL /* callp */);
+      if (MARPAESLIF_UNLIKELY(symbolp == NULL)) {
+        goto err;
+      }
+      symbolp->lookupLevelDeltai = 0;
+      symbolp->lookupSymbolp     = lookaheadp;
+      symbolp->lookaheadb        = rhsAlternativep->u.priorities.lookaheadb;
+
+      ruledSymbolp = lookaheadp;
+    } else {
+      ruledSymbolp = symbolp;
+    }
+
+    if (MARPAESLIF_UNLIKELY(! _marpaESLIF_bootstrap_G1_action_priority_loosen_ruleb(marpaESLIFp, marpaESLIFGrammarp, grammarp, ruledSymbolp, rhsAlternativep->u.priorities.alternativesStackp, declp))) {
       goto err;
     }
     break;
@@ -1377,6 +1381,21 @@ static inline marpaESLIF_symbol_t  *_marpaESLIF_bootstrap_check_rhsAlternativep(
     symbolp = _marpaESLIF_bootstrap_check_meta_by_namep(marpaESLIFp, marpaESLIFGrammarp, grammarp, tmps, 1 /* createb */, 0 /* forcecreateb */, 1 /* lhsb */, declp, 0 /* rhsb */, NULL /* callp */);
     if (MARPAESLIF_UNLIKELY(symbolp == NULL)) {
       goto err;
+    }
+    if (rhsAlternativep->u.exception.lookaheadb) {
+      /* We let previous symbol alone: this will become a lookahead symbol that is a lexeme and we will force it to point to a new symbol */
+      sprintf(tmps, "Internal[%d]", marpaESLIFGrammarp->internalRuleCounti++);
+      lookaheadp = _marpaESLIF_bootstrap_check_meta_by_namep(marpaESLIFp, marpaESLIFGrammarp, grammarp, tmps, 1 /* createb */, 0 /* forcecreateb */, 1 /* lhsb */, declp, 0 /* rhsb */, NULL /* callp */);
+      if (MARPAESLIF_UNLIKELY(symbolp == NULL)) {
+        goto err;
+      }
+      symbolp->lookupLevelDeltai = 0;
+      symbolp->lookupSymbolp     = lookaheadp;
+      symbolp->lookaheadb        = rhsAlternativep->u.exception.lookaheadb;
+
+      ruledSymbolp = lookaheadp;
+    } else {
+      ruledSymbolp = symbolp;
     }
     /* Check the rhs primary - we know it has to be a lexeme, and a lexeme cannot be parameterized. */
     if (rhsAlternativep->u.exception.rhsPrimaryp->callp != NULL) {
@@ -1426,14 +1445,14 @@ static inline marpaESLIF_symbol_t  *_marpaESLIF_bootstrap_check_rhsAlternativep(
       goto err;
     }
     /* If naming is not NULL, it is guaranteed to be an UTF-8 thingy */
-    MARPAESLIF_TRACEF(marpaESLIFp, funcs, "Creating exception rule %s(declp) ::= %s - %s", symbolp->descp->asciis, rhsp->descp->asciis, rhsExceptionp->descp->asciis);
+    MARPAESLIF_TRACEF(marpaESLIFp, funcs, "Creating exception rule %s(declp) ::= %s - %s", ruledSymbolp->descp->asciis, rhsp->descp->asciis, rhsExceptionp->descp->asciis);
     rulep = _marpaESLIF_bootstrap_check_rulep(marpaESLIFp,
                                               marpaESLIFGrammarp,
                                               grammarp,
                                               (namingp != NULL) ? (char *) MARPAESLIF_UTF8_STRING : NULL, /* descEncodings */
                                               (namingp != NULL) ? namingp->bytep : NULL, /* descs */
                                               (namingp != NULL) ? namingp->bytel : 0, /* descl */
-                                              symbolp->idi,
+                                              ruledSymbolp->idi,
                                               1, /* nrhsl */
                                               &(rhsp->idi), /* rhsip */
                                               rhsExceptionp->idi,
@@ -1470,6 +1489,21 @@ static inline marpaESLIF_symbol_t  *_marpaESLIF_bootstrap_check_rhsAlternativep(
     symbolp = _marpaESLIF_bootstrap_check_meta_by_namep(marpaESLIFp, marpaESLIFGrammarp, grammarp, tmps, 1 /* createb */, 0 /* forcecreateb */, 1 /* lhsb */, declp, 0 /* rhsb */, NULL /* callp */);
     if (MARPAESLIF_UNLIKELY(symbolp == NULL)) {
       goto err;
+    }
+    if (rhsAlternativep->u.quantified.lookaheadb) {
+      /* We let previous symbol alone: this will become a lookahead symbol that is a lexeme and we will force it to point to a new symbol */
+      sprintf(tmps, "Internal[%d]", marpaESLIFGrammarp->internalRuleCounti++);
+      lookaheadp = _marpaESLIF_bootstrap_check_meta_by_namep(marpaESLIFp, marpaESLIFGrammarp, grammarp, tmps, 1 /* createb */, 0 /* forcecreateb */, 1 /* lhsb */, declp, 0 /* rhsb */, NULL /* callp */);
+      if (MARPAESLIF_UNLIKELY(symbolp == NULL)) {
+        goto err;
+      }
+      symbolp->lookupLevelDeltai = 0;
+      symbolp->lookupSymbolp     = lookaheadp;
+      symbolp->lookaheadb        = rhsAlternativep->u.quantified.lookaheadb;
+
+      ruledSymbolp = lookaheadp;
+    } else {
+      ruledSymbolp = symbolp;
     }
     /* Check the rhs primary */
     rhsp = _marpaESLIF_bootstrap_check_rhsPrimaryp(marpaESLIFp, marpaESLIFGrammarp, grammarp, rhsAlternativep->u.quantified.rhsPrimaryp, 1 /* createb */, 0 /* forcecreateb */);
@@ -1516,9 +1550,9 @@ static inline marpaESLIF_symbol_t  *_marpaESLIF_bootstrap_check_rhsAlternativep(
     /* If naming is not NULL, it is guaranteed to be an UTF-8 thingy */
 #ifndef MARPAESLIF_NTRACE
     if (separatorp != NULL) {
-      MARPAESLIF_TRACEF(marpaESLIFp, funcs, "Creating alternative rule %s(declp) ::= %s(callp)%s ranki=>%d separator=>%s(separatorcallp) proper=>%d hide-separator=>%d null-ranking=>%s at grammar level %d", symbolp->descp->asciis, rhsp->descp->asciis, rhsAlternativep->u.quantified.minimumi ? "+" : "*", ranki, separatorp->descp->asciis, (int) properb, (int) hideseparatorb, nullRanksHighb ? "high" : "low", grammarp->leveli);
+      MARPAESLIF_TRACEF(marpaESLIFp, funcs, "Creating alternative rule %s(declp) ::= %s(callp)%s ranki=>%d separator=>%s(separatorcallp) proper=>%d hide-separator=>%d null-ranking=>%s at grammar level %d", ruledSymbolp->descp->asciis, rhsp->descp->asciis, rhsAlternativep->u.quantified.minimumi ? "+" : "*", ranki, separatorp->descp->asciis, (int) properb, (int) hideseparatorb, nullRanksHighb ? "high" : "low", grammarp->leveli);
     } else {
-      MARPAESLIF_TRACEF(marpaESLIFp, funcs, "Creating alternative rule %s ::= %s%s ranki=>%d null-ranking=>%s at grammar level %d", symbolp->descp->asciis, rhsp->descp->asciis, rhsAlternativep->u.quantified.minimumi ? "+" : "*", ranki, nullRanksHighb ? "high" : "low", grammarp->leveli);
+      MARPAESLIF_TRACEF(marpaESLIFp, funcs, "Creating alternative rule %s ::= %s%s ranki=>%d null-ranking=>%s at grammar level %d", ruledSymbolp->descp->asciis, rhsp->descp->asciis, rhsAlternativep->u.quantified.minimumi ? "+" : "*", ranki, nullRanksHighb ? "high" : "low", grammarp->leveli);
     }
 #endif
     rulep = _marpaESLIF_bootstrap_check_rulep(marpaESLIFp,
@@ -1527,7 +1561,7 @@ static inline marpaESLIF_symbol_t  *_marpaESLIF_bootstrap_check_rhsAlternativep(
                                               (namingp != NULL) ? (char *) MARPAESLIF_UTF8_STRING : NULL, /* descEncodings */
                                               (namingp != NULL) ? namingp->bytep : NULL, /* descs */
                                               (namingp != NULL) ? namingp->bytel : 0, /* descl */
-                                              symbolp->idi,
+                                              ruledSymbolp->idi,
                                               1, /* nrhsl */
                                               &(rhsp->idi), /* rhsip */
                                               -1, /* exceptioni */
