@@ -1119,6 +1119,9 @@ marpaESLIF BNF can be expressed in itself:
                                    | '(' <rhs primary> '-' <rhs primary> <adverb list> ')'
                                    | '(-' <rhs primary> <quantifier> <adverb list> '-)'
                                    | '(' <rhs primary> <quantifier> <adverb list> ')'
+                                   | /\(\?[=!]/ <priorities> ')'
+                                   | /\(\?[=!]/ <rhs primary> '-' <rhs primary> <adverb list> ')'
+                                   | /\(\?[=!]/ <rhs primary> <quantifier> <adverb list> ')'
   <rhs primary no parameter>     ::= <single symbol>
                                    | <symbol> '@' <grammar reference>
   <rhs primary>                  ::= <rhs primary no parameter>
