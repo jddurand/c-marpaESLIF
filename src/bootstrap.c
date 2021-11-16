@@ -1362,6 +1362,8 @@ static inline marpaESLIF_symbol_t  *_marpaESLIF_bootstrap_check_rhsAlternativep(
       symbolp->lookupSymbolp     = lookaheadp;
       symbolp->lookaheadb        = rhsAlternativep->u.priorities.lookaheadb;
 
+      marpaESLIFGrammarp->hasLookaheadMetab = 1;
+
       ruledSymbolp = lookaheadp;
     } else {
       ruledSymbolp = symbolp;
@@ -1392,6 +1394,8 @@ static inline marpaESLIF_symbol_t  *_marpaESLIF_bootstrap_check_rhsAlternativep(
       symbolp->lookupLevelDeltai = 0;
       symbolp->lookupSymbolp     = lookaheadp;
       symbolp->lookaheadb        = rhsAlternativep->u.exception.lookaheadb;
+
+      marpaESLIFGrammarp->hasLookaheadMetab = 1;
 
       ruledSymbolp = lookaheadp;
     } else {
@@ -1500,6 +1504,8 @@ static inline marpaESLIF_symbol_t  *_marpaESLIF_bootstrap_check_rhsAlternativep(
       symbolp->lookupLevelDeltai = 0;
       symbolp->lookupSymbolp     = lookaheadp;
       symbolp->lookaheadb        = rhsAlternativep->u.quantified.lookaheadb;
+
+      marpaESLIFGrammarp->hasLookaheadMetab = 1;
 
       ruledSymbolp = lookaheadp;
     } else {

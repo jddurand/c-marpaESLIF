@@ -333,6 +333,7 @@ struct marpaESLIFGrammar {
   short                      hasSolPseudoTerminalb; /* Any :sol terminal in the grammar ? */
   genericHash_t              _lexemeGrammarHash; /* Cache of string <=> lexeme grammars */
   genericHash_t             *lexemeGrammarHashp;
+  short                      hasLookaheadMetab;  /* Any lookahead meta in the grammar ? */
 };
 
 struct marpaESLIF_meta {
