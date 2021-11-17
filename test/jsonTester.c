@@ -31,6 +31,7 @@ int main(int argc, char **argv) {
   int                          nberrori = 0;
   test_element_chunk_t        *chunkp;
   char                        *p;
+  char                        *names;
 
   genericLoggerp = GENERICLOGGER_NEW(GENERICLOGGER_LOGLEVEL_TRACE);
   if (genericLoggerp == NULL) {
@@ -49,22 +50,64 @@ int main(int argc, char **argv) {
     goto err;
   }
 
+  marpaESLIFJSONDecodeOption.disallowDupkeysb                = 0;
+  marpaESLIFJSONDecodeOption.maxDepthl                       = 0;
+  marpaESLIFJSONDecodeOption.noReplacementCharacterb         = 0;
+  marpaESLIFJSONDecodeOption.positiveInfinityActionp         = NULL; /* +Infinity action */
+  marpaESLIFJSONDecodeOption.negativeInfinityActionp         = NULL; /* -Infinity action */
+  marpaESLIFJSONDecodeOption.positiveNanActionp              = NULL; /* +Nan action */
+  marpaESLIFJSONDecodeOption.negativeNanActionp              = NULL; /* -Nan action */
+  marpaESLIFJSONDecodeOption.numberActionp                   = NULL; /* Number action */
+
   test_elementp = &(tests[0]);
   
   while (test_elementp->names != NULL) {
 
-    if ((argc == 2) && (strcmp(argv[1], test_elementp->names) != 0)) {
-      goto next;
-    }
+    if (argc == 2) {
+      if (strcmp(argv[1], "-") == 0) {
+        /* stdin */
+        char stdins[1024];
+        size_t stdinl;
 
-    marpaESLIFJSONDecodeOption.disallowDupkeysb                = 0;
-    marpaESLIFJSONDecodeOption.maxDepthl                       = 0;
-    marpaESLIFJSONDecodeOption.noReplacementCharacterb         = 0;
-    marpaESLIFJSONDecodeOption.positiveInfinityActionp         = NULL; /* +Infinity action */
-    marpaESLIFJSONDecodeOption.negativeInfinityActionp         = NULL; /* -Infinity action */
-    marpaESLIFJSONDecodeOption.positiveNanActionp              = NULL; /* +Nan action */
-    marpaESLIFJSONDecodeOption.negativeNanActionp              = NULL; /* -Nan action */
-    marpaESLIFJSONDecodeOption.numberActionp                   = NULL; /* Number action */
+        marpaESLIFTester_context.inputl = 0;
+        while (1) {
+          clearerr(stdin);
+          stdinl = fread(stdins, 1, sizeof(stdins), stdin);
+          if (stdinl > sizeof(stdins)) {
+            fprintf(stderr, "fread returned more bytes than expected\n");
+            goto err;
+          } else {
+            if (ferror(stdin)) {
+              fprintf(stderr, "stdin stream error, %s\n", strerror(errno));
+              goto err;
+            }
+            if (stdinl > 0) {
+              if (marpaESLIFTester_context.inputs == NULL) {
+                marpaESLIFTester_context.inputs = (char *) malloc(stdinl);
+                if (marpaESLIFTester_context.inputs == NULL) {
+                  GENERICLOGGER_ERRORF(genericLoggerp, "malloc failure, %s", strerror(errno));
+                  goto err;
+                }
+              } else {
+                /* Tant pis for the memory leak if realloc failed */
+                marpaESLIFTester_context.inputs = (char *) realloc(marpaESLIFTester_context.inputs, marpaESLIFTester_context.inputl + stdinl);
+                if (marpaESLIFTester_context.inputs == NULL) {
+                  GENERICLOGGER_ERRORF(genericLoggerp, "realloc failure, %s", strerror(errno));
+                  goto err;
+                }
+              }
+              memcpy(marpaESLIFTester_context.inputs + marpaESLIFTester_context.inputl, stdins, stdinl);
+              marpaESLIFTester_context.inputl += stdinl;
+            }
+          }
+          if (feof(stdin)) {
+            goto go;
+          }
+        }
+      } else if (strcmp(argv[1], test_elementp->names) != 0) {
+        goto next;
+      }
+    }
 
     marpaESLIFTester_context.inputl = 0;
 
@@ -88,6 +131,7 @@ int main(int argc, char **argv) {
       chunkp++;
     }
 
+  go:
     marpaESLIFRecognizerOption.userDatavp               = &marpaESLIFTester_context;
     marpaESLIFRecognizerOption.readerCallbackp          = inputReaderb;
     marpaESLIFRecognizerOption.disableThresholdb        = 0;
@@ -110,29 +154,38 @@ int main(int argc, char **argv) {
     marpaESLIFValueOption.nullb                 = 0;    /* Default: 0 */
     marpaESLIFValueOption.maxParsesi            = 0;    /* Default: 0 */
 
-    GENERICLOGGER_INFOF(genericLoggerp, "Scanning JSON %s", test_elementp->names);
+    names = (argc == 2) ? argv[1] : test_elementp->names;
+    GENERICLOGGER_INFOF(genericLoggerp, "Scanning JSON %s", names);
 
     jsonb = marpaESLIFJSON_decodeb(marpaESLIFGrammarJsonp, &marpaESLIFJSONDecodeOption, &marpaESLIFRecognizerOption, &marpaESLIFValueOption);
-    if (test_elementp->names[0] == 'i') {
+    if (names[0] == 'i') {
       /* Implementation defined */
       if (jsonb) {
-        GENERICLOGGER_INFOF(genericLoggerp, "%s => OK (implementation defined)", test_elementp->names);
+        GENERICLOGGER_INFOF(genericLoggerp, "%s => OK (implementation defined)", names);
       } else {
-        GENERICLOGGER_NOTICEF(genericLoggerp, "%s => KO (implementation defined)", test_elementp->names);
+        GENERICLOGGER_NOTICEF(genericLoggerp, "%s => KO (implementation defined)", names);
       }
-    } else if (test_elementp->names[0] == 'n') {
+    } else if (names[0] == 'n') {
       if (jsonb) {
-        GENERICLOGGER_ERRORF(genericLoggerp, "%s => KO (success when it should have failed)", test_elementp->names);
+        GENERICLOGGER_ERRORF(genericLoggerp, "%s => KO (success when it should have failed)", names);
         ++nberrori;
         exiti = 1;
       } else {
-        GENERICLOGGER_INFOF(genericLoggerp, "%s => OK", test_elementp->names);
+        GENERICLOGGER_INFOF(genericLoggerp, "%s => OK", names);
       }
-    } else if (test_elementp->names[0] == 'y') {
+    } else if (names[0] == 'y') {
       if (jsonb) {
-        GENERICLOGGER_INFOF(genericLoggerp, "%s => OK", test_elementp->names);
+        GENERICLOGGER_INFOF(genericLoggerp, "%s => OK", names);
       } else {
-        GENERICLOGGER_ERRORF(genericLoggerp, "%s => KO (failure when it should have succeeded)", test_elementp->names);
+        GENERICLOGGER_ERRORF(genericLoggerp, "%s => KO (failure when it should have succeeded)", names);
+        ++nberrori;
+        exiti = 1;
+      }
+    } else {
+      if (jsonb) {
+        GENERICLOGGER_INFOF(genericLoggerp, "%s => OK", names);
+      } else {
+        GENERICLOGGER_INFOF(genericLoggerp, "%s => KO", names);
         ++nberrori;
         exiti = 1;
       }
@@ -142,6 +195,9 @@ int main(int argc, char **argv) {
     marpaESLIFTester_context.inputs = NULL;
 
   next:
+    if ((argc == 2) && (strcmp(argv[1], "-") == 0)) {
+      break;
+    }
     test_elementp++;
   }
 
