@@ -18950,8 +18950,18 @@ static inline unsigned long _marpaESLIF_djb2_s(unsigned char *str, size_t length
 int _marpaESLIF_ptrhashi(void *userDatavp, genericStackItemType_t itemType, void **pp)
 /****************************************************************************/
 {
+  /* C.f. https://jfdube.wordpress.com/2011/10/12/hashing-strings-and-pointers-avoiding-common-pitfalls/ */
   /* We know what we are doing, i.e. that *pp is a void* */
-  return (int) (_marpaESLIF_djb2_s((unsigned char *) pp, sizeof(void *)) % MARPAESLIF_HASH_SIZE);
+  marpaESLIF_uint32_t u32 = (marpaESLIF_uint32_t) *pp;
+
+  u32 = ~u32 + (u32 << 15);
+  u32 = u32 ^ (u32 >> 12);
+  u32 = u32 + (u32 << 2);
+  u32 = u32 ^ (u32 >> 4);
+  u32 = u32 * 2057;
+  u32 = u32 ^ (u32 >> 16);
+
+  return (int) (u32 % MARPAESLIF_HASH_SIZE);
 }
 
 
