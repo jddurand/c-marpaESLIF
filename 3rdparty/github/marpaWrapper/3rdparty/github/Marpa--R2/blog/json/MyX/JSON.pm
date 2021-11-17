@@ -1,4 +1,4 @@
-package MarpaX::JSON;
+package MyX::JSON;
 
 use 5.010;
 use strict;
@@ -121,7 +121,7 @@ sub parse {
 
 sub parse_json {
     my ($string) = @_;
-    my $parser = MarpaX::JSON->new();
+    my $parser = MyX::JSON->new();
     return $parser->parse($string);
 }
 
