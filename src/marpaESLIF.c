@@ -6052,10 +6052,9 @@ static inline short _marpaESLIFRecognizer_symbol_matcherb(marpaESLIFRecognizer_t
 /* This function can call for more data. If the later fails, it returns -1 and this is fatal, 0 is a normal error, 1 is ok. */
 /*****************************************************************************/
 {
-  static const char                       *funcs                              = "_marpaESLIFRecognizer_symbol_matcherb";
-  marpaESLIFValueResult_t                  marpaESLIFValueResultArray         = marpaESLIFValueResultUndef;
-  /* When caller gives a marpaESLIFValueResultp, reuse it immediately, so that we avoid an unnecesary memcpy */
-  marpaESLIFValueResult_t                 *marpaESLIFValueResultp             = (marpaESLIFValueResultArrayp != NULL) ? marpaESLIFValueResultArrayp : &marpaESLIFValueResultArray;
+  static const char                       *funcs = "_marpaESLIFRecognizer_symbol_matcherb";
+  marpaESLIFValueResult_t                  marpaESLIFValueResultArray;
+  marpaESLIFValueResult_t                 *marpaESLIFValueResultp;
   /* offset flag is meaningful only if the symbol is a terminal */
   short                                    rcb;
   marpaESLIF_matcher_value_t               rci;
@@ -6069,6 +6068,16 @@ static inline short _marpaESLIFRecognizer_symbol_matcherb(marpaESLIFRecognizer_t
   MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_INC;
   MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "start");
 
+  /* Set a valid marpaESLIFResultp */
+  if (marpaESLIFValueResultArrayp != NULL) {
+    /* When caller gives a marpaESLIFValueResultArrayp, reuse it immediately, so that we avoid an unnecesary memcpy */
+    marpaESLIFValueResultp = marpaESLIFValueResultArrayp;
+  } else {
+    /* Else assign an address on the stack. Note that this is immediately followed by an initialization ../ */
+    marpaESLIFValueResultp = &marpaESLIFValueResultArray;
+  }
+
+  /* /.. here: */
   marpaESLIFValueResultp->contextp        = NULL;
   marpaESLIFValueResultp->representationp = NULL;
   marpaESLIFValueResultp->type            = MARPAESLIF_VALUE_TYPE_UNDEF;
