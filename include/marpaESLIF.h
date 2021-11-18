@@ -248,15 +248,15 @@ typedef float marpaESLIFValueResultFloat_t;
 typedef double marpaESLIFValueResultDouble_t;
 typedef struct marpaESLIFValueResultPtr {
   void                                *p;
+  short                                shallowb;
   void                                *freeUserDatavp;
   marpaESLIFValueResultFreeCallback_t  freeCallbackp;
-  short                                shallowb;
 } marpaESLIFValueResultPtr_t;
 typedef struct marpaESLIFValueResultArray {
   char                                *p;
+  short                                shallowb;
   void                                *freeUserDatavp;
   marpaESLIFValueResultFreeCallback_t  freeCallbackp;
-  short                                shallowb;
   size_t                               sizel;
 } marpaESLIFValueResultArray_t;
 enum marpaESLIFValueResultBool {
@@ -265,25 +265,25 @@ enum marpaESLIFValueResultBool {
 };
 typedef struct marpaESLIFValueResultString {
   unsigned char                       *p;
+  short                                shallowb;
   void                                *freeUserDatavp;
   marpaESLIFValueResultFreeCallback_t  freeCallbackp;
-  short                                shallowb;
   size_t                               sizel;
   char                                *encodingasciis;
 } marpaESLIFValueResultString_t;
 typedef struct marpaESLIFValueResultRow {
   marpaESLIFValueResult_t             *p;
+  short                                shallowb;
   void                                *freeUserDatavp;
   marpaESLIFValueResultFreeCallback_t  freeCallbackp;
-  short                                shallowb;
   size_t                               sizel;
 } marpaESLIFValueResultRow_t;
 typedef struct marpaESLIFValueResultPair marpaESLIFValueResultPair_t;
 typedef struct marpaESLIFValueResultTable {
   marpaESLIFValueResultPair_t         *p;
+  short                                shallowb;
   void                                *freeUserDatavp;
   marpaESLIFValueResultFreeCallback_t  freeCallbackp;
-  short                                shallowb;
   size_t                               sizel;
 } marpaESLIFValueResultTable_t;
 typedef long double marpaESLIFValueResultLongDouble_t;
