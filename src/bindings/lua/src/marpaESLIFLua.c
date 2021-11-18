@@ -265,8 +265,6 @@ static int                                marpaESLIFLua_marpaESLIFRecognizer_hoo
 static int                                marpaESLIFLua_marpaESLIFValue_newi(lua_State *L);
 static int                                marpaESLIFLua_marpaESLIFRecognizer_symbolTryi(lua_State *L);
 static int                                marpaESLIFLua_marpaESLIFRecognizer_progressi(lua_State *L);
-static int                                marpaESLIFLua_marpaESLIFRecognizer_latestEarleySetIdi(lua_State *L);
-static int                                marpaESLIFLua_marpaESLIFRecognizer_earlemei(lua_State *L);
 #ifdef MARPAESLIFLUA_EMBEDDED
 static int                                marpaESLIFLua_marpaESLIFValue_newFromUnmanagedi(lua_State *L, marpaESLIFValue_t *marpaESLIFValueUnmanagedp);
 #endif

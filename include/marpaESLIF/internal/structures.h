@@ -8,6 +8,10 @@
  */
 #define GENERICSTACK_CUSTOM marpaESLIFValueResult_t
 
+#ifndef MARPAESLIF_HASH_SIZE
+#define MARPAESLIF_HASH_SIZE 8 /* General default hash size */
+#endif
+
 #include <marpaWrapper.h>
 #include <genericStack.h>
 #include <genericHash.h>
@@ -379,10 +383,6 @@ struct marpaESLIFValue {
   marpaESLIF_string_t         *stringp; /* Not NULL only when is a literal - then callback is forced to be internal */
   lua_State                   *L;       /* Shallow copy of the L that is in the top-level recognizer */
   void                        *marpaESLIFLuaValueContextp;
-  genericStack_t               _beforePtrStack;
-  genericStack_t              *beforePtrStackp;
-  genericHash_t                _afterPtrHash;
-  genericHash_t               *afterPtrHashp;
   marpaESLIFRepresentation_t   proxyRepresentationp; /* Proxy representation callback, c.f. json.c for an example */
   marpaESLIF_stringGenerator_t stringGenerator; /* Internal string generator, put here to avoid unnecessary malloc()/free() calls */
   genericLogger_t             *stringGeneratorLoggerp; /* Internal string generator logger, put here to avoid unnecessary genericLogger_newp()/genericLogger_freev() calls */
@@ -489,12 +489,6 @@ struct marpaESLIFRecognizer {
   /* Embedded lua - c.f. src/bindings/src/marpaESLIFLua.c */
   void                        *marpaESLIFLuaRecognizerContextp;
 
-  /* Lexeme input stack is a marpaESLIFValueResult stack */
-  genericStack_t               _beforePtrStack;
-  genericStack_t              *beforePtrStackp;
-  genericHash_t                _afterPtrHash;
-  genericHash_t               *afterPtrHashp;
-
   /* For pristine recognizers, expected terminals are always known in advance */
   size_t                       nSymbolPristinel;
   int                          *symbolArrayPristinep; /* This is shallow pointer! */
@@ -510,9 +504,15 @@ struct marpaESLIFRecognizer {
   char                        *actions;        /* Shallow pointer to action "name", depends on action type */
   marpaESLIF_action_t         *actionp;        /* Shallow pointer to action */
 
-  /* For _marpaESLIF_flatten_pointers optimization */
-  genericStack_t               _marpaESLIFValueResultFlattenStack;
-  genericStack_t              *marpaESLIFValueResultFlattenStackp;
+  /* For _marpaESLIFRecognizer_set_internalp_deepb */
+  genericStack_t               _marpaESLIFValueResultWorkStack;
+  genericStack_t              *marpaESLIFValueResultWorkStackp;
+  genericStack_t               _marpaESLIFValueResultBeforeStack;
+  genericStack_t              *marpaESLIFValueResultBeforeStackp;
+  genericStack_t               _marpaESLIFValueResultAfterStack;
+  genericStack_t              *marpaESLIFValueResultAfterStackp;
+  genericStack_t               _marpaESLIFValueResultHashArrayp[MARPAESLIF_HASH_SIZE];
+  genericStack_t              *marpaESLIFValueResultHashp; /* Only the top recognizer owns it */
 
   /* When doing regex callback, only the "offset_vector" part is variable, all other */
   /* members of the regex's TABLE argument can be created once and modified in-place */
