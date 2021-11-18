@@ -20463,16 +20463,6 @@ static inline short _marpaESLIFRecognizer_pointers_trackb(marpaESLIFRecognizer_t
 /*****************************************************************************/
 static inline short _marpaESLIFRecognizer_pointers_cleanupb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFValueResult_t *marpaESLIFValueResultOrigp, marpaESLIFValueResult_t *marpaESLIFValueResultNewp)
 /*****************************************************************************/
-/* It is in this method that we use _internalp. The algorithm is:            */
-/*                                                                           */
-/* - For all non-shallowed pointers below marpaESLIFValueResultOrigp we set  */
-/* internalp to NULL                                                         */
-/* - For all non-shallowed pointers below marpaESLIFValueResultNewp we set   */
-/* internalp to something != NULL                                            */
-/*                                                                           */
-/* Then, by definition, all non-shallowed pointers below                     */
-/* marpaESLIFValueResultOrigp that have a NULL value must be freed.          */
-/*****************************************************************************/
 {
   genericStack_t          *marpaESLIFValueOrigStackp   = marpaESLIFRecognizerp->marpaESLIFValueResultBeforeStackp;
   genericStack_t          *marpaESLIFValueNewStackp    = marpaESLIFRecognizerp->marpaESLIFValueResultAfterStackp;;
