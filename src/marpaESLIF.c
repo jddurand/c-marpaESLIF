@@ -5805,7 +5805,7 @@ static inline short _marpaESLIFRecognizer_terminal_matcherb(marpaESLIFRecognizer
       marpaESLIFValueResultp->representationp = NULL;
       marpaESLIFValueResultp->type            = MARPAESLIF_VALUE_TYPE_ARRAY;
       marpaESLIFValueResultp->u.a.sizel       = matchedLengthl;
-      if (eofb || (marpaESLIFRecognizerp->marpaESLIFRecognizerParentp != NULL)) {
+      if ((marpaESLIFRecognizerp->marpaESLIFRecognizerParentp != NULL) || eofb) {
         /* eofb: we own the input that is guaranteed to not change. */
         /* lexeme mode - caller's responsibility to take care - this an internal case, not exposed to the end-user. */
         marpaESLIFValueResultp->u.a.p              = matchedp;
