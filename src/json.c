@@ -82,7 +82,7 @@ static const char *marpaESLIFJSON_decode_extended_grammars =
   "           | object\n"
   "           | array\n"
   "           | constant\n"
-  "constant ::= /true|false|null/                                                                 action         => constant\n"
+  "constant ::= /true|false|null/                                                                 action         => 0_constant\n"
   "\n"
   "# -----------\n"
   "# JSON object\n"
@@ -90,7 +90,7 @@ static const char *marpaESLIFJSON_decode_extended_grammars =
   ":terminal ::= '{'                                                                              symbol-action => ::undef    # We do not mind about this symbol\n"
   ":terminal ::= '}'                                                                              symbol-action => ::undef    # We do not mind about this symbol\n"
   "object    ::= '{' members '}'                                                                  action         => ::copy[1]\n"
-  "members   ::= pair*                                                                            action         => members   # Returns { @{pair1}, ..., @{pair2} }\n"
+  "members   ::= pair*                                                                            action         => 1_members # Returns { @{pair1}, ..., @{pair2} }\n"
   "                                                                                               separator      => commas    # ... separated by comma(s)\n"
   "                                                                                               proper         => 0         # ... with eventual trailing separator\n"
   "                                                                                               hide-separator => 1         # ... and hide separator in the action\n"
@@ -113,7 +113,7 @@ static const char *marpaESLIFJSON_decode_extended_grammars =
   "# JSON Number\n"
   "# -----------\n"
   "# Take care: we allow a JSON number to start with non-significant digits\n"
-  "number ::= /[+-]?(?:[0-9]+)(?:\\.[0-9]+)?(?:[eE][+-]?[0-9]+)?/                                    action => number\n"
+  "number ::= /[+-]?(?:[0-9]+)(?:\\.[0-9]+)?(?:[eE][+-]?[0-9]+)?/                                    action => 2_number\n"
   "\n"
   "# -----------\n"
   "# JSON String\n"
@@ -123,8 +123,8 @@ static const char *marpaESLIFJSON_decode_extended_grammars =
   "\n"
   ":terminal ::= '\"' pause => after event => :discard[switch]\n"
   "\n"
-  "chars   ::= char*                                                                              action => chars\n"
-  "char    ::= /(?:[^\"\\\\\\x00-\\x1F]+)|(?:\\\\[\"\\\\\\/bfnrt])|(?:(?:\\\\u[[:xdigit:]]{4})+)/ action => char # Take care: PCRE2 [:cntrl:] includes DEL character\n"
+  "chars   ::= char*                                                                              action => 3_chars\n"
+  "char    ::= /(?:[^\"\\\\\\x00-\\x1F]+)|(?:\\\\[\"\\\\\\/bfnrt])|(?:(?:\\\\u[[:xdigit:]]{4})+)/ action => 4_char # Take care: PCRE2 [:cntrl:] includes DEL character\n"
   "\n"
   "# ------------------------------------------------------------\n"
   "# Discard: Unsignificant whitespaces, Perl comment C++ comment\n"
@@ -142,27 +142,27 @@ static const char *marpaESLIFJSON_decode_extended_grammars =
   "# --------------------------\n"
   "# Max depth limit (does not change the grammar)\n"
   "# --------------------------\n"
-  ":terminal ::= '[' pause => after event => inc[]\n"
-  ":terminal ::= ']' pause => after event => dec[]\n"
-  ":terminal ::= '{' pause => after event => inc[]\n"
-  ":terminal ::= '}' pause => after event => dec[]\n"
+  ":terminal ::= '[' pause => after event => 0_inc[]\n"
+  ":terminal ::= ']' pause => after event => 1_dec[]\n"
+  ":terminal ::= '{' pause => after event => 0_inc[]\n"
+  ":terminal ::= '}' pause => after event => 1_dec[]\n"
   "\n"
   "# ----------------\n"
   "# Infinity extension\n"
   "# ----------------\n"
-  "number   ::= '-Infinity':i                                                                     action => negative_infinity\n"
-  "           | '-Inf':i                                                                          action => negative_infinity\n"
-  "           | '+Infinity':i                                                                     action => positive_infinity\n"
-  "           | '+Inf':i                                                                          action => positive_infinity\n"
-  "           | 'Infinity':i                                                                      action => positive_infinity\n"
-  "           | 'Inf':i                                                                           action => positive_infinity\n"
+  "number   ::= '-Infinity':i                                                                     action => 6_negative_infinity\n"
+  "           | '-Inf':i                                                                          action => 6_negative_infinity\n"
+  "           | '+Infinity':i                                                                     action => 5_positive_infinity\n"
+  "           | '+Inf':i                                                                          action => 5_positive_infinity\n"
+  "           | 'Infinity':i                                                                      action => 5_positive_infinity\n"
+  "           | 'Inf':i                                                                           action => 5_positive_infinity\n"
   "\n"
   "# ----------------\n"
   "# Nan extension\n"
   "# ----------------\n"
-  "number   ::= '-NaN':i                                                                          action => negative_nan\n"
-  "           | 'NaN':i                                                                           action => positive_nan\n"
-  "           | '+NaN':i                                                                          action => positive_nan\n"
+  "number   ::= '-NaN':i                                                                          action => 7_negative_nan\n"
+  "           | 'NaN':i                                                                           action => 8_positive_nan\n"
+  "           | '+NaN':i                                                                          action => 8_positive_nan\n"
   "\n"
   "# -----------------\n"
   "# Control character\n"
@@ -204,7 +204,7 @@ static const char *marpaESLIFJSON_decode_strict_grammars =
   "           | object\n"
   "           | array\n"
   "           | constant\n"
-  "constant ::= /true|false|null/                                                                 action         => constant\n"
+  "constant ::= /true|false|null/                                                                 action         => 0_constant\n"
   "\n"
   "# -----------\n"
   "# JSON object\n"
@@ -212,7 +212,7 @@ static const char *marpaESLIFJSON_decode_strict_grammars =
   ":terminal ::= '{'                                                                              symbol-action => ::undef    # We do not mind about this symbol\n"
   ":terminal ::= '}'                                                                              symbol-action => ::undef    # We do not mind about this symbol\n"
   "object    ::= '{' members '}'                                                                  action         => ::copy[1]\n"
-  "members   ::= pair*                                                                            action         => members   # Returns { @{pair1}, ..., @{pair2} }\n"
+  "members   ::= pair*                                                                            action         => 1_members # Returns { @{pair1}, ..., @{pair2} }\n"
   "                                                                                               separator      => comma     # ... separated by comma\n"
   "                                                                                               proper         => 1         # ... with no trailing separator\n"
   "                                                                                               hide-separator => 1         # ... and hide separator in the action\n"
@@ -234,7 +234,7 @@ static const char *marpaESLIFJSON_decode_strict_grammars =
   "# -----------\n"
   "# JSON Number\n"
   "# -----------\n"
-  "number ::= /-?(?:0|[1-9][0-9]*)(?:\\.[0-9]+)?(?:[eE][+-]?[0-9]+)?/                             action => number\n"
+  "number ::= /-?(?:0|[1-9][0-9]*)(?:\\.[0-9]+)?(?:[eE][+-]?[0-9]+)?/                             action => 2_number\n"
   "\n"
   "# -----------\n"
   "# JSON String\n"
@@ -244,8 +244,8 @@ static const char *marpaESLIFJSON_decode_strict_grammars =
   "\n"
   ":terminal ::= '\"' pause => after event => :discard[switch]\n"
   "\n"
-  "chars   ::= char*                                                                              action => chars\n"
-  "char    ::= /(?:[^\"\\\\\\x00-\\x1F]+)|(?:\\\\[\"\\\\\\/bfnrt])|(?:(?:\\\\u[[:xdigit:]]{4})+)/ action => char # Take care: PCRE2 [:cntrl:] includes DEL character\n"
+  "chars   ::= char*                                                                              action => 3_chars\n"
+  "char    ::= /(?:[^\"\\\\\\x00-\\x1F]+)|(?:\\\\[\"\\\\\\/bfnrt])|(?:(?:\\\\u[[:xdigit:]]{4})+)/ action => 4_char # Take care: PCRE2 [:cntrl:] includes DEL character\n"
   "\n"
   "# -------------------------\n"
   "# Unsignificant whitespaces\n"
@@ -255,10 +255,10 @@ static const char *marpaESLIFJSON_decode_strict_grammars =
   "# --------------------------\n"
   "# Max depth limit (does not change the grammar)\n"
   "# --------------------------\n"
-  ":terminal ::= '[' pause => after event => inc[]\n"
-  ":terminal ::= ']' pause => after event => dec[]\n"
-  ":terminal ::= '{' pause => after event => inc[]\n"
-  ":terminal ::= '}' pause => after event => dec[]\n"
+  ":terminal ::= '[' pause => after event => 0_inc[]\n"
+  ":terminal ::= ']' pause => after event => 1_dec[]\n"
+  ":terminal ::= '{' pause => after event => 0_inc[]\n"
+  ":terminal ::= '}' pause => after event => 1_dec[]\n"
   "\n"
   ;
 
@@ -595,22 +595,7 @@ static short _marpaESLIFJSONReaderb(void *userDatavp, char **inputcpp, size_t *i
 static marpaESLIFRecognizerEventCallback_t _marpaESLIFJSONRecognizerEventActionResolverp(void *userDatavp, marpaESLIFRecognizer_t *marpaESLIFRecognizerp, char *actions)
 /*****************************************************************************/
 {
-  marpaESLIFRecognizerEventCallback_t  rcp;
-
-  if (MARPAESLIF_LIKELY(strcmp(actions, "marpaESLIFJsonEventAction") == 0)) {
-    rcp = _marpaESLIFJSONRecognizerEventCallbackb;
-  } else {
-    MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "Unrecognized event-action \"%s\"", actions);
-    goto err;
-  }
-
-  goto done;
-
- err:
-  rcp = NULL;
-  
- done:
-  return rcp;
+  return _marpaESLIFJSONRecognizerEventCallbackb;
 }
 
 /*****************************************************************************/
@@ -622,17 +607,21 @@ static short _marpaESLIFJSONRecognizerEventCallbackb(void *userDatavp, marpaESLI
 
   for (i = 0; i < eventArrayl; i++) {
     if (eventArrayp[i].events != NULL) {
-      if (strcmp(eventArrayp[i].events, "inc[]") == 0) {
+      switch (eventArrayp[i].events[0]) {
+      case '0':
         if (MARPAESLIF_UNLIKELY(! _marpaESLIFJSON_incb(userDatavp, marpaESLIFRecognizerp, marpaESLIFValueResultBoolp))) {
           goto err;
         }
-      } else if (strcmp(eventArrayp[i].events, "dec[]") == 0) {
+        break;
+      case '1':
         if (MARPAESLIF_UNLIKELY(! _marpaESLIFJSON_decb(userDatavp, marpaESLIFRecognizerp, marpaESLIFValueResultBoolp))) {
           goto err;
         }
-      } else {
+        break;
+      default:
         MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "Unrecognized event \"%s\"", eventArrayp[i].events);
         goto err;
+        break;
       }
     }
   }
@@ -696,25 +685,35 @@ static marpaESLIFValueRuleCallback_t _marpaESLIFJSONValueRuleActionResolverp(voi
 {
   marpaESLIFValueRuleCallback_t  rcp;
 
-  if (strcmp(actions, "members") == 0) {
-    rcp = _marpaESLIFJSON_membersb;
-  } else if (strcmp(actions, "number") == 0) {
-    rcp = _marpaESLIFJSON_numberb;
-  } else if (strcmp(actions, "char") == 0) {
-    rcp = _marpaESLIFJSON_charb;
-  } else if (strcmp(actions, "chars") == 0) {
-    rcp = _marpaESLIFJSON_charsb;
-  } else if (strcmp(actions, "constant") == 0) {
+  switch (actions[0]) {
+  case '0':
     rcp = _marpaESLIFJSON_constantb;
-  } else if (strcmp(actions, "positive_infinity") == 0) {
+    break;
+  case '1':
+    rcp = _marpaESLIFJSON_membersb;
+    break;
+  case '2':
+    rcp = _marpaESLIFJSON_numberb;
+    break;
+  case '3':
+    rcp = _marpaESLIFJSON_charsb;
+    break;
+  case '4':
+    rcp = _marpaESLIFJSON_charb;
+    break;
+  case '5':
     rcp = _marpaESLIFJSON_positive_infinityb;
-  } else if (strcmp(actions, "negative_infinity") == 0) {
+    break;
+  case '6':
     rcp = _marpaESLIFJSON_negative_infinityb;
-  } else if (strcmp(actions, "positive_nan") == 0) {
-    rcp = _marpaESLIFJSON_positive_nanb;
-  } else if (strcmp(actions, "negative_nan") == 0) {
+    break;
+  case '7':
     rcp = _marpaESLIFJSON_negative_nanb;
-  } else {
+    break;
+  case '8':
+    rcp = _marpaESLIFJSON_positive_nanb;
+    break;
+  default:
     MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "Unrecognized action \"%s\"", actions);
     goto err;
   }
