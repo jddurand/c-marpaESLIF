@@ -15877,16 +15877,7 @@ static inline short _marpaESLIFRecognizer_internalStack_i_setb(marpaESLIFRecogni
   }
 
   /* Do the replacement */
-  if (marpaESLIFValueResultp->type == MARPAESLIF_VALUE_TYPE_UNDEF) {
-    /* No need of a memcpy if marpaESLIFValueResultp type is UNDEF, though context and representation remains important */
-    /* These three lines appears to be more performant than a memcpy */
-    marpaESLIFValueResultOrigp->type            = MARPAESLIF_VALUE_TYPE_UNDEF;
-    marpaESLIFValueResultOrigp->contextp        = marpaESLIFValueResultp->contextp;
-    marpaESLIFValueResultOrigp->representationp = marpaESLIFValueResultp->representationp;
-  } else {
-    /* Do a memcpy */
-    *marpaESLIFValueResultOrigp = *marpaESLIFValueResultp;
-  }
+  *marpaESLIFValueResultOrigp = *marpaESLIFValueResultp;
 
   rcb = 1;
   goto done;
