@@ -20489,16 +20489,29 @@ static inline short _marpaESLIFRecognizer_pointers_cleanupb(marpaESLIFRecognizer
   if (! _marpaESLIFRecognizer_pointers_trackb(marpaESLIFRecognizerp, marpaESLIFValueOrigStackp, marpaESLIFValueResultOrigp, 0 /* hashb */)) {
     goto err;
   }
-  
+
+  /* Pointless to try to free if there is no non-shallowed pointer in the original marpaESLIFValueResult */
+  if ((origUsedi = GENERICSTACK_USED(marpaESLIFValueOrigStackp)) <= 0) {
+    rcb = 1;
+    goto done;
+  }
+
   /* Remember non-shallowed new marpaESLIFValueResult and their inner ptr in our internal hash */
   if (! _marpaESLIFRecognizer_pointers_trackb(marpaESLIFRecognizerp, marpaESLIFValueNewStackp, marpaESLIFValueResultNewp, 1 /* hashb */)) {
     goto err;
   }
-  
-  /* Loop on all original non-shallowed pointers. Those whose internal pointer do not exist in the internal hash should be freed */
-  /* It is VERY important to take the stack in reverse order */
-  /* Note that doing a GET is a little more performance than a POP in this case. */
-  if ((origUsedi = GENERICSTACK_USED(marpaESLIFValueOrigStackp)) > 0) {
+
+  /* If no non-shallowed pointer in the new marpaESLIFValueResult, no need to lookup to hash */
+  if (GENERICSTACK_USED(marpaESLIFValueNewStackp) <= 0) {
+    /* Loop on all original non-shallowed pointers. Those whose internal pointer do not exist in the internal hash should be freed */
+    /* It is VERY important to take the stack in reverse order */
+    /* Note that doing a GET is a little more performance than a POP in this case. */
+    for (i = --origUsedi; i >= 0; i--) {
+      marpaESLIFValueResultTmpp = (marpaESLIFValueResult_t *) GENERICSTACK_GET_PTR(marpaESLIFValueOrigStackp, i);
+      _marpaESLIFRecognizer_valueResultFreev(marpaESLIFRecognizerp, marpaESLIFValueResultTmpp);
+    }
+  } else {
+    /* Same as before, but with a lookup on the hash table */
     for (i = --origUsedi; i >= 0; i--) {
       marpaESLIFValueResultTmpp = (marpaESLIFValueResult_t *) GENERICSTACK_GET_PTR(marpaESLIFValueOrigStackp, i);
       /* By definition the pointer is ok */
@@ -20506,25 +20519,24 @@ static inline short _marpaESLIFRecognizer_pointers_cleanupb(marpaESLIFRecognizer
 
       hashi = _marpaESLIF_inlined_ptrhashi(p);
       marpaESLIFValueResultHashp = &(marpaESLIFRecognizerp->marpaESLIFValueResultHashp[hashi]);
-      if ((hashUsedi = GENERICSTACK_USED(marpaESLIFValueResultHashp)) < 0) {
-        /* Nothing in this stack */
-        continue;
-      }
 
-      foundb = 0;
-      for (j = 0; j < hashUsedi; j++) {
-        if (p == GENERICSTACK_GET_PTR(marpaESLIFValueResultHashp, j)) {
-          foundb = 1;
-          break;
+      if ((hashUsedi = GENERICSTACK_USED(marpaESLIFValueResultHashp)) <= 0) {
+        /* Cannot be found - this marpaESLIFValueResult can be freed */
+        _marpaESLIFRecognizer_valueResultFreev(marpaESLIFRecognizerp, marpaESLIFValueResultTmpp);
+      } else {
+        foundb = 0;
+        for (j = 0; j < hashUsedi; j++) {
+          if (p == GENERICSTACK_GET_PTR(marpaESLIFValueResultHashp, j)) {
+            foundb = 1;
+            break;
+          }
+        }
+    
+        if (! foundb) {
+          /* Not found - this marpaESLIFValueResult can be freed */
+          _marpaESLIFRecognizer_valueResultFreev(marpaESLIFRecognizerp, marpaESLIFValueResultTmpp);
         }
       }
-    
-      if (foundb) {
-        continue;
-      }
-
-      /* This marpaESLIFValueResult can be freed */
-      _marpaESLIFRecognizer_valueResultFreev(marpaESLIFRecognizerp, marpaESLIFValueResultTmpp);
     }
   }
 
