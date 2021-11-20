@@ -796,7 +796,7 @@ static short _marpaESLIFJSON_membersb(void *userDatavp, marpaESLIFValue_t *marpa
           origshallowbp[j] = &(marpaESLIFValueResultp->u.r.p[j].u.s.shallowb);
           break;
         case MARPAESLIF_VALUE_TYPE_ROW:
-          origshallowbp[j] = &(marpaESLIFValueResultp->u.r.p[j].u.t.shallowb);
+          origshallowbp[j] = &(marpaESLIFValueResultp->u.r.p[j].u.r.shallowb);
           break;
         case MARPAESLIF_VALUE_TYPE_TABLE:
           origshallowbp[j] = &(marpaESLIFValueResultp->u.r.p[j].u.t.shallowb);
