@@ -735,11 +735,10 @@ static short _marpaESLIFJSON_membersb(void *userDatavp, marpaESLIFValue_t *marpa
   marpaESLIFJSONContext_t       *marpaESLIFJSONContextp = (marpaESLIFJSONContext_t *) userDatavp;
   short                          disallowDupkeysb       = marpaESLIFJSONContextp->marpaESLIFJSONDecodeOptionp->disallowDupkeysb;
   marpaESLIFValueResult_t        marpaESLIFValueResult;
-  marpaESLIFValueResult_t       *marpaESLIFValueResultp;
+  marpaESLIFValueResult_t        item;
   int                            i;
   int                            j;
   int                            currentTableIndicei;
-  short                         *origshallowbp[2];
   short                          rcb;
   marpaESLIFValueResultString_t *previousKeyp;
   marpaESLIFValueResultString_t *currentKeyp;
@@ -757,64 +756,38 @@ static short _marpaESLIFJSON_membersb(void *userDatavp, marpaESLIFValue_t *marpa
   /* We receive a list of rows that we want to flatten */
   if ((! nullableb) && (argni >= arg0i)) {
     marpaESLIFValueResult.u.t.sizel = argni - arg0i + 1;
-    marpaESLIFValueResult.u.t.p = (marpaESLIFValueResultPair_t *) malloc(marpaESLIFValueResult.u.t.sizel * sizeof(marpaESLIFValueResultPair_t));
-    if (MARPAESLIF_UNLIKELY(marpaESLIFValueResult.u.t.p == NULL)) {
-      MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "malloc failure, %s", strerror(errno));
-      goto err;
+    if (marpaESLIFValuep->marpaESLIFp->ZeroIntegerisZeroBytesb) {
+      /* We do explicitely a calloc instead of a malloc, so that inner key */
+      /* and value type are automatically MARPAESLIF_VALUE_TYPE_UNDEF.     */
+      if (MARPAESLIF_UNLIKELY((marpaESLIFValueResult.u.t.p = (marpaESLIFValueResultPair_t *) calloc(marpaESLIFValueResult.u.t.sizel, sizeof(marpaESLIFValueResultPair_t))) == NULL)) {
+        MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "calloc failure, %s", strerror(errno));
+        goto err;
+      }
+    } else {
+      if (MARPAESLIF_UNLIKELY((marpaESLIFValueResult.u.t.p = (marpaESLIFValueResultPair_t *) malloc(marpaESLIFValueResult.u.t.sizel * sizeof(marpaESLIFValueResultPair_t))) == NULL)) {
+        MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "malloc failure, %s", strerror(errno));
+        goto err;
+      }
+
+      for (i = arg0i, currentTableIndicei = 0; i<= argni; i++, currentTableIndicei++) {
+        marpaESLIFValueResult.u.t.p[currentTableIndicei].key.type = MARPAESLIF_VALUE_TYPE_UNDEF;
+        marpaESLIFValueResult.u.t.p[currentTableIndicei].value.type = MARPAESLIF_VALUE_TYPE_UNDEF;
+      }
     }
 
     for (i = arg0i, currentTableIndicei = 0; i<= argni; i++, currentTableIndicei++) {
-      marpaESLIFValueResultp = _marpaESLIFValue_stack_getp(marpaESLIFValuep, i);
-      if (MARPAESLIF_UNLIKELY(marpaESLIFValueResultp == NULL)) {
+      /* No need to check that if the value at indice is is a ROW - this is ok per definition */
+      if (MARPAESLIF_UNLIKELY(! _marpaESLIFValue_stack_getAndForgetb(marpaESLIFValuep, i, &item))) {
         goto err;
       }
 
-      /* No need to check that - this is ok per definition */
-      /*
-      if (MARPAESLIF_UNLIKELY(marpaESLIFValueResultp->type != MARPAESLIF_VALUE_TYPE_ROW)) {
-        MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "marpaESLIFValueResultp->type is not ROW (got %d, %s)", marpaESLIFValueResultp->type, _marpaESLIF_value_types(marpaESLIFValueResultp->type));
+      /* Transfer row into table at indice currentTableIndicei */
+      marpaESLIFValueResult.u.t.p[currentTableIndicei].key   = item.u.r.p[0];
+      marpaESLIFValueResult.u.t.p[currentTableIndicei].value = item.u.r.p[1];
+
+      /* Free row. We know it has only two elements per definition - we voluntarily do not call it with a true deepb */
+      if (! _marpaESLIFValue_marpaESLIFValueResult_freeb(marpaESLIFValuep, (marpaESLIFValueResult_t *) &item, 0 /* deepb */)) {
         goto err;
-      }
-
-      if (MARPAESLIF_UNLIKELY(marpaESLIFValueResultp->u.r.sizel != 2)) {
-        MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "row size is %ld and not 2", (unsigned long) marpaESLIFValueResultp->u.r.sizel);
-        goto err;
-      }
-      */
-
-      /* We have to take care of members's shallow status: the table becomes the owner in any case */
-      for (j = 0; j < 2; j++) {
-        origshallowbp[j] = NULL;
-        switch (marpaESLIFValueResultp->u.r.p[j].type) {
-        case MARPAESLIF_VALUE_TYPE_PTR:
-          origshallowbp[j] = &(marpaESLIFValueResultp->u.r.p[j].u.p.shallowb);
-          break;
-        case MARPAESLIF_VALUE_TYPE_ARRAY:
-          origshallowbp[j] = &(marpaESLIFValueResultp->u.r.p[j].u.a.shallowb);
-          break;
-        case MARPAESLIF_VALUE_TYPE_STRING:
-          origshallowbp[j] = &(marpaESLIFValueResultp->u.r.p[j].u.s.shallowb);
-          break;
-        case MARPAESLIF_VALUE_TYPE_ROW:
-          origshallowbp[j] = &(marpaESLIFValueResultp->u.r.p[j].u.r.shallowb);
-          break;
-        case MARPAESLIF_VALUE_TYPE_TABLE:
-          origshallowbp[j] = &(marpaESLIFValueResultp->u.r.p[j].u.t.shallowb);
-          break;
-        default:
-          break;
-        }
-      }
-
-      marpaESLIFValueResult.u.t.p[currentTableIndicei].key   = marpaESLIFValueResultp->u.r.p[0];
-      marpaESLIFValueResult.u.t.p[currentTableIndicei].value = marpaESLIFValueResultp->u.r.p[1];
-
-      if (origshallowbp[0] != NULL) {
-        *(origshallowbp[0]) = 1;
-      }
-
-      if (origshallowbp[1] != NULL) {
-        *(origshallowbp[1]) = 1;
       }
 
       if (disallowDupkeysb && (currentTableIndicei > 0)) {
@@ -858,9 +831,7 @@ static short _marpaESLIFJSON_membersb(void *userDatavp, marpaESLIFValue_t *marpa
   goto done;
 
  err:
-  if (marpaESLIFValueResult.u.t.p != NULL) {
-    free(marpaESLIFValueResult.u.t.p);
-  }
+  _marpaESLIFValue_marpaESLIFValueResult_freeb(marpaESLIFValuep, (marpaESLIFValueResult_t *) &marpaESLIFValueResult, 1 /* deepb */);
   rcb = 0;
 
  done:

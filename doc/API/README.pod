@@ -2444,6 +2444,15 @@ Copies the value result at indice C<indicei> into the C<marpaESLIFValueResultp> 
 
 Returns a true value on success, a false value otherwise.
 
+=head3 C<marpaESLIFValue_marpaESLIFValueResult_freeb>
+
+    marpaESLIF_EXPORT short marpaESLIFValue_marpaESLIFValueResult_freeb(marpaESLIFValue_t *marpaESLIFValuep,
+                                                                        marpaESLIFValueResult_t *marpaESLIFValueResultp,
+                                                                        short deepb);
+
+Handy method to be used when you use C<marpaESLIFValue_stack_forgetb>. If C<deepb> is a false value, only the first immediate pointer, if any, inside C<marpaESLIFValueResultp> will be freed, if it not shallow. If C<deepb> is a true value, loops over all inner marpaESLIFValueResult's and call for disposal of every non-shadowed element.
+
+
 =head3 C<marpaESLIF_ftos>
 
   char *marpaESLIF_ftos(marpaESLIF_t *marpaESLIFp, float f);

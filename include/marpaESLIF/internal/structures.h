@@ -287,6 +287,7 @@ struct marpaESLIF {
   marpaESLIF_terminal_t  *regexModifiersp;             /* Internal regex for match regex modifiers */
   genericLogger_t        *traceLoggerp;                /* For cases where this is silent mode but compiled with TRACE */
   short                   NULLisZeroBytesb;            /* An internal boolean to help when we can safely do calloc() */
+  short                   ZeroIntegerisZeroBytesb;     /* An internal boolean to help when we can safely do calloc() */
   char                   *versions;                    /* Version */
   int                     versionMajori;               /* Major version */
   int                     versionMinori;               /* Minor version */
