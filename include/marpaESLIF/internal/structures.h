@@ -507,12 +507,10 @@ struct marpaESLIFRecognizer {
   /* For _marpaESLIFRecognizer_set_internalp_deepb */
   genericStack_t               _marpaESLIFValueResultWorkStack;
   genericStack_t              *marpaESLIFValueResultWorkStackp;
-  genericStack_t               _marpaESLIFValueResultBeforeStack;
-  genericStack_t              *marpaESLIFValueResultBeforeStackp;
-  genericStack_t               _marpaESLIFValueResultAfterStack;
-  genericStack_t              *marpaESLIFValueResultAfterStackp;
-  genericStack_t               _marpaESLIFValueResultHashArrayp[MARPAESLIF_HASH_SIZE];
-  genericStack_t              *marpaESLIFValueResultHashp; /* Only the top recognizer owns it */
+  genericStack_t               _marpaESLIFValueResultStack;
+  genericStack_t              *marpaESLIFValueResultStackp;
+  genericStack_t               _marpaESLIFValueResultStackArray[MARPAESLIF_HASH_SIZE];
+  genericStack_t              *marpaESLIFValueResultStackArrayp; /* Only the top recognizer owns it */
 
   /* When doing regex callback, only the "offset_vector" part is variable, all other */
   /* members of the regex's TABLE argument can be created once and modified in-place */
