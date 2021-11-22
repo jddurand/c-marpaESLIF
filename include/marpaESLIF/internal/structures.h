@@ -221,6 +221,7 @@ struct marpaESLIFSymbol {
   genericStack_t                 _nullableRuleStack;     /* Used during validation, to determine nullable semantics */
   genericStack_t                *nullableRuleStackp;     /* Pointer to _nullableRuleStack */
   marpaESLIFAction_t            *nullableActionp;        /* Nullable semantic, only for meta symbols that are not lexemes */
+  marpaESLIF_internal_rule_action_t nullableActione;     /* For faster lookup */
   int                            propertyBitSet;
   int                            eventBitSet;
   genericStack_t                 _lhsRuleStack;          /* Stack of rules having this symbol as LHS */
@@ -259,6 +260,7 @@ struct marpaESLIF_rule {
   marpaESLIF_symbol_t            *exceptionp;                   /* Exception symbol */
   int                             exceptionIdi;                 /* Exception symbol Id */
   marpaESLIFAction_t             *actionp;                      /* Action */
+  marpaESLIF_internal_rule_action_t actione;                    /* For faster lookup */
   char                           *discardEvents;                /* Discard event name - shallowed to its RHS */
   short                           discardEventb;                /* Discard event initial state: 0: off, 1: on - copied to its RHS */
   marpaESLIF_internal_event_action_t discardEvente;             /* Discard event internal action type */
@@ -301,6 +303,7 @@ struct marpaESLIF_grammar {
   genericStack_t        *ruleStackp;                         /* Pointer to stack of rules */
   marpaESLIFAction_t    *defaultSymbolActionp;               /* Default action for symbols - never NULL */
   marpaESLIFAction_t    *defaultRuleActionp;                 /* Default action for rules - never NULL */
+  marpaESLIF_internal_rule_action_t defaultRuleActione;      /* For faster lookup */
   marpaESLIFAction_t    *defaultEventActionp;                /* Default action for events - can be NULL */
   marpaESLIFAction_t    *defaultRegexActionp;                /* Default regex action, it is transversal and applies to all regexes of a grammar - can be NULL */
   int                    starti;                             /* Default start symbol ID - filled during grammar validation */

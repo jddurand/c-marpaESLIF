@@ -706,6 +706,7 @@ static inline marpaESLIF_grammar_t  *_marpaESLIF_bootstrap_grammarp(marpaESLIFGr
 static inline short                  _marpaESLIF_numberb(marpaESLIF_t *marpaESLIFp, char *s, marpaESLIFValueResult_t *marpaESLIFValueResultp, short *confidencebp);
 static inline short                  _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIFGrammarp, short ignoreLazyb, short startGrammarIsLexemeb);
 static inline marpaESLIF_internal_event_action_t _eventActionsToActione(char *actions);
+static inline marpaESLIF_internal_rule_action_t _ruleActionpToActione(marpaESLIFAction_t *actionp);
 static inline short                  _marpaESLIFGrammar_haveLexemeb(marpaESLIFGrammar_t *marpaESLIFGrammarp, int grammari, marpaWrapperGrammar_t *marpaWrapperGrammarp, short *haveLexemebp);
 static inline marpaESLIFGrammar_t   *_marpaESLIFGrammar_newp(marpaESLIF_t *marpaESLIFp, marpaESLIFGrammarOption_t *marpaESLIFGrammarOptionp, short startGrammarIsLexemeb);
 
@@ -774,11 +775,11 @@ static inline short                  _marpaESLIFRecognizer_start_charconvb(marpa
 
 /* All wrappers, even the Lexeme and Grammar wrappers go through these routines */
 static        short                  _marpaESLIFValue_ruleCallbackWrapperb(void *userDatavp, int rulei, int arg0i, int argni, int resulti);
-static inline short                  _marpaESLIFValue_ruleActionCallbackb(marpaESLIFValue_t *marpaESLIFValuep, char *asciishows, marpaESLIF_action_t *actionp, marpaESLIFValueRuleCallback_t *ruleCallbackpp);
+static inline short                  _marpaESLIFValue_ruleActionCallbackb(marpaESLIFValue_t *marpaESLIFValuep, char *asciishows, marpaESLIF_action_t *actionp, marpaESLIFValueRuleCallback_t *ruleCallbackpp, marpaESLIF_internal_rule_action_t rule_actione);
 static        short                  _marpaESLIFValue_symbolCallbackWrapperb(void *userDatavp, int symboli, int argi, int resulti);
 static        short                  _marpaESLIFValue_nullingCallbackWrapperb(void *userDatavp, int symboli, int resulti);
 static inline short                  _marpaESLIFValue_anySymbolCallbackWrapperb(void *userDatavp, int symboli, int argi, int resulti, short nullableb);
-static inline short                  _marpaESLIFValue_symbolActionCallbackb(marpaESLIFValue_t *marpaESLIFValuep, char *asciishows, short nullableb, marpaESLIF_action_t *nullableActionp, marpaESLIFValueSymbolCallback_t *symbolCallbackpp, marpaESLIFValueRuleCallback_t *ruleCallbackpp, marpaESLIF_action_t *symbolActionp);
+static inline short                  _marpaESLIFValue_symbolActionCallbackb(marpaESLIFValue_t *marpaESLIFValuep, char *asciishows, short nullableb, marpaESLIF_action_t *nullableActionp, marpaESLIFValueSymbolCallback_t *symbolCallbackpp, marpaESLIFValueRuleCallback_t *ruleCallbackpp, marpaESLIF_action_t *symbolActionp, marpaESLIF_internal_rule_action_t nullableActione);
 static inline short                  _marpaESLIFRecognizer_recognizerIfActionCallbackb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, char *asciishows, marpaESLIF_action_t *ifActionp, marpaESLIFRecognizerIfCallback_t *ifCallbackpp);
 static inline short                  _marpaESLIFRecognizer_recognizerEventActionCallbackb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIF_action_t *eventActionp, marpaESLIFRecognizerEventCallback_t *eventCallbackpp);
 static inline short                  _marpaESLIFRecognizer_recognizerRegexActionCallbackb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, char *asciishows, marpaESLIF_action_t *regexActionp, marpaESLIFRecognizerRegexCallback_t *regexCallbackpp);
@@ -3926,6 +3927,8 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
     }
     grammarp = (marpaESLIF_grammar_t *) GENERICSTACK_GET_PTR(grammarStackp, grammari);
 
+    grammarp->defaultRuleActione = _ruleActionpToActione(grammarp->defaultRuleActionp);
+
     MARPAESLIF_TRACEF(marpaESLIFp, funcs, "Filling rule IDs array in grammar level %d (%s)", grammari, grammarp->descp->asciis);
     ruleStackp = grammarp->ruleStackp;
     grammarp->nrulel = GENERICSTACK_USED(ruleStackp);
@@ -3955,6 +3958,7 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
         _marpaESLIF_rule_createshowv(marpaESLIFp, grammarp, rulep, rulep->asciishows, NULL);
 
         rulep->discardEvente = _eventActionsToActione(rulep->discardEvents);
+        rulep->actione       = _ruleActionpToActione(rulep->actionp);
       }
     }
 
@@ -3980,6 +3984,7 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
         symbolp->eventNullede    = _eventActionsToActione(symbolp->eventNulleds);
         symbolp->eventCompletede = _eventActionsToActione(symbolp->eventCompleteds);
         symbolp->discardEvente   = _eventActionsToActione(symbolp->discardEvents);
+        symbolp->nullableActione = _ruleActionpToActione(symbolp->nullableActionp);
       }
     }
   }
@@ -4016,6 +4021,43 @@ static inline marpaESLIF_internal_event_action_t _eventActionsToActione(char *ac
   }
 
   return MARPAESLIF_INTERNAL_EVENT_ACTION_NA;
+}
+
+/*****************************************************************************/
+static inline marpaESLIF_internal_rule_action_t _ruleActionpToActione(marpaESLIFAction_t *actionp)
+/*****************************************************************************/
+{
+  if ((actionp != NULL) && (actionp->type == MARPAESLIF_ACTION_TYPE_NAME)) {
+    if (strcmp(actionp->u.names, "::shift") == 0) {
+      return MARPAESLIF_INTERNAL_RULE_ACTION___SHIFT;
+    } else if (strcmp(actionp->u.names, "::undef") == 0) {
+      return MARPAESLIF_INTERNAL_RULE_ACTION___UNDEF;
+    } else if (strcmp(actionp->u.names, "::ascii") == 0) {
+      return MARPAESLIF_INTERNAL_RULE_ACTION___ASCII;
+    } else if (strncmp(actionp->u.names, "::convert", convertl) == 0) {
+      return MARPAESLIF_INTERNAL_RULE_ACTION___CONVERT;
+    } else if (strcmp(actionp->u.names, "::concat") == 0) {
+      return MARPAESLIF_INTERNAL_RULE_ACTION___CONCAT;
+    } else if (strncmp(actionp->u.names, "::copy", copyl) == 0) {
+      return MARPAESLIF_INTERNAL_RULE_ACTION___COPY;
+    } else if (strcmp(actionp->u.names, "::true") == 0) {
+      return MARPAESLIF_INTERNAL_RULE_ACTION___TRUE;
+    } else if (strcmp(actionp->u.names, "::false") == 0) {
+      return MARPAESLIF_INTERNAL_RULE_ACTION___FALSE;
+    } else if (strcmp(actionp->u.names, "::json") == 0) {
+      return MARPAESLIF_INTERNAL_RULE_ACTION___JSON;
+    } else if (strcmp(actionp->u.names, "::jsonf") == 0) {
+      return MARPAESLIF_INTERNAL_RULE_ACTION___JSONF;
+    } else if (strcmp(actionp->u.names, "::row") == 0) {
+      return MARPAESLIF_INTERNAL_RULE_ACTION___ROW;
+    } else if (strcmp(actionp->u.names, "::table") == 0) {
+      return MARPAESLIF_INTERNAL_RULE_ACTION___TABLE;
+    } else if (strcmp(actionp->u.names, "::ast") == 0) {
+      return MARPAESLIF_INTERNAL_RULE_ACTION___AST;
+    }
+  }
+
+  return MARPAESLIF_INTERNAL_RULE_ACTION_NA;
 }
 
 /*****************************************************************************/
@@ -4118,6 +4160,7 @@ static inline marpaESLIF_grammar_t *_marpaESLIF_grammar_newp(marpaESLIFGrammar_t
   grammarp->ruleStackp                         = NULL; /* Take care, pointer to a stack inside grammar structure */
   grammarp->defaultSymbolActionp               = NULL;
   grammarp->defaultRuleActionp                 = NULL;
+  grammarp->defaultRuleActione                 = MARPAESLIF_INTERNAL_RULE_ACTION_NA;
   grammarp->defaultEventActionp                = NULL;
   grammarp->defaultRegexActionp                = NULL;
   grammarp->starti                             = 0;    /* Filled during grammar validation */
@@ -4440,6 +4483,7 @@ static inline marpaESLIF_rule_t *_marpaESLIF_rule_newp(marpaESLIF_t *marpaESLIFp
   rulep->exceptionp         = NULL;
   rulep->exceptionIdi       = -1;
   rulep->actionp            = NULL;
+  rulep->actione            = MARPAESLIF_INTERNAL_RULE_ACTION_NA;
   rulep->discardEvents      = NULL;
   rulep->discardEventb      = 0;
   rulep->discardEvente      = MARPAESLIF_INTERNAL_EVENT_ACTION_NA;
@@ -4693,6 +4737,7 @@ static inline marpaESLIF_symbol_t *_marpaESLIF_symbol_newp(marpaESLIF_t *marpaES
   symbolp->priorityi               = 0; /* Default priority is 0 */
   symbolp->nullableRuleStackp      = NULL; /* Take care, this is a pointer to an stack inside symbol structure */
   symbolp->nullableActionp         = NULL;
+  symbolp->nullableActione         = MARPAESLIF_INTERNAL_RULE_ACTION_NA;
   symbolp->propertyBitSet          = 0; /* Filled by grammar validation */
   symbolp->eventBitSet             = 0; /* Filled by grammar validation */
   symbolp->lhsRuleStackp           = NULL;
@@ -12111,7 +12156,7 @@ static short _marpaESLIFValue_ruleCallbackWrapperb(void *userDatavp, int rulei, 
       marpaESLIFValuep->previousPassWasPassthroughb = 0;
     }
 
-    if (MARPAESLIF_UNLIKELY(! _marpaESLIFValue_ruleActionCallbackb(marpaESLIFValuep, rulep->asciishows, rulep->actionp, &ruleCallbackp))) {
+    if (MARPAESLIF_UNLIKELY(! _marpaESLIFValue_ruleActionCallbackb(marpaESLIFValuep, rulep->asciishows, rulep->actionp, &ruleCallbackp, rulep->actione))) {
       goto err;
     }
 
@@ -12223,7 +12268,7 @@ static inline short _marpaESLIFValue_anySymbolCallbackWrapperb(void *userDatavp,
 
   MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Grammar %d Symbol %d %s", grammarp->leveli, symbolp->idi, symbolp->descp->asciis);
 
-  if (MARPAESLIF_UNLIKELY(! _marpaESLIFValue_symbolActionCallbackb(marpaESLIFValuep, symbolp->descp->asciis, nullableb, symbolp->nullableActionp, &symbolCallbackp, &ruleCallbackp, symbolp->symbolActionp))) {
+  if (MARPAESLIF_UNLIKELY(! _marpaESLIFValue_symbolActionCallbackb(marpaESLIFValuep, symbolp->descp->asciis, nullableb, symbolp->nullableActionp, &symbolCallbackp, &ruleCallbackp, symbolp->symbolActionp, symbolp->nullableActione))) {
     goto err;
   }
 
@@ -19700,7 +19745,7 @@ static inline void _marpaESLIF_action_freev(marpaESLIF_action_t *actionp)
 }
 
 /*****************************************************************************/
-static inline short _marpaESLIFValue_ruleActionCallbackb(marpaESLIFValue_t *marpaESLIFValuep, char *asciishows, marpaESLIF_action_t *actionp, marpaESLIFValueRuleCallback_t *ruleCallbackpp)
+static inline short _marpaESLIFValue_ruleActionCallbackb(marpaESLIFValue_t *marpaESLIFValuep, char *asciishows, marpaESLIF_action_t *actionp, marpaESLIFValueRuleCallback_t *ruleCallbackpp, marpaESLIF_internal_rule_action_t rule_actione)
 /*****************************************************************************/
 {
   static const char                   *funcs                 = "_marpaESLIFValue_ruleActionCallbackb";
@@ -19714,7 +19759,8 @@ static inline short _marpaESLIFValue_ruleActionCallbackb(marpaESLIFValue_t *marp
 
   if (actionp == NULL) {
     /* No action ? Then take the default. */
-    actionp = grammarp->defaultRuleActionp;
+    actionp      = grammarp->defaultRuleActionp;
+    rule_actione = grammarp->defaultRuleActione;
   }
   if (MARPAESLIF_UNLIKELY(actionp == NULL)) {
     /* Still no action ? */
@@ -19739,40 +19785,56 @@ static inline short _marpaESLIFValue_ruleActionCallbackb(marpaESLIFValue_t *marp
 
       /* If this is a built-in action, we do not need the resolver */
       names = marpaESLIFValuep->actions;
-      if (strcmp(names, "::shift") == 0) {
+      switch (rule_actione) {
+      case MARPAESLIF_INTERNAL_RULE_ACTION___SHIFT:
         ruleCallbackp = _marpaESLIF_rule_action___shiftb;
-      } else if (strcmp(names, "::undef") == 0) {
+        break;
+      case MARPAESLIF_INTERNAL_RULE_ACTION___UNDEF:
         ruleCallbackp = _marpaESLIF_rule_action___undefb;
-      } else if (strcmp(names, "::ascii") == 0) {
+        break;
+      case MARPAESLIF_INTERNAL_RULE_ACTION___ASCII:
         ruleCallbackp = _marpaESLIF_rule_action___asciib;
-      } else if (strncmp(names, "::convert", convertl) == 0) {
+        break;
+      case MARPAESLIF_INTERNAL_RULE_ACTION___CONVERT:
         ruleCallbackp = _marpaESLIF_rule_action___convertb;
-      } else if (strcmp(names, "::concat") == 0) {
+        break;
+      case MARPAESLIF_INTERNAL_RULE_ACTION___CONCAT:
         ruleCallbackp = _marpaESLIF_rule_action___concatb;
-      } else if (strncmp(names, "::copy", copyl) == 0) {
+        break;
+      case MARPAESLIF_INTERNAL_RULE_ACTION___COPY:
         ruleCallbackp = _marpaESLIF_rule_action___copyb;
-      } else if (strcmp(names, "::true") == 0) {
+        break;
+      case MARPAESLIF_INTERNAL_RULE_ACTION___TRUE:
         ruleCallbackp = _marpaESLIF_rule_action___trueb;
-      } else if (strcmp(names, "::false") == 0) {
+        break;
+      case MARPAESLIF_INTERNAL_RULE_ACTION___FALSE:
         ruleCallbackp = _marpaESLIF_rule_action___falseb;
-      } else if (strcmp(names, "::json") == 0) {
+        break;
+      case MARPAESLIF_INTERNAL_RULE_ACTION___JSON:
         ruleCallbackp = _marpaESLIF_rule_action___jsonb;
-      } else if (strcmp(names, "::jsonf") == 0) {
+        break;
+      case MARPAESLIF_INTERNAL_RULE_ACTION___JSONF:
         ruleCallbackp = _marpaESLIF_rule_action___jsonfb;
-      } else if (strcmp(names, "::row") == 0) {
+        break;
+      case MARPAESLIF_INTERNAL_RULE_ACTION___ROW:
         ruleCallbackp = _marpaESLIF_rule_action___rowb;
-      } else if (strcmp(names, "::table") == 0) {
+        break;
+      case MARPAESLIF_INTERNAL_RULE_ACTION___TABLE:
         ruleCallbackp = _marpaESLIF_rule_action___tableb;
-      } else if (strcmp(names, "::ast") == 0) {
+        break;
+      case MARPAESLIF_INTERNAL_RULE_ACTION___AST:
         ruleCallbackp = _marpaESLIF_rule_action___astb;
-      } else {
+        break;
+      default:
         /* Not a built-in: ask to the resolver */
         if (MARPAESLIF_UNLIKELY(ruleActionResolverp == NULL)) {
           MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "Cannot execute action \"%s\": no rule action resolver", names);
           goto err;
         }
         ruleCallbackp = ruleActionResolverp(marpaESLIFValueOption.userDatavp, marpaESLIFValuep, names);
+        break;
       }
+
       if (MARPAESLIF_UNLIKELY(ruleCallbackp == NULL)) {
         MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "%s: action \"%s\" resolved to NULL", asciishows, names);
         goto err;
@@ -19825,7 +19887,7 @@ static inline short _marpaESLIFValue_ruleActionCallbackb(marpaESLIFValue_t *marp
 }
 
 /*****************************************************************************/
-static inline short _marpaESLIFValue_symbolActionCallbackb(marpaESLIFValue_t *marpaESLIFValuep, char *asciishows, short nullableb, marpaESLIF_action_t *nullableActionp, marpaESLIFValueSymbolCallback_t *symbolCallbackpp, marpaESLIFValueRuleCallback_t *ruleCallbackpp, marpaESLIF_action_t *symbolActionp)
+static inline short _marpaESLIFValue_symbolActionCallbackb(marpaESLIFValue_t *marpaESLIFValuep, char *asciishows, short nullableb, marpaESLIF_action_t *nullableActionp, marpaESLIFValueSymbolCallback_t *symbolCallbackpp, marpaESLIFValueRuleCallback_t *ruleCallbackpp, marpaESLIF_action_t *symbolActionp, marpaESLIF_internal_rule_action_t nullableActione)
 /*****************************************************************************/
 {
   /* In case of a nullable a symbol callback can fallback to a rule callback */
@@ -19843,7 +19905,7 @@ static inline short _marpaESLIFValue_symbolActionCallbackb(marpaESLIFValue_t *ma
   if (nullableb) {
     /* This will be in reality a rule callback */
     symbolCallbackp = NULL;
-    if (MARPAESLIF_UNLIKELY(! _marpaESLIFValue_ruleActionCallbackb(marpaESLIFValuep, asciishows, nullableActionp, &ruleCallbackp))) {
+    if (MARPAESLIF_UNLIKELY(! _marpaESLIFValue_ruleActionCallbackb(marpaESLIFValuep, asciishows, nullableActionp, &ruleCallbackp, nullableActione))) {
       goto err;
     }
   } else {
