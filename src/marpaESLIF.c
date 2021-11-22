@@ -537,9 +537,6 @@ static const char *MARPAESLIF_VALUE_TYPE_UNKNOWN_STRING     = "UNKNOWN";
 static const size_t copyl    = 6; /* strlen("::copy"); */
 static const size_t convertl = 9; /* strlen("::convert"); */
 
-static const char *MARPAESLIF_TRANSFER_INTERNAL_STRING = "::transfer (internal)";
-static const char *MARPAESLIF_CONCAT_INTERNAL_STRING = "::concat (internal)";
-
 static const marpaESLIF_uint32_t pcre2_option_binary_default  = PCRE2_NOTEMPTY;
 static const marpaESLIF_uint32_t pcre2_option_char_default    = PCRE2_NOTEMPTY|PCRE2_NO_UTF_CHECK;
 static const marpaESLIF_uint32_t pcre2_option_partial_default = PCRE2_NOTEMPTY|PCRE2_NO_UTF_CHECK|PCRE2_PARTIAL_HARD;
@@ -707,6 +704,7 @@ static inline short                  _marpaESLIF_numberb(marpaESLIF_t *marpaESLI
 static inline short                  _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIFGrammarp, short ignoreLazyb, short startGrammarIsLexemeb);
 static inline marpaESLIF_internal_event_action_t _eventActionsToActione(char *actions);
 static inline marpaESLIF_internal_rule_action_t _ruleActionpToActione(marpaESLIFAction_t *actionp);
+static inline marpaESLIF_internal_symbol_action_t _symbolActionpToActione(marpaESLIFAction_t *actionp);
 static inline short                  _marpaESLIFGrammar_haveLexemeb(marpaESLIFGrammar_t *marpaESLIFGrammarp, int grammari, marpaWrapperGrammar_t *marpaWrapperGrammarp, short *haveLexemebp);
 static inline marpaESLIFGrammar_t   *_marpaESLIFGrammar_newp(marpaESLIF_t *marpaESLIFp, marpaESLIFGrammarOption_t *marpaESLIFGrammarOptionp, short startGrammarIsLexemeb);
 
@@ -779,7 +777,7 @@ static inline short                  _marpaESLIFValue_ruleActionCallbackb(marpaE
 static        short                  _marpaESLIFValue_symbolCallbackWrapperb(void *userDatavp, int symboli, int argi, int resulti);
 static        short                  _marpaESLIFValue_nullingCallbackWrapperb(void *userDatavp, int symboli, int resulti);
 static inline short                  _marpaESLIFValue_anySymbolCallbackWrapperb(void *userDatavp, int symboli, int argi, int resulti, short nullableb);
-static inline short                  _marpaESLIFValue_symbolActionCallbackb(marpaESLIFValue_t *marpaESLIFValuep, char *asciishows, short nullableb, marpaESLIF_action_t *nullableActionp, marpaESLIFValueSymbolCallback_t *symbolCallbackpp, marpaESLIFValueRuleCallback_t *ruleCallbackpp, marpaESLIF_action_t *symbolActionp, marpaESLIF_internal_rule_action_t nullableActione);
+static inline short                  _marpaESLIFValue_symbolActionCallbackb(marpaESLIFValue_t *marpaESLIFValuep, char *asciishows, short nullableb, marpaESLIF_action_t *nullableActionp, marpaESLIFValueSymbolCallback_t *symbolCallbackpp, marpaESLIFValueRuleCallback_t *ruleCallbackpp, marpaESLIF_action_t *symbolActionp, marpaESLIF_internal_rule_action_t nullableActione, marpaESLIF_internal_symbol_action_t symbolActione);
 static inline short                  _marpaESLIFRecognizer_recognizerIfActionCallbackb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, char *asciishows, marpaESLIF_action_t *ifActionp, marpaESLIFRecognizerIfCallback_t *ifCallbackpp);
 static inline short                  _marpaESLIFRecognizer_recognizerEventActionCallbackb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIF_action_t *eventActionp, marpaESLIFRecognizerEventCallback_t *eventCallbackpp);
 static inline short                  _marpaESLIFRecognizer_recognizerRegexActionCallbackb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, char *asciishows, marpaESLIF_action_t *regexActionp, marpaESLIFRecognizerRegexCallback_t *regexCallbackpp);
@@ -3927,7 +3925,8 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
     }
     grammarp = (marpaESLIF_grammar_t *) GENERICSTACK_GET_PTR(grammarStackp, grammari);
 
-    grammarp->defaultRuleActione = _ruleActionpToActione(grammarp->defaultRuleActionp);
+    grammarp->defaultRuleActione   = _ruleActionpToActione(grammarp->defaultRuleActionp);
+    grammarp->defaultSymbolActione = _symbolActionpToActione(grammarp->defaultSymbolActionp);
 
     MARPAESLIF_TRACEF(marpaESLIFp, funcs, "Filling rule IDs array in grammar level %d (%s)", grammari, grammarp->descp->asciis);
     ruleStackp = grammarp->ruleStackp;
@@ -3985,6 +3984,7 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
         symbolp->eventCompletede = _eventActionsToActione(symbolp->eventCompleteds);
         symbolp->discardEvente   = _eventActionsToActione(symbolp->discardEvents);
         symbolp->nullableActione = _ruleActionpToActione(symbolp->nullableActionp);
+        symbolp->symbolActione   = _symbolActionpToActione(symbolp->symbolActionp);
       }
     }
   }
@@ -4058,6 +4058,35 @@ static inline marpaESLIF_internal_rule_action_t _ruleActionpToActione(marpaESLIF
   }
 
   return MARPAESLIF_INTERNAL_RULE_ACTION_NA;
+}
+
+/*****************************************************************************/
+static inline marpaESLIF_internal_symbol_action_t _symbolActionpToActione(marpaESLIFAction_t *actionp)
+/*****************************************************************************/
+{
+  if ((actionp != NULL) && (actionp->type == MARPAESLIF_ACTION_TYPE_NAME)) {
+    if (strcmp(actionp->u.names, "::transfer") == 0) {
+      return MARPAESLIF_INTERNAL_SYMBOL_ACTION___TRANSFER;
+    } else if (strcmp(actionp->u.names, "::undef") == 0) {
+      return MARPAESLIF_INTERNAL_SYMBOL_ACTION___UNDEF;
+    } else if (strcmp(actionp->u.names, "::ascii") == 0) {
+      return MARPAESLIF_INTERNAL_SYMBOL_ACTION___ASCII;
+    } else if (strncmp(actionp->u.names, "::convert", convertl) == 0) {
+      return MARPAESLIF_INTERNAL_SYMBOL_ACTION___CONVERT;
+    } else if (strcmp(actionp->u.names, "::concat") == 0) {
+      return MARPAESLIF_INTERNAL_SYMBOL_ACTION___CONCAT;
+    } else if (strcmp(actionp->u.names, "::true") == 0) {
+      return MARPAESLIF_INTERNAL_SYMBOL_ACTION___TRUE;
+    } else if (strcmp(actionp->u.names, "::false") == 0) {
+      return MARPAESLIF_INTERNAL_SYMBOL_ACTION___FALSE;
+    } else if (strcmp(actionp->u.names, "::json") == 0) {
+      return MARPAESLIF_INTERNAL_SYMBOL_ACTION___JSON;
+    } else if (strcmp(actionp->u.names, "::jsonf") == 0) {
+      return MARPAESLIF_INTERNAL_SYMBOL_ACTION___JSONF;
+    }
+  }
+
+  return MARPAESLIF_INTERNAL_SYMBOL_ACTION_NA;
 }
 
 /*****************************************************************************/
@@ -4159,6 +4188,7 @@ static inline marpaESLIF_grammar_t *_marpaESLIF_grammar_newp(marpaESLIFGrammar_t
   grammarp->symbolStackp                       = NULL; /* Take care, pointer to a stack inside grammar structure */
   grammarp->ruleStackp                         = NULL; /* Take care, pointer to a stack inside grammar structure */
   grammarp->defaultSymbolActionp               = NULL;
+  grammarp->defaultSymbolActione               = MARPAESLIF_INTERNAL_SYMBOL_ACTION_NA;
   grammarp->defaultRuleActionp                 = NULL;
   grammarp->defaultRuleActione                 = MARPAESLIF_INTERNAL_RULE_ACTION_NA;
   grammarp->defaultEventActionp                = NULL;
@@ -4743,6 +4773,7 @@ static inline marpaESLIF_symbol_t *_marpaESLIF_symbol_newp(marpaESLIF_t *marpaES
   symbolp->lhsRuleStackp           = NULL;
   symbolp->exceptionp              = NULL;
   symbolp->symbolActionp           = NULL;
+  symbolp->symbolActione           = MARPAESLIF_INTERNAL_SYMBOL_ACTION_NA;
   symbolp->ifActionp               = NULL;
   symbolp->generatorActionp        = NULL;
   symbolp->marpaESLIFSymbolOption  = marpaESLIFSymbolOptionp != NULL ? *marpaESLIFSymbolOptionp : marpaESLIFSymbolOption_default_template;
@@ -10342,7 +10373,7 @@ short marpaESLIFRecognizer_eventb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp,
   eventArray.type    = type;
   eventArray.symbols = (symbolp != NULL) ? symbolp->descp->asciis : NULL;
   /* Support of ":symbol" is coded here */
-  eventArray.events  = (event_actione == MARPAESLIF_INTERNAL_EVENT_ACTION__DISCARD_SWITCH) ? eventArray.symbols : events;
+  eventArray.events  = (event_actione == MARPAESLIF_INTERNAL_EVENT_ACTION__SYMBOL) ? eventArray.symbols : events;
 
   /* Extend of create the array */
   /* marpaESLIFRecognizerp->eventArrayl is always in the range [0..marpaESLIFRecognizerp->eventArraySizel] */
@@ -12268,7 +12299,7 @@ static inline short _marpaESLIFValue_anySymbolCallbackWrapperb(void *userDatavp,
 
   MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Grammar %d Symbol %d %s", grammarp->leveli, symbolp->idi, symbolp->descp->asciis);
 
-  if (MARPAESLIF_UNLIKELY(! _marpaESLIFValue_symbolActionCallbackb(marpaESLIFValuep, symbolp->descp->asciis, nullableb, symbolp->nullableActionp, &symbolCallbackp, &ruleCallbackp, symbolp->symbolActionp, symbolp->nullableActione))) {
+  if (MARPAESLIF_UNLIKELY(! _marpaESLIFValue_symbolActionCallbackb(marpaESLIFValuep, symbolp->descp->asciis, nullableb, symbolp->nullableActionp, &symbolCallbackp, &ruleCallbackp, symbolp->symbolActionp, symbolp->nullableActione, symbolp->symbolActione))) {
     goto err;
   }
 
@@ -19887,7 +19918,7 @@ static inline short _marpaESLIFValue_ruleActionCallbackb(marpaESLIFValue_t *marp
 }
 
 /*****************************************************************************/
-static inline short _marpaESLIFValue_symbolActionCallbackb(marpaESLIFValue_t *marpaESLIFValuep, char *asciishows, short nullableb, marpaESLIF_action_t *nullableActionp, marpaESLIFValueSymbolCallback_t *symbolCallbackpp, marpaESLIFValueRuleCallback_t *ruleCallbackpp, marpaESLIF_action_t *symbolActionp, marpaESLIF_internal_rule_action_t nullableActione)
+static inline short _marpaESLIFValue_symbolActionCallbackb(marpaESLIFValue_t *marpaESLIFValuep, char *asciishows, short nullableb, marpaESLIF_action_t *nullableActionp, marpaESLIFValueSymbolCallback_t *symbolCallbackpp, marpaESLIFValueRuleCallback_t *ruleCallbackpp, marpaESLIF_action_t *symbolActionp, marpaESLIF_internal_rule_action_t nullableActione, marpaESLIF_internal_symbol_action_t symbolActione)
 /*****************************************************************************/
 {
   /* In case of a nullable a symbol callback can fallback to a rule callback */
@@ -19900,6 +19931,7 @@ static inline short _marpaESLIFValue_symbolActionCallbackb(marpaESLIFValue_t *ma
   marpaESLIFValueSymbolCallback_t       symbolCallbackp;
   marpaESLIFValueRuleCallback_t         ruleCallbackp;
   marpaESLIF_action_t                  *actionp;
+  marpaESLIF_internal_symbol_action_t   actione;
   short                                 rcb;
 
   if (nullableb) {
@@ -19913,6 +19945,7 @@ static inline short _marpaESLIFValue_symbolActionCallbackb(marpaESLIFValue_t *ma
     ruleCallbackp   = NULL;
     /* Symbol action is a constant at the grammar level */
     actionp = (symbolActionp != NULL) ? symbolActionp : grammarp->defaultSymbolActionp;
+    actione = (symbolActionp != NULL) ? symbolActione : grammarp->defaultSymbolActione;
     if (MARPAESLIF_UNLIKELY(actionp == NULL)) {
       /* Still no action ? */
       MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "At grammar level %d (%s): %s requires symbol-action => action_name",
@@ -19936,32 +19969,44 @@ static inline short _marpaESLIFValue_symbolActionCallbackb(marpaESLIFValue_t *ma
 
         /* If this is a built-in action, we do not need the resolver */
         names = marpaESLIFValuep->actions;
-        if (strcmp(names, "::transfer") == 0) {
+        switch (actione) {
+        case MARPAESLIF_INTERNAL_SYMBOL_ACTION___TRANSFER:
           symbolCallbackp = _marpaESLIF_symbol_action___transferb;
-        } else if (strcmp(names, "::undef") == 0) {
+          break;
+        case MARPAESLIF_INTERNAL_SYMBOL_ACTION___UNDEF:
           symbolCallbackp = _marpaESLIF_symbol_action___undefb;
-        } else if (strcmp(names, "::ascii") == 0) {
+          break;
+        case MARPAESLIF_INTERNAL_SYMBOL_ACTION___ASCII:
           symbolCallbackp = _marpaESLIF_symbol_action___asciib;
-        } else if (strncmp(names, "::convert", convertl) == 0) {
+          break;
+        case MARPAESLIF_INTERNAL_SYMBOL_ACTION___CONVERT:
           symbolCallbackp = _marpaESLIF_symbol_action___convertb;
-        } else if (strcmp(names, "::concat") == 0) {
+          break;
+        case MARPAESLIF_INTERNAL_SYMBOL_ACTION___CONCAT:
           symbolCallbackp = _marpaESLIF_symbol_action___concatb;
-        } else if (strcmp(names, "::true") == 0) {
+          break;
+        case MARPAESLIF_INTERNAL_SYMBOL_ACTION___TRUE:
           symbolCallbackp = _marpaESLIF_symbol_action___trueb;
-        } else if (strcmp(names, "::false") == 0) {
+          break;
+        case MARPAESLIF_INTERNAL_SYMBOL_ACTION___FALSE:
           symbolCallbackp = _marpaESLIF_symbol_action___falseb;
-        } else if (strcmp(names, "::json") == 0) {
+          break;
+        case MARPAESLIF_INTERNAL_SYMBOL_ACTION___JSON:
           symbolCallbackp = _marpaESLIF_symbol_action___jsonb;
-        } else if (strcmp(names, "::jsonf") == 0) {
+          break;
+        case MARPAESLIF_INTERNAL_SYMBOL_ACTION___JSONF:
           symbolCallbackp = _marpaESLIF_symbol_action___jsonfb;
-        } else {
+          break;
+        default:
           /* Not a built-in: ask to the resolver */
           if (MARPAESLIF_UNLIKELY(symbolActionResolverp == NULL)) {
             MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "Cannot execute symbol action \"%s\": no symbol action resolver", names);
             goto err;
           }
           symbolCallbackp = symbolActionResolverp(marpaESLIFValueOption.userDatavp, marpaESLIFValuep, names);
+          break;
         }
+
         if (MARPAESLIF_UNLIKELY(symbolCallbackp == NULL)) {
           MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "%s: action \"%s\" resolved to NULL", asciishows, names);
           goto err;

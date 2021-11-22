@@ -80,15 +80,15 @@ typedef enum marpaESLIF_internal_rule_action {
 /* Internal symbol action types for faster lookup */
 typedef enum marpaESLIF_internal_symbol_action {
   MARPAESLIF_INTERNAL_SYMBOL_ACTION_NA = 0,
-  MARPAESLIF_INTERNAL_ACTION___TRANSFER,
-  MARPAESLIF_INTERNAL_ACTION___UNDEF,
-  MARPAESLIF_INTERNAL_ACTION___ASCII,
-  MARPAESLIF_INTERNAL_ACTION___CONVERT,
-  MARPAESLIF_INTERNAL_ACTION___CONCAT,
-  MARPAESLIF_INTERNAL_ACTION___TRUE,
-  MARPAESLIF_INTERNAL_ACTION___FALSE,
-  MARPAESLIF_INTERNAL_ACTION___JSON,
-  MARPAESLIF_INTERNAL_ACTION___JSONF
+  MARPAESLIF_INTERNAL_SYMBOL_ACTION___TRANSFER,
+  MARPAESLIF_INTERNAL_SYMBOL_ACTION___UNDEF,
+  MARPAESLIF_INTERNAL_SYMBOL_ACTION___ASCII,
+  MARPAESLIF_INTERNAL_SYMBOL_ACTION___CONVERT,
+  MARPAESLIF_INTERNAL_SYMBOL_ACTION___CONCAT,
+  MARPAESLIF_INTERNAL_SYMBOL_ACTION___TRUE,
+  MARPAESLIF_INTERNAL_SYMBOL_ACTION___FALSE,
+  MARPAESLIF_INTERNAL_SYMBOL_ACTION___JSON,
+  MARPAESLIF_INTERNAL_SYMBOL_ACTION___JSONF
 } marpaESLIF_internal_symbol_action_t;
 
 /* Symbol types */
@@ -228,6 +228,7 @@ struct marpaESLIFSymbol {
   genericStack_t                *lhsRuleStackp;          /* Pointer to stack of rules having this symbol as LHS */
   marpaESLIF_symbol_t           *exceptionp;             /* Pointer to an exception itself, the one after the '-' character */
   marpaESLIFAction_t            *symbolActionp;          /* symbol-action, only for terminals or lexemes */
+  marpaESLIF_internal_symbol_action_t symbolActione;     /* For faster lookup */
   marpaESLIFAction_t            *ifActionp;              /* if-action, only for terminals or lexemes */
   marpaESLIFAction_t            *generatorActionp;       /* generator-action */
   marpaESLIFSymbolOption_t       marpaESLIFSymbolOption;
@@ -302,6 +303,7 @@ struct marpaESLIF_grammar {
   genericStack_t         _ruleStack;                         /* Stack of rules */
   genericStack_t        *ruleStackp;                         /* Pointer to stack of rules */
   marpaESLIFAction_t    *defaultSymbolActionp;               /* Default action for symbols - never NULL */
+  marpaESLIF_internal_symbol_action_t defaultSymbolActione;  /* For faster lookup */
   marpaESLIFAction_t    *defaultRuleActionp;                 /* Default action for rules - never NULL */
   marpaESLIF_internal_rule_action_t defaultRuleActione;      /* For faster lookup */
   marpaESLIFAction_t    *defaultEventActionp;                /* Default action for events - can be NULL */
