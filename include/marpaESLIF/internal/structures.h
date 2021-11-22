@@ -50,6 +50,47 @@ typedef struct  marpaESLIF_lua_functiondecl marpaESLIF_lua_functiondecl_t;
 
 #include "marpaESLIF/internal/lua.h" /* For lua_State* */
 
+/* Internal event types that requires an action for faster lookup */
+typedef enum marpaESLIF_internal_event_action {
+  MARPAESLIF_INTERNAL_EVENT_ACTION_NA = 0,
+  MARPAESLIF_INTERNAL_EVENT_ACTION__SYMBOL,
+  MARPAESLIF_INTERNAL_EVENT_ACTION__DISCARD_ON,
+  MARPAESLIF_INTERNAL_EVENT_ACTION__DISCARD_OFF,
+  MARPAESLIF_INTERNAL_EVENT_ACTION__DISCARD_SWITCH
+} marpaESLIF_internal_event_action_t;
+
+/* Internal rule action types for faster lookup */
+typedef enum marpaESLIF_internal_rule_action {
+  MARPAESLIF_INTERNAL_RULE_ACTION_NA = 0,
+  MARPAESLIF_INTERNAL_RULE_ACTION___SHIFT,
+  MARPAESLIF_INTERNAL_RULE_ACTION___UNDEF,
+  MARPAESLIF_INTERNAL_RULE_ACTION___ASCII,
+  MARPAESLIF_INTERNAL_RULE_ACTION___CONVERT,
+  MARPAESLIF_INTERNAL_RULE_ACTION___CONCAT,
+  MARPAESLIF_INTERNAL_RULE_ACTION___COPY,
+  MARPAESLIF_INTERNAL_RULE_ACTION___TRUE,
+  MARPAESLIF_INTERNAL_RULE_ACTION___FALSE,
+  MARPAESLIF_INTERNAL_RULE_ACTION___JSON,
+  MARPAESLIF_INTERNAL_RULE_ACTION___JSONF,
+  MARPAESLIF_INTERNAL_RULE_ACTION___ROW,
+  MARPAESLIF_INTERNAL_RULE_ACTION___TABLE,
+  MARPAESLIF_INTERNAL_RULE_ACTION___AST
+} marpaESLIF_internal_rule_action_t;
+
+/* Internal symbol action types for faster lookup */
+typedef enum marpaESLIF_internal_symbol_action {
+  MARPAESLIF_INTERNAL_SYMBOL_ACTION_NA = 0,
+  MARPAESLIF_INTERNAL_ACTION___TRANSFER,
+  MARPAESLIF_INTERNAL_ACTION___UNDEF,
+  MARPAESLIF_INTERNAL_ACTION___ASCII,
+  MARPAESLIF_INTERNAL_ACTION___CONVERT,
+  MARPAESLIF_INTERNAL_ACTION___CONCAT,
+  MARPAESLIF_INTERNAL_ACTION___TRUE,
+  MARPAESLIF_INTERNAL_ACTION___FALSE,
+  MARPAESLIF_INTERNAL_ACTION___JSON,
+  MARPAESLIF_INTERNAL_ACTION___JSONF
+} marpaESLIF_internal_symbol_action_t;
+
 /* Symbol types */
 enum marpaESLIF_symbol_type {
   MARPAESLIF_SYMBOL_TYPE_NA = 0,
@@ -156,17 +197,23 @@ struct marpaESLIFSymbol {
   marpaESLIF_string_t           *descp;                  /* Symbol description */
   char                          *eventBefores;           /* Pause before */
   short                          eventBeforeb;           /* Pause before initial state: 0: off, 1: on */
+  marpaESLIF_internal_event_action_t eventBeforee;       /* For faster lookup if it requires an action */
   char                          *eventAfters;            /* Pause after */
   short                          eventAfterb;            /* Pause after initial state: 0: off, 1: on */
+  marpaESLIF_internal_event_action_t eventAftere;        /* For faster lookup if it requires an action */
   char                          *eventPredicteds;        /* Event name for prediction */
   short                          eventPredictedb;        /* Prediction initial state: 0: off, 1: on */
+  marpaESLIF_internal_event_action_t eventPredictede;    /* For faster lookup if it requires an action */
   char                          *eventNulleds;           /* Event name for nulled */
   short                          eventNulledb;           /* Nulled initial state: 0: off, 1: on */
+  marpaESLIF_internal_event_action_t eventNullede;       /* For faster lookup if it requires an action */
   char                          *eventCompleteds;        /* Event name for completion */
   short                          eventCompletedb;        /* Completion initial state: 0: off, 1: on */
+  marpaESLIF_internal_event_action_t eventCompletede;    /* For faster lookup if it requires an action */
   marpaESLIF_lua_functiondecl_t *eventDeclp;             /* Specific to event declaration on parameterized LHSs */
   char                          *discardEvents;          /* Discard event name - shallow pointer to a :discard rule's discardEvents */
   short                          discardEventb;          /* Discard event initial state: 0: off, 1: on - copy of :discard's rule value */
+  marpaESLIF_internal_event_action_t discardEvente;      /* Discard event internal action type */
   int                            lookupLevelDeltai;      /* Referenced grammar delta level */
   marpaESLIF_symbol_t           *lookupSymbolp;          /* Forced referenced lookup symbol */
   int                            lookupResolvedLeveli;   /* Resolved grammar level */
@@ -214,6 +261,7 @@ struct marpaESLIF_rule {
   marpaESLIFAction_t             *actionp;                      /* Action */
   char                           *discardEvents;                /* Discard event name - shallowed to its RHS */
   short                           discardEventb;                /* Discard event initial state: 0: off, 1: on - copied to its RHS */
+  marpaESLIF_internal_event_action_t discardEvente;             /* Discard event internal action type */
   int                             ranki;
   short                           nullRanksHighb;
   short                           sequenceb;
@@ -439,7 +487,9 @@ struct marpaESLIFRecognizer {
   marpaESLIFRecognizer_t      *marpaESLIFRecognizerParentp;
   char                        *lastCompletionEvents; /* A trick to avoid having to fetch the array event when a discard subgrammar succeed */
   marpaESLIF_symbol_t         *lastCompletionSymbolp; /* Ditto */
+  marpaESLIF_internal_event_action_t lastCompletionEvente;  /* Ditto */
   char                        *discardEvents;     /* Set by a child discard recognizer that reaches a completion event */
+  marpaESLIF_internal_event_action_t discardEvente;     /* Discard event internal action type */
   marpaESLIF_symbol_t         *discardSymbolp;    /* Ditto */
   int                          resumeCounteri;    /* Internal counter for tracing - no functional impact */
   int                          callstackCounteri; /* Internal counter for tracing - no functional impact */
