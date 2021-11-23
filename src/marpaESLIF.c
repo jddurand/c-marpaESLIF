@@ -5583,7 +5583,6 @@ static inline short _marpaESLIFRecognizer_terminal_matcherb(marpaESLIFRecognizer
   short                              rcb;
   char                              *bytes;
   size_t                             bytel;
-  short                              memcmp1b;
   marpaESLIF_pcre2_callout_context_t callout_context;
   short                              rcMatcherb;
 
@@ -5693,10 +5692,9 @@ static inline short _marpaESLIFRecognizer_terminal_matcherb(marpaESLIFRecognizer
       if (bytel <= 0) {
         MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "%s for %s", "MARPAESLIF_MATCH_FAILURE", terminalp->descp->asciis);
       } else {
-        /* It is always faster to compare a char than a memcmp. If size to compare is 1 we are done, else we restrict memcmp() when first char is ok */
-        memcmp1b = (inputs[0] == bytes[0]);
+        /* We consider it is faster to compare a char than calling memcmp */
         if (inputl >= bytel) {
-          if ((bytel == 1) ? memcmp1b : (memcmp1b && (memcmp(inputs, bytes, bytel) == 0))) {
+          if ((bytel == 1) ? (inputs[0] == bytes[0]) : (memcmp(inputs, bytes, bytel) == 0)) {
             rci = MARPAESLIF_MATCH_OK;
             MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "%s for %s", "MARPAESLIF_MATCH_OK", terminalp->descp->asciis);
             matchedp       = inputs;
@@ -5705,7 +5703,7 @@ static inline short _marpaESLIFRecognizer_terminal_matcherb(marpaESLIFRecognizer
             MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "%s for %s", "MARPAESLIF_MATCH_FAILURE", terminalp->descp->asciis);
           }
         } else {
-          if ((inputl == 1) ? memcmp1b : (memcmp1b && (memcmp(inputs, bytes, inputl) == 0))) {
+          if ((inputl == 1) ? (inputs[0] == bytes[0]) : (memcmp(inputs, bytes, inputl) == 0)) {
             /* Partial match */
             if (eofb) {
               MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "%s for %s", "MARPAESLIF_MATCH_FAILURE", terminalp->descp->asciis);
