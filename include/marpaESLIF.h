@@ -645,6 +645,10 @@ extern "C" {
   /* marpaESLIFValue_stack_getAndForgetb transfers the memory management from the stack to the end-user in one call */
   /* It is nothing else but a wrapper on marpaESLIFValue_stack_getp followed by marpaESLIFValue_stack_forgetb */
   marpaESLIF_EXPORT short                         marpaESLIFValue_stack_getAndForgetb(marpaESLIFValue_t *marpaESLIFValuep, int indicei, marpaESLIFValueResult_t *marpaESLIFValueResultp);
+  /* -------------------------------------------------------- */
+  /* Useful methods to manage a marpaESLIFValueResult content */
+  /* -------------------------------------------------------- */
+  marpaESLIF_EXPORT short                         marpaESLIFRecognizer_marpaESLIFValueResult_freeb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFValueResult_t *marpaESLIFValueResultp, short deepb);
   marpaESLIF_EXPORT short                         marpaESLIFValue_marpaESLIFValueResult_freeb(marpaESLIFValue_t *marpaESLIFValuep, marpaESLIFValueResult_t *marpaESLIFValueResultp, short deepb);
 
   /* Helpers */
@@ -692,6 +696,8 @@ extern "C" {
   /* ambiguousb            - Fixed to 0 */
   /* nullb                 - Fixed to 0 */
   /* maxParsesi            - Fixed to 0 */
+  /* The following setting in marpaESLIFRecognizerOption_t* argument will be ignored as well: */
+  /* exhaustedb            - Fixed to 0 */
   marpaESLIF_EXPORT short                         marpaESLIFJSON_decodeb(marpaESLIFGrammar_t *marpaESLIFGrammarJSONp, marpaESLIFJSONDecodeOption_t *marpaESLIFJSONDecodeOptionp, marpaESLIFRecognizerOption_t *marpaESLIFRecognizerOptionp, marpaESLIFValueOption_t *marpaESLIFValueOptionp);
 
   /* ------------------------------------- */

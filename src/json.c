@@ -1,6 +1,12 @@
 #include <locale.h>
 #include <stdlib.h>
 
+/* ========================================================================================= */
+/* JSON grammar is unambiguous, i.e. if it parses correctly, then it valuates unambiguously. */
+/* In other words, there is no need to call for valuation, the result can be computed at     */
+/* parse time.                                                                               */
+/* ========================================================================================= */
+
 #undef  FILENAMES
 #define FILENAMES "json.c" /* For logging */
 
