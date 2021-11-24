@@ -6790,6 +6790,13 @@ static inline char *_marpaESLIF_charconvb(marpaESLIF_t *marpaESLIFp, char *toEnc
 	free(marpaESLIFRecognizerp);
     }
   }
+  /* If the caller did not have a tconvp yet, we do not want to return this one that has just failed */
+  if ((tconvpp != NULL) && (*tconvpp == NULL) && (tconvp != NULL)) {
+    if (tconv_close(tconvp) != 0) {
+      MARPAESLIF_ERRORF(marpaESLIFp, "tconv_close failure, %s", strerror(errno));
+    }
+    tconvp = NULL;
+  }
   if (outbuforigp != NULL) {
     free(outbuforigp);
   }
@@ -14893,6 +14900,7 @@ static inline short _marpaESLIFRecognizer_flush_charconvb(marpaESLIFRecognizer_t
     goto err;
   }
 
+  /* Note that here we let tconvsilentb == 0. This is because if we flush, then we were able to start character convertion. Flushing should not fail then. */
   utf8s = _marpaESLIF_charconvb(marpaESLIFp, NULL /* toEncodings, was MARPAESLIF_UTF8_STRING */, NULL /* fromEncodings */, NULL /* srcs */, 0 /* srcl */, &utf8l /* dstlp */, NULL /* fromEncodingsp */, &(marpaESLIF_streamp->tconvp), 1 /* eofb */, &(marpaESLIF_streamp->bytelefts), &(marpaESLIF_streamp->byteleftl), &(marpaESLIF_streamp->byteleftallocl), 0 /* tconvsilentb */, NULL /* defaultEncodings */, NULL /* fallbackEncodings*/);
   if (MARPAESLIF_UNLIKELY(utf8s == NULL)) {
     goto err;
@@ -14943,6 +14951,8 @@ static inline short _marpaESLIFRecognizer_start_charconvb(marpaESLIFRecognizer_t
   marpaESLIF_grammar_t      *grammarp            = marpaESLIFGrammarp->grammarp;
   char                       *encodingasciis     = NULL;
   char                       *utf8s              = NULL;
+  /* If a subgrammar cannot append data, next subgrammar may, using a different encoding in input. So we stay silent. */
+  short                       tconvsilentb       = (marpaESLIFRecognizerp->marpaESLIFRecognizerParentp != NULL) ? 1 : 0;
   size_t                      utf8l;
   short                       appendDatab;
   short                       rcb;
@@ -14976,7 +14986,7 @@ static inline short _marpaESLIFRecognizer_start_charconvb(marpaESLIFRecognizer_t
   }
 
   /* Convert input */
-  utf8s = _marpaESLIF_charconvb(marpaESLIFp, (char *) MARPAESLIF_UTF8_STRING, encodingasciis, srcs, srcl, &utf8l, &(marpaESLIF_streamp->encodings), &(marpaESLIF_streamp->tconvp), eofb, &(marpaESLIF_streamp->bytelefts), &(marpaESLIF_streamp->byteleftl), &(marpaESLIF_streamp->byteleftallocl), 0 /* tconvsilentb */, grammarp->defaultEncodings, grammarp->fallbackEncodings);
+  utf8s = _marpaESLIF_charconvb(marpaESLIFp, (char *) MARPAESLIF_UTF8_STRING, encodingasciis, srcs, srcl, &utf8l, &(marpaESLIF_streamp->encodings), &(marpaESLIF_streamp->tconvp), eofb, &(marpaESLIF_streamp->bytelefts), &(marpaESLIF_streamp->byteleftl), &(marpaESLIF_streamp->byteleftallocl), tconvsilentb, grammarp->defaultEncodings, grammarp->fallbackEncodings);
   if (MARPAESLIF_UNLIKELY(utf8s == NULL)) {
     goto err;
   }
