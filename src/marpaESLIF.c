@@ -747,6 +747,7 @@ static inline short                  _marpaESLIFRecognizer_set_pauseb(marpaESLIF
 static inline short                  _marpaESLIFRecognizer_set_tryb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIF_grammar_t *grammarp, marpaESLIF_symbol_t *symbolp, char *bytes, size_t bytel);
 static inline short                  _marpaESLIFRecognizer_push_grammar_eventsb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp);
 static inline void                   _marpaESLIFRecognizer_clear_grammar_eventsb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp);
+static inline void                   _marpaESLIFRecognizer_clear_all_eventsb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp);
 static inline short                  _marpaESLIFRecognizer_value_validb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFValueResult_t *marpaESLIFValueResultp, void *userDatavp, _marpaESLIFRecognizer_valueResultCallback_t callbackp);
 static inline short                  __marpaESLIFRecognizer_value_validb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFValueResult_t *marpaESLIFValueResultp);
 static        short                  _marpaESLIFRecognizer_concat_valueResultCallbackb(void *userDatavp, marpaESLIFValueResult_t *marpaESLIFValueResultp);
@@ -5322,10 +5323,12 @@ static inline marpaESLIF_t *_marpaESLIF_newp(marpaESLIFOption_t *marpaESLIFOptio
     goto err;
   }
 
+#ifdef MARPAESLIF_NTRACE
   /* When we bootstrap we do no want to log unless there is an error */
   if (marpaESLIFOptionp->genericLoggerp != NULL) {
     genericLogger_logLevel_seti(marpaESLIFOptionp->genericLoggerp, GENERICLOGGER_LOGLEVEL_INFO);
   }
+#endif
   
   /* ----------------------------------- */
   /* First without the lazy rules        */
@@ -8462,6 +8465,7 @@ static inline short _marpaESLIFRecognizer_resume_oneb(marpaESLIFRecognizer_t *ma
   marpaWrapperRecognizer_t        *marpaWrapperRecognizerp           = marpaESLIFRecognizerp->marpaWrapperRecognizerp;
   int                              maxStartCompletionsi              = marpaESLIFRecognizerp->maxStartCompletionsi;
   marpaESLIF_stream_t             *marpaESLIF_streamp                = marpaESLIFRecognizerp->marpaESLIF_streamp;
+  short                            onlyPredictedLexemesb             = 0;
   size_t                           nSymboll;
   short                            havePriorityb;
   short                            maxPriorityInitializedb;
@@ -8516,17 +8520,16 @@ static inline short _marpaESLIFRecognizer_resume_oneb(marpaESLIFRecognizer_t *ma
   marpaESLIFRecognizerp->completedb      = 0;
 
   /* We always start by resetting and collecting current events */
-  MARPAESLIFRECOGNIZER_RESET_EVENTS(marpaESLIFRecognizerp);
+  _marpaESLIFRecognizer_clear_all_eventsb(marpaESLIFRecognizerp);
+
   /* We break immediately if there are events and the initialEventsb is set. This can happen once */
   /* only in the whole lifetime of a recognizer. */
   if (initialEventsb) {
     if (MARPAESLIF_UNLIKELY(! _marpaESLIFRecognizer_push_grammar_eventsb(marpaESLIFRecognizerp))) {
       goto err;
     }
-    if (marpaESLIFRecognizerp->eventArrayl > 0) {
-      rcb = 1;
-      goto done;
-    }
+    /* Ask for predicted lexemes */
+    onlyPredictedLexemesb = 1;
   }
   
   /* Ask for expected grammar terminals */
@@ -8538,7 +8541,7 @@ static inline short _marpaESLIFRecognizer_resume_oneb(marpaESLIFRecognizer_t *ma
   for (symboll = 0; symboll < nSymboll; symboll++) {
     symboli = symbolArrayp[symboll];
     MARPAESLIF_INTERNAL_GET_SYMBOL_FROM_STACK(marpaESLIFp, symbolp, symbolStackp, symboli);
-    MARPAESLIF_TRACEF(marpaESLIFp, funcs, "Expected terminal: %s", symbolp->descp->asciis);
+    MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Expected terminal: %s", symbolp->descp->asciis);
   }
 #endif
 
@@ -8547,6 +8550,9 @@ static inline short _marpaESLIFRecognizer_resume_oneb(marpaESLIFRecognizer_t *ma
        - discard mode and completion is reached, or
        - grammar is exhausted and exhaustion support is on
        (Note that exception mode setted support of exhaustion mode)
+       These two cases cannot happen when initialEventsb is true:
+       - discard mode cannot be set
+       - grammar cannot be exhausted (we at the very early start)
     */
     if (MARPAESLIF_UNLIKELY(! _marpaESLIFRecognizer_isExhaustedb(marpaESLIFRecognizerp, &isExhaustedb))) {
       goto err;
@@ -8576,6 +8582,17 @@ static inline short _marpaESLIFRecognizer_resume_oneb(marpaESLIFRecognizer_t *ma
   for (symboll = 0; symboll < nSymboll; symboll++) {
     symboli = symbolArrayp[symboll];
     MARPAESLIF_INTERNAL_GET_SYMBOL_FROM_STACK(marpaESLIFp, symbolp, symbolStackp, symboli);
+
+    if (onlyPredictedLexemesb) {
+      /* Skip this symbol if it is not a predicted lexeme... */
+      if (symbolp->eventBefores == NULL) {
+        continue;
+      }
+      /* ... or if the prediction event is off */
+      if (! marpaESLIFRecognizerp->beforeEventStatebp[symbolp->idi]) {
+        continue;
+      }
+    }
 
     /* There is a case when we know a symbol can be skipped: */
     /* It is a string literal that:                          */
@@ -8760,7 +8777,22 @@ static inline short _marpaESLIFRecognizer_resume_oneb(marpaESLIFRecognizer_t *ma
       goto err;
     }
   }
-  
+
+  /* If we were in the initialEvents mode and there is already something in the event array, get out of the method immediately. */
+  if (initialEventsb) {
+    if (marpaESLIFRecognizerp->eventArrayl > 0) {
+      rcb = 1;
+      goto done;
+    } else {
+      /* No initial event at all. This mean no predicted symbol neither. So we stop aking for only predicted lexemes. */
+      onlyPredictedLexemesb = 0;
+      /* And switch of this unique flag */
+      initialEventsb = 0;
+      /* ... and restart the loop */
+      goto retry;
+    }
+  }
+
   if (alternativeStackSymboli <= 0) {
     if (! _marpaESLIFRecognizer_discardParseb(marpaESLIFRecognizerp, 0, &discardl)) {
       goto err;
@@ -9430,6 +9462,7 @@ static inline short _marpaESLIFRecognizer_lexeme_completeb(marpaESLIFRecognizer_
 
   if (MARPAESLIF_UNLIKELY(! marpaWrapperRecognizer_completeb(marpaESLIFRecognizerp->marpaWrapperRecognizerp))) {
     /* Regardless of failure or success, events should always be fetched as per the doc */
+    _marpaESLIFRecognizer_clear_all_eventsb(marpaESLIFRecognizerp);
     _marpaESLIFRecognizer_push_grammar_eventsb(marpaESLIFRecognizerp);
     goto err;
   }
@@ -9447,7 +9480,7 @@ static inline short _marpaESLIFRecognizer_lexeme_completeb(marpaESLIFRecognizer_
   }
 
   /* Push grammar and eventual pause after events */
-  MARPAESLIFRECOGNIZER_RESET_EVENTS(marpaESLIFRecognizerp);
+  _marpaESLIFRecognizer_clear_all_eventsb(marpaESLIFRecognizerp);
   if (MARPAESLIF_UNLIKELY(! _marpaESLIFRecognizer_push_grammar_eventsb(marpaESLIFRecognizerp))) {
     goto err;
   }
@@ -10711,6 +10744,13 @@ static inline void _marpaESLIFRecognizer_clear_grammar_eventsb(marpaESLIFRecogni
 }
 
 /*****************************************************************************/
+static inline void _marpaESLIFRecognizer_clear_all_eventsb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp)
+/*****************************************************************************/
+{
+  marpaESLIFRecognizerp->eventArrayl = 0;
+}
+
+/*****************************************************************************/
 static inline void  _marpaESLIFRecognizer_sort_eventsb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp)
 /*****************************************************************************/
 {
@@ -11571,7 +11611,7 @@ static inline short _marpaESLIFRecognizer_discardParseb(marpaESLIFRecognizer_t *
 
         if (! noEventb) {
           /* We want to do as if we would have done a lexeme complete before */
-          MARPAESLIFRECOGNIZER_RESET_EVENTS(marpaESLIFRecognizerp);
+          _marpaESLIFRecognizer_clear_all_eventsb(marpaESLIFRecognizerp);
           if (MARPAESLIF_UNLIKELY(! _marpaESLIFRecognizer_push_grammar_eventsb(marpaESLIFRecognizerp))) {
             goto err;
           }
@@ -19385,7 +19425,7 @@ static inline short _marpaESLIFRecognizer_getLexemeGrammarFromCachep(marpaESLIFR
                    findResultb);
 #ifndef MARPAESLIF_NTRACE
   if (findResultb && (marpaESLIFGrammarp == NULL)) {
-    MARPAESLIF_ERROR(marpaESLIFp, "marpaESLIFGrammarp is NULL");
+    MARPAESLIF_ERROR(marpaESLIFRecognizerp->marpaESLIFp, "marpaESLIFGrammarp is NULL");
     goto err;
   }
 #endif
