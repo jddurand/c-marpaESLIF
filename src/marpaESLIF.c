@@ -8825,7 +8825,7 @@ static inline short _marpaESLIFRecognizer_resume_oneb(marpaESLIFRecognizer_t *ma
                                                                  (marpaESLIF_streamp->eofb && (marpaESLIF_streamp->inputl <= 0))
                                                                  ))
         ) {
-      /* If exhaustion option is on, we fake an exhaustion event if grammar itself is not exhausted */
+      /* If exhaustion option is on, we want to always have an exhaustion event event when grammar itself is not exhausted */
       if (marpaESLIFRecognizerp->marpaESLIFRecognizerOption.exhaustedb) {
         if (MARPAESLIF_UNLIKELY(! _marpaESLIFRecognizer_isExhaustedb(marpaESLIFRecognizerp, &isExhaustedb))) {
           goto err;
@@ -8835,6 +8835,7 @@ static inline short _marpaESLIFRecognizer_resume_oneb(marpaESLIFRecognizer_t *ma
           if (MARPAESLIF_UNLIKELY(! _marpaESLIFRecognizer_push_eventb(marpaESLIFRecognizerp, MARPAESLIF_EVENTTYPE_EXHAUSTED, NULL /* symbolp */, MARPAESLIF_EVENTTYPE_EXHAUSTED_NAME, NULL /* discardArrayp */, MARPAESLIF_INTERNAL_EVENT_ACTION_NA))) {
             goto err;
           }
+          marpaESLIFRecognizerp->forceExhaustedb = 1;
         }
       }
       marpaESLIFRecognizerp->cannotcontinueb = 1;
@@ -10932,6 +10933,7 @@ static inline marpaESLIFRecognizer_t *_marpaESLIFRecognizer_newp(marpaESLIFGramm
   marpaESLIFRecognizerp->haveLexemeb                        = 0;
   /* These variables are resetted at every _resume_oneb() */
   marpaESLIFRecognizerp->completedb                         = 0;
+  marpaESLIFRecognizerp->forceExhaustedb                    = 0;
   marpaESLIFRecognizerp->cannotcontinueb                    = 0;
   marpaESLIFRecognizerp->alternativeStackSymbolp            = NULL;  /* Take care, it is pointer to internal _alternativeStackSymbolp if stack init is ok */
   marpaESLIFRecognizerp->commitedAlternativeStackSymbolp    = NULL;  /* Take care, it is pointer to internal _commitedAlternativeStackSymbolp if stack init is ok */
@@ -11366,9 +11368,14 @@ static inline short _marpaESLIFRecognizer_isExhaustedb(marpaESLIFRecognizer_t *m
   MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_INC;
   MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "start");
 
-  /* Ask directly to the grammar */
-  if (MARPAESLIF_UNLIKELY(! marpaWrapperRecognizer_exhaustedb(marpaESLIFRecognizerp->marpaWrapperRecognizerp, &isExhaustedb))) {
-    goto err;
+  /* Are we forcing an exhaustion event ? */
+  if (marpaESLIFRecognizerp->forceExhaustedb) {
+    isExhaustedb = 1;
+  } else {
+    /* Ask directly to the recognizer */
+    if (MARPAESLIF_UNLIKELY(! marpaWrapperRecognizer_exhaustedb(marpaESLIFRecognizerp->marpaWrapperRecognizerp, &isExhaustedb))) {
+      goto err;
+    }
   }
 
   MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "isExhaustedb=%d", (int) isExhaustedb);
@@ -19365,6 +19372,7 @@ static inline short _marpaESLIFRecognizer_getPristineFromCachep(marpaESLIF_t *ma
         /* marpaESLIFRecognizerp->haveLexemeb                  = 0; */
         /* These variables are resetted at every _resume_oneb() */
         /* marpaESLIFRecognizerp->completedb                   = 0; */
+        /* marpaESLIFRecognizerp->forceExhaustedb                 = 0; */
         /* marpaESLIFRecognizerp->cannotcontinueb                 = 0; */
         /* marpaESLIFRecognizerp->alternativeStackSymbolp         = NULL; */
         /* marpaESLIFRecognizerp->commitedAlternativeStackSymbolp = NULL; */

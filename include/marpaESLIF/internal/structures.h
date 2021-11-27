@@ -507,7 +507,8 @@ struct marpaESLIFRecognizer {
   short                        discardb;       /* Discard mode */
   short                        silentb;        /* Silent mode */
   short                        haveLexemeb;    /* Remember if this recognizer have at least one lexeme */
-  short                        completedb;     /* Ditto for completion (used in case od discard events) */
+  short                        completedb;     /* Ditto for completion (used in case of discard events) */
+  short                        forceExhaustedb; /* If recognizer interface has the exhaustedb flag set and this value is true, forces an exhaustion event if grammar do not have one */
   short                        cannotcontinueb; /* Internal flag that forces CanContinueb() to return false */
   genericStack_t               _alternativeStackSymbol;          /* Current alternative stack containing symbol information and the matched size */
   genericStack_t              *alternativeStackSymbolp;          /* Pointer to current alternative stack containing symbol information and the matched size */
