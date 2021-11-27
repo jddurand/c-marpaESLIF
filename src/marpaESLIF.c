@@ -8506,9 +8506,12 @@ static inline short _marpaESLIFRecognizer_resume_oneb(marpaESLIFRecognizer_t *ma
   MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "start, maxStartCompletionsi=%d", maxStartCompletionsi);
 
   /* Checks */
-  if (MARPAESLIF_UNLIKELY(! marpaESLIFRecognizerp->scanb)) {
-    MARPAESLIF_ERROR(marpaESLIFp, "Scan must be called first");
-    goto err;
+  if (! marpaESLIFRecognizerp->scanb) {
+    /* We allow scan/resume to not have been called only if the recognizer is not pristine */
+    if (marpaESLIFRecognizerp->pristineb) {
+      MARPAESLIF_ERROR(marpaESLIFp, "Scan must be called first");
+      goto err;
+    }
   }
   if (MARPAESLIF_UNLIKELY(! latmb)) {
     MARPAESLIF_ERRORF(marpaESLIFp, "Grammar No %d (%s) must be in LATM mode", grammarp->leveli, grammarp->descp->asciis);

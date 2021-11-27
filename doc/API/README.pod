@@ -1550,6 +1550,8 @@ Resume the scanning. All parameters have the same meaning as for C<marpaESLIFRec
     }
   }
 
+Calling C<marpaESLIFRecognizer_resumeb> is legal for any recognizer that already called <marpaESLIFRecognizer_scanb> or did at least one call to C<marpaESLIFRecognizer_lexeme_alternativeb>.
+
 This method can generate grammar and pause events.
 
 Returns a true value on success, a false value on failure.
