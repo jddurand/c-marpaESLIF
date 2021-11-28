@@ -278,7 +278,15 @@ Returns a boolean value indicating success or not.
 
 Get a copy of the current internal recognizer buffer, starting at the exact byte where resume() would start. An undefined output does not mean there is an error, but that internal buffers are completely consumed. ESLIF will automatically require more data unless the EOF flag is set. Internal buffer is always UTF-8 encoded to every chunk of data that was declared to be a character stream.
 
-Returns the associated input bytes, or C<undef>.
+Returns the associated input input, or C<undef>.
+
+=head2 $eslifRecognizer->inputLength()
+
+Returns the length of current internal recognizer buffer, in bytes.
+
+=head2 $eslifRecognizer->error()
+
+Generates an error report for C<$eslifRecognizer>.
 
 =head2 $eslifRecognizer->progressLog($start, $end, $loggerLevel)
 

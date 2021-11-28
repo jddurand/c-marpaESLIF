@@ -211,6 +211,9 @@ public class AppThread implements Runnable {
 				}
 				if (doScan(eslifLogger, eslifRecognizer, true)) {
 					showLocation("After doScan", eslifLogger, eslifRecognizer);
+					showInputLength("After doScan", eslifLogger, eslifRecognizer);
+					showInput("After doScan", eslifLogger, eslifRecognizer);
+					showError("After doScan", eslifLogger, eslifRecognizer);
 					if (! eslifRecognizer.isEof()) {
 						if (! eslifRecognizer.read()) {
 							break;
@@ -438,6 +441,34 @@ public class AppThread implements Runnable {
 			eslifLogger.debug("[" + context + "]  Location is [" + line + "," + column + "]");
 		} catch (Exception e) {
 			eslifLogger.warning("[" + context + "]  line() or column() raised an exception");
+		}
+	}
+
+	private static void showInput(String context, ESLIFLoggerInterface eslifLogger, ESLIFRecognizer eslifRecognizer) {
+		try {
+			byte[] bytes = eslifRecognizer.input();
+			String input = new String(bytes, "UTF-8");
+			eslifLogger.debug("[" + context + "]  Input is: " + input);
+		} catch (Exception e) {
+			eslifLogger.warning("[" + context + "]  input() raised an exception");
+		}
+	}
+
+	private static void showInputLength(String context, ESLIFLoggerInterface eslifLogger, ESLIFRecognizer eslifRecognizer) {
+		try {
+			long inputLength = eslifRecognizer.inputLength();
+			eslifLogger.debug("[" + context + "]  Input length is " + inputLength);
+		} catch (Exception e) {
+			eslifLogger.warning("[" + context + "]  inputLength() raised an exception");
+		}
+	}
+
+	private static void showError(String context, ESLIFLoggerInterface eslifLogger, ESLIFRecognizer eslifRecognizer) {
+		try {
+			eslifLogger.debug("[" + context + "] Simulating error report:");
+			eslifRecognizer.error();
+		} catch (Exception e) {
+			eslifLogger.warning("[" + context + "]  error() raised an exception");
 		}
 	}
 }

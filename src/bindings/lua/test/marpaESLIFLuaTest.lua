@@ -552,6 +552,21 @@ showLocation = function(context, eslifRecognizer)
    logger:debugf("[%s] Location is %d:%d", context, line, column)
 end
 
+showInputLength = function(context, eslifRecognizer)
+   local inputLength = eslifRecognizer:inputLength()
+   logger:debugf("[%s] Input length is %d", context, inputLength)
+end
+
+showInput = function(context, eslifRecognizer)
+   local input = eslifRecognizer:input()
+   logger:debugf("[%s] Input is %s", context, input)
+end
+
+showError = function(context, eslifRecognizer)
+   logger:debugf("[%s] Simulating error report:", context)
+   eslifRecognizer:error()
+end
+
 doScan = function(eslifRecognizer, initialEvents)
    logger:debugf(" =============> scan(initialEvents=%s)", tostring(initialEvents))
     if (not eslifRecognizer:scan(initialEvents)) then
@@ -711,6 +726,9 @@ for _, localstring in pairs(strings) do
    end
    if (doScan(eslifRecognizer, true)) then
       showLocation("After doScan", eslifRecognizer)
+      showInputLength("After doScan", eslifRecognizer)
+      showInput("After doScan", eslifRecognizer)
+      showError("After doScan", eslifRecognizer)
       if (not eslifRecognizer:isEof()) then
          if (not eslifRecognizer:read()) then
             break
@@ -719,6 +737,7 @@ for _, localstring in pairs(strings) do
       end
       local j = 0
       while (eslifRecognizer:isCanContinue()) do
+         logger:debugf("[%s] Progress log:", context)
          eslifRecognizer:progressLog(-1, -1, GENERICLOGGER_LOGLEVEL_NOTICE)
          local progress = eslifRecognizer:progress(-1, -1)
          logger:infof('Progress: %s', tableDump(progress))

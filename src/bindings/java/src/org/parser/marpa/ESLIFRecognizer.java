@@ -65,6 +65,8 @@ public class ESLIFRecognizer {
 	private native boolean           jniIsCanContinue() throws ESLIFException;
 	private native boolean           jniRead() throws ESLIFException;
 	private native byte[]            jniInput() throws ESLIFException;
+	private native long              jniInputLength() throws ESLIFException;
+	private native void              jniError() throws ESLIFException;
 	private native void              jniProgressLog(int start, int end, ESLIFLoggerLevel level) throws ESLIFException;
 	private native long              jniLastCompletedOffset(String name) throws ESLIFException;
 	private native long              jniLastCompletedLength(String name) throws ESLIFException;
@@ -455,6 +457,25 @@ public class ESLIFRecognizer {
 		return jniInput();
 	}
 
+	/**
+	 * Get the length of the current internal recognizer buffer.
+	 * 
+	 * @return length in bytes
+	 * @throws ESLIFException if the interface failed
+	 */
+	public synchronized long inputLength() throws ESLIFException {
+		return jniInputLength();
+	}
+
+	/**
+	 * Asks to simulate an error report.
+	 * 
+	 * @throws ESLIFException if the interface failed
+	 */
+	public synchronized void error() throws ESLIFException {
+		jniError();
+	}
+	
 	/**
 	 * Asks to get a logging representation of the current parse progress. The format is fixed by the underlying libraries.
 	 * The <code>start</code> and <code>end</code> parameters follow the perl convention of indices, i.e. when they are negative,

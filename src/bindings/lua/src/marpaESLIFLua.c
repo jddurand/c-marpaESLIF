@@ -253,6 +253,8 @@ static int                                marpaESLIFLua_marpaESLIFRecognizer_dis
 static int                                marpaESLIFLua_marpaESLIFRecognizer_isEofi(lua_State *L);
 static int                                marpaESLIFLua_marpaESLIFRecognizer_readi(lua_State *L);
 static int                                marpaESLIFLua_marpaESLIFRecognizer_inputi(lua_State *L);
+static int                                marpaESLIFLua_marpaESLIFRecognizer_inputLengthi(lua_State *L);
+static int                                marpaESLIFLua_marpaESLIFRecognizer_errori(lua_State *L);
 static int                                marpaESLIFLua_marpaESLIFRecognizer_progressLogi(lua_State *L);
 static int                                marpaESLIFLua_marpaESLIFRecognizer_lastCompletedOffseti(lua_State *L);
 static int                                marpaESLIFLua_marpaESLIFRecognizer_lastCompletedLengthi(lua_State *L);
@@ -1019,6 +1021,8 @@ static short marpaESLIFLua_lua_isinteger(int *rcip, lua_State *L, int idx);
   MARPAESLIFLUA_STORE_FUNCTION(L, "isEof",                           marpaESLIFLua_marpaESLIFRecognizer_isEofi); \
   MARPAESLIFLUA_STORE_FUNCTION(L, "read",                            marpaESLIFLua_marpaESLIFRecognizer_readi); \
   MARPAESLIFLUA_STORE_FUNCTION(L, "input",                           marpaESLIFLua_marpaESLIFRecognizer_inputi); \
+  MARPAESLIFLUA_STORE_FUNCTION(L, "inputLength",                     marpaESLIFLua_marpaESLIFRecognizer_inputLengthi); \
+  MARPAESLIFLUA_STORE_FUNCTION(L, "error",                           marpaESLIFLua_marpaESLIFRecognizer_errori); \
   MARPAESLIFLUA_STORE_FUNCTION(L, "progressLog",                     marpaESLIFLua_marpaESLIFRecognizer_progressLogi); \
   MARPAESLIFLUA_STORE_FUNCTION(L, "lastCompletedOffset",             marpaESLIFLua_marpaESLIFRecognizer_lastCompletedOffseti); \
   MARPAESLIFLUA_STORE_FUNCTION(L, "lastCompletedLength",             marpaESLIFLua_marpaESLIFRecognizer_lastCompletedLengthi); \
@@ -6292,6 +6296,85 @@ static int marpaESLIFLua_marpaESLIFRecognizer_inputi(lua_State *L)
   }
   
   return 1;
+
+ err:
+  return 0;
+}
+
+/*****************************************************************************/
+static int marpaESLIFLua_marpaESLIFRecognizer_inputLengthi(lua_State *L)
+/*****************************************************************************/
+{
+  static const char                *funcs = "marpaESLIFLua_marpaESLIFRecognizer_inputLengthi";
+  marpaESLIFLuaRecognizerContext_t *marpaESLIFLuaRecognizerContextp;
+  size_t                            inputl;
+  int                               typei;
+  int                               topi;
+
+  if (! marpaESLIFLua_lua_gettop(&topi, L)) goto err;
+  if (topi != 1) {
+    marpaESLIFLua_luaL_error(L, "Usage: marpaESLIFRecognizer_read(marpaESLIFRecognizerp)");
+    goto err;
+  }
+
+  if (! marpaESLIFLua_lua_type(&typei, L, 1)) goto err;
+  if (typei != LUA_TTABLE) {
+    marpaESLIFLua_luaL_error(L, "marpaESLIFRecognizerp must be a table");
+    goto err;
+  }
+  if (! marpaESLIFLua_lua_getfield(NULL,L, 1, "marpaESLIFLuaRecognizerContextp")) goto err;
+  if (! marpaESLIFLua_lua_touserdata((void **) &marpaESLIFLuaRecognizerContextp, L, -1)) goto err;
+  if (! marpaESLIFLua_lua_pop(L, 1)) goto err;
+
+  /* Clear the stack */
+  if (! marpaESLIFLua_lua_settop(L, 0)) goto err;
+
+  if (! marpaESLIFRecognizer_inputb(marpaESLIFLuaRecognizerContextp->marpaESLIFRecognizerp, NULL, &inputl)) {
+    marpaESLIFLua_luaL_errorf(L, "marpaESLIFRecognizer_inputb failure, %s", strerror(errno));
+    goto err;
+  }
+
+  if (! marpaESLIFLua_lua_pushinteger(L, (lua_Integer) inputl)) goto err;
+
+  return 1;
+
+ err:
+  return 0;
+}
+
+/*****************************************************************************/
+static int marpaESLIFLua_marpaESLIFRecognizer_errori(lua_State *L)
+/*****************************************************************************/
+{
+  static const char                *funcs = "marpaESLIFLua_marpaESLIFRecognizer_errori";
+  marpaESLIFLuaRecognizerContext_t *marpaESLIFLuaRecognizerContextp;
+  int                               typei;
+  int                               topi;
+
+  if (! marpaESLIFLua_lua_gettop(&topi, L)) goto err;
+  if (topi != 1) {
+    marpaESLIFLua_luaL_error(L, "Usage: marpaESLIFRecognizer_read(marpaESLIFRecognizerp)");
+    goto err;
+  }
+
+  if (! marpaESLIFLua_lua_type(&typei, L, 1)) goto err;
+  if (typei != LUA_TTABLE) {
+    marpaESLIFLua_luaL_error(L, "marpaESLIFRecognizerp must be a table");
+    goto err;
+  }
+  if (! marpaESLIFLua_lua_getfield(NULL,L, 1, "marpaESLIFLuaRecognizerContextp")) goto err;
+  if (! marpaESLIFLua_lua_touserdata((void **) &marpaESLIFLuaRecognizerContextp, L, -1)) goto err;
+  if (! marpaESLIFLua_lua_pop(L, 1)) goto err;
+
+  /* Clear the stack */
+  if (! marpaESLIFLua_lua_settop(L, 0)) goto err;
+
+  if (! marpaESLIFRecognizer_errorb(marpaESLIFLuaRecognizerContextp->marpaESLIFRecognizerp)) {
+    marpaESLIFLua_luaL_errorf(L, "marpaESLIFRecognizer_errorb failure, %s", strerror(errno));
+    goto err;
+  }
+
+  return 0;
 
  err:
   return 0;

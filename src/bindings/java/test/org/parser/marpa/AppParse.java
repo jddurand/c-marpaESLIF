@@ -29,7 +29,7 @@ public class AppParse  {
 			}
 		}
 
-		if (false) {
+		if (true) {
 			// This is the multi-threaded test
 			eslifLogger.info("Running over " + nbthread + " threads, using two loggers");
 			
@@ -67,17 +67,29 @@ public class AppParse  {
 				}
 			}
 		}
-		// Import/export test
-		new AppImportExport(eslifLogger).run();
-		// JSON test
-		new AppJSONLua(eslifLogger).run();
-		// JSONEncoder test
-		new AppJSONEncoder(eslifLogger).run();
-		// JSONDecoder test
-		new AppJSONDecoder(eslifLogger).run();
-		// JSON handy class
-		new AppJSON(eslifLogger).run();
-		// Parameterized rules class
-		new AppParameterizedRules(eslifLogger).run();
+		if (true) {
+		  // Import/export test
+		  new AppImportExport(eslifLogger).run();
+		}
+		if (true) {
+		  // JSON test
+		  new AppJSONLua(eslifLogger).run();
+		}
+		if (true) {
+		  // JSONEncoder test
+		  new AppJSONEncoder(eslifLogger).run();
+		}
+		if (true) {
+		  // JSONDecoder test
+		  new AppJSONDecoder(eslifLogger).run();
+		}
+		if (true) {
+		  // JSON handy class
+		  new AppJSON(eslifLogger).run();
+		}
+		if (true) {
+		  // Parameterized rules class
+		  new AppParameterizedRules(eslifLogger).run();
+		}
 	}
 }

@@ -9962,6 +9962,11 @@ short marpaESLIFRecognizer_lexeme_expectedb(marpaESLIFRecognizer_t *marpaESLIFRe
       goto err;
     }
 
+    if (! MARPAESLIF_IS_LEXEME(symbolp)) {
+      continue;
+    }
+
+    /* This is a meta symbol per definition */
     nLexemel++;
 
     /* Prepare/use internal buffer */

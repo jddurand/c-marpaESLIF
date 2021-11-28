@@ -5468,6 +5468,47 @@ OUTPUT:
 
 =for comment
   /* ----------------------------------------------------------------------- */
+  /* MarpaX::ESLIF::Recognizer::inputLength                                  */
+  /* ----------------------------------------------------------------------- */
+=cut
+
+STRLEN
+inputLength(p)
+  SV *p;
+PREINIT:
+  static const char *funcs = "MarpaX::ESLIF::Recognizer::inputLength";
+CODE:
+  MarpaX_ESLIF_Recognizer_t *MarpaX_ESLIF_Recognizerp = marpaESLIFPerl_engine(aTHX_ p);
+  size_t                     inputl;
+  SV                        *svp;
+
+  if (MARPAESLIF_UNLIKELY(! marpaESLIFRecognizer_inputb(MarpaX_ESLIF_Recognizerp->marpaESLIFRecognizerp, NULL, &inputl))) {
+    MARPAESLIFPERL_CROAKF("marpaESLIFRecognizer_inputb failure, %s", strerror(errno));
+  }
+  RETVAL = (STRLEN) inputl;
+OUTPUT:
+  RETVAL
+
+=for comment
+  /* ----------------------------------------------------------------------- */
+  /* MarpaX::ESLIF::Recognizer::error                                        */
+  /* ----------------------------------------------------------------------- */
+=cut
+
+void
+error(p)
+  SV *p;
+PREINIT:
+  static const char *funcs = "MarpaX::ESLIF::Recognizer::error";
+CODE:
+  MarpaX_ESLIF_Recognizer_t *MarpaX_ESLIF_Recognizerp = marpaESLIFPerl_engine(aTHX_ p);
+
+  if (MARPAESLIF_UNLIKELY(! marpaESLIFRecognizer_errorb(MarpaX_ESLIF_Recognizerp->marpaESLIFRecognizerp))) {
+    MARPAESLIFPERL_CROAKF("marpaESLIFRecognizer_errorb failure, %s", strerror(errno));
+  }
+
+=for comment
+  /* ----------------------------------------------------------------------- */
   /* MarpaX::ESLIF::Recognizer::progressLog                                  */
   /* ----------------------------------------------------------------------- */
 =cut
