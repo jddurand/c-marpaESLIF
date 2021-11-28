@@ -1551,6 +1551,9 @@ for (my $i = 0; $i <= $#strings; $i++) {
     isa_ok($eslifRecognizer, 'MarpaX::ESLIF::Recognizer');
     if (doScan($log, $eslifRecognizer, 1)) {
         showLocation("After doScan", $log, $eslifRecognizer);
+        showInputLength("After doScan", $log, $eslifRecognizer);
+        showInput("After doScan", $log, $eslifRecognizer);
+        showError("After doScan", $log, $eslifRecognizer);
         if (! $eslifRecognizer->isEof()) {
             if (! $eslifRecognizer->read()) {
                 last;
@@ -1702,6 +1705,39 @@ sub showLocation {
             BAIL_OUT("\$eslifRecognizer->location() is not equivalent to (\$eslifRecognizer->line, \$eslifRecognizer->column)");
         }
         $log->debugf("[%s] Location is %s", $context, [$line, $column]);
+    } catch {
+        $log->warnf("[%s] Location raised an exception, %s", $_);
+    }
+}
+
+sub showInputLength {
+    my ($context, $log, $eslifRecognizer)  = @_;
+
+    try {
+        my $inputLength = $eslifRecognizer->inputLength();
+        $log->debugf("[%s] Input length is %d", $context, $inputLength);
+    } catch {
+        $log->warnf("[%s] Location raised an exception, %s", $_);
+    }
+}
+
+sub showInput {
+    my ($context, $log, $eslifRecognizer)  = @_;
+
+    try {
+        my $input = $eslifRecognizer->input();
+        $log->debugf("[%s] Input is %s", $context, $input);
+    } catch {
+        $log->warnf("[%s] Location raised an exception, %s", $_);
+    }
+}
+
+sub showError {
+    my ($context, $log, $eslifRecognizer)  = @_;
+
+    try {
+        $log->debugf("[%s] Simulating error report:", $context);
+        $eslifRecognizer->error();
     } catch {
         $log->warnf("[%s] Location raised an exception, %s", $_);
     }
