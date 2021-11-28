@@ -18183,6 +18183,33 @@ short marpaESLIFRecognizer_inputb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp,
 }
 
 /*****************************************************************************/
+short marpaESLIFRecognizer_errorb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp)
+/*****************************************************************************/
+{
+  static const char *funcs = "marpaESLIFRecognizer_errorb";
+  short              rcb;
+
+  if (marpaESLIFRecognizerp == NULL) {
+    errno = EINVAL;
+    rcb = 0;
+    goto fast_done;
+  }
+
+  MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_INC;
+  MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "start");
+
+  _marpaESLIFRecognizer_errorv(marpaESLIFRecognizerp);
+  rcb = 1;
+  goto done;
+
+ done:
+  MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "return %d", (int) rcb);
+  MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_DEC;
+ fast_done:
+  return rcb;
+}
+
+/*****************************************************************************/
 short marpaESLIFRecognizer_locationb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, size_t *linelp, size_t *columnlp)
 /*****************************************************************************/
 {

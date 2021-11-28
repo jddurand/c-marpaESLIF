@@ -1877,6 +1877,14 @@ These pointers are intentionaly not having a I<const> keyword, though it is obvi
 
 Returns a true value on success, a false value on failure.
 
+=head3 C<marpaESLIFRecognizer_errorb>
+
+  short marpaESLIFRecognizer_errorb(marpaESLIFRecognizer_t  *marpaESLIFRecognizerp);
+
+Generates an error report for the recognizer instance pointed by C<marpaESLIFRecognizerp>.
+
+Returns a true value on success, a false value on failure.
+
 =head3 C<marpaESLIFRecognizer_locationb>
 
   short marpaESLIFRecognizer_locationb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp,

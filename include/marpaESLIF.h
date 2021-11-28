@@ -619,6 +619,7 @@ extern "C" {
   marpaESLIF_EXPORT short                         marpaESLIFRecognizer_progressLogb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, int starti, int endi, genericLoggerLevel_t logleveli);
   marpaESLIF_EXPORT short                         marpaESLIFRecognizer_progressb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, int starti, int endi, size_t *progresslp, marpaESLIFRecognizerProgress_t **progresspp);
   marpaESLIF_EXPORT short                         marpaESLIFRecognizer_inputb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, char **inputsp, size_t *inputlp);
+  marpaESLIF_EXPORT short                         marpaESLIFRecognizer_errorb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp);
   marpaESLIF_EXPORT short                         marpaESLIFRecognizer_locationb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, size_t *linelp, size_t *columnlp);
   marpaESLIF_EXPORT short                         marpaESLIFRecognizer_readb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, char **inputsp, size_t *inputlp);
   marpaESLIF_EXPORT short                         marpaESLIFRecognizer_last_completedb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, char *names, char **offsetpp, size_t *lengthlp);
