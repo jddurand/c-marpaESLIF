@@ -215,11 +215,6 @@ static marpaESLIFValueResult_t marpaESLIFValueResultLazy = {
 #endif
 
 /* -------------------------------------------------------------------------------------------- */
-/* Reset recognizer events                                                                      */
-/* -------------------------------------------------------------------------------------------- */
-#define MARPAESLIFRECOGNIZER_RESET_EVENTS(marpaESLIFRecognizerp) (marpaESLIFRecognizerp)->eventArrayl = 0
-
-/* -------------------------------------------------------------------------------------------- */
 /* This macro makes sure we return a multiple of chunk of always at least 1 BYTE more than size */
 /* -------------------------------------------------------------------------------------------- */
 #define MARPAESLIF_CHUNKED_SIZE_UPPER(size, chunk) ((size) < (chunk)) ? (chunk) : ((1 + ((size) / (chunk))) * (chunk))
@@ -9485,9 +9480,7 @@ static inline short _marpaESLIFRecognizer_lexeme_completeb(marpaESLIFRecognizer_
 
   /* Push grammar and eventual pause after events */
   _marpaESLIFRecognizer_clear_all_eventsb(marpaESLIFRecognizerp);
-  if (MARPAESLIF_UNLIKELY(! _marpaESLIFRecognizer_push_grammar_eventsb(marpaESLIFRecognizerp))) {
-    goto err;
-  }
+  /* It is important to push our events before, because of our internal events, in particular :discard[on/off/switch] */
   for (commitedAlternativei = 0; commitedAlternativei < GENERICSTACK_USED(commitedAlternativeStackSymbolp); commitedAlternativei++) {
     symbolp = (marpaESLIF_symbol_t *) GENERICSTACK_GET_PTR(commitedAlternativeStackSymbolp, commitedAlternativei);
     if ((symbolp->eventAfters != NULL) && marpaESLIFRecognizerp->afterEventStatebp[symbolp->idi]) {
@@ -9498,6 +9491,9 @@ static inline short _marpaESLIFRecognizer_lexeme_completeb(marpaESLIFRecognizer_
         goto err;
       }
     }
+  }
+  if (MARPAESLIF_UNLIKELY(! _marpaESLIFRecognizer_push_grammar_eventsb(marpaESLIFRecognizerp))) {
+    goto err;
   }
 
   /* We can reset commited alternatives */
