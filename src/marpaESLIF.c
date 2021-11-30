@@ -915,6 +915,7 @@ static inline void                   _marpaESLIF_lua_functioncall_freev(marpaESL
 static inline short                  _marpaESLIFRecognizer_eventb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, size_t *eventArraylp, marpaESLIFEvent_t **eventArraypp);
 static inline short                  _marpaESLIFRecognizer_lexeme_last_pauseb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, char *lexemes, char **pausesp, size_t *pauselp);
 static inline short                  _marpaESLIFRecognizer_lexeme_readb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFAlternative_t *marpaESLIFAlternativep, size_t lengthl);
+static inline size_t                 _marpaESLIF_next_power_of_twob(marpaESLIF_t *marpaESLIFp, size_t wantedl);
 
 /*****************************************************************************/
 static inline marpaESLIF_string_t *_marpaESLIF_string_newp(marpaESLIF_t *marpaESLIFp, char *encodingasciis, char *bytep, size_t bytel)
@@ -8820,30 +8821,36 @@ static inline short _marpaESLIFRecognizer_resume_oneb(marpaESLIFRecognizer_t *ma
                                 (int) marpaESLIF_streamp->eofb,
                                 (unsigned long) marpaESLIF_streamp->inputl);
 
-    if (MARPAESLIF_LIKELY(marpaESLIFRecognizerp->haveLexemeb && (
-                                                                 marpaESLIFRecognizerp->marpaESLIFRecognizerOption.exhaustedb
-                                                                 ||
-                                                                 (marpaESLIF_streamp->eofb && (marpaESLIF_streamp->inputl <= 0))
-                                                                 ))
-        ) {
-      /* If exhaustion option is on, we want to always have an exhaustion event event when grammar itself is not exhausted */
+    if (MARPAESLIF_LIKELY(marpaESLIFRecognizerp->haveLexemeb)) {
       if (marpaESLIFRecognizerp->marpaESLIFRecognizerOption.exhaustedb) {
+        /* Is grammar already showing up exhaustion ? */
         if (MARPAESLIF_UNLIKELY(! _marpaESLIFRecognizer_isExhaustedb(marpaESLIFRecognizerp, &isExhaustedb))) {
           goto err;
         }
         if (! isExhaustedb) {
-          /* Fake an exhaustion event */
-          if (MARPAESLIF_UNLIKELY(! _marpaESLIFRecognizer_push_eventb(marpaESLIFRecognizerp, MARPAESLIF_EVENTTYPE_EXHAUSTED, NULL /* symbolp */, MARPAESLIF_EVENTTYPE_EXHAUSTED_NAME, NULL /* discardArrayp */, MARPAESLIF_INTERNAL_EVENT_ACTION_NA))) {
+          /* We force an exhaustion event if last progress reaches start completion */
+          if (MARPAESLIF_UNLIKELY(! _marpaESLIF_recognizer_start_is_completeb(marpaESLIFRecognizerp, &completeb))) {
             goto err;
           }
-          marpaESLIFRecognizerp->forceExhaustedb = 1;
+          if (completeb) {
+            marpaESLIFRecognizerp->forceExhaustedb = 1;
+            isExhaustedb = 1;
+          }
+        }
+        if (isExhaustedb) {
+          marpaESLIFRecognizerp->cannotcontinueb = 1;
+          rcb = 1;
+          goto done;
         }
       }
-      marpaESLIFRecognizerp->cannotcontinueb = 1;
-      rcb = 1;
-      goto done;
+      if (marpaESLIF_streamp->eofb && (marpaESLIF_streamp->inputl <= 0)) {
+        /* End of the stream */
+        marpaESLIFRecognizerp->cannotcontinueb = 1;
+        rcb = 1;
+        goto done;
+      }
+      goto err;
     } else {
-      rcb = 0;
       goto err;
     }
   }
@@ -22077,6 +22084,36 @@ static inline short _marpaESLIFRecognizer_lexeme_readb(marpaESLIFRecognizer_t *m
   return
     marpaESLIFRecognizer_lexeme_alternativeb(marpaESLIFRecognizerp, marpaESLIFAlternativep) &&
     marpaESLIFRecognizer_lexeme_completeb(marpaESLIFRecognizerp, lengthl);
+}
+
+/*****************************************************************************/
+static inline size_t _marpaESLIF_next_power_of_twob(marpaESLIF_t *marpaESLIFp, size_t wantedl)
+/*****************************************************************************/
+/* https://www.geeksforgeeks.org/smallest-power-of-2-greater-than-or-equal-to-n/ */
+/* Get the multiple of 2 that is >= sizel                                    */
+/*****************************************************************************/
+{
+  size_t rcl;
+  size_t previousl;
+
+  if ((wantedl > 0) && !(wantedl & (wantedl - 1))) {
+    rcl = wantedl;
+  } else {
+    previousl = rcl = 1;
+    while (rcl < wantedl) {
+      /* We count on compiler to optimize (<<= 1, + twice etc.) */
+      rcl *= 2;
+      if (rcl < previousl) {
+        /* Turnaround */
+        MARPAESLIF_ERRORF(marpaESLIFp, "Failed to get power of 2 >= %d", (unsigned long) wantedl);
+        rcl = 0;
+        break;
+      }
+      previousl = rcl;
+    }
+  }
+
+  return rcl;
 }
 
 #include "bootstrap.c"
