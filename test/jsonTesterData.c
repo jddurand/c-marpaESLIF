@@ -202,7 +202,7 @@ test_element_t tests[] =
   {"n_structure_array_with_extra_array_close.json", { { "[1]]", 4 }, { NULL, 0 } }},
   {"n_structure_array_with_unclosed_string.json", { { "[\"asd]", 6 }, { NULL, 0 } }},
   {"n_structure_ascii-unicode-identifier.json", { { "a\xc3", 2 }, { "\xa5", 1 }, { NULL, 0 } }},
-  {"n_structure_capitalized_True.json", { { "[True]", 6 }, { NULL, 0 } }},
+  {MARPAESLIF_JSONTESTER_OK_ONLY_IF_NOT_STRICT "_structure_capitalized_True.json", { { "[True]", 6 }, { NULL, 0 } }},
   {"n_structure_close_unopened_array.json", { { "1]", 2 }, { NULL, 0 } }},
   {"n_structure_comma_instead_of_closing_brace.json", { { "{\"x\": true,", 11 }, { NULL, 0 } }},
   {"n_structure_double_array.json", { { "[][]", 4 }, { NULL, 0 } }},

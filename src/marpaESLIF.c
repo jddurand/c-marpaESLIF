@@ -9686,7 +9686,10 @@ short marpaESLIFRecognizer_lexeme_readb(marpaESLIFRecognizer_t *marpaESLIFRecogn
   MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_INC(marpaESLIFRecognizerp);
   MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "start");
 
-  rcb = _marpaESLIFRecognizer_lexeme_readb(marpaESLIFRecognizerp, marpaESLIFAlternativep, lengthl);
+  /* Because of the extra checks we must still continue to call the external methods */
+  rcb =
+    marpaESLIFRecognizer_lexeme_alternativeb(marpaESLIFRecognizerp, marpaESLIFAlternativep) &&
+    marpaESLIFRecognizer_lexeme_completeb(marpaESLIFRecognizerp, lengthl);
   goto done;
 
  err:
@@ -22065,9 +22068,36 @@ static inline short _marpaESLIFRecognizer_lexeme_last_pauseb(marpaESLIFRecognize
 static inline short _marpaESLIFRecognizer_lexeme_readb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFAlternative_t *marpaESLIFAlternativep, size_t lengthl)
 /*****************************************************************************/
 {
-  return
-    marpaESLIFRecognizer_lexeme_alternativeb(marpaESLIFRecognizerp, marpaESLIFAlternativep) &&
-    marpaESLIFRecognizer_lexeme_completeb(marpaESLIFRecognizerp, lengthl);
+  marpaESLIF_t            *marpaESLIFp        = marpaESLIFRecognizerp->marpaESLIFp;
+  marpaESLIFGrammar_t     *marpaESLIFGrammarp = marpaESLIFRecognizerp->marpaESLIFGrammarp;
+  marpaESLIF_grammar_t    *grammarp           = marpaESLIFGrammarp->grammarp;;
+  marpaESLIF_symbol_t     *symbolp;
+  marpaESLIF_alternative_t alternative;
+  short                    rcb;
+
+  /* An alternative can only be an RHS */
+  symbolp = _marpaESLIF_symbol_findp(marpaESLIFp, grammarp, marpaESLIFAlternativep->lexemes, -1, NULL /* symbolip */, 0 /* silentb */, 0 /* onlyLhsb */, 1 /* onlyRhsb */);
+  if (MARPAESLIF_UNLIKELY(symbolp == NULL)) {
+    MARPAESLIF_ERRORF(marpaESLIFp, "Failed to find lexeme <%s>", marpaESLIFAlternativep->lexemes);
+    goto err;
+  }
+
+  alternative.marpaESLIFValueResult = marpaESLIFValueResultUndef;
+  alternative.symbolp               = symbolp;
+  alternative.marpaESLIFValueResult = marpaESLIFAlternativep->value;
+  alternative.grammarLengthi        = (int) marpaESLIFAlternativep->grammarLengthl;
+  alternative.usedb                 = 1;
+
+  rcb =
+    _marpaESLIFRecognizer_lexeme_alternativeb(marpaESLIFRecognizerp, &alternative) &&
+    _marpaESLIFRecognizer_lexeme_completeb(marpaESLIFRecognizerp, lengthl);
+  goto done;
+
+ err:
+  rcb = 0;
+
+ done:
+  return rcb;
 }
 
 /*****************************************************************************/

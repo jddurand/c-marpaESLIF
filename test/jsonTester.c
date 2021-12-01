@@ -32,8 +32,9 @@ int main(int argc, char **argv) {
   test_element_chunk_t        *chunkp;
   char                        *p;
   char                        *names;
+  short                        foundb = 0;
 
-  genericLoggerp = GENERICLOGGER_NEW(GENERICLOGGER_LOGLEVEL_TRACE);
+  genericLoggerp = GENERICLOGGER_NEW(GENERICLOGGER_LOGLEVEL_INFO);
   if (genericLoggerp == NULL) {
     perror("GENERICLOGGER_NEW");
     goto err;
@@ -49,6 +50,8 @@ int main(int argc, char **argv) {
   if (marpaESLIFGrammarJsonp == NULL) {
     goto err;
   }
+
+  GENERICLOGGER_LEVEL_SET(genericLoggerp, GENERICLOGGER_LOGLEVEL_TRACE);
 
   marpaESLIFJSONDecodeOption.disallowDupkeysb                = 0;
   marpaESLIFJSONDecodeOption.maxDepthl                       = 0;
@@ -104,9 +107,23 @@ int main(int argc, char **argv) {
             goto go;
           }
         }
+        foundb = 1;
       } else if (strcmp(argv[1], test_elementp->names) != 0) {
         goto next;
+      } else {
+        foundb = 1;
       }
+    } else {
+      foundb = 1;
+    }
+
+    if (! foundb) {
+      if (argc == 2) {
+        GENERICLOGGER_ERRORF(genericLoggerp, "Test %s not found", argv[1]);
+      } else {
+        GENERICLOGGER_ERROR(genericLoggerp, "No test ?");
+      }
+      goto err;
     }
 
     marpaESLIFTester_context.inputl = 0;
