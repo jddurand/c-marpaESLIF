@@ -636,9 +636,9 @@ extern "C" {
   marpaESLIF_EXPORT short                         marpaESLIFValue_contextb(marpaESLIFValue_t *marpaESLIFValuep, char **symbolsp, int *symbolip, char **rulesp, int *ruleip);
   marpaESLIF_EXPORT void                          marpaESLIFValue_freev(marpaESLIFValue_t *marpaESLIFValuep);
 
-  /* ------------------------------------- */
-  /* Stack management when doing valuation */
-  /* ------------------------------------- */
+  /* ------------------------------- */
+  /* marpaESLIFValueResult_t helpers */
+  /* ------------------------------- */
   marpaESLIF_EXPORT short                         marpaESLIFValue_stack_setb(marpaESLIFValue_t *marpaESLIFValuep, int indicei, marpaESLIFValueResult_t *marpaESLIFValueResultp);
   marpaESLIF_EXPORT marpaESLIFValueResult_t      *marpaESLIFValue_stack_getp(marpaESLIFValue_t *marpaESLIFValuep, int indicei);
   /* marpaESLIFValue_stack_forgetb is like setting a value of type MARPAESLIFVALUE_TYPE_UNDEF saying that memory management is switched off at this specific indice */
@@ -647,6 +647,7 @@ extern "C" {
   /* It is nothing else but a wrapper on marpaESLIFValue_stack_getp followed by marpaESLIFValue_stack_forgetb */
   marpaESLIF_EXPORT short                         marpaESLIFValue_stack_getAndForgetb(marpaESLIFValue_t *marpaESLIFValuep, int indicei, marpaESLIFValueResult_t *marpaESLIFValueResultp);
   marpaESLIF_EXPORT short                         marpaESLIFValue_marpaESLIFValueResult_freeb(marpaESLIFValue_t *marpaESLIFValuep, marpaESLIFValueResult_t *marpaESLIFValueResultp, short deepb);
+  marpaESLIF_EXPORT short                         marpaESLIFRecognizer_marpaESLIFValueResult_freeb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFValueResult_t *marpaESLIFValueResultp, short deepb);
 
   /* Helpers */
   
@@ -685,14 +686,7 @@ extern "C" {
   /* ESLIF will automatically frees marpaESLIFValueResultp content. */
   marpaESLIF_EXPORT short                         marpaESLIFJSON_encodeb(marpaESLIFGrammar_t *marpaESLIFGrammarJSONp, marpaESLIFValueResult_t *marpaESLIFValueResultp, marpaESLIFValueOption_t *marpaESLIFValueOptionp);
   marpaESLIF_EXPORT marpaESLIFGrammar_t          *marpaESLIFJSON_decode_newp(marpaESLIF_t *marpaESLIFp, short strictb);
-  /* For decoding, a marpaESLIFValueOption_t* argument is required. In it the following settings will be ignored, */
-  /* being overwriten by marpaESLIFJSON_decodeb: */
-  /* symbolActionResolverp - We use the default "::transfer" implementation */
-  /* highRankOnlyb         - Fixed to 1 */
-  /* orderByRankb          - Fixed to 1 */
-  /* ambiguousb            - Fixed to 0 */
-  /* nullb                 - Fixed to 0 */
-  /* maxParsesi            - Fixed to 0 */
+  /* For decoding, a marpaESLIFValueOption_t* argument is required. Only the importer callback and its context will be used */
   marpaESLIF_EXPORT short                         marpaESLIFJSON_decodeb(marpaESLIFGrammar_t *marpaESLIFGrammarJSONp, marpaESLIFJSONDecodeOption_t *marpaESLIFJSONDecodeOptionp, marpaESLIFRecognizerOption_t *marpaESLIFRecognizerOptionp, marpaESLIFValueOption_t *marpaESLIFValueOptionp);
 
   /* ------------------------------------- */

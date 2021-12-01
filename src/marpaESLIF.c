@@ -834,6 +834,7 @@ static inline short                  _marpaESLIFValue_stack_setb(marpaESLIFValue
 static inline short                  _marpaESLIFValue_stack_getb(marpaESLIFValue_t *marpaESLIFValuep, int indicei, marpaESLIFValueResult_t *marpaESLIFValueResultp);
 static inline short                  _marpaESLIFValue_stack_getAndForgetb(marpaESLIFValue_t *marpaESLIFValuep, int indicei, marpaESLIFValueResult_t *marpaESLIFValueResultp);
 static inline short                  _marpaESLIFValue_marpaESLIFValueResult_freeb(marpaESLIFValue_t *marpaESLIFValuep, marpaESLIFValueResult_t *marpaESLIFValueResultp, short deepb);
+static inline short                  _marpaESLIFRecognizer_marpaESLIFValueResult_freeb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFValueResult_t *marpaESLIFValueResultp, short deepb);
 
 static inline marpaESLIFValueResult_t *_marpaESLIFValue_stack_getp(marpaESLIFValue_t *marpaESLIFValuep, int indicei);
 static inline short                  _marpaESLIFValue_stack_forgetb(marpaESLIFValue_t *marpaESLIFValuep, int indicei);
@@ -916,6 +917,8 @@ static inline short                  _marpaESLIFRecognizer_eventb(marpaESLIFReco
 static inline short                  _marpaESLIFRecognizer_lexeme_last_pauseb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, char *lexemes, char **pausesp, size_t *pauselp);
 static inline short                  _marpaESLIFRecognizer_lexeme_readb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFAlternative_t *marpaESLIFAlternativep, size_t lengthl);
 static inline size_t                 _marpaESLIF_next_power_of_twob(marpaESLIF_t *marpaESLIFp, size_t wantedl);
+static inline short                  _marpaESLIFValue_importb(marpaESLIFValue_t *marpaESLIFValuep, marpaESLIFValueResult_t *marpaESLIFValueResultp);
+static inline short                  _marpaESLIFRecognizer_importb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFValueResult_t *marpaESLIFValueResultp);
 
 /*****************************************************************************/
 static inline marpaESLIF_string_t *_marpaESLIF_string_newp(marpaESLIF_t *marpaESLIFp, char *encodingasciis, char *bytep, size_t bytel)
@@ -15593,13 +15596,39 @@ short marpaESLIFValue_marpaESLIFValueResult_freeb(marpaESLIFValue_t *marpaESLIFV
 }
 
 /*****************************************************************************/
+short marpaESLIFRecognizer_marpaESLIFValueResult_freeb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFValueResult_t *marpaESLIFValueResultp, short deepb)
+/*****************************************************************************/
+{
+  static const char *funcs  = "marpaESLIFRecognizer_marpaESLIFValueResult_freeb";
+
+  if (marpaESLIFRecognizerp == NULL) {
+    errno = EINVAL;
+    return 0;
+  }
+
+  if (marpaESLIFValueResultp == NULL) {
+    errno = EINVAL;
+    return 0;
+  }
+
+  return _marpaESLIFRecognizer_marpaESLIFValueResult_freeb(marpaESLIFRecognizerp, marpaESLIFValueResultp, deepb);
+}
+
+/*****************************************************************************/
 static inline short _marpaESLIFValue_marpaESLIFValueResult_freeb(marpaESLIFValue_t *marpaESLIFValuep, marpaESLIFValueResult_t *marpaESLIFValueResultp, short deepb)
 /*****************************************************************************/
 {
+  return _marpaESLIFRecognizer_marpaESLIFValueResult_freeb(marpaESLIFValuep->marpaESLIFRecognizerp, marpaESLIFValueResultp, deepb);
+}
+
+/*****************************************************************************/
+static inline short _marpaESLIFRecognizer_marpaESLIFValueResult_freeb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFValueResult_t *marpaESLIFValueResultp, short deepb)
+/*****************************************************************************/
+{
   if (deepb) {
-    return _marpaESLIFRecognizer_pointers_cleanupb(marpaESLIFValuep->marpaESLIFRecognizerp, marpaESLIFValueResultp, (marpaESLIFValueResult_t *) &marpaESLIFValueResultUndef);
+    return _marpaESLIFRecognizer_pointers_cleanupb(marpaESLIFRecognizerp, marpaESLIFValueResultp, (marpaESLIFValueResult_t *) &marpaESLIFValueResultUndef);
   } else {
-    _marpaESLIFRecognizer_valueResultFreev(marpaESLIFValuep->marpaESLIFRecognizerp, marpaESLIFValueResultp);
+    _marpaESLIFRecognizer_valueResultFreev(marpaESLIFRecognizerp, marpaESLIFValueResultp);
     return 1;
   }
 }
@@ -15894,7 +15923,7 @@ short marpaESLIFValue_importb(marpaESLIFValue_t *marpaESLIFValuep, marpaESLIFVal
     return 0;
   }
 
-  return _marpaESLIFValue_eslif2hostb(marpaESLIFValuep, marpaESLIFValueResultp, NULL /* forcedUserDatavp */, NULL /* forcedImporterp */);
+  return _marpaESLIFValue_importb(marpaESLIFValuep, marpaESLIFValueResultp);
 }
 
 /*****************************************************************************/
@@ -15914,7 +15943,7 @@ short marpaESLIFRecognizer_importb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp
   MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_INC(marpaESLIFRecognizerp);
   MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "start");
 
-  rcb = _marpaESLIFRecognizer_eslif2hostb(marpaESLIFRecognizerp, marpaESLIFValueResultp, NULL /* forcedUserDatavp */, NULL /* forcedImporterp */);
+  rcb = _marpaESLIFRecognizer_importb(marpaESLIFRecognizerp, marpaESLIFValueResultp);
   goto done;
 
  done:
@@ -22129,6 +22158,20 @@ static inline size_t _marpaESLIF_next_power_of_twob(marpaESLIF_t *marpaESLIFp, s
   }
 
   return rcl;
+}
+
+/*****************************************************************************/
+static inline short _marpaESLIFValue_importb(marpaESLIFValue_t *marpaESLIFValuep, marpaESLIFValueResult_t *marpaESLIFValueResultp)
+/*****************************************************************************/
+{
+  return _marpaESLIFValue_eslif2hostb(marpaESLIFValuep, marpaESLIFValueResultp, NULL /* forcedUserDatavp */, NULL /* forcedImporterp */);
+}
+
+/*****************************************************************************/
+static inline short _marpaESLIFRecognizer_importb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFValueResult_t *marpaESLIFValueResultp)
+/*****************************************************************************/
+{
+  return _marpaESLIFRecognizer_eslif2hostb(marpaESLIFRecognizerp, marpaESLIFValueResultp, NULL /* forcedUserDatavp */, NULL /* forcedImporterp */);
 }
 
 #include "bootstrap.c"
