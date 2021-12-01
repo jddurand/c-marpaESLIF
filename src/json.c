@@ -1,9 +1,9 @@
 #include <locale.h>
 #include <stdlib.h>
-#include "json3_encode_extended_grammar.c"
-#include "json3_decode_extended_grammar.c"
-#include "json3_encode_strict_grammar.c"
-#include "json3_decode_strict_grammar.c"
+#include "json_encode_extended_grammar.c"
+#include "json_decode_extended_grammar.c"
+#include "json_encode_strict_grammar.c"
+#include "json_decode_strict_grammar.c"
 
 #undef  FILENAMES
 #define FILENAMES "json.c" /* For logging */
