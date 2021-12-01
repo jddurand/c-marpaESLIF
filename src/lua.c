@@ -1848,9 +1848,6 @@ static short _marpaESLIFRecognizer_lua_push_contextb(marpaESLIFRecognizer_t *mar
   marpaESLIF_stringGenerator_t  marpaESLIF_stringGenerator;
   short                         rcb;
 
-  MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_INC;
-  MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "start");
-
   marpaESLIF_stringGenerator.s = NULL;
 
   /* Create the lua state if needed - this is a lua state using ESLIF internal's, i.e. there is no </luascript> in it. */
@@ -1985,9 +1982,6 @@ static short _marpaESLIFRecognizer_lua_push_contextb(marpaESLIFRecognizer_t *mar
   rcb = 0;
 
  done:
-  MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "return %d", (int) rcb);
-  MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_DEC;
-
   if (marpaESLIF_stringGenerator.s != NULL) {
     free(marpaESLIF_stringGenerator.s);
   }
