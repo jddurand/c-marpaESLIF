@@ -1786,6 +1786,14 @@ static inline short _marpaESLIFJSONDecodeManageEventsb(marpaESLIFJSONDecodeConte
       }
       MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFJSONDecodeContextp->marpaESLIFRecognizerp, funcs, "Setting current value *%p to *%p of type %s", currentValuep, marpaESLIFJSONDecodeDeposit.dstp, _marpaESLIF_value_types(marpaESLIFJSONDecodeDeposit.dstp->type));
       *currentValuep = *(marpaESLIFJSONDecodeDeposit.dstp);
+
+      /* By definition dstp and its context were allocated */
+      MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFJSONDecodeContextp->marpaESLIFRecognizerp, funcs, "Freeing dstp %p", marpaESLIFJSONDecodeDeposit.dstp);
+      free(marpaESLIFJSONDecodeDeposit.dstp);
+      MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFJSONDecodeContextp->marpaESLIFRecognizerp, funcs, "Freeing contextp %p", marpaESLIFJSONDecodeDeposit.contextp);
+      free(marpaESLIFJSONDecodeDeposit.contextp);
+
+      /* Pop stack and propagate the value */
       _marpaESLIFJSONDecodeDepositStackPopb(marpaESLIFJSONDecodeContextp);
       if (! _marpaESLIFJSONDecodePropagateValueb(marpaESLIFJSONDecodeContextp, currentValuep)) {
         goto err;
