@@ -15,6 +15,7 @@ typedef short (*marpaESLIFJSONDecodeDepositCallback_t)(marpaESLIFJSONDecodeDepos
 typedef struct marpaESLIFJSONEncodeContext                marpaESLIFJSONEncodeContext_t;
 
 #define MARPAESLIFJSON_ARRAYL_IN_STRUCTURE 4096
+#define MARPAESLIFJSON_STRINGALLOCL_DEFAULT_VALUE 4096
 struct marpaESLIFJSONDecodeContext {
   marpaESLIF_t                      *marpaESLIFp;
   marpaESLIFRecognizer_t            *marpaESLIFRecognizerp;
@@ -31,6 +32,7 @@ struct marpaESLIFJSONDecodeContext {
   size_t                             numberallocl; /* Used when we analyse a number */
   size_t                             stringallocl; /* Used when we iterate within DQUOTE_START ... DQUOTE_END */
   size_t                             uint32allocl; /* Used when we iterate within DQUOTE_START ... DQUOTE_END and compute series of \\uXXXX */
+  marpaESLIFValueResult_t            currentValue;
   char                              _numbers[MARPAESLIFJSON_ARRAYL_IN_STRUCTURE + 1]; /* To avoid allocation for the vast majority of cases in my opinion -; */
   marpaESLIF_uint32_t               _uint32p[MARPAESLIFJSON_ARRAYL_IN_STRUCTURE + 1]; /* Ditto */
 };
@@ -48,9 +50,11 @@ struct marpaESLIFJSONDecodeDepositCallbackContext {
 };
   
 struct marpaESLIFJSONDecodeDeposit {
+  marpaESLIFValueResult_t                      *dstp;
   marpaESLIFJSONDecodeDepositCallbackContext_t *contextp;
   marpaESLIFJSONDecodeDepositCallback_t         actionp;
-  marpaESLIFValueResult_t                      *dstp;
+  short                                         dstpOnStackb;
+  short                                         contextpOnStackb;
 };
 
 static const char MARPAESLIFJSON_DQUOTE          = '\'';
@@ -135,27 +139,28 @@ static short                                _marpaESLIFJSONDecodeEventCallbackb(
 static inline short                         _marpaESLIFJSONDecodeIncb(marpaESLIFJSONDecodeContext_t *marpaESLIFJSONDecodeContextp, marpaESLIFValueResultBool_t *marpaESLIFValueResultBoolp);
 static inline short                         _marpaESLIFJSONDecodeDecb(marpaESLIFJSONDecodeContext_t *marpaESLIFJSONDecodeContextp, marpaESLIFValueResultBool_t *marpaESLIFValueResultBoolp);
 static short                                _marpaESLIFJSONDecodeImportb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, void *userDatavp, marpaESLIFValueResult_t *marpaESLIFValueResultp);
-static inline short                         _marpaESLIFJSONDecodeSetPositiveInfinityb(marpaESLIFJSONDecodeContext_t *marpaESLIFJSONDecodeContextp, marpaESLIFValueResult_t *currentValuep, char *inputs, size_t inputl);
-static inline short                         _marpaESLIFJSONDecodeSetNegativeInfinityb(marpaESLIFJSONDecodeContext_t *marpaESLIFJSONDecodeContextp, marpaESLIFValueResult_t *currentValuep, char *inputs, size_t inputl);
-static inline short                         _marpaESLIFJSONDecodeSetPositiveNanb(marpaESLIFJSONDecodeContext_t *marpaESLIFJSONDecodeContextp, marpaESLIFValueResult_t *currentValuep, char *inputs, size_t inputl);
-static inline short                         _marpaESLIFJSONDecodeSetNegativeNanb(marpaESLIFJSONDecodeContext_t *marpaESLIFJSONDecodeContextp, marpaESLIFValueResult_t *currentValuep, char *inputs, size_t inputl);
-static inline short                         _marpaESLIFJSONDecodeSetNumberb(marpaESLIFJSONDecodeContext_t *marpaESLIFJSONDecodeContextp, marpaESLIFValueResult_t *currentValuep, char *inputs, size_t inputl);
-static inline short                         _marpaESLIFJSONDecodeExtendStringContainerb(marpaESLIFJSONDecodeContext_t *marpaESLIFJSONDecodeContextp, marpaESLIFValueResult_t *currentValuep, size_t incl);
-static inline short                         _marpaESLIFJSONDecodeAppendCharb(marpaESLIFJSONDecodeContext_t *marpaESLIFJSONDecodeContextp, marpaESLIFValueResult_t *currentValuep, char *inputs, size_t inputl);
+static inline short                         _marpaESLIFJSONDecodeSetPositiveInfinityb(marpaESLIFJSONDecodeContext_t *marpaESLIFJSONDecodeContextp, char *inputs, size_t inputl);
+static inline short                         _marpaESLIFJSONDecodeSetNegativeInfinityb(marpaESLIFJSONDecodeContext_t *marpaESLIFJSONDecodeContextp, char *inputs, size_t inputl);
+static inline short                         _marpaESLIFJSONDecodeSetPositiveNanb(marpaESLIFJSONDecodeContext_t *marpaESLIFJSONDecodeContextp, char *inputs, size_t inputl);
+static inline short                         _marpaESLIFJSONDecodeSetNegativeNanb(marpaESLIFJSONDecodeContext_t *marpaESLIFJSONDecodeContextp, char *inputs, size_t inputl);
+static inline short                         _marpaESLIFJSONDecodeSetNumberb(marpaESLIFJSONDecodeContext_t *marpaESLIFJSONDecodeContextp, char *inputs, size_t inputl);
+static inline short                         _marpaESLIFJSONDecodeExtendStringContainerb(marpaESLIFJSONDecodeContext_t *marpaESLIFJSONDecodeContextp, size_t incl);
+static inline short                         _marpaESLIFJSONDecodeAppendCharb(marpaESLIFJSONDecodeContext_t *marpaESLIFJSONDecodeContextp, char *inputs, size_t inputl);
 static inline short                         _marpaESLIFJSONDecodeProposalb(marpaESLIFJSONDecodeContext_t *marpaESLIFJSONDecodeContextp, marpaESLIFJSONProposalAction_t proposalp, char *inputs, size_t inputl, marpaESLIFValueResult_t *currentValuep, short confidenceb);
-static inline short                         _marpaESLIFJSONDecodeSetConstantb(marpaESLIFJSONDecodeContext_t *marpaESLIFJSONDecodeContextp, marpaESLIFValueResult_t *currentValuep, char *inputs, size_t inputl);
+static inline short                         _marpaESLIFJSONDecodeSetConstantb(marpaESLIFJSONDecodeContext_t *marpaESLIFJSONDecodeContextp, char *inputs, size_t inputl);
 static inline short                         _marpaESLIFJSONDecodeDepositStackPushb(marpaESLIFJSONDecodeContext_t *marpaESLIFJSONDecodeContextp, marpaESLIFJSONDecodeDeposit_t *marpaESLIFJSONDecodeDepositp);
 static inline short                         _marpaESLIFJSONDecodeDepositStackGetLastb(marpaESLIFJSONDecodeContext_t *marpaESLIFJSONDecodeContextp, marpaESLIFJSONDecodeDeposit_t *marpaESLIFJSONDecodeDepositp);
-static inline short                         _marpaESLIFJSONDecodeDepositStackGetb(marpaESLIFJSONDecodeContext_t *marpaESLIFJSONDecodeContextp, marpaESLIFJSONDecodeDeposit_t *marpaESLIFJSONDecodeDepositp, int indicei);
-static inline void                          _marpaESLIFJSONDecodeDepositStackPopb(marpaESLIFJSONDecodeContext_t *marpaESLIFJSONDecodeContextp);
+static inline short                         _marpaESLIFJSONDecodeDepositStackPopb(marpaESLIFJSONDecodeContext_t *marpaESLIFJSONDecodeContextp, marpaESLIFJSONDecodeDeposit_t *marpaESLIFJSONDecodeDepositp);
 static short                                _marpaESLIFJSONDecodeSetValueCallbackv(marpaESLIFJSONDecodeDepositCallbackContext_t *marpaESLIFJSONDecodeDepositCallbackContextp, marpaESLIFValueResult_t *dstp, marpaESLIFValueResult_t *srcp);
 static short                                _marpaESLIFJSONDecodePushArrayCallbackv(marpaESLIFJSONDecodeDepositCallbackContext_t *marpaESLIFJSONDecodeDepositCallbackContextp, marpaESLIFValueResult_t *dstp, marpaESLIFValueResult_t *srcp);
 static short                                _marpaESLIFJSONDecodeSetHashCallbackv(marpaESLIFJSONDecodeDepositCallbackContext_t *marpaESLIFJSONDecodeDepositCallbackContextp, marpaESLIFValueResult_t *dstp, marpaESLIFValueResult_t *srcp);
-static inline short                         _marpaESLIFJSONDecodePropagateValueb(marpaESLIFJSONDecodeContext_t *marpaESLIFJSONDecodeContextp, marpaESLIFValueResult_t *currentValuep);
-static inline short                         _marpaESLIFJSONDecodeManageEventsb(marpaESLIFJSONDecodeContext_t *marpaESLIFJSONDecodeContextp, marpaESLIFValueResult_t *currentValuep);
+static inline short                         _marpaESLIFJSONDecodePropagateValueb(marpaESLIFJSONDecodeContext_t *marpaESLIFJSONDecodeContextp, marpaESLIFValueResult_t *marpaESLIFValueresultp);
+static inline short                         _marpaESLIFJSONDecodeManageEventsb(marpaESLIFJSONDecodeContext_t *marpaESLIFJSONDecodeContextp);
 static short                                _marpaESLIFJSONDecodeValueResultImportb(marpaESLIFValue_t *marpaESLIFValuep, void *userDatavp, marpaESLIFValueResult_t *marpaESLIFValueResultp);
 static short                                _marpaESLIFJSONDecodeRepresentationb(void *userDatavp, marpaESLIFValueResult_t *marpaESLIFValueResultp, char **inputcpp, size_t *inputlp, char **encodingasciisp, marpaESLIFRepresentationDispose_t *disposeCallbackpp, short *stringbp);
 static void                                 _marpaESLIFJSONDecodeRepresentationDisposev(void *userDatavp, char *inputcp, size_t inputl, char *encodingasciis);
+static short                                _marpaESLIFJSONDecodeDepositInitb(marpaESLIFJSONDecodeContext_t *marpaESLIFJSONDecodeContextp, marpaESLIFJSONDecodeDeposit_t *depositp, marpaESLIFJSONDecodeDepositCallback_t actionp);
+static void                                 _marpaESLIFJSONDecodeDepositDisposev(marpaESLIFJSONDecodeContext_t *marpaESLIFJSONDecodeContextp, marpaESLIFJSONDecodeDeposit_t *depositp);
 static short                                _marpaESLIFJSONEncodeValueResultImportb(marpaESLIFValue_t *marpaESLIFValuep, void *userDatavp, marpaESLIFValueResult_t *marpaESLIFValueResultp);
 static short                                _marpaESLIFJSONEncodeRepresentationb(void *userDatavp, marpaESLIFValueResult_t *marpaESLIFValueResultp, char **inputcpp, size_t *inputlp, char **encodingasciisp, marpaESLIFRepresentationDispose_t *disposeCallbackpp, short *stringbp);
 static void                                 _marpaESLIFJSONEncodeRepresentationDisposev(void *userDatavp, char *inputcp, size_t inputl, char *encodingasciis);
@@ -312,7 +317,6 @@ short marpaESLIFJSON_decodeb(marpaESLIFGrammar_t *marpaESLIFGrammarJSONp, marpaE
   short                                         isExhaustedb;
   short                                         isEofb;
   size_t                                        inputl;
-  marpaESLIFValueResult_t                       currentValue;
   short                                         rcb;
   short                                         parseokb;
   int                                           i;
@@ -332,6 +336,7 @@ short marpaESLIFJSON_decodeb(marpaESLIFGrammar_t *marpaESLIFGrammarJSONp, marpaE
   marpaESLIFJSONDecodeContext.numberallocl                = 0;
   marpaESLIFJSONDecodeContext.stringallocl                = 0;
   marpaESLIFJSONDecodeContext.uint32allocl                = 0;
+  marpaESLIFJSONDecodeContext.currentValue                = marpaESLIFValueResultUndef;
 
   GENERICSTACK_INIT(marpaESLIFJSONDecodeContext.depositStackp);
   if (MARPAESLIF_UNLIKELY(GENERICSTACK_ERROR(marpaESLIFJSONDecodeContext.depositStackp))) {
@@ -370,9 +375,11 @@ short marpaESLIFJSON_decodeb(marpaESLIFGrammar_t *marpaESLIFGrammarJSONp, marpaE
   marpaESLIFJSONDecodeDepositCallbackContext.keyb                          = 1;
   marpaESLIFJSONDecodeDepositCallbackContext.allocl                        = 0;
 
-  marpaESLIFJSONDecodeDeposit.dstp     = &output;
-  marpaESLIFJSONDecodeDeposit.contextp = &marpaESLIFJSONDecodeDepositCallbackContext;
-  marpaESLIFJSONDecodeDeposit.actionp  = _marpaESLIFJSONDecodeSetValueCallbackv;
+  marpaESLIFJSONDecodeDeposit.dstp             = &output;
+  marpaESLIFJSONDecodeDeposit.contextp         = &marpaESLIFJSONDecodeDepositCallbackContext;
+  marpaESLIFJSONDecodeDeposit.actionp          = _marpaESLIFJSONDecodeSetValueCallbackv;
+  marpaESLIFJSONDecodeDeposit.dstpOnStackb     = 1;
+  marpaESLIFJSONDecodeDeposit.contextpOnStackb = 1;
 
   if (! _marpaESLIFJSONDecodeDepositStackPushb(&marpaESLIFJSONDecodeContext, &marpaESLIFJSONDecodeDeposit)) {
     goto err;
@@ -381,14 +388,14 @@ short marpaESLIFJSON_decodeb(marpaESLIFGrammar_t *marpaESLIFGrammarJSONp, marpaE
   if (MARPAESLIF_UNLIKELY(! marpaESLIFRecognizer_scanb(marpaESLIFJSONDecodeContext.marpaESLIFRecognizerp, 1 /* initialEventsb */, &continueb, NULL /* exhaustedbp */))) {
     goto err;
   }
-  if (! _marpaESLIFJSONDecodeManageEventsb(&marpaESLIFJSONDecodeContext, &currentValue)) {
+  if (! _marpaESLIFJSONDecodeManageEventsb(&marpaESLIFJSONDecodeContext)) {
     goto err;
   }
   while (continueb) {
     if (MARPAESLIF_UNLIKELY(! marpaESLIFRecognizer_resumeb(marpaESLIFJSONDecodeContext.marpaESLIFRecognizerp, 0 /* deltaLengthl */, &continueb, NULL /* exhaustedbp */))) {
       break;
     }
-    if (! _marpaESLIFJSONDecodeManageEventsb(&marpaESLIFJSONDecodeContext, &currentValue)) {
+    if (! _marpaESLIFJSONDecodeManageEventsb(&marpaESLIFJSONDecodeContext)) {
       goto err;
     }
   }
@@ -434,7 +441,7 @@ short marpaESLIFJSON_decodeb(marpaESLIFGrammar_t *marpaESLIFGrammarJSONp, marpaE
   marpaESLIFValuep->proxyRepresentationp = _marpaESLIFJSONDecodeRepresentationb;
 
   /* Call for import (no-op if end-user has set no importer */
-  if (! _marpaESLIFValue_importb(marpaESLIFValuep, &output)) {
+  if (! _marpaESLIFValue_importb(marpaESLIFValuep, &marpaESLIFJSONDecodeContext.currentValue)) {
     goto err;
   }
 
@@ -452,21 +459,9 @@ short marpaESLIFJSON_decodeb(marpaESLIFGrammar_t *marpaESLIFGrammarJSONp, marpaE
     /* It is in theory impossible that marpaESLIFJSONDecodeContext.marpaESLIFRecognizerp is NULL if marpaESLIFJSONDecodeContext.depositStackp is not NULL */
     if (marpaESLIFJSONDecodeContext.marpaESLIFRecognizerp != NULL) {
       /* All entries contain abused marpaESLIFValueResult's that are allocated except the one on the top */
-      for (i = 0; i < GENERICSTACK_USED(marpaESLIFJSONDecodeContext.depositStackp); i++) {
-        if (_marpaESLIFJSONDecodeDepositStackGetb(&marpaESLIFJSONDecodeContext, &marpaESLIFJSONDecodeDeposit, i)) {
-          if (marpaESLIFJSONDecodeDeposit.dstp != NULL) {
-            MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFJSONDecodeContext.marpaESLIFRecognizerp, funcs, "Calling for a deep deallocation inside dstp %p", marpaESLIFJSONDecodeDeposit.dstp);
-            _marpaESLIFRecognizer_marpaESLIFValueResult_freeb(marpaESLIFJSONDecodeContext.marpaESLIFRecognizerp, marpaESLIFJSONDecodeDeposit.dstp, 1 /* deepb */);
-            if (i > 0) {
-              /* They are always allocated per def */
-              if (marpaESLIFJSONDecodeDeposit.contextp != NULL) {
-                MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFJSONDecodeContext.marpaESLIFRecognizerp, funcs, "Freeing callback context %p", marpaESLIFJSONDecodeDeposit.contextp);
-                free(marpaESLIFJSONDecodeDeposit.contextp);
-              }
-              MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFJSONDecodeContext.marpaESLIFRecognizerp, funcs, "Freeing dstp %p", marpaESLIFJSONDecodeDeposit.dstp);
-              free(marpaESLIFJSONDecodeDeposit.dstp);
-            }
-          }
+      while (GENERICSTACK_USED(marpaESLIFJSONDecodeContext.depositStackp) > 0) {
+        if (_marpaESLIFJSONDecodeDepositStackPopb(&marpaESLIFJSONDecodeContext, &marpaESLIFJSONDecodeDeposit)) {
+          _marpaESLIFJSONDecodeDepositDisposev(&marpaESLIFJSONDecodeContext, &marpaESLIFJSONDecodeDeposit);
         }
       }
     }
@@ -481,6 +476,9 @@ short marpaESLIFJSON_decodeb(marpaESLIFGrammar_t *marpaESLIFGrammarJSONp, marpaE
   if (marpaESLIFJSONDecodeContext.numbers != NULL) {
     free(marpaESLIFJSONDecodeContext.numbers);
   }
+  MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFJSONDecodeContext.marpaESLIFRecognizerp, funcs, "Freeing currentValue content", &(marpaESLIFJSONDecodeContext.currentValue));
+  _marpaESLIFRecognizer_marpaESLIFValueResult_freeb(marpaESLIFJSONDecodeContext.marpaESLIFRecognizerp, &(marpaESLIFJSONDecodeContext.currentValue), 1 /* deepb */);
+
   if (marpaESLIFJSONDecodeContext.marpaESLIFRecognizerp != NULL) {
     MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFJSONDecodeContext.marpaESLIFRecognizerp, funcs, "return %d", (int) rcb);
     MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_DEC(marpaESLIFJSONDecodeContext.marpaESLIFRecognizerp);
@@ -696,7 +694,7 @@ static short _marpaESLIFJSONDecodeImportb(marpaESLIFRecognizer_t *marpaESLIFReco
 }
 
 /*****************************************************************************/
-static inline short _marpaESLIFJSONDecodeSetPositiveInfinityb(marpaESLIFJSONDecodeContext_t *marpaESLIFJSONDecodeContextp, marpaESLIFValueResult_t *currentValuep, char *inputs, size_t inputl)
+static inline short _marpaESLIFJSONDecodeSetPositiveInfinityb(marpaESLIFJSONDecodeContext_t *marpaESLIFJSONDecodeContextp, char *inputs, size_t inputl)
 /*****************************************************************************/
 {
   static const char *funcs       = "_marpaESLIFJSONDecodeSetPositiveInfinityb";
@@ -707,15 +705,15 @@ static inline short _marpaESLIFJSONDecodeSetPositiveInfinityb(marpaESLIFJSONDeco
   MARPAESLIFRECOGNIZER_TRACE(marpaESLIFJSONDecodeContextp->marpaESLIFRecognizerp, funcs, "start");
 
 #ifdef MARPAESLIF_INFINITY
-  currentValuep->contextp        = NULL;
-  currentValuep->representationp = NULL;
-  currentValuep->type            = MARPAESLIF_VALUE_TYPE_FLOAT;
-  currentValuep->u.f             = marpaESLIFJSONDecodeContextp->marpaESLIFp->positiveinfinityf;
+  marpaESLIFJSONDecodeContextp->currentValue.contextp        = NULL;
+  marpaESLIFJSONDecodeContextp->currentValue.representationp = NULL;
+  marpaESLIFJSONDecodeContextp->currentValue.type            = MARPAESLIF_VALUE_TYPE_FLOAT;
+  marpaESLIFJSONDecodeContextp->currentValue.u.f             = marpaESLIFJSONDecodeContextp->marpaESLIFp->positiveinfinityf;
   confidenceb                             = 1;
 #else
-  currentValuep->contextp        = NULL;
-  currentValuep->representationp = NULL;
-  currentValuep->type            = MARPAESLIF_VALUE_TYPE_UNDEF;
+  marpaESLIFJSONDecodeContextp->currentValue.contextp        = NULL;
+  marpaESLIFJSONDecodeContextp->currentValue.representationp = NULL;
+  marpaESLIFJSONDecodeContextp->currentValue.type            = MARPAESLIF_VALUE_TYPE_UNDEF;
   confidenceb                             = 0;
 #endif
 
@@ -723,21 +721,16 @@ static inline short _marpaESLIFJSONDecodeSetPositiveInfinityb(marpaESLIFJSONDeco
                                        marpaESLIFJSONDecodeContextp->marpaESLIFJSONDecodeOptionp->positiveInfinityActionp,
                                        inputs,
                                        inputl,
-                                       currentValuep,
+                                       &(marpaESLIFJSONDecodeContextp->currentValue),
                                        confidenceb);
-  goto done;
 
- err:
-  rcb = 0;
-
- done:
   MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFJSONDecodeContextp->marpaESLIFRecognizerp, funcs, "return %d", (int) rcb);
   MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_DEC(marpaESLIFJSONDecodeContextp->marpaESLIFRecognizerp);
   return rcb;
 }
 
 /*****************************************************************************/
-static inline short _marpaESLIFJSONDecodeSetNegativeInfinityb(marpaESLIFJSONDecodeContext_t *marpaESLIFJSONDecodeContextp, marpaESLIFValueResult_t *currentValuep, char *inputs, size_t inputl)
+static inline short _marpaESLIFJSONDecodeSetNegativeInfinityb(marpaESLIFJSONDecodeContext_t *marpaESLIFJSONDecodeContextp, char *inputs, size_t inputl)
 /*****************************************************************************/
 {
   static const char *funcs       = "_marpaESLIFJSONDecodeSetNegativeInfinityb";
@@ -748,15 +741,15 @@ static inline short _marpaESLIFJSONDecodeSetNegativeInfinityb(marpaESLIFJSONDeco
   MARPAESLIFRECOGNIZER_TRACE(marpaESLIFJSONDecodeContextp->marpaESLIFRecognizerp, funcs, "start");
 
 #ifdef MARPAESLIF_INFINITY
-  currentValuep->contextp        = NULL;
-  currentValuep->representationp = NULL;
-  currentValuep->type            = MARPAESLIF_VALUE_TYPE_FLOAT;
-  currentValuep->u.f             = marpaESLIFJSONDecodeContextp->marpaESLIFp->negativeinfinityf;
+  marpaESLIFJSONDecodeContextp->currentValue.contextp        = NULL;
+  marpaESLIFJSONDecodeContextp->currentValue.representationp = NULL;
+  marpaESLIFJSONDecodeContextp->currentValue.type            = MARPAESLIF_VALUE_TYPE_FLOAT;
+  marpaESLIFJSONDecodeContextp->currentValue.u.f             = marpaESLIFJSONDecodeContextp->marpaESLIFp->negativeinfinityf;
   confidenceb                             = 1;
 #else
-  currentValuep->contextp        = NULL;
-  currentValuep->representationp = NULL;
-  currentValuep->type            = MARPAESLIF_VALUE_TYPE_UNDEF;
+  marpaESLIFJSONDecodeContextp->currentValue.contextp        = NULL;
+  marpaESLIFJSONDecodeContextp->currentValue.representationp = NULL;
+  marpaESLIFJSONDecodeContextp->currentValue.type            = MARPAESLIF_VALUE_TYPE_UNDEF;
   confidenceb                             = 0;
 #endif
 
@@ -764,21 +757,16 @@ static inline short _marpaESLIFJSONDecodeSetNegativeInfinityb(marpaESLIFJSONDeco
                                        marpaESLIFJSONDecodeContextp->marpaESLIFJSONDecodeOptionp->negativeInfinityActionp,
                                        inputs,
                                        inputl,
-                                       currentValuep,
+                                       &(marpaESLIFJSONDecodeContextp->currentValue),
                                        confidenceb);
-  goto done;
 
- err:
-  rcb = 0;
-
- done:
   MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFJSONDecodeContextp->marpaESLIFRecognizerp, funcs, "return %d", (int) rcb);
   MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_DEC(marpaESLIFJSONDecodeContextp->marpaESLIFRecognizerp);
   return rcb;
 }
 
 /*****************************************************************************/
-static inline short _marpaESLIFJSONDecodeSetPositiveNanb(marpaESLIFJSONDecodeContext_t *marpaESLIFJSONDecodeContextp, marpaESLIFValueResult_t *currentValuep, char *inputs, size_t inputl)
+static inline short _marpaESLIFJSONDecodeSetPositiveNanb(marpaESLIFJSONDecodeContext_t *marpaESLIFJSONDecodeContextp, char *inputs, size_t inputl)
 /*****************************************************************************/
 {
   static const char *funcs       = "_marpaESLIFJSONDecodeSetPositiveNanb";
@@ -789,15 +777,15 @@ static inline short _marpaESLIFJSONDecodeSetPositiveNanb(marpaESLIFJSONDecodeCon
   MARPAESLIFRECOGNIZER_TRACE(marpaESLIFJSONDecodeContextp->marpaESLIFRecognizerp, funcs, "start");
 
 #ifdef MARPAESLIF_INFINITY
-  currentValuep->contextp        = NULL;
-  currentValuep->representationp = NULL;
-  currentValuep->type            = MARPAESLIF_VALUE_TYPE_FLOAT;
-  currentValuep->u.f             = marpaESLIFJSONDecodeContextp->marpaESLIFp->positivenanf;
+  marpaESLIFJSONDecodeContextp->currentValue.contextp        = NULL;
+  marpaESLIFJSONDecodeContextp->currentValue.representationp = NULL;
+  marpaESLIFJSONDecodeContextp->currentValue.type            = MARPAESLIF_VALUE_TYPE_FLOAT;
+  marpaESLIFJSONDecodeContextp->currentValue.u.f             = marpaESLIFJSONDecodeContextp->marpaESLIFp->positivenanf;
   confidenceb                             = marpaESLIFJSONDecodeContextp->marpaESLIFp->nanconfidenceb;
 #else
-  currentValuep->contextp        = NULL;
-  currentValuep->representationp = NULL;
-  currentValuep->type            = MARPAESLIF_VALUE_TYPE_UNDEF;
+  marpaESLIFJSONDecodeContextp->currentValue.contextp        = NULL;
+  marpaESLIFJSONDecodeContextp->currentValue.representationp = NULL;
+  marpaESLIFJSONDecodeContextp->currentValue.type            = MARPAESLIF_VALUE_TYPE_UNDEF;
   confidenceb                             = 0;
 #endif
 
@@ -805,21 +793,16 @@ static inline short _marpaESLIFJSONDecodeSetPositiveNanb(marpaESLIFJSONDecodeCon
                                        marpaESLIFJSONDecodeContextp->marpaESLIFJSONDecodeOptionp->positiveNanActionp,
                                        inputs,
                                        inputl,
-                                       currentValuep,
+                                       &(marpaESLIFJSONDecodeContextp->currentValue),
                                        confidenceb);
-  goto done;
 
- err:
-  rcb = 0;
-
- done:
   MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFJSONDecodeContextp->marpaESLIFRecognizerp, funcs, "return %d", (int) rcb);
   MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_DEC(marpaESLIFJSONDecodeContextp->marpaESLIFRecognizerp);
   return rcb;
 }
 
 /*****************************************************************************/
-static inline short _marpaESLIFJSONDecodeSetNegativeNanb(marpaESLIFJSONDecodeContext_t *marpaESLIFJSONDecodeContextp, marpaESLIFValueResult_t *currentValuep, char *inputs, size_t inputl)
+static inline short _marpaESLIFJSONDecodeSetNegativeNanb(marpaESLIFJSONDecodeContext_t *marpaESLIFJSONDecodeContextp, char *inputs, size_t inputl)
 /*****************************************************************************/
 {
   static const char *funcs       = "_marpaESLIFJSONDecodeSetNegativeNanb";
@@ -830,15 +813,15 @@ static inline short _marpaESLIFJSONDecodeSetNegativeNanb(marpaESLIFJSONDecodeCon
   MARPAESLIFRECOGNIZER_TRACE(marpaESLIFJSONDecodeContextp->marpaESLIFRecognizerp, funcs, "start");
 
 #ifdef MARPAESLIF_INFINITY
-  currentValuep->contextp        = NULL;
-  currentValuep->representationp = NULL;
-  currentValuep->type            = MARPAESLIF_VALUE_TYPE_FLOAT;
-  currentValuep->u.f             = marpaESLIFJSONDecodeContextp->marpaESLIFp->negativenanf;
+  marpaESLIFJSONDecodeContextp->currentValue.contextp        = NULL;
+  marpaESLIFJSONDecodeContextp->currentValue.representationp = NULL;
+  marpaESLIFJSONDecodeContextp->currentValue.type            = MARPAESLIF_VALUE_TYPE_FLOAT;
+  marpaESLIFJSONDecodeContextp->currentValue.u.f             = marpaESLIFJSONDecodeContextp->marpaESLIFp->negativenanf;
   confidenceb                             = marpaESLIFJSONDecodeContextp->marpaESLIFp->nanconfidenceb;
 #else
-  currentValuep->contextp        = NULL;
-  currentValuep->representationp = NULL;
-  currentValuep->type            = MARPAESLIF_VALUE_TYPE_UNDEF;
+  marpaESLIFJSONDecodeContextp->currentValue.contextp        = NULL;
+  marpaESLIFJSONDecodeContextp->currentValue.representationp = NULL;
+  marpaESLIFJSONDecodeContextp->currentValue.type            = MARPAESLIF_VALUE_TYPE_UNDEF;
   confidenceb                             = 0;
 #endif
 
@@ -846,21 +829,16 @@ static inline short _marpaESLIFJSONDecodeSetNegativeNanb(marpaESLIFJSONDecodeCon
                                        marpaESLIFJSONDecodeContextp->marpaESLIFJSONDecodeOptionp->negativeNanActionp,
                                        inputs,
                                        inputl,
-                                       currentValuep,
+                                       &(marpaESLIFJSONDecodeContextp->currentValue),
                                        confidenceb);
-  goto done;
 
- err:
-  rcb = 0;
-
- done:
   MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFJSONDecodeContextp->marpaESLIFRecognizerp, funcs, "return %d", (int) rcb);
   MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_DEC(marpaESLIFJSONDecodeContextp->marpaESLIFRecognizerp);
   return rcb;
 }
 
 /*****************************************************************************/
-static inline short _marpaESLIFJSONDecodeSetNumberb(marpaESLIFJSONDecodeContext_t *marpaESLIFJSONDecodeContextp, marpaESLIFValueResult_t *currentValuep, char *inputs, size_t inputl)
+static inline short _marpaESLIFJSONDecodeSetNumberb(marpaESLIFJSONDecodeContext_t *marpaESLIFJSONDecodeContextp, char *inputs, size_t inputl)
 /*****************************************************************************/
 /* NUMBER ~ /(?:[+-]?(?:[0-9]+)(?:\.[0-9]+)?(?:[eE][+-]?[0-9]+)?)|(?:[+-]?[Ii][Nn][Ff](?:[Ii][Nn][Ii][Tt][Yy])?)|(?:[+-]?[Nn][Aa][Nn])/ */
 /*****************************************************************************/
@@ -879,19 +857,19 @@ static inline short _marpaESLIFJSONDecodeSetNumberb(marpaESLIFJSONDecodeContext_
   switch (inputs[0]) {
   case 'I':
   case 'i':
-    return _marpaESLIFJSONDecodeSetPositiveInfinityb(marpaESLIFJSONDecodeContextp, currentValuep, inputs, inputl);
+    return _marpaESLIFJSONDecodeSetPositiveInfinityb(marpaESLIFJSONDecodeContextp, inputs, inputl);
   case 'N':
   case 'n':
-    return _marpaESLIFJSONDecodeSetPositiveNanb(marpaESLIFJSONDecodeContextp, currentValuep, inputs, inputl);
+    return _marpaESLIFJSONDecodeSetPositiveNanb(marpaESLIFJSONDecodeContextp, inputs, inputl);
   case '+':
     if (inputl >= 2) {
       switch (inputs[1]) {
       case 'I':
       case 'i':
-        return _marpaESLIFJSONDecodeSetPositiveInfinityb(marpaESLIFJSONDecodeContextp, currentValuep, inputs, inputl);
+        return _marpaESLIFJSONDecodeSetPositiveInfinityb(marpaESLIFJSONDecodeContextp, inputs, inputl);
       case 'N':
       case 'n':
-        return _marpaESLIFJSONDecodeSetPositiveNanb(marpaESLIFJSONDecodeContextp, currentValuep, inputs, inputl);
+        return _marpaESLIFJSONDecodeSetPositiveNanb(marpaESLIFJSONDecodeContextp, inputs, inputl);
       default:
         break;
       }
@@ -902,10 +880,10 @@ static inline short _marpaESLIFJSONDecodeSetNumberb(marpaESLIFJSONDecodeContext_
       switch (inputs[1]) {
       case 'I':
       case 'i':
-        return _marpaESLIFJSONDecodeSetNegativeInfinityb(marpaESLIFJSONDecodeContextp, currentValuep, inputs, inputl);
+        return _marpaESLIFJSONDecodeSetNegativeInfinityb(marpaESLIFJSONDecodeContextp, inputs, inputl);
       case 'N':
       case 'n':
-        return _marpaESLIFJSONDecodeSetNegativeNanb(marpaESLIFJSONDecodeContextp, currentValuep, inputs, inputl);
+        return _marpaESLIFJSONDecodeSetNegativeNanb(marpaESLIFJSONDecodeContextp, inputs, inputl);
       default:
         break;
       }
@@ -953,7 +931,7 @@ static inline short _marpaESLIFJSONDecodeSetNumberb(marpaESLIFJSONDecodeContext_
   /* strict mode.                                                                                      */
   if (! _marpaESLIF_numberb(marpaESLIFJSONDecodeContextp->marpaESLIFp,
                             numbers,
-                            currentValuep,
+                            &(marpaESLIFJSONDecodeContextp->currentValue),
                             &confidenceb)) {
     goto err;
   }
@@ -962,7 +940,7 @@ static inline short _marpaESLIFJSONDecodeSetNumberb(marpaESLIFJSONDecodeContext_
                                        marpaESLIFJSONDecodeContextp->marpaESLIFJSONDecodeOptionp->numberActionp,
                                        inputs,
                                        inputl,
-                                       currentValuep,
+                                       &(marpaESLIFJSONDecodeContextp->currentValue),
                                        confidenceb);
   goto done;
 
@@ -976,66 +954,64 @@ static inline short _marpaESLIFJSONDecodeSetNumberb(marpaESLIFJSONDecodeContext_
 }
 
 /*****************************************************************************/
-static inline short _marpaESLIFJSONDecodeExtendStringContainerb(marpaESLIFJSONDecodeContext_t *marpaESLIFJSONDecodeContextp, marpaESLIFValueResult_t *currentValuep, size_t incl)
-/*****************************************************************************/
-/* /(?:[^"\\\x00-\x1F]+)|(?:\\["\\\/bfnrt])|(?:(?:\\u[[:xdigit:]]{4})+)/     */
-/* Cases are:                                                                */
-/* - First character is     '\': this is an escaped character                */
-/* - First character is not '\': the whole match is ASCII chars              */
-/* Caller is responsible to have set stringallocl correctly.                 */
+static inline short _marpaESLIFJSONDecodeExtendStringContainerb(marpaESLIFJSONDecodeContext_t *marpaESLIFJSONDecodeContextp, size_t incl)
 /*****************************************************************************/
 {
   static const char *funcs = "_marpaESLIFJSONDecodeExtendStringContainerb";
   size_t             wantedl;
   size_t             heapl;
-  char              *tmps;
+  unsigned char     *tmps;
   short              rcb;
 
   MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_INC(marpaESLIFJSONDecodeContextp->marpaESLIFRecognizerp);
   MARPAESLIFRECOGNIZER_TRACE(marpaESLIFJSONDecodeContextp->marpaESLIFRecognizerp, funcs, "start");
 
-  wantedl = currentValuep->u.s.sizel + incl;
-  if (wantedl < currentValuep->u.s.sizel) {
-    MARPAESLIF_ERROR(marpaESLIFJSONDecodeContextp->marpaESLIFp, "size_t turnaround when computing string size");
-    goto err;
-  }
+  if (marpaESLIFJSONDecodeContextp->stringallocl <= 0) {
+    if (incl > MARPAESLIFJSON_STRINGALLOCL_DEFAULT_VALUE) {
+      /* Initial increase of more than MARPAESLIFJSON_STRINGALLOCL_DEFAULT_VALUE */
+      heapl = _marpaESLIF_next_power_of_twob(marpaESLIFJSONDecodeContextp->marpaESLIFp, incl);
+    } else {
+      heapl = MARPAESLIFJSON_STRINGALLOCL_DEFAULT_VALUE;
+    }
+    marpaESLIFJSONDecodeContextp->currentValue.u.s.p = (unsigned char *) malloc(heapl + 1); /* +1 for NUL byte */
+    if (marpaESLIFJSONDecodeContextp->currentValue.u.s.p == NULL) {
+      MARPAESLIF_ERRORF(marpaESLIFJSONDecodeContextp->marpaESLIFp, "malloc failure, %s", strerror(errno));
+      goto err;
+    }
+    MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFJSONDecodeContextp->marpaESLIFRecognizerp, funcs, "Allocated current value u.s.p to %p", marpaESLIFJSONDecodeContextp->currentValue.u.s.p);
+    marpaESLIFJSONDecodeContextp->currentValue.contextp           = NULL;
+    marpaESLIFJSONDecodeContextp->currentValue.representationp    = NULL;
+    marpaESLIFJSONDecodeContextp->currentValue.type               = MARPAESLIF_VALUE_TYPE_STRING;
+    marpaESLIFJSONDecodeContextp->currentValue.u.s.sizel          = incl;
+    marpaESLIFJSONDecodeContextp->currentValue.u.s.shallowb       = 0;
+    marpaESLIFJSONDecodeContextp->currentValue.u.s.freeUserDatavp = marpaESLIFJSONDecodeContextp->marpaESLIFp;
+    marpaESLIFJSONDecodeContextp->currentValue.u.s.freeCallbackp  = _marpaESLIF_generic_freeCallbackv;
+    marpaESLIFJSONDecodeContextp->currentValue.u.s.encodingasciis = (char *) MARPAESLIF_UTF8_STRING;
 
-  if (wantedl > marpaESLIFJSONDecodeContextp->stringallocl) {
-    heapl = _marpaESLIF_next_power_of_twob(marpaESLIFJSONDecodeContextp->marpaESLIFp, wantedl);
-    if (heapl <= 0) {
+    marpaESLIFJSONDecodeContextp->stringallocl = heapl;
+  } else {
+    wantedl = marpaESLIFJSONDecodeContextp->currentValue.u.s.sizel + incl;
+    if (wantedl < marpaESLIFJSONDecodeContextp->currentValue.u.s.sizel) {
+      MARPAESLIF_ERROR(marpaESLIFJSONDecodeContextp->marpaESLIFp, "size_t turnaround when computing string size");
       goto err;
     }
 
-    if (marpaESLIFJSONDecodeContextp->stringallocl <= 0) {
-      currentValuep->u.s.p = (char *) malloc(heapl + 1); /* +1 for NUL byte */
-      if (currentValuep->u.s.p == NULL) {
-        MARPAESLIF_ERRORF(marpaESLIFJSONDecodeContextp->marpaESLIFp, "malloc failure, %s", strerror(errno));
+    if (wantedl > marpaESLIFJSONDecodeContextp->stringallocl) {
+      heapl = _marpaESLIF_next_power_of_twob(marpaESLIFJSONDecodeContextp->marpaESLIFp, wantedl);
+      if (heapl <= 0) {
         goto err;
       }
-      MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFJSONDecodeContextp->marpaESLIFRecognizerp, funcs, "Allocated current value %p->u.s.p to %p", currentValuep, currentValuep->u.s.p);
-    } else {
-      tmps = (char *) realloc(currentValuep->u.s.p, heapl + 1); /* +1 for NUL byte */
+
+      tmps = (unsigned char *) realloc(marpaESLIFJSONDecodeContextp->currentValue.u.s.p, heapl + 1); /* +1 for NUL byte */
       if (tmps == NULL) {
         MARPAESLIF_ERRORF(marpaESLIFJSONDecodeContextp->marpaESLIFp, "realloc failure, %s", strerror(errno));
         goto err;
       }
-      MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFJSONDecodeContextp->marpaESLIFRecognizerp, funcs, "Reallocated current value %p->u.s.p from %p to %p", currentValuep, currentValuep->u.s.p, tmps);
-      currentValuep->u.s.p = tmps;
+      MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFJSONDecodeContextp->marpaESLIFRecognizerp, funcs, "Reallocated current value u.s.p from %p to %p", marpaESLIFJSONDecodeContextp->currentValue.u.s.p, tmps);
+      marpaESLIFJSONDecodeContextp->currentValue.u.s.p = tmps;
+      marpaESLIFJSONDecodeContextp->stringallocl = heapl;
     }
-
-    if (marpaESLIFJSONDecodeContextp->stringallocl <= 0) {
-      /* First time */
-      currentValuep->contextp           = NULL;
-      currentValuep->representationp    = NULL;
-      currentValuep->type               = MARPAESLIF_VALUE_TYPE_STRING;
-      currentValuep->u.s.shallowb       = 0;
-      currentValuep->u.s.freeUserDatavp = marpaESLIFJSONDecodeContextp->marpaESLIFp;
-      currentValuep->u.s.freeCallbackp  = _marpaESLIF_generic_freeCallbackv;
-      currentValuep->u.s.encodingasciis = (char *) MARPAESLIF_UTF8_STRING;
-    }
-
-    currentValuep->u.s.sizel          = wantedl;
-    marpaESLIFJSONDecodeContextp->stringallocl = heapl;
+    marpaESLIFJSONDecodeContextp->currentValue.u.s.sizel = wantedl;
   }
 
   rcb = 1;
@@ -1051,7 +1027,7 @@ static inline short _marpaESLIFJSONDecodeExtendStringContainerb(marpaESLIFJSONDe
 }
 
 /*****************************************************************************/
-static inline short _marpaESLIFJSONDecodeAppendCharb(marpaESLIFJSONDecodeContext_t *marpaESLIFJSONDecodeContextp, marpaESLIFValueResult_t *currentValuep, char *inputs, size_t inputl)
+static inline short _marpaESLIFJSONDecodeAppendCharb(marpaESLIFJSONDecodeContext_t *marpaESLIFJSONDecodeContextp, char *inputs, size_t inputl)
 /*****************************************************************************/
 /* /(?:[^"\\\x00-\x1F]+)|(?:\\["\\\/bfnrt])|(?:(?:\\u[[:xdigit:]]{4})+)/     */
 /* Cases are:                                                                */
@@ -1063,8 +1039,8 @@ static inline short _marpaESLIFJSONDecodeAppendCharb(marpaESLIFJSONDecodeContext
   static const char       *funcs = "_marpaESLIFJSONDecodeAppendCharb";
   marpaESLIF_uint32_t     *uint32p;
   marpaESLIF_uint32_t     *tmpp;
-  size_t                   uint32l;
   size_t                   previousStringSizel;
+  size_t                   uint32l;
   size_t                   heapl;
   size_t                   dstl;
   marpaESLIF_uint32_t      c;
@@ -1078,66 +1054,70 @@ static inline short _marpaESLIFJSONDecodeAppendCharb(marpaESLIFJSONDecodeContext
   MARPAESLIFRECOGNIZER_TRACE(marpaESLIFJSONDecodeContextp->marpaESLIFRecognizerp, funcs, "start");
 
   /* We re-process input only when this is an escaped character */
-  if (inputs[0] != '\\') {
-    previousStringSizel = currentValuep->u.s.sizel;
-    if (! _marpaESLIFJSONDecodeExtendStringContainerb(marpaESLIFJSONDecodeContextp, currentValuep, inputl /* incl */)) {
+  if (inputs == NULL) {
+    /* String initialization */
+    if (! _marpaESLIFJSONDecodeExtendStringContainerb(marpaESLIFJSONDecodeContextp, 0 /* incl */)) {
       goto err;
     }
-    memcpy(&(currentValuep->u.s.p[previousStringSizel]), inputs, inputl);
+  } else if (inputs[0] != '\\') {
+    if (! _marpaESLIFJSONDecodeExtendStringContainerb(marpaESLIFJSONDecodeContextp, inputl /* incl */)) {
+      goto err;
+    }
+    memcpy(&(marpaESLIFJSONDecodeContextp->currentValue.u.s.p[marpaESLIFJSONDecodeContextp->currentValue.u.s.sizel]), inputs, inputl);
   } else {
     /* By definition there is something else after */
     switch (inputs[1]) {
     case '"':
-      if (! _marpaESLIFJSONDecodeExtendStringContainerb(marpaESLIFJSONDecodeContextp, currentValuep, 1 /* incl */)) {
+      if (! _marpaESLIFJSONDecodeExtendStringContainerb(marpaESLIFJSONDecodeContextp, 1 /* incl */)) {
         goto err;
       }
-      currentValuep->u.s.p[currentValuep->u.s.sizel-1] = MARPAESLIFJSON_DQUOTE;
+      marpaESLIFJSONDecodeContextp->currentValue.u.s.p[marpaESLIFJSONDecodeContextp->currentValue.u.s.sizel-1] = MARPAESLIFJSON_DQUOTE;
       break;
     case '\\':
-      if (! _marpaESLIFJSONDecodeExtendStringContainerb(marpaESLIFJSONDecodeContextp, currentValuep, 1 /* incl */)) {
+      if (! _marpaESLIFJSONDecodeExtendStringContainerb(marpaESLIFJSONDecodeContextp, 1 /* incl */)) {
         goto err;
       }
-      currentValuep->u.s.p[currentValuep->u.s.sizel-1] = MARPAESLIFJSON_BACKSLASH;
+      marpaESLIFJSONDecodeContextp->currentValue.u.s.p[marpaESLIFJSONDecodeContextp->currentValue.u.s.sizel-1] = MARPAESLIFJSON_BACKSLASH;
       break;
     case '/':
-      if (! _marpaESLIFJSONDecodeExtendStringContainerb(marpaESLIFJSONDecodeContextp, currentValuep, 1 /* incl */)) {
+      if (! _marpaESLIFJSONDecodeExtendStringContainerb(marpaESLIFJSONDecodeContextp, 1 /* incl */)) {
         goto err;
       }
-      currentValuep->u.s.p[currentValuep->u.s.sizel-1] = MARPAESLIFJSON_SLASH;
+      marpaESLIFJSONDecodeContextp->currentValue.u.s.p[marpaESLIFJSONDecodeContextp->currentValue.u.s.sizel-1] = MARPAESLIFJSON_SLASH;
       break;
     case 'b':
-      if (! _marpaESLIFJSONDecodeExtendStringContainerb(marpaESLIFJSONDecodeContextp, currentValuep, 1 /* incl */)) {
+      if (! _marpaESLIFJSONDecodeExtendStringContainerb(marpaESLIFJSONDecodeContextp, 1 /* incl */)) {
         goto err;
       }
-      currentValuep->u.s.p[currentValuep->u.s.sizel-1] = MARPAESLIFJSON_BACKSPACE;
+      marpaESLIFJSONDecodeContextp->currentValue.u.s.p[marpaESLIFJSONDecodeContextp->currentValue.u.s.sizel-1] = MARPAESLIFJSON_BACKSPACE;
       break;
     case 'f':
-      if (! _marpaESLIFJSONDecodeExtendStringContainerb(marpaESLIFJSONDecodeContextp, currentValuep, 1 /* incl */)) {
+      if (! _marpaESLIFJSONDecodeExtendStringContainerb(marpaESLIFJSONDecodeContextp, 1 /* incl */)) {
         goto err;
       }
-      currentValuep->u.s.p[currentValuep->u.s.sizel-1] = MARPAESLIFJSON_FORMFEED;
+      marpaESLIFJSONDecodeContextp->currentValue.u.s.p[marpaESLIFJSONDecodeContextp->currentValue.u.s.sizel-1] = MARPAESLIFJSON_FORMFEED;
       break;
     case 'r':
-      if (! _marpaESLIFJSONDecodeExtendStringContainerb(marpaESLIFJSONDecodeContextp, currentValuep, 1 /* incl */)) {
+      if (! _marpaESLIFJSONDecodeExtendStringContainerb(marpaESLIFJSONDecodeContextp, 1 /* incl */)) {
         goto err;
       }
-      currentValuep->u.s.p[currentValuep->u.s.sizel-1] = MARPAESLIFJSON_LINEFEED;
+      marpaESLIFJSONDecodeContextp->currentValue.u.s.p[marpaESLIFJSONDecodeContextp->currentValue.u.s.sizel-1] = MARPAESLIFJSON_LINEFEED;
       break;
     case 'n':
-      if (! _marpaESLIFJSONDecodeExtendStringContainerb(marpaESLIFJSONDecodeContextp, currentValuep, 1 /* incl */)) {
+      if (! _marpaESLIFJSONDecodeExtendStringContainerb(marpaESLIFJSONDecodeContextp, 1 /* incl */)) {
         goto err;
       }
-      currentValuep->u.s.p[currentValuep->u.s.sizel-1] = MARPAESLIFJSON_CARRIAGE_RETURN;
+      marpaESLIFJSONDecodeContextp->currentValue.u.s.p[marpaESLIFJSONDecodeContextp->currentValue.u.s.sizel-1] = MARPAESLIFJSON_CARRIAGE_RETURN;
       break;
     case 't':
-      if (! _marpaESLIFJSONDecodeExtendStringContainerb(marpaESLIFJSONDecodeContextp, currentValuep, 1 /* incl */)) {
+      if (! _marpaESLIFJSONDecodeExtendStringContainerb(marpaESLIFJSONDecodeContextp, 1 /* incl */)) {
         goto err;
       }
-      currentValuep->u.s.p[currentValuep->u.s.sizel-1] = MARPAESLIFJSON_HORIZONTAL_TAB;
+      marpaESLIFJSONDecodeContextp->currentValue.u.s.p[marpaESLIFJSONDecodeContextp->currentValue.u.s.sizel-1] = MARPAESLIFJSON_HORIZONTAL_TAB;
       break;
       break;
     default:
-      /* It is a sequence of '\uXXXX' by definition, i.e. 6 bytes - so there are (currentValuep->u.a.sizel / 6) hex digits */
+      /* It is a sequence of '\uXXXX' by definition, i.e. 6 bytes - so there are (marpaESLIFJSONDecodeContextp->currentValue.u.a.sizel / 6) hex digits */
       uint32l = inputl / 6;
 
       if (uint32l <= MARPAESLIFJSON_ARRAYL_IN_STRUCTURE) {
@@ -1185,14 +1165,14 @@ static inline short _marpaESLIFJSONDecodeAppendCharb(marpaESLIFJSONDecodeContext
       }
 
       /* Worst case is four UTF-8 bytes */
-      previousStringSizel = currentValuep->u.s.sizel;
+      previousStringSizel = marpaESLIFJSONDecodeContextp->currentValue.u.s.sizel;
       dstl = uint32l * 4;
-      if (! _marpaESLIFJSONDecodeExtendStringContainerb(marpaESLIFJSONDecodeContextp, currentValuep, dstl /* incl */)) {
+      if (! _marpaESLIFJSONDecodeExtendStringContainerb(marpaESLIFJSONDecodeContextp, dstl /* incl */)) {
         goto err;
       }
 
       /* Based on efi_utf16_to_utf8 from Linux kernel */
-      q = &(currentValuep->u.s.p[previousStringSizel]);
+      q = &(marpaESLIFJSONDecodeContextp->currentValue.u.s.p[previousStringSizel]);
       for (i = 0, j = 1; i < uint32l; i++, j++) {
         c = uint32p[i];
 
@@ -1301,7 +1281,7 @@ static inline short _marpaESLIFJSONDecodeProposalb(marpaESLIFJSONDecodeContext_t
 }
 
 /*****************************************************************************/
-static inline short _marpaESLIFJSONDecodeSetConstantb(marpaESLIFJSONDecodeContext_t *marpaESLIFJSONDecodeContextp, marpaESLIFValueResult_t *currentValuep, char *inputs, size_t inputl)
+static inline short _marpaESLIFJSONDecodeSetConstantb(marpaESLIFJSONDecodeContext_t *marpaESLIFJSONDecodeContextp, char *inputs, size_t inputl)
 /*****************************************************************************/
 {
   static const char *funcs = "__marpaESLIFJSONDecodeSetConstantb";
@@ -1313,15 +1293,15 @@ static inline short _marpaESLIFJSONDecodeSetConstantb(marpaESLIFJSONDecodeContex
   switch (inputs[0]) {
   case 't':
   case 'T':
-    *currentValuep = marpaESLIFJSONDecodeContextp->marpaESLIFp->marpaESLIFValueResultTrue;
+    marpaESLIFJSONDecodeContextp->currentValue = marpaESLIFJSONDecodeContextp->marpaESLIFp->marpaESLIFValueResultTrue;
     break;
   case 'f':
   case 'F':
-    *currentValuep = marpaESLIFJSONDecodeContextp->marpaESLIFp->marpaESLIFValueResultFalse;
+    marpaESLIFJSONDecodeContextp->currentValue = marpaESLIFJSONDecodeContextp->marpaESLIFp->marpaESLIFValueResultFalse;
     break;
   case 'n':
   case 'N':
-    *currentValuep = marpaESLIFValueResultUndef;
+    marpaESLIFJSONDecodeContextp->currentValue = marpaESLIFValueResultUndef;
     break;
   default:
     MARPAESLIF_ERRORF(marpaESLIFJSONDecodeContextp->marpaESLIFp,
@@ -1364,15 +1344,15 @@ static inline short _marpaESLIFJSONDecodeDepositStackPushb(marpaESLIFJSONDecodeC
   marpaESLIFValueResult.contextp         = marpaESLIFJSONDecodeDepositp->contextp;
   marpaESLIFValueResult.u.p.p            = marpaESLIFJSONDecodeDepositp->actionp;
 
-  MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFJSONDecodeContextp->marpaESLIFRecognizerp, funcs, "Set depositStackp[%d]->dstp              = %p", GENERICSTACK_USED(marpaESLIFJSONDecodeContextp->depositStackp), marpaESLIFJSONDecodeDepositp->dstp);
-  MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFJSONDecodeContextp->marpaESLIFRecognizerp, funcs, "Set depositStackp[%d]->contextp          = %p", GENERICSTACK_USED(marpaESLIFJSONDecodeContextp->depositStackp), marpaESLIFJSONDecodeDepositp->contextp);
-  MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFJSONDecodeContextp->marpaESLIFRecognizerp, funcs, "Set depositStackp[%d]->contextp->keyb    = %d", GENERICSTACK_USED(marpaESLIFJSONDecodeContextp->depositStackp), (int) marpaESLIFJSONDecodeDepositp->contextp->keyb);
-  MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFJSONDecodeContextp->marpaESLIFRecognizerp, funcs, "Set depositStackp[%d]->contextp->alllocl = %ld", GENERICSTACK_USED(marpaESLIFJSONDecodeContextp->depositStackp), (unsigned long) marpaESLIFJSONDecodeDepositp->contextp->allocl);
-  MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFJSONDecodeContextp->marpaESLIFRecognizerp, funcs, "Set depositStackp[%d]->actionp           = %p", GENERICSTACK_USED(marpaESLIFJSONDecodeContextp->depositStackp), marpaESLIFJSONDecodeDepositp->actionp);
+  MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFJSONDecodeContextp->marpaESLIFRecognizerp, funcs, "Pushing depositStackp[%d]->dstp              = %p of type %s", GENERICSTACK_USED(marpaESLIFJSONDecodeContextp->depositStackp), marpaESLIFJSONDecodeDepositp->dstp, _marpaESLIF_value_types(marpaESLIFJSONDecodeDepositp->dstp->type));
+  MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFJSONDecodeContextp->marpaESLIFRecognizerp, funcs, "Pushing depositStackp[%d]->contextp          = %p", GENERICSTACK_USED(marpaESLIFJSONDecodeContextp->depositStackp), marpaESLIFJSONDecodeDepositp->contextp);
+  MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFJSONDecodeContextp->marpaESLIFRecognizerp, funcs, "Pushing depositStackp[%d]->contextp->keyb    = %d", GENERICSTACK_USED(marpaESLIFJSONDecodeContextp->depositStackp), (int) marpaESLIFJSONDecodeDepositp->contextp->keyb);
+  MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFJSONDecodeContextp->marpaESLIFRecognizerp, funcs, "Pushing depositStackp[%d]->contextp->alllocl = %ld", GENERICSTACK_USED(marpaESLIFJSONDecodeContextp->depositStackp), (unsigned long) marpaESLIFJSONDecodeDepositp->contextp->allocl);
+  MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFJSONDecodeContextp->marpaESLIFRecognizerp, funcs, "Pushing depositStackp[%d]->actionp           = %p", GENERICSTACK_USED(marpaESLIFJSONDecodeContextp->depositStackp), marpaESLIFJSONDecodeDepositp->actionp);
 
   GENERICSTACK_PUSH_CUSTOM(marpaESLIFJSONDecodeContextp->depositStackp, marpaESLIFValueResult);
   if (GENERICSTACK_ERROR(marpaESLIFJSONDecodeContextp->depositStackp)) {
-    MARPAESLIF_ERRORF(marpaESLIFJSONDecodeContextp->marpaESLIFp, "stackp push failure, %s", strerror(errno));
+    MARPAESLIF_ERRORF(marpaESLIFJSONDecodeContextp->marpaESLIFp, "depositStackp push failure, %s", strerror(errno));
     goto err;
   }
 
@@ -1399,26 +1379,13 @@ static inline short _marpaESLIFJSONDecodeDepositStackGetLastb(marpaESLIFJSONDeco
 /*            u.p.p                               actionp                    */
 /*****************************************************************************/
 {
-  return _marpaESLIFJSONDecodeDepositStackGetb(marpaESLIFJSONDecodeContextp, marpaESLIFJSONDecodeDepositp, GENERICSTACK_USED(marpaESLIFJSONDecodeContextp->depositStackp) - 1);
-}
-
-/*****************************************************************************/
-static inline short _marpaESLIFJSONDecodeDepositStackGetb(marpaESLIFJSONDecodeContext_t *marpaESLIFJSONDecodeContextp, marpaESLIFJSONDecodeDeposit_t *marpaESLIFJSONDecodeDepositp, int indicei)
-/*****************************************************************************/
-/* We abuse marpaESLIFValueResult_t:                                         */
-/*                                                                           */
-/*          marpaESLIFValueResult_t             marpaESLIFJSONDeposit_t      */
-/*            representationp                     dstp                       */
-/*            contextp                            contextp                   */
-/*            u.p.p                               actionp                    */
-/*****************************************************************************/
-{
-  static const char       *funcs   = "_marpaESLIFJSONDecodeDepositStackGetb";
+  static const char       *funcs   = "_marpaESLIFJSONDecodeDepositStackGetLastb";
+  int                      indicei = GENERICSTACK_USED(marpaESLIFJSONDecodeContextp->depositStackp) - 1;
   marpaESLIFValueResult_t *marpaESLIFValueResultp;
   short                    rcb;
 
   MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_INC(marpaESLIFJSONDecodeContextp->marpaESLIFRecognizerp);
-  MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFJSONDecodeContextp->marpaESLIFRecognizerp, funcs, "start indice=%d", indicei);
+  MARPAESLIFRECOGNIZER_TRACE(marpaESLIFJSONDecodeContextp->marpaESLIFRecognizerp, funcs, "start");
 
   marpaESLIFValueResultp = GENERICSTACK_GET_CUSTOMP(marpaESLIFJSONDecodeContextp->depositStackp, indicei);
   if (GENERICSTACK_ERROR(marpaESLIFJSONDecodeContextp->depositStackp)) {
@@ -1430,7 +1397,7 @@ static inline short _marpaESLIFJSONDecodeDepositStackGetb(marpaESLIFJSONDecodeCo
   marpaESLIFJSONDecodeDepositp->contextp = marpaESLIFValueResultp->contextp;
   marpaESLIFJSONDecodeDepositp->actionp  = (marpaESLIFJSONDecodeDepositCallback_t) marpaESLIFValueResultp->u.p.p;
 
-  MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFJSONDecodeContextp->marpaESLIFRecognizerp, funcs, "Got depositStackp[%d]->dstp             = %p", indicei, marpaESLIFJSONDecodeDepositp->dstp);
+  MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFJSONDecodeContextp->marpaESLIFRecognizerp, funcs, "Got depositStackp[%d]->dstp             = %p of type %s", indicei, marpaESLIFJSONDecodeDepositp->dstp, _marpaESLIF_value_types(marpaESLIFJSONDecodeDepositp->dstp->type));
   MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFJSONDecodeContextp->marpaESLIFRecognizerp, funcs, "Got depositStackp[%d]->contextp         = %p", indicei, marpaESLIFJSONDecodeDepositp->contextp);
   MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFJSONDecodeContextp->marpaESLIFRecognizerp, funcs, "Got depositStackp[%d]->contextp->keyb   = %d", indicei, (int) marpaESLIFJSONDecodeDepositp->contextp->keyb);
   MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFJSONDecodeContextp->marpaESLIFRecognizerp, funcs, "Got depositStackp[%d]->contextp->allocl = %ld", indicei, (unsigned long) marpaESLIFJSONDecodeDepositp->contextp->allocl);
@@ -1449,21 +1416,50 @@ static inline short _marpaESLIFJSONDecodeDepositStackGetb(marpaESLIFJSONDecodeCo
 }
 
 /*****************************************************************************/
-static inline void _marpaESLIFJSONDecodeDepositStackPopb(marpaESLIFJSONDecodeContext_t *marpaESLIFJSONDecodeContextp)
+static inline short _marpaESLIFJSONDecodeDepositStackPopb(marpaESLIFJSONDecodeContext_t *marpaESLIFJSONDecodeContextp, marpaESLIFJSONDecodeDeposit_t *marpaESLIFJSONDecodeDepositp)
+/*****************************************************************************/
+/* We abuse marpaESLIFValueResult_t:                                         */
+/*                                                                           */
+/*          marpaESLIFValueResult_t             marpaESLIFJSONDeposit_t      */
+/*            representationp                     dstp                       */
+/*            contextp                            contextp                   */
+/*            u.p.p                               actionp                    */
 /*****************************************************************************/
 {
-  static const char *funcs = "_marpaESLIFJSONDecodeDepositStackPopb";
+  static const char       *funcs   = "_marpaESLIFJSONDecodeDepositStackPopb";
+  int                      indicei = GENERICSTACK_USED(marpaESLIFJSONDecodeContextp->depositStackp);
+  marpaESLIFValueResult_t  marpaESLIFValueResult;
+  short                    rcb;
 
   MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_INC(marpaESLIFJSONDecodeContextp->marpaESLIFRecognizerp);
   MARPAESLIFRECOGNIZER_TRACE(marpaESLIFJSONDecodeContextp->marpaESLIFRecognizerp, funcs, "start");
 
-  MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFJSONDecodeContextp->marpaESLIFRecognizerp, funcs, "Popping depositStackp from %d to %d elements", GENERICSTACK_USED(marpaESLIFJSONDecodeContextp->depositStackp), GENERICSTACK_USED(marpaESLIFJSONDecodeContextp->depositStackp) - 1);
+  marpaESLIFValueResult = GENERICSTACK_POP_CUSTOM(marpaESLIFJSONDecodeContextp->depositStackp);
+  if (GENERICSTACK_ERROR(marpaESLIFJSONDecodeContextp->depositStackp)) {
+    MARPAESLIF_ERRORF(marpaESLIFJSONDecodeContextp->marpaESLIFp, "depositStackp pop failure, %s", strerror(errno));
+    goto err;
+  }
 
-  /* The stack contains only shallow elements: it is legal to play directly on the number of used elements */
-  GENERICSTACK_USED(marpaESLIFJSONDecodeContextp->depositStackp)--;
+  marpaESLIFJSONDecodeDepositp->dstp     = (marpaESLIFValueResult_t *) marpaESLIFValueResult.representationp;
+  marpaESLIFJSONDecodeDepositp->contextp = marpaESLIFValueResult.contextp;
+  marpaESLIFJSONDecodeDepositp->actionp  = (marpaESLIFJSONDecodeDepositCallback_t) marpaESLIFValueResult.u.p.p;
 
-  MARPAESLIFRECOGNIZER_TRACE(marpaESLIFJSONDecodeContextp->marpaESLIFRecognizerp, funcs, "return");
+  MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFJSONDecodeContextp->marpaESLIFRecognizerp, funcs, "Popped depositStackp[%d]->dstp             = %p of type %s", indicei - 1, marpaESLIFJSONDecodeDepositp->dstp, _marpaESLIF_value_types(marpaESLIFJSONDecodeDepositp->dstp->type));
+  MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFJSONDecodeContextp->marpaESLIFRecognizerp, funcs, "Popped depositStackp[%d]->contextp         = %p", indicei - 1, marpaESLIFJSONDecodeDepositp->contextp);
+  MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFJSONDecodeContextp->marpaESLIFRecognizerp, funcs, "Popped depositStackp[%d]->contextp->keyb   = %d", indicei - 1, (int) marpaESLIFJSONDecodeDepositp->contextp->keyb);
+  MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFJSONDecodeContextp->marpaESLIFRecognizerp, funcs, "Popped depositStackp[%d]->contextp->allocl = %ld", indicei - 1, (unsigned long) marpaESLIFJSONDecodeDepositp->contextp->allocl);
+  MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFJSONDecodeContextp->marpaESLIFRecognizerp, funcs, "Popped depositStackp[%d]->actionp          = %p", indicei - 1, marpaESLIFJSONDecodeDepositp->actionp);
+
+  rcb = 1;
+  goto done;
+
+ err:
+  rcb = 0;
+
+ done:
+  MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFJSONDecodeContextp->marpaESLIFRecognizerp, funcs, "return %d", (int) rcb);
   MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_DEC(marpaESLIFJSONDecodeContextp->marpaESLIFRecognizerp);
+  return rcb;
 }
 
 /*****************************************************************************/
@@ -1674,12 +1670,12 @@ static short _marpaESLIFJSONDecodeSetHashCallbackv(marpaESLIFJSONDecodeDepositCa
 }
 
 /*****************************************************************************/
-static inline short _marpaESLIFJSONDecodePropagateValueb(marpaESLIFJSONDecodeContext_t *marpaESLIFJSONDecodeContextp, marpaESLIFValueResult_t *currentValuep)
+static inline short _marpaESLIFJSONDecodePropagateValueb(marpaESLIFJSONDecodeContext_t *marpaESLIFJSONDecodeContextp, marpaESLIFValueResult_t *marpaESLIFValueresultp)
 /*****************************************************************************/
 {
   static const char             *funcs = "_marpaESLIFJSONDecodePropagateValueb";
-  short                          rcb;
   marpaESLIFJSONDecodeDeposit_t  marpaESLIFJSONDecodeDeposit;
+  short                          rcb;
 
   MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_INC(marpaESLIFJSONDecodeContextp->marpaESLIFRecognizerp);
   MARPAESLIFRECOGNIZER_TRACE(marpaESLIFJSONDecodeContextp->marpaESLIFRecognizerp, funcs, "start");
@@ -1688,14 +1684,12 @@ static inline short _marpaESLIFJSONDecodePropagateValueb(marpaESLIFJSONDecodeCon
     goto err;
   }
 
-  if (! marpaESLIFJSONDecodeDeposit.actionp(marpaESLIFJSONDecodeDeposit.contextp, marpaESLIFJSONDecodeDeposit.dstp, currentValuep)) {
+  if (! marpaESLIFJSONDecodeDeposit.actionp(marpaESLIFJSONDecodeDeposit.contextp, marpaESLIFJSONDecodeDeposit.dstp, marpaESLIFValueresultp)) {
     goto err;
   }
 
-  /* Value has been propagated - undef origin */
-  MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFJSONDecodeContextp->marpaESLIFRecognizerp, funcs, "Setting current value *%p to marpaESLIFValueResultUndef", currentValuep);
-  *currentValuep = marpaESLIFValueResultUndef;
-  rcb = 1;
+  /* Re-initialise the source */
+  *marpaESLIFValueresultp = marpaESLIFValueResultUndef;
   goto done;
 
  err:
@@ -1708,7 +1702,7 @@ static inline short _marpaESLIFJSONDecodePropagateValueb(marpaESLIFJSONDecodeCon
 }
 
 /*****************************************************************************/
-static inline short _marpaESLIFJSONDecodeManageEventsb(marpaESLIFJSONDecodeContext_t *marpaESLIFJSONDecodeContextp, marpaESLIFValueResult_t *currentValuep)
+static inline short _marpaESLIFJSONDecodeManageEventsb(marpaESLIFJSONDecodeContext_t *marpaESLIFJSONDecodeContextp)
 /*****************************************************************************/
 {
   static const char                            *funcs = "_marpaESLIFJSONDecodeManageEventsb";
@@ -1738,41 +1732,13 @@ static inline short _marpaESLIFJSONDecodeManageEventsb(marpaESLIFJSONDecodeConte
         :terminal ::= '[' pause => after event => 0_inc
         :terminal ::= '{' pause => after event => 0_inc
         ------------------------------------------------*/
-      dstp = (marpaESLIFValueResult_t *) malloc(sizeof(marpaESLIFValueResult_t));
-      if (dstp == NULL) {
-        MARPAESLIF_ERRORF(marpaESLIFJSONDecodeContextp->marpaESLIFp, "malloc failure, %s", strerror(errno));
-        goto err;
-      }
-      MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFJSONDecodeContextp->marpaESLIFRecognizerp, funcs, "Allocated destination dstp to %p", dstp);
-      *dstp = marpaESLIFValueResultUndef;
-
-      marpaESLIFJSONDecodeDepositCallbackContextp = (marpaESLIFJSONDecodeDepositCallbackContext_t *) malloc(sizeof(marpaESLIFJSONDecodeDepositCallbackContext_t));
-      if (marpaESLIFJSONDecodeDepositCallbackContextp == NULL) {
-        MARPAESLIF_ERRORF(marpaESLIFJSONDecodeContextp->marpaESLIFp, "malloc failure, %s", strerror(errno));
-        goto err;
-      }
-      MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFJSONDecodeContextp->marpaESLIFRecognizerp, funcs, "Allocated callback context to %p", marpaESLIFJSONDecodeDepositCallbackContextp);
-      marpaESLIFJSONDecodeDepositCallbackContextp->marpaESLIFp                  = marpaESLIFJSONDecodeContextp->marpaESLIFp;
-      marpaESLIFJSONDecodeDepositCallbackContextp->marpaESLIFJSONDecodeContextp = marpaESLIFJSONDecodeContextp;
-      marpaESLIFJSONDecodeDepositCallbackContextp->keyb                         = 1;
-      marpaESLIFJSONDecodeDepositCallbackContextp->allocl                       = 0;
-      
-      switch (eventArrayp[eventl].symbols[1]) {
-      case '[':
-        marpaESLIFJSONDecodeDeposit.dstp     = dstp;
-        marpaESLIFJSONDecodeDeposit.contextp = marpaESLIFJSONDecodeDepositCallbackContextp;
-        marpaESLIFJSONDecodeDeposit.actionp  = _marpaESLIFJSONDecodePushArrayCallbackv;
-        break;
-      case '{':
-        marpaESLIFJSONDecodeDeposit.dstp     = dstp;
-        marpaESLIFJSONDecodeDeposit.contextp = marpaESLIFJSONDecodeDepositCallbackContextp;
-        marpaESLIFJSONDecodeDeposit.actionp   = _marpaESLIFJSONDecodeSetHashCallbackv;
-        break;
-      default:
-        MARPAESLIF_ERROR(marpaESLIFJSONDecodeContextp->marpaESLIFp, "Invalid item symbols");
+      if (! _marpaESLIFJSONDecodeDepositInitb(marpaESLIFJSONDecodeContextp,
+                                              &marpaESLIFJSONDecodeDeposit,
+                                              (eventArrayp[eventl].symbols[1] == '[') ? _marpaESLIFJSONDecodePushArrayCallbackv : _marpaESLIFJSONDecodeSetHashCallbackv)) {
         goto err;
       }
       if (! _marpaESLIFJSONDecodeDepositStackPushb(marpaESLIFJSONDecodeContextp, &marpaESLIFJSONDecodeDeposit)) {
+        _marpaESLIFJSONDecodeDepositDisposev(marpaESLIFJSONDecodeContextp, &marpaESLIFJSONDecodeDeposit);
         goto err;
       }
       break;
@@ -1781,81 +1747,27 @@ static inline short _marpaESLIFJSONDecodeManageEventsb(marpaESLIFJSONDecodeConte
          :terminal ::= ']' pause => after event => 1_dec$
          :terminal ::= '}' pause => after event => 1_dec$
          ------------------------------------------------*/
-      if (! _marpaESLIFJSONDecodeDepositStackGetLastb(marpaESLIFJSONDecodeContextp, &marpaESLIFJSONDecodeDeposit)) {
+      if (! _marpaESLIFJSONDecodeDepositStackPopb(marpaESLIFJSONDecodeContextp, &marpaESLIFJSONDecodeDeposit)) {
         goto err;
       }
-      MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFJSONDecodeContextp->marpaESLIFRecognizerp, funcs, "Setting current value *%p to *%p of type %s", currentValuep, marpaESLIFJSONDecodeDeposit.dstp, _marpaESLIF_value_types(marpaESLIFJSONDecodeDeposit.dstp->type));
-      *currentValuep = *(marpaESLIFJSONDecodeDeposit.dstp);
-
-      /* By definition dstp and its context were allocated */
-      MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFJSONDecodeContextp->marpaESLIFRecognizerp, funcs, "Freeing dstp %p", marpaESLIFJSONDecodeDeposit.dstp);
-      free(marpaESLIFJSONDecodeDeposit.dstp);
-      MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFJSONDecodeContextp->marpaESLIFRecognizerp, funcs, "Freeing contextp %p", marpaESLIFJSONDecodeDeposit.contextp);
-      free(marpaESLIFJSONDecodeDeposit.contextp);
-
-      /* Pop stack and propagate the value */
-      _marpaESLIFJSONDecodeDepositStackPopb(marpaESLIFJSONDecodeContextp);
-      if (! _marpaESLIFJSONDecodePropagateValueb(marpaESLIFJSONDecodeContextp, currentValuep)) {
+      if (! _marpaESLIFJSONDecodePropagateValueb(marpaESLIFJSONDecodeContextp, marpaESLIFJSONDecodeDeposit.dstp)) {
         goto err;
       }
       break;
     case '2':
+    case '3':
       /*-----------------------------------------------
-        :lexeme ::= CHAR pause => after event => 2_CHAR
+        :lexeme ::= CHAR       pause => after event => 2_CHAR
+        :lexeme ::= CNTRL_CHAR pause => after event => 3_CNTRL_CHAR
 
-        Note that by definition currentValuep has been initialized in 5_DQUOTE_START
+        Note that by definition currentValue has been initialized in 5_DQUOTE_START
         -----------------------------------------------*/
       if (! _marpaESLIFRecognizer_lexeme_last_pauseb(marpaESLIFJSONDecodeContextp->marpaESLIFRecognizerp, "CHAR", &pauses, &pausel)) {
         goto err;
       }
-      if (currentValuep->u.s.sizel <= 0) {
-        currentValuep->u.s.p = (unsigned char *) malloc(pausel);
-        if (currentValuep->u.s.p == NULL) {
-          MARPAESLIF_ERRORF(marpaESLIFJSONDecodeContextp->marpaESLIFp, "malloc failure, %s", strerror(errno));
-          goto err;
-        }
-        MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFJSONDecodeContextp->marpaESLIFRecognizerp, funcs, "Allocated current value %p->u.s.p to %p", currentValuep, currentValuep->u.s.p);
-      } else {
-        tmps = (unsigned char *) realloc(currentValuep->u.s.p, currentValuep->u.s.sizel + pausel);
-        if (tmps == NULL) {
-          MARPAESLIF_ERRORF(marpaESLIFJSONDecodeContextp->marpaESLIFp, "realloc failure, %s", strerror(errno));
-          goto err;
-        }
-        MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFJSONDecodeContextp->marpaESLIFRecognizerp, funcs, "Reallocated current value %p->u.s.p from %p to %p", currentValuep, currentValuep->u.s.p, tmps);
-        currentValuep->u.s.p = tmps;
-      }
-      memcpy(currentValuep->u.s.p + currentValuep->u.s.sizel, pauses, pausel);
-      currentValuep->u.s.shallowb  = 0;
-      currentValuep->u.s.sizel    += pausel;
-      break;
-    case '3':
-      /*-------------------------------------------------------------
-        :lexeme   ::= CNTRL_CHAR pause => after event => 3_CNTRL_CHAR
-        
-        Note that by definition currentValuep has been initialized in 5_DQUOTE_START
-        -------------------------------------------------------------*/
-      if (! _marpaESLIFRecognizer_lexeme_last_pauseb(marpaESLIFJSONDecodeContextp->marpaESLIFRecognizerp, "CNTRL_CHAR", &pauses, &pausel)) {
+      if (! _marpaESLIFJSONDecodeAppendCharb(marpaESLIFJSONDecodeContextp, pauses, pausel)) {
         goto err;
       }
-      if (currentValuep->u.s.sizel <= 0) {
-        currentValuep->u.s.p = (unsigned char *) malloc(pausel);
-        if (currentValuep->u.s.p == NULL) {
-          MARPAESLIF_ERRORF(marpaESLIFJSONDecodeContextp->marpaESLIFp, "malloc failure, %s", strerror(errno));
-          goto err;
-        }
-        MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFJSONDecodeContextp->marpaESLIFRecognizerp, funcs, "Allocated current value %p->u.s.p to %p", currentValuep, currentValuep->u.s.p);
-      } else {
-        tmps = (unsigned char *) realloc(currentValuep->u.s.p, currentValuep->u.s.sizel + pausel);
-        if (tmps == NULL) {
-          MARPAESLIF_ERRORF(marpaESLIFJSONDecodeContextp->marpaESLIFp, "realloc failure, %s", strerror(errno));
-          goto err;
-        }
-        MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFJSONDecodeContextp->marpaESLIFRecognizerp, funcs, "Reallocated current value %p->u.s.p from %p to %p", currentValuep, currentValuep->u.s.p, tmps);
-        currentValuep->u.s.p = tmps;
-      }
-      memcpy(currentValuep->u.s.p + currentValuep->u.s.sizel, pauses, pausel);
-      currentValuep->u.s.shallowb  = 0;
-      currentValuep->u.s.sizel    += pausel;
       break;
     case '4':
       /* ---------------------------------------------------------
@@ -1864,7 +1776,10 @@ static inline short _marpaESLIFJSONDecodeManageEventsb(marpaESLIFJSONDecodeConte
       if (! _marpaESLIFRecognizer_lexeme_last_pauseb(marpaESLIFJSONDecodeContextp->marpaESLIFRecognizerp, "CONSTANT", &pauses, &pausel)) {
         goto err;
       }
-      if (! _marpaESLIFJSONDecodeSetConstantb(marpaESLIFJSONDecodeContextp, currentValuep, pauses, pausel)) {
+      if (! _marpaESLIFJSONDecodeSetConstantb(marpaESLIFJSONDecodeContextp, pauses, pausel)) {
+        goto err;
+      }
+      if (! _marpaESLIFJSONDecodePropagateValueb(marpaESLIFJSONDecodeContextp, &(marpaESLIFJSONDecodeContextp->currentValue))) {
         goto err;
       }
       break;
@@ -1884,13 +1799,11 @@ static inline short _marpaESLIFJSONDecodeManageEventsb(marpaESLIFJSONDecodeConte
         goto err;
       }
 
-      currentValuep->type               = MARPAESLIF_VALUE_TYPE_STRING;
-      currentValuep->u.s.p              = (char *) MARPAESLIF_EMPTY_STRING;
-      currentValuep->u.s.shallowb       = 1;
-      currentValuep->u.s.freeUserDatavp = marpaESLIFJSONDecodeContextp->marpaESLIFp;
-      currentValuep->u.s.freeCallbackp  = _marpaESLIF_generic_freeCallbackv;
-      currentValuep->u.s.sizel          = 0;
-      currentValuep->u.s.encodingasciis = (char *) MARPAESLIF_UTF8_STRING;
+      /* String initialization */
+      marpaESLIFJSONDecodeContextp->stringallocl = 0;
+      if (! _marpaESLIFJSONDecodeAppendCharb(marpaESLIFJSONDecodeContextp, NULL, 0)) {
+        goto err;
+      }
       break;
     case '6':
       /* ------------------------------------------------------------------
@@ -1905,7 +1818,9 @@ static inline short _marpaESLIFJSONDecodeManageEventsb(marpaESLIFJSONDecodeConte
       if (! _marpaESLIFRecognizer_lexeme_readb(marpaESLIFJSONDecodeContextp->marpaESLIFRecognizerp, &alternative, 1 /* lengthl */)) {
         goto err;
       }
-      if (! _marpaESLIFJSONDecodePropagateValueb(marpaESLIFJSONDecodeContextp, currentValuep)) {
+      /* Our procedure made sure there is always a room for a hiden NUL byte */
+      marpaESLIFJSONDecodeContextp->currentValue.u.s.p[marpaESLIFJSONDecodeContextp->currentValue.u.s.sizel] = '\0';
+      if (! _marpaESLIFJSONDecodePropagateValueb(marpaESLIFJSONDecodeContextp, &(marpaESLIFJSONDecodeContextp->currentValue))) {
         goto err;
       }
       break;
@@ -1916,7 +1831,10 @@ static inline short _marpaESLIFJSONDecodeManageEventsb(marpaESLIFJSONDecodeConte
       if (! _marpaESLIFRecognizer_lexeme_last_pauseb(marpaESLIFJSONDecodeContextp->marpaESLIFRecognizerp, "NUMBER", &pauses, &pausel)) {
         goto err;
       }
-      if (! _marpaESLIFJSONDecodeSetNumberb(marpaESLIFJSONDecodeContextp, currentValuep, pauses, pausel)) {
+      if (! _marpaESLIFJSONDecodeSetNumberb(marpaESLIFJSONDecodeContextp, pauses, pausel)) {
+        goto err;
+      }
+      if (! _marpaESLIFJSONDecodePropagateValueb(marpaESLIFJSONDecodeContextp, &(marpaESLIFJSONDecodeContextp->currentValue))) {
         goto err;
       }
       break;
@@ -1957,7 +1875,11 @@ static short _marpaESLIFJSONDecodeRepresentationb(void *userDatavp, marpaESLIFVa
   marpaESLIFValueOption_t       *marpaESLIFValueOptionp       = marpaESLIFJSONDecodeContextp->marpaESLIFValueOptionp;
   short                          rcb;
 
+  MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_INC(marpaESLIFJSONDecodeContextp->marpaESLIFRecognizerp);
+  MARPAESLIFRECOGNIZER_TRACE(marpaESLIFJSONDecodeContextp->marpaESLIFRecognizerp, funcs, "start");
+
   /* Proxy to caller's representation */
+  MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFJSONDecodeContextp->marpaESLIFRecognizerp, funcs, "Calling %p", marpaESLIFValueResultp->representationp);
   rcb = marpaESLIFValueResultp->representationp(marpaESLIFValueOptionp->userDatavp,
                                                 marpaESLIFValueResultp,
                                                 inputcpp,
@@ -1967,6 +1889,9 @@ static short _marpaESLIFJSONDecodeRepresentationb(void *userDatavp, marpaESLIFVa
                                                 stringbp);
 
   *disposeCallbackpp = _marpaESLIFJSONDecodeRepresentationDisposev;
+
+  MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFJSONDecodeContextp->marpaESLIFRecognizerp, funcs, "return %d", (int) rcb);
+  MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_DEC(marpaESLIFJSONDecodeContextp->marpaESLIFRecognizerp);
 
   return rcb;
 }
@@ -1979,13 +1904,100 @@ static void _marpaESLIFJSONDecodeRepresentationDisposev(void *userDatavp, char *
   marpaESLIFJSONDecodeContext_t *marpaESLIFJSONDecodeContextp = (marpaESLIFJSONDecodeContext_t *) userDatavp;
   marpaESLIFValueOption_t       *marpaESLIFValueOptionp       = marpaESLIFJSONDecodeContextp->marpaESLIFValueOptionp;
 
+  MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_INC(marpaESLIFJSONDecodeContextp->marpaESLIFRecognizerp);
+  MARPAESLIFRECOGNIZER_TRACE(marpaESLIFJSONDecodeContextp->marpaESLIFRecognizerp, funcs, "start");
+
   /* Proxy to caller's representation disposer */
   if (marpaESLIFJSONDecodeContextp->representationDisposep != NULL) {
+    MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFJSONDecodeContextp->marpaESLIFRecognizerp, funcs, "Calling %p", marpaESLIFJSONDecodeContextp->representationDisposep);
     marpaESLIFJSONDecodeContextp->representationDisposep(marpaESLIFValueOptionp->userDatavp,
                                                          inputcp,
                                                          inputl,
                                                          encodingasciis);
   }
+
+  MARPAESLIFRECOGNIZER_TRACE(marpaESLIFJSONDecodeContextp->marpaESLIFRecognizerp, funcs, "return");
+  MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_DEC(marpaESLIFJSONDecodeContextp->marpaESLIFRecognizerp);
+}
+
+/*****************************************************************************/
+static short _marpaESLIFJSONDecodeDepositInitb(marpaESLIFJSONDecodeContext_t *marpaESLIFJSONDecodeContextp, marpaESLIFJSONDecodeDeposit_t *depositp, marpaESLIFJSONDecodeDepositCallback_t actionp)
+/*****************************************************************************/
+{
+  static const char                            *funcs = "_marpaESLIFJSONEncodeRepresentationDisposev";
+  marpaESLIFValueResult_t                      *dstp;
+  marpaESLIFJSONDecodeDepositCallbackContext_t *marpaESLIFJSONDecodeDepositCallbackContextp;
+  short                                         rcb;
+
+  MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_INC(marpaESLIFJSONDecodeContextp->marpaESLIFRecognizerp);
+  MARPAESLIFRECOGNIZER_TRACE(marpaESLIFJSONDecodeContextp->marpaESLIFRecognizerp, funcs, "start");
+
+  dstp = (marpaESLIFValueResult_t *) malloc(sizeof(marpaESLIFValueResult_t));
+  if (dstp == NULL) {
+    MARPAESLIF_ERRORF(marpaESLIFJSONDecodeContextp->marpaESLIFp, "malloc failure, %s", strerror(errno));
+    goto err;
+  }
+  MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFJSONDecodeContextp->marpaESLIFRecognizerp, funcs, "Allocated destination dstp to %p, initialized to UNDEF", dstp);
+  *dstp = marpaESLIFValueResultUndef;
+
+  marpaESLIFJSONDecodeDepositCallbackContextp = (marpaESLIFJSONDecodeDepositCallbackContext_t *) malloc(sizeof(marpaESLIFJSONDecodeDepositCallbackContext_t));
+  if (marpaESLIFJSONDecodeDepositCallbackContextp == NULL) {
+    MARPAESLIF_ERRORF(marpaESLIFJSONDecodeContextp->marpaESLIFp, "malloc failure, %s", strerror(errno));
+    goto err;
+  }
+  MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFJSONDecodeContextp->marpaESLIFRecognizerp, funcs, "Allocated callback context to %p", marpaESLIFJSONDecodeDepositCallbackContextp);
+
+  marpaESLIFJSONDecodeDepositCallbackContextp->marpaESLIFp                  = marpaESLIFJSONDecodeContextp->marpaESLIFp;
+  marpaESLIFJSONDecodeDepositCallbackContextp->marpaESLIFJSONDecodeContextp = marpaESLIFJSONDecodeContextp;
+  marpaESLIFJSONDecodeDepositCallbackContextp->keyb                         = 1;
+  marpaESLIFJSONDecodeDepositCallbackContextp->allocl                       = 0;
+      
+  depositp->dstp             = dstp;
+  depositp->dstpOnStackb     = 0;
+  depositp->contextp         = marpaESLIFJSONDecodeDepositCallbackContextp;
+  depositp->contextpOnStackb = 0;
+  depositp->actionp          = actionp;
+
+  rcb = 1;
+  goto done;
+
+ err:
+  if (dstp != NULL) {
+    free(dstp);
+  }
+  rcb = 0;
+  /* marpaESLIFJSONDecodeDepositCallbackContextp cannot be NULL if we are in err */
+
+ done:
+  MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFJSONDecodeContextp->marpaESLIFRecognizerp, funcs, "return %d", (int) rcb);
+  MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_DEC(marpaESLIFJSONDecodeContextp->marpaESLIFRecognizerp);
+  return rcb;
+}
+
+/*****************************************************************************/
+static void _marpaESLIFJSONDecodeDepositDisposev(marpaESLIFJSONDecodeContext_t *marpaESLIFJSONDecodeContextp, marpaESLIFJSONDecodeDeposit_t *depositp)
+/*****************************************************************************/
+{
+  static const char *funcs = "_marpaESLIFJSONDecodeDepositDisposev";
+
+  MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_INC(marpaESLIFJSONDecodeContextp->marpaESLIFRecognizerp);
+  MARPAESLIFRECOGNIZER_TRACE(marpaESLIFJSONDecodeContextp->marpaESLIFRecognizerp, funcs, "start");
+
+  if ((depositp->contextp != NULL) && (! depositp->contextpOnStackb)) {
+    MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFJSONDecodeContextp->marpaESLIFRecognizerp, funcs, "Freeing deposit context %p", depositp->contextp);
+    free(depositp->contextp);
+  }
+  if (depositp->dstp != NULL) {
+    MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFJSONDecodeContextp->marpaESLIFRecognizerp, funcs, "Freeing deposit dstp %p content", depositp->dstp);
+    _marpaESLIFRecognizer_marpaESLIFValueResult_freeb(marpaESLIFJSONDecodeContextp->marpaESLIFRecognizerp, depositp->dstp, 1 /* deepb */);
+    if (! depositp->dstpOnStackb) {
+      MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFJSONDecodeContextp->marpaESLIFRecognizerp, funcs, "Freeing deposit dstp %p", depositp->dstp);
+      free(depositp->dstp);
+    }
+  }
+
+  MARPAESLIFRECOGNIZER_TRACE(marpaESLIFJSONDecodeContextp->marpaESLIFRecognizerp, funcs, "return");
+  MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_DEC(marpaESLIFJSONDecodeContextp->marpaESLIFRecognizerp);
 }
 
 /*****************************************************************************/
