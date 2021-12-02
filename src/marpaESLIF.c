@@ -1,4 +1,4 @@
-/* #undef MARPAESLIF_NTRACE *:
+/* #undef MARPAESLIF_NTRACE */
 
 #include <stdlib.h>
 #include <errno.h>
