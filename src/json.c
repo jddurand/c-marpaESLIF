@@ -610,6 +610,11 @@ static short _marpaESLIFJSONDecodeEventCallbackb(void *userDatavp, marpaESLIFRec
       if (! _marpaESLIFJSONDecodePropagateValueb(marpaESLIFJSONDecodeContextp, marpaESLIFJSONDecodeDeposit.dstp)) {
         goto err;
       }
+      /* Clean deposit - by definition it was fully allocated */
+      /* Take care we transfered the content of dstp - only dstp itself is to freed */
+      free(marpaESLIFJSONDecodeDeposit.dstp);
+      /* contextp contains only shallow pointers */
+      free(marpaESLIFJSONDecodeDeposit.contextp);
       break;
     case '2':
     case '3':

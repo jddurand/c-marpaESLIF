@@ -1,4 +1,4 @@
-/* #undef MARPAESLIF_NTRACE */
+#undef MARPAESLIF_NTRACE
 
 #include <stdlib.h>
 #include <errno.h>
@@ -10761,33 +10761,43 @@ static inline void _marpaESLIFRecognizer_valueResultFreev(marpaESLIFRecognizer_t
 /* Note that marpaESLIFValueResultp is always on the stack.                  */
 /*****************************************************************************/
 {
+  static const char *funcs  = "_marpaESLIFRecognizer_valueResultFreev";
+
+  MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_INC(marpaESLIFRecognizerp);
+  MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "start");
+
   switch (marpaESLIFValueResultp->type) {
   case MARPAESLIF_VALUE_TYPE_PTR:
     if ((marpaESLIFValueResultp->u.p.p != NULL) && (! marpaESLIFValueResultp->u.p.shallowb) && (marpaESLIFValueResultp->u.p.freeCallbackp != NULL)) {
+      MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Calling freeCallbackp for %p of type PTR", marpaESLIFValueResultp->u.p.p);
       marpaESLIFValueResultp->u.p.freeCallbackp(marpaESLIFValueResultp->u.p.freeUserDatavp, marpaESLIFValueResultp);
     }
     marpaESLIFValueResultp->u.p.p = NULL;
     break;
   case MARPAESLIF_VALUE_TYPE_ARRAY:
     if ((marpaESLIFValueResultp->u.a.p != NULL) && (! marpaESLIFValueResultp->u.a.shallowb) && (marpaESLIFValueResultp->u.a.freeCallbackp != NULL)) {
+      MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Calling freeCallbackp for %p of type PTR", marpaESLIFValueResultp->u.a.p);
       marpaESLIFValueResultp->u.a.freeCallbackp(marpaESLIFValueResultp->u.a.freeUserDatavp, marpaESLIFValueResultp);
     }
     marpaESLIFValueResultp->u.a.p = NULL;
     break;
   case MARPAESLIF_VALUE_TYPE_STRING:
     if ((marpaESLIFValueResultp->u.s.p != NULL) && (! marpaESLIFValueResultp->u.s.shallowb) && (marpaESLIFValueResultp->u.s.freeCallbackp != NULL)) {
+      MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Calling freeCallbackp for %p of type PTR", marpaESLIFValueResultp->u.s.p);
       marpaESLIFValueResultp->u.s.freeCallbackp(marpaESLIFValueResultp->u.s.freeUserDatavp, marpaESLIFValueResultp);
     }
     marpaESLIFValueResultp->u.s.p = NULL;
     break;
   case MARPAESLIF_VALUE_TYPE_ROW:
     if ((marpaESLIFValueResultp->u.r.p != NULL) && (! marpaESLIFValueResultp->u.r.shallowb) && (marpaESLIFValueResultp->u.r.freeCallbackp != NULL)) {
+      MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Calling freeCallbackp for %p of type PTR", marpaESLIFValueResultp->u.r.p);
       marpaESLIFValueResultp->u.r.freeCallbackp(marpaESLIFValueResultp->u.r.freeUserDatavp, marpaESLIFValueResultp);
     }
     marpaESLIFValueResultp->u.r.p = NULL;
     break;
   case MARPAESLIF_VALUE_TYPE_TABLE:
     if ((marpaESLIFValueResultp->u.t.p != NULL) && (! marpaESLIFValueResultp->u.t.shallowb) && (marpaESLIFValueResultp->u.t.freeCallbackp != NULL)) {
+      MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Calling freeCallbackp for %p of type PTR", marpaESLIFValueResultp->u.t.p);
       marpaESLIFValueResultp->u.t.freeCallbackp(marpaESLIFValueResultp->u.t.freeUserDatavp, marpaESLIFValueResultp);
     }
     marpaESLIFValueResultp->u.t.p = NULL;
@@ -10795,6 +10805,9 @@ static inline void _marpaESLIFRecognizer_valueResultFreev(marpaESLIFRecognizer_t
   default:
     break;
   }
+
+  MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "return");
+  MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_DEC(marpaESLIFRecognizerp);
 }
 
 /*****************************************************************************/
