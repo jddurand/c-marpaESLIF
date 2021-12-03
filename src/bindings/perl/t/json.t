@@ -20,8 +20,6 @@ Log::Any::Adapter->set('Log4perl');
 
 BEGIN { require_ok('MarpaX::ESLIF') };
 
-read STDIN, my $dummy, 1;
-
 my @inputs = (
     "{\"test\":\"1.25\"}",
     "{\"test\":\"1.25e4\"}",
