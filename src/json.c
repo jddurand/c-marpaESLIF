@@ -583,8 +583,8 @@ static short _marpaESLIFJSONDecodeEventCallbackb(void *userDatavp, marpaESLIFRec
     switch (eventArrayp[eventl].events[0]) {
     case '0':
       /*------------------------------------------------
-        :terminal ::= '[' pause => after event => 0_inc
-        :terminal ::= '{' pause => after event => 0_inc
+        :terminal ::= '[' pause => after event => 0_inc$
+        :terminal ::= '{' pause => after event => 0_inc$
         ------------------------------------------------*/
 
       /* Create a container and push it */
@@ -626,10 +626,8 @@ static short _marpaESLIFJSONDecodeEventCallbackb(void *userDatavp, marpaESLIFRec
       free(marpaESLIFJSONDecodeDeposit.contextp);
       break;
     case '2':
-    case '3':
       /*-----------------------------------------------
-        :lexeme ::= CHAR       pause => after event => 2_CHAR
-        :lexeme ::= CNTRL_CHAR pause => after event => 3_CNTRL_CHAR
+        :lexeme ::= CHAR pause => after event => 2_CHAR$
 
         Note that by definition currentValue has been initialized in 5_DQUOTE_START
         -----------------------------------------------*/
@@ -642,9 +640,9 @@ static short _marpaESLIFJSONDecodeEventCallbackb(void *userDatavp, marpaESLIFRec
         goto err;
       }
       break;
-    case '4':
+    case '3':
       /* ---------------------------------------------------------
-         :lexeme   ::= CONSTANT_OR_NUMBER pause => after event => 4_CONSTANT_OR_NUMBER
+         :lexeme ::= CONSTANT_OR_NUMBER pause => after event => 4_CONSTANT_OR_NUMBER$
          ---------------------------------------------------------*/
 
       /* Get paused value, set it and propagate it */
@@ -676,9 +674,9 @@ static short _marpaESLIFJSONDecodeEventCallbackb(void *userDatavp, marpaESLIFRec
         goto err;
       }
       break;
-    case '5':
+    case '4':
       /* ------------------------------------------------------------------
-         :terminal ::= '\"' pause => after event => 5_DQUOTE
+         :terminal ::= '\"' pause => after event => 5_DQUOTE$
          ------------------------------------------------------------------*/
       if (marpaESLIFJSONDecodeContextp->currentValue.type == MARPAESLIF_VALUE_TYPE_UNDEF) {
         /* This is the beginning of a string */
@@ -1128,7 +1126,6 @@ static inline short _marpaESLIFJSONDecodeExtendStringContainerb(marpaESLIFJSONDe
 /*****************************************************************************/
 static inline short _marpaESLIFJSONDecodeAppendCharb(marpaESLIFJSONDecodeContext_t *marpaESLIFJSONDecodeContextp, char *inputs, size_t inputl)
 /*****************************************************************************/
-/* /(?:[^"\\\x00-\x1F]+)|(?:\\["\\\/bfnrt])|(?:(?:\\u[[:xdigit:]]{4})+)/     */
 /* Cases are:                                                                */
 /* - First character is     '\': this is an escaped character                */
 /* - First character is not '\': the whole match is ASCII chars              */
