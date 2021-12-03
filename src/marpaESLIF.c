@@ -831,6 +831,7 @@ static inline short                  _marpaESLIFValue_stack_newb(marpaESLIFValue
 static inline short                  _marpaESLIFValue_stack_freeb(marpaESLIFValue_t *marpaESLIFValuep);
 static inline marpaESLIFValueResult_t *_marpaESLIFRecognizer_context_getp(marpaESLIFRecognizer_t *marpaESLIFRecognizerp);
 static inline short                  _marpaESLIFValue_stack_setb(marpaESLIFValue_t *marpaESLIFValuep, int indicei, marpaESLIFValueResult_t *marpaESLIFValueResultp);
+static inline short                  _marpaESLIFValue_stack_set_fastb(marpaESLIFValue_t *marpaESLIFValuep, int resulti, int arg0i, int argni, short nullableb, marpaESLIF_internal_rule_action_t actione, marpaESLIFValueResult_t *marpaESLIFValueResultp);
 static inline short                  _marpaESLIFValue_stack_getb(marpaESLIFValue_t *marpaESLIFValuep, int indicei, marpaESLIFValueResult_t *marpaESLIFValueResultp);
 static inline short                  _marpaESLIFValue_stack_getAndForgetb(marpaESLIFValue_t *marpaESLIFValuep, int indicei, marpaESLIFValueResult_t *marpaESLIFValueResultp);
 static inline short                  _marpaESLIFValue_marpaESLIFValueResult_freeb(marpaESLIFValue_t *marpaESLIFValuep, marpaESLIFValueResult_t *marpaESLIFValueResultp, short deepb);
@@ -15511,6 +15512,66 @@ static inline short _marpaESLIFValue_stack_setb(marpaESLIFValue_t *marpaESLIFVal
 }
 
 /*****************************************************************************/
+static inline short _marpaESLIFValue_stack_set_fastb(marpaESLIFValue_t *marpaESLIFValuep, int resulti, int arg0i, int argni, short nullableb, marpaESLIF_internal_rule_action_t actione, marpaESLIFValueResult_t *marpaESLIFValueResultp)
+/*****************************************************************************/
+/* This method exist when ESLIF is executing a built-in action, then:        */
+/* - It knows what was done                                                  */
+/* - It knows the stack resulti                                              */
+/* - It knows the stack arg0..argni                                          */
+/* In other words: ESLIF is able to predict if a management of pointers      */
+/* is needed.                                                                */
+/*****************************************************************************/
+{
+  static const char       *funcs                 = "_marpaESLIFValue_stack_set_fastb";
+  marpaESLIFRecognizer_t  *marpaESLIFRecognizerp = marpaESLIFValuep->marpaESLIFRecognizerp;
+  short                    forgetb;
+  short                    rcb;
+
+  MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_INC(marpaESLIFRecognizerp);
+  MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "start resulti=%d", resulti);
+
+  if (nullableb) {
+    /* There is nothing popped on the right side of the rule - we do not know */
+    /* if forgetting is safe or not.                                          */
+    forgetb = 0;
+  } else {
+    switch (actione) {
+    case MARPAESLIF_INTERNAL_RULE_ACTION_INTERNAL_HAND_MADE: /* Internal hand-made method on which the logic arg0i <= resulti <= argni applies */
+    case MARPAESLIF_INTERNAL_RULE_ACTION___ROW:   /* [Perl representation follows:] resulti = [ arg0i etc... argni ] */
+    case MARPAESLIF_INTERNAL_RULE_ACTION___TABLE: /* [Perl representation follows:] resulti = { arg0i => arg1i, arg2i => arg3i, etc..., arg(n-1)i => argni } */
+      /* If arg0i <= resulti <= argni then by definition there  */
+      /* is no need to check for pointers to clean              */
+      forgetb = ((arg0i <= resulti) && (resulti <= argni)) ? 1 : 0;
+      break;
+    default:
+      forgetb = 0;
+      break;
+    }
+  }
+
+  /* Note that by definition we NEVER validate the input: we generated it - we know what we were doing */
+  if (MARPAESLIF_UNLIKELY(! _marpaESLIFRecognizer_internalStack_i_setb(marpaESLIFValuep->marpaESLIFRecognizerp,
+								       marpaESLIFValuep->valueResultStackp,
+								       resulti,
+								       marpaESLIFValueResultp,
+								       forgetb,
+								       NULL /* marpaESLIFValueResultOrigp */))) {
+    goto err;
+  }
+
+  MARPAESLIF_TRACEF(marpaESLIFValuep->marpaESLIFp, funcs, "Action %s success, valueResultStackp[%d] is of type %s", marpaESLIFValuep->actions, resulti, _marpaESLIF_value_types(marpaESLIFValueResultp->type));
+  rcb = 1;
+  goto done;
+
+ err:
+    rcb = 0;
+ done:
+    MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "return %d", (int) rcb);
+    MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_DEC(marpaESLIFRecognizerp);
+    return rcb;
+}
+
+/*****************************************************************************/
 static inline short _marpaESLIFValue_stack_getb(marpaESLIFValue_t *marpaESLIFValuep, int indicei, marpaESLIFValueResult_t *marpaESLIFValueResultp)
 /*****************************************************************************/
 {
@@ -17592,7 +17653,7 @@ static short _marpaESLIF_rule_action___rowb(void *userDatavp, marpaESLIFValue_t 
   }
 
   /* If this fails, we will leak at most */
-  if (MARPAESLIF_UNLIKELY(! _marpaESLIFValue_stack_setb(marpaESLIFValuep, resulti, &marpaESLIFValueResult))) {
+  if (MARPAESLIF_UNLIKELY(! _marpaESLIFValue_stack_set_fastb(marpaESLIFValuep, resulti, arg0i, argni, nullableb, MARPAESLIF_INTERNAL_RULE_ACTION___ROW, &marpaESLIFValueResult))) {
     goto err;
   }
 
@@ -17676,7 +17737,7 @@ static short _marpaESLIF_rule_action___tableb(void *userDatavp, marpaESLIFValue_
   }
 
   /* If this fails, we will leak at most */
-  if (MARPAESLIF_UNLIKELY(! _marpaESLIFValue_stack_setb(marpaESLIFValuep, resulti, &marpaESLIFValueResult))) {
+  if (MARPAESLIF_UNLIKELY(! _marpaESLIFValue_stack_set_fastb(marpaESLIFValuep, resulti, arg0i, argni, nullableb, MARPAESLIF_INTERNAL_RULE_ACTION___TABLE, &marpaESLIFValueResult))) {
     goto err;
   }
 

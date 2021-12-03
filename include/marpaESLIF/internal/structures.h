@@ -61,6 +61,7 @@ typedef enum marpaESLIF_internal_event_action {
 
 /* Internal rule action types for faster lookup */
 typedef enum marpaESLIF_internal_rule_action {
+  MARPAESLIF_INTERNAL_RULE_ACTION_INTERNAL_HAND_MADE = -1,
   MARPAESLIF_INTERNAL_RULE_ACTION_NA = 0,
   MARPAESLIF_INTERNAL_RULE_ACTION___SHIFT,
   MARPAESLIF_INTERNAL_RULE_ACTION___UNDEF,

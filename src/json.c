@@ -82,7 +82,7 @@ static const char *marpaESLIFJSON_decode_extended_grammars =
   "           | object\n"
   "           | array\n"
   "           | constant\n"
-  "constant ::= /true|false|null/                                                                 action         => 0_constant\n"
+  "constant ::= /true|false|null/i                                                                action         => 0_constant\n"
   "\n"
   "# -----------\n"
   "# JSON object\n"
@@ -823,7 +823,7 @@ static short _marpaESLIFJSON_membersb(void *userDatavp, marpaESLIFValue_t *marpa
     }
   }
 
-  if (MARPAESLIF_UNLIKELY(! _marpaESLIFValue_stack_setb(marpaESLIFValuep, resulti, &marpaESLIFValueResult))) {
+  if (MARPAESLIF_UNLIKELY(! _marpaESLIFValue_stack_set_fastb(marpaESLIFValuep, resulti, arg0i, argni, nullableb, MARPAESLIF_INTERNAL_RULE_ACTION_INTERNAL_HAND_MADE, &marpaESLIFValueResult))) {
     goto err;
   }
 
@@ -1267,10 +1267,13 @@ static short _marpaESLIFJSON_constantb(void *userDatavp, marpaESLIFValue_t *marp
 
     switch (marpaESLIFValueResultp->u.a.p[0]) {
     case 't':
+    case 'T':
       return _marpaESLIFValue_stack_setb(marpaESLIFValuep, resulti, &(marpaESLIFValuep->marpaESLIFp->marpaESLIFValueResultTrue));
     case 'f':
+    case 'F':
       return _marpaESLIFValue_stack_setb(marpaESLIFValuep, resulti, &(marpaESLIFValuep->marpaESLIFp->marpaESLIFValueResultFalse));
     case 'n':
+    case 'N':
       return _marpaESLIFValue_stack_setb(marpaESLIFValuep, resulti, (marpaESLIFValueResult_t *) &marpaESLIFValueResultUndef);
     default:
       MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "Invalid first character '%c'", marpaESLIFValueResultp->u.a.p[0]);
