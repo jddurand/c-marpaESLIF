@@ -21,10 +21,6 @@ Log::Any::Adapter->set('Log4perl');
 BEGIN { require_ok('MarpaX::ESLIF') };
 
 my @inputs = (
-    "{\"test\":\"1.25\"}",
-    "{\"test\":\"1.25e4\"}",
-    "{\"test\":1.25}",
-    "{\"test\":1.25e4}",
     "[]",
     "[
        { 
