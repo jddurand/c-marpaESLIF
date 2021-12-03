@@ -2053,6 +2053,20 @@ For other numbers, C<confidenceb> is a true value C<marpaESLIFValueResultp> type
 
 In general it is safe to leave untouched the C<marpaESLIFValueResultp> if C<confidenceb> is a true value, else it is recommended to change it.
 
+Take care of the context in the callbacks:
+
+=over
+
+=item Decoder option callbacks
+
+They are called in the context of a recognizer. So they are using C<marpaESLIFJSONDecodeOptionp->userDatavp> in their context.
+
+=item Import callback
+
+It is called in the context of a valuator. So they are using C<marpaESLIFValueOptionp->userDatavp> in their context.
+
+=back
+
 =over
 
 =item FLOAT
