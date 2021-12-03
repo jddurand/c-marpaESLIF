@@ -32,7 +32,7 @@ struct marpaESLIFJSONDecodeContext {
   size_t                             numberallocl; /* Used when we analyse a number */
   size_t                             stringallocl; /* Used when we iterate within DQUOTE_START ... DQUOTE_END */
   size_t                             uint32allocl; /* Used when we iterate within DQUOTE_START ... DQUOTE_END and compute series of \\uXXXX */
-  marpaESLIFValueResult_t            currentValue; /* Will also become the final value */
+  marpaESLIFValueResult_t            currentValue; /* Temporary work area - UNDEF at beginning, always reset to UNDEF when commited */
   char                              _numbers[MARPAESLIFJSON_ARRAYL_IN_STRUCTURE + 1]; /* To avoid allocation for the vast majority of cases in my opinion -; */
   marpaESLIF_uint32_t               _uint32p[MARPAESLIFJSON_ARRAYL_IN_STRUCTURE + 1]; /* Ditto */
 };
@@ -472,9 +472,10 @@ short marpaESLIFJSON_decodeb(marpaESLIFGrammar_t *marpaESLIFGrammarJSONp, marpaE
   if (marpaESLIFJSONDecodeContext.uint32p != NULL) {
     free(marpaESLIFJSONDecodeContext.uint32p);
   }
-  if (marpaESLIFJSONDecodeContext.numbers != NULL) {
-    free(marpaESLIFJSONDecodeContext.numbers);
-  }
+  if (marpaESLIFJSONDecodeContext.currentValue.type != MARPAESLIF_VALUE_TYPE_UNDEF) {
+      MARPAESLIFRECOGNIZER_TRACE(marpaESLIFJSONDecodeContext.marpaESLIFRecognizerp, funcs, "Freeing currentValue content");
+      _marpaESLIFRecognizer_marpaESLIFValueResult_freeb(marpaESLIFJSONDecodeContext.marpaESLIFRecognizerp, &(marpaESLIFJSONDecodeContext.currentValue), 1 /* deepb */);
+    }
   /* Note that current value is automatically freed when scanning the deposit stack */
 
   if (marpaESLIFJSONDecodeContext.marpaESLIFRecognizerp != NULL) {
@@ -1443,7 +1444,6 @@ static inline short _marpaESLIFJSONDecodeDepositStackPushb(marpaESLIFJSONDecodeC
   MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFJSONDecodeContextp->marpaESLIFRecognizerp, funcs, "Pushing depositStackp[%d]->contextp->keyb    = %d", GENERICSTACK_USED(marpaESLIFJSONDecodeContextp->depositStackp), (int) marpaESLIFJSONDecodeDepositp->contextp->keyb);
   MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFJSONDecodeContextp->marpaESLIFRecognizerp, funcs, "Pushing depositStackp[%d]->contextp->alllocl = %ld", GENERICSTACK_USED(marpaESLIFJSONDecodeContextp->depositStackp), (unsigned long) marpaESLIFJSONDecodeDepositp->contextp->allocl);
   MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFJSONDecodeContextp->marpaESLIFRecognizerp, funcs, "Pushing depositStackp[%d]->actionp           = %p", GENERICSTACK_USED(marpaESLIFJSONDecodeContextp->depositStackp), marpaESLIFJSONDecodeDepositp->actionp);
-  MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFJSONDecodeContextp->marpaESLIFRecognizerp, funcs, "Pushing depositStackp[%d]->contextp          = %p", GENERICSTACK_USED(marpaESLIFJSONDecodeContextp->depositStackp), marpaESLIFJSONDecodeDepositp->contextp);
 
   GENERICSTACK_PUSH_CUSTOM(marpaESLIFJSONDecodeContextp->depositStackp, marpaESLIFValueResult);
   if (GENERICSTACK_ERROR(marpaESLIFJSONDecodeContextp->depositStackp)) {
