@@ -313,6 +313,7 @@ short marpaESLIFJSON_decodeb(marpaESLIFGrammar_t *marpaESLIFGrammarJSONp, marpaE
   short                                         isExhaustedb;
   short                                         isEofb;
   size_t                                        inputl;
+  marpaESLIFValueResult_t                      *finalValuep; /* Shallow pointer - c.f. dispose of memory at the end */
   short                                         rcb;
 
   /* Whatever happens, we take entire control on the callbacks so that we have our own context on top of it */
@@ -369,14 +370,14 @@ short marpaESLIFJSON_decodeb(marpaESLIFGrammar_t *marpaESLIFGrammarJSONp, marpaE
   marpaESLIFJSONDecodeDepositCallbackContext.keyb                          = 1;
   marpaESLIFJSONDecodeDepositCallbackContext.allocl                        = 0;
 
-  marpaESLIFJSONDecodeDeposit.dstp             = (marpaESLIFValueResult_t *) malloc(sizeof(marpaESLIFValueResult_t));
+  finalValuep = marpaESLIFJSONDecodeDeposit.dstp = (marpaESLIFValueResult_t *) malloc(sizeof(marpaESLIFValueResult_t));
   if (MARPAESLIF_UNLIKELY(marpaESLIFJSONDecodeDeposit.dstp == NULL)) {
     MARPAESLIF_ERRORF(marpaESLIFGrammarJSONp->marpaESLIFp, "malloc failure, %s", strerror(errno));
     goto err;
   }
   *(marpaESLIFJSONDecodeDeposit.dstp) = marpaESLIFValueResultUndef;
 
-  marpaESLIFJSONDecodeDeposit.contextp         = (marpaESLIFJSONDecodeDepositCallbackContext_t *) malloc(sizeof(marpaESLIFJSONDecodeDepositCallbackContext_t));
+  marpaESLIFJSONDecodeDeposit.contextp = (marpaESLIFJSONDecodeDepositCallbackContext_t *) malloc(sizeof(marpaESLIFJSONDecodeDepositCallbackContext_t));
   if (MARPAESLIF_UNLIKELY(marpaESLIFJSONDecodeDeposit.contextp == NULL)) {
     MARPAESLIF_ERRORF(marpaESLIFGrammarJSONp->marpaESLIFp, "malloc failure, %s", strerror(errno));
     free(marpaESLIFJSONDecodeDeposit.dstp);
@@ -439,8 +440,14 @@ short marpaESLIFJSON_decodeb(marpaESLIFGrammar_t *marpaESLIFGrammarJSONp, marpaE
   /* Set-up proxy representation */
   marpaESLIFValuep->proxyRepresentationp = _marpaESLIFJSONDecodeRepresentationb;
 
+  /* Here it is a non-sense to not have only one entry in the deposit stack */
+  if (MARPAESLIF_UNLIKELY(GENERICSTACK_USED(marpaESLIFJSONDecodeContext.depositStackp) != 1)) {
+    MARPAESLIF_ERRORF(marpaESLIFJSONDecodeContext.marpaESLIFp, "Deposit stack has %d items", GENERICSTACK_USED(marpaESLIFJSONDecodeContext.depositStackp));
+    goto err;
+  }
+
   /* Call for import (no-op if end-user has set no importer */
-  if (MARPAESLIF_UNLIKELY(! _marpaESLIFValue_importb(marpaESLIFValuep, &marpaESLIFJSONDecodeContext.currentValue))) {
+  if (MARPAESLIF_UNLIKELY(! _marpaESLIFValue_importb(marpaESLIFValuep, finalValuep))) {
     goto err;
   }
 
@@ -476,7 +483,7 @@ short marpaESLIFJSON_decodeb(marpaESLIFGrammar_t *marpaESLIFGrammarJSONp, marpaE
       MARPAESLIFRECOGNIZER_TRACE(marpaESLIFJSONDecodeContext.marpaESLIFRecognizerp, funcs, "Freeing currentValue content");
       _marpaESLIFRecognizer_marpaESLIFValueResult_freeb(marpaESLIFJSONDecodeContext.marpaESLIFRecognizerp, &(marpaESLIFJSONDecodeContext.currentValue), 1 /* deepb */);
     }
-  /* Note that current value is automatically freed when scanning the deposit stack */
+  /* Note that finalValuep is automatically freed when scanning the deposit stack */
 
   if (marpaESLIFJSONDecodeContext.marpaESLIFRecognizerp != NULL) {
     MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFJSONDecodeContext.marpaESLIFRecognizerp, funcs, "return %d", (int) rcb);
