@@ -28,7 +28,7 @@ static const char *marpaESLIFJSON_decode_extended_grammars =
   ":terminal          ::= '}'                pause => after  event => 1_dec$\n"
   ":lexeme            ::= CHAR               pause => after  event => 2_CHAR$\n"
   ":lexeme            ::= CONSTANT_OR_NUMBER pause => after  event => 3_CONSTANT_OR_NUMBER$\n"
-  ":terminal          ::= '\"'               pause => after  event => 4_DQUOTE$\n"
+  ":terminal          ::= '\"'               pause => after  event => 4_dquote$\n"
   "\n"
   "# ----------\n"
   "# JSON value\n"

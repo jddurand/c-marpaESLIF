@@ -30,8 +30,8 @@ struct marpaESLIFJSONDecodeContext {
   genericStack_t                   *depositStackp;
   size_t                             currentDepthl;
   size_t                             numberallocl; /* Used when we analyse a number */
-  size_t                             stringallocl; /* Used when we iterate within DQUOTE_START ... DQUOTE_END */
-  size_t                             uint32allocl; /* Used when we iterate within DQUOTE_START ... DQUOTE_END and compute series of \\uXXXX */
+  size_t                             stringallocl; /* Used when we iterate within string */
+  size_t                             uint32allocl; /* Used when we iterate within string and compute series of \\uXXXX */
   marpaESLIFValueResult_t            currentValue; /* Temporary work area - UNDEF at beginning, always reset to UNDEF when commited */
   char                              _numbers[MARPAESLIFJSON_ARRAYL_IN_STRUCTURE + 1]; /* To avoid allocation for the vast majority of cases in my opinion -; */
   marpaESLIF_uint32_t               _uint32p[MARPAESLIFJSON_ARRAYL_IN_STRUCTURE + 1]; /* Ditto */
@@ -642,7 +642,7 @@ static short _marpaESLIFJSONDecodeEventCallbackb(void *userDatavp, marpaESLIFRec
       /*-----------------------------------------------
         :lexeme ::= CHAR pause => after event => 2_CHAR$
 
-        Note that by definition currentValue has been initialized in 5_DQUOTE_START
+        Note that by definition currentValue has been initialized in 5_dquote$
         -----------------------------------------------*/
 
       /* Get paused value and append */
@@ -689,7 +689,7 @@ static short _marpaESLIFJSONDecodeEventCallbackb(void *userDatavp, marpaESLIFRec
       break;
     case '4':
       /* ------------------------------------------------------------------
-         :terminal ::= '\"' pause => after event => 5_DQUOTE$
+         :terminal ::= '\"' pause => after event => 5_dquote$
          ------------------------------------------------------------------*/
       if (marpaESLIFJSONDecodeContextp->currentValue.type == MARPAESLIF_VALUE_TYPE_UNDEF) {
         /* This is the beginning of a string */
