@@ -644,15 +644,33 @@ static short _marpaESLIFJSONDecodeEventCallbackb(void *userDatavp, marpaESLIFRec
       break;
     case '4':
       /* ---------------------------------------------------------
-         :lexeme   ::= CONSTANT pause => after event => 4_CONSTANT
+         :lexeme   ::= CONSTANT_OR_NUMBER pause => after event => 4_CONSTANT_OR_NUMBER
          ---------------------------------------------------------*/
 
       /* Get paused value, set it and propagate it */
-      if (! _marpaESLIFRecognizer_lexeme_last_pauseb(marpaESLIFJSONDecodeContextp->marpaESLIFRecognizerp, "CONSTANT", &pauses, &pausel)) {
+      if (! _marpaESLIFRecognizer_lexeme_last_pauseb(marpaESLIFJSONDecodeContextp->marpaESLIFRecognizerp, "CONSTANT_OR_NUMBER", &pauses, &pausel)) {
         goto err;
       }
-      if (! _marpaESLIFJSONDecodeSetConstantb(marpaESLIFJSONDecodeContextp, pauses, pausel)) {
-        goto err;
+
+      /* We switch to a true constant or to a number using the first character */
+      switch (pauses[0]) {
+        /* Constant */
+      case 't':
+      case 'T':
+      case 'f':
+      case 'F':
+      case 'n':
+      case 'N':
+        if (! _marpaESLIFJSONDecodeSetConstantb(marpaESLIFJSONDecodeContextp, pauses, pausel)) {
+          goto err;
+        }
+        break;
+      default:
+        /* Number */
+        if (! _marpaESLIFJSONDecodeSetNumberb(marpaESLIFJSONDecodeContextp, pauses, pausel)) {
+          goto err;
+        }
+        break;
       }
       if (! _marpaESLIFJSONDecodePropagateValueb(marpaESLIFJSONDecodeContextp, &(marpaESLIFJSONDecodeContextp->currentValue))) {
         goto err;
@@ -687,22 +705,9 @@ static short _marpaESLIFJSONDecodeEventCallbackb(void *userDatavp, marpaESLIFRec
         }
       }
       break;
-    case '6':
-      /* ------------------------------------------------------------------
-         :lexeme   ::= NUMBER pause => before event => 6_NUMBER
-         ------------------------------------------------------------------*/
-
-      /* Get paused value, set it and propagate it */
-      if (! _marpaESLIFRecognizer_lexeme_last_pauseb(marpaESLIFJSONDecodeContextp->marpaESLIFRecognizerp, "NUMBER", &pauses, &pausel)) {
-        goto err;
-      }
-      if (! _marpaESLIFJSONDecodeSetNumberb(marpaESLIFJSONDecodeContextp, pauses, pausel)) {
-        goto err;
-      }
-      if (! _marpaESLIFJSONDecodePropagateValueb(marpaESLIFJSONDecodeContextp, &(marpaESLIFJSONDecodeContextp->currentValue))) {
-        goto err;
-      }
-      break;
+    default:
+      MARPAESLIF_ERRORF(marpaESLIFJSONDecodeContextp->marpaESLIFp, "Unsupported event %s", eventArrayp[eventl].events);
+      goto err;
     }
   }
 
