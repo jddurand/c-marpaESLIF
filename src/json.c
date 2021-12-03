@@ -660,36 +660,36 @@ static short _marpaESLIFJSONDecodeEventCallbackb(void *userDatavp, marpaESLIFRec
       break;
     case '5':
       /* ------------------------------------------------------------------
-         :lexeme   ::= DQUOTE_START pause => before event => 5_DQUOTE_START
+         :terminal ::= '\"' pause => after event => 5_DQUOTE
          ------------------------------------------------------------------*/
+      if (marpaESLIFJSONDecodeContextp->currentValue.type == MARPAESLIF_VALUE_TYPE_UNDEF) {
+        /* This is the beginning of a string */
 
-      /* Switch :discard to off and initialize string */
-      if (! _marpaESLIFRecognizer_hook_discardb(marpaESLIFJSONDecodeContextp->marpaESLIFRecognizerp, 0 /* discardOnOffb */)) {
-        goto err;
-      }
-      marpaESLIFJSONDecodeContextp->stringallocl = 0;
-      if (! _marpaESLIFJSONDecodeAppendCharb(marpaESLIFJSONDecodeContextp, NULL, 0)) {
-        goto err;
+        /* Switch :discard to off and initialize string */
+        if (! _marpaESLIFRecognizer_hook_discardb(marpaESLIFJSONDecodeContextp->marpaESLIFRecognizerp, 0 /* discardOnOffb */)) {
+          goto err;
+        }
+        marpaESLIFJSONDecodeContextp->stringallocl = 0;
+        if (! _marpaESLIFJSONDecodeAppendCharb(marpaESLIFJSONDecodeContextp, NULL, 0)) {
+          goto err;
+        }
+      } else {
+        /* This is the end of a string */
+
+        /* Switch :discard to on and propagage the value */
+        if (! _marpaESLIFRecognizer_hook_discardb(marpaESLIFJSONDecodeContextp->marpaESLIFRecognizerp, 1 /* discardOnOffb */)) {
+          goto err;
+        }
+        /* Our procedure made sure there is always a room for a hiden NUL byte */
+        marpaESLIFJSONDecodeContextp->currentValue.u.s.p[marpaESLIFJSONDecodeContextp->currentValue.u.s.sizel] = '\0';
+        if (! _marpaESLIFJSONDecodePropagateValueb(marpaESLIFJSONDecodeContextp, &(marpaESLIFJSONDecodeContextp->currentValue))) {
+          goto err;
+        }
       }
       break;
     case '6':
       /* ------------------------------------------------------------------
-         :lexeme   ::= DQUOTE_END pause => before event => 6_DQUOTE_END
-         ------------------------------------------------------------------*/
-
-      /* Switch :discard to on and propagage the value */
-      if (! _marpaESLIFRecognizer_hook_discardb(marpaESLIFJSONDecodeContextp->marpaESLIFRecognizerp, 1 /* discardOnOffb */)) {
-        goto err;
-      }
-      /* Our procedure made sure there is always a room for a hiden NUL byte */
-      marpaESLIFJSONDecodeContextp->currentValue.u.s.p[marpaESLIFJSONDecodeContextp->currentValue.u.s.sizel] = '\0';
-      if (! _marpaESLIFJSONDecodePropagateValueb(marpaESLIFJSONDecodeContextp, &(marpaESLIFJSONDecodeContextp->currentValue))) {
-        goto err;
-      }
-      break;
-    case '7':
-      /* ------------------------------------------------------------------
-         :lexeme   ::= NUMBER pause => before event => 7_NUMBER
+         :lexeme   ::= NUMBER pause => before event => 6_NUMBER
          ------------------------------------------------------------------*/
 
       /* Get paused value, set it and propagate it */
