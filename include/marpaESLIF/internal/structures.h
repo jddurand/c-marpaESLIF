@@ -39,7 +39,7 @@ typedef enum    marpaESLIF_matcher_value    marpaESLIF_matcher_value_t;
 typedef enum    marpaESLIF_event_type       marpaESLIF_event_type_t;
 typedef struct  marpaESLIF_readerContext    marpaESLIF_readerContext_t;
 typedef struct  marpaESLIF_cloneContext     marpaESLIF_cloneContext_t;
-typedef struct  marpaESLIF_lexeme_data      marpaESLIF_lexeme_data_t;
+typedef struct  marpaESLIF_symbol_data      marpaESLIF_symbol_data_t;
 typedef struct  marpaESLIF_alternative      marpaESLIF_alternative_t;
 typedef         marpaESLIFAction_t          marpaESLIF_action_t;
 typedef         marpaESLIFActionType_t      marpaESLIF_action_type_t;
@@ -516,13 +516,13 @@ struct marpaESLIFRecognizer {
   genericStack_t              *commitedAlternativeStackSymbolp;  /* Pointer to commited alternative stack */
   genericStack_t               _set2InputStack;                  /* Mapping latest Earley Set to absolute input offset and length */
   genericStack_t              *set2InputStackp;                  /* Pointer to mapping latest Earley Set to absolute input offset and length */
-  char                       **lexemesArrayp;      /* Persistent buffer of last call to marpaESLIFRecognizer_lexeme_expectedb */
-  size_t                       lexemesArrayAllocl; /* Current allocated size -; */
+  char                       **namesArrayp;         /* Persistent buffer of last call to marpaESLIFRecognizer_name_expectedb */
+  size_t                       namesArrayAllocl;    /* Current allocated size -; */
   short                       *discardEventStatebp; /* Discard current event states for the CURRENT grammar (marpaESLIFRecognizerp->marpaESLIFGrammarp->grammarp) */
   short                       *beforeEventStatebp;  /* Lexeme before current event states for the CURRENT grammar */
   short                       *afterEventStatebp;   /* Lexeme after current event states for the CURRENT grammar */
-  marpaESLIF_lexeme_data_t   **lastPausepp;         /* Lexeme last pause for the CURRENT grammar */
-  marpaESLIF_lexeme_data_t   **lastTrypp;           /* Lexeme or :discard last try for the CURRENT grammar */
+  marpaESLIF_symbol_data_t   **lastPausepp;         /* Lexeme last pause for the CURRENT grammar */
+  marpaESLIF_symbol_data_t   **lastTrypp;           /* Lexeme or :discard last try for the CURRENT grammar */
   short                        discardOnOffb;       /* Discard is on or off ? */
   short                        pristineb;           /* 1: pristine, i.e. can be reused, 0: have at least one thing that happened at the raw grammar level, modulo the eventual initial events */
   genericHash_t                _marpaESLIFRecognizerHash; /* Cache of recognizers ready for re-use - shared with all children (lexeme mode) */
@@ -594,7 +594,7 @@ struct marpaESLIFRecognizer {
   marpaESLIFAction_t             *popContextActionp;  /* Getting the context is a common function that is stored at recognizer level */
 };
 
-struct marpaESLIF_lexeme_data {
+struct marpaESLIF_symbol_data {
   char   *bytes;        /* Data */
   size_t  bytel;        /* Length */
   size_t  byteSizel;    /* Allocated size */

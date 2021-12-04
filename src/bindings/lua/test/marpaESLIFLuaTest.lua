@@ -538,8 +538,8 @@ showRecognizerInput = function(context, eslifRecognizer)
    logger:debugf("[%s] Recognizer buffer:\n%s", context, input)
 end
 
-showLexemeExpected = function(context, eslifRecognizer)
-   logger:debugf("[%s] Expected lexemes: %s", context, tableDump(eslifRecognizer:lexemeExpected()))
+showNameExpected = function(context, eslifRecognizer)
+   logger:debugf("[%s] Expected lexemes: %s", context, tableDump(eslifRecognizer:nameExpected()))
 end
 
 showLocation = function(context, eslifRecognizer)
@@ -575,7 +575,7 @@ doScan = function(eslifRecognizer, initialEvents)
     local context = "after scan"
     showRecognizerInput(context, eslifRecognizer)
     showEvents(context, eslifRecognizer)
-    showLexemeExpected(context, eslifRecognizer)
+    showNameExpected(context, eslifRecognizer)
 		
     return true
 end
@@ -591,12 +591,12 @@ doResume = function(eslifRecognizer, deltaLength)
    context = "after resume"
    showRecognizerInput(context, eslifRecognizer)
    showEvents(context, eslifRecognizer)
-   showLexemeExpected(context, eslifRecognizer)
+   showNameExpected(context, eslifRecognizer)
 		
    return true
 end
 
-doLexemeRead = function(eslifRecognizer, symbol, value, pause)
+doAlternativeRead = function(eslifRecognizer, symbol, value, pause)
    --
    -- "pause" is a "lua string", i.e. nothing else but a sequence of bytes
    -- returned by marpaESLIF, guaranteed to be in UTF-8 encoding
@@ -606,14 +606,14 @@ doLexemeRead = function(eslifRecognizer, symbol, value, pause)
    local length = #pause
    local context
    logger:debugf("... Forcing Integer %s spanned on %d bytes instead of \"%s\"", tostring(value), length, tostring(pause))
-   if (not eslifRecognizer:lexemeRead(symbol, value, length, 1)) then
+   if (not eslifRecognizer:alternativeRead(symbol, value, length, 1)) then
       return false
    end
 
-   context = "after lexemeRead"
+   context = "after alternativeRead"
    showRecognizerInput(context, eslifRecognizer)
    showEvents(context, eslifRecognizer)
-   showLexemeExpected(context, eslifRecognizer)
+   showNameExpected(context, eslifRecognizer)
 
    return true
 end
@@ -650,15 +650,15 @@ doDiscardTry = function(eslifRecognizer)
    }
 end
 
-doLexemeTry = function(eslifRecognizer, symbol)
+doTry = function(eslifRecognizer, symbol)
 
    local test
    try {
       function()
-         test = eslifRecognizer:lexemeTry(symbol)
+         test = eslifRecognizer:try(symbol)
          logger:debugf("... Testing %s lexeme at current position returns %s", symbol, tostring(test))
          if (test) then
-            local lastTry = eslifRecognizer:lexemeLastTry()
+            local lastTry = eslifRecognizer:lastTry()
             logger:debugf("... Testing symbol %s at current position gave \"%s\"", symbol, lastTry)
          end
       end,
@@ -756,16 +756,16 @@ for _, localstring in pairs(strings) do
                --
                -- Recognizer will wait forever if we do not feed the number
                --
-               local pause = eslifRecognizer:lexemeLastPause("NUMBER")
+               local pause = eslifRecognizer:nameLastPause("NUMBER")
                if (pause == nil) then
                   error("Pause before on NUMBER but no pause information!")
                end
-               if (not doLexemeRead(eslifRecognizer, "NUMBER", j, pause)) then
+               if (not doAlternativeRead(eslifRecognizer, "NUMBER", j, pause)) then
                   error("NUMBER expected but reading such lexeme fails!")
                end
                doDiscardTry(eslifRecognizer)
-               doLexemeTry(eslifRecognizer, "WHITESPACES")
-               doLexemeTry(eslifRecognizer, "whitespaces")
+               doTry(eslifRecognizer, "WHITESPACES")
+               doTry(eslifRecognizer, "whitespaces")
             end
          end
          if (j == 0) then
@@ -917,7 +917,7 @@ rhs1 ::= . => parameterizedRhs->(1, nil, 'Input should be "1"')
        | . => parameterizedRhs->(3, nil, 'Input should be "3"')
        | . => parameterizedRhs->(4, nil, 'Input should be "4"')
        | . => ::luac->function(x,y,z) return x^y end ->(10,11,12)
-       | . => ::lua->lua_action->(10,12)
+       | . => ::lua->lua_action->(10,12) /* Voluntarily undefined */
 rhs2 ::= . => parameterizedRhs->(1, 'Input should be "1"')
        | . => parameterizedRhs->(2, 'Input should be "2"')
        | . => parameterizedRhs->(3, 'Input should be "3"')

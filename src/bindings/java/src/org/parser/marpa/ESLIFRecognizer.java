@@ -49,14 +49,14 @@ public class ESLIFRecognizer {
 	private native void              jniEventOnOff(String symbol, ESLIFEventType[] eventTypes, boolean onOff) throws ESLIFException;
 	private native void              jniHookDiscard(boolean onOff) throws ESLIFException;
 	private native void              jniHookDiscardSwitch() throws ESLIFException;
-	private native boolean       	 jniLexemeAlternative(String name, Object object, int grammarLength) throws ESLIFException;
-	private native boolean			 jniLexemeComplete(int length) throws ESLIFException;
-	private native boolean           jniLexemeRead(String name, Object object, int grammarLength, int length) throws ESLIFException;
-	private native boolean           jniLexemeTry(String name) throws ESLIFException;
+	private native boolean       	 jniAlternative(String name, Object object, int grammarLength) throws ESLIFException;
+	private native boolean		 jniAlternativeComplete(int length) throws ESLIFException;
+	private native boolean           jniAlternativeRead(String name, Object object, int grammarLength, int length) throws ESLIFException;
+	private native boolean           jniNameTry(String name) throws ESLIFException;
 	private native boolean           jniDiscardTry() throws ESLIFException;
-	private native String[]          jniLexemeExpected() throws ESLIFException;
-	private native byte[]            jniLexemeLastPause(String lexeme) throws ESLIFException;
-	private native byte[]            jniLexemeLastTry(String lexeme) throws ESLIFException;
+	private native String[]          jniNameExpected() throws ESLIFException;
+	private native byte[]            jniNameLastPause(String name) throws ESLIFException;
+	private native byte[]            jniNameLastTry(String name) throws ESLIFException;
 	private native byte[]            jniDiscardLastTry() throws ESLIFException;
 	private native byte[]            jniDiscardLast() throws ESLIFException;
 	private native boolean           jniIsEof() throws ESLIFException;
@@ -266,32 +266,31 @@ public class ESLIFRecognizer {
 	}
 
 	/**
-	 * A lexeme is a terminal in the legacy parsing terminology. The lexeme word mean that in the grammar it is associated to a sub-grammar.
 	 * Pushing an alternative mean that the end-user is instructing the recognizer that, at this precise moment of lexing, there is a given
-	 * lexeme associated to the name parameter, with a given opaque value.  
-	 * Grammar length is usually one, i.e. one lexeme (which is a symbol in the grammar) correspond to one token.
+	 * symbol associated to the name parameter, with a given opaque value.  
+	 * Grammar length is usually one, i.e. one token.
 	 * Nevertheless it is possible to say that an alternative span over more than one symbol.
 	 * 
-	 * @param name the name of the lexeme
-	 * @param object the object that will represent the value of this lexeme at this parsing stage
+	 * @param name the name of the symbol
+	 * @param object the object that will represent the value of this symbol at this parsing stage
 	 * @param grammarLength the length in the grammar, must be greater or equal than one
 	 * @return a boolean indicating if the call was successful or not
 	 * @throws ESLIFException if the interface failed
 	 */
-	public synchronized boolean lexemeAlternative(String name, Object object, int grammarLength) throws ESLIFException {
-		return jniLexemeAlternative(name, object, grammarLength);
+	public synchronized boolean alternative(String name, Object object, int grammarLength) throws ESLIFException {
+		return jniAlternative(name, object, grammarLength);
 	}
 	
 	/**
-	 * Short-hand version of lexemeAlternative, where grammar length default to the recommended value of 1.
+	 * Short-hand version of alternative, where grammar length default to the recommended value of 1.
 	 * 
-	 * @param name the name of the lexeme
-	 * @param object the object that will represent the value of this lexeme at this parsing stage
+	 * @param name the name of the symbol
+	 * @param object the object that will represent the value of this symbol at this parsing stage
 	 * @return a boolean indicating if the call was successful or not
 	 * @throws ESLIFException if the interface failed
 	 */
-	public synchronized boolean lexemeAlternative(String name, Object object) throws ESLIFException {
-		return jniLexemeAlternative(name, object, 1);
+	public synchronized boolean alternative(String name, Object object) throws ESLIFException {
+		return alternative(name, object, 1);
 	}
 	
 	/**
@@ -303,48 +302,48 @@ public class ESLIFRecognizer {
 	 * @return a boolean indicating if the call was successful or not
 	 * @throws ESLIFException if the interface failed
 	 */
-	public synchronized boolean lexemeComplete(int length) throws ESLIFException {
-		return jniLexemeComplete(length);
+	public synchronized boolean alternativeComplete(int length) throws ESLIFException {
+		return jniAlternativeComplete(length);
 	}
 	
 	/**
-	 * A short-hand version of lexemeAlternative() plus lexemeComplete() methods, whith the exact same meaning of all parameters.
+	 * A short-hand version of alternative() plus complete() methods, whith the exact same meaning of all parameters.
 	 * This method can generate events.
 	 * 
-	 * @param name the name of the lexeme
-	 * @param object the object that will represent the value of this lexeme at this parsing stage
+	 * @param name the name of the symbol
+	 * @param object the object that will represent the value of this symbol at this parsing stage
 	 * @param length the number of bytes consumed by the latest set of alternatives
 	 * @param grammarLength the length in the grammar, must be greater or equal than one
 	 * @return a boolean indicating if the call was successful or not
 	 * @throws ESLIFException if the interface failed
 	 */
-	public synchronized boolean lexemeRead(String name, Object object, int length, int grammarLength) throws ESLIFException {
-		return jniLexemeRead(name, object, length, grammarLength);
+	public synchronized boolean alternativeRead(String name, Object object, int length, int grammarLength) throws ESLIFException {
+		return jniAlternativeRead(name, object, length, grammarLength);
 	}
 	
 	/**
-	 * A short-hand version of lexemeAlternative() followed by lexemeComplete() where grammarLength default to the recommended value of 1.
+	 * A short-hand version of alternativeRead() where grammarLength default to the recommended value of 1.
 	 * This method can generate events.
 	 * 
-	 * @param name the name of the lexeme
-	 * @param object the object that will represent the value of this lexeme at this parsing stage
+	 * @param name the name of the symbol
+	 * @param object the object that will represent the value of this symbol at this parsing stage
 	 * @param length the number of bytes consumed by the latest set of alternatives
 	 * @return a boolean indicating if the call was successful or not
 	 * @throws ESLIFException if the interface failed
 	 */
-	public synchronized boolean lexemeRead(String name, Object object, int length) throws ESLIFException {
-		return jniLexemeRead(name, object, length, 1);
+	public synchronized boolean alternativeRead(String name, Object object, int length) throws ESLIFException {
+		return alternativeRead(name, object, length, 1);
 	}
 	
 	/**
-	 * The end-user can ask the recognizer if a lexeme may match
+	 * The end-user can ask the recognizer if a symbol name may match
 	 * 
-	 * @param name the name of the lexeme
-	 * @return a boolean indicating if the lexeme is recognized
+	 * @param name the name of the symbol
+	 * @return a boolean indicating if the symbol is recognized
 	 * @throws ESLIFException if the interface failed
 	 */
-	public synchronized boolean lexemeTry(String name) throws ESLIFException {
-		return jniLexemeTry(name);
+	public synchronized boolean nameTry(String name) throws ESLIFException {
+		return jniNameTry(name);
 	}
 	
 	/**
@@ -358,42 +357,42 @@ public class ESLIFRecognizer {
 	}
 	
 	/**
-	 * Ask the recognizer a list of expected lexemes
+	 * Ask the recognizer a list of expected symbol names
 	 * 
-	 * @return an array of lexeme names, may be null if there is none
+	 * @return an array of symbol names, may be null if there is none
 	 * @throws ESLIFException if the interface failed
 	 */
-	public synchronized String[] lexemeExpected() throws ESLIFException {
-		return jniLexemeExpected();
+	public synchronized String[] nameExpected() throws ESLIFException {
+		return jniNameExpected();
 	}
 	
 	/**
-	 * Ask the recognizer the end-user data associated to last lexeme "pause after" event.
-	 * A "pause after" event is the when the recognizer was responsible of lexeme recognition, after a call to scan() or resume() methods.
-	 * This data will be an exact copy of the last bytes that matched for a given lexeme, where data is the internal representation of end-user data,
+	 * Ask the recognizer the end-user data associated to a last symbol "pause" event.
+	 * A "pause" event is the when the recognizer was responsible of symbol recognition, after a call to scan() or resume() methods.
+	 * This data will be an exact copy of the last bytes that matched for a given symbol, where data is the internal representation of end-user data,
 	 * meaning that it may be UTF-8 sequence of bytes in case of character stream, and always an UTF-8 seauence of bytes in case of end-user data
 	 * (end-user data representation is always the toString() result converted to UTF8).
 	 * 
-	 * @param lexeme the lexeme name
+	 * @param name the symbol name
 	 * @return an array of bytes
 	 * @throws ESLIFException if the interface failed
 	 */
-	public synchronized byte[] lexemeLastPause(String lexeme) throws ESLIFException {
-		return jniLexemeLastPause(lexeme);
+	public synchronized byte[] nameLastPause(String name) throws ESLIFException {
+		return jniNameLastPause(name);
 	}
 
 	/**
-	 * Ask the recognizer the end-user data associated to last successful lexeme try.
-	 * This data will be an exact copy of the last bytes that matched for a given lexeme, where data is the internal representation of end-user data,
+	 * Ask the recognizer the end-user data associated to last successful symbol name try.
+	 * This data will be an exact copy of the last bytes that matched for a given symbol, where data is the internal representation of end-user data,
 	 * meaning that it may be UTF-8 sequence of bytes in case of character stream, and always an UTF-8 sequence of bytes in case of end-user data
 	 * (end-user data representation is always the toString() result converted to UTF8).
 	 * 
-	 * @param lexeme the lexeme name
+	 * @param name the symbol name
 	 * @return an array of bytes
 	 * @throws ESLIFException if the interface failed
 	 */
-	public synchronized byte[] lexemeLastTry(String lexeme) throws ESLIFException {
-		return jniLexemeLastTry(lexeme);
+	public synchronized byte[] nameLastTry(String name) throws ESLIFException {
+		return jniNameLastTry(name);
 	}
 
 	/**
@@ -491,7 +490,7 @@ public class ESLIFRecognizer {
 	}
 	
 	/**
-	 * The recognizer is tentatively keeping an absolute offset every time a lexeme is complete. We say tentatively in the sense
+	 * The recognizer is tentatively keeping an absolute offset every time a symbol is complete. We say tentatively in the sense
 	 * that no overflow checking is done, thus this number is not reliable in case the user data spanned over a very large number of bytes.
 	 * In addition, the unit is in bytes.
 	 * 

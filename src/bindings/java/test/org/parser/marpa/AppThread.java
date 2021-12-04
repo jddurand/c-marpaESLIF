@@ -238,16 +238,16 @@ public class AppThread implements Runnable {
 						    	//
 						    	// Recognizer will wait forever if we do not feed the number
 						    	//
-								byte[] bytes = eslifRecognizer.lexemeLastPause("NUMBER");
+								byte[] bytes = eslifRecognizer.nameLastPause("NUMBER");
 								if (bytes == null) {
 									throw new Exception("Pause before on NUMBER but no pause information!");
 								}
-								if (! doLexemeRead(eslifLogger, eslifRecognizer, "NUMBER", j+1, bytes)) {
-									throw new Exception("NUMBER expected but reading such lexeme fails!");
+								if (! doAlternativeRead(eslifLogger, eslifRecognizer, "NUMBER", j+1, bytes)) {
+									throw new Exception("NUMBER expected but reading such name fails!");
 								}
 								doDiscardTry(eslifLogger, eslifRecognizer);
-								doLexemeTry(eslifLogger, eslifRecognizer, "WHITESPACES");
-								doLexemeTry(eslifLogger, eslifRecognizer, "whitespaces");
+								doNameTry(eslifLogger, eslifRecognizer, "WHITESPACES");
+								doNameTry(eslifLogger, eslifRecognizer, "whitespaces");
 						    }
 						}
 						if (j == 0) {
@@ -307,7 +307,7 @@ public class AppThread implements Runnable {
 		context = "after scan";
 		showRecognizerInput(context, eslifLogger, eslifRecognizer);
 		showEvents(context, eslifLogger, eslifRecognizer);
-		showLexemeExpected(context, eslifLogger, eslifRecognizer);
+		showNameExpected(context, eslifLogger, eslifRecognizer);
 		
 		return true;
 	}
@@ -323,7 +323,7 @@ public class AppThread implements Runnable {
 		context = "after resume";
 		showRecognizerInput(context, eslifLogger, eslifRecognizer);
 		showEvents(context, eslifLogger, eslifRecognizer);
-		showLexemeExpected(context, eslifLogger, eslifRecognizer);
+		showNameExpected(context, eslifLogger, eslifRecognizer);
 		
 		return true;
 	}
@@ -339,23 +339,23 @@ public class AppThread implements Runnable {
 				eslifLogger.debug("... Testing discard at current position gave \"" + string + "\"");
 			}
 		} catch (ESLIFException e) {
-			// Because we test with a symbol that is not a lexeme, and that raises an exception
+			// Because we test with a symbol that is not a vali name, and that raises an exception
 			eslifLogger.debug(e.getMessage());
 		}
 	}
 
-	private static void doLexemeTry(ESLIFLoggerInterface eslifLogger, ESLIFRecognizer eslifRecognizer, String symbol) throws UnsupportedEncodingException {
+	private static void doNameTry(ESLIFLoggerInterface eslifLogger, ESLIFRecognizer eslifRecognizer, String symbol) throws UnsupportedEncodingException {
 		boolean test;
 		try {
-			test = eslifRecognizer.lexemeTry(symbol);
-			eslifLogger.debug("... Testing " + symbol + " lexeme at current position returns " + test);
+			test = eslifRecognizer.nameTry(symbol);
+			eslifLogger.debug("... Testing " + symbol + " name at current position returns " + test);
 			if (test) {
-				byte[] bytes = eslifRecognizer.lexemeLastTry(symbol);
+				byte[] bytes = eslifRecognizer.nameLastTry(symbol);
 				String string = new String(bytes, "UTF-8");
-				eslifLogger.debug("... Testing " + symbol + " lexeme at current position gave \"" + string + "\"");
+				eslifLogger.debug("... Testing " + symbol + " name at current position gave \"" + string + "\"");
 			}
 		} catch (ESLIFException e) {
-			// Because we test with a symbol that is not a lexeme, and that raises an exception
+			// Because we test with a symbol that is not a valid name, and that raises an exception
 			eslifLogger.debug(e.getMessage());
 		}
 	}
@@ -363,19 +363,19 @@ public class AppThread implements Runnable {
 	// We replace current NUMBER by the Integer object representing value
 	//
 	@SuppressWarnings("deprecation")
-	private static boolean doLexemeRead(ESLIFLoggerInterface eslifLogger, ESLIFRecognizer eslifRecognizer, String symbol, int value, byte[] bytes) throws Exception {
+	private static boolean doAlternativeRead(ESLIFLoggerInterface eslifLogger, ESLIFRecognizer eslifRecognizer, String symbol, int value, byte[] bytes) throws Exception {
 		String context;
 		String old = new String(bytes, "UTF-8");
 		
 		eslifLogger.debug("... Forcing Integer object for \"" + value + "\" spanned on " + bytes.length + " bytes" + " instead of \"" + old + "\"");
-		if (! eslifRecognizer.lexemeRead(symbol, new Integer(value), bytes.length, 1 /* grammarLength */)) {
+		if (! eslifRecognizer.alternativeRead(symbol, new Integer(value), bytes.length, 1 /* grammarLength */)) {
 			return false;
 		}
 
-		context = "after lexemeRead";
+		context = "after nameRead";
 		showRecognizerInput(context, eslifLogger, eslifRecognizer);
 		showEvents(context, eslifLogger, eslifRecognizer);
-		showLexemeExpected(context, eslifLogger, eslifRecognizer);
+		showNameExpected(context, eslifLogger, eslifRecognizer);
 		
 		return true;
 	}
@@ -399,7 +399,7 @@ public class AppThread implements Runnable {
 			String         name   = event.getEvent();
 		    eslifLogger.debug("[" + context + "]" + " Event: {Type, Symbol, Name}={" + type + ", " + symbol + ", " + name + "}");
 		    if (ESLIFEventType.BEFORE.equals(type)) {
-				byte[] bytes = eslifRecognizer.lexemeLastPause(symbol);
+				byte[] bytes = eslifRecognizer.nameLastPause(symbol);
 				if (bytes == null) {
 					throw new Exception("Pause before on " + symbol + " but no pause information!");
 				}
@@ -407,11 +407,11 @@ public class AppThread implements Runnable {
 		}
 	}
 	
-	private static void showLexemeExpected(String context, ESLIFLoggerInterface eslifLogger, ESLIFRecognizer eslifRecognizer) throws ESLIFException {
-		String[] lexemeExpected = eslifRecognizer.lexemeExpected();
-		if (lexemeExpected != null) {
-			for (int j = 0; j < lexemeExpected.length; j++) {
-				eslifLogger.debug("[" + context + "] Expected lexeme: " + lexemeExpected[j]);
+	private static void showNameExpected(String context, ESLIFLoggerInterface eslifLogger, ESLIFRecognizer eslifRecognizer) throws ESLIFException {
+		String[] nameExpected = eslifRecognizer.nameExpected();
+		if (nameExpected != null) {
+			for (int j = 0; j < nameExpected.length; j++) {
+				eslifLogger.debug("[" + context + "] Expected name: " + nameExpected[j]);
 			}
 		}
 	}

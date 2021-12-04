@@ -261,10 +261,10 @@ short marpaESLIFJSON_encodeb(marpaESLIFGrammar_t *marpaESLIFGrammarJSONp, marpaE
   }
 
   /* Insert a lexeme with length 0 in the input, though length 1 in the grammar */
-  marpaESLIFAlternative.lexemes        = "INPUT";
+  marpaESLIFAlternative.names          = "INPUT";
   marpaESLIFAlternative.value          = *marpaESLIFValueResultp;
   marpaESLIFAlternative.grammarLengthl = 1;
-  if (MARPAESLIF_UNLIKELY(! marpaESLIFRecognizer_lexeme_readb(marpaESLIFRecognizerp, &marpaESLIFAlternative, 0 /* lengthl */))) {
+  if (MARPAESLIF_UNLIKELY(! marpaESLIFRecognizer_alternative_readb(marpaESLIFRecognizerp, &marpaESLIFAlternative, 0 /* lengthl */))) {
     goto err;
   }
   marpaESLIFValuep = marpaESLIFValue_newp(marpaESLIFRecognizerp, &marpaESLIFValueOption);
@@ -630,7 +630,7 @@ static short _marpaESLIFJSONDecodeEventCallbackb(void *userDatavp, marpaESLIFRec
         -----------------------------------------------*/
 
       /* Get paused value and append */
-      if (MARPAESLIF_UNLIKELY(! _marpaESLIFRecognizer_lexeme_last_pauseb(marpaESLIFRecognizerp, "CHAR", &pauses, &pausel))) {
+      if (MARPAESLIF_UNLIKELY(! _marpaESLIFRecognizer_name_last_pauseb(marpaESLIFRecognizerp, "CHAR", &pauses, &pausel))) {
         goto err;
       }
       if (MARPAESLIF_UNLIKELY(! _marpaESLIFJSONDecodeAppendCharb(marpaESLIFRecognizerp, marpaESLIFJSONDecodeContextp, pauses, pausel))) {
@@ -643,7 +643,7 @@ static short _marpaESLIFJSONDecodeEventCallbackb(void *userDatavp, marpaESLIFRec
          ---------------------------------------------------------*/
 
       /* Get paused value, set it and propagate it */
-      if (MARPAESLIF_UNLIKELY(! _marpaESLIFRecognizer_lexeme_last_pauseb(marpaESLIFRecognizerp, "CONSTANT_OR_NUMBER", &pauses, &pausel))) {
+      if (MARPAESLIF_UNLIKELY(! _marpaESLIFRecognizer_name_last_pauseb(marpaESLIFRecognizerp, "CONSTANT_OR_NUMBER", &pauses, &pausel))) {
         goto err;
       }
 

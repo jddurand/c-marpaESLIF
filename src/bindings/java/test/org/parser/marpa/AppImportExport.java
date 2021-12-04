@@ -147,7 +147,7 @@ public class AppImportExport implements Runnable {
 				ESLIFRecognizerInterface eslifRecognizerInterface = new AppEmptyRecognizer(this.eslifLogger);
 			    ESLIFRecognizer eslifRecognizer = new ESLIFRecognizer(eslifGrammar, eslifRecognizerInterface);
 			    eslifRecognizer.scan(true); // Initial events
-			    eslifRecognizer.lexemeRead("JAVA_INPUT", input, 1, 1);
+			    eslifRecognizer.alternativeRead("JAVA_INPUT", input, 1, 1);
 			    ESLIFValueInterface eslifValueInterface = new AppValue();
 			    eslifValue = new ESLIFValue(eslifRecognizer, eslifValueInterface);
 			    eslifValue.value();

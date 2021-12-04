@@ -198,29 +198,28 @@ Note that trying to change the state of an event that was not pre-declared in th
 
 Returns a reference to an array of hash references, eventually empty if there is none. Each array element is a reference to a hash containing these keys:
 
-=head2 $eslifRecognizer->lexemeAlternative($name, $anything, $grammarLength)
+=head2 $eslifRecognizer->alternative($name, $anything, $grammarLength)
 
-A lexeme is a terminal in the legacy parsing terminology. The lexeme word mean that in the grammar it is associated to a sub-grammar. Pushing an alternative mean that the end-user is intructing the recognizer that, at this precise moment of lexing, there is a given lexeme associated with the C<$name> parameter, with a given opaque value <$anything>. Grammar length parameter C<$grammarLength> is optional, and defaults to C<1>, i.e. one lexeme (which is a symbol in the grammar) correspond to one token. Nevertheless it is possible to say that an alternative span over more than one symbol.
+Pushes an alternative mean that the end-user is intructing the recognizer that, at this precise moment of lexing, there is a given symbol associated with the C<$name> parameter, with a given opaque value <$anything>. Grammar length parameter C<$grammarLength> is optional, and defaults to C<1>, i.e. one grammar token. Nevertheless it is possible to say that an alternative span over more than one symbol.
 
 Returns a boolean indicating if the call was successful or not.
 
-=head2 $eslifRecognizer->lexemeComplete($length)
+=head2 $eslifRecognizer->alternativeComplete($length)
 
 Say the recognizer that alternatives are complete at this precise moment of parsing, and that the recognizer must move forward by C<$length> B<bytes>, which can be zero (end-user's responsibility).
 This method can generate events.
 
 Returns a boolean indicating if the call was successful or not.
 
-=head2 $eslifRecognizer->lexemeRead($name, $anything, $length, $grammarLength)
+=head2 $eslifRecognizer->alternativeRead($name, $anything, $length, $grammarLength)
 
-A short-hand version of lexemeAlternative() followed by lexemeComplete(), with the same meaning for all parameters.
-This method can generate events.
+A short-hand version of alternative() followed by alternativeComplete(), with the same meaning for all parameters. This method can generate events.
 
 Returns a boolean indicating if the call was successful or not.
 
-=head2 $eslifRecognizer->lexemeTry($name)
+=head2 $eslifRecognizer->nameTry($name)
 
-The end-user can ask the recognizer if a lexeme C<$name> may match.
+The end-user can ask the recognizer if a symbol identified by C<$name> may match.
 
 Returns a boolean indicating if the lexeme is recognized.
 
@@ -230,21 +229,21 @@ The end-user can ask the recognizer if C<:discard> rule may match.
 
 Returns a boolean indicating if :discard is recognized.
 
-=head2 $eslifRecognizer->lexemeExpected()
+=head2 $eslifRecognizer->nameExpected()
 
-Ask the recognizer a list of expected lexemes.
+Ask the recognizer a list of expected symbol names.
 
 Returns a reference to an array of names, eventually empty.
 
-=head2 $eslifRecognizer->lexemeLastPause($name)
+=head2 $eslifRecognizer->nameLastPause($name)
 
-Ask the recognizer the end-user data associated to last lexeme I<pause after> event. A I<pause after> event is the when the recognizer was responsible of lexeme recognition, after a call to scan() or resume() methods. This data will be an exact copy of the last bytes that matched for a given lexeme, where data is the internal representation of end-user data, meaning that it may be UTF-8 sequence of bytes in case of character stream.
+Ask the recognizer the end-user data associated to last symbol pause event. A pause event is the when the recognizer was responsible of symbol recognition, after a call to scan() or resume() methods. This data will be an exact copy of the last bytes that matched for a given symbol, where data is the internal representation of end-user data, meaning that it may be UTF-8 sequence of bytes in case of character stream.
 
 Returns the associated bytes, or C<undef>.
 
-=head2 $eslifRecognizer->lexemeLastTry($name)
+=head2 $eslifRecognizer->nameLastTry($name)
 
-Ask the recognizer the end-user data associated to last successful lexeme try. This data will be an exact copy of the last bytes that matched for a given lexeme, where data is the internal representation of end-user data, meaning that it may be UTF-8 sequence of bytes in case of character stream.
+Ask the recognizer the end-user data associated to last successful symbol try. This data will be an exact copy of the last bytes that matched for a given symbol, where data is the internal representation of end-user data, meaning that it may be UTF-8 sequence of bytes in case of character stream.
 
 Returns the associated bytes, or C<undef>.
 

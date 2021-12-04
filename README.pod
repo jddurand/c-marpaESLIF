@@ -102,7 +102,28 @@ other than the one at level 0 as the starting grammar.
 
 =head3 Top recognizer
 
-The lifetime of parsing, for a given I<location> in the top-level grammar, consist by assigning a set of symbols (these are called I<alternatives>), commiting them (we say that we I<complete> the set of alternatives), and move on. A Scanless Interface mean that you do not have to write your own analysis of input: grammars give definition of what is expected, and the interface have the possbility to determine all the alternatives for you, commiting them, and move on in the input stream. We say input stream: this is another dimension (we suppose from now on that the top-level grammar is at level 0):
+Parsing from the point of an ESLIF user, consists of, for a given I<location> in the top-level grammar,
+
+=over
+
+=item assigning
+
+a set of symbols (these are called I<alternatives>)
+
+=item commiting
+
+them (we say that we I<complete> the set of alternatives), and
+
+=item moving
+
+on to the next location.
+
+=back
+    
+We call this interface "scanless" because you do not have to write your own lexer.
+The grammars define what is expected, and recognizer determines all the alternatives for you,
+commits them, and moves on in the input stream.
+We say input stream: this is another dimension (we suppose from now on that the top-level grammar is at level 0):
 
   #
   # Note
@@ -133,7 +154,7 @@ The lifetime of parsing, for a given I<location> in the top-level grammar, consi
 
 =head3 Sub-recognizers
 
-The stream management mentionned above is transversal to any grammar: As soon as "terminal" is in reality a referenced symbol, a sub-recognizer is instanciated and it is sharing the stream with is parent:
+The stream management mentioned above is transversal to any grammar: As soon as "terminal" is in reality a referenced symbol, a sub-recognizer is instantiated and it shares the stream with its parent:
 
 
                     TOP RECOGNIZER ON GRAMMAR LEVEL 0
@@ -186,29 +207,47 @@ The stream management mentionned above is transversal to any grammar: As soon as
           | If T2 matches it is a parse tree value            |
           [---------------------------------------------------]
 
-And this is recursive: there will as many sub-recognizers instanciated as there are sub-grammars involved. For instance if terminal C<U2> above is a referenced symbol at grammar level C<l>, a second sub-recognizer will be instanced by the first sub-recognizer. Every child recognizer is sharing all needed transveral information, that is everything about stream management. The main difference between the top recognizer and any child recognizer is that a child recognizer is always doing an internal valuation to retreive the span in the input stream for, and give that back to its parent.
+This is recursive: there will as many sub-recognizers instantiated as there are sub-grammars involved.
+For instance, if terminal C<U2> above is a referenced symbol at grammar level C<l>,
+a second sub-recognizer will be instantiated by the first sub-recognizer.
+Every child recognizer is shares all needed transveral information,
+that is everything about stream management.
+The main difference between the top recognizer
+and any child recognizer is that a child recognizer
+is always doing an internal valuation to retreive the span in the input stream for,
+and give that back to its parent.
 
-The internal valuation is a forced mode that is concatenating all matched bytes in the input stream.
+The internal valuation is a forced mode that concatenates all matched bytes in the input stream.
 
 =head3 Discard and sub-recognizers
 
-You might say, why explicitely doing an internal valuation: the match is where sub-recognizer started and where it ended. No, because any grammar can have it own I<discard> mechanism. This mean that what a sub-recognizer matched may be shorter than the number of bytes effectively consumed from the input stream. So, we have just introduced the notion of I<discard>:
+You might ask, "Why explicitly do an internal valuation?"
+After all, the match is where sub-recognizer started and where it ended.
+But an explicit internal valuation is needed because any grammar can have it own I<discard> mechanism.
+This mean that what a sub-recognizer matched may be shorter
+than the number of bytes effectively consumed from the input stream.
 
-discard is yet another symbol in any grammar, but with special semantic, and its name in the BNF is always C<:discard>. For example:
+This raises the issue of the I<discard> mechanism.
+A discard symbol is an ordinary symbol of a grammar, but with a special semantics.
+In the BNF, the name of this special semantics is C<:discard>.
+For example:
 
   :discard   ::= whitespace
   whitespace   ~ /[\s]+/
 
-mean that grammar at level 0 always try to match the C<whitespace> symbol when it failed to match any of the expected terminals.
+This means that the grammar at level 0 tries to match the C<whitespace> symbol
+when it fails to match any of the expected terminals.
 
-As soon as there is no match, and if C<:discard> rule exist, any recognizer is always trying to get a match on it using a sub-recognizer, exactly like when it is executing a sub-recognizer for a terminal referencing a symbol in another grammar. Furthermore nothing distinguishes the special symbol C<:discard> from the others: it can also reference any symbol in any other sub-grammar. Though there is a major difference between discard sub-recognizers and terminal sub-recognizers: a discard sub-recognizer will never instanciate another discard sub-sub-recognizer. This mean that in the following:
+As soon as there is no match, and if C<:discard> rule exist, any recognizer is always trying to get a match on it using a sub-recognizer, exactly like when it is executing a sub-recognizer for a terminal referencing a symbol in another grammar.
+Furthermore nothing distinguishes the special symbol C<:discard> from the others: it can also reference any symbol in any other sub-grammar. Though there is one major difference between discard sub-recognizers and terminal sub-recognizers: a discard sub-recognizer will never instantiate another discard sub-sub-recognizer.
+This means that in the following:
 
   :discard    ::= whitespace
   :discard      ~ somethingelse
   whitespace    ~ /[\s]+/
   somethingelse ~ 'a string'
 
-if a discard tentative is instancuated on grammar at level 0 using the symbol C<whitespace> of level 1, and if C<whitespace> of level 1 does not match, there will be no tentative for try to discard in level 1, even it is has a C<:discard> rule that is defined to be C<somethingelse>.
+if a discard tentative is instantiated on grammar at level 0 using the symbol C<whitespace> of level 1, and if C<whitespace> of level 1 does not match, there will be no tentative for try to discard in level 1, even it is has a C<:discard> rule that is defined to be C<somethingelse>.
 
 =head1 STREAMING, CHARACTER AND BINARY MODES
 

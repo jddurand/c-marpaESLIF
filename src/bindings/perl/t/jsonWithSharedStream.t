@@ -251,7 +251,7 @@ sub doparse {
             next unless defined($event);
             $log->debugf('Event %s', $event->{event});
             if ($event->{event} eq 'lstring$') {
-                my $pauses = $marpaESLIFRecognizer->lexemeLastPause('lstring');
+                my $pauses = $marpaESLIFRecognizer->nameLastPause('lstring');
                 my ($line, $column) = $marpaESLIFRecognizer->location();
                 $log->debugf("Got lstring: %s; length=%ld, current position is {line, column} = {%ld, %ld}", $pauses, length($pauses), $line, $column);
             }
@@ -265,20 +265,20 @@ sub doparse {
                 }
                 # Set exhausted flag since this grammar is very likely to exit when data remains
                 $marpaESLIFRecognizerObject->set_exhausted_flag(1);
-                # Force read of the LCURLY lexeme
-                $log->debug("LCURLY lexeme read");
-                $marpaESLIFRecognizerObject->lexemeRead('LCURLY', '{', 1); # In UTF-8 '{' is one byte
+                # Force read of the LCURLY symbol
+                $log->debug("LCURLY symbol read");
+                $marpaESLIFRecognizerObject->alternativeRead('LCURLY', '{', 1); # In UTF-8 '{' is one byte
                 my $value = doparse($marpaESLIFRecognizerObject, undef, $recursionLevel + 1);
                 # Inject object's value
                 $log->debugf("Injecting value from sub grammar: %s", $value);
-                $log->debug("OBJECT_FROM_INNER_GRAMMAR lexeme read");
-                $marpaESLIFRecognizer->lexemeRead('OBJECT_FROM_INNER_GRAMMAR', $value, 0); # Stream moved synchroneously
+                $log->debug("OBJECT_FROM_INNER_GRAMMAR symbol read");
+                $marpaESLIFRecognizer->alternativeRead('OBJECT_FROM_INNER_GRAMMAR', $value, 0); # Stream moved synchroneously
                 $marpaESLIFRecognizerObject->unshare();
             }
             elsif ($event->{event} eq '^RCURLY') {
-                # Force read of the RCURLY lexeme
-                $log->debug("RCURLY lexeme read");
-                $marpaESLIFRecognizer->lexemeRead('RCURLY', '}', 1); # In UTF-8 '}' is one byte
+                # Force read of the RCURLY symbol
+                $log->debug("RCURLY symbol read");
+                $marpaESLIFRecognizer->alternativeRead('RCURLY', '}', 1); # In UTF-8 '}' is one byte
                 goto valuation;
             } elsif ($event->{event} eq '^value' || $event->{event} eq 'value$') {
                 # No op
