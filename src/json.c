@@ -624,7 +624,7 @@ static short _marpaESLIFJSONDecodeEventCallbackb(void *userDatavp, marpaESLIFRec
       break;
     case '2':
       /*-----------------------------------------------
-        :lexeme ::= CHAR pause => after event => 2_CHAR$
+        :terminal ::= ... pause => after event => 2_CHAR$ name => CHAR
 
         Note that by definition currentValue has been initialized in 5_dquote$
         -----------------------------------------------*/
@@ -639,7 +639,7 @@ static short _marpaESLIFJSONDecodeEventCallbackb(void *userDatavp, marpaESLIFRec
       break;
     case '3':
       /* ---------------------------------------------------------
-         :lexeme ::= CONSTANT_OR_NUMBER pause => after event => 4_CONSTANT_OR_NUMBER$
+         :terminal ::= ... pause => after event => 4_CONSTANT_OR_NUMBER$ name => CONSTANT_OR_NUMBER
          ---------------------------------------------------------*/
 
       /* Get paused value, set it and propagate it */
