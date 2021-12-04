@@ -1199,10 +1199,10 @@ At any location in the grammar, possible alternatives can be of the two major ty
                                       marpaESLIFReaderDispose_t *disposeCallbackpp);
   /* Recognizer callback definitions */
 
-  /* if-action callback: received a lexeme and return a boolean */
+  /* if-action callback: received a marpaESLIFValueResultp of type ARRAY and return a boolean */
   typedef short (*marpaESLIFRecognizerIfCallback_t)(void *userDatavp,
                                                     marpaESLIFRecognizer_t *marpaESLIFRecognizerp,
-                                                    marpaESLIFValueResult_t *marpaESLIFValueResultLexemep,
+                                                    marpaESLIFValueResult_t *marpaESLIFValueResultp,
                                                     marpaESLIFValueResultBool_t *marpaESLIFValueResultBoolp);
   /* if-action callback resolver */
   typedef marpaESLIFRecognizerIfCallback_t (*marpaESLIFRecognizerIfActionResolver_t)(void *userDatavp,
@@ -1386,7 +1386,7 @@ To prevent too many memory allocations, when marpaESLIF need to increase its int
 
 =item C<ifActionResolverp>
 
-If a lexeme or a terminal is a candidate for automatic parsing (I<scan> or I<parse> modes), this callback must not be C<NULL> and return a function pointer. The later will be be called with a C<marpaESLIFValueResultLexemep> argument that is guaranteed to be of type C<ARRAY>, and must return in C<marpaESLIFValueResultBoolp>, guaranteed to not be C<NULL>, a boolean value saying of the lexeme or terminal can be taken in account in the parse tree.
+If a lexeme or a terminal is a candidate for automatic parsing (I<scan> or I<parse> modes), this callback must not be C<NULL> and return a function pointer. The later will be be called with a C<marpaESLIFValueResultp> argument that is guaranteed to be of type C<ARRAY>, and must return in C<marpaESLIFValueResultBoolp>, guaranteed to not be C<NULL>, a boolean value saying of the lexeme or terminal can be taken in account in the parse tree.
 
 The function will return a true value in case of success, a false value otherwise.
 
@@ -1550,30 +1550,30 @@ Resume the scanning. All parameters have the same meaning as for C<marpaESLIFRec
     }
   }
 
-Calling C<marpaESLIFRecognizer_resumeb> is legal for any recognizer that already called <marpaESLIFRecognizer_scanb> or did at least one call to C<marpaESLIFRecognizer_lexeme_alternativeb>.
+Calling C<marpaESLIFRecognizer_resumeb> is legal for any recognizer that already called <marpaESLIFRecognizer_scanb> or did at least one call to C<marpaESLIFRecognizer_alternativeb> or C<marpaESLIFRecognizer_alternative_readb>.
 
 This method can generate grammar and pause events.
 
 Returns a true value on success, a false value on failure.
 
-=head3 C<marpaESLIFRecognizer_lexeme_alternativeb>
+=head3 C<marpaESLIFRecognizer_alternativeb>
 
   typedef struct marpaESLIFAlternative {
-    char                   *lexemes;        /* Lexeme name */
+    char                   *names  ;        /* Symbol name */
     marpaESLIFValueResult_t value;          /* Value */
     size_t                  grammarLengthl; /* Length in the grammar (1 == token-stream model) */
   } marpaESLIFAlternative_t;
 
-  short marpaESLIFRecognizer_lexeme_alternativeb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp,
-                                                 marpaESLIFAlternative_t *marpaESLIFAlternativep);
+  short marpaESLIFRecognizer_alternativeb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp,
+                                          marpaESLIFAlternative_t *marpaESLIFAlternativep);
 
-It is possible to inject arbitrarty lexemes outside of the internal scanner. Such external lexemes are described using a C<marpaESLIFAlternative_t> structure, containing:
+It is possible to inject symbols outside of the internal scanner. They are then are described using a C<marpaESLIFAlternative_t> structure, containing:
 
 =over
 
-=item lexemes
+=item names
 
-The lexeme name as per the grammar. Must be different than C<NULL>.
+The symbol name as per the grammar. Must be different than C<NULL>.
 
 =item value
 
@@ -1587,38 +1587,42 @@ The number of grammar tokens taken by this alternative. A highly recommended val
 
 Returns a true value on success, a false value on failure.
 
-=head3 C<marpaESLIFRecognizer_lexeme_completeb>
+=head3 C<marpaESLIFRecognizer_alternative_completeb>
 
-  short marpaESLIFRecognizer_lexeme_completeb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp,
-                                              size_t lengthl);
+Deprecated, please refer C<marpaESLIFRecognizer_completeb>.
 
-Say to the recognizer pointed C<marpaESLIFRecognizerp> by that the current set of lexeme alternatives is complete, and that the stream should advance by C<length> bytes, where bytes is really the number of bytes in the internal recognizer buffer, i.e. an UTF-8 sequence of code points in case of a character-oriented stream. The reader callback may be called if necessary, in case the caller say to advance by more bytes than what is currently available. It is an error to specify more bytes than the recognizer can get (and eventually transform, in case of character-stream oriented buffer) from the reader. A a value of C<0> for the length is legal.
+=head3 C<marpaESLIFRecognizer_completeb>
 
-If a I<lexeme after> event is triggered, C<marpaESLIFRecognizer_lexeme_last_pauseb> will show as many bytes as C<lengthl>. And because it is guaranteed that C<marpaESLIFRecognizer_lexeme_last_pauseb> returns a pointer to NUL-terminated buffer, the extreme case is that last pause can be an empty string "" when the alternative has been pushed using a user-defined value.
+  short marpaESLIFRecognizer_completeb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp,
+                                       size_t lengthl);
 
-This method can generate grammar and pause events.
+Say to the recognizer pointed C<marpaESLIFRecognizerp> by that the current set of alternatives is complete, and that the stream should advance by C<length> bytes, where bytes is really the number of bytes in the internal recognizer buffer, i.e. an UTF-8 sequence of code points in case of a character-oriented stream. The reader callback may be called if necessary, in case the caller say to advance by more bytes than what is currently available. It is an error to specify more bytes than the recognizer can get (and eventually transform, in case of character-stream oriented buffer) from the reader. A a value of C<0> for the length is legal.
 
-Returns a true value on success, a false value on failure.
-
-=head3 C<marpaESLIFRecognizer_lexeme_readb>
-
-  short marpaESLIFRecognizer_lexeme_readb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp,
-                                          marpaESLIFAlternative_t *marpaESLIFAlternativep);
-                                          size_t lengthl);
-
-A short-hand version of lexeme management that is pushing an alternative and do completion in one call.
+If a I<after> event is triggered, C<marpaESLIFRecognizer_name_last_pauseb> will show as many bytes as C<lengthl>. And because it is guaranteed that C<marpaESLIFRecognizer_name_last_pauseb> returns a pointer to a NUL-terminated buffer, the extreme case is that last pause can be an empty string "", which is legal when the alternative has been pushed using a user-defined value or it is correspond to a pseudo terminal.
 
 This method can generate grammar and pause events.
 
 Returns a true value on success, a false value on failure.
 
-=head3 C<marpaESLIFRecognizer_lexeme_tryb>
+=head3 C<marpaESLIFRecognizer_alternative_readb>
 
-  short marpaESLIFRecognizer_lexeme_tryb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp,
-                                         char *lexemes,
-                                         short *matchbp);
+  short marpaESLIFRecognizer_alternative_readb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp,
+                                               marpaESLIFAlternative_t *marpaESLIFAlternativep);
+                                               size_t lengthl);
 
-Try to match the lexeme with name C<lexemes> that must be non-C<NULL> against the input seen by the recognizer. Returns in C<matchbp>, when not C<NULL>, a true value if there is a match, a false value otherwise. This method generates no event.
+A short-hand version of alternative management that is pushing an alternative and do completion in one call.
+
+This method can generate grammar and pause events.
+
+Returns a true value on success, a false value on failure.
+
+=head3 C<marpaESLIFRecognizer_name_tryb>
+
+  short marpaESLIFRecognizer_name_tryb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp,
+                                       char *names,
+                                       short *matchbp);
+
+Try to match the symbol with name C<names> that must be non-C<NULL> against the input seen by the recognizer. Returns in C<matchbp>, when not C<NULL>, a true value if there is a match, a false value otherwise. This method generates no event.
 
 This function should never fail, a false value indicates something fatal happened or the arguments are not correct.
 
@@ -1646,13 +1650,13 @@ Try to match the :discard rule against the input seen by the recognizer. Returns
 
 This function should never fail, a false value indicates something fatal happened or the arguments are not correct.
 
-=head3 C<marpaESLIFRecognizer_lexeme_expectedb>
+=head3 C<marpaESLIFRecognizer_name_expectedb>
 
-  short marpaESLIFRecognizer_lexeme_expectedb(marpaESLIFRecognizer_t   *marpaESLIFRecognizerp,
-                                              size_t                   *nLexemelp,
-                                              char                   ***lexemesArraypp);
+  short marpaESLIFRecognizer_name_expectedb(marpaESLIFRecognizer_t   *marpaESLIFRecognizerp,
+                                            size_t                   *nNamelp,
+                                            char                   ***namesArraypp);
 
-For the current recognizer C<marpaESLIFRecognizerp>, get the list of I<lexemes> expected. C<*nLexemelp>, if not C<NULL>, is filled with the number of expected lexemes, and C<*lexemesArraypp>, if not C<NULL>, will contain the array of NUL-terminated ASCII symbol names.
+For the current recognizer C<marpaESLIFRecognizerp>, get the list of I<names> expected. C<*nNamelp>, if not C<NULL>, is filled with the number of expected names, and C<*namesArraypp>, if not C<NULL>, will contain the array of NUL-terminated ASCII symbol names.
 
 This function should never fail, a false value indicates something fatal happened or the arguments are not correct.
 
@@ -1687,8 +1691,8 @@ This function should never fail, a false value indicates something fatal happene
     MARPAESLIF_EVENTTYPE_COMPLETED  = 0x01, /* Grammar event */
     MARPAESLIF_EVENTTYPE_NULLED     = 0x02, /* Grammar event */
     MARPAESLIF_EVENTTYPE_PREDICTED  = 0x04, /* Grammar event */
-    MARPAESLIF_EVENTTYPE_BEFORE     = 0x08, /* Just before lexeme is commited */
-    MARPAESLIF_EVENTTYPE_AFTER      = 0x10, /* Just after lexeme is commited */
+    MARPAESLIF_EVENTTYPE_BEFORE     = 0x08, /* Just before symbol is commited */
+    MARPAESLIF_EVENTTYPE_AFTER      = 0x10, /* Just after symbol is commited */
     MARPAESLIF_EVENTTYPE_EXHAUSTED  = 0x20, /* Exhaustion */
     MARPAESLIF_EVENTTYPE_DISCARD    = 0x40  /* Discard */
   } marpaESLIFEventType_t;
@@ -1726,15 +1730,17 @@ Prediction event. This can happen only for meta symbol names. In the grammar thi
 
 =item MARPAESLIF_EVENTTYPE_BEFORE
 
-I<Lexeme before> event. This can happen only for lexemes that are predicted by the scanning. In the grammar this is declared with:
+I<symbol before> event. This can happen only for lexemes or terminals that are predicted by the scanning. In the grammar this is declared with:
 
-  :lexeme ::= lexemename pause => before event => eventname
+  :lexeme   ::= lexemename          pause => before event => eventname
+  :terminal ::= terminaldescription pause => before event => eventname
 
 =item MARPAESLIF_EVENTTYPE_AFTER
 
-I<Lexeme before> event. This can happen only for lexemes after they are pushed as alternatives by the scanning. In the grammar this is declared with:
+I<symbol before> event. This can happen only for lexemes or terminals after they are pushed as alternatives by the scanning. In the grammar this is declared with:
 
-  :lexeme ::= lexemename pause => after event => eventname
+  :lexeme   ::= lexemename          pause => after  event => eventname
+  :terminal ::= terminaldescription pause => after  event => eventname
 
 =item MARPAESLIF_EVENTTYPE_EXHAUSTED
 
@@ -1909,25 +1915,25 @@ Please note that this is in effect only if the recognizer option have a true val
 
 Returns a true value on success, a false value on failure.
 
-=head3 C<marpaESLIFRecognizer_lexeme_last_pauseb>
+=head3 C<marpaESLIFRecognizer_name_last_pauseb>
 
-  short marpaESLIFRecognizer_lexeme_last_pauseb(marpaESLIFRecognizer_t  *marpaESLIFRecognizerp,
-                                                char                    *lexemes,
-                                                char                   **pausesp,
-                                                size_t                  *pauselp);
+  short marpaESLIFRecognizer_name_last_pauseb(marpaESLIFRecognizer_t  *marpaESLIFRecognizerp,
+                                              char                    *names,
+                                              char                   **pausesp,
+                                              size_t                  *pauselp);
 
-For the recognizer instance pointed by C<marpaESLIFRecognizerp>, returns a pointer to the last portion of input stream that generated a I<lexeme pause> event for lexeme C<lexemes> in the value pointed by C<pausesp> if it is not NULL, and the length in the value pointed by C<pauselp> if it is not NULL. For convenience if the last pause is not NULL, the buffer holding the pause information is always NUL-terminated, even if the C<\0> NUL character is I<not> in the returned length. In case of user-defined alternatives, the empty string "" is returned in C<pausesp>.
+For the recognizer instance pointed by C<marpaESLIFRecognizerp>, returns a pointer to the last portion of input stream that generated a I<pause> event for symbol C<names> in the value pointed by C<pausesp> if it is not NULL, and the length in the value pointed by C<pauselp> if it is not NULL. For convenience if the last pause is not NULL, the buffer holding the pause information is always NUL-terminated, even if the C<\0> NUL character is I<not> in the returned length. In case of user-defined alternatives, the empty string "" is returned in C<pausesp>.
 
 This function should never fail, a false value indicates something fatal happened or the arguments are not correct.
 
-=head3 C<marpaESLIFRecognizer_lexeme_last_tryb>
+=head3 C<marpaESLIFRecognizer_name_last_tryb>
 
-  short marpaESLIFRecognizer_lexeme_last_tryb(marpaESLIFRecognizer_t  *marpaESLIFRecognizerp,
-                                              char                    *lexemes,
-                                              char                   **trysp,
-                                              size_t                  *trylp);
+  short marpaESLIFRecognizer_name_last_tryb(marpaESLIFRecognizer_t  *marpaESLIFRecognizerp,
+                                            char                    *names,
+                                            char                   **trysp,
+                                            size_t                  *trylp);
 
-For the recognizer instance pointed by C<marpaESLIFRecognizerp>, returns a pointer to the last portion of input stream into the value pointed by C<trysp>, when it is non-C<NULL>, and corresponding length in the value pointed by C<trylp> when it is is non-C<NULL>, of the last successful try for lexeme C<lexemes>, via a call to C<marpaESLIFRecognizer_lexeme_tryb>. If C<*trysp> is non-NULL, it is guaranteed that C<*trylp> is greater than zero, and the block of memory is NUL-terminated, even if the additional NUL byte will not be included into C<trylp>.
+For the recognizer instance pointed by C<marpaESLIFRecognizerp>, returns a pointer to the last portion of input stream into the value pointed by C<trysp>, when it is non-C<NULL>, and corresponding length in the value pointed by C<trylp> when it is is non-C<NULL>, of the last successful try for symbol C<names>, via a call to C<marpaESLIFRecognizer_name_tryb>. If C<*trysp> is non-NULL, it is guaranteed that C<*trylp> is greater than zero, and the block of memory is NUL-terminated, even if the additional NUL byte will not be included into C<trylp>.
 
 This function should never fail, a false value indicates something fatal happened or the arguments are not correct.
 
@@ -2544,6 +2550,19 @@ For meta symbols, also they can belong to any C<marpaESLIFGrammarp>, only the le
 =head1 NOTES
 
 =over
+
+=item Symbol names
+
+The name of a lexeme or a terminal symbol is be default how it is writen. Nevertheless this can overwriten using the
+
+  name => wantedName
+
+adverb in the grammar, e.g.:
+
+  :terminal ::= /X/ name => XRegexp
+  :lexeme   ::= X   name => XLexeme
+
+It is highly recommended to not set the same name to multiple symbols.
 
 =item Exhaustion
 

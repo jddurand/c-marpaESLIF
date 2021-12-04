@@ -450,7 +450,7 @@ static short manage_eventsb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, gener
   short   rcb;
 
   /* We have a single event, no need to ask what it is */
-  if (! marpaESLIFRecognizer_lexeme_last_pauseb(marpaESLIFRecognizerp, "card", &pauses, &pausel)) {
+  if (! marpaESLIFRecognizer_name_last_pauseb(marpaESLIFRecognizerp, "card", &pauses, &pausel)) {
     goto err;
   }
 
@@ -463,7 +463,7 @@ static short manage_eventsb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, gener
   GENERICLOGGER_DEBUGF(genericLoggerp, "Got card %s", cards);
 
   /* Try to see if there is whitespace after */
-  if (! marpaESLIFRecognizer_lexeme_tryb(marpaESLIFRecognizerp, "WS", &isWSb)) {
+  if (! marpaESLIFRecognizer_name_tryb(marpaESLIFRecognizerp, "WS", &isWSb)) {
     goto err;
   }
   if (isWSb) {

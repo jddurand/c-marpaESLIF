@@ -527,10 +527,10 @@ short marpaESLIFJSON_encodeb(marpaESLIFGrammar_t *marpaESLIFGrammarJSONp, marpaE
   }
 
   /* Insert a lexeme with length 0 in the input, though length 1 in the grammar */
-  marpaESLIFAlternative.lexemes        = "INPUT";
+  marpaESLIFAlternative.names          = "INPUT";
   marpaESLIFAlternative.value          = *marpaESLIFValueResultp;
   marpaESLIFAlternative.grammarLengthl = 1;
-  if (MARPAESLIF_UNLIKELY(! marpaESLIFRecognizer_lexeme_readb(marpaESLIFRecognizerp, &marpaESLIFAlternative, 0 /* lengthl */))) {
+  if (MARPAESLIF_UNLIKELY(! marpaESLIFRecognizer_alternative_readb(marpaESLIFRecognizerp, &marpaESLIFAlternative, 0 /* lengthl */))) {
     goto err;
   }
   marpaESLIFValuep = marpaESLIFValue_newp(marpaESLIFRecognizerp, &marpaESLIFValueOption);

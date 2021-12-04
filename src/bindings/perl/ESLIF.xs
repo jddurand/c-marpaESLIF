@@ -5093,17 +5093,17 @@ CODE:
 
 =for comment
   /* ----------------------------------------------------------------------- */
-  /* MarpaX::ESLIF::Recognizer::lexemeAlternative                            */
+  /* MarpaX::ESLIF::Recognizer::alternative                                  */
   /* ----------------------------------------------------------------------- */
 =cut
 
 bool
-lexemeAlternative(p, names, svp, ...)
+alternative(p, names, svp, ...)
   SV   *p;
   char *names;
   SV   *svp;
 PREINIT:
-  static const char *funcs = "MarpaX::ESLIF::Recognizer::lexemeAlternative";
+  static const char *funcs = "MarpaX::ESLIF::Recognizer::alternative";
 CODE:
   MarpaX_ESLIF_Recognizer_t *MarpaX_ESLIF_Recognizerp = marpaESLIFPerl_engine(aTHX_ p);
   marpaESLIFAlternative_t    marpaESLIFAlternative;
@@ -5123,26 +5123,26 @@ CODE:
     MARPAESLIFPERL_CROAK("grammarLength cannot be <= 0");
   }
 
-  marpaESLIFAlternative.lexemes        = (char *) names;
+  marpaESLIFAlternative.names          = (char *) names;
   marpaESLIFAlternative.grammarLengthl = (size_t) grammarLength;
   marpaESLIFPerl_stack_setv(aTHX_ marpaESLIFGrammar_eslifp(marpaESLIFRecognizer_grammarp(MarpaX_ESLIF_Recognizerp->marpaESLIFRecognizerp)), NULL /* marpaESLIFValuep */, -1 /* resulti */, svp, &(marpaESLIFAlternative.value), 1 /* incb */, MarpaX_ESLIF_Recognizerp->constantsp);
 
-  RETVAL = (bool) marpaESLIFRecognizer_lexeme_alternativeb(MarpaX_ESLIF_Recognizerp->marpaESLIFRecognizerp, &marpaESLIFAlternative);
+  RETVAL = (bool) marpaESLIFRecognizer_alternativeb(MarpaX_ESLIF_Recognizerp->marpaESLIFRecognizerp, &marpaESLIFAlternative);
 OUTPUT:
   RETVAL
 
 =for comment
   /* ----------------------------------------------------------------------- */
-  /* MarpaX::ESLIF::Recognizer::lexemeComplete                               */
+  /* MarpaX::ESLIF::Recognizer::alternativeComplete                          */
   /* ----------------------------------------------------------------------- */
 =cut
 
 bool
-lexemeComplete(p, length)
+alternativeComplete(p, length)
   SV  *p;
   int  length;
 PREINIT:
-  static const char *funcs = "MarpaX::ESLIF::Recognizer::lexemeComplete";
+  static const char *funcs = "MarpaX::ESLIF::Recognizer::alternativeComplete";
 CODE:
   MarpaX_ESLIF_Recognizer_t *MarpaX_ESLIF_Recognizerp = marpaESLIFPerl_engine(aTHX_ p);
 
@@ -5150,24 +5150,24 @@ CODE:
     MARPAESLIFPERL_CROAK("Length cannot be < 0");
   }
 
-  RETVAL = (bool) marpaESLIFRecognizer_lexeme_completeb(MarpaX_ESLIF_Recognizerp->marpaESLIFRecognizerp, (size_t) length);
+  RETVAL = (bool) marpaESLIFRecognizer_alternative_completeb(MarpaX_ESLIF_Recognizerp->marpaESLIFRecognizerp, (size_t) length);
 OUTPUT:
   RETVAL
 
 =for comment
   /* ----------------------------------------------------------------------- */
-  /* MarpaX::ESLIF::Recognizer::lexemeRead                                   */
+  /* MarpaX::ESLIF::Recognizer::alternativeRead                              */
   /* ----------------------------------------------------------------------- */
 =cut
 
 bool
-lexemeRead(p, names, svp, length, ...)
+alternativeRead(p, names, svp, length, ...)
   SV   *p;
   char *names;
   SV   *svp;
   int   length;
 PREINIT:
-  static const char       *funcs         = "MarpaX::ESLIF::Recognizer::lexemeRead";
+  static const char       *funcs         = "MarpaX::ESLIF::Recognizer::alternativeRead";
 CODE:
   MarpaX_ESLIF_Recognizer_t *MarpaX_ESLIF_Recognizerp = marpaESLIFPerl_engine(aTHX_ p);
   int                        grammarLength = 1;
@@ -5185,42 +5185,36 @@ CODE:
     MARPAESLIFPERL_CROAK("grammarLength cannot be <= 0");
   }
 
-  marpaESLIFAlternative.lexemes        = (char *) names;
+  marpaESLIFAlternative.names          = (char *) names;
   marpaESLIFAlternative.grammarLengthl = (size_t) grammarLength;
   marpaESLIFPerl_stack_setv(aTHX_ marpaESLIFGrammar_eslifp(marpaESLIFRecognizer_grammarp(MarpaX_ESLIF_Recognizerp->marpaESLIFRecognizerp)), NULL /* marpaESLIFValuep */, -1 /* resulti */, svp, &(marpaESLIFAlternative.value), 1 /* incb */, MarpaX_ESLIF_Recognizerp->constantsp);
 
-  RETVAL = (bool) marpaESLIFRecognizer_lexeme_readb(MarpaX_ESLIF_Recognizerp->marpaESLIFRecognizerp, &marpaESLIFAlternative, (size_t) length);
+  RETVAL = (bool) marpaESLIFRecognizer_alternative_readb(MarpaX_ESLIF_Recognizerp->marpaESLIFRecognizerp, &marpaESLIFAlternative, (size_t) length);
 OUTPUT:
   RETVAL
 
 =for comment
   /* ----------------------------------------------------------------------- */
-  /* MarpaX::ESLIF::Recognizer::lexemeTry                                    */
+  /* MarpaX::ESLIF::Recognizer::nameTry                                      */
   /* ----------------------------------------------------------------------- */
 =cut
 
 bool
-lexemeTry(p, name)
+nameTry(p, name)
   SV   *p;
   char *name;
 PREINIT:
-  static const char *funcs = "MarpaX::ESLIF::Recognizer::lexemeTry";
+  static const char *funcs = "MarpaX::ESLIF::Recognizer::nameTry";
 CODE:
   MarpaX_ESLIF_Recognizer_t *MarpaX_ESLIF_Recognizerp = marpaESLIFPerl_engine(aTHX_ p);
   short                      rcb;
 
-  if (MARPAESLIF_UNLIKELY(! marpaESLIFRecognizer_lexeme_tryb(MarpaX_ESLIF_Recognizerp->marpaESLIFRecognizerp, name, &rcb))) {
-    MARPAESLIFPERL_CROAKF("marpaESLIFRecognizer_lexeme_tryb failure, %s", strerror(errno));
+  if (MARPAESLIF_UNLIKELY(! marpaESLIFRecognizer_name_tryb(MarpaX_ESLIF_Recognizerp->marpaESLIFRecognizerp, name, &rcb))) {
+    MARPAESLIFPERL_CROAKF("marpaESLIFRecognizer_name_tryb failure, %s", strerror(errno));
   }
   RETVAL = (bool) rcb;
 OUTPUT:
   RETVAL
-
-=for comment
-  /* ----------------------------------------------------------------------- */
-  /* MarpaX::ESLIF::Recognizer::discardTry                                   */
-  /* ----------------------------------------------------------------------- */
-=cut
 
 bool
 discardTry(p)
@@ -5240,15 +5234,15 @@ OUTPUT:
 
 =for comment
   /* ----------------------------------------------------------------------- */
-  /* MarpaX::ESLIF::Recognizer::lexemeExpected                               */
+  /* MarpaX::ESLIF::Recognizer::nameExpected                                 */
   /* ----------------------------------------------------------------------- */
 =cut
 
 SV *
-lexemeExpected(p)
+nameExpected(p)
   SV *p;
 PREINIT:
-  static const char *funcs = "MarpaX::ESLIF::Recognizer::lexemeExpected";
+  static const char *funcs = "MarpaX::ESLIF::Recognizer::nameExpected";
 CODE:
   MarpaX_ESLIF_Recognizer_t  *MarpaX_ESLIF_Recognizerp = marpaESLIFPerl_engine(aTHX_ p);
   AV                         *list;
@@ -5257,8 +5251,8 @@ CODE:
   char                      **lexemesArrayp;
   SV                         *svp;
 
-  if (MARPAESLIF_UNLIKELY(! marpaESLIFRecognizer_lexeme_expectedb(MarpaX_ESLIF_Recognizerp->marpaESLIFRecognizerp, &nLexeme, &lexemesArrayp))) {
-    MARPAESLIFPERL_CROAKF("marpaESLIFRecognizer_lexeme_expectedb failure, %s", strerror(errno));
+  if (MARPAESLIF_UNLIKELY(! marpaESLIFRecognizer_name_expectedb(MarpaX_ESLIF_Recognizerp->marpaESLIFRecognizerp, &nLexeme, &lexemesArrayp))) {
+    MARPAESLIFPERL_CROAKF("marpaESLIFRecognizer_name_expectedb failure, %s", strerror(errno));
   }
 
   list  = newAV();
@@ -5281,24 +5275,24 @@ OUTPUT:
 
 =for comment
   /* ----------------------------------------------------------------------- */
-  /* MarpaX::ESLIF::Recognizer::lexemeLastPause                              */
+  /* MarpaX::ESLIF::Recognizer::nameLastPause                                */
   /* ----------------------------------------------------------------------- */
 =cut
 
 SV *
-lexemeLastPause(p, lexeme)
+nameLastPause(p, lexeme)
   SV   *p;
   char *lexeme;
 PREINIT:
-  static const char *funcs = "MarpaX::ESLIF::Recognizer::lexemeLastPause";
+  static const char *funcs = "MarpaX::ESLIF::Recognizer::nameLastPause";
 CODE:
   MarpaX_ESLIF_Recognizer_t *MarpaX_ESLIF_Recognizerp = marpaESLIFPerl_engine(aTHX_ p);
   char                      *pauses;
   size_t                     pausel;
   SV                         *svp;
 
-  if (MARPAESLIF_UNLIKELY(!  marpaESLIFRecognizer_lexeme_last_pauseb(MarpaX_ESLIF_Recognizerp->marpaESLIFRecognizerp, (char *) lexeme, &pauses, &pausel))) {
-    MARPAESLIFPERL_CROAKF("marpaESLIFRecognizer_lexeme_last_pauseb failure, %s", strerror(errno));
+  if (MARPAESLIF_UNLIKELY(!  marpaESLIFRecognizer_name_last_pauseb(MarpaX_ESLIF_Recognizerp->marpaESLIFRecognizerp, (char *) lexeme, &pauses, &pausel))) {
+    MARPAESLIFPERL_CROAKF("marpaESLIFRecognizer_name_last_pauseb failure, %s", strerror(errno));
   }
   if ((pauses != NULL) && (pausel > 0)) {
     svp = MARPAESLIFPERL_NEWSVPVN_UTF8(pauses, pausel);
@@ -5311,24 +5305,24 @@ OUTPUT:
 
 =for comment
   /* ----------------------------------------------------------------------- */
-  /* MarpaX::ESLIF::Recognizer::lexemeLastTry                                */
+  /* MarpaX::ESLIF::Recognizer::nameLastTry                                  */
   /* ----------------------------------------------------------------------- */
 =cut
 
 SV *
-lexemeLastTry(p, lexeme)
+nameLastTry(p, lexeme)
   SV   *p;
   char *lexeme;
 PREINIT:
-  static const char *funcs = "MarpaX::ESLIF::Recognizer::lexemeLastTry";
+  static const char *funcs = "MarpaX::ESLIF::Recognizer::nameLastTry";
 CODE:
   MarpaX_ESLIF_Recognizer_t *MarpaX_ESLIF_Recognizerp = marpaESLIFPerl_engine(aTHX_ p);
   char                      *trys;
   size_t                     tryl;
   SV                        *svp;
 
-  if (MARPAESLIF_UNLIKELY(!  marpaESLIFRecognizer_lexeme_last_tryb(MarpaX_ESLIF_Recognizerp->marpaESLIFRecognizerp, (char *) lexeme, &trys, &tryl))) {
-    MARPAESLIFPERL_CROAKF("marpaESLIFRecognizer_lexeme_last_tryb failure, %s", strerror(errno));
+  if (MARPAESLIF_UNLIKELY(!  marpaESLIFRecognizer_name_last_tryb(MarpaX_ESLIF_Recognizerp->marpaESLIFRecognizerp, (char *) lexeme, &trys, &tryl))) {
+    MARPAESLIFPERL_CROAKF("marpaESLIFRecognizer_name_last_tryb failure, %s", strerror(errno));
   }
   if ((trys != NULL) && (tryl > 0)) {
     svp = MARPAESLIFPERL_NEWSVPVN_UTF8(trys, tryl);

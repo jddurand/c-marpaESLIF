@@ -8,7 +8,7 @@
 static marpaESLIFValueRuleCallback_t   ruleActionResolverp(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, char *actions);
 static marpaESLIFValueSymbolCallback_t symbolActionResolverp(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, char *actions);
 static short                           default_meta_actionb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
-static short                           default_lexeme_actionb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, marpaESLIFValueResult_t *marpaESLIFValueResultp, int resulti);
+static short                           default_symbol_actionb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, marpaESLIFValueResult_t *marpaESLIFValueResultp, int resulti);
 static short                           inputReaderb(void *userDatavp, char **inputsp, size_t *inputlp, short *eofbp, short *characterStreambp, char **encodingsp, size_t *encodinglp, marpaESLIFReaderDispose_t *disposeCallbackpp);
 static short                           eventManagerb(int *eventCountip, marpaESLIFRecognizer_t *marpaESLIFRecognizerp, genericLogger_t *genericLoggerp);
 static void                            genericLoggerCallback(void *userDatavp, genericLoggerLevel_t logLeveli, const char *msgs);
@@ -23,9 +23,12 @@ typedef struct marpaESLIFTester_context {
   size_t           valuel;
 } marpaESLIFTester_context_t;
 
+const static char *myContexts;
+
 const static char *charEncodings = "ASCII";
 
 const static char *exceptions = "\n"
+  ":terminal ::= :sol pause => before event => ^sol # to force the scanner to stop at the very beginning\n"
   ":start ::= <start2>\n"
   ":discard ::= /[\\s]+/ event => :symbol\n"
   ":discard ::= \xE2\x80\x9C@\\\xE2\x80\x9D\xE2\x80\x9D event => discard_arobace\n"
@@ -39,15 +42,15 @@ const static char *exceptions = "\n"
   "\n"
   "chars ~ char*\n"
   "\n"
-  ":terminal ::= :sol pause => after event => sol_after\n"
+  ":terminal ::= :sol pause => after event => solAfterEvent\n"
   "sol ~ :sol\n"
-  ":terminal ::= :eof pause => after event => eof_after\n"
+  ":terminal ::= :eof pause => after event => eofAfterEvent\n"
   "eof ~ :eof\n"
-  ":terminal ::= :eol pause => after event => eol_after\n"
+  ":terminal ::= :eol pause => after event => eolAfterEvent\n"
   "eol ~ :eol\n"
   "\n"
-  ":lexeme ::= <char> pause => before event => char_before\n"
-  ":lexeme ::= <char> pause => after event => char_after\n"
+  ":lexeme ::= <char> pause => before event => charBeforeEvent\n"
+  ":lexeme ::= <char> pause => after event => charAfterEvent\n"
   "char ~ [a-zA-Z0-9_:@]\n"
   "\n"
   "startException ~ chars ':' chars\n"
@@ -82,22 +85,25 @@ int main() {
   marpaESLIFValue_t            *marpaESLIFValuep = NULL;
   short                         continueb;
   short                         exhaustedb;
-  const static char            *inputs = "abc! 123de@:@f\r\nX";
+  const static char            *inputs = "    abc! 123de@:@f\r\nX";
   short                         rcValueb;
   int                           eventCounti = 0;
-  size_t                        nLexemel;
-  size_t                        lexemel;
-  char                        **lexemesArrayp;
+  size_t                        nSymboll;
+  size_t                        symboll;
+  char                        **symbolsArrayp;
   int                          *ruleip;
   size_t                        rulel;
   size_t                        rulei;
   marpaESLIFRuleProperty_t      ruleProperty;
   int                          *symbolip;
-  size_t                        symboll;
   size_t                        symboli;
   marpaESLIFSymbolProperty_t    symbolProperty;
   size_t                        rhsl;
   marpaESLIFGrammarProperty_t   grammarProperty;
+  short                         matchb;
+  char                         *trys;
+  size_t                        tryl;
+  size_t                        discardl;
   
   genericLoggerp = genericLogger_newp(genericLoggerCallback, NULL /* userDatavp */, GENERICLOGGER_LOGLEVEL_TRACE);
 
@@ -240,8 +246,8 @@ int main() {
           }
         }
       }
-      if (marpaESLIFGrammar_symbolarray_by_levelb(marpaESLIFGrammarp, &symbolip, &symboll, leveli, NULL)) {
-        for (symboli = 0; symboli < symboll; symboli++) {
+      if (marpaESLIFGrammar_symbolarray_by_levelb(marpaESLIFGrammarp, &symbolip, &nSymboll, leveli, NULL)) {
+        for (symboli = 0; symboli < nSymboll; symboli++) {
           if (marpaESLIFGrammar_symbolproperty_by_levelb(marpaESLIFGrammarp, symboli, &symbolProperty, leveli, NULL)) {
             GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "... Symbol No %d", symboli);
             GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "... ... type                  : %d", symbolProperty.type);
@@ -346,27 +352,65 @@ int main() {
   if (! marpaESLIFRecognizer_scanb(marpaESLIFRecognizerp, 1 /* initialEventsb */, &continueb, &exhaustedb)) {
     goto err;
   }
-  /* Lexemes expected ? */
-  if (! marpaESLIFRecognizer_lexeme_expectedb(marpaESLIFRecognizerp, &nLexemel, &lexemesArrayp)) {
+  /* Grammar terminals expected ? */
+  if (! marpaESLIFRecognizer_name_expectedb(marpaESLIFRecognizerp, &nSymboll, &symbolsArrayp)) {
     goto err;
   }
-  for (lexemel = 0; lexemel < nLexemel; lexemel++) {
-    GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "Lexeme expected: %s", lexemesArrayp[lexemel]);
+  for (symboll = 0; symboll < nSymboll; symboll++) {
+    GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "Symbol name expected: %s", symbolsArrayp[symboll]);
   }
+
+  /* Try :sol pseudo terminal - it must match */
+  if (! marpaESLIFRecognizer_name_tryb(marpaESLIFRecognizerp, ":sol", &matchb)) {
+    goto err;
+  }
+  if (! matchb) {
+    GENERICLOGGER_ERROR(marpaESLIFOption.genericLoggerp, "Initial :sol terminal try did not match");
+    goto err;
+  }
+  if (! marpaESLIFRecognizer_name_last_tryb(marpaESLIFRecognizerp, ":sol", &trys, &tryl)) {
+    goto err;
+  }
+  GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, ":sol last try buffer of size %ld: <%s>", (unsigned long) tryl, trys);
+
+  /* This will eat the :sol that is expexted */
   if (! eventManagerb(&eventCounti, marpaESLIFRecognizerp, genericLoggerp)) {
     goto err;
   }
+
+  /* Try :discard pseudo symbol - it must match */
+  if (! marpaESLIFRecognizer_discard_tryb(marpaESLIFRecognizerp, &matchb)) {
+    goto err;
+  }
+  if (! matchb) {
+    GENERICLOGGER_ERROR(marpaESLIFOption.genericLoggerp, "Initial :discard try did not match");
+    goto err;
+  }
+  if (! marpaESLIFRecognizer_discard_last_tryb(marpaESLIFRecognizerp, &trys, &tryl)) {
+    goto err;
+  }
+  GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, ":discard last try buffer of size %ld: <%s>", (unsigned long) tryl, trys);
+
+  /* Try initial discard - it must succeed with the same number of bytes as with the try */
+  if (! marpaESLIFRecognizer_discardb(marpaESLIFRecognizerp, &discardl)) {
+    goto err;
+  }
+  if (discardl != tryl) {
+    GENERICLOGGER_ERRORF(marpaESLIFOption.genericLoggerp, "Initial :discard succeded on %ld bytes but :discard try said %ld bytes", (unsigned long) discardl, (unsigned long) tryl);
+    goto err;
+  }
+
   while (continueb) {
     if (! marpaESLIFRecognizer_resumeb(marpaESLIFRecognizerp, 0, &continueb, &exhaustedb)) {
       goto err;
     }
 
-    /* Lexemes expected ? */
-    if (! marpaESLIFRecognizer_lexeme_expectedb(marpaESLIFRecognizerp, &nLexemel, &lexemesArrayp)) {
+    /* Grammar terminals expected ? */
+    if (! marpaESLIFRecognizer_name_expectedb(marpaESLIFRecognizerp, &nSymboll, &symbolsArrayp)) {
       goto err;
     }
-    for (lexemel = 0; lexemel < nLexemel; lexemel++) {
-      GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "Lexeme expected: %s", lexemesArrayp[lexemel]);
+    for (symboll = 0; symboll < nSymboll; symboll++) {
+      GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "Symbol name expected: %s", symbolsArrayp[symboll]);
     }
     
     if (! eventManagerb(&eventCounti, marpaESLIFRecognizerp, genericLoggerp)) {
@@ -502,8 +546,8 @@ static marpaESLIFValueSymbolCallback_t symbolActionResolverp(void *userDatavp, m
     GENERICLOGGER_ERRORF(marpaESLIFTester_contextp->genericLoggerp, "leveli = %d", leveli);
     goto err;
   }
-  if (strcmp(actions, "default_lexeme_actionb") == 0) {
-    marpaESLIFValueSymbolCallbackp = default_lexeme_actionb;
+  if (strcmp(actions, "default_symbol_actionb") == 0) {
+    marpaESLIFValueSymbolCallbackp = default_symbol_actionb;
   } else {
     GENERICLOGGER_ERRORF(marpaESLIFTester_contextp->genericLoggerp, "Unsupported action \"%s\"", actions);
     goto err;
@@ -525,7 +569,7 @@ static short default_meta_actionb(void *userDatavp, marpaESLIFValue_t *marpaESLI
 }
 
 /****************************************************************************/
-static short default_lexeme_actionb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, marpaESLIFValueResult_t *marpaESLIFValueResultp, int resulti)
+static short default_symbol_actionb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, marpaESLIFValueResult_t *marpaESLIFValueResultp, int resulti)
 /****************************************************************************/
 {
   return 0;
@@ -594,28 +638,44 @@ static short eventManagerb(int *eventCountip, marpaESLIFRecognizer_t *marpaESLIF
   for (eventArrayIteratorl = 0; eventArrayIteratorl < eventArrayl; eventArrayIteratorl++) {
     switch (eventArrayp[eventArrayIteratorl].type) {
     case MARPAESLIF_EVENTTYPE_COMPLETED:
-      GENERICLOGGER_INFOF(genericLoggerp, "[%3d] Event %s for symbol %s", *eventCountip, eventArrayp[eventArrayIteratorl].events, eventArrayp[eventArrayIteratorl].symbols);
+      GENERICLOGGER_INFOF(genericLoggerp, "[%3d] Completed event %s for symbol %s", *eventCountip, eventArrayp[eventArrayIteratorl].events, eventArrayp[eventArrayIteratorl].symbols);
       break;
     case MARPAESLIF_EVENTTYPE_NULLED:
-      GENERICLOGGER_INFOF(genericLoggerp, "[%3d] Event %s for symbol %s", *eventCountip, eventArrayp[eventArrayIteratorl].events, eventArrayp[eventArrayIteratorl].symbols);
+      GENERICLOGGER_INFOF(genericLoggerp, "[%3d] Nulled Event %s for symbol %s", *eventCountip, eventArrayp[eventArrayIteratorl].events, eventArrayp[eventArrayIteratorl].symbols);
       break;
     case MARPAESLIF_EVENTTYPE_PREDICTED:
-      GENERICLOGGER_INFOF(genericLoggerp, "[%3d] Event %s for symbol %s", *eventCountip, eventArrayp[eventArrayIteratorl].events, eventArrayp[eventArrayIteratorl].symbols);
+      GENERICLOGGER_INFOF(genericLoggerp, "[%3d] Predicted Event %s for symbol %s", *eventCountip, eventArrayp[eventArrayIteratorl].events, eventArrayp[eventArrayIteratorl].symbols);
       break;
     case MARPAESLIF_EVENTTYPE_BEFORE:
       if (! marpaESLIFRecognizer_isEofb(marpaESLIFRecognizerp, &eofb)) {
         goto err;
       }
-      GENERICLOGGER_INFOF(genericLoggerp, "[%3d] Event %s for symbol %s (character is %c (0x%lx), eofb is %d)", *eventCountip, eventArrayp[eventArrayIteratorl].events, eventArrayp[eventArrayIteratorl].symbols, *inputs, (unsigned long) *inputs, (int) eofb);
-      if (strcmp(eventArrayp[eventArrayIteratorl].events, "char_before") == 0) {
+      GENERICLOGGER_INFOF(genericLoggerp, "[%3d] Before Event %s for symbol %s (character is %c (0x%lx), eofb is %d)", *eventCountip, eventArrayp[eventArrayIteratorl].events, eventArrayp[eventArrayIteratorl].symbols, *inputs, (unsigned long) *inputs, (int) eofb);
+      if (strcmp(eventArrayp[eventArrayIteratorl].events, "charBeforeEvent") == 0) {
         GENERICLOGGER_INFOF(genericLoggerp, "[%3d] ... Pushing single alternative <%s>", *eventCountip, eventArrayp[eventArrayIteratorl].symbols);
-        marpaESLIFAlternative.lexemes               = eventArrayp[eventArrayIteratorl].symbols;
+        marpaESLIFAlternative.names                 = eventArrayp[eventArrayIteratorl].symbols;
         marpaESLIFAlternative.value.type            = MARPAESLIF_VALUE_TYPE_CHAR;
         marpaESLIFAlternative.value.u.c             = *inputs;
-        marpaESLIFAlternative.value.contextp        =  NULL; /* Not used */
+        marpaESLIFAlternative.value.contextp        =  (void *) &myContexts; /* Not used */
         marpaESLIFAlternative.value.representationp = alternativeRepresentation;
         marpaESLIFAlternative.grammarLengthl        = 1;
-        if (! marpaESLIFRecognizer_lexeme_readb(marpaESLIFRecognizerp, &marpaESLIFAlternative, 1 /* Length in the real input */)) {
+        if (! marpaESLIFRecognizer_alternative_readb(marpaESLIFRecognizerp, &marpaESLIFAlternative, 1 /* Length in the real input */)) {
+          goto err;
+        }
+        /* Complete can generate again events! */
+        /* We have no risk because a given symbol instance can never generate two events: if it has been completed */
+        /* and it will be predicted again, then the completion event wins. */
+        if (! eventManagerb(eventCountip, marpaESLIFRecognizerp, genericLoggerp)) {
+          goto err;
+        }
+      } else  if (strcmp(eventArrayp[eventArrayIteratorl].events, "^sol") == 0) {
+        GENERICLOGGER_INFOF(genericLoggerp, "[%3d] ... Pushing single alternative <%s>", *eventCountip, eventArrayp[eventArrayIteratorl].symbols);
+        marpaESLIFAlternative.names                 = eventArrayp[eventArrayIteratorl].symbols;
+        marpaESLIFAlternative.value.type            = MARPAESLIF_VALUE_TYPE_UNDEF;
+        marpaESLIFAlternative.value.contextp        =  (void *) &myContexts; /* Not used */
+        marpaESLIFAlternative.value.representationp = NULL; /* Not used */
+        marpaESLIFAlternative.grammarLengthl        = 1;
+        if (! marpaESLIFRecognizer_alternative_readb(marpaESLIFRecognizerp, &marpaESLIFAlternative, 1 /* Length in the real input */)) {
           goto err;
         }
         /* Complete can generate again events! */
@@ -625,6 +685,7 @@ static short eventManagerb(int *eventCountip, marpaESLIFRecognizer_t *marpaESLIF
           goto err;
         }
       }
+
       break;
     case MARPAESLIF_EVENTTYPE_AFTER:
       if (! marpaESLIFRecognizer_isEofb(marpaESLIFRecognizerp, &eofb)) {
@@ -633,13 +694,13 @@ static short eventManagerb(int *eventCountip, marpaESLIFRecognizer_t *marpaESLIF
       if (! marpaESLIFRecognizer_inputb(marpaESLIFRecognizerp, &inputs, &inputl)) {
         goto err;
       }
-      GENERICLOGGER_INFOF(genericLoggerp, "[%3d] Event %s for symbol %s (inputl=%ld, eofbp is %d)", *eventCountip, eventArrayp[eventArrayIteratorl].events, eventArrayp[eventArrayIteratorl].symbols, (unsigned long) inputl, (int) eofb);
+      GENERICLOGGER_INFOF(genericLoggerp, "[%3d] After event %s for symbol %s (inputl=%ld, eofbp is %d)", *eventCountip, eventArrayp[eventArrayIteratorl].events, eventArrayp[eventArrayIteratorl].symbols, (unsigned long) inputl, (int) eofb);
       break;
     case MARPAESLIF_EVENTTYPE_EXHAUSTED:
       GENERICLOGGER_INFOF(genericLoggerp, "[%3d] >>> Exhausted event", *eventCountip);
       break;
     case MARPAESLIF_EVENTTYPE_DISCARD:
-      GENERICLOGGER_INFOF(genericLoggerp, "[%3d] Event %s for symbol %s", *eventCountip, eventArrayp[eventArrayIteratorl].events, eventArrayp[eventArrayIteratorl].symbols);
+      GENERICLOGGER_INFOF(genericLoggerp, "[%3d] Discard event %s for symbol %s", *eventCountip, eventArrayp[eventArrayIteratorl].events, eventArrayp[eventArrayIteratorl].symbols);
       break;
     default:
       if (eventArrayp[eventArrayIteratorl].type != MARPAESLIF_EVENTTYPE_NONE) {

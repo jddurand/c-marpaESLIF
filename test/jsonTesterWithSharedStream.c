@@ -319,7 +319,7 @@ static short doparseb(genericLogger_t *genericLoggerp, marpaESLIFRecognizer_t *m
       GENERICLOGGER_DEBUGF(genericLoggerp, "Event %s", events);
       if (strcmp(events, "lstring$") == 0) {
 
-        if (! marpaESLIFRecognizer_lexeme_last_pauseb(marpaESLIFRecognizerp, "lstring", &pauses, &pausel)) {
+        if (! marpaESLIFRecognizer_name_last_pauseb(marpaESLIFRecognizerp, "lstring", &pauses, &pausel)) {
           goto err;
         }
         if (! marpaESLIFRecognizer_locationb(marpaESLIFRecognizerp, &linel, &columnl)) {
@@ -340,13 +340,13 @@ static short doparseb(genericLogger_t *genericLoggerp, marpaESLIFRecognizer_t *m
         }
   
         /* Force read of the LCURLY lexeme */
-        marpaESLIFAlternative.lexemes               = "LCURLY";
+        marpaESLIFAlternative.names                 = "LCURLY";
         marpaESLIFAlternative.value.contextp        =  &context; /* Must be != NULL */
         marpaESLIFAlternative.value.representationp = NULL; /* Default representation is ok */
         marpaESLIFAlternative.value.type            = MARPAESLIF_VALUE_TYPE_CHAR;
         marpaESLIFAlternative.value.u.c             = '{';
         marpaESLIFAlternative.grammarLengthl        = 1;
-        if (! marpaESLIFRecognizer_lexeme_readb(marpaESLIFRecognizerObjectp, &marpaESLIFAlternative, 1 /* Length in the real input */)) {
+        if (! marpaESLIFRecognizer_alternative_readb(marpaESLIFRecognizerObjectp, &marpaESLIFAlternative, 1 /* Length in the real input */)) {
           goto err;
         }
 
@@ -357,21 +357,21 @@ static short doparseb(genericLogger_t *genericLoggerp, marpaESLIFRecognizer_t *m
         marpaESLIFRecognizerObjectp = NULL;
 
         /* Read a fake object - no need to advance the stream, because we shared it with marpaESLIFRecognizerObjectp */
-        marpaESLIFAlternative.lexemes               = "OBJECT_FROM_INNER_GRAMMAR";
+        marpaESLIFAlternative.names                 = "OBJECT_FROM_INNER_GRAMMAR";
         marpaESLIFAlternative.value.type            = MARPAESLIF_VALUE_TYPE_UNDEF;
         marpaESLIFAlternative.grammarLengthl        = 1;
-        if (! marpaESLIFRecognizer_lexeme_readb(marpaESLIFRecognizerp, &marpaESLIFAlternative, 0 /* Length in the real input */)) {
+        if (! marpaESLIFRecognizer_alternative_readb(marpaESLIFRecognizerp, &marpaESLIFAlternative, 0 /* Length in the real input */)) {
           goto err;
         }
       } else if (strcmp(events, "^RCURLY") == 0) {
         /* Force read of the RCURLY lexeme */
-        marpaESLIFAlternative.lexemes               = "RCURLY";
+        marpaESLIFAlternative.names                 = "RCURLY";
         marpaESLIFAlternative.value.type            = MARPAESLIF_VALUE_TYPE_CHAR;
         marpaESLIFAlternative.value.contextp        =  &context; /* Must be != NULL */
         marpaESLIFAlternative.value.representationp = NULL; /* Default representation is ok */
         marpaESLIFAlternative.value.u.c             = '{';
         marpaESLIFAlternative.grammarLengthl        = 1;
-        if (! marpaESLIFRecognizer_lexeme_readb(marpaESLIFRecognizerp, &marpaESLIFAlternative, 1 /* Length in the real input */)) {
+        if (! marpaESLIFRecognizer_alternative_readb(marpaESLIFRecognizerp, &marpaESLIFAlternative, 1 /* Length in the real input */)) {
           goto err;
         }
 

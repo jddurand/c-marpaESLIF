@@ -94,7 +94,7 @@ use diagnostics;
 use Carp qw/croak/;
 #
 # In our example we have NOT specified a symbol action, therefore
-# lexemes that come directly from the grammar are exactly what is in the input
+# symbols that come directly from the grammar are exactly what is in the input
 #*/
 
 sub new {
@@ -1582,16 +1582,16 @@ for (my $i = 0; $i <= $#strings; $i++) {
                     #
                     # Recognizer will wait forever if we do not feed the number
                     #
-                    my $pause = $eslifRecognizer->lexemeLastPause("NUMBER");
+                    my $pause = $eslifRecognizer->nameLastPause("NUMBER");
                     if (! defined($pause)) {
                         BAIL_OUT("Pause before on NUMBER but no pause information!");
                       }
-                    if (! doLexemeRead($log, $eslifRecognizer, "NUMBER", $j, $pause)) {
-                        BAIL_OUT("NUMBER expected but reading such lexeme fails!");
+                    if (! doAlternativeRead($log, $eslifRecognizer, "NUMBER", $j, $pause)) {
+                        BAIL_OUT("NUMBER expected but reading such name fails!");
                     }
                     doDiscardTry($log, $eslifRecognizer);
-                    doLexemeTry($log, $eslifRecognizer, "WHITESPACES");
-                    doLexemeTry($log, $eslifRecognizer, "whitespaces");
+                    doNameTry($log, $eslifRecognizer, "WHITESPACES");
+                    doNameTry($log, $eslifRecognizer, "whitespaces");
                 }
             }
             if ($j == 0) {
@@ -1628,7 +1628,7 @@ sub doScan {
     my $context = "after scan";
     showRecognizerInput($context, $log, $eslifRecognizer);
     showEvents($context, $log, $eslifRecognizer);
-    showLexemeExpected($context, $log, $eslifRecognizer);
+    showNameExpected($context, $log, $eslifRecognizer);
 		
     return 1;
 }
@@ -1646,10 +1646,10 @@ sub showEvents {
     $log->debugf("[%s] Events: %s", $context, $eslifRecognizer->events);
 }
 
-sub showLexemeExpected {
+sub showNameExpected {
     my ($context, $log, $eslifRecognizer) = @_;
 
-    $log->debugf("[%s] Expected lexemes: %s", $context, $eslifRecognizer->lexemeExpected);
+    $log->debugf("[%s] Expected names: %s", $context, $eslifRecognizer->nameExpected);
 }
 
 sub doResume {
@@ -1664,7 +1664,7 @@ sub doResume {
     $context = "after resume";
     showRecognizerInput($context, $log, $eslifRecognizer);
     showEvents($context, $log, $eslifRecognizer);
-    showLexemeExpected($context, $log, $eslifRecognizer);
+    showNameExpected($context, $log, $eslifRecognizer);
 		
     return 1;
 }
@@ -1746,19 +1746,19 @@ sub showError {
 #
 # We replace current NUMBER by the Integer object representing value
 #
-sub doLexemeRead {
+sub doAlternativeRead {
     my ($log, $eslifRecognizer, $symbol, $value, $pause) = @_;
     my $length = length(encode('UTF-8', $pause));
     my $context;
     $log->debugf("... Forcing Integer object for \"%s\" spanned on %d bytes instead of \"%s\"", $value, $length, $pause);
-    if (! $eslifRecognizer->lexemeRead($symbol, int($value), $length, 1)) {
+    if (! $eslifRecognizer->alternativeRead($symbol, int($value), $length, 1)) {
         return 0;
     }
 
-    $context = "after lexemeRead";
+    $context = "after alternativeRead";
     showRecognizerInput($context, $log, $eslifRecognizer);
     showEvents($context, $log, $eslifRecognizer);
-    showLexemeExpected($context, $log, $eslifRecognizer);
+    showNameExpected($context, $log, $eslifRecognizer);
 		
     return 1;
 }
@@ -1779,18 +1779,18 @@ sub doDiscardTry {
     }
 }
 
-sub doLexemeTry {
+sub doNameTry {
     my ($log, $eslifRecognizer, $symbol) = @_;
     my $test;
     try {
-        $test = $eslifRecognizer->lexemeTry($symbol);
-        $log->debugf("... Testing %s lexeme at current position returns %d", $symbol, $test);
+        $test = $eslifRecognizer->nameTry($symbol);
+        $log->debugf("... Testing %s name at current position returns %d", $symbol, $test);
         if ($test) {
-            my $try = $eslifRecognizer->lexemeLastTry($symbol);
+            my $try = $eslifRecognizer->nameLastTry($symbol);
             $log->debugf("... Testing symbol %s at current position gave \"%s\"", $symbol, $try);
         }
     } catch {
-        # Because we test with a symbol that is not a lexeme, and that raises an exception
+        # Because we test with a symbol that is not a name, and that raises an exception
         $log->debugf($_);
     }
 }

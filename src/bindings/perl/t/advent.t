@@ -168,7 +168,7 @@ for my $test_data (@tests) {
           while ($ok && $re->isCanContinue()) {
 
             # In our example there is a single event: no need to ask what it is
-            my $CARD = $re->lexemeLastPause('CARD');
+            my $CARD = $re->nameLastPause('CARD');
             ok(utf8::is_utf8($CARD), "Card '$CARD' have the utf8 flag");
             if ( ++$played{$CARD} > 1 ) {
                 $actual_result = 'Parse stopped by application';
