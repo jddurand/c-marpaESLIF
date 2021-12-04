@@ -6711,6 +6711,8 @@ static short _marpaESLIF_bootstrap_G1_action_lexeme_ruleb(void *userDatavp, marp
   marpaESLIF_action_t                         *symbolactionp;
   marpaESLIF_action_t                         *ifactionp;
   short                                       *verbosebp;
+  marpaESLIF_bootstrap_utf_string_t           *namingp;
+  marpaESLIF_string_t                         *descp;
   short                                        rcb;
 
   MARPAESLIF_BOOTSTRAP_GET_INT(marpaESLIFValuep, arg0i+1, leveli);
@@ -6765,7 +6767,7 @@ static short _marpaESLIF_bootstrap_G1_action_lexeme_ruleb(void *userDatavp, marp
                                                                               &priorityip,
                                                                               &pausei,
                                                                               NULL, /* latmbp */
-                                                                              NULL, /* namingpp */
+                                                                              &namingp,
                                                                               &symbolactionp,
                                                                               &eventInitializationp,
                                                                               &ifactionp,
@@ -6778,9 +6780,23 @@ static short _marpaESLIF_bootstrap_G1_action_lexeme_ruleb(void *userDatavp, marp
   }
 
   /* Update the symbol */
+  if (namingp != NULL) {
+    descp = _marpaESLIF_string_newp(marpaESLIFp, NULL /* encodingasciis */, namingp->bytep, namingp->bytel);
+    if (descp == NULL) {
+      goto err;
+    }
+    /* symbolp->descp is then != symbolp->u.metap->descp (that is the default) */
+    if (symbolp->descp != symbolp->u.metap->descp) {
+      /* This was already overwriten */
+      _marpaESLIF_string_freev(symbolp->descp, 0 /* onStackp */);
+    }
+    symbolp->descp = descp;
+  }
+
   if (priorityip != NULL) {
     symbolp->priorityi = *priorityip;
   }
+
   if (verbosebp != NULL) {
     symbolp->verboseb = *verbosebp;
   }
@@ -6903,6 +6919,8 @@ static short _marpaESLIF_bootstrap_G1_action_terminal_ruleb(void *userDatavp, ma
   short                                        undefb;
   marpaESLIF_action_t                         *symbolactionp;
   marpaESLIF_action_t                         *ifactionp;
+  marpaESLIF_bootstrap_utf_string_t           *namingp;
+  marpaESLIF_string_t                         *descp;
   short                                        rcb;
 
   MARPAESLIF_BOOTSTRAP_GET_INT(marpaESLIFValuep, arg0i+1, leveli);
@@ -6935,6 +6953,12 @@ static short _marpaESLIF_bootstrap_G1_action_terminal_ruleb(void *userDatavp, ma
     goto err;
   }
 
+  /* Check this is a terminal symbol */
+  if (symbolp->type != MARPAESLIF_SYMBOL_TYPE_TERMINAL) {
+    MARPAESLIF_ERRORF(marpaESLIFp, ":terminal rule on <%s> but this is a lexeme", symbolp->descp->asciis);
+    goto err;
+  }
+
   /* Unpack the adverb list */
   if (MARPAESLIF_UNLIKELY(! _marpaESLIF_bootstrap_unpack_adverbListItemStackb(marpaESLIFp,
                                                                               ":terminal rule",
@@ -6952,7 +6976,7 @@ static short _marpaESLIF_bootstrap_G1_action_terminal_ruleb(void *userDatavp, ma
                                                                               &priorityip,
                                                                               &pausei,
                                                                               NULL, /* latmbp */
-                                                                              NULL, /* namingpp */
+                                                                              &namingp,
                                                                               &symbolactionp,
                                                                               &eventInitializationp,
                                                                               &ifactionp,
@@ -6965,6 +6989,19 @@ static short _marpaESLIF_bootstrap_G1_action_terminal_ruleb(void *userDatavp, ma
   }
 
   /* Update the symbol */
+  if (namingp != NULL) {
+    descp = _marpaESLIF_string_newp(marpaESLIFp, NULL /* encodingasciis */, namingp->bytep, namingp->bytel);
+    if (descp == NULL) {
+      goto err;
+    }
+    /* symbolp->descp is then != symbolp->u.terminalp->descp (that is the default) */
+    if (symbolp->descp != symbolp->u.terminalp->descp) {
+      /* This was already overwriten */
+      _marpaESLIF_string_freev(symbolp->descp, 0 /* onStackp */);
+    }
+    symbolp->descp = descp;
+  }
+
   if (priorityip != NULL) {
     symbolp->priorityi = *priorityip;
   }
