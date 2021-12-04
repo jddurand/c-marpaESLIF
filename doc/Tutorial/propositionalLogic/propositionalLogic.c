@@ -9,34 +9,34 @@
 static char myContext;
 #define MY_CONTEXT &myContext /* Any value != NULL 0 */
 
-#define DO_ALTERNATIVE_UNDEF(names) do {                                \
+#define DO_ALTERNATIVE_UNDEF(this) do {                                 \
     marpaESLIFAlternative_t  marpaESLIFAlternative;                     \
                                                                         \
-    marpaESLIFAlternative.lexemes        = names;                       \
+    marpaESLIFAlternative.names          = this;                        \
     marpaESLIFAlternative.value.type     = MARPAESLIF_VALUE_TYPE_UNDEF; \
     marpaESLIFAlternative.value.contextp = MY_CONTEXT;                  \
     marpaESLIFAlternative.grammarLengthl = 1;                           \
                                                                         \
-    GENERICLOGGER_DEBUGF(genericLoggerp, "Injecting <%s>", names);      \
-    if (! marpaESLIFRecognizer_lexeme_readb(marpaESLIFRecognizerp, &marpaESLIFAlternative, 0)) { \
-      GENERICLOGGER_ERRORF(genericLoggerp, "Failure to set <%s> alternative", names); \
+    GENERICLOGGER_DEBUGF(genericLoggerp, "Injecting <%s>", this);      \
+    if (! marpaESLIFRecognizer_alternative_readb(marpaESLIFRecognizerp, &marpaESLIFAlternative, 0)) { \
+      GENERICLOGGER_ERRORF(genericLoggerp, "Failure to set <%s> alternative", this); \
       marpaESLIFRecognizer_progressLogb(marpaESLIFRecognizerp, -1, -1, GENERICLOGGER_LOGLEVEL_ERROR); \
       goto err;                                                         \
     }                                                                   \
   } while (0)
 
-#define DO_ALTERNATIVE_CHAR(names, boolval) do {                        \
+#define DO_ALTERNATIVE_CHAR(this, boolval) do {                         \
     marpaESLIFAlternative_t  marpaESLIFAlternative;                     \
                                                                         \
-    marpaESLIFAlternative.lexemes        = names;                       \
+    marpaESLIFAlternative.names          = this;                        \
     marpaESLIFAlternative.value.type     = MARPAESLIF_VALUE_TYPE_CHAR;  \
     marpaESLIFAlternative.value.u.c      = boolval;                     \
     marpaESLIFAlternative.value.contextp = MY_CONTEXT;                  \
     marpaESLIFAlternative.grammarLengthl = 1;                           \
                                                                         \
-    GENERICLOGGER_DEBUGF(genericLoggerp, "Injecting <%s> with value '%c'", names, boolval); \
-    if (! marpaESLIFRecognizer_lexeme_readb(marpaESLIFRecognizerp, &marpaESLIFAlternative, 0)) { \
-      GENERICLOGGER_ERRORF(genericLoggerp, "Failure to set <%s> alternative", names); \
+    GENERICLOGGER_DEBUGF(genericLoggerp, "Injecting <%s> with value '%c'", this, boolval); \
+    if (! marpaESLIFRecognizer_alternative_readb(marpaESLIFRecognizerp, &marpaESLIFAlternative, 0)) { \
+      GENERICLOGGER_ERRORF(genericLoggerp, "Failure to set <%s> alternative", this); \
       marpaESLIFRecognizer_progressLogb(marpaESLIFRecognizerp, -1, -1, GENERICLOGGER_LOGLEVEL_ERROR); \
       goto err;                                                         \
     }                                                                   \
@@ -134,7 +134,7 @@ int main() {
     exit(1);
   }
 
-  GENERICLOGGER_INFOF(genericLoggerp, "Injecting lexemes for: %s", examples);
+  GENERICLOGGER_INFOF(genericLoggerp, "Injecting symbols for: %s", examples);
   DO_ALTERNATIVE_UNDEF("LPAREN");
   DO_ALTERNATIVE_CHAR ("SYMBOL", 'P');
   DO_ALTERNATIVE_UNDEF("AND");
