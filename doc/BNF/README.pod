@@ -960,11 +960,16 @@ Events can be specified, with an eventual initializer, given that default initia
 
 =item Naming
 
-A name can be associated to the rule, in the form:
+A name can be associated to a rule, in the form:
 
-  name => something
-  name => 'quoted string literal'  # No modifier is allowed after the string
-  name => "quoted string literal"  # No modifier is allowed after the string
+  LHS ::= etc... RHS etc... name => something
+  LHS ::= etc... RHS etc... name => 'quoted string literal'  # No modifier is allowed after the string
+  LHS ::= etc... RHS etc... name => "quoted string literal"  # No modifier is allowed after the string
+
+and to symbols in the form:
+
+  :terminal ::= /X/ name => XRegexp
+  :lexeme   ::= X   name => XLexeme
 
 =back
 
