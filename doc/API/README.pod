@@ -361,12 +361,15 @@ Lua 5.3.4 semantics are applied I<immediately> after the opening parenthesis, up
 Default action for symbols, and correspond to the grammar keyword C<action>. Can be a name of a string literal.
 
 =item defaultSymbolActionp
+
 Default action for symbols, and correspond to the grammar keyword C<symbol-action>. Can be a name of a string literal.
 
 =item defaultEventActionp
+
 Default action for events, and correspond to the grammar keyword C<event-action>. Can be a name of a string literal.
 
 =item defaultRegexActionp
+
 Default action for regex callout, and correspond to the grammar keyword C<regex-action>. Can be a name of a string literal.
 
 =back
