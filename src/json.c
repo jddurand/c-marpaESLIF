@@ -1232,7 +1232,7 @@ static inline short _marpaESLIFJSONDecodeAppendCharb(marpaESLIFRecognizer_t *mar
 
     case 'b':
       /* ------------------------- */
-      /* Escaped bell              */
+      /* Escaped backspace         */
       /* ------------------------- */
       if (MARPAESLIF_UNLIKELY(! _marpaESLIFJSONDecodeExtendStringContainerb(marpaESLIFRecognizerp, marpaESLIFJSONDecodeContextp, 1 /* incl */))) {
         goto err;
@@ -1242,7 +1242,7 @@ static inline short _marpaESLIFJSONDecodeAppendCharb(marpaESLIFRecognizer_t *mar
 
     case 'f':
       /* ------------------------- */
-      /* Escaped form feed         */
+      /* Escaped formfeed          */
       /* ------------------------- */
       if (MARPAESLIF_UNLIKELY(! _marpaESLIFJSONDecodeExtendStringContainerb(marpaESLIFRecognizerp, marpaESLIFJSONDecodeContextp, 1 /* incl */))) {
         goto err;
@@ -1257,22 +1257,22 @@ static inline short _marpaESLIFJSONDecodeAppendCharb(marpaESLIFRecognizer_t *mar
       if (MARPAESLIF_UNLIKELY(! _marpaESLIFJSONDecodeExtendStringContainerb(marpaESLIFRecognizerp, marpaESLIFJSONDecodeContextp, 1 /* incl */))) {
         goto err;
       }
-      marpaESLIFJSONDecodeContextp->currentValue.u.s.p[previousSizel] = MARPAESLIFJSON_LINEFEED;
+      marpaESLIFJSONDecodeContextp->currentValue.u.s.p[previousSizel] = MARPAESLIFJSON_CARRIAGE_RETURN;
       break;
 
     case 'n':
       /* ------------------------- */
-      /* Escaped new line          */
+      /* Escaped line feed         */
       /* ------------------------- */
       if (MARPAESLIF_UNLIKELY(! _marpaESLIFJSONDecodeExtendStringContainerb(marpaESLIFRecognizerp, marpaESLIFJSONDecodeContextp, 1 /* incl */))) {
         goto err;
       }
-      marpaESLIFJSONDecodeContextp->currentValue.u.s.p[previousSizel] = MARPAESLIFJSON_CARRIAGE_RETURN;
+      marpaESLIFJSONDecodeContextp->currentValue.u.s.p[previousSizel] = MARPAESLIFJSON_LINEFEED;
       break;
 
     case 't':
       /* ------------------------- */
-      /* Escaped tabulation        */
+      /* Escaped horizontal tab    */
       /* ------------------------- */
       if (MARPAESLIF_UNLIKELY(! _marpaESLIFJSONDecodeExtendStringContainerb(marpaESLIFRecognizerp, marpaESLIFJSONDecodeContextp, 1 /* incl */))) {
         goto err;
