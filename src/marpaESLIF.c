@@ -12653,6 +12653,7 @@ static char *_marpaESLIFGrammar_symbolDescriptionCallback(void *userDatavp, int 
   marpaESLIF_grammar_t *grammarp           = marpaESLIFGrammarp->grammarp;
   genericStack_t       *symbolStackp       = grammarp->symbolStackp;
   marpaESLIF_symbol_t  *symbolp;
+  char                 *rcs;
 
 #ifndef MARPAESLIF_NTRACE
   /* Should never happen */
@@ -12660,9 +12661,21 @@ static char *_marpaESLIFGrammar_symbolDescriptionCallback(void *userDatavp, int 
     return NULL;
   }
 #endif
-  symbolp = GENERICSTACK_GET_PTR(symbolStackp, symboli);
 
-  return symbolp->descp->asciis;
+  symbolp = GENERICSTACK_GET_PTR(symbolStackp, symboli);
+  switch (symbolp->type) {
+  case MARPAESLIF_SYMBOL_TYPE_TERMINAL:
+    rcs = symbolp->u.terminalp->descp->asciis;
+    break;
+  case MARPAESLIF_SYMBOL_TYPE_META:
+    rcs = symbolp->u.metap->descp->asciis;
+    break;
+  default:
+    rcs = NULL;
+    break;
+  }
+
+  return rcs;
 }
 
 /*****************************************************************************/
