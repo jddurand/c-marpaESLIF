@@ -50,7 +50,7 @@ struct marpaESLIFJSONDecodeDeposit {
   marpaESLIFJSONDecodeDepositCallback_t         actionp;
 };
 
-static const char MARPAESLIFJSON_DQUOTE          = '\'';
+static const char MARPAESLIFJSON_DQUOTE          = '"';
 static const char MARPAESLIFJSON_BACKSLASH       = '\\';
 static const char MARPAESLIFJSON_SLASH           = '/';
 static const char MARPAESLIFJSON_BACKSPACE       = '\x08';
