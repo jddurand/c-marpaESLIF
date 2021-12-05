@@ -155,9 +155,9 @@ Returns the ESLIF grammar itself, or C<NULL> if failure. The returned pointer mu
 
 =head3 C<marpaESLIF_numberb>
 
-  marpaESLIF_EXPORT short marpaESLIF_numberb(marpaESLIF_t *marpaESLIFp, char *s, marpaESLIFValueResult_t *marpaESLIFValueResultp, short *confidencebp);
+  marpaESLIF_EXPORT short marpaESLIF_numberb(marpaESLIF_t *marpaESLIFp, char *s, size_t sizel, marpaESLIFValueResult_t *marpaESLIFValueResultp, short *confidencebp);
 
-Tries to parse the C<NUL> terminated string pointed by C<s> as a JSON relaxed number, i.e. with possible leading C<+> and zeroes. Returns in C<marpaESLIFValueResultp>, when not C<NULL>, the result, and in C<confidencebp>, when not C<NULL>, a true number if ESLIF is sure.
+Tries to parse the I<ASCII> string pointed by C<s> of size C<sizel> bytes (if C<sizel> is 0, ESLIF will compute automatically the length) as a JSON relaxed number, i.e. with possible leading C<+> and zeroes. Returns in C<marpaESLIFValueResultp>, when not C<NULL>, the result, and in C<confidencebp>, when not C<NULL>, a true number if ESLIF is sure.
 
 Returns a true value on success, a false value otherwise.
 
@@ -361,12 +361,15 @@ Lua 5.3.4 semantics are applied I<immediately> after the opening parenthesis, up
 Default action for symbols, and correspond to the grammar keyword C<action>. Can be a name of a string literal.
 
 =item defaultSymbolActionp
+
 Default action for symbols, and correspond to the grammar keyword C<symbol-action>. Can be a name of a string literal.
 
 =item defaultEventActionp
+
 Default action for events, and correspond to the grammar keyword C<event-action>. Can be a name of a string literal.
 
 =item defaultRegexActionp
+
 Default action for regex callout, and correspond to the grammar keyword C<regex-action>. Can be a name of a string literal.
 
 =back
@@ -2059,6 +2062,20 @@ For other numbers, C<confidenceb> is a true value C<marpaESLIFValueResultp> type
 
 In general it is safe to leave untouched the C<marpaESLIFValueResultp> if C<confidenceb> is a true value, else it is recommended to change it.
 
+Take care of the context in the callbacks:
+
+=over
+
+=item Decoder option callbacks
+
+They are called in the context of a recognizer. So they are using C<marpaESLIFJSONDecodeOptionp->userDatavp> in their context.
+
+=item Import callback
+
+It is called in the context of a valuator. So they are using C<marpaESLIFValueOptionp->userDatavp> in their context.
+
+=back
+
 =over
 
 =item FLOAT
@@ -2468,7 +2485,16 @@ Returns a true value on success, a false value otherwise.
                                                                         marpaESLIFValueResult_t *marpaESLIFValueResultp,
                                                                         short deepb);
 
-Handy method to be used when you use C<marpaESLIFValue_stack_forgetb>. If C<deepb> is a false value, only the first immediate pointer, if any, inside C<marpaESLIFValueResultp> will be freed, if it not shallow. If C<deepb> is a true value, loops over all inner marpaESLIFValueResult's and call for disposal of every non-shadowed element.
+Handy method to be used when you use C<marpaESLIFValue_stack_forgetb>. If C<deepb> is a false value, only the first immediate pointer, if any, inside C<marpaESLIFValueResultp> will be freed when not shallow. If C<deepb> is a true value, loops over all inner marpaESLIFValueResult's and call for disposal of every non-shadowed element. This method never free C<marpaESLIFValueResultp> itself because it may be on the stack. It is user's responsibility to handle this case.
+
+
+=head3 C<marpaESLIFRecognizer_marpaESLIFValueResult_freeb>
+
+    marpaESLIF_EXPORT short marpaESLIFRecognizer_marpaESLIFValueResult_freeb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp,
+                                                                             marpaESLIFValueResult_t *marpaESLIFValueResultp,
+                                                                             short deepb);
+
+Handy method equivalent to C<marpaESLIFValue_marpaESLIFValueResult_freeb> but in a recognizer context.
 
 
 =head3 C<marpaESLIF_ftos>

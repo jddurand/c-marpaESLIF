@@ -7374,12 +7374,12 @@ static short marpaESLIFJava_JSONDecodeNumberActionb(void *userDatavp, char *stri
 /*****************************************************************************/
 {
   /* We always use Math::BigFloat->new(strings) */
-  static const char            *funcs = "marpaESLIFJava_JSONDecodeNumberAction";
-  marpaESLIFJavaValueContext_t *marpaESLIFJavaValueContextp = (marpaESLIFJavaValueContext_t *) userDatavp;
-  jstring                       numberp;
-  jobject                       objectp;
-  short                         rcb;
-  JNIEnv                       *envp;
+  static const char                 *funcs = "marpaESLIFJava_JSONDecodeNumberAction";
+  marpaESLIFJavaRecognizerContext_t *marpaESLIFJavaRecognizerContextp = (marpaESLIFJavaRecognizerContext_t *) userDatavp;
+  jstring                            numberp;
+  jobject                            objectp;
+  short                              rcb;
+  JNIEnv                            *envp;
 
   /* Number callback is never running in another thread - no need to attach */
   if (((*marpaESLIF_vmp)->GetEnv(marpaESLIF_vmp, (void **) &envp, MARPAESLIF_JNI_VERSION) != JNI_OK) || (envp == NULL)) {

@@ -82,24 +82,26 @@ typedef marpaESLIFRecognizerIfCallback_t (*marpaESLIFRecognizerIfActionResolver_
 typedef short (*marpaESLIFRecognizerEventCallback_t)(void *userDatavp, marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFEvent_t *eventArrayp, size_t eventArrayl, marpaESLIFValueResultBool_t *marpaESLIFValueResultBoolp);
 typedef marpaESLIFRecognizerEventCallback_t (*marpaESLIFRecognizerEventActionResolver_t)(void *userDatavp, marpaESLIFRecognizer_t *marpaESLIFRecognizerp, char *actions);
 
-/* -------------------------------------------------------------------------------- */
-/* regex recognizer callback: marpaESLIFCalloutBlockp is of type TABLE:             */
-/*                                                                                  */
-/* KeyType key                => valueType       value                              */
-/* ------- ---                   ---------       -----                              */
-/* STRING  "callout_number"   => LONG or UNDEF   Callout number                     */
-/* STRING  "callout_string"   => STRING or UNDEF Callout string                     */
-/* STRING  "subject"          => ARRAY           Subject                            */
-/* STRING  "pattern"          => STRING          Pattern                            */
-/* STRING  "capture_top"      => LONG            Max current capture                */
-/* STRING  "capture_last"     => LONG            Most recently closed capture       */
-/* STRING  "offset_vector"    => ROW of LONGs    Offset vector                      */
-/* STRING  "mark"             => LONG or UNDEF   Current mark offset                */
-/* STRING  "start_match"      => LONG            Current match start attempt offset */
-/* STRING  "current_position" => LONG            Current subject offset             */
-/* STRING  "next_item"        => STRING or UNDEF Next item in the pattern           */
-/*                                                                                  */
-/* The following indices are just helpers to reach the correct pair keyvalue        */
+/* ------------------------------------------------------------------------------------------------ */
+/* regex recognizer callback: marpaESLIFCalloutBlockp is of type TABLE:                             */
+/*                                                                                                  */
+/* KeyType key                => valueType       value                              key/pair indice */
+/* ------- ---                   ---------       -----                                              */
+/* STRING  "callout_number"   => LONG or UNDEF   Callout number                                   0 */
+/* STRING  "callout_string"   => STRING or UNDEF Callout string                                   1 */
+/* STRING  "subject"          => ARRAY           Subject                                          2 */
+/* STRING  "pattern"          => STRING          Pattern                                          3 */
+/* STRING  "capture_top"      => LONG            Max current capture                              4 */
+/* STRING  "capture_last"     => LONG            Most recently closed capture                     5 */
+/* STRING  "offset_vector"    => ROW of LONGs    Offset vector                                    6 */
+/* STRING  "mark"             => LONG or UNDEF   Current mark offset                              7 */
+/* STRING  "start_match"      => LONG            Current match start attempt offset               8 */
+/* STRING  "current_position" => LONG            Current subject offset                           9 */
+/* STRING  "next_item"        => STRING or UNDEF Next item in the pattern                        10 */
+/*                                                                                                  */
+/* ESLIF guarantees that this marpaESLIFCalloutBlockp is filled in this exact order, therefore      */
+/* using an indice in the marpaESLIFCalloutBlockEnum_t enum below is safe.                          */
+/* ------------------------------------------------------------------------------------------------ */
 typedef enum marpaESLIFCalloutBlockEnum {
                                          MARPAESLIFCALLOUTBLOCK_CALLOUT_NUMBER = 0,
                                          MARPAESLIFCALLOUTBLOCK_CALLOUT_STRING,
@@ -556,7 +558,7 @@ extern "C" {
   /* Helper function that tells if a string could be parsed to a number using the non-strict ESLIF's JSON number formalism */
   /* restricted to not special numbers, i.e. /[+-]?(?:[0-9]+)(?:\\.[0-9]+)?(?:[eE][+-]?[0-9]+)?/.                          */
   /* This does NOT handle Infinity nor Nans, see the specific functions later that check on the explicit value.            */
-  marpaESLIF_EXPORT short                         marpaESLIF_numberb(marpaESLIF_t *marpaESLIFp, char *s, marpaESLIFValueResult_t *marpaESLIFValueResultp, short *confidencebp);
+  marpaESLIF_EXPORT short                         marpaESLIF_numberb(marpaESLIF_t *marpaESLIFp, char *s, size_t sizel, marpaESLIFValueResult_t *marpaESLIFValueResultp, short *confidencebp);
 
   marpaESLIF_EXPORT marpaESLIFGrammar_t          *marpaESLIFGrammar_newp(marpaESLIF_t *marpaESLIFp, marpaESLIFGrammarOption_t *marpaESLIFGrammarOptionp);
   marpaESLIF_EXPORT marpaESLIF_t                 *marpaESLIFGrammar_eslifp(marpaESLIFGrammar_t *marpaESLIFGrammarp);
@@ -636,9 +638,9 @@ extern "C" {
   marpaESLIF_EXPORT short                         marpaESLIFValue_contextb(marpaESLIFValue_t *marpaESLIFValuep, char **symbolsp, int *symbolip, char **rulesp, int *ruleip);
   marpaESLIF_EXPORT void                          marpaESLIFValue_freev(marpaESLIFValue_t *marpaESLIFValuep);
 
-  /* ------------------------------------- */
-  /* Stack management when doing valuation */
-  /* ------------------------------------- */
+  /* ------------------------------- */
+  /* marpaESLIFValueResult_t helpers */
+  /* ------------------------------- */
   marpaESLIF_EXPORT short                         marpaESLIFValue_stack_setb(marpaESLIFValue_t *marpaESLIFValuep, int indicei, marpaESLIFValueResult_t *marpaESLIFValueResultp);
   marpaESLIF_EXPORT marpaESLIFValueResult_t      *marpaESLIFValue_stack_getp(marpaESLIFValue_t *marpaESLIFValuep, int indicei);
   /* marpaESLIFValue_stack_forgetb is like setting a value of type MARPAESLIFVALUE_TYPE_UNDEF saying that memory management is switched off at this specific indice */
@@ -647,6 +649,7 @@ extern "C" {
   /* It is nothing else but a wrapper on marpaESLIFValue_stack_getp followed by marpaESLIFValue_stack_forgetb */
   marpaESLIF_EXPORT short                         marpaESLIFValue_stack_getAndForgetb(marpaESLIFValue_t *marpaESLIFValuep, int indicei, marpaESLIFValueResult_t *marpaESLIFValueResultp);
   marpaESLIF_EXPORT short                         marpaESLIFValue_marpaESLIFValueResult_freeb(marpaESLIFValue_t *marpaESLIFValuep, marpaESLIFValueResult_t *marpaESLIFValueResultp, short deepb);
+  marpaESLIF_EXPORT short                         marpaESLIFRecognizer_marpaESLIFValueResult_freeb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFValueResult_t *marpaESLIFValueResultp, short deepb);
 
   /* Helpers */
   
@@ -685,14 +688,7 @@ extern "C" {
   /* ESLIF will automatically frees marpaESLIFValueResultp content. */
   marpaESLIF_EXPORT short                         marpaESLIFJSON_encodeb(marpaESLIFGrammar_t *marpaESLIFGrammarJSONp, marpaESLIFValueResult_t *marpaESLIFValueResultp, marpaESLIFValueOption_t *marpaESLIFValueOptionp);
   marpaESLIF_EXPORT marpaESLIFGrammar_t          *marpaESLIFJSON_decode_newp(marpaESLIF_t *marpaESLIFp, short strictb);
-  /* For decoding, a marpaESLIFValueOption_t* argument is required. In it the following settings will be ignored, */
-  /* being overwriten by marpaESLIFJSON_decodeb: */
-  /* symbolActionResolverp - We use the default "::transfer" implementation */
-  /* highRankOnlyb         - Fixed to 1 */
-  /* orderByRankb          - Fixed to 1 */
-  /* ambiguousb            - Fixed to 0 */
-  /* nullb                 - Fixed to 0 */
-  /* maxParsesi            - Fixed to 0 */
+  /* For decoding, a marpaESLIFValueOption_t* argument is required. Only the importer callback and its context will be used */
   marpaESLIF_EXPORT short                         marpaESLIFJSON_decodeb(marpaESLIFGrammar_t *marpaESLIFGrammarJSONp, marpaESLIFJSONDecodeOption_t *marpaESLIFJSONDecodeOptionp, marpaESLIFRecognizerOption_t *marpaESLIFRecognizerOptionp, marpaESLIFValueOption_t *marpaESLIFValueOptionp);
 
   /* ------------------------------------- */
