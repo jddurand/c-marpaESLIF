@@ -695,7 +695,7 @@ static inline marpaESLIF_grammar_t  *_marpaESLIF_bootstrap_grammarp(marpaESLIFGr
                                                                     marpaESLIF_action_t *defaultRegexActionp,
                                                                     char *defaultEncodings,
                                                                     char *fallbackEncodings);
-static inline short                  _marpaESLIF_numberb(marpaESLIF_t *marpaESLIFp, char *s, marpaESLIFValueResult_t *marpaESLIFValueResultp, short *confidencebp);
+static inline short                  _marpaESLIF_numberb(marpaESLIF_t *marpaESLIFp, char *s, size_t sizel, marpaESLIFValueResult_t *marpaESLIFValueResultp, short *confidencebp);
 static inline short                  _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIFGrammarp, short ignoreLazyb, short startGrammarIsLexemeb);
 static inline marpaESLIF_internal_event_action_t _eventActionsToActione(char *actions);
 static inline marpaESLIF_internal_rule_action_t _ruleActionpToActione(marpaESLIFAction_t *actionp);
@@ -2490,13 +2490,13 @@ static inline marpaESLIF_grammar_t *_marpaESLIF_bootstrap_grammarp(marpaESLIFGra
 }
 
 /*****************************************************************************/
-static inline short _marpaESLIF_numberb(marpaESLIF_t *marpaESLIFp, char *s, marpaESLIFValueResult_t *marpaESLIFValueResultp, short *confidencebp)
+static inline short _marpaESLIF_numberb(marpaESLIF_t *marpaESLIFp, char *s, size_t sizel, marpaESLIFValueResult_t *marpaESLIFValueResultp, short *confidencebp)
 /*****************************************************************************/
 {
   static const char                  *funcs       = "_marpaESLIFRecognizer_numberb";
   short                               confidenceb = 1; /* Set to 0 only when we got through the double case */
   char                               *bytes       = s;
-  size_t                              bytel       = strlen(s); /* Remember the doc: caller must make sure it is NUL terminated */
+  size_t                              bytel       = (sizel <= 0) ? strlen(s) : sizel; /* Remember the doc: caller must make sure it is NUL terminated if sizel is 0 */
   char                               *numbers;
   size_t                              numberl;
   char                               *endptrendp;
@@ -15971,7 +15971,7 @@ short marpaESLIFRecognizer_importb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp
 }
 
 /*****************************************************************************/
-short marpaESLIF_numberb(marpaESLIF_t *marpaESLIFp, char *s, marpaESLIFValueResult_t *marpaESLIFValueResultp, short *confidencebp)
+short marpaESLIF_numberb(marpaESLIF_t *marpaESLIFp, char *s, size_t sizel, marpaESLIFValueResult_t *marpaESLIFValueResultp, short *confidencebp)
 /*****************************************************************************/
 {
   if ((marpaESLIFp == NULL) || (s == NULL)) {
@@ -15979,7 +15979,7 @@ short marpaESLIF_numberb(marpaESLIF_t *marpaESLIFp, char *s, marpaESLIFValueResu
     return 0;
   }
 
-  return _marpaESLIF_numberb(marpaESLIFp, s, marpaESLIFValueResultp, confidencebp);
+  return _marpaESLIF_numberb(marpaESLIFp, s, sizel, marpaESLIFValueResultp, confidencebp);
 }
 
 /*****************************************************************************/
@@ -21113,7 +21113,7 @@ static int _marpaESLIF_pcre2_callouti(pcre2_callout_block *blockp, void *userDat
   if (blockp->next_item_length == 0) {
     MARPAESLIFCALLOUTBLOCK_INIT_UNDEF (marpaESLIFValuePairsp[MARPAESLIFCALLOUTBLOCK_NEXT_ITEM].value);
   } else {
-    MARPAESLIFCALLOUTBLOCK_INIT_STRING(marpaESLIFValuePairsp[MARPAESLIFCALLOUTBLOCK_PATTERN].value, terminalp->patterns + blockp->pattern_position, blockp->next_item_length);
+    MARPAESLIFCALLOUTBLOCK_INIT_STRING(marpaESLIFValuePairsp[MARPAESLIFCALLOUTBLOCK_NEXT_ITEM].value, terminalp->patterns + blockp->pattern_position, blockp->next_item_length);
   }
 
   /* MARPAESLIF_NOTICEF(marpaESLIFRecognizerp->marpaESLIFp, "... Calling regex callback on terminal: %s", terminalp->descp->asciis); */

@@ -155,9 +155,9 @@ Returns the ESLIF grammar itself, or C<NULL> if failure. The returned pointer mu
 
 =head3 C<marpaESLIF_numberb>
 
-  marpaESLIF_EXPORT short marpaESLIF_numberb(marpaESLIF_t *marpaESLIFp, char *s, marpaESLIFValueResult_t *marpaESLIFValueResultp, short *confidencebp);
+  marpaESLIF_EXPORT short marpaESLIF_numberb(marpaESLIF_t *marpaESLIFp, char *s, size_t sizel, marpaESLIFValueResult_t *marpaESLIFValueResultp, short *confidencebp);
 
-Tries to parse the C<NUL> terminated string pointed by C<s> as a JSON relaxed number, i.e. with possible leading C<+> and zeroes. Returns in C<marpaESLIFValueResultp>, when not C<NULL>, the result, and in C<confidencebp>, when not C<NULL>, a true number if ESLIF is sure.
+Tries to parse the I<ASCII> string pointed by C<s> of size C<sizel> bytes (if C<sizel> is 0, ESLIF will compute automatically the length) as a JSON relaxed number, i.e. with possible leading C<+> and zeroes. Returns in C<marpaESLIFValueResultp>, when not C<NULL>, the result, and in C<confidencebp>, when not C<NULL>, a true number if ESLIF is sure.
 
 Returns a true value on success, a false value otherwise.
 

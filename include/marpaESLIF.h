@@ -558,7 +558,7 @@ extern "C" {
   /* Helper function that tells if a string could be parsed to a number using the non-strict ESLIF's JSON number formalism */
   /* restricted to not special numbers, i.e. /[+-]?(?:[0-9]+)(?:\\.[0-9]+)?(?:[eE][+-]?[0-9]+)?/.                          */
   /* This does NOT handle Infinity nor Nans, see the specific functions later that check on the explicit value.            */
-  marpaESLIF_EXPORT short                         marpaESLIF_numberb(marpaESLIF_t *marpaESLIFp, char *s, marpaESLIFValueResult_t *marpaESLIFValueResultp, short *confidencebp);
+  marpaESLIF_EXPORT short                         marpaESLIF_numberb(marpaESLIF_t *marpaESLIFp, char *s, size_t sizel, marpaESLIFValueResult_t *marpaESLIFValueResultp, short *confidencebp);
 
   marpaESLIF_EXPORT marpaESLIFGrammar_t          *marpaESLIFGrammar_newp(marpaESLIF_t *marpaESLIFp, marpaESLIFGrammarOption_t *marpaESLIFGrammarOptionp);
   marpaESLIF_EXPORT marpaESLIF_t                 *marpaESLIFGrammar_eslifp(marpaESLIFGrammar_t *marpaESLIFGrammarp);

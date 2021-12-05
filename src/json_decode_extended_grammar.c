@@ -43,7 +43,7 @@ static const char *marpaESLIFJSON_decode_extended_grammars =
   "# -----------\n"
   "# JSON String\n"
   "# -----------\n"
-  "string             ::= /\"(?C50)(?:(?:(?:[^\"\\\\]+)|(?:\\\\[\"\\\\\\/bfnrt])|(?:(?:\\\\u[[:xdigit:]]{4})+))(?C51))*\"(?C52)/\n"
+  "string             ::= /\"(?C50)(?:((?:[^\"\\\\]+)|(?:\\\\[\"\\\\\\/bfnrt])|(?:(?:\\\\u[[:xdigit:]]{4})+))(?C51))*\"(?C52)/\n"
   "\n"
   "# -----------------------\n"
   "# JSON constant or number\n"
