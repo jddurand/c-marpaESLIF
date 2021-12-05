@@ -82,24 +82,26 @@ typedef marpaESLIFRecognizerIfCallback_t (*marpaESLIFRecognizerIfActionResolver_
 typedef short (*marpaESLIFRecognizerEventCallback_t)(void *userDatavp, marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFEvent_t *eventArrayp, size_t eventArrayl, marpaESLIFValueResultBool_t *marpaESLIFValueResultBoolp);
 typedef marpaESLIFRecognizerEventCallback_t (*marpaESLIFRecognizerEventActionResolver_t)(void *userDatavp, marpaESLIFRecognizer_t *marpaESLIFRecognizerp, char *actions);
 
-/* -------------------------------------------------------------------------------- */
-/* regex recognizer callback: marpaESLIFCalloutBlockp is of type TABLE:             */
-/*                                                                                  */
-/* KeyType key                => valueType       value                              */
-/* ------- ---                   ---------       -----                              */
-/* STRING  "callout_number"   => LONG or UNDEF   Callout number                     */
-/* STRING  "callout_string"   => STRING or UNDEF Callout string                     */
-/* STRING  "subject"          => ARRAY           Subject                            */
-/* STRING  "pattern"          => STRING          Pattern                            */
-/* STRING  "capture_top"      => LONG            Max current capture                */
-/* STRING  "capture_last"     => LONG            Most recently closed capture       */
-/* STRING  "offset_vector"    => ROW of LONGs    Offset vector                      */
-/* STRING  "mark"             => LONG or UNDEF   Current mark offset                */
-/* STRING  "start_match"      => LONG            Current match start attempt offset */
-/* STRING  "current_position" => LONG            Current subject offset             */
-/* STRING  "next_item"        => STRING or UNDEF Next item in the pattern           */
-/*                                                                                  */
-/* The following indices are just helpers to reach the correct pair keyvalue        */
+/* ------------------------------------------------------------------------------------------------ */
+/* regex recognizer callback: marpaESLIFCalloutBlockp is of type TABLE:                             */
+/*                                                                                                  */
+/* KeyType key                => valueType       value                              key/pair indice */
+/* ------- ---                   ---------       -----                                              */
+/* STRING  "callout_number"   => LONG or UNDEF   Callout number                                   0 */
+/* STRING  "callout_string"   => STRING or UNDEF Callout string                                   1 */
+/* STRING  "subject"          => ARRAY           Subject                                          2 */
+/* STRING  "pattern"          => STRING          Pattern                                          3 */
+/* STRING  "capture_top"      => LONG            Max current capture                              4 */
+/* STRING  "capture_last"     => LONG            Most recently closed capture                     5 */
+/* STRING  "offset_vector"    => ROW of LONGs    Offset vector                                    6 */
+/* STRING  "mark"             => LONG or UNDEF   Current mark offset                              7 */
+/* STRING  "start_match"      => LONG            Current match start attempt offset               8 */
+/* STRING  "current_position" => LONG            Current subject offset                           9 */
+/* STRING  "next_item"        => STRING or UNDEF Next item in the pattern                        10 */
+/*                                                                                                  */
+/* ESLIF guarantees that this marpaESLIFCalloutBlockp is filled in this exact order, therefore      */
+/* using an indice in the marpaESLIFCalloutBlockEnum_t enum below is safe.                          */
+/* ------------------------------------------------------------------------------------------------ */
 typedef enum marpaESLIFCalloutBlockEnum {
                                          MARPAESLIFCALLOUTBLOCK_CALLOUT_NUMBER = 0,
                                          MARPAESLIFCALLOUTBLOCK_CALLOUT_STRING,
