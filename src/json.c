@@ -264,16 +264,17 @@ short marpaESLIFJSON_encodeb(marpaESLIFGrammar_t *marpaESLIFGrammarJSONp, marpaE
   marpaESLIFAlternative.names          = "INPUT";
   marpaESLIFAlternative.value          = *marpaESLIFValueResultp;
   marpaESLIFAlternative.grammarLengthl = 1;
-  if (MARPAESLIF_UNLIKELY(! marpaESLIFRecognizer_alternative_readb(marpaESLIFRecognizerp, &marpaESLIFAlternative, 0 /* lengthl */))) {
+  if (MARPAESLIF_UNLIKELY(! _marpaESLIFRecognizer_alternative_readb(marpaESLIFRecognizerp, &marpaESLIFAlternative, 0 /* lengthl */))) {
     goto err;
   }
-  marpaESLIFValuep = marpaESLIFValue_newp(marpaESLIFRecognizerp, &marpaESLIFValueOption);
 
-  /* Set-up proxy representation */
-  marpaESLIFValuep->proxyRepresentationp = _marpaESLIFJSONEncodeRepresentationb;
+  marpaESLIFValuep = _marpaESLIFValue_newp(marpaESLIFRecognizerp, &marpaESLIFValueOption, 0 /* silentb */, 0 /* fakeb */);
   if (MARPAESLIF_UNLIKELY(marpaESLIFValuep == NULL)) {
     goto err;
   }
+
+  /* Set-up proxy representation */
+  marpaESLIFValuep->proxyRepresentationp = _marpaESLIFJSONEncodeRepresentationb;
 
   if (MARPAESLIF_UNLIKELY(! marpaESLIFValue_valueb(marpaESLIFValuep))) {
     goto err;
@@ -385,11 +386,11 @@ short marpaESLIFJSON_decodeb(marpaESLIFGrammar_t *marpaESLIFGrammarJSONp, marpaE
     goto err;
   }
 
-  if (MARPAESLIF_UNLIKELY(! marpaESLIFRecognizer_scanb(marpaESLIFRecognizerp, 1 /* initialEventsb */, &continueb, NULL /* exhaustedbp */))) {
+  if (MARPAESLIF_UNLIKELY(! _marpaESLIFRecognizer_scanb(marpaESLIFRecognizerp, 1 /* initialEventsb */, &continueb, NULL /* exhaustedbp */))) {
     goto err;
   }
   while (continueb) {
-    if (MARPAESLIF_UNLIKELY(! marpaESLIFRecognizer_resumeb(marpaESLIFRecognizerp, 0 /* deltaLengthl */, &continueb, NULL /* exhaustedbp */))) {
+    if (MARPAESLIF_UNLIKELY(! _marpaESLIFRecognizer_resumeb(marpaESLIFRecognizerp, 0 /* deltaLengthl */, &continueb, NULL /* exhaustedbp */))) {
       break;
     }
   }
@@ -427,7 +428,7 @@ short marpaESLIFJSON_decodeb(marpaESLIFGrammar_t *marpaESLIFGrammarJSONp, marpaE
   marpaESLIFValueOption.nullb                     = 0; /* Fixed */
   marpaESLIFValueOption.maxParsesi                = 0; /* Fixed */
 
-  marpaESLIFValuep = marpaESLIFValue_newp(marpaESLIFRecognizerp, &marpaESLIFValueOption);
+  marpaESLIFValuep = _marpaESLIFValue_newp(marpaESLIFRecognizerp, &marpaESLIFValueOption, 0 /* silentb */, 1 /* fakeb */);
   if (MARPAESLIF_UNLIKELY(marpaESLIFValuep == NULL)) {
     goto err;
   }
@@ -564,10 +565,6 @@ static short _marpaESLIFJSONDecodeEventCallbackb(void *userDatavp, marpaESLIFRec
   MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_INC(marpaESLIFRecognizerp);
   MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "start");
 
-  if (MARPAESLIF_UNLIKELY(! _marpaESLIFRecognizer_eventb(marpaESLIFRecognizerp, &eventArrayl, &eventArrayp))) {
-    goto err;
-  }
-
   for (eventl = 0; eventl < eventArrayl; eventl++) {
     MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Processing %s event", eventArrayp[eventl].events);
     switch (eventArrayp[eventl].events[0]) {
@@ -589,7 +586,7 @@ static short _marpaESLIFJSONDecodeEventCallbackb(void *userDatavp, marpaESLIFRec
       }
 
       /* Initialize the container */
-      if (! marpaESLIFJSONDecodeDeposit.actionp(marpaESLIFRecognizerp, marpaESLIFJSONDecodeDeposit.contextp, marpaESLIFJSONDecodeDeposit.dstp, NULL)) {
+      if (MARPAESLIF_UNLIKELY(! marpaESLIFJSONDecodeDeposit.actionp(marpaESLIFRecognizerp, marpaESLIFJSONDecodeDeposit.contextp, marpaESLIFJSONDecodeDeposit.dstp, NULL))) {
         goto err;
       }
 
