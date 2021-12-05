@@ -12671,7 +12671,7 @@ static char *_marpaESLIFGrammar_symbolDescriptionCallback(void *userDatavp, int 
     rcs = symbolp->u.metap->descp->asciis;
     break;
   default:
-    rcs = NULL;
+    rcs = (char *) MARPAESLIF_EMPTY_STRING;
     break;
   }
 
@@ -21787,7 +21787,7 @@ static inline void _marpaESLIFRecognizer_errorv(marpaESLIFRecognizer_t *marpaESL
       for (symboll = 0; symboll < nSymboll; symboll++) {
         symboli = symbolArrayp[symboll];
         MARPAESLIF_INTERNAL_GET_SYMBOL_FROM_STACK(marpaESLIFp, symbolp, symbolStackp, symboli);
-        MARPAESLIF_ERRORF(marpaESLIFp, "Expected symbol: %s (symbol No %d)", symbolp->descp->asciis, symbolp->idi);
+        MARPAESLIF_ERRORF(marpaESLIFp, "Expected symbol: %s (symbol No %d)", _marpaESLIFGrammar_symbolDescriptionCallback(marpaESLIFGrammarp, symbolp->idi), symbolp->idi);
       }
     }
   }
