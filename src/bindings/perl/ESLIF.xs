@@ -2338,7 +2338,7 @@ static inline short marpaESLIFPerl_importb(pTHX_ marpaESLIFPerl_importContext_t 
     }
     break;
   case MARPAESLIF_VALUE_TYPE_LONG_DOUBLE:
-    /* Note that typecast ld to f is always ok because for +/-Infinity or NaN, because they remains +/-Infinity or NaN */
+    /* Note that typecast ld to f is always ok for +/-Infinity or NaN, because they remains +/-Infinity or NaN */
     if ((! constantsp->nvtype_is_long_doubleb) &&
         (! constantsp->nvtype_is___float128) &&
         (! marpaESLIFValueResult_isinfb(importContextp->marpaESLIFp, marpaESLIFValueResultp)) &&
