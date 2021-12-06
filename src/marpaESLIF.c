@@ -3848,12 +3848,12 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
       MARPAESLIF_INTERNAL_GET_SYMBOL_FROM_STACK(marpaESLIFp, symbolp, symbolStackp, symboli);
       if (MARPAESLIF_IS_LEXEME(symbolp)) {
         if (MARPAESLIF_UNLIKELY((symbolp->eventPredicteds != NULL) || (symbolp->eventNulleds != NULL) || (symbolp->eventCompleteds != NULL))) {
-          MARPAESLIF_ERRORF(marpaESLIFp, "Event on symbol <%s> at grammar level %d (%s) but it is a lexeme, you must use the \":lexeme <%s> pause => eventType event => eventName\" form", symbolp->descp->asciis, grammari, grammarp->descp->asciis, symbolp->descp->asciis);
+          MARPAESLIF_ERRORF(marpaESLIFp, "Event on symbol <%s> at grammar level %d (%s) but it is a lexeme, you must use the \":symbol <%s> pause => eventType event => eventName\" form", symbolp->descp->asciis, grammari, grammarp->descp->asciis, symbolp->descp->asciis);
           goto err;
         }
       } else if (MARPAESLIF_UNLIKELY(MARPAESLIF_IS_TERMINAL(symbolp))) {
         if ((symbolp->eventPredicteds != NULL) || (symbolp->eventNulleds != NULL) || (symbolp->eventCompleteds != NULL)) {
-          MARPAESLIF_ERRORF(marpaESLIFp, "Event on symbol <%s> at grammar level %d (%s) but it is a terminal, you must use the \":terminal <%s> pause => eventType event => eventName\" form", symbolp->descp->asciis, grammari, grammarp->descp->asciis, symbolp->descp->asciis);
+          MARPAESLIF_ERRORF(marpaESLIFp, "Event on symbol <%s> at grammar level %d (%s) but it is a terminal, you must use the \":symbol <%s> pause => eventType event => eventName\" form", symbolp->descp->asciis, grammari, grammarp->descp->asciis, symbolp->descp->asciis);
           goto err;
         }
       } else {
@@ -4833,14 +4833,14 @@ static inline void _marpaESLIF_symbol_freev(marpaESLIF_symbol_t *symbolp)
       switch (symbolp->type) {
       case MARPAESLIF_SYMBOL_TYPE_TERMINAL:
         if (symbolp->descp != symbolp->u.terminalp->descp) {
-          /* A :terminal rule overwrote default description */
+          /* A :terminal or :symbol rule overwrote default description */
           _marpaESLIF_string_freev(symbolp->descp, 0 /* onStackb */);
         }
         _marpaESLIF_terminal_freev(symbolp->u.terminalp);
         break;
       case MARPAESLIF_SYMBOL_TYPE_META:
         if (symbolp->descp != symbolp->u.metap->descp) {
-          /* A :lexeme rule overwrote default description */
+          /* A :lexeme or :symbol rule overwrote default description */
           _marpaESLIF_string_freev(symbolp->descp, 0 /* onStackb */);
         }
         _marpaESLIF_meta_freev(symbolp->u.metap);
@@ -13531,7 +13531,7 @@ static inline void _marpaESLIF_grammar_createshowv(marpaESLIFGrammar_t *marpaESL
         ||
         ((symbolp->type == MARPAESLIF_SYMBOL_TYPE_META) && (symbolp->descp != symbolp->u.metap->descp))
         ) {
-      MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, MARPAESLIF_IS_LEXEME(symbolp) ? ":lexeme" : ":terminal");
+      MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, ":symbol");
       MARPAESLIF_LEVEL_CREATESHOW(grammarp, asciishowl, asciishows);
       MARPAESLIF_SYMBOL_CREATESHOW(asciishowl, asciishows, symbolp);
 

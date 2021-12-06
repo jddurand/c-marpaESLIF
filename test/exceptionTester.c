@@ -28,8 +28,8 @@ const static char *selfs =
 #ifdef TEST_STACKOVERFLOW
   "CHARDATAEXCEPTION ~ CData@-1 - CData@-1\n"
 #endif
-  ":lexeme ::= CHARDATAEXCEPTION if-action => ::lua->CHARDATAEXCEPTION\n"
-  ":lexeme ::= CHARDATA if-action => ::lua->CHARDATA\n"
+  ":symbol ::= CHARDATAEXCEPTION if-action => ::lua->CHARDATAEXCEPTION\n"
+  ":symbol ::= CHARDATA if-action => ::lua->CHARDATA\n"
   "<luascript>\n"
   "function CHARDATA(chardata)\n"
   "  print('...=> CHARDATA='..tostring(chardata))\n"

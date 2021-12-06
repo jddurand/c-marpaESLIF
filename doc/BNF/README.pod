@@ -583,49 +583,48 @@ Lexemes are different than non-lexeme symbols because they are treated in the gr
 
 =over
 
-=item Lexeme events
+=item Pause events
 
-Meta symbols that are lexemes can have pause events, C<before> mean that the scanning recognized them, C<after> mean they have been consumed, e.g.:
+Symbols that are lexemes or terminals (i.e. they are grammar terminals in the common terminology) can have pause events, C<before> mean that the scanning recognized them, C<after> mean they have been consumed, e.g.:
 
-  :lexeme ::= symbolname1 pause => before event => ^symbolname1
-  :lexeme ::= symbolname2 pause => after  event =>  symbolname2$
+  :symbol ::= symbolname pause => before event => ^symbolname
+  :symbol ::= symbolname pause => after  event =>  symbolname$
 
-It is not allowed to set a lexeme event on a symbol that is not a lexeme. You cannot declare two pause events in the same line.
+=item Pause actions
 
-=item Terminal events
+=over
 
-Explicit terminals can have pause events, C<before> mean that the scanning recognized them, C<after> mean they have been consumed, e.g.:
+=item C<symbol-action>
 
-  :terminal ::= '"' pause => before event => ^beforeDquote
-  :terminal ::= "'" pause => after  event =>  afterSquote$
+The grammar's C<symbol-action> can be overwritten by setting such a C<:symbol> adverb, e.g.:
 
-Only an explicit terminal can be set using the :terminal keyword.
+  :symbol ::= symbolname     symbol-action => ::u8"Custom String"
+  :symbol ::= symbolname     symbol-action => Custom_action
+  :symbol ::= 'ThisTerminal' symbol-action => ::lua->lua_custom_action
 
-=item Lexeme and terminal specific actions
+=item C<if-action>
 
-The grammar's C<symbol-action> can be overwritten by setting such entry in C<:lexeme> and C<:terminal> settings, e.g.:
+Itapplies I<only> when the symbol is discovered via the automatic scan: The C<if-action> must refer to a callback in user-land's recognizer interface or in embedded lua interpreter, and must return a boolean:
 
-  :lexeme   ::= symbolname1 symbol-action => ::u8"Custom String"
-  :lexeme   ::= symbolname2 symbol-action => Custom_action
-  :terminal ::= 'ThisTerminal' symbol-action => ::lua->lua_custom_action
-
-A lexeme or a terminal can have an C<if-action> setting, that applies I<only> when the lexeme or a terminal is discovered via the automatic scan. The C<if-action> must refer to a callback in user-land's recognizer interface or in embedded lua interpreter, and must return a boolean:
-
-  :lexeme   ::= symbolname1 if-action => Custom_action1
-  :lexeme   ::= symbolname2 if-action => ::lua->Custom_action2
+  :symbol   ::= symbolname if-action => Custom_action1
+  :symbol   ::= symbolname if-action => ::lua->Custom_action2
 
 Please note that the C<if-action> will always be called with an argument of type ARRAY (i.e. up to the implementation to convert that to a multibyte string, if any).
 
-A lexeme or a terminal can have a C<regex-action> setting, that always applies, regardless if the parsing is done using the automatic scan or not. C<regex-action> is a transversal grammar setting; and can be set only via C<::default> meta rule:
+=item C<regex-action>
+
+It a transversal grammar setting; and can be set only via C<::default> meta rule:
 
   ::default ::= regex-action => Custom_regexaction1
   ::default   ~ regex-action => ::lua->Custom_regexaction2
 
 If a regular expression has a callout in the form C<(?CX)> (where C<X> is a number> or C<(?C"string")>, the C<regex-action> is called with a I<block> argument. This <block> argument is a hash in perl, a table in lua, and an I<ESLIFRegexCallout> instance in java.
 
-=item Non-lexeme events
+=back
 
-Completion, predicted or nulled events are supported, targetting a symbol name. These are I<grammar> events.
+=item Meta symbols events
+
+For any other symbol that is not a lexeme nor a terminal, completion, predicted or nulled events are supported, targetting a meta symbol name. These are I<grammar> events.
 
 For example:
 
@@ -968,8 +967,8 @@ A name can be associated to a rule, in the form:
 
 and to symbols in the form:
 
-  :terminal ::= /X/ name => XRegexp
-  :lexeme   ::= X   name => XLexeme
+  :symbol ::= /X/ name => XRegexp
+  :symbol   ::= X   name => XLexeme
 
 =back
 
@@ -988,10 +987,10 @@ marpaESLIF BNF can be expressed in itself:
   :discard ::= /#[^\n]*/u
   :discard ::= /\/\/[^\n]*|\/\*(?:[^\*]+|\*(?!\/))*\*\//u
   
-  :terminal ::= /::luac?\->function\(/ pause => after event => :discard[switch]
-  :terminal ::= /\-\-?>\(/' pause => after event => :discard[switch]
-  :lexeme   ::= <lua funcbody after lparen>@+2 pause => after event => :discard[switch] verbose => 1
-  :lexeme   ::= <lua args after lparen>@+2 pause => after event => :discard[switch] verbose => 1
+  :symbol  ::= /::luac?\->function\(/ pause => after event => :discard[switch]
+  :symbol  ::= /\-\-?>\(/' pause => after event => :discard[switch]
+  :symbol   ::= <lua funcbody after lparen>@+2 pause => after event => :discard[switch] verbose => 1
+  :symbol   ::= <lua args after lparen>@+2 pause => after event => :discard[switch] verbose => 1
   
   event :discard[on]  = nulled <discard on>
   event :discard[off] = nulled <discard off>
@@ -1026,8 +1025,8 @@ marpaESLIF BNF can be expressed in itself:
   <quantified rule>              ::= <lhs> <op declare> <rhs primary> <quantifier> <adverb list>
   <discard rule>                 ::= ':discard' <op declare> <rhs primary> <adverb list>
   <default rule>                 ::= ':default' <op declare> <adverb list>
-  <lexeme rule>                  ::= ':lexeme' <op declare> <rhs primary no parameter> <adverb list>
-  <terminal rule>                ::= ':terminal' <op declare> <terminal> <adverb list>
+  <lexeme rule>                  ::= ':lexeme' <op declare> <rhs primary no parameter> <adverb list> /* Deprecated, use :symbol */
+  <terminal rule>                ::= ':terminal' <op declare> <terminal> <adverb list> /* Deprecated, use :symbol */
   <completion event declaration> ::= 'event' <event initialization> '=' 'completed' <lhs>
                                    | 'event' <event initialization> <op declare> 'completed' <lhs>
   <nulled event declaration> ::= 'event' <event initialization> '=' 'nulled' <lhs>

@@ -70,7 +70,7 @@ FACE ~ [2-9jqka] | '10'
 WS ~ [\s]
 :discard ::= WS
 
-:lexeme ::= <CARD>  pause => after event => CARD
+:symbol ::= <CARD>  pause => after event => CARD
 };
 
 my $eslif = MarpaX::ESLIF->new($log);

@@ -55,8 +55,8 @@ Calls to grammar's currentRuleProperties() or rulePropertiesByLevel() methods ou
   whitespaces ::= WHITESPACES
   comment ::= /(?:(?:(?:\/\/)(?:[^\n]*)(?:\n|\z))|(?:(?:\/\*)(?:(?:[^\*]+|\*(?!\/))*)(?:\*\/)))/u
 
-  :lexeme ::= NUMBER pause => before event => ^NUMBER
-  :lexeme ::= NUMBER pause => after  event => NUMBER$
+  :symbol ::= NUMBER pause => before event => ^NUMBER
+  :symbol ::= NUMBER pause => after  event => NUMBER$
 
   :desc      ~ 'Calculator Tokens'
   NUMBER     ~ /[\d]+/   name => 'NUMBER Lexeme'

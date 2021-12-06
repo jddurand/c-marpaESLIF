@@ -1851,8 +1851,8 @@ Expression ::=
    ||     Expression  '+' Expression                                             name => 'Expression is +'
     |     Expression  '-' Expression                                             name => 'Expression is -'
 
-:lexeme ::= NUMBER pause => before event => ^NUMBER symbol-action => perl_number priority => 1 if-action => ::lua->test_if_action
-:lexeme ::= NUMBER pause => after  event => NUMBER$ priority => 0 verbose => 0
+:symbol ::= NUMBER pause => before event => ^NUMBER symbol-action => perl_number priority => 1 if-action => ::lua->test_if_action
+:symbol ::= NUMBER pause => after  event => NUMBER$ priority => 0 verbose => 0
 
 :default ~ regex-action => RegexAction
 

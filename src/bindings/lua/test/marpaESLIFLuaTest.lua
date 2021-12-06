@@ -165,9 +165,9 @@ Expression ::=
    ||     Expression  '+' Expression                                             name => 'Expression is +'
     |     Expression  '-' Expression                                             name => 'Expression is -'
 
-:lexeme ::= NUMBER pause => before event => ^NUMBER
-:lexeme ::= NUMBER pause => after  event => NUMBER$
-:lexeme ::= NUMBER if-action => if_number
+:symbol ::= NUMBER pause => before event => ^NUMBER
+:symbol ::= NUMBER pause => after  event => NUMBER$
+:symbol ::= NUMBER if-action => if_number
 
 NUMBER     ~ /[\d]+/
 whitespaces ::= WHITESPACES

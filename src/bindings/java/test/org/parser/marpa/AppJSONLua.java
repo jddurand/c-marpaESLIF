@@ -94,7 +94,7 @@ public class AppJSONLua implements Runnable {
 						"# ------------ \n" +
 						"number ::= NUMBER                                 action => ::lua->lua_number # Prepare for eventual bignum extension \n" +
 						" \n" +
-						":lexeme ::= NUMBER if-action => if_number\n" +
+						":symbol ::= NUMBER if-action => if_number\n" +
 						":default ~ regex-action => regex_action\n" +
 						"NUMBER   ~ _INT \n" +
 						"         | _INT _FRAC \n" +

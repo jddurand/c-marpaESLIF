@@ -105,16 +105,16 @@ e              ~ 'e'
                | 'E+'
                | 'E-'
 string       ::= lstring
-:lexeme ::= lstring pause => after event => lstring$
+:symbol ::= lstring pause => after event => lstring$
 lstring        ~ quote in_string quote
 quote          ~ '"'
 in_string      ~ in_string_char*
 in_string_char  ~ [^"] | '\\\\' '"'
 :discard       ::= whitespace
 whitespace     ~ [\s]+
-:lexeme ::= LCURLY pause => before event => ^LCURLY
+:symbol ::= LCURLY pause => before event => ^LCURLY
 LCURLY         ~ '{'
-:lexeme ::= RCURLY pause => before event => ^RCURLY
+:symbol ::= RCURLY pause => before event => ^RCURLY
 RCURLY         ~ '}'
 OBJECT_FROM_INNER_GRAMMAR ~ [^\s\S]
 };

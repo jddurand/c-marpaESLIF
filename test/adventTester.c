@@ -23,7 +23,7 @@ const static char *base_dsl = "\n"
   "WS ~ [\\s]\n"
   ":discard ::= WS\n"
   "\n"
-  ":lexeme ::= <card> pause => after event => card\n"
+  ":symbol ::= <card> pause => after event => card\n"
   ;
 
 #define BLACK_HEART_SUIT_UTF8s   "\xE2\x99\xA5"

@@ -475,11 +475,11 @@ Grammar events also include the nulled symbols and the exhaustion. Nulled events
 
 Scanner events are not generating by the grammar itself, but by the recognizer, and they always concern the lexemes: parsing can be paused before a lexeme is I<seen>, or after it has been I<seen> (though not yet commited). Pauses after a lexeme is seen can always be simulated with a nulled grammar event, in contrary to pauses before a lexeme is seen. The syntax is always:
 
-  :lexeme ::= lexemeSymbol pause => before event => eventName
+  :symbol ::= lexemeSymbol pause => before event => eventName
 
 or
 
-  :lexeme ::= lexemeSymbol pause => after event => eventName
+  :symbol ::= lexemeSymbol pause => after event => eventName
 
 For example:
 
@@ -495,8 +495,8 @@ For example:
   event Expression$ = completed Expression
   LPAREN ~ '('
   RPAREN ~ ')'
-  :lexeme ::= LPAREN pause => after event => LPAREN$
-  :lexeme ::= RPAREN pause => after event => RPAREN$
+  :symbol ::= LPAREN pause => after event => LPAREN$
+  :symbol ::= RPAREN pause => after event => RPAREN$
 
 =head3 Injecting user-defined values in the parse tree
 
@@ -537,7 +537,7 @@ You have to create a valuator that is using your valuation interface: C<MarpaX::
               ||     Expression  '+' Expression                 action => do_plus
                |     Expression  '-' Expression                 action => do_minus
   :discard ::= /[\s]+/
-  :lexeme ::= NUMBER pause => before event => ^NUMBER
+  :symbol ::= NUMBER pause => before event => ^NUMBER
   NUMBER     ~ /[\d]+/
   POW        ~ '**'
   };
