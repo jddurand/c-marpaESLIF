@@ -757,7 +757,8 @@ static inline void                   _marpaESLIF_stream_disposev(marpaESLIFRecog
 static inline marpaESLIFRecognizer_t *_marpaESLIFRecognizer_newp(marpaESLIFGrammar_t *marpaESLIFGrammarp, marpaESLIFRecognizerOption_t *marpaESLIFRecognizerOptionp, short discardb, short noEventb, short silentb, marpaESLIFRecognizer_t *marpaESLIFRecognizerParentp, short fakeb, int maxStartCompletionsi, short utfb, short grammmarIsOnStackb);
 static inline short                  _marpaESLIFRecognizer_shareb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFRecognizer_t *marpaESLIFRecognizerSharedp);
 static inline short                  _marpaESLIFRecognizer_peekb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFRecognizer_t *marpaESLIFRecognizerPeekedp);
-static inline short                  _marpaESLIFRecognizer_discardParseb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, size_t minl, size_t *discardlp, short appendEventb);
+static inline short                  _marpaESLIFRecognizer_discardb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, size_t *discardlp);
+static inline short                  __marpaESLIFRecognizer_discardb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, size_t minl, size_t *discardlp, short appendEventb);
 static inline short                  _marpaESLIFGrammar_parseb(marpaESLIFGrammar_t *marpaESLIFGrammarp, marpaESLIFRecognizerOption_t *marpaESLIFRecognizerOptionp, marpaESLIFValueOption_t *marpaESLIFValueOptionp, short discardb, short noEventb, short silentb, marpaESLIFRecognizer_t *marpaESLIFRecognizerParentp, short *isExhaustedbp, marpaESLIFValueResult_t *marpaESLIFValueResultp, int maxStartCompletionsi, size_t *lastSizeBeforeCompletionlp, int *numberOfStartCompletionsip, short grammarIsOnStackb, short verboseb);
 static        void                   _marpaESLIF_generateStringWithLoggerCallback(void *userDatavp, genericLoggerLevel_t logLeveli, const char *msgs);
 static        void                   _marpaESLIF_generateSeparatedStringWithLoggerCallback(void *userDatavp, genericLoggerLevel_t logLeveli, const char *msgs);
@@ -8820,7 +8821,7 @@ static inline short _marpaESLIFRecognizer_resume_oneb(marpaESLIFRecognizer_t *ma
   }
 
   if (alternativeStackSymboli <= 0) {
-    if (! _marpaESLIFRecognizer_discardParseb(marpaESLIFRecognizerp, 0 /* minl */, &discardl, 0 /* appendEventb */)) {
+    if (! __marpaESLIFRecognizer_discardb(marpaESLIFRecognizerp, 0 /* minl */, &discardl, 0 /* appendEventb */)) {
       goto err;
     }
     if (discardl > 0) {
@@ -8965,7 +8966,7 @@ static inline short _marpaESLIFRecognizer_resume_oneb(marpaESLIFRecognizer_t *ma
   /* In this case, :discard have precedence. The exception is a match on a pseudo-terminal, or on a */
   /* lookup, that is valid despite the fact the it matched zero byte */
   if (! (isPseudoTerminalMatchb || isLookupMetaMatchb)) {
-    if (! _marpaESLIFRecognizer_discardParseb(marpaESLIFRecognizerp, maxMatchedl /* minl */, &discardl, 0 /* appendEventb */)) {
+    if (! __marpaESLIFRecognizer_discardb(marpaESLIFRecognizerp, maxMatchedl /* minl */, &discardl, 0 /* appendEventb */)) {
       goto err;
     }
     if (discardl > 0) {
@@ -9801,7 +9802,6 @@ short marpaESLIFRecognizer_discardb(marpaESLIFRecognizer_t *marpaESLIFRecognizer
 /*****************************************************************************/
 {
   static const char *funcs = "marpaESLIFRecognizer_discardb";
-  size_t             discardl;
   short              rcb;
 
   if (MARPAESLIF_UNLIKELY(marpaESLIFRecognizerp == NULL)) {
@@ -9813,14 +9813,7 @@ short marpaESLIFRecognizer_discardb(marpaESLIFRecognizer_t *marpaESLIFRecognizer
   MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_INC(marpaESLIFRecognizerp);
   MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "start");
 
-  if (! _marpaESLIFRecognizer_discardParseb(marpaESLIFRecognizerp, 0 /* minl */, &discardl, 0 /* appendEventb */)) {
-    goto err;
-  }
-
-  if (discardlp != NULL) {
-    *discardlp = discardl;
-  }
-  rcb = 1;
+  rcb = _marpaESLIFRecognizer_discardb(marpaESLIFRecognizerp, discardlp);
   goto done;
 
  err:
@@ -9830,6 +9823,32 @@ short marpaESLIFRecognizer_discardb(marpaESLIFRecognizer_t *marpaESLIFRecognizer
   MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "return %d", (int) rcb);
   MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_DEC(marpaESLIFRecognizerp);
  fast_done:
+  return rcb;
+}
+
+/*****************************************************************************/
+static inline short _marpaESLIFRecognizer_discardb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, size_t *discardlp)
+/*****************************************************************************/
+{
+  static const char *funcs = "_marpaESLIFRecognizer_discardb";
+  size_t             discardl;
+  short              rcb;
+
+  if (! __marpaESLIFRecognizer_discardb(marpaESLIFRecognizerp, 0 /* minl */, &discardl, 0 /* appendEventb */)) {
+    goto err;
+  }
+
+  if (discardlp != NULL) {
+    *discardlp = discardl;
+  }
+
+  rcb = 1;
+  goto done;
+
+ err:
+  rcb = 0;
+
+ done:
   return rcb;
 }
 
@@ -10658,7 +10677,7 @@ static inline short _marpaESLIFRecognizer_push_grammar_eventsb(marpaESLIFRecogni
       /* to avoid the eventual error message "Grammar is exhausted but lexeme remains" */
 
       do {
-        if (! _marpaESLIFRecognizer_discardParseb(marpaESLIFRecognizerp, 0 /* minl */, &discardl, 1 /* appendEventb */)) {
+        if (! __marpaESLIFRecognizer_discardb(marpaESLIFRecognizerp, 0 /* minl */, &discardl, 1 /* appendEventb */)) {
           goto err;
         }
         if (discardl > 0) {
@@ -11523,7 +11542,7 @@ short marpaESLIFRecognizer_isExhaustedb(marpaESLIFRecognizer_t *marpaESLIFRecogn
 }
 
 /*****************************************************************************/
-static inline short _marpaESLIFRecognizer_discardParseb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, size_t minl, size_t *discardlp, short appendEventb)
+static inline short __marpaESLIFRecognizer_discardb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, size_t minl, size_t *discardlp, short appendEventb)
 /*****************************************************************************/
 /* Note that we made sure that discardlp is never NULL in any caller.        */
 /* appendEventb will prevent clearing the events. This can happen only once  */
@@ -11531,7 +11550,7 @@ static inline short _marpaESLIFRecognizer_discardParseb(marpaESLIFRecognizer_t *
 /* exhausted grammar.                                                        */
 /*****************************************************************************/
 {
-  static const char       *funcs = "_marpaESLIFRecognizer_discardParseb";
+  static const char       *funcs = "__marpaESLIFRecognizer_discardb";
   short                    isDiscardExpectedb;
   short                    noEventb;
   marpaESLIF_stream_t     *marpaESLIF_streamp;
