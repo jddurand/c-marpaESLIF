@@ -1028,7 +1028,7 @@ marpaESLIF BNF can be expressed in itself:
   <default rule>                 ::= ':default' <op declare> <adverb list>
   <lexeme rule>                  ::= ':lexeme' <op declare> <rhs primary no parameter> <adverb list> /* Deprecated, use :symbol */
   <terminal rule>                ::= ':terminal' <op declare> <terminal> <adverb list> /* Deprecated, use :symbol */
-  <symbol rule>                  ::= ':symbol' <op declare> <terminal> <adverb list>
+  <symbol rule>                  ::= ':symbol' <op declare> <rhs primary no parameter> <adverb list>
   <completion event declaration> ::= 'event' <event initialization> '=' 'completed' <lhs>
                                    | 'event' <event initialization> <op declare> 'completed' <lhs>
   <nulled event declaration> ::= 'event' <event initialization> '=' 'nulled' <lhs>
