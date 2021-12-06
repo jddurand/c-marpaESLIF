@@ -13,6 +13,7 @@
 #include "marpaESLIF/internal/logging.h"
 #include "marpaESLIF/internal/bootstrap.h"
 #include "marpaESLIF/internal/lua.h"
+#include "marpaESLIF/internal/json.h"
 
 #ifndef offsetof
 #  define offsetof(type, member) ((size_t)((char *)&((type *)0)->member - (char *)0))
@@ -898,7 +899,9 @@ static int                           _marpaESLIF_pcre2_callout_enumeratei(pcre2_
 static inline void                   _marpaESLIFCalloutBlock_initb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp);
 static inline void                   _marpaESLIFCalloutBlock_disposev(marpaESLIFRecognizer_t *marpaESLIFRecognizerp);
 static inline marpaESLIFSymbol_t    *_marpaESLIFSymbol_terminal_newp(marpaESLIF_t *marpaESLIFp, marpaESLIF_terminal_type_t terminalType, marpaESLIFString_t *stringp, char *modifiers, marpaESLIFSymbolOption_t *marpaESLIFSymbolOptionp);
-static inline marpaESLIFSymbol_t    *_marpaESLIFSymbol_meta_newp(marpaESLIF_t *marpaESLIFp, marpaESLIFGrammar_t *marpaESLIFGrammarp, char *symbols, int leveli, marpaESLIFString_t *descp, marpaESLIFSymbolOption_t *marpaESLIFSymbolOptionp);
+static inline marpaESLIF_symbol_t   *_marpaESLIFSymbol_meta_newp(marpaESLIF_t *marpaESLIFp, marpaESLIFGrammar_t *marpaESLIFGrammarp, char *symbols, marpaESLIFSymbolOption_t *marpaESLIFSymbolOptionp);
+static inline marpaESLIF_symbol_t   *_marpaESLIFSymbol_meta_new_by_levelp(marpaESLIF_t *marpaESLIFp, marpaESLIFGrammar_t *marpaESLIFGrammarp, char *symbols, int leveli, marpaESLIFString_t *descp, marpaESLIFSymbolOption_t *marpaESLIFSymbolOptionp);
+static inline marpaESLIFSymbol_t    *__marpaESLIFSymbol_meta_newp(marpaESLIF_t *marpaESLIFp, marpaESLIFGrammar_t *marpaESLIFGrammarp, char *symbols, int leveli, marpaESLIFString_t *descp, marpaESLIFSymbolOption_t *marpaESLIFSymbolOptionp);
 static inline unsigned int           _marpaESLIF_charset_toupperi(marpaESLIF_t *marpaESLIFp, const char c);
 static inline short                  _marpaESLIF_charset_eqb(marpaESLIF_t *marpaESLIFp, const char *s, const char *p, size_t sizel);
 static inline char                  *_marpaESLIF_charset_canonicals(marpaESLIF_t *marpaESLIFp, const char *s, const size_t sizel);
@@ -926,7 +929,9 @@ static inline short                  _marpaESLIFRecognizer_importb(marpaESLIFRec
 static inline short                  _marpaESLIFRecognizer_name_expectedb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, size_t *nNamelp, char ***namesArraypp);
 static inline short                  _marpaESLIFRecognizer_discard_last_tryb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, char **trysp, size_t *trylp);
 static inline short                  _marpaESLIFRecognizer_alternativeb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFAlternative_t *marpaESLIFAlternativep);
-  
+static inline marpaESLIF_symbol_t   *_marpaESLIFSymbol_string_newp(marpaESLIF_t *marpaESLIFp, marpaESLIFString_t *stringp, char *modifiers, marpaESLIFSymbolOption_t *marpaESLIFSymbolOptionp);
+static inline marpaESLIF_symbol_t   *_marpaESLIFSymbol_regex_newp(marpaESLIF_t *marpaESLIFp, marpaESLIFString_t *stringp, char *modifiers, marpaESLIFSymbolOption_t *marpaESLIFSymbolOptionp);
+
 /*****************************************************************************/
 static inline marpaESLIF_string_t *_marpaESLIF_string_newp(marpaESLIF_t *marpaESLIFp, char *encodingasciis, char *bytep, size_t bytel)
 /*****************************************************************************/
@@ -5047,11 +5052,13 @@ static inline marpaESLIF_t *_marpaESLIF_newp(marpaESLIFOption_t *marpaESLIFOptio
   genericLogger_t              *genericLoggerp;
   genericLoggerLevel_t          genericLoggerLeveli;
   marpaESLIFString_t            newlineString;
+  int                           i;
 #ifdef MARPAESLIF_HAVE_LONG_LONG
   char                          tmps[MARPAESLIF_MAX_DECIMAL_DIGITS_LONGLONG + 1];
 #else
   char                          tmps[MARPAESLIF_MAX_DECIMAL_DIGITS_LONG + 1];
 #endif
+  marpaESLIFString_t            jsonString;
 
   if (marpaESLIFOptionp == NULL) {
     marpaESLIFOptionp = &marpaESLIFOption_default_template;
@@ -5156,6 +5163,10 @@ static inline marpaESLIF_t *_marpaESLIF_newp(marpaESLIFOption_t *marpaESLIFOptio
   marpaESLIFp->longmaxcharsl = strlen(tmps);
 #endif
 
+  for (i = 0; i < _MARPAESLIF_JSON_TYPE_LAST; i++) {
+    marpaESLIFp->jsonStringpp[i] = NULL;
+    marpaESLIFp->jsonConstantOrNumberpp[i] = NULL;
+  }
 
   /* From now on we can use MARPAESLIF_ERRORF */
   marpaESLIFp->tablesp = pcre2_maketables(NULL);
@@ -5299,6 +5310,31 @@ static inline marpaESLIF_t *_marpaESLIF_newp(marpaESLIFOption_t *marpaESLIFOptio
   /* Although this should never happen, it is okay if the trace logger is NULL */
   if (marpaESLIFp->traceLoggerp == NULL) {
     GENERICLOGGER_TRACEF(marpaESLIFOptionp->genericLoggerp, "genericLogger initialization failure, %s", strerror(errno));
+  }
+
+  /* Create internal JSON symbols */
+  jsonString.encodingasciis = "ASCII";
+  jsonString.asciis         = NULL;
+  for (i = 0; i < _MARPAESLIF_JSON_TYPE_LAST; i++) {
+    jsonString.bytep = (char *) jsonStringRegexsp[i];
+    jsonString.bytel = strlen(jsonStringRegexsp[i]);
+    marpaESLIFp->jsonStringpp[i] = _marpaESLIFSymbol_regex_newp(marpaESLIFp,
+                                                                &jsonString,
+                                                                (char *) jsonStringRegexModifiersp[i],
+                                                                NULL /* marpaESLIFSymbolOptionp */);
+    if (MARPAESLIF_UNLIKELY(marpaESLIFp->jsonStringpp[i] == NULL)) {
+      goto err;
+    }
+
+    jsonString.bytep = (char *) jsonConstantOrNumberRegexsp[i];
+    jsonString.bytel = strlen(jsonConstantOrNumberRegexsp[i]);
+    marpaESLIFp->jsonConstantOrNumberpp[i] = _marpaESLIFSymbol_regex_newp(marpaESLIFp,
+                                                                          &jsonString,
+                                                                          (char *) jsonConstantOrNumberRegexModifiersp[i],
+                                                                          NULL /* marpaESLIFSymbolOptionp */);
+    if (MARPAESLIF_UNLIKELY(marpaESLIFp->jsonConstantOrNumberpp[i] == NULL)) {
+      goto err;
+    }
   }
 
   /* Create internal ESLIF grammar - it is important to set the option first */
@@ -5557,6 +5593,8 @@ marpaESLIFOption_t *marpaESLIF_optionp(marpaESLIF_t *marpaESLIFp)
 void marpaESLIF_freev(marpaESLIF_t *marpaESLIFp)
 /*****************************************************************************/
 {
+  int i;
+
   if (marpaESLIFp != NULL) {
     _marpaESLIFGrammar_freev(marpaESLIFp->marpaESLIFGrammarLuap, 0 /* onStackb */);
     _marpaESLIFGrammar_freev(marpaESLIFp->marpaESLIFGrammarLuapp[0], 0 /* onStackb */);
@@ -5578,6 +5616,10 @@ void marpaESLIF_freev(marpaESLIF_t *marpaESLIFp)
 #else
       free((void *) marpaESLIFp->tablesp);
 #endif
+    }
+    for (i = 0; i < _MARPAESLIF_JSON_TYPE_LAST; i++) {
+      _marpaESLIF_symbol_freev(marpaESLIFp->jsonStringpp[i]); /* This is NULL protected */
+      _marpaESLIF_symbol_freev(marpaESLIFp->jsonConstantOrNumberpp[i]); /* This is NULL protected */
     }
     /* free(marpaESLIFp->lconvp); */ /* output of localeconv() should never be freed */
     free(marpaESLIFp);
@@ -21328,7 +21370,7 @@ static inline marpaESLIFSymbol_t *_marpaESLIFSymbol_terminal_newp(marpaESLIF_t *
 }
 
 /*****************************************************************************/
-static inline marpaESLIFSymbol_t *_marpaESLIFSymbol_meta_newp(marpaESLIF_t *marpaESLIFp, marpaESLIFGrammar_t *marpaESLIFGrammarp, char *symbols, int leveli, marpaESLIFString_t *descp, marpaESLIFSymbolOption_t *marpaESLIFSymbolOptionp)
+static inline marpaESLIFSymbol_t *__marpaESLIFSymbol_meta_newp(marpaESLIF_t *marpaESLIFp, marpaESLIFGrammar_t *marpaESLIFGrammarp, char *symbols, int leveli, marpaESLIFString_t *descp, marpaESLIFSymbolOption_t *marpaESLIFSymbolOptionp)
 /*****************************************************************************/
 {
   marpaESLIFSymbol_t   *symbolp   = NULL;
@@ -21385,6 +21427,13 @@ marpaESLIFSymbol_t *marpaESLIFSymbol_string_newp(marpaESLIF_t *marpaESLIFp, marp
     return NULL;
   }
 
+  return _marpaESLIFSymbol_string_newp(marpaESLIFp, stringp, modifiers, marpaESLIFSymbolOptionp);
+}
+
+/*****************************************************************************/
+static inline marpaESLIF_symbol_t *_marpaESLIFSymbol_string_newp(marpaESLIF_t *marpaESLIFp, marpaESLIFString_t *stringp, char *modifiers, marpaESLIFSymbolOption_t *marpaESLIFSymbolOptionp)
+/*****************************************************************************/
+{
   return _marpaESLIFSymbol_terminal_newp(marpaESLIFp, MARPAESLIF_TERMINAL_TYPE_STRING, stringp, modifiers, marpaESLIFSymbolOptionp);
 }
 
@@ -21397,6 +21446,13 @@ marpaESLIFSymbol_t *marpaESLIFSymbol_regex_newp(marpaESLIF_t *marpaESLIFp, marpa
     return NULL;
   }
 
+  return _marpaESLIFSymbol_regex_newp(marpaESLIFp, stringp, modifiers, marpaESLIFSymbolOptionp);
+}
+
+/*****************************************************************************/
+static inline marpaESLIF_symbol_t *_marpaESLIFSymbol_regex_newp(marpaESLIF_t *marpaESLIFp, marpaESLIFString_t *stringp, char *modifiers, marpaESLIFSymbolOption_t *marpaESLIFSymbolOptionp)
+/*****************************************************************************/
+{
   return _marpaESLIFSymbol_terminal_newp(marpaESLIFp, MARPAESLIF_TERMINAL_TYPE_REGEX, stringp, modifiers, marpaESLIFSymbolOptionp);
 }
 
@@ -21409,7 +21465,14 @@ marpaESLIFSymbol_t *marpaESLIFSymbol_meta_newp(marpaESLIF_t *marpaESLIFp, marpaE
     return NULL;
   }
 
-  return _marpaESLIFSymbol_meta_newp(marpaESLIFp, marpaESLIFGrammarp, symbols, 0 /* leveli */, NULL /* descp */, marpaESLIFSymbolOptionp);
+  return _marpaESLIFSymbol_meta_newp(marpaESLIFp, marpaESLIFGrammarp, symbols, marpaESLIFSymbolOptionp);
+}
+
+/*****************************************************************************/
+static inline marpaESLIF_symbol_t *_marpaESLIFSymbol_meta_newp(marpaESLIF_t *marpaESLIFp, marpaESLIFGrammar_t *marpaESLIFGrammarp, char *symbols, marpaESLIFSymbolOption_t *marpaESLIFSymbolOptionp)
+/*****************************************************************************/
+{
+  return __marpaESLIFSymbol_meta_newp(marpaESLIFp, marpaESLIFGrammarp, symbols, 0 /* leveli */, NULL /* descp */, marpaESLIFSymbolOptionp);
 }
 
 /*****************************************************************************/
@@ -21421,7 +21484,14 @@ marpaESLIFSymbol_t *marpaESLIFSymbol_meta_new_by_levelp(marpaESLIF_t *marpaESLIF
     return NULL;
   }
 
-  return _marpaESLIFSymbol_meta_newp(marpaESLIFp, marpaESLIFGrammarp, symbols, leveli, descp, marpaESLIFSymbolOptionp);
+  return _marpaESLIFSymbol_meta_new_by_levelp(marpaESLIFp, marpaESLIFGrammarp, symbols, leveli, descp, marpaESLIFSymbolOptionp);
+}
+
+/*****************************************************************************/
+static inline marpaESLIF_symbol_t *_marpaESLIFSymbol_meta_new_by_levelp(marpaESLIF_t *marpaESLIFp, marpaESLIFGrammar_t *marpaESLIFGrammarp, char *symbols, int leveli, marpaESLIFString_t *descp, marpaESLIFSymbolOption_t *marpaESLIFSymbolOptionp)
+/*****************************************************************************/
+{
+  return __marpaESLIFSymbol_meta_newp(marpaESLIFp, marpaESLIFGrammarp, symbols, leveli, descp, marpaESLIFSymbolOptionp);
 }
 
 /*****************************************************************************/

@@ -47,6 +47,7 @@ typedef struct  marpaESLIF_stream           marpaESLIF_stream_t;
 typedef struct  marpaESLIF_stringGenerator  marpaESLIF_stringGenerator_t;
 typedef struct  marpaESLIF_lua_functioncall marpaESLIF_lua_functioncall_t;
 typedef struct  marpaESLIF_lua_functiondecl marpaESLIF_lua_functiondecl_t;
+typedef enum    marpaESLIF_json_type        marpaESLIF_json_type_t;
 
 #include "marpaESLIF/internal/lua.h" /* For lua_State* */
 
@@ -322,9 +323,12 @@ struct marpaESLIF_grammar {
   short                  fastDiscardb;                       /* True when :discard can be done in the context of the current recognizer */
 };
 
-/* ----------------------------------- */
-/* Definition of the opaque structures */
-/* ----------------------------------- */
+enum marpaESLIF_json_type {
+  MARPAESLIF_JSON_TYPE_STRICT = 0,
+  MARPAESLIF_JSON_TYPE_EXTENDED,
+  _MARPAESLIF_JSON_TYPE_LAST
+};
+
 #define MARPAESLIFGRAMMARLUA_FOR_PARLIST 0
 #define MARPAESLIFGRAMMARLUA_FOR_EXPLIST 1
 struct marpaESLIF {
@@ -368,6 +372,9 @@ struct marpaESLIF {
   float                   negativenanf;                /* -NaN */
   short                   nanconfidenceb;              /* 1 when ESLIF think that NaN representation is correct */
 #endif
+  /* For JSON grammars : the symbols that depend on strictness */
+  marpaESLIF_symbol_t    *jsonStringpp[_MARPAESLIF_JSON_TYPE_LAST];
+  marpaESLIF_symbol_t    *jsonConstantOrNumberpp[_MARPAESLIF_JSON_TYPE_LAST];
 };
 
 struct marpaESLIFGrammar {
