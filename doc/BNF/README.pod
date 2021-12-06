@@ -965,10 +965,15 @@ A name can be associated to a rule, in the form:
   LHS ::= etc... RHS etc... name => 'quoted string literal'  # No modifier is allowed after the string
   LHS ::= etc... RHS etc... name => "quoted string literal"  # No modifier is allowed after the string
 
-and to symbols in the form:
+and to terminals in the form:
 
   :symbol ::= /X/ name => XRegexp
-  :symbol   ::= X   name => XLexeme
+
+A terminal that has the name adverb can be accessed later in the grammar at the same level using the name preceded by the dollar sign C<$>, e.g;:
+
+  LHS ::= etc... $XRegexp ...
+
+Note that two terminals cannot share the same name adverb.
 
 =back
 

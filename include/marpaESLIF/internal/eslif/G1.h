@@ -123,6 +123,7 @@ typedef enum bootstrap_grammar_G1_enum {
   G1_TERMINAL_LUA_FUNCTION,
   G1_TERMINAL_LUA_FUNCTIONCALL,
   G1_TERMINAL_LUA_FUNCTIONDECL,
+  G1_TERMINAL_DOLLAR,
   /* ----- Non terminals ------ */
   G1_META_STATEMENTS,
   G1_META_STATEMENT,
@@ -1212,6 +1213,14 @@ bootstrap_grammar_terminal_t bootstrap_grammar_G1_terminals[] = {
 #else
     NULL, NULL
 #endif
+  },
+  { G1_TERMINAL_DOLLAR, MARPAESLIF_TERMINAL_TYPE_STRING, NULL,
+    "'$'", NULL, NULL,
+#ifndef MARPAESLIF_NTRACE
+    "$", NULL
+#else
+    NULL, NULL
+#endif
   }
 };
 
@@ -1576,6 +1585,8 @@ bootstrap_grammar_rule_t bootstrap_grammar_G1_rules[] = {
   { G1_META_RHS_PRIMARY_NO_PARAMETER,         G1_RULE_RHS_PRIMARY_NO_PARAMETER_2,             MARPAESLIF_RULE_TYPE_ALTERNATIVE, 3, { G1_META_SYMBOL,
                                                                                                                                      G1_TERMINAL_AT_SIGN,
                                                                                                                                      G1_META_GRAMMAR_REFERENCE                    }, -1,                        -1,      -1,              0, G1_ACTION_RHS_PRIMARY_NO_PARAMETER_2 },
+  { G1_META_RHS_PRIMARY_NO_PARAMETER,         G1_RULE_RHS_PRIMARY_NO_PARAMETER_3,             MARPAESLIF_RULE_TYPE_ALTERNATIVE, 2, { G1_TERMINAL_DOLLAR,
+                                                                                                                                     G1_META_ALTERNATIVE_NAME                     }, -1,                        -1,      -1,              0, G1_ACTION_RHS_PRIMARY_NO_PARAMETER_3 },
   { G1_META_RHS_PRIMARY,                      G1_RULE_RHS_PRIMARY_1,                          MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_RHS_PRIMARY_NO_PARAMETER             }, -1,                        -1,      -1,              0, G1_ACTION_RHS_PRIMARY_1 },
 
   /*

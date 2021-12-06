@@ -269,7 +269,8 @@ enum marpaESLIF_bootstrap_rhs_primary_type {
   MARPAESLIF_BOOTSTRAP_RHS_PRIMARY_TYPE_NA = 0,
   MARPAESLIF_BOOTSTRAP_RHS_PRIMARY_TYPE_SINGLE_SYMBOL,
   MARPAESLIF_BOOTSTRAP_RHS_PRIMARY_TYPE_SYMBOL_AND_REFERENCE,
-  MARPAESLIF_BOOTSTRAP_RHS_PRIMARY_TYPE_GENERATOR_ACTION
+  MARPAESLIF_BOOTSTRAP_RHS_PRIMARY_TYPE_GENERATOR_ACTION,
+  MARPAESLIF_BOOTSTRAP_RHS_PRIMARY_TYPE_NAME
 };
 
 enum marpaESLIF_bootstrap_grammar_reference_type {
@@ -328,6 +329,8 @@ struct marpaESLIF_bootstrap_rhs_primary {
     marpaESLIF_bootstrap_single_symbol_t        *singleSymbolp;
     marpaESLIF_bootstrap_symbol_and_reference_t *symbolAndReferencep;
     marpaESLIF_action_t                         *generatorActionp;
+    marpaESLIF_bootstrap_utf_string_t            name;
+
   } u;
 };
 
