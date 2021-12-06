@@ -397,6 +397,7 @@ In the example below we take care to I<disable> the initial event otherwise the 
     event Expression$ = completed Expression
     };
   $eslifGrammar = MarpaX::ESLIF::Grammar->new($eslif, $grammar_v5);
+  $eslifRecognizerInterface = MyRecognizer->new($input);
   $eslifRecognizer = MarpaX::ESLIF::Recognizer->new($eslifGrammar, $eslifRecognizerInterface);
   #
   # Always start with scan()
@@ -502,14 +503,14 @@ For example:
 
 At any time where the control is given back to the user, user-defined perl values, that can be I<anything>, can be injected. The most common method is:
 
-  $eslifRecognizer->lexemeRead(symbolName, perlValue, lengthInBytes, grammarLength)
+  $eslifRecognizer->alternativeRead(symbolName, perlValue, lengthInBytes, grammarLength)
 
 C<grammarLength> is optional and default to C<1>, this is the number of symbols spanned, and should be rarelly of use... On the other hand, C<lengthInBytes> is required, but C<may be zero> (when it is zero you are really injecting things I<without> moving the internal pointers).
 Please note that when this is a stream of characters, you have to think in terms of UTF-8 encoding for the number of bytes.
 
 Since injecting values is possible only for lexemes, it is often practical to require a pause information from the recognizer with the method:
 
-  $eslifRecognizer->lexemeLastPause(symbolName)
+  $eslifRecognizer->nameLastPause(symbolName)
 
 which will return a perl's string for the last paused information for lexeme C<symbolName>, or C<undef> if there is none. The number of C<bytes> in this string is the relevant thing here.
 
@@ -552,14 +553,14 @@ You have to create a valuator that is using your valuation interface: C<MarpaX::
       foreach (@{$eslifRecognizer->events()}) {
         if ($_->{event}) {   # Can be undef for exhaustion
           if ($_->{event} eq '^NUMBER') {
-            my $lastPause = $eslifRecognizer->lexemeLastPause($_->{symbol});
+            my $lastPause = $eslifRecognizer->nameLastPause($_->{symbol});
             printf "Pause before event %s for symbol %s: \"%s\"\n", $_->{event}, $_->{symbol}, $lastPause;
             # ------------------------------
             # We replace NUMBER by NUMBER*10
             # ------------------------------
-            $eslifRecognizer->lexemeRead('NUMBER', $lastPause, 0);
-            $eslifRecognizer->lexemeRead('POW', '**', 0);
-            $eslifRecognizer->lexemeRead('NUMBER', '2', 0);
+            $eslifRecognizer->alternativeRead('NUMBER', $lastPause, 0);
+            $eslifRecognizer->alternativeRead('POW', '**', 0);
+            $eslifRecognizer->alternativeRead('NUMBER', '2', 0);
             # -------------------------------------------
             # We say to resume exactly where NUMBER ended
             # -------------------------------------------
@@ -589,7 +590,7 @@ This is a neat way to remove automatically C<:discard> rules from the input -;
 
 You have to notice also that I<nothing> obliges you to inject a alternative value that would be of the same length of what I<should> be in the input. For instance, injecting the string C<*ANYTHING*> for the C<POW> token:
 
-          $eslifRecognizer->lexemeRead('POW', '*ANYTHING*', 0);
+          $eslifRecognizer->alternativeRead('POW', '*ANYTHING*', 0);
 
 would result in this stringification:
 
