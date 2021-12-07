@@ -9366,7 +9366,6 @@ static inline short _marpaESLIFRecognizer_alternative_and_valueb(marpaESLIFRecog
 /*****************************************************************************/
 {
   static const char   *funcs                           = "_marpaESLIFRecognizer_alternative_and_valueb";
-  marpaESLIF_t        *marpaESLIFp                     = marpaESLIFRecognizerp->marpaESLIFp;
   genericStack_t      *commitedAlternativeStackSymbolp = marpaESLIFRecognizerp->commitedAlternativeStackSymbolp;
   marpaESLIF_symbol_t *symbolp                         = alternativep->symbolp;
   short                rcb;
@@ -9383,11 +9382,16 @@ static inline short _marpaESLIFRecognizer_alternative_and_valueb(marpaESLIFRecog
 #endif
 
   if (MARPAESLIF_UNLIKELY(! marpaWrapperRecognizer_alternativeb(marpaESLIFRecognizerp->marpaWrapperRecognizerp, symbolp->idi, valuei, alternativep->grammarLengthi))) {
+    if (! marpaESLIFRecognizerp->silentb) {
+      MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "Grammar alternative error with symbol %s", symbolp->descp->asciis);
+      _marpaESLIFRecognizer_errorv(marpaESLIFRecognizerp);
+    }
     goto err;
   }
+
   GENERICSTACK_PUSH_PTR(commitedAlternativeStackSymbolp, symbolp);
   if (MARPAESLIF_UNLIKELY(GENERICSTACK_ERROR(commitedAlternativeStackSymbolp))) {
-    MARPAESLIF_ERRORF(marpaESLIFp, "commitedAlternativeStackSymbolp push failure, %s", strerror(errno));
+    MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "commitedAlternativeStackSymbolp push failure, %s", strerror(errno));
     goto err;
   }
 
