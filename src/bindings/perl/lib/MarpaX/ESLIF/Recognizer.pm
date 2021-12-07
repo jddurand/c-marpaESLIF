@@ -267,6 +267,10 @@ This method is similar to the isEof()'s recognizer interface. Except that this i
 
 Returns a boolean indicating of end-of-user-data is reached.
 
+=head2 $eslifRecognizer->isStartComplete()
+
+Returns a boolean indicating if start symbol completion is reached. Note that this does not mean that the grammar is exhausted.
+
 =head2 $eslifRecognizer->read()
 
 Forces the recognizer to read more data. Usually, the recognizer interface is called automatically whenever needed.

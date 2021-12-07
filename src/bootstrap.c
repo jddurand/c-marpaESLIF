@@ -5159,16 +5159,16 @@ static short _marpaESLIF_bootstrap_G1_action_terminal_3b(void *userDatavp, marpa
   }
   /* Fake a recognizer. EOF flag will be set automatically in fake mode */
   marpaESLIFGrammar.marpaESLIFp = marpaESLIFp;
-  marpaESLIFRecognizerp = _marpaESLIFRecognizer_newp(&marpaESLIFGrammar,
-                                                     NULL, /* marpaESLIFRecognizerOptionp */
-                                                     0, /* discardb - no effect anway because we are in fake mode */
-                                                     1, /* noEventb - no effect anway because we are in fake mode */
-                                                     0, /* silentb */
-                                                     NULL, /* marpaESLIFRecognizerParentp */
-                                                     1, /* fakeb */
-                                                     0, /* wantedStartCompletionsi */
-                                                     1, /* A grammar is always transformed to valid UTF-8 before being parsed */
-                                                     1 /* grammmarIsOnStackb */);
+  marpaESLIFRecognizerp = __marpaESLIFRecognizer_newp(&marpaESLIFGrammar,
+                                                      NULL, /* marpaESLIFRecognizerOptionp */
+                                                      0, /* discardb - no effect anway because we are in fake mode */
+                                                      1, /* noEventb - no effect anway because we are in fake mode */
+                                                      0, /* silentb */
+                                                      NULL, /* marpaESLIFRecognizerParentp */
+                                                      1, /* fakeb */
+                                                      0, /* wantedStartCompletionsi */
+                                                      1, /* A grammar is always transformed to valid UTF-8 before being parsed */
+                                                      1 /* grammmarIsOnStackb */);
   if (MARPAESLIF_UNLIKELY(marpaESLIFRecognizerp == NULL)) {
     goto err;
   }
@@ -6844,6 +6844,7 @@ static short __marpaESLIF_bootstrap_G1_action_symbol_ruleb(void *userDatavp, mar
   char                                        *lhsTypes             = ":symbol";
   char                                        *lhsRuleTypes         = ":symbol rule";
   marpaESLIF_string_t                         *stringp              = NULL;
+  marpaESLIF_bootstrap_utf_string_t           *namingp              = NULL;
   marpaESLIF_symbol_t                         *symbolp;
   int                                          leveli;
   marpaESLIF_grammar_t                        *grammarp;
@@ -6854,7 +6855,6 @@ static short __marpaESLIF_bootstrap_G1_action_symbol_ruleb(void *userDatavp, mar
   marpaESLIF_action_t                         *symbolactionp;
   marpaESLIF_action_t                         *ifactionp;
   short                                       *verbosebp;
-  marpaESLIF_bootstrap_utf_string_t           *namingp;
   marpaESLIF_string_t                         *descp;
   short                                        rcb;
 
@@ -7760,16 +7760,16 @@ static inline marpaESLIF_bootstrap_utf_string_t *_marpaESLIF_bootstrap_regex_to_
 
   /* Fake a recognizer. EOF flag will be set automatically in fake mode */
   marpaESLIFGrammar.marpaESLIFp = marpaESLIFp;
-  marpaESLIFRecognizerp = _marpaESLIFRecognizer_newp(&marpaESLIFGrammar,
-                                                     NULL, /* marpaESLIFRecognizerOptionp */
-                                                     0, /* discardb - no effect anway because we are in fake mode */
-                                                     1, /* noEventb - no effect anway because we are in fake mode */
-                                                     0, /* silentb */
-                                                     NULL, /* marpaESLIFRecognizerParentp */
-                                                     1, /* fakeb */
-                                                     0, /* wantedStartCompletionsi */
-                                                     1, /* A grammar is always transformed to valid UTF-8 before being parsed */
-                                                     1 /* grammmarIsOnStackb */);
+  marpaESLIFRecognizerp = __marpaESLIFRecognizer_newp(&marpaESLIFGrammar,
+                                                      NULL, /* marpaESLIFRecognizerOptionp */
+                                                      0, /* discardb - no effect anway because we are in fake mode */
+                                                      1, /* noEventb - no effect anway because we are in fake mode */
+                                                      0, /* silentb */
+                                                      NULL, /* marpaESLIFRecognizerParentp */
+                                                      1, /* fakeb */
+                                                      0, /* wantedStartCompletionsi */
+                                                      1, /* A grammar is always transformed to valid UTF-8 before being parsed */
+                                                      1 /* grammmarIsOnStackb */);
   if (MARPAESLIF_UNLIKELY(marpaESLIFRecognizerp == NULL)) {
     goto err;
   }
@@ -7905,16 +7905,16 @@ static inline marpaESLIF_bootstrap_utf_string_t *_marpaESLIF_bootstrap_character
 
   /* Fake a recognizer. EOF flag will be set automatically in fake mode */
   marpaESLIFGrammar.marpaESLIFp = marpaESLIFp;
-  marpaESLIFRecognizerp = _marpaESLIFRecognizer_newp(&marpaESLIFGrammar,
-                                                     NULL, /* marpaESLIFRecognizerOptionp */
-                                                     0, /* discardb */
-                                                     1, /* noEventb - no effect anway because we are in fake mode */
-                                                     0, /* silentb */
-                                                     NULL, /* marpaESLIFRecognizerParentp */
-                                                     1, /* fakeb */
-                                                     0, /* wantedStartCompletionsi */
-                                                     1, /* A grammar is always transformed to valid UTF-8 before being parsed */
-                                                     1 /* grammmarIsOnStackb */);
+  marpaESLIFRecognizerp = __marpaESLIFRecognizer_newp(&marpaESLIFGrammar,
+                                                      NULL, /* marpaESLIFRecognizerOptionp */
+                                                      0, /* discardb */
+                                                      1, /* noEventb - no effect anway because we are in fake mode */
+                                                      0, /* silentb */
+                                                      NULL, /* marpaESLIFRecognizerParentp */
+                                                      1, /* fakeb */
+                                                      0, /* wantedStartCompletionsi */
+                                                      1, /* A grammar is always transformed to valid UTF-8 before being parsed */
+                                                      1 /* grammmarIsOnStackb */);
   if (MARPAESLIF_UNLIKELY(marpaESLIFRecognizerp == NULL)) {
     goto err;
   }

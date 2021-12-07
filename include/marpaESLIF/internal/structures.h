@@ -399,6 +399,9 @@ struct marpaESLIFGrammar {
   genericHash_t              _lexemeGrammarHash; /* Cache of string <=> lexeme grammars */
   genericHash_t             *lexemeGrammarHashp;
   short                      hasLookaheadMetab;  /* Any lookahead meta in the grammar ? */
+  /* For JSON grammars : the symbols that depend on strictness */
+  marpaESLIF_symbol_t       *jsonStringp; /* Shallow pointer */
+  marpaESLIF_symbol_t       *jsonConstantOrNumberp; /* Shallow pointer */
 };
 
 struct marpaESLIF_meta {

@@ -1554,6 +1554,7 @@ for (my $i = 0; $i <= $#strings; $i++) {
         showInputLength("After doScan", $log, $eslifRecognizer);
         showInput("After doScan", $log, $eslifRecognizer);
         showError("After doScan", $log, $eslifRecognizer);
+        $log->infof("isStartComplete: %s", $eslifRecognizer->isStartComplete());
         if (! $eslifRecognizer->isEof()) {
             if (! $eslifRecognizer->read()) {
                 last;
@@ -1565,6 +1566,7 @@ for (my $i = 0; $i <= $#strings; $i++) {
         }
         my $j = 0;
         while ($eslifRecognizer->isCanContinue()) {
+            $log->infof("isStartComplete: %s", $eslifRecognizer->isStartComplete());
             if (! doResume($log, $eslifRecognizer, 0)) {
                 last;
             }

@@ -729,6 +729,7 @@ for _, localstring in pairs(strings) do
       showInputLength("After doScan", eslifRecognizer)
       showInput("After doScan", eslifRecognizer)
       showError("After doScan", eslifRecognizer)
+      logger:infof('isStartComplete: %s', eslifRecognizer:isStartComplete())
       if (not eslifRecognizer:isEof()) then
          if (not eslifRecognizer:read()) then
             break
@@ -737,6 +738,7 @@ for _, localstring in pairs(strings) do
       end
       local j = 0
       while (eslifRecognizer:isCanContinue()) do
+         logger:infof('isStartComplete: %s', eslifRecognizer:isStartComplete())
          logger:debugf("[%s] Progress log:", context)
          eslifRecognizer:progressLog(-1, -1, GENERICLOGGER_LOGLEVEL_NOTICE)
          local progress = eslifRecognizer:progress(-1, -1)

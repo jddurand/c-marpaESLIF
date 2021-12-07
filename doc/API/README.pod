@@ -1671,6 +1671,15 @@ Returns in the value pointed by C<eofbp> the current EOF state, when it is not C
 
 This function should never fail, a false value indicates something fatal happened or the arguments are not correct.
 
+=head3 C<marpaESLIFRecognizer_isStartCompleteb>
+
+  short marpaESLIFRecognizer_isStartCompleteb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp,
+                                              short *completebp);
+
+Returns in the value pointed by C<completebp> a true value if grammar reached start symbol completion, when it is not C<NULL>.
+
+This function should never fail, a false value indicates something fatal happened or the arguments are not correct.
+
 =head3 C<marpaESLIFRecognizer_isExhaustedb>
 
   short marpaESLIFRecognizer_isExhaustedb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, short *isExhaustedbp);

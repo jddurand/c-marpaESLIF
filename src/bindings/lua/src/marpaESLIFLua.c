@@ -251,6 +251,7 @@ static int                                marpaESLIFLua_marpaESLIFRecognizer_nam
 static int                                marpaESLIFLua_marpaESLIFRecognizer_discardLastTryi(lua_State *L);
 static int                                marpaESLIFLua_marpaESLIFRecognizer_discardLasti(lua_State *L);
 static int                                marpaESLIFLua_marpaESLIFRecognizer_isEofi(lua_State *L);
+static int                                marpaESLIFLua_marpaESLIFRecognizer_isStartCompletei(lua_State *L);
 static int                                marpaESLIFLua_marpaESLIFRecognizer_readi(lua_State *L);
 static int                                marpaESLIFLua_marpaESLIFRecognizer_inputi(lua_State *L);
 static int                                marpaESLIFLua_marpaESLIFRecognizer_inputLengthi(lua_State *L);
@@ -1019,6 +1020,7 @@ static short marpaESLIFLua_lua_isinteger(int *rcip, lua_State *L, int idx);
   MARPAESLIFLUA_STORE_FUNCTION(L, "discardLastTry",                  marpaESLIFLua_marpaESLIFRecognizer_discardLastTryi); \
   MARPAESLIFLUA_STORE_FUNCTION(L, "discardLast",                     marpaESLIFLua_marpaESLIFRecognizer_discardLasti); \
   MARPAESLIFLUA_STORE_FUNCTION(L, "isEof",                           marpaESLIFLua_marpaESLIFRecognizer_isEofi); \
+  MARPAESLIFLUA_STORE_FUNCTION(L, "isStartComplete",                 marpaESLIFLua_marpaESLIFRecognizer_isStartCompletei); \
   MARPAESLIFLUA_STORE_FUNCTION(L, "read",                            marpaESLIFLua_marpaESLIFRecognizer_readi); \
   MARPAESLIFLUA_STORE_FUNCTION(L, "input",                           marpaESLIFLua_marpaESLIFRecognizer_inputi); \
   MARPAESLIFLUA_STORE_FUNCTION(L, "inputLength",                     marpaESLIFLua_marpaESLIFRecognizer_inputLengthi); \
@@ -6221,6 +6223,47 @@ static int marpaESLIFLua_marpaESLIFRecognizer_isEofi(lua_State *L)
 }
 
 /*****************************************************************************/
+static int marpaESLIFLua_marpaESLIFRecognizer_isStartCompletei(lua_State *L)
+/*****************************************************************************/
+{
+  static const char                *funcs = "marpaESLIFLua_marpaESLIFRecognizer_isStartCompletei";
+  marpaESLIFLuaRecognizerContext_t *marpaESLIFLuaRecognizerContextp;
+  short                             completeb;
+  int                               typei;
+  int                               topi;
+ 
+  if (! marpaESLIFLua_lua_gettop(&topi, L)) goto err;
+  if (topi != 1) {
+    marpaESLIFLua_luaL_error(L, "Usage: marpaESLIFRecognizer_isStartComplete(marpaESLIFRecognizerp)");
+    goto err;
+  }
+  
+  if (! marpaESLIFLua_lua_type(&typei, L, 1)) goto err;
+  if (typei != LUA_TTABLE) {
+    marpaESLIFLua_luaL_error(L, "marpaESLIFRecognizerp must be a table");
+    goto err;
+  }
+  if (! marpaESLIFLua_lua_getfield(NULL,L, 1, "marpaESLIFLuaRecognizerContextp")) goto err;
+  if (! marpaESLIFLua_lua_touserdata((void **) &marpaESLIFLuaRecognizerContextp, L, -1)) goto err;
+  if (! marpaESLIFLua_lua_pop(L, 1)) goto err;
+
+  /* Clear the stack */
+  if (! marpaESLIFLua_lua_settop(L, 0)) goto err;
+
+  if (! marpaESLIFRecognizer_isStartCompleteb(marpaESLIFLuaRecognizerContextp->marpaESLIFRecognizerp, &completeb)) {
+    marpaESLIFLua_luaL_errorf(L, "marpaESLIFRecognizer_isStartCompleteb failure, %s", strerror(errno));
+    goto err;
+  }
+  
+  if (! marpaESLIFLua_lua_pushboolean(L, completeb ? 1 : 0)) goto err;
+  
+  return 1;
+
+ err:
+  return 0;
+}
+
+/*****************************************************************************/
 static int marpaESLIFLua_marpaESLIFRecognizer_readi(lua_State *L)
 /*****************************************************************************/
 {
@@ -6972,7 +7015,7 @@ static int marpaESLIFLua_marpaESLIFRecognizer_symbolTryi(lua_State *L)
     goto err;
   }
 
-  rci = matchb ? 1 : 0; /* The importer callback pushed the the value to stack */
+  rci = matchb ? 1 : 0; /* The recognizer importer callback pushed the value to stack */
   goto done;
 
  err:
@@ -9916,7 +9959,7 @@ static int marpaESLIFLua_marpaESLIFSymbol_tryi(lua_State *L)
     goto err;
   }
 
-  rci = matchb ? 1 : 0; /* The importer callback pushed the the value to stack */
+  rci = matchb ? 1 : 0; /* The importer callback pushed the value to stack */
   goto done;
 
  err:

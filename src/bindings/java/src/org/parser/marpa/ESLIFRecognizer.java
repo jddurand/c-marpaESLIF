@@ -60,6 +60,7 @@ public class ESLIFRecognizer {
 	private native byte[]            jniDiscardLastTry() throws ESLIFException;
 	private native byte[]            jniDiscardLast() throws ESLIFException;
 	private native boolean           jniIsEof() throws ESLIFException;
+	private native boolean           jniIsStartComplete() throws ESLIFException;
 	private native boolean           jniIsExhausted() throws ESLIFException;
 	private native void              jniSetExhaustedFlag(boolean flag) throws ESLIFException;
 	private native boolean           jniIsCanContinue() throws ESLIFException;
@@ -432,6 +433,16 @@ public class ESLIFRecognizer {
 	 */
 	public synchronized boolean isEof() throws ESLIFException {
 		return jniIsEof();
+	}
+
+	/**
+	 * Indicates if the start symbol is complete. Note that this does mean that the grammar is exhausted.
+	 * 
+	 * @return a boolean indicating start symbol completion
+	 * @throws ESLIFException if the interface failed
+	 */
+	public synchronized boolean isStartComplete() throws ESLIFException {
+		return jniIsStartComplete();
 	}
 
 	/**

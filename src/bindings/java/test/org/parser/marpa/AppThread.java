@@ -214,6 +214,7 @@ public class AppThread implements Runnable {
 					showInputLength("After doScan", eslifLogger, eslifRecognizer);
 					showInput("After doScan", eslifLogger, eslifRecognizer);
 					showError("After doScan", eslifLogger, eslifRecognizer);
+					eslifLogger.info("isStartComplete: " + eslifRecognizer.isStartComplete());
 					if (! eslifRecognizer.isEof()) {
 						if (! eslifRecognizer.read()) {
 							break;
@@ -222,6 +223,7 @@ public class AppThread implements Runnable {
 					}
 					int j = 0;
 					while (eslifRecognizer.isCanContinue()) {
+					        eslifLogger.info("isStartComplete: " + eslifRecognizer.isStartComplete());
 						eslifRecognizer.progressLog(-1, -1, ESLIFLoggerLevel.get(ESLIFLoggerLevel.NOTICE.getCode()));
 						ESLIFProgress[] progress = eslifRecognizer.progress(-1, -1);
 						for (int k = 0; k < progress.length; k++) {

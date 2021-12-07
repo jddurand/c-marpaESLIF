@@ -4847,10 +4847,10 @@ CODE:
   }
 
   if (matchb) {
-    if (MARPAESLIF_UNLIKELY(marpaESLIFPerl_GENERICSTACK_USED(MarpaX_ESLIF_Symbolp->internalStackp) != 1)) {
-      MARPAESLIFPERL_CROAKF("Internal value stack is %d instead of 1", marpaESLIFPerl_GENERICSTACK_USED(MarpaX_ESLIF_Symbolp->internalStackp));
+    if (MARPAESLIF_UNLIKELY(marpaESLIFPerl_GENERICSTACK_USED(MarpaX_ESLIF_Recognizerp->internalStackp) != 1)) {
+      MARPAESLIFPERL_CROAKF("Internal value stack is %d instead of 1", marpaESLIFPerl_GENERICSTACK_USED(MarpaX_ESLIF_Recognizerp->internalStackp));
     }
-    RETVAL = (SV *) marpaESLIFPerl_GENERICSTACK_POP_PTR(MarpaX_ESLIF_Symbolp->internalStackp);
+    RETVAL = (SV *) marpaESLIFPerl_GENERICSTACK_POP_PTR(MarpaX_ESLIF_Recognizerp->internalStackp);
   } else {
     RETVAL = &PL_sv_undef;
   }
@@ -5406,12 +5406,34 @@ PREINIT:
   static const char *funcs = "MarpaX::ESLIF::Recognizer::isEof";
 CODE:
   MarpaX_ESLIF_Recognizer_t *MarpaX_ESLIF_Recognizerp = marpaESLIFPerl_engine(aTHX_ p);
-  short                     eofb;
+  short                      eofb;
 
   if (MARPAESLIF_UNLIKELY(! marpaESLIFRecognizer_isEofb(MarpaX_ESLIF_Recognizerp->marpaESLIFRecognizerp, &eofb))) {
     MARPAESLIFPERL_CROAKF("marpaESLIFRecognizer_isEofb failure, %s", strerror(errno));
   }
   RETVAL = (bool) eofb;
+OUTPUT:
+  RETVAL
+
+=for comment
+  /* ----------------------------------------------------------------------- */
+  /* MarpaX::ESLIF::Recognizer::isStartComplete                              */
+  /* ----------------------------------------------------------------------- */
+=cut
+
+bool
+isStartComplete(p)
+  SV *p;
+PREINIT:
+  static const char *funcs = "MarpaX::ESLIF::Recognizer::isStartComplete";
+CODE:
+  MarpaX_ESLIF_Recognizer_t *MarpaX_ESLIF_Recognizerp = marpaESLIFPerl_engine(aTHX_ p);
+  short                      completeb;
+
+  if (MARPAESLIF_UNLIKELY(! marpaESLIFRecognizer_isStartCompleteb(MarpaX_ESLIF_Recognizerp->marpaESLIFRecognizerp, &completeb))) {
+    MARPAESLIFPERL_CROAKF("marpaESLIFRecognizer_isStartCompleteb failure, %s", strerror(errno));
+  }
+  RETVAL = (bool) completeb;
 OUTPUT:
   RETVAL
 
