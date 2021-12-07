@@ -2507,6 +2507,7 @@ static inline short _marpaESLIF_numberb(marpaESLIF_t *marpaESLIFp, char *s, size
   short                               confidenceb = 1; /* Set to 0 only when we got through the double case */
   char                               *bytes       = s;
   size_t                              bytel       = (sizel <= 0) ? strlen(s) : sizel; /* Remember the doc: caller must make sure it is NUL terminated if sizel is 0 */
+  char                               *dups        = NULL; /* For the cases where we modify in place s, we want to restore it */
   char                               *numbers;
   size_t                              numberl;
   char                               *endptrendp;
@@ -2549,6 +2550,7 @@ static inline short _marpaESLIF_numberb(marpaESLIF_t *marpaESLIFp, char *s, size
 #else
   char                                integers[MARPAESLIF_MAX_DECIMAL_DIGITS_LONG + 1];
 #endif
+  short                               rcb;
 
   if (bytes[0] == '+') {
     MARPAESLIF_TRACE(marpaESLIFp, funcs, "Removing leading '+' sign");
@@ -2640,6 +2642,12 @@ static inline short _marpaESLIF_numberb(marpaESLIF_t *marpaESLIFp, char *s, size
     /*    ^p         */
 
     MARPAESLIF_TRACEF(marpaESLIFp, funcs, "%s: Removing %ld non significant left digits", numbers, (unsigned long) numberOfUnsignificantDigitl);
+    /* We modify the input in place, keep a copy for restoring at the end */
+    dups = strdup(s);
+    if (MARPAESLIF_UNLIKELY(dups == NULL)) {
+      MARPAESLIF_ERRORF(marpaESLIFp, "strdup failure, %s", strerror(errno));
+      goto err;
+    }
     memmove(pmin, p, endptrendp - p + 1); /* + 1 for the NUL byte */
 
     /* Impact of the memmove() */
@@ -2687,6 +2695,14 @@ static inline short _marpaESLIF_numberb(marpaESLIF_t *marpaESLIFp, char *s, size
         /*     ^p          */
         numberOfUnsignificantDigitl += 2;
         MARPAESLIF_TRACEF(marpaESLIFp, funcs, "%s: Removing the dot part", numbers, (unsigned long) numberOfUnsignificantDigitl);
+        if (dups == NULL) {
+          /* No backup copy yet */
+          dups = strdup(s);
+          if (MARPAESLIF_UNLIKELY(dups == NULL)) {
+            MARPAESLIF_ERRORF(marpaESLIFp, "strdup failure, %s", strerror(errno));
+            goto err;
+          }
+        }
         memmove(dotp, pmax, endptrendp - pmax + 1); /* + 1 for the NUL byte */
         dotp = NULL;
       } else {
@@ -2696,6 +2712,14 @@ static inline short _marpaESLIF_numberb(marpaESLIF_t *marpaESLIFp, char *s, size
         /*       ^p        */
         MARPAESLIF_TRACEF(marpaESLIFp, funcs, "%s: Removing %ld non significant right digits", numbers, (unsigned long) numberOfUnsignificantDigitl);
         ++p;
+        if (dups == NULL) {
+          /* No backup copy yet */
+          dups = strdup(s);
+          if (MARPAESLIF_UNLIKELY(dups == NULL)) {
+            MARPAESLIF_ERRORF(marpaESLIFp, "strdup failure, %s", strerror(errno));
+            goto err;
+          }
+        }
         memmove(p, pmax, endptrendp - pmax + 1); /* + 1 for the NUL byte */
       }
 
@@ -3033,7 +3057,20 @@ static inline short _marpaESLIF_numberb(marpaESLIF_t *marpaESLIFp, char *s, size
     *marpaESLIFValueResultp = marpaESLIFValueResult;
   }
 
-  return 1;
+  rcb = 1;
+  goto done;
+
+ err:
+  rcb = 0;
+
+ done:
+  if (dups != NULL) {
+    /* We changed the input... Restore it */
+    memcpy(s, dups, sizel);
+    free(dups);
+  }
+
+  return rcb;
 }
 
 /*****************************************************************************/
