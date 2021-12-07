@@ -331,6 +331,7 @@ short marpaESLIFJSON_decodeb(marpaESLIFGrammar_t *marpaESLIFGrammarJSONp, marpaE
   marpaESLIFAlternative_t                       marpaESLIFAlternative;
   short                                         matchb;
   size_t                                        discardl;
+  int                                           depositStackpUsedi;
   short                                         rcb;
 
   /* Whatever happens, we take entire control on the callbacks so that we have our own context on top of it */
@@ -561,16 +562,19 @@ short marpaESLIFJSON_decodeb(marpaESLIFGrammar_t *marpaESLIFGrammarJSONp, marpaE
   if (MARPAESLIF_UNLIKELY(! _marpaESLIFRecognizer_inputb(marpaESLIFRecognizerp, NULL, &inputl))) {
     goto err;
   }
+  depositStackpUsedi = GENERICSTACK_USED(marpaESLIFJSONDecodeContext.depositStackp);
 
-  /* Parsing is ok if:          */
-  /* - start symbol is complete */
-  /* - eof is reached           */
-  /* - all data is consumed     */
-  MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "isStartCompleteb = %d", (int) isStartCompleteb);
-  MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "isEofb           = %d", (int) isEofb);
-  MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "inputl           = %ld", (unsigned long) inputl);
+  /* Parsing is ok if:            */
+  /* - start symbol is complete   */
+  /* - eof is reached             */
+  /* - all data is consumed       */
+  MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "isStartCompleteb  = %d", (int) isStartCompleteb);
+  MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "isEofb            = %d", (int) isEofb);
+  MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "inputl            = %ld", (unsigned long) inputl);
+  MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "depositStack size = %d", depositStackpUsedi);
 
-  if ((! isStartCompleteb) || (! isEofb) || (inputl > 0)) {
+  if ((! isStartCompleteb) || (! isEofb) || (inputl > 0) || (depositStackpUsedi != 1)) {
+    MARPAESLIF_ERROR(marpaESLIFGrammarJSONp->marpaESLIFp, "Incomplete parsing");
     _marpaESLIFRecognizer_errorv(marpaESLIFRecognizerp);
     goto err;
   }
@@ -595,12 +599,6 @@ short marpaESLIFJSON_decodeb(marpaESLIFGrammar_t *marpaESLIFGrammarJSONp, marpaE
 
   /* Set-up proxy representation */
   marpaESLIFValuep->proxyRepresentationp = _marpaESLIFJSONDecodeRepresentationb;
-
-  /* Here it is a non-sense to not have only one entry in the deposit stack */
-  if (MARPAESLIF_UNLIKELY(GENERICSTACK_USED(marpaESLIFJSONDecodeContext.depositStackp) != 1)) {
-    MARPAESLIF_ERRORF(marpaESLIFGrammarJSONp->marpaESLIFp, "Deposit stack has %d items", GENERICSTACK_USED(marpaESLIFJSONDecodeContext.depositStackp));
-    goto err;
-  }
 
   /* Call for import (no-op if end-user has set no importer */
   if (MARPAESLIF_UNLIKELY(! _marpaESLIFValue_importb(marpaESLIFValuep, finalValuep))) {
