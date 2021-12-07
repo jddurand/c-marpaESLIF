@@ -2910,15 +2910,6 @@ static inline short marpaESLIFPerl_JSONDecodeNumberAction(void *userDatavp, char
   MarpaX_ESLIF_constants_t  *constantsp               = MarpaX_ESLIF_Recognizerp->constantsp;
   AV                        *listp;
   SV                        *svp;
-  SV                        *svisintp;
-  short                     isintb;
-  SV                        *svnegp;
-  short                      isnegb;
-  SV                        *svgep;
-  short                      isgeb = 0;
-  SV                        *svlep;
-  short                      isleb = 0;
-  SV                        *svnumifyp;
   dTHXa(MarpaX_ESLIF_Recognizerp->PerlInterpreterp);
 
   if (confidenceb) {
