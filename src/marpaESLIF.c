@@ -9383,7 +9383,7 @@ static inline short _marpaESLIFRecognizer_alternative_and_valueb(marpaESLIFRecog
 
   if (MARPAESLIF_UNLIKELY(! marpaWrapperRecognizer_alternativeb(marpaESLIFRecognizerp->marpaWrapperRecognizerp, symbolp->idi, valuei, alternativep->grammarLengthi))) {
     if (! marpaESLIFRecognizerp->silentb) {
-      MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "Grammar alternative error with symbol %s", symbolp->descp->asciis);
+      MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "Failed to commit alternative %s", symbolp->descp->asciis);
       _marpaESLIFRecognizer_errorv(marpaESLIFRecognizerp);
     }
     goto err;
