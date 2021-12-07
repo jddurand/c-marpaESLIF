@@ -965,10 +965,15 @@ A name can be associated to a rule, in the form:
   LHS ::= etc... RHS etc... name => 'quoted string literal'  # No modifier is allowed after the string
   LHS ::= etc... RHS etc... name => "quoted string literal"  # No modifier is allowed after the string
 
-and to symbols in the form:
+and to terminals in the form:
 
   :symbol ::= /X/ name => XRegexp
-  :symbol   ::= X   name => XLexeme
+
+A terminal that has the name adverb can be accessed later in the grammar at the same level using the name preceded by the dollar sign C<$>, e.g;:
+
+  LHS ::= etc... $XRegexp ...
+
+Note that two terminals cannot share the same name adverb.
 
 =back
 
@@ -1014,6 +1019,7 @@ marpaESLIF BNF can be expressed in itself:
                                    | <autorank statement>
                                    | <lua script statement>
                                    | <terminal rule>
+                                   | <symbol rule>
   <start rule>                   ::= ':start' <op declare> <start symbol>
   <start symbol>                 ::= <symbol>
                                    | <start symbol> <lua functioncall>
@@ -1027,6 +1033,7 @@ marpaESLIF BNF can be expressed in itself:
   <default rule>                 ::= ':default' <op declare> <adverb list>
   <lexeme rule>                  ::= ':lexeme' <op declare> <rhs primary no parameter> <adverb list> /* Deprecated, use :symbol */
   <terminal rule>                ::= ':terminal' <op declare> <terminal> <adverb list> /* Deprecated, use :symbol */
+  <symbol rule>                  ::= ':symbol' <op declare> <rhs primary no parameter> <adverb list>
   <completion event declaration> ::= 'event' <event initialization> '=' 'completed' <lhs>
                                    | 'event' <event initialization> <op declare> 'completed' <lhs>
   <nulled event declaration> ::= 'event' <event initialization> '=' 'nulled' <lhs>
