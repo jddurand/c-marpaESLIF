@@ -10787,6 +10787,9 @@ static inline short _marpaESLIFRecognizer_push_grammar_eventsb(marpaESLIFRecogni
     /* Trigger an error if data remains and recognizer do not have the exhausted event flag */
     if (MARPAESLIF_UNLIKELY(! ((marpaESLIF_streamp->eofb && (marpaESLIF_streamp->inputl <= 0)) || marpaESLIFRecognizerp->marpaESLIFRecognizerOption.exhaustedb))) {
       MARPAESLIF_ERROR(marpaESLIFRecognizerp->marpaESLIFp, "Grammar is exhausted but data remains");
+      if (! marpaESLIFRecognizerp->silentb) {
+        _marpaESLIFRecognizer_errorv(marpaESLIFRecognizerp);
+      }
       goto err;
     }
   }
