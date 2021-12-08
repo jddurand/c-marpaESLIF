@@ -457,6 +457,13 @@ static marpaESLIFValueResult_t marpaESLIFValueResultLazy = {
     marpaESLIFValueResult.u.r.sizel          = lengthl;                 \
   } while (0)
 
+#define MARPAESLIFCALLOUTBLOCK_INIT_INT(marpaESLIFValueResult, value) do { \
+    marpaESLIFValueResult.contextp           = NULL;                    \
+    marpaESLIFValueResult.representationp    = NULL;                    \
+    marpaESLIFValueResult.type               = MARPAESLIF_VALUE_TYPE_INT; \
+    marpaESLIFValueResult.u.i                = (int) (value);           \
+  } while (0)
+
 #define MARPAESLIFCALLOUTBLOCK_INIT_LONG(marpaESLIFValueResult, value) do { \
     marpaESLIFValueResult.contextp           = NULL;                    \
     marpaESLIFValueResult.representationp    = NULL;                    \
@@ -21172,6 +21179,8 @@ static int _marpaESLIF_pcre2_callouti(pcre2_callout_block *blockp, void *userDat
   static const char                  *funcs                       = "_marpaESLIF_pcre2_callouti";
   marpaESLIF_pcre2_callout_context_t *contextp                    = (marpaESLIF_pcre2_callout_context_t *) userDatavp;
   marpaESLIFRecognizer_t             *marpaESLIFRecognizerp       = contextp->marpaESLIFRecognizerp;
+  marpaESLIFGrammar_t                *marpaESLIFGrammarp          = marpaESLIFRecognizerp->marpaESLIFGrammarp;
+  marpaESLIF_grammar_t               *grammarp                    = marpaESLIFGrammarp->grammarp;
   marpaESLIFValueResultPair_t        *marpaESLIFValuePairsp       = marpaESLIFRecognizerp->_marpaESLIFCalloutBlockPairs;
   marpaESLIF_terminal_t              *terminalp                   = contextp->terminalp;
   marpaESLIFAction_t                 *regexActionp                = marpaESLIFRecognizerp->marpaESLIFGrammarp->grammarp->defaultRegexActionp;
@@ -21229,8 +21238,17 @@ static int _marpaESLIF_pcre2_callouti(pcre2_callout_block *blockp, void *userDat
     MARPAESLIFCALLOUTBLOCK_INIT_UNDEF (marpaESLIFValuePairsp[MARPAESLIFCALLOUTBLOCK_CALLOUT_NUMBER].value);
     MARPAESLIFCALLOUTBLOCK_INIT_STRING(marpaESLIFValuePairsp[MARPAESLIFCALLOUTBLOCK_CALLOUT_STRING].value, blockp->callout_string, blockp->callout_string_length);
   }
+#ifndef MARPAESLIF_NTRACE
+  /* Note that in fact blockp->subject is stream's inputs, and blockp->subject_length is stream's inputl */
   MARPAESLIFCALLOUTBLOCK_INIT_ARRAY (marpaESLIFValuePairsp[MARPAESLIFCALLOUTBLOCK_SUBJECT].value, blockp->subject, blockp->subject_length);
+#else
+  MARPAESLIFCALLOUTBLOCK_INIT_UNDEF (marpaESLIFValuePairsp[MARPAESLIFCALLOUTBLOCK_SUBJECT].value);
+#endif
+#ifndef MARPAESLIF_NTRACE
   MARPAESLIFCALLOUTBLOCK_INIT_STRING(marpaESLIFValuePairsp[MARPAESLIFCALLOUTBLOCK_PATTERN].value, terminalp->patterns, terminalp->patternl);
+#else
+  MARPAESLIFCALLOUTBLOCK_INIT_UNDEF (marpaESLIFValuePairsp[MARPAESLIFCALLOUTBLOCK_PATTERN].value);
+#endif
   MARPAESLIFCALLOUTBLOCK_INIT_LONG  (marpaESLIFValuePairsp[MARPAESLIFCALLOUTBLOCK_CAPTURE_TOP].value, blockp->capture_top);
   MARPAESLIFCALLOUTBLOCK_INIT_LONG  (marpaESLIFValuePairsp[MARPAESLIFCALLOUTBLOCK_CAPTURE_LAST].value, blockp->capture_last);
   MARPAESLIFCALLOUTBLOCK_INIT_ROW(marpaESLIFValuePairsp[MARPAESLIFCALLOUTBLOCK_OFFSET_VECTOR].value, marpaESLIFValueResultOvectorp, offset_vectorl);
@@ -21250,6 +21268,8 @@ static int _marpaESLIF_pcre2_callouti(pcre2_callout_block *blockp, void *userDat
   } else {
     MARPAESLIFCALLOUTBLOCK_INIT_STRING(marpaESLIFValuePairsp[MARPAESLIFCALLOUTBLOCK_NEXT_ITEM].value, terminalp->patterns + blockp->pattern_position, blockp->next_item_length);
   }
+  MARPAESLIFCALLOUTBLOCK_INIT_INT  (marpaESLIFValuePairsp[MARPAESLIFCALLOUTBLOCK_GRAMMAR_LEVEL].value, grammarp->leveli);
+  MARPAESLIFCALLOUTBLOCK_INIT_INT  (marpaESLIFValuePairsp[MARPAESLIFCALLOUTBLOCK_SYMBOL_ID].value, terminalp->idi);
 
   /* MARPAESLIF_NOTICEF(marpaESLIFRecognizerp->marpaESLIFp, "... Calling regex callback on terminal: %s", terminalp->descp->asciis); */
   if (MARPAESLIF_UNLIKELY(! regexCallbackp(marpaESLIFRecognizerp->marpaESLIFRecognizerOption.userDatavp, marpaESLIFRecognizerp, marpaESLIFRecognizerp->marpaESLIFCalloutBlockp, &marpaESLIFValueResultInt))) {
@@ -21323,6 +21343,8 @@ static inline void _marpaESLIFCalloutBlock_initb(marpaESLIFRecognizer_t *marpaES
   static const char           *start_matchs          = "start_match";
   static const char           *current_positions     = "current_position";
   static const char           *next_items            = "next_item";
+  static const char           *grammar_levels        = "grammar_level";
+  static const char           *symbol_ids            = "symbol_id";
 
   /* Remember current offset_vectorl size */
   marpaESLIFRecognizerp->_offset_vector_allocl = 0;
@@ -21359,6 +21381,12 @@ static inline void _marpaESLIFCalloutBlock_initb(marpaESLIFRecognizer_t *marpaES
 
   MARPAESLIFCALLOUTBLOCK_INIT_STRING(marpaESLIFValuePairsp[MARPAESLIFCALLOUTBLOCK_NEXT_ITEM].key, next_items, strlen(next_items));
   MARPAESLIFCALLOUTBLOCK_INIT_UNDEF (marpaESLIFValuePairsp[MARPAESLIFCALLOUTBLOCK_NEXT_ITEM].value);
+
+  MARPAESLIFCALLOUTBLOCK_INIT_STRING(marpaESLIFValuePairsp[MARPAESLIFCALLOUTBLOCK_GRAMMAR_LEVEL].key, grammar_levels, strlen(grammar_levels));
+  MARPAESLIFCALLOUTBLOCK_INIT_UNDEF (marpaESLIFValuePairsp[MARPAESLIFCALLOUTBLOCK_GRAMMAR_LEVEL].value);
+
+  MARPAESLIFCALLOUTBLOCK_INIT_STRING(marpaESLIFValuePairsp[MARPAESLIFCALLOUTBLOCK_SYMBOL_ID].key, symbol_ids, strlen(symbol_ids));
+  MARPAESLIFCALLOUTBLOCK_INIT_UNDEF (marpaESLIFValuePairsp[MARPAESLIFCALLOUTBLOCK_SYMBOL_ID].value);
 
   marpaESLIFRecognizerp->_marpaESLIFCalloutBlock.contextp           = NULL;
   marpaESLIFRecognizerp->_marpaESLIFCalloutBlock.representationp    = NULL;

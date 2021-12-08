@@ -89,8 +89,8 @@ typedef marpaESLIFRecognizerEventCallback_t (*marpaESLIFRecognizerEventActionRes
 /* ------- ---                   ---------       -----                                              */
 /* STRING  "callout_number"   => LONG or UNDEF   Callout number                                   0 */
 /* STRING  "callout_string"   => STRING or UNDEF Callout string                                   1 */
-/* STRING  "subject"          => ARRAY           Subject                                          2 */
-/* STRING  "pattern"          => STRING          Pattern                                          3 */
+/* STRING  "subject"          => ARRAY OR UNDEF  Subject (*)                                      2 */
+/* STRING  "pattern"          => STRING OR UNDEF Pattern (*)                                      3 */
 /* STRING  "capture_top"      => LONG            Max current capture                              4 */
 /* STRING  "capture_last"     => LONG            Most recently closed capture                     5 */
 /* STRING  "offset_vector"    => ROW of LONGs    Offset vector                                    6 */
@@ -98,6 +98,15 @@ typedef marpaESLIFRecognizerEventCallback_t (*marpaESLIFRecognizerEventActionRes
 /* STRING  "start_match"      => LONG            Current match start attempt offset               8 */
 /* STRING  "current_position" => LONG            Current subject offset                           9 */
 /* STRING  "next_item"        => STRING or UNDEF Next item in the pattern                        10 */
+/* STRING  "grammar_level"    => INT             The grammar level                               11 */
+/* STRING  "symbol_id"        => INT             The symbol identifier                           12 */
+/*                                                                                                  */
+/* (*) By default UNDEF is returned, unless ESLIF is compiled without the MARPAESLIF_NTRACE define. */
+/*     This is voluntarily choice for performance reasons.                                          */
+/*     In production mode ESLIF guarantees that:                                                    */
+/*     - subject correspond to the output of marpaESLIFRecognizer_input()                           */
+/*     - pattern can be retreived using the symbol's description using symbol_id value in input to  */
+/*       marpaESLIFGrammar_symbolproperty_by_levelb().                                              */
 /*                                                                                                  */
 /* ESLIF guarantees that this marpaESLIFCalloutBlockp is filled in this exact order, therefore      */
 /* using an indice in the marpaESLIFCalloutBlockEnum_t enum below is safe.                          */
@@ -114,6 +123,8 @@ typedef enum marpaESLIFCalloutBlockEnum {
                                          MARPAESLIFCALLOUTBLOCK_START_MATCH,
                                          MARPAESLIFCALLOUTBLOCK_CURRENT_POSITION,
                                          MARPAESLIFCALLOUTBLOCK_NEXT_ITEM,
+                                         MARPAESLIFCALLOUTBLOCK_GRAMMAR_LEVEL,
+                                         MARPAESLIFCALLOUTBLOCK_SYMBOL_ID,
                                          _MARPAESLIFCALLOUTBLOCK_SIZE
 } marpaESLIFCalloutBlockEnum_t;
 

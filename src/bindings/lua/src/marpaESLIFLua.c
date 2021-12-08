@@ -305,6 +305,8 @@ static int                                marpaESLIFLua_marpaESLIFRegexCallout_g
 static int                                marpaESLIFLua_marpaESLIFRegexCallout_getStartMatchi(lua_State *L);
 static int                                marpaESLIFLua_marpaESLIFRegexCallout_getCurrentPositioni(lua_State *L);
 static int                                marpaESLIFLua_marpaESLIFRegexCallout_getNextItemi(lua_State *L);
+static int                                marpaESLIFLua_marpaESLIFRegexCallout_getGrammarLeveli(lua_State *L);
+static int                                marpaESLIFLua_marpaESLIFRegexCallout_getSymbolIdi(lua_State *L);
 
 static short                              marpaESLIFLua_symbolContextInitb(lua_State *L, marpaESLIF_t *marpaESLIFp, int eslifStacki, marpaESLIFLuaSymbolContext_t *marpaESLIFLuaSymbolContextp, short unmanagedb);
 static void                               marpaESLIFLua_symbolContextFreev(marpaESLIFLuaSymbolContext_t *marpaESLIFLuaSymbolContextp, short onStackb);
@@ -1077,6 +1079,8 @@ static short marpaESLIFLua_lua_isinteger(int *rcip, lua_State *L, int idx);
     MARPAESLIFLUA_STORE_FUNCTION(L, "getStartMatch",      marpaESLIFLua_marpaESLIFRegexCallout_getStartMatchi); \
     MARPAESLIFLUA_STORE_FUNCTION(L, "getCurrentPosition", marpaESLIFLua_marpaESLIFRegexCallout_getCurrentPositioni); \
     MARPAESLIFLUA_STORE_FUNCTION(L, "getNextItem",        marpaESLIFLua_marpaESLIFRegexCallout_getNextItemi); \
+    MARPAESLIFLUA_STORE_FUNCTION(L, "getGrammarLevel",    marpaESLIFLua_marpaESLIFRegexCallout_getGrammarLeveli); \
+    MARPAESLIFLUA_STORE_FUNCTION(L, "getSymbolId",        marpaESLIFLua_marpaESLIFRegexCallout_getSymbolIdi); \
     if (! marpaESLIFLua_lua_setfield(L, -2, "__index")) goto err;           /* Stack: function, { "regexCalloutTable" = regexCalloutTable }, { "__mode" = "v", __index = {...}}} */ \
     if (! marpaESLIFLua_lua_setmetatable(L, -2)) goto err;                  /* Stack: function, { "regexCalloutTable" = regexCalloutTable } meta { "__mode" = "v", __index = {...}}} */ \
   } while (0)
@@ -9705,6 +9709,7 @@ static short marpaESLIFLuaJSONDecoder_readerb(void *userDatavp, char **inputcpp,
     int                            typei;                               \
     int                            topi;                                \
                                                                         \
+    fprintf(stderr, "... %s %s\n", methodName, memberName);             \
     if (! marpaESLIFLua_lua_gettop(&topi, L)) goto err;                 \
     if (topi != 1) {                                                    \
       marpaESLIFLua_luaL_errorf(L, "Usage: %s(%s)", funcs, "argument"); \
@@ -9740,6 +9745,8 @@ static int marpaESLIFLua_marpaESLIFRegexCallout_getMarki(lua_State *L)          
 static int marpaESLIFLua_marpaESLIFRegexCallout_getStartMatchi(lua_State *L)      { MARPAESLIFLUA_MARPAESLIFREGEXCALLOUT_METHOD(L, "getStartMatch",      "start_match"); }
 static int marpaESLIFLua_marpaESLIFRegexCallout_getCurrentPositioni(lua_State *L) { MARPAESLIFLUA_MARPAESLIFREGEXCALLOUT_METHOD(L, "getCurrentPosition", "current_position"); }
 static int marpaESLIFLua_marpaESLIFRegexCallout_getNextItemi(lua_State *L)        { MARPAESLIFLUA_MARPAESLIFREGEXCALLOUT_METHOD(L, "getNextItem",        "next_item"); }
+static int marpaESLIFLua_marpaESLIFRegexCallout_getGrammarLeveli(lua_State *L)    { MARPAESLIFLUA_MARPAESLIFREGEXCALLOUT_METHOD(L, "getGrammarLeveli",   "grammar_level"); }
+static int marpaESLIFLua_marpaESLIFRegexCallout_getSymbolIdi(lua_State *L)        { MARPAESLIFLUA_MARPAESLIFREGEXCALLOUT_METHOD(L, "getSymbolId",        "symbol_id"); }
 /****************************************************************************/
 
 /****************************************************************************/

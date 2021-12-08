@@ -524,7 +524,7 @@ sub getCalloutString { return shift->{callout_string} }
 
 =head2 $self->getSubject
 
-Returns current subject
+Returns current subject. Always undef unless ESLIF is compiled in trace mode.
 
 =cut
 
@@ -532,7 +532,7 @@ sub getSubject { return shift->{subject} }
 
 =head2 $self->getPattern
 
-Returns pattern
+Returns pattern. Always undef unless ESLIF is compiled in trace mode.
 
 =cut
 
@@ -593,6 +593,22 @@ Returns the next item in the pattern
 =cut
 
 sub getNextItem { return shift->{next_item} }
+
+=head2 $self->getGrammarLevel
+
+Returns the current grammar level
+
+=cut
+
+sub getGrammarLevel { return shift->{grammar_level} }
+
+=head2 $self->getSymbolId
+
+Returns the current symbol id
+
+=cut
+
+sub getSymbolId { return shift->{symbol_id} }
 
 =head1 SEE ALSO
 

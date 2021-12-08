@@ -108,6 +108,7 @@ public class AppJSONLua implements Runnable {
 						"_DIGIT19 ~ [1-9] \n" +
 						"_FRAC    ~ '.' _DIGITS \n" +
 						"_EXP     ~ _E _DIGITS \n" +
+						":symbol  ~ /(([0-9])+)(?C\"RegexAction\")/ name => JDD\n" +
 						"_DIGITS  ~ /(([0-9])+)(?C\"RegexAction\")/ \n" +
 						"_E       ~ /e[+-]?/i \n" +
 						" \n" +
@@ -318,7 +319,7 @@ public class AppJSONLua implements Runnable {
 				String string = new String(strings[i]);
 	
 				BufferedReader reader = new BufferedReader(new StringReader(string));
-				AppRecognizer eslifAppRecognizer = new AppRecognizer(reader, eslifLogger);
+				AppRecognizer eslifAppRecognizer = new AppRecognizer(reader, eslifLogger, eslifGrammar);
 				AppValue eslifAppValue = new AppValue();
 				eslifLogger.info("Testing parse() on " + string);
 				try {

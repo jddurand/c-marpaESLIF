@@ -712,6 +712,7 @@ static short _marpaESLIFJSONDecodeRegexCallbackb(void *userDatavp, marpaESLIFRec
   static const char             *funcs = "_marpaESLIFJSONDecodeRegexCallbackb";
   marpaESLIFJSONDecodeContext_t *marpaESLIFJSONDecodeContextp = (marpaESLIFJSONDecodeContext_t *) userDatavp;
   long                           blockNumberl;
+  char                          *subjects;
   char                          *matchs;
   size_t                         matchl;
   marpaESLIFJSONDecodeDeposit_t  marpaESLIFJSONDecodeDeposit;
@@ -738,15 +739,11 @@ static short _marpaESLIFJSONDecodeRegexCallbackb(void *userDatavp, marpaESLIFRec
     /* String component             */
     /* ============================ */
     /* If there is a match it is complete, it is the second in the ovector per construction */
-    matchs =
-      marpaESLIFCalloutBlockp->u.t.p[MARPAESLIFCALLOUTBLOCK_SUBJECT].value.u.a.p
-      +
-      marpaESLIFCalloutBlockp->u.t.p[MARPAESLIFCALLOUTBLOCK_OFFSET_VECTOR].value.u.r.p[2].u.l;
-      ;
-    matchl =
-      marpaESLIFCalloutBlockp->u.t.p[MARPAESLIFCALLOUTBLOCK_OFFSET_VECTOR].value.u.r.p[3].u.l
-      -
-      marpaESLIFCalloutBlockp->u.t.p[MARPAESLIFCALLOUTBLOCK_OFFSET_VECTOR].value.u.r.p[2].u.l;
+    if (MARPAESLIF_UNLIKELY(! _marpaESLIFRecognizer_inputb(marpaESLIFRecognizerp, &subjects, NULL))) {
+      goto err;
+    }
+    matchs = subjects + marpaESLIFCalloutBlockp->u.t.p[MARPAESLIFCALLOUTBLOCK_OFFSET_VECTOR].value.u.r.p[2].u.l;
+    matchl = marpaESLIFCalloutBlockp->u.t.p[MARPAESLIFCALLOUTBLOCK_OFFSET_VECTOR].value.u.r.p[3].u.l - marpaESLIFCalloutBlockp->u.t.p[MARPAESLIFCALLOUTBLOCK_OFFSET_VECTOR].value.u.r.p[2].u.l;
     MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "String component on %ld bytes at positions [%ld-%ld]", (unsigned long) matchl, (unsigned long) marpaESLIFCalloutBlockp->u.t.p[MARPAESLIFCALLOUTBLOCK_OFFSET_VECTOR].value.u.r.p[2].u.l, (unsigned long) (marpaESLIFCalloutBlockp->u.t.p[MARPAESLIFCALLOUTBLOCK_OFFSET_VECTOR].value.u.r.p[3].u.l - 1));
     if (MARPAESLIF_UNLIKELY(! _marpaESLIFJSONDecodeAppendCharb(marpaESLIFRecognizerp, marpaESLIFJSONDecodeContextp, matchs, matchl))) {
       goto err;
@@ -802,7 +799,10 @@ static short _marpaESLIFJSONDecodeRegexCallbackb(void *userDatavp, marpaESLIFRec
     /* Number                       */
     /* ============================ */
     /* If there is a match it is complete, i.e. current position is the full length - no need to have match group */
-    matchs = marpaESLIFCalloutBlockp->u.t.p[MARPAESLIFCALLOUTBLOCK_SUBJECT].value.u.a.p;
+    if (MARPAESLIF_UNLIKELY(! _marpaESLIFRecognizer_inputb(marpaESLIFRecognizerp, &subjects, NULL))) {
+      goto err;
+    }
+    matchs = subjects;
     matchl = marpaESLIFCalloutBlockp->u.t.p[MARPAESLIFCALLOUTBLOCK_CURRENT_POSITION].value.u.l;
     MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Number on %ld bytes", (unsigned long) matchl);
     if (! _marpaESLIFJSONDecodeSetNumberb(marpaESLIFRecognizerp, marpaESLIFJSONDecodeContextp, matchs, matchl)) {
@@ -818,7 +818,10 @@ static short _marpaESLIFJSONDecodeRegexCallbackb(void *userDatavp, marpaESLIFRec
     /* Positive infinity            */
     /* ============================ */
     /* If there is a match it is complete, i.e. current position is the full length - no need to have match group */
-    matchs = marpaESLIFCalloutBlockp->u.t.p[MARPAESLIFCALLOUTBLOCK_SUBJECT].value.u.a.p;
+    if (MARPAESLIF_UNLIKELY(! _marpaESLIFRecognizer_inputb(marpaESLIFRecognizerp, &subjects, NULL))) {
+      goto err;
+    }
+    matchs = subjects;
     matchl = marpaESLIFCalloutBlockp->u.t.p[MARPAESLIFCALLOUTBLOCK_CURRENT_POSITION].value.u.l;
     MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Positive infinity on %ld bytes", (unsigned long) matchl);
     if (! _marpaESLIFJSONDecodeSetPositiveInfinityb(marpaESLIFRecognizerp, marpaESLIFJSONDecodeContextp, matchs, matchl)) {
@@ -834,7 +837,10 @@ static short _marpaESLIFJSONDecodeRegexCallbackb(void *userDatavp, marpaESLIFRec
     /* Negative infinity            */
     /* ============================ */
     /* If there is a match it is complete, i.e. current position is the full length - no need to have match group */
-    matchs = marpaESLIFCalloutBlockp->u.t.p[MARPAESLIFCALLOUTBLOCK_SUBJECT].value.u.a.p;
+    if (MARPAESLIF_UNLIKELY(! _marpaESLIFRecognizer_inputb(marpaESLIFRecognizerp, &subjects, NULL))) {
+      goto err;
+    }
+    matchs = subjects;
     matchl = marpaESLIFCalloutBlockp->u.t.p[MARPAESLIFCALLOUTBLOCK_CURRENT_POSITION].value.u.l;
     MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Negative infinity on %ld bytes", (unsigned long) matchl);
     if (! _marpaESLIFJSONDecodeSetNegativeInfinityb(marpaESLIFRecognizerp, marpaESLIFJSONDecodeContextp, matchs, matchl)) {
@@ -850,7 +856,10 @@ static short _marpaESLIFJSONDecodeRegexCallbackb(void *userDatavp, marpaESLIFRec
     /* Positive nan                 */
     /* ============================ */
     /* If there is a match it is complete, i.e. current position is the full length - no need to have match group */
-    matchs = marpaESLIFCalloutBlockp->u.t.p[MARPAESLIFCALLOUTBLOCK_SUBJECT].value.u.a.p;
+    if (MARPAESLIF_UNLIKELY(! _marpaESLIFRecognizer_inputb(marpaESLIFRecognizerp, &subjects, NULL))) {
+      goto err;
+    }
+    matchs = subjects;
     matchl = marpaESLIFCalloutBlockp->u.t.p[MARPAESLIFCALLOUTBLOCK_CURRENT_POSITION].value.u.l;
     MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Positive nan on %ld bytes", (unsigned long) matchl);
     if (! _marpaESLIFJSONDecodeSetPositiveNanb(marpaESLIFRecognizerp, marpaESLIFJSONDecodeContextp, matchs, matchl)) {
@@ -866,7 +875,10 @@ static short _marpaESLIFJSONDecodeRegexCallbackb(void *userDatavp, marpaESLIFRec
     /* Negative                 nan */
     /* ============================ */
     /* If there is a match it is complete, i.e. current position is the full length - no need to have match group */
-    matchs = marpaESLIFCalloutBlockp->u.t.p[MARPAESLIFCALLOUTBLOCK_SUBJECT].value.u.a.p;
+    if (MARPAESLIF_UNLIKELY(! _marpaESLIFRecognizer_inputb(marpaESLIFRecognizerp, &subjects, NULL))) {
+      goto err;
+    }
+    matchs = subjects;
     matchl = marpaESLIFCalloutBlockp->u.t.p[MARPAESLIFCALLOUTBLOCK_CURRENT_POSITION].value.u.l;
     MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Negative nan on %ld bytes", (unsigned long) matchl);
     if (! _marpaESLIFJSONDecodeSetNegativeNanb(marpaESLIFRecognizerp, marpaESLIFJSONDecodeContextp, matchs, matchl)) {

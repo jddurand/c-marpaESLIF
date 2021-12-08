@@ -68,7 +68,7 @@ public class AppParameterizedRules implements Runnable {
 				String string = new String(strings[i]);
 	
 				BufferedReader reader = new BufferedReader(new StringReader(string));
-				AppRecognizer eslifAppRecognizer = new AppRecognizer(reader, eslifLogger);
+				AppRecognizer eslifAppRecognizer = new AppRecognizer(reader, eslifLogger, eslifGrammar);
 				AppValue eslifAppValue = new AppValue();
 				eslifLogger.info("Testing parse() on " + string);
 				try {

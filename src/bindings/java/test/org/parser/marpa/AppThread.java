@@ -139,7 +139,7 @@ public class AppThread implements Runnable {
 				String string = new String(strings[i]);
 	
 				BufferedReader reader = new BufferedReader(new StringReader(string));
-				AppRecognizer eslifAppRecognizer = new AppRecognizer(reader, eslifLogger);
+				AppRecognizer eslifAppRecognizer = new AppRecognizer(reader, eslifLogger, eslifGrammar);
 				AppValue eslifAppValue = new AppValue();
 				eslifLogger.info("Testing parse() on " + string);
 				try {
@@ -185,7 +185,7 @@ public class AppThread implements Runnable {
 				String string = new String(strings[i]);
 	
 				BufferedReader reader = new BufferedReader(new StringReader(string));
-				AppRecognizer eslifAppRecognizer = new AppRecognizer(reader, eslifLogger);
+				AppRecognizer eslifAppRecognizer = new AppRecognizer(reader, eslifLogger, eslifGrammar);
 				ESLIFRecognizer eslifRecognizerShared = new ESLIFRecognizer(eslifGrammar, eslifAppRecognizer);
 				ESLIFRecognizer eslifRecognizer = new ESLIFRecognizer(eslifGrammar, eslifAppRecognizer);
 				eslifRecognizer.share(eslifRecognizerShared);

@@ -12,12 +12,13 @@ public class AppRecognizer implements ESLIFRecognizerInterface {
 		private String               line           = null;
 		private BufferedReader       bufferedReader = null;
 		private ESLIFLoggerInterface eslifLoggerInterface = null;
+		private ESLIFGrammar         eslifGrammar = null;
 
 		/**
 		 * @param bufferedReader buffered reader
 		 * @throws Exception exception
 		 */
-		public AppRecognizer(BufferedReader bufferedReader, ESLIFLoggerInterface eslifLoggerInterface) throws Exception {
+		public AppRecognizer(BufferedReader bufferedReader, ESLIFLoggerInterface eslifLoggerInterface, ESLIFGrammar eslifGrammar) throws Exception {
 			if (bufferedReader == null) {
 				throw new Exception("bufferedReader is null");
 			}
@@ -26,6 +27,7 @@ public class AppRecognizer implements ESLIFRecognizerInterface {
 				throw new Exception("eslifLoggerInterface is null");
 			}
 			this.eslifLoggerInterface = eslifLoggerInterface;
+			this.eslifGrammar = eslifGrammar;
 		}
 
 		public boolean read() {
@@ -82,8 +84,12 @@ public class AppRecognizer implements ESLIFRecognizerInterface {
 			return true;
 		}	
 
-		public int regex_action(ESLIFRegexCallout eSLIFRegexCallout) {
-			eslifLoggerInterface.debug("regex_action(" + eSLIFRegexCallout + ")");
+		public int regex_action(ESLIFRegexCallout eslifRegexCallout) throws ESLIFException {
+			eslifLoggerInterface.debug("regex_action(" + eslifRegexCallout + ")");
+			int grammarLevel = eslifRegexCallout.getGrammarLevel();
+			int symbolId = eslifRegexCallout.getSymbolId();
+			ESLIFGrammarSymbolProperties eslifSymbolProperties = eslifGrammar.symbolPropertiesByLevel(grammarLevel, symbolId);
+			eslifLoggerInterface.debug("... regex_action was for symbol " + symbolId + " of grammar level " + grammarLevel + " :" + eslifSymbolProperties);
 			return 0;
 		}	
 

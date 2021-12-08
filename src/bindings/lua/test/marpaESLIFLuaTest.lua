@@ -463,6 +463,8 @@ recognizerInterface = {
       logger:tracef('lua_regexaction: mark            = %s', tostring(block:getMark()))
       logger:tracef('lua_regexaction: currentPosition = %s', tostring(block:getCurrentPosition()))
       logger:tracef('lua_regexaction: nextItem        = %s', tostring(block:getNextItem()))
+      logger:tracef('lua_regexaction: grammarLevel    = %s', tostring(block:getGrammarLevel()))
+      logger:tracef('lua_regexaction: symbolId        = %s', tostring(block:getSymbolId()))
       return 0
    end,
    ["parameterizedRhs"]             = function(self, parameter, undef, explanation)

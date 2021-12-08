@@ -752,7 +752,7 @@ static marpaESLIFJavaMethodCache_t marpaESLIFJavaMethodCacheArrayp[] = {
   {      &MARPAESLIF_ESLIFJSONDECODEROPTION_CLASSCACHE, "isNoReplacementCharacter", "()Z", 0 /* staticb */, NULL, 1 /* requiredb */ },
 
   #define MARPAESLIF_ESLIFREGEXCALLOUT_CLASS_init_METHODP                           marpaESLIFJavaMethodCacheArrayp[109].methodp
-  {      &MARPAESLIF_ESLIFREGEXCALLOUT_CLASSCACHE, "<init>",                        "(Ljava/lang/Integer;Ljava/lang/String;[BLjava/lang/String;JJ[JLjava/lang/Long;JJLjava/lang/String;)V", 0 /* staticb */, NULL, 1 /* requiredb */ },
+  {      &MARPAESLIF_ESLIFREGEXCALLOUT_CLASSCACHE, "<init>",                        "(Ljava/lang/Integer;Ljava/lang/String;[BLjava/lang/String;JJ[JLjava/lang/Long;JJLjava/lang/String;II)V", 0 /* staticb */, NULL, 1 /* requiredb */ },
 
   #define MARPAESLIF_ESLIFSYMBOL_CLASS_getLoggerInterfacep_METHODP                  marpaESLIFJavaMethodCacheArrayp[110].methodp
   {      &MARPAESLIF_ESLIFSYMBOL_CLASSCACHE, "getLoggerInterface",                 "()Lorg/parser/marpa/ESLIFLoggerInterface;", 0 /* staticb */, NULL, 1 /* requiredb */ },
@@ -5038,6 +5038,8 @@ static short marpaESLIFJava_recognizerRegexCallbackb(void *userDatavp, marpaESLI
   jlong                                      startMatch;
   jlong                                      currentPosition;
   jstring                                    nextItemp                        = NULL;
+  jint                                       grammarLevel;
+  jint                                       symbolId;
   JNIEnv                                    *envp;
   marpaESLIFString_t                         marpaESLIFString;
   jint                                       integer;
@@ -5062,14 +5064,16 @@ static short marpaESLIFJava_recognizerRegexCallbackb(void *userDatavp, marpaESLI
     calloutStringp = marpaESLIFJava_marpaESLIFStringToJavap(envp, &marpaESLIFString);
   }
 
-  subjectp = (*envp)->NewByteArray(envp, (jsize) marpaESLIFCalloutBlockp->u.t.p[MARPAESLIFCALLOUTBLOCK_SUBJECT].value.u.a.sizel);
-  if (subjectp == NULL) {
-    goto err;
-  }
-  if (marpaESLIFCalloutBlockp->u.t.p[MARPAESLIFCALLOUTBLOCK_SUBJECT].value.u.a.sizel > 0) {
-    (*envp)->SetByteArrayRegion(envp, subjectp, (jsize) 0, (jsize) marpaESLIFCalloutBlockp->u.t.p[MARPAESLIFCALLOUTBLOCK_SUBJECT].value.u.a.sizel, (jbyte *) marpaESLIFCalloutBlockp->u.t.p[MARPAESLIFCALLOUTBLOCK_SUBJECT].value.u.a.p);
-    if (HAVEEXCEPTION(envp)) {
+  if (marpaESLIFCalloutBlockp->u.t.p[MARPAESLIFCALLOUTBLOCK_SUBJECT].value.type == MARPAESLIF_VALUE_TYPE_ARRAY) {
+    subjectp = (*envp)->NewByteArray(envp, (jsize) marpaESLIFCalloutBlockp->u.t.p[MARPAESLIFCALLOUTBLOCK_SUBJECT].value.u.a.sizel);
+    if (subjectp == NULL) {
       goto err;
+    }
+    if (marpaESLIFCalloutBlockp->u.t.p[MARPAESLIFCALLOUTBLOCK_SUBJECT].value.u.a.sizel > 0) {
+      (*envp)->SetByteArrayRegion(envp, subjectp, (jsize) 0, (jsize) marpaESLIFCalloutBlockp->u.t.p[MARPAESLIFCALLOUTBLOCK_SUBJECT].value.u.a.sizel, (jbyte *) marpaESLIFCalloutBlockp->u.t.p[MARPAESLIFCALLOUTBLOCK_SUBJECT].value.u.a.p);
+      if (HAVEEXCEPTION(envp)) {
+        goto err;
+      }
     }
   }
 
@@ -5112,6 +5116,8 @@ static short marpaESLIFJava_recognizerRegexCallbackb(void *userDatavp, marpaESLI
 
   startMatch = (jlong) marpaESLIFCalloutBlockp->u.t.p[MARPAESLIFCALLOUTBLOCK_START_MATCH].value.u.l;
   currentPosition = (jlong) marpaESLIFCalloutBlockp->u.t.p[MARPAESLIFCALLOUTBLOCK_CURRENT_POSITION].value.u.l;
+  grammarLevel = (jint) marpaESLIFCalloutBlockp->u.t.p[MARPAESLIFCALLOUTBLOCK_GRAMMAR_LEVEL].value.u.i;
+  symbolId = (jint) marpaESLIFCalloutBlockp->u.t.p[MARPAESLIFCALLOUTBLOCK_SYMBOL_ID].value.u.i;
 
   if (marpaESLIFCalloutBlockp->u.t.p[MARPAESLIFCALLOUTBLOCK_NEXT_ITEM].value.type == MARPAESLIF_VALUE_TYPE_STRING) {
     marpaESLIFString.bytep          = (char *) marpaESLIFCalloutBlockp->u.t.p[MARPAESLIFCALLOUTBLOCK_NEXT_ITEM].value.u.s.p;
@@ -5134,7 +5140,9 @@ static short marpaESLIFJava_recognizerRegexCallbackb(void *userDatavp, marpaESLI
                                           markp,
                                           startMatch,
                                           currentPosition,
-                                          nextItemp);
+                                          nextItemp,
+                                          grammarLevel,
+                                          symbolId);
   if (regexEslifCalloutp == NULL) {
     goto err;
   }

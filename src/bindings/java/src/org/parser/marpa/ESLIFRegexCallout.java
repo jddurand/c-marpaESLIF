@@ -96,6 +96,8 @@ import java.util.Arrays;
  * Any value lower than PCRE2_ERROR_INTERNAL_DUPMATCH will emit a warning by ESLIF, the later changing
  * it to PCRE2_ERROR_CALLOUT
  *
+ * By default subject and pattern are undefined for performance reasons. The user can always retrieve
+ * current subject by using recognizer's input(), and current symbol pattern using grammar's symbolPropertiesByLevel().
  */
 
 public class ESLIFRegexCallout {
@@ -110,6 +112,8 @@ public class ESLIFRegexCallout {
 	private long startMatch;
 	private long currentPosition;
 	private String nextItem;
+	private int grammarLevel;
+	private int symbolId;
 
 	/**
 	 * @param calloutNumber callout number
@@ -123,8 +127,10 @@ public class ESLIFRegexCallout {
 	 * @param startMatch current mark start attempt offset
 	 * @param currentPosition current subject offset
 	 * @param nextItem next item in the pattern
+	 * @param grammarLevel current grammar level
+	 * @param symbolId current symbol id
 	 */
-	public ESLIFRegexCallout(Integer calloutNumber, String calloutString, byte[] subject, String pattern, long captureTop, long captureLast, long[] offsetVector, Long mark, long startMatch, long currentPosition, String nextItem) {
+	public ESLIFRegexCallout(Integer calloutNumber, String calloutString, byte[] subject, String pattern, long captureTop, long captureLast, long[] offsetVector, Long mark, long startMatch, long currentPosition, String nextItem, int grammarLevel, int symbolId) {
 		this.calloutNumber = calloutNumber;
 		this.calloutString = calloutString;
 		this.subject = subject;
@@ -136,6 +142,8 @@ public class ESLIFRegexCallout {
 		this.startMatch = startMatch;
 		this.currentPosition = currentPosition;
 		this.nextItem = nextItem;
+		this.grammarLevel = grammarLevel;
+		this.symbolId = symbolId;
 	}
 
 	/**
@@ -154,6 +162,8 @@ public class ESLIFRegexCallout {
 
 	/**
 	 * @return the current subject
+	 * 
+	 * null by default unless ESLIF library is compiled in trace mode.
 	 */
 	public byte[] getSubject() {
 		return subject;
@@ -161,6 +171,8 @@ public class ESLIFRegexCallout {
 
 	/**
 	 * @return the pattern
+	 * 
+	 * null by default unless ESLIF library is compiled in trace mode.
 	 */
 	public String getPattern() {
 		return pattern;
@@ -215,6 +227,20 @@ public class ESLIFRegexCallout {
 		return nextItem;
 	}
 
+	/**
+	 * @return the current grammar level
+	 */
+	public int getGrammarLevel() {
+		return grammarLevel;
+	}
+
+	/**
+	 * @return the current symbol id
+	 */
+	public int getSymbolId() {
+		return symbolId;
+	}
+
 	/* (non-Javadoc)
 	 * @see java.lang.Object#toString()
 	 */
@@ -223,7 +249,8 @@ public class ESLIFRegexCallout {
 		return "ESLIFRegexCallout [calloutNumber=" + calloutNumber + ", calloutString=" + calloutString + ", subject="
 				+ Arrays.toString(subject) + ", pattern=" + pattern + ", captureTop=" + captureTop + ", captureLast="
 				+ captureLast + ", offsetVector=" + Arrays.toString(offsetVector) + ", mark=" + mark + ", startMatch="
-				+ startMatch + ", currentPosition=" + currentPosition + ", nextItem=" + nextItem + "]";
+				+ startMatch + ", currentPosition=" + currentPosition + ", nextItem=" + nextItem + ", grammarLevel="
+				+ grammarLevel + ", symbolId=" + symbolId + "]";
 	}
 
 	/* (non-Javadoc)
@@ -238,12 +265,14 @@ public class ESLIFRegexCallout {
 		result = prime * result + (int) (captureLast ^ (captureLast >>> 32));
 		result = prime * result + (int) (captureTop ^ (captureTop >>> 32));
 		result = prime * result + (int) (currentPosition ^ (currentPosition >>> 32));
+		result = prime * result + grammarLevel;
 		result = prime * result + ((mark == null) ? 0 : mark.hashCode());
 		result = prime * result + ((nextItem == null) ? 0 : nextItem.hashCode());
 		result = prime * result + Arrays.hashCode(offsetVector);
 		result = prime * result + ((pattern == null) ? 0 : pattern.hashCode());
 		result = prime * result + (int) (startMatch ^ (startMatch >>> 32));
 		result = prime * result + Arrays.hashCode(subject);
+		result = prime * result + symbolId;
 		return result;
 	}
 
@@ -285,6 +314,9 @@ public class ESLIFRegexCallout {
 		if (currentPosition != other.currentPosition) {
 			return false;
 		}
+		if (grammarLevel != other.grammarLevel) {
+			return false;
+		}
 		if (mark == null) {
 			if (other.mark != null) {
 				return false;
@@ -313,6 +345,9 @@ public class ESLIFRegexCallout {
 			return false;
 		}
 		if (!Arrays.equals(subject, other.subject)) {
+			return false;
+		}
+		if (symbolId != other.symbolId) {
 			return false;
 		}
 		return true;
