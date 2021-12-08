@@ -6841,10 +6841,10 @@ static short __marpaESLIF_bootstrap_G1_action_symbol_ruleb(void *userDatavp, mar
   genericStack_t                              *adverbListItemStackp = NULL;
   marpaESLIF_bootstrap_terminal_t             *terminalp            = NULL;
   marpaESLIF_bootstrap_rhs_primary_t          *rhsPrimaryp          = NULL;
-  char                                        *lhsTypes             = ":symbol";
-  char                                        *lhsRuleTypes         = ":symbol rule";
   marpaESLIF_string_t                         *stringp              = NULL;
   marpaESLIF_bootstrap_utf_string_t           *namingp              = NULL;
+  char                                        *lhsTypes;
+  char                                        *lhsRuleTypes;
   marpaESLIF_symbol_t                         *symbolp;
   int                                          leveli;
   marpaESLIF_grammar_t                        *grammarp;
@@ -6919,6 +6919,18 @@ static short __marpaESLIF_bootstrap_G1_action_symbol_ruleb(void *userDatavp, mar
   /* Check this is the correct type (backward compatibility for deprecated :lexeme and :terminal rules) */
   switch (wantedType) {
   case MARPAESLIF_SYMBOL_TYPE_NA:
+    lhsTypes = ":symbol";
+    switch (symbolp->type) {
+    case MARPAESLIF_SYMBOL_TYPE_TERMINAL:
+      lhsRuleTypes = ":symbol rule on a terminal";
+      break;
+    case MARPAESLIF_SYMBOL_TYPE_META:
+      lhsRuleTypes = ":symbol rule on a meta symbol";
+      break;
+    default:
+      MARPAESLIF_ERRORF(marpaESLIFp, "Unexpected symbol type %d", symbolp->type);
+      goto err;
+    }
     break;
   case MARPAESLIF_SYMBOL_TYPE_TERMINAL:
     lhsTypes = ":terminal";
