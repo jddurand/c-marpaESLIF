@@ -14349,10 +14349,9 @@ Returns:      >  0 => the number of bytes consumed
   marpaESLIF_uint32_t c = *utf8bytes++;
   marpaESLIF_uint32_t d = c;
   int i, j, s;
-  static const int utf8_table1[6] = { 0x7f, 0x7ff, 0xffff, 0x1fffff, 0x3ffffff, 0x7fffffff};
-  static const int utf8_table3[6] = { 0xff, 0x1f, 0x0f, 0x07, 0x03, 0x01};
-#define utf8_table1_size 6
-  /* static const int utf8_table1_size = sizeof(utf8_table1) / sizeof(int); */
+  const int utf8_table1[] = { 0x7f, 0x7ff, 0xffff, 0x1fffff, 0x3ffffff, 0x7fffffff};
+  const int utf8_table3[] = { 0xff, 0x1f, 0x0f, 0x07, 0x03, 0x01};
+  const int utf8_table1_size = sizeof(utf8_table1) / sizeof(int);
 
   for (i = -1; i < 6; i++) {               /* i is number of additional bytes */
     if ((d & 0x80) == 0) break;

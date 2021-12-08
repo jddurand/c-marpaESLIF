@@ -10,10 +10,10 @@ static const size_t _marpaESLIF_bootstrap_descInternall = 8; /* strlen("INTERNAL
 static const char  *_marpaESLIF_bootstrap_lua_return_function_lparens = "return function(";
 
 /* For ord2utf */
-static const int utf8_table1[6] = { 0x7f, 0x7ff, 0xffff, 0x1fffff, 0x3ffffff, 0x7fffffff};
-#define utf8_table1_size 6
-/* static const int utf8_table1_size = sizeof(utf8_table1) / sizeof(int); */
-static const int utf8_table2[6] = { 0,    0xc0, 0xe0, 0xf0, 0xf8, 0xfc};
+static const int utf8_table1[] = { 0x7f, 0x7ff, 0xffff, 0x1fffff, 0x3ffffff, 0x7fffffff};
+static const int utf8_table1_size = sizeof(utf8_table1) / sizeof(int);
+static const int utf8_table2[] = { 0,    0xc0, 0xe0, 0xf0, 0xf8, 0xfc};
+static const int utf8_table3[] = { 0xff, 0x1f, 0x0f, 0x07, 0x03, 0x01};
 
 /* For ::lua-> action prefix */
 static const char *LUA_ACTION_PREFIX = "::lua->";
@@ -8020,7 +8020,6 @@ static inline int _marpaESLIF_bootstrap_ord2utfb(marpaESLIF_uint32_t uint32, PCR
     uint32 >>= 6;
   }
   *bufferp = utf8_table2[i] | uint32;
-
   return i + 1;
 }
 
