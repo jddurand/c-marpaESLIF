@@ -26,28 +26,29 @@
 #define INTERNAL_CHARACTERCLASSMODIFIERS_PATTERN "[eijmnsxDJUuaNubcA]+$"
 #define INTERNAL_REGEXMODIFIERS_PATTERN "[eijmnsxDJUuaNubcA]*$"
 
-typedef struct  marpaESLIF_regex            marpaESLIF_regex_t;
-typedef         marpaESLIFString_t          marpaESLIF_string_t;
-typedef enum    marpaESLIF_symbol_type      marpaESLIF_symbol_type_t;
-typedef enum    marpaESLIF_terminal_type    marpaESLIF_terminal_type_t;
-typedef struct  marpaESLIF_terminal         marpaESLIF_terminal_t;
-typedef struct  marpaESLIF_meta             marpaESLIF_meta_t;
-typedef         marpaESLIFSymbol_t          marpaESLIF_symbol_t;
-typedef struct  marpaESLIF_rule             marpaESLIF_rule_t;
-typedef struct  marpaESLIF_grammar          marpaESLIF_grammar_t;
-typedef enum    marpaESLIF_matcher_value    marpaESLIF_matcher_value_t;
-typedef enum    marpaESLIF_event_type       marpaESLIF_event_type_t;
-typedef struct  marpaESLIF_readerContext    marpaESLIF_readerContext_t;
-typedef struct  marpaESLIF_cloneContext     marpaESLIF_cloneContext_t;
-typedef struct  marpaESLIF_symbol_data      marpaESLIF_symbol_data_t;
-typedef struct  marpaESLIF_alternative      marpaESLIF_alternative_t;
-typedef         marpaESLIFAction_t          marpaESLIF_action_t;
-typedef         marpaESLIFActionType_t      marpaESLIF_action_type_t;
-typedef struct  marpaESLIF_stream           marpaESLIF_stream_t;
-typedef struct  marpaESLIF_stringGenerator  marpaESLIF_stringGenerator_t;
-typedef struct  marpaESLIF_lua_functioncall marpaESLIF_lua_functioncall_t;
-typedef struct  marpaESLIF_lua_functiondecl marpaESLIF_lua_functiondecl_t;
-typedef enum    marpaESLIF_json_type        marpaESLIF_json_type_t;
+typedef struct  marpaESLIF_regex                 marpaESLIF_regex_t;
+typedef         marpaESLIFString_t               marpaESLIF_string_t;
+typedef enum    marpaESLIF_symbol_type           marpaESLIF_symbol_type_t;
+typedef enum    marpaESLIF_terminal_type         marpaESLIF_terminal_type_t;
+typedef struct  marpaESLIF_terminal              marpaESLIF_terminal_t;
+typedef struct  marpaESLIF_meta                  marpaESLIF_meta_t;
+typedef         marpaESLIFSymbol_t               marpaESLIF_symbol_t;
+typedef struct  marpaESLIF_rule                  marpaESLIF_rule_t;
+typedef struct  marpaESLIF_grammar               marpaESLIF_grammar_t;
+typedef enum    marpaESLIF_matcher_value         marpaESLIF_matcher_value_t;
+typedef enum    marpaESLIF_event_type            marpaESLIF_event_type_t;
+typedef struct  marpaESLIF_readerContext         marpaESLIF_readerContext_t;
+typedef struct  marpaESLIF_cloneContext          marpaESLIF_cloneContext_t;
+typedef struct  marpaESLIF_symbol_data           marpaESLIF_symbol_data_t;
+typedef struct  marpaESLIF_alternative           marpaESLIF_alternative_t;
+typedef         marpaESLIFAction_t               marpaESLIF_action_t;
+typedef         marpaESLIFActionType_t           marpaESLIF_action_type_t;
+typedef struct  marpaESLIF_stream                marpaESLIF_stream_t;
+typedef struct  marpaESLIF_stringGenerator       marpaESLIF_stringGenerator_t;
+typedef struct  marpaESLIF_lua_functioncall      marpaESLIF_lua_functioncall_t;
+typedef struct  marpaESLIF_lua_functiondecl      marpaESLIF_lua_functiondecl_t;
+typedef enum    marpaESLIF_json_type             marpaESLIF_json_type_t;
+typedef struct  marpaESLIF_pcre2_callout_context marpaESLIF_pcre2_callout_context_t;
 
 #include "marpaESLIF/internal/lua.h" /* For lua_State* */
 
@@ -135,6 +136,11 @@ struct marpaESLIF_regex_option_map {
   { 'A', NULL,                                       0,                                        "PCRE2_ANCHORED",  PCRE2_ANCHORED }
 };
 
+struct marpaESLIF_pcre2_callout_context {
+  marpaESLIFRecognizer_t *marpaESLIFRecognizerp;
+  marpaESLIF_terminal_t  *terminalp;
+};
+
 struct marpaESLIF_regex {
   pcre2_code            *patternp;     /* Compiled pattern */
   pcre2_match_data      *match_datap;  /* Match data */
@@ -144,8 +150,10 @@ struct marpaESLIF_regex {
 #endif
   short                  isAnchoredb;  /* Remember if pattern was allocated with PCRE2_ANCHORED (set automatically or not) */
   short                  utfb;         /* Is UTF mode enabled in that pattern ? */
-  pcre2_compile_context *ccontextp;    /* Output of pcre2_compile_context */
+  pcre2_compile_context *compile_contextp;    /* Output of pcre2_compile_context */
   short                  calloutb;     /* Do this regex have any callout ? */
+  pcre2_match_context   *match_contextp;    /* Match context */
+  marpaESLIF_pcre2_callout_context_t callout_context; /* Callout match */
 };
 
 struct marpaESLIF_terminal {
