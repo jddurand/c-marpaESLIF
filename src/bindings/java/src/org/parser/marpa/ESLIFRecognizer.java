@@ -65,7 +65,7 @@ public class ESLIFRecognizer {
 	private native void              jniSetExhaustedFlag(boolean flag) throws ESLIFException;
 	private native boolean           jniIsCanContinue() throws ESLIFException;
 	private native boolean           jniRead() throws ESLIFException;
-	private native byte[]            jniInput() throws ESLIFException;
+	private native byte[]            jniInput(int offset, int length) throws ESLIFException;
 	private native long              jniInputLength() throws ESLIFException;
 	private native void              jniError() throws ESLIFException;
 	private native void              jniProgressLog(int start, int end, ESLIFLoggerLevel level) throws ESLIFException;
@@ -456,15 +456,28 @@ public class ESLIFRecognizer {
 	}
 
 	/**
-	 * Get a copy of the current internal recognizer buffer, starting at the exact byte where resume() would start.
-	 * A null output does not mean there is an error, but that internal buffers are completely consumed. ESLIF will automatically require more data unless the EOF flag is set.
-	 * Internal buffer is always UTF-8 encoded to every chunk of data that was declared to be a character stream.
+	 * Get a copy of the current internal recognizer buffer, where offset is in byte unit and with the same semantics as perl's substr function.
+	 * An undefined output does not necessarily mean there is an error, but that the internal buffer is completely consumed.
+	 * It is recommended to set length parameter to a reasonable value, to prevent an internal copy of a potentially big number of bytes.
 	 * 
 	 * @return an array of bytes, or null
 	 * @throws ESLIFException if the interface failed
 	 */
-	public synchronized byte[] input() throws ESLIFException {
-		return jniInput();
+	public synchronized byte[] input(int offset) throws ESLIFException {
+		return this.input(offset, 0);
+	}
+
+	/**
+	 * Get a copy of the current internal recognizer buffer, where offset and length are in byte unit and with the same semantics as
+	 * perl's substr function for the offset parameter, same semantics as for the length parameter when it is not 0 (the zero value is ignored).
+	 * An undefined output does not necessarily mean there is an error, but that the internal buffer is completely consumed.
+	 * It is recommended to set length parameter to a reasonable value, to prevent an internal copy of a potentially big number of bytes.
+	 * 
+	 * @return an array of bytes, or null
+	 * @throws ESLIFException if the interface failed
+	 */
+	public synchronized byte[] input(int offset, int length) throws ESLIFException {
+		return jniInput(offset, length);
 	}
 
 	/**

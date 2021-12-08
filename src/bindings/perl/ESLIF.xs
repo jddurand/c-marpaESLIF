@@ -5453,21 +5453,76 @@ OUTPUT:
 =cut
 
 SV *
-input(p)
+input(p, offset, ...)
   SV *p;
+  int offset;
 PREINIT:
   static const char *funcs = "MarpaX::ESLIF::Recognizer::input";
 CODE:
   MarpaX_ESLIF_Recognizer_t *MarpaX_ESLIF_Recognizerp = marpaESLIFPerl_engine(aTHX_ p);
+  int                        length;
   char                      *inputs;
   size_t                     inputl;
+  char                      *realinputs;
+  size_t                     realinputl;
+  size_t                     deltal;
+  char                      *maxinputs;
   SV                        *svp;
+
+  if (items > 2) {
+    SV *Perl_length = ST(2);
+    if ((marpaESLIFPerl_getTypei(aTHX_ Perl_length) & SCALAR) != SCALAR) {
+      MARPAESLIFPERL_CROAK("Second argument must be a scalar");
+    }
+    length = (int) SvIV(Perl_length);
+  } else {
+    length = 0;
+  }
 
   if (MARPAESLIF_UNLIKELY(! marpaESLIFRecognizer_inputb(MarpaX_ESLIF_Recognizerp->marpaESLIFRecognizerp, &inputs, &inputl))) {
     MARPAESLIFPERL_CROAKF("marpaESLIFRecognizer_inputb failure, %s", strerror(errno));
   }
+
+  /* inputs is a direct pointer to memory */
   if ((inputs != NULL) && (inputl > 0)) {
-    svp = MARPAESLIFPERL_NEWSVPVN_UTF8(inputs, inputl);
+    maxinputs = inputs + inputl - 1;
+    /* Apply offset parameter */
+    realinputs = inputs;
+    if (offset < 0) {
+      realinputs += inputl;
+    }
+    realinputs += offset;
+    if ((realinputs < inputs) || (realinputs > maxinputs)) {
+      if (MarpaX_ESLIF_Recognizerp->MarpaX_ESLIFp->Perl_loggerInterfacep != NULL) {
+        marpaESLIFPerl_genericLoggerCallbackv(MarpaX_ESLIF_Recognizerp->MarpaX_ESLIFp, GENERICLOGGER_LOGLEVEL_WARNING, "input() goes beyond either end of input buffer");
+      }
+      svp = &PL_sv_undef;
+    } else {
+      /* Adapt input length to the modified start offset */
+      if (realinputs > inputs) {
+        deltal = realinputs - inputs;
+        inputl -= deltal;
+      }
+      /* Apply length parameter */
+      if (length == 0) {
+        realinputl = inputl; /* All bytes available */
+      } else if (length > 0) {
+        if (length < inputl) {
+          realinputl = length; /* Remains more bytes than what the user want */
+        } else {
+          realinputl = inputl; /* Remains less bytes than what the user want */
+        }
+      } else {
+        length = -length;
+        if (length < inputl) {
+          deltal = inputl - length; 
+          realinputl = deltal; /* Skip length last bytes */
+        } else {
+          realinputl = 0; /* Skipping more bytes that what is available */
+        }
+      }
+      svp = MARPAESLIFPERL_NEWSVPVN_UTF8(realinputs, realinputl);
+    }
   } else {
     svp = &PL_sv_undef;
   }

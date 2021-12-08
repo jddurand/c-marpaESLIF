@@ -534,8 +534,16 @@ showEvents = function(context, eslifRecognizer)
 end
 
 showRecognizerInput = function(context, eslifRecognizer)
-   local input = eslifRecognizer:input()
-   logger:debugf("[%s] Recognizer buffer:\n%s", context, input)
+   local input = eslifRecognizer:input(0)
+   logger:debugf("[%s] Recognizer buffer:\n%s", context, tostring(input))
+   for offset=-5,5 do
+     input = eslifRecognizer:input(offset)
+     logger:debugf("[%s] ... ... input(%d) returns: %s", context, offset, tostring(input))
+     for length=-5,5 do
+       input = eslifRecognizer:input(offset, length)
+       logger:debugf("[%s] ... ... ... input(%d,%d) returns: %s", context, offset, length, tostring(input))
+     end
+   end
 end
 
 showNameExpected = function(context, eslifRecognizer)
@@ -558,8 +566,8 @@ showInputLength = function(context, eslifRecognizer)
 end
 
 showInput = function(context, eslifRecognizer)
-   local input = eslifRecognizer:input()
-   logger:debugf("[%s] Input is %s", context, input)
+   local input = eslifRecognizer:input(0)
+   logger:debugf("[%s] Input is %s", context, tostring(input))
 end
 
 showError = function(context, eslifRecognizer)

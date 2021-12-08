@@ -290,9 +290,19 @@ sub doparse {
         #
         # Check if there is something else to read
         #
+
+        for (my $offset = -3; $offset < 3; $offset++) {
+            my $bytes = $marpaESLIFRecognizer->input($offset);
+            $log->infof("input(%d) returns:: %s", $offset, $bytes);
+            for (my $length = -3; $length < 3; $length++) {
+                $bytes = $marpaESLIFRecognizer->input($offset, $length);
+                $log->infof("input(%d, %d) returns:: %s", $offset, $length, $bytes);
+            }
+        }
+
+        my $firstByte = $marpaESLIFRecognizer->input(0, 1);
         my $eof = $marpaESLIFRecognizer->isEof;
-        my $bytes = $marpaESLIFRecognizer->input;
-        if ((! defined($bytes)) && $eof) {
+        if ((! defined($firstByte)) && $eof) {
             goto valuation;
         }
         #

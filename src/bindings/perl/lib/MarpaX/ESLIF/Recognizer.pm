@@ -277,9 +277,9 @@ Forces the recognizer to read more data. Usually, the recognizer interface is ca
 
 Returns a boolean value indicating success or not.
 
-=head2 $eslifRecognizer->input()
+=head2 $eslifRecognizer->input(offset[, length])
 
-Get a copy of the current internal recognizer buffer, starting at the exact byte where resume() would start. An undefined output does not mean there is an error, but that internal buffers are completely consumed. ESLIF will automatically require more data unless the EOF flag is set. Internal buffer is always UTF-8 encoded to every chunk of data that was declared to be a character stream.
+Get a copy of the current internal recognizer buffer, where C<offset> and C<length> are in I<byte> unit and with the same semantics as builtin C<substr> function for the C<offset> parameter, same semantics for the C<length> parameter when is not C<0> (the zero value is ignored). An undefined output does not necessarily mean there is an error, but that the internal buffer is completely consumed. It is recommended to set C<length> parameter to a reasonable value, to prevent an internal copy of a potentially big number of bytes.
 
 Returns the associated input input, or C<undef>.
 

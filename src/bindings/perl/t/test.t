@@ -1638,8 +1638,8 @@ sub doScan {
 sub showRecognizerInput {
     my ($context, $log, $eslifRecognizer) = @_;
 
-    my $input = $eslifRecognizer->input();
-    $log->debugf("[%s] Recognizer buffer:\n%s", $context, $input);
+    my $input = $eslifRecognizer->input(0, 1);
+    $log->debugf("[%s] Recognizer buffer first byte:\n%s", $context, $input);
 }
 
 sub showEvents {
@@ -1727,7 +1727,7 @@ sub showInput {
     my ($context, $log, $eslifRecognizer)  = @_;
 
     try {
-        my $input = $eslifRecognizer->input();
+        my $input = $eslifRecognizer->input(0);
         $log->debugf("[%s] Input is %s", $context, $input);
     } catch {
         $log->warnf("[%s] Location raised an exception, %s", $_);

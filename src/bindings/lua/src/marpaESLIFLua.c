@@ -6302,16 +6302,27 @@ static int marpaESLIFLua_marpaESLIFRecognizer_readi(lua_State *L)
 static int marpaESLIFLua_marpaESLIFRecognizer_inputi(lua_State *L)
 /*****************************************************************************/
 {
-  static const char                *funcs = "marpaESLIFLua_marpaESLIFRecognizer_inputi";
-  marpaESLIFLuaRecognizerContext_t *marpaESLIFLuaRecognizerContextp;
-  char                             *inputs;
-  size_t                            inputl;
-  int                               typei;
-  int                               topi;
+  static const char                   *funcs = "marpaESLIFLua_marpaESLIFRecognizer_inputi";
+  marpaESLIFLuaRecognizerContext_t    *marpaESLIFLuaRecognizerContextp;
+  char                                *inputs;
+  size_t                               inputl;
+  int                                  offset;
+  int                                  length;
+  int                                  typei;
+  int                                  topi;
+  int                                  isNumi;
+  lua_Integer                          tmpi;
+  char                                *realinputs;
+  size_t                               realinputl;
+  size_t                               deltal;
+  char                                *maxinputs;
+  marpaESLIFOption_t                  *marpaESLIFOptionp;
+  genericLogger_t                     *genericLoggerp;
+  marpaESLIFLuaGenericLoggerContext_t *marpaESLIFLuaGenericLoggerContextp = NULL;
  
   if (! marpaESLIFLua_lua_gettop(&topi, L)) goto err;
-  if (topi != 1) {
-    marpaESLIFLua_luaL_error(L, "Usage: marpaESLIFRecognizer_read(marpaESLIFRecognizerp)");
+  if ((topi != 2) && (topi != 3)) {
+    marpaESLIFLua_luaL_error(L, "Usage: marpaESLIFRecognizer_read(marpaESLIFRecognizerp, offset[, length])");
     goto err;
   }
   
@@ -6319,6 +6330,23 @@ static int marpaESLIFLua_marpaESLIFRecognizer_inputi(lua_State *L)
   if (typei != LUA_TTABLE) {
     marpaESLIFLua_luaL_error(L, "marpaESLIFRecognizerp must be a table");
     goto err;
+  }
+  if (! marpaESLIFLua_lua_tointegerx(&tmpi, L, 2, &isNumi)) goto err;
+  if (! isNumi) {
+    marpaESLIFLua_luaL_error(L, "Failed to convert offset to an integer");
+    goto err;
+  }
+  offset = (int) tmpi;
+
+  if (topi != 3) {
+    length = 0;
+  } else {
+    if (! marpaESLIFLua_lua_tointegerx(&tmpi, L, 3, &isNumi)) goto err;
+    if (! isNumi) {
+      marpaESLIFLua_luaL_error(L, "Failed to convert length to an integer");
+      goto err;
+    }
+    length = (int) tmpi;
   }
   if (! marpaESLIFLua_lua_getfield(NULL,L, 1, "marpaESLIFLuaRecognizerContextp")) goto err;
   if (! marpaESLIFLua_lua_touserdata((void **) &marpaESLIFLuaRecognizerContextp, L, -1)) goto err;
@@ -6333,7 +6361,52 @@ static int marpaESLIFLua_marpaESLIFRecognizer_inputi(lua_State *L)
   }
 
   if ((inputs != NULL) && (inputl > 0)) {
-    if (! marpaESLIFLua_lua_pushlstring(NULL, L, (const char *) inputs, inputl)) goto err;
+    maxinputs = inputs + inputl - 1;
+    /* Apply offset parameter */
+    realinputs = inputs;
+    if (offset < 0) {
+      realinputs += inputl;
+    }
+    realinputs += offset;
+    if ((realinputs < inputs) || (realinputs > maxinputs)) {
+      /* Try to emit a warning */
+      marpaESLIFOptionp = marpaESLIF_optionp(marpaESLIFGrammar_eslifp(marpaESLIFRecognizer_grammarp(marpaESLIFLuaRecognizerContextp->marpaESLIFRecognizerp)));
+      if (marpaESLIFOptionp != NULL) {
+        genericLoggerp = marpaESLIFOptionp->genericLoggerp;
+        if (genericLoggerp != NULL) {
+          marpaESLIFLuaGenericLoggerContextp = (marpaESLIFLuaGenericLoggerContext_t *) genericLogger_userDatavp_getp(genericLoggerp);
+	  if (marpaESLIFLuaGenericLoggerContextp != NULL) {
+            marpaESLIFLua_genericLoggerCallbackv(marpaESLIFLuaGenericLoggerContextp, GENERICLOGGER_LOGLEVEL_WARNING, "input() goes beyond either end of input buffer");
+          }
+        }
+      }
+      if (! marpaESLIFLua_lua_pushnil(L)) goto err;
+    } else {
+      /* Adapt input length to the modified start offset */
+      if (realinputs > inputs) {
+        deltal = realinputs - inputs;
+        inputl -= deltal;
+      }
+      /* Apply length parameter */
+      if (length == 0) {
+        realinputl = inputl; /* All bytes available */
+      } else if (length > 0) {
+        if (length < inputl) {
+          realinputl = length; /* Remains more bytes than what the user want */
+        } else {
+          realinputl = inputl; /* Remains less bytes than what the user want */
+        }
+      } else {
+        length = -length;
+        if (length < inputl) {
+          deltal = inputl - length; 
+          realinputl = deltal; /* Skip length last bytes */
+        } else {
+          realinputl = 0; /* Skipping more bytes that what is available */
+        }
+      }
+      if (! marpaESLIFLua_lua_pushlstring(NULL, L, (const char *) realinputs, realinputl)) goto err;
+    }
   } else {
     if (! marpaESLIFLua_lua_pushnil(L)) goto err;
   }

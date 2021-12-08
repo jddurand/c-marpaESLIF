@@ -77,7 +77,7 @@ JNIEXPORT jboolean     JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniIsExhaus
 JNIEXPORT void         JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniSetExhaustedFlag       (JNIEnv *envp, jobject eslifRecognizerp, jboolean flag);
 JNIEXPORT jboolean     JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniIsCanContinue          (JNIEnv *envp, jobject eslifRecognizerp);
 JNIEXPORT jboolean     JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniRead                   (JNIEnv *envp, jobject eslifRecognizerp);
-JNIEXPORT jbyteArray   JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniInput                  (JNIEnv *envp, jobject eslifRecognizerp);
+JNIEXPORT jbyteArray   JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniInput                  (JNIEnv *envp, jobject eslifRecognizerp, jint offset, jint length);
 JNIEXPORT jlong        JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniInputLength            (JNIEnv *envp, jobject eslifRecognizerp);
 JNIEXPORT void         JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniError                  (JNIEnv *envp, jobject eslifRecognizerp);
 JNIEXPORT jbyteArray   JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniNameLastPause          (JNIEnv *envp, jobject eslifRecognizerp, jstring namep);
@@ -3420,7 +3420,7 @@ JNIEXPORT jboolean JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniRead(JNIEnv 
 }
 
 /*****************************************************************************/
-JNIEXPORT jbyteArray JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniInput(JNIEnv *envp, jobject eslifRecognizerp)
+JNIEXPORT jbyteArray JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniInput(JNIEnv *envp, jobject eslifRecognizerp, jint offset, jint length)
 /*****************************************************************************/
 {
   static const char      *funcs = "Java_org_parser_marpa_ESLIFRecognizer_jniInput";
@@ -3428,6 +3428,12 @@ JNIEXPORT jbyteArray JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniInput(JNIE
   jbyteArray              byteArrayp = NULL;
   char                   *inputs;
   size_t                  inputl;
+  char                   *realinputs;
+  size_t                  realinputl;
+  size_t                  deltal;
+  char                   *maxinputs;
+  jobject                 eslifGrammarp;
+  jobject                 genericLoggerContextp;
 
   if (! ESLIFRecognizer_contextb(envp, eslifRecognizerp, &marpaESLIFRecognizerp, NULL /* marpaESLIFJavaRecognizerContextpp */)) {
     goto err;
@@ -3438,13 +3444,58 @@ JNIEXPORT jbyteArray JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniInput(JNIE
   }
 
   if ((inputs != NULL) && (inputl > 0)) {
-    byteArrayp = (*envp)->NewByteArray(envp, (jsize) inputl);
-    if (byteArrayp == NULL) {
-      goto err;
+    maxinputs = inputs + inputl - 1;
+    /* Apply offset parameter */
+    realinputs = inputs;
+    if (offset < 0) {
+      realinputs += inputl;
     }
-    (*envp)->SetByteArrayRegion(envp, byteArrayp, (jsize) 0, (jsize) inputl, (jbyte *) inputs);
-    if (HAVEEXCEPTION(envp)) {
-      goto err;
+    realinputs += offset;
+    if ((realinputs < inputs) || (realinputs > maxinputs)) {
+      /* Get eslif instance */
+      eslifGrammarp = (*envp)->CallObjectMethod(envp, eslifRecognizerp, MARPAESLIF_ESLIFRECOGNIZER_CLASS_getEslifGrammar_METHODP);
+      if (eslifGrammarp == NULL) {
+        RAISEEXCEPTION(envp, "eslifGrammarp is NULL");
+      }
+      /* Get genericLoggerContext */
+      genericLoggerContextp = (*envp)->CallObjectMethod(envp, eslifGrammarp, MARPAESLIF_ESLIF_CLASS_getGenericLoggerContextp_METHODP);
+      if (genericLoggerContextp != NULL) {
+        genericLoggerCallbackv(genericLoggerContextp, GENERICLOGGER_LOGLEVEL_WARNING, "input() goes beyond either end of input buffer");
+      }
+      /* Default value is already NULL */
+    } else {
+      /* Adapt input length to the modified start offset */
+      if (realinputs > inputs) {
+        deltal = realinputs - inputs;
+        inputl -= deltal;
+      }
+      /* Apply length parameter */
+      if (length == 0) {
+        realinputl = inputl; /* All bytes available */
+      } else if (length > 0) {
+        if (length < inputl) {
+          realinputl = length; /* Remains more bytes than what the user want */
+        } else {
+          realinputl = inputl; /* Remains less bytes than what the user want */
+        }
+      } else {
+        length = -length;
+        if (length < inputl) {
+          deltal = inputl - length; 
+          realinputl = deltal; /* Skip length last bytes */
+        } else {
+          realinputl = 0; /* Skipping more bytes that what is available */
+        }
+      }
+
+      byteArrayp = (*envp)->NewByteArray(envp, (jsize) realinputl);
+      if (byteArrayp == NULL) {
+        goto err;
+      }
+      (*envp)->SetByteArrayRegion(envp, byteArrayp, (jsize) 0, (jsize) realinputl, (jbyte *) realinputs);
+      if (HAVEEXCEPTION(envp)) {
+        goto err;
+      }
     }
   }
 

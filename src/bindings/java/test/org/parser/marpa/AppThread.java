@@ -383,7 +383,7 @@ public class AppThread implements Runnable {
 	}
 
 	private static void showRecognizerInput(String context, ESLIFLoggerInterface eslifLogger, ESLIFRecognizer eslifRecognizer) throws UnsupportedEncodingException, ESLIFException {
-		byte[] bytes = eslifRecognizer.input();
+		byte[] bytes = eslifRecognizer.input(0);
 		if (bytes != null) {
 			String str = new String(bytes, "UTF-8"); // for UTF-8 encoding
 			eslifLogger.debug("[" + context + "] Recognizer buffer:\n" + str);
@@ -432,7 +432,7 @@ public class AppThread implements Runnable {
 			String matchedString = new String(matchedbytes, "UTF-8");
 			eslifLogger.debug("[" + context + "]  Last " + symbol + " completion is: " + matchedString);
 		} catch (Exception e) {
-			eslifLogger.warning("[" + context + "]  Last " + symbol + " completion raised an exception");
+			eslifLogger.warning("[" + context + "]  Last " + symbol + " completion raised an exception: " + e);
 		}
 	}
 
@@ -442,17 +442,39 @@ public class AppThread implements Runnable {
 			long column = eslifRecognizer.column();
 			eslifLogger.debug("[" + context + "]  Location is [" + line + "," + column + "]");
 		} catch (Exception e) {
-			eslifLogger.warning("[" + context + "]  line() or column() raised an exception");
+			eslifLogger.warning("[" + context + "]  line() or column() raised an exception: " + e);
 		}
 	}
 
 	private static void showInput(String context, ESLIFLoggerInterface eslifLogger, ESLIFRecognizer eslifRecognizer) {
 		try {
-			byte[] bytes = eslifRecognizer.input();
-			String input = new String(bytes, "UTF-8");
-			eslifLogger.debug("[" + context + "]  Input is: " + input);
+			byte[] bytes = eslifRecognizer.input(0);
+			if (bytes != null) {
+				String input = new String(bytes, "UTF-8");
+				eslifLogger.debug("[" + context + "]  Input is: " + input);
+			} else {
+				eslifLogger.debug("[" + context + "]  Input returned null");
+			}
+			for (int offset = -10; offset <= 10; offset++) {
+				bytes = eslifRecognizer.input(offset);
+				if (bytes != null) {
+					String input = new String(bytes, "UTF-8");
+					eslifLogger.debug("[" + context + "]  ... input(" + offset + ") returns: " + input);
+				} else {
+					eslifLogger.debug("[" + context + "]  ... input(" + offset + ") returned null");
+				}
+				for (int length = -10; length <= 10; length++) {
+					bytes = eslifRecognizer.input(offset, length);
+					if (bytes != null) {
+						String input = new String(bytes, "UTF-8");
+						eslifLogger.debug("[" + context + "]  ... input(" + offset + "," + length + ") returns: " + input);
+					} else {
+						eslifLogger.debug("[" + context + "]  ... input(" + offset + "," + length + ") returned null");
+					}
+				}
+			}
 		} catch (Exception e) {
-			eslifLogger.warning("[" + context + "]  input() raised an exception");
+			eslifLogger.warning("[" + context + "]  input() raised an exception: " + e);
 		}
 	}
 
@@ -461,7 +483,7 @@ public class AppThread implements Runnable {
 			long inputLength = eslifRecognizer.inputLength();
 			eslifLogger.debug("[" + context + "]  Input length is " + inputLength);
 		} catch (Exception e) {
-			eslifLogger.warning("[" + context + "]  inputLength() raised an exception");
+			eslifLogger.warning("[" + context + "]  inputLength() raised an exception: " + e);
 		}
 	}
 
@@ -470,7 +492,7 @@ public class AppThread implements Runnable {
 			eslifLogger.debug("[" + context + "] Simulating error report:");
 			eslifRecognizer.error();
 		} catch (Exception e) {
-			eslifLogger.warning("[" + context + "]  error() raised an exception");
+			eslifLogger.warning("[" + context + "]  error() raised an exception: " + e);
 		}
 	}
 }
