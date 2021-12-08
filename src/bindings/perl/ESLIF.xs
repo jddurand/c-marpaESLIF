@@ -189,27 +189,34 @@ typedef struct marpaESLIFPerl_importContext {
 #  define MARPAESLIFPERL_SvREFCNT_dec(svp) SvREFCNT_dec(svp)
 #endif
 
-#define MARPAESLIFPERL_ENCODING_IS_UTF8(encodings, encodingl)           \
-  (                                                                     \
-    /* UTF-8 */                                                         \
-    (                                                                   \
-      (encodingl == 5)                                 &&               \
-      ((encodings[0] == 'U') || (encodings[0] == 'u')) &&               \
-      ((encodings[1] == 'T') || (encodings[1] == 't')) &&               \
-      ((encodings[2] == 'F') || (encodings[2] == 'f')) &&               \
-       (encodings[3] == '-') &&                                         \
-       (encodings[4] == '8')                                            \
+/* Why is there no need for encodingl ? Because it is guaranteed that encodings */
+/* is a NUL terminated ASCII string. So when character at position i is != '\0' */
+/* then the character at position i+1 exists (and it may be the NUL byte...).   */
+/* We do not rely on strcasecmp, _stricmp etc...  not in C std and too much     */
+/* bound to locale.                                                             */
+/* In addition you may wonder why I both to do strcmp() because the case        */
+/* insensitive version. This is because almost nobody export UTF-8 as something */
+/* else but "UTF-8". So the probability to have strcmp() successful when it is  */
+/* an UTF-8 string is unvaluable compared to somebody that would use "utf-8".   */
+/* And of course strcmp() is bound by any compiler to an optimized assemby      */
+/* version ;)                                                                   */
+/* Note that we do NOT test if encodings is != NULL because when ESLIF exports  */
+/* a marpaESLIFValueResult of type STRING it guarantees that encodingasciis is  */
+/* set.                                                                         */
+#define MARPAESLIFPERL_ENCODING_IS_UTF8(encodings)                      \
+  ((strcmp(encodings, "UTF-8") == 0)                                    \
+   ||                                                                   \
+   (                                                                    \
+    ((encodings[0] == 'U') || (encodings[0] == 'u')) &&                 \
+    ((encodings[1] == 'T') || (encodings[1] == 't')) &&                 \
+    ((encodings[2] == 'F') || (encodings[2] == 'f')) &&                 \
+    (((encodings[3] == '-') && (encodings[4] == '8') && (encodings[5] == '\0')) /* UTF-8 */ \
+     ||                                                                 \
+     ((encodings[3] == '8') && (encodings[4] == '\0')) /* UTF8 */       \
     )                                                                   \
-    ||                                                                  \
-    /* UTF8 */                                                          \
-    (                                                                   \
-      (encodingl == 4)                                 &&               \
-      ((encodings[0] == 'U') || (encodings[0] == 'u')) &&               \
-      ((encodings[1] == 'T') || (encodings[1] == 't')) &&               \
-      ((encodings[2] == 'F') || (encodings[2] == 'f')) &&               \
-       (encodings[3] == '8')                                            \
-    )                                                                   \
+   )                                                                    \
   )
+
 
 #if defined(SvREFCNT_inc_simple_void_NN)
 #  define MARPAESLIFPERL_SvREFCNT_inc(svp) SvREFCNT_inc_simple_void_NN(svp)
@@ -2242,7 +2249,7 @@ static inline short marpaESLIFPerl_importb(pTHX_ marpaESLIFPerl_importContext_t 
       stringp = newSVpv("", 0);
     }
     utf8b = 0;
-    if (MARPAESLIFPERL_ENCODING_IS_UTF8(marpaESLIFValueResultp->u.s.encodingasciis, strlen(marpaESLIFValueResultp->u.s.encodingasciis))) {
+    if (MARPAESLIFPERL_ENCODING_IS_UTF8(marpaESLIFValueResultp->u.s.encodingasciis)) {
 #ifdef MARPAESLIFPERL_UTF8_CROSSCHECK
       /* Cross-check it is a strict UTF-8 string */
 #ifdef is_strict_utf8_string
