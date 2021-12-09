@@ -595,6 +595,7 @@ struct marpaESLIFRecognizer {
   marpaESLIFValueResult_t     *marpaESLIFCalloutBlockp;
 
   /* We always maintain a shallow pointer to the top-level recognizer, to ease access to lua state */
+  /* This variable should be used ONLY IN src/lua.c (modulo initialization and propagation that are in src/marpaESLIF.c) */
   marpaESLIFRecognizer_t      *marpaESLIFRecognizerTopp;
 
   /* At every recognizer pass, we use this array whose size is equal to the total number of marpa grammar terminals */
