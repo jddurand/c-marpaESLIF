@@ -62,6 +62,8 @@ int main() {
   marpaESLIFRecognizerOption.buftriggerperci          = 50; /* Excess number of bytes, in percentage of bufsizl, where stream buffer size is reduced. Recommended: 50 */
   marpaESLIFRecognizerOption.bufaddperci              = 50; /* Policy of minimum of bytes for increase, in percentage of current allocated size, when stream buffer size need to augment. Recommended: 50 */
   marpaESLIFRecognizerOption.ifActionResolverp        = NULL;
+  marpaESLIFRecognizerOption.eventActionResolverp     = NULL;
+  marpaESLIFRecognizerOption.regexActionResolverp     = NULL;
   marpaESLIFRecognizerOption.generatorActionResolverp = NULL;
 
   /*

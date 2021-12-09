@@ -159,6 +159,8 @@ int main(int argc, char **argv) {
     marpaESLIFRecognizerOption.buftriggerperci          = 50;
     marpaESLIFRecognizerOption.bufaddperci              = 50;
     marpaESLIFRecognizerOption.ifActionResolverp        = NULL;
+    marpaESLIFRecognizerOption.eventActionResolverp     = NULL;
+    marpaESLIFRecognizerOption.regexActionResolverp     = NULL;
     marpaESLIFRecognizerOption.generatorActionResolverp = NULL;
 
     marpaESLIFValueOption.userDatavp            = NULL; /* User specific context */

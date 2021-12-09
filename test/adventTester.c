@@ -13,7 +13,7 @@ typedef struct marpaESLIFTester_context {
 } marpaESLIFTester_context_t;
 
 const static char *base_dsl = "\n"
-  ":default ::= default-encoding => UTF-8\n"
+  ":default ::= default-encoding => UTF-8 regex-action => JDD\n"
   ":start ::= deal\n"
   "deal ::= hands\n"
   "hands ::= hand | hands ';' hand\n"
@@ -21,7 +21,7 @@ const static char *base_dsl = "\n"
   "card ~ face suit\n"
   "face ~ [2-9jqka] | '10'\n"
   "WS ~ [\\s]\n"
-  ":discard ::= WS\n"
+  ":discard ::= /([\\s]+(?C51))/\n"
   "\n"
   ":symbol ::= <card> pause => after event => card\n"
   ;
@@ -170,6 +170,8 @@ int main() {
       marpaESLIFRecognizerOption.buftriggerperci          = 50;
       marpaESLIFRecognizerOption.bufaddperci              = 50;
       marpaESLIFRecognizerOption.ifActionResolverp        = NULL;
+      marpaESLIFRecognizerOption.eventActionResolverp     = NULL;
+      marpaESLIFRecognizerOption.regexActionResolverp     = NULL;
       marpaESLIFRecognizerOption.generatorActionResolverp = NULL;
 
       marpaESLIFRecognizerp = marpaESLIFRecognizer_newp(marpaESLIFGrammarp, &marpaESLIFRecognizerOption);
@@ -463,6 +465,7 @@ static short manage_eventsb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, gener
   GENERICLOGGER_DEBUGF(genericLoggerp, "Got card %s", cards);
 
   /* Try to see if there is whitespace after */
+  /*
   if (! marpaESLIFRecognizer_name_tryb(marpaESLIFRecognizerp, "WS", &isWSb)) {
     goto err;
   }
@@ -471,7 +474,8 @@ static short manage_eventsb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, gener
   } else {
     GENERICLOGGER_DEBUGF(genericLoggerp, "Card %s is not followed by whitespace", cards);
   }
-
+  */
+  
   /* Check for duplicate card */
   if (GENERICSTACK_IS_SHORT(cardStackp, cardi)) {
     GENERICLOGGER_DEBUGF(genericLoggerp, "Duplicate card %s", cards);
