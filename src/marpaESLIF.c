@@ -182,6 +182,12 @@ static marpaESLIFValueResult_t marpaESLIFValueResultLazy = {
 #define MARPAESLIF_IS_DISCARD(symbolp)            (symbolp)->discardb
 
 /* -------------------------------------------------------------------------------------------- */
+/* Util macros on recognizer                                                                    */
+/* -------------------------------------------------------------------------------------------- */
+#define MARPAESLIFRECOGNIZER_IS_TOP(marpaESLIFRecognizerp) ((marpaESLIFRecognizerp)->marpaESLIFRecognizerParentp == NULL)
+#define MARPAESLIFRECOGNIZER_IS_CHILD(marpaESLIFRecognizerp) ((marpaESLIFRecognizerp)->marpaESLIFRecognizerParentp != NULL)
+
+/* -------------------------------------------------------------------------------------------- */
 /* In theory, when rci is MARPAESLIF_MATCH_OK, marpaESLIFValueResult type must be a valid ARRAY */
 /* -------------------------------------------------------------------------------------------- */
 #define _MARPAESLIF_CHECK_MATCH_RESULT(funcs, marpaESLIFRecognizerp, symbolp, rci, marpaESLIFValueResultp) do { \
@@ -547,6 +553,8 @@ static const marpaESLIF_uint32_t pcre2_option_partial_default = PCRE2_NOTEMPTY|P
 static const char *MARPAESLIF_TERMINAL__EOF = ":eof";
 static const char *MARPAESLIF_TERMINAL__EOL = ":eol";
 static const char *MARPAESLIF_TERMINAL__SOL = ":sol";
+
+static marpaESLIFRecognizer_t invalidFakeMarpaESLIFRecognizer;
 
 /* For reset of values in the stack, it is okay to not care about the union -; */
 static const marpaESLIFValueResult_t marpaESLIFValueResultUndef = {
@@ -5861,9 +5869,15 @@ static inline short _marpaESLIFRecognizer_terminal_matcherb(marpaESLIFRecognizer
       }
     }
 
-    /* Update callout userdata context - take care this will segfault IF you have callouts in the regexp during bootstrap. */
-    marpaESLIF_regexp->callout_context.marpaESLIFRecognizerp = marpaESLIFRecognizerp;
-    
+    if (MARPAESLIFRECOGNIZER_IS_TOP(marpaESLIFRecognizerp)) {
+      /* Update callout userdata context - take care this will segfault IF you have callouts in the regexp during bootstrap. */
+      marpaESLIF_regexp->callout_context.marpaESLIFRecognizerp = marpaESLIFRecognizerp;
+      pcre2_set_callout(marpaESLIF_regexp->match_contextp, _marpaESLIF_pcre2_callouti, &(marpaESLIF_regexp->callout_context));
+    } else {
+      /* No recognizer callback inside a sub-grammar */
+      pcre2_set_callout(marpaESLIF_regexp->match_contextp, NULL, NULL);
+    }
+
     /* --------------------------------------------------------- */
     /* EOF mode:                                                 */
     /* return full match status: OK or FAILURE.                  */
@@ -6046,7 +6060,7 @@ static inline short _marpaESLIFRecognizer_terminal_matcherb(marpaESLIFRecognizer
       marpaESLIFValueResultp->representationp = NULL;
       marpaESLIFValueResultp->type            = MARPAESLIF_VALUE_TYPE_ARRAY;
       marpaESLIFValueResultp->u.a.sizel       = matchedLengthl;
-      if ((marpaESLIFRecognizerp->marpaESLIFRecognizerParentp != NULL) || eofb) {
+      if (MARPAESLIFRECOGNIZER_IS_CHILD(marpaESLIFRecognizerp) || eofb) {
         /* eofb: we own the input that is guaranteed to not change. */
         /* lexeme mode - caller's responsibility to take care - this an internal case, not exposed to the end-user. */
         marpaESLIFValueResultp->u.a.p              = matchedp;
@@ -6444,7 +6458,7 @@ static inline short _marpaESLIFRecognizer_symbol_matcherb(marpaESLIFRecognizer_t
 
   if (rci == MARPAESLIF_MATCH_OK) {
     /* If symbol has an if-action, check it if we are the top-level recognizer */
-    if ((symbolp->ifActionp != NULL) && (marpaESLIFRecognizerp->marpaESLIFRecognizerTopp == marpaESLIFRecognizerp)) {
+    if ((symbolp->ifActionp != NULL) && MARPAESLIFRECOGNIZER_IS_TOP(marpaESLIFRecognizerp)) {
       if (MARPAESLIF_UNLIKELY(! _marpaESLIFRecognizer_recognizerIfActionCallbackb(marpaESLIFRecognizerp, symbolp->descp->asciis, symbolp->ifActionp, &ifCallbackp))) {
         goto err;
       }
@@ -7972,7 +7986,7 @@ short marpaESLIFRecognizer_shareb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp,
   }
 
   /* Not allowed if there is a parent recognizer */
-  if (marpaESLIFRecognizerp->marpaESLIFRecognizerParentp != NULL) {
+  if (MARPAESLIFRECOGNIZER_IS_CHILD(marpaESLIFRecognizerp)) {
     errno = EPERM;
     rcb = 0;
     goto fast_done;
@@ -8013,7 +8027,7 @@ short marpaESLIFRecognizer_peekb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, 
   }
 
   /* Not allowed if there is a parent recognizer */
-  if (marpaESLIFRecognizerp->marpaESLIFRecognizerParentp != NULL) {
+  if (MARPAESLIFRECOGNIZER_IS_CHILD(marpaESLIFRecognizerp)) {
     errno = EPERM;
     rcb = 0;
     goto fast_done;
@@ -8078,7 +8092,7 @@ short marpaESLIFRecognizer_scanb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, 
   }
 
   /* Not allowed if there is a parent recognizer */
-  if (marpaESLIFRecognizerp->marpaESLIFRecognizerParentp != NULL) {
+  if (MARPAESLIFRECOGNIZER_IS_CHILD(marpaESLIFRecognizerp)) {
     errno = EPERM;
     rcb = 0;
     goto fast_done;
@@ -8121,7 +8135,7 @@ short marpaESLIFRecognizer_resumeb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp
   }
 
   /* Not allowed if there is a parent recognizer */
-  if (marpaESLIFRecognizerp->marpaESLIFRecognizerParentp != NULL) {
+  if (MARPAESLIFRECOGNIZER_IS_CHILD(marpaESLIFRecognizerp)) {
     errno = EPERM;
     rcb = 0;
     goto fast_done;
@@ -8463,11 +8477,12 @@ static inline short _marpaESLIFRecognizer_isDiscardExpectedb(marpaESLIFRecognize
 /* never NULL.                                                               */
 /*****************************************************************************/
 {
-  static const char          *funcs              = "_marpaESLIFRecognizer_isDiscardExpectedb";
-  short                       isDiscardExpectedb = 0;
-  short                       fastDiscardb       = 0;
-  size_t                      fastDiscardl       = 0;
-  marpaESLIF_symbol_t        *fastDiscardSymbolp = NULL;
+  static const char          *funcs                               = "_marpaESLIFRecognizer_isDiscardExpectedb";
+  short                       isDiscardExpectedb                  = 0;
+  short                       fastDiscardb                        = 0;
+  size_t                      fastDiscardl                        = 0;
+  marpaESLIF_symbol_t        *fastDiscardSymbolp                  = NULL;
+  marpaESLIFRecognizer_t     *marpaESLIFRecognizerParentPreviousp = marpaESLIFRecognizerp->marpaESLIFRecognizerParentp;
   marpaESLIF_stream_t        *marpaESLIF_streamp;
   marpaESLIFGrammar_t        *marpaESLIFGrammarp;
   marpaESLIF_grammar_t       *grammarp;
@@ -8506,8 +8521,11 @@ static inline short _marpaESLIFRecognizer_isDiscardExpectedb(marpaESLIFRecognize
   }
 
   /* We now simulate what would do _marpaESLIFRecognizer_resume_oneb() at the very beginning. */
+  /* We do not forget to also simulate that we should be a child recognizer.                  */
   marpaESLIF_streamp = marpaESLIFRecognizerp->marpaESLIF_streamp;
   symbolStackp       = grammarp->symbolStackp;
+
+  marpaESLIFRecognizerp->marpaESLIFRecognizerParentp = &invalidFakeMarpaESLIFRecognizer;
 
   nSymbolPristinel     = grammarp->nSymbolDiscardl;
   symbolArrayPristinep = grammarp->symbolArrayDiscardp;
@@ -8525,6 +8543,7 @@ static inline short _marpaESLIFRecognizer_isDiscardExpectedb(marpaESLIFRecognize
                                                        NULL, /* lastSizeBeforeCompletionlp */
                                                        NULL /* numberOfStartCompletionsip */);
     if (MARPAESLIF_UNLIKELY(rcMatcherb < 0)) {
+      marpaESLIFRecognizerp->marpaESLIFRecognizerParentp = marpaESLIFRecognizerParentPreviousp;
       goto err;
     }
     if (! rcMatcherb) {
@@ -8554,6 +8573,8 @@ static inline short _marpaESLIFRecognizer_isDiscardExpectedb(marpaESLIFRecognize
       }
     }   
   }
+
+  marpaESLIFRecognizerp->marpaESLIFRecognizerParentp = marpaESLIFRecognizerParentPreviousp;
 
  fast_done:
   *isDiscardExpectedbp = isDiscardExpectedb;
@@ -8752,7 +8773,7 @@ static inline short _marpaESLIFRecognizer_resume_oneb(marpaESLIFRecognizer_t *ma
       offsetl = ((char *) marpaESLIFValueResultArray.u.a.p) - previnputs;
       /* Take care: this may move the stream */
       rcMatcherb = _marpaESLIFRecognizer_symbol_matcherb(marpaESLIFRecognizerp, marpaESLIF_streamp, exceptionp, &exceptionRci, &exceptionMarpaESLIFValueResultArray, exceptionMaxStartCompletionsi, &lastSizeBeforeCompletionl, &numberOfExceptionCompletionsi);
-      if ((marpaESLIFRecognizerp->marpaESLIFRecognizerParentp == NULL) && (marpaESLIF_streamp->inputs != previnputs)) {
+      if (MARPAESLIFRECOGNIZER_IS_TOP(marpaESLIFRecognizerp) && (marpaESLIF_streamp->inputs != previnputs)) {
         /* Stream have moved and marpaESLIFValueResultArray.u.a.p is a pointer within the stream... */
         marpaESLIFValueResultArray.u.a.p = marpaESLIF_streamp->inputs + offsetl;
       }
@@ -8791,7 +8812,7 @@ static inline short _marpaESLIFRecognizer_resume_oneb(marpaESLIFRecognizer_t *ma
                   previnputs = marpaESLIF_streamp->inputs;
                   offsetl = ((char *) marpaESLIFValueResultArray.u.a.p) - previnputs;
 		  rcMatcherb = _marpaESLIFRecognizer_symbol_matcherb(marpaESLIFRecognizerp, marpaESLIF_streamp, symbolp, &rci, &marpaESLIFValueResultArray, symbolMaxStartCompletionsi, NULL /* lastSizeBeforeCompletionlp */, NULL /* numberOfStartCompletionsi */);
-                  if ((marpaESLIFRecognizerp->marpaESLIFRecognizerParentp == NULL) && (marpaESLIF_streamp->inputs != previnputs)) {
+                  if (MARPAESLIFRECOGNIZER_IS_TOP(marpaESLIFRecognizerp) && (marpaESLIF_streamp->inputs != previnputs)) {
                     /* Stream have moved and marpaESLIFValueResultArray.u.a.p is a pointer within the stream... */
                     marpaESLIFValueResultArray.u.a.p = marpaESLIF_streamp->inputs + offsetl;
                   }
@@ -8835,7 +8856,7 @@ static inline short _marpaESLIFRecognizer_resume_oneb(marpaESLIFRecognizer_t *ma
       break;
     case MARPAESLIF_MATCH_OK:
       alternative.symbolp = symbolp;
-      if (marpaESLIFRecognizerp->marpaESLIFRecognizerParentp != NULL) {
+      if (MARPAESLIFRECOGNIZER_IS_CHILD(marpaESLIFRecognizerp)) {
         /* Internal alternatives: always a shallow ARRAY */
         alternative.marpaESLIFValueResult = marpaESLIFValueResultArray;
       } else {
@@ -9180,7 +9201,7 @@ static inline short _marpaESLIFRecognizer_resume_oneb(marpaESLIFRecognizer_t *ma
     /* If there is a completion it is unique per def because discard mode is always launched with ambiguity turned off. */
   if (rcb && marpaESLIFRecognizerp->discardb && (! canContinueb) && (marpaESLIFRecognizerp->lastCompletionEvents != NULL) && (marpaESLIFRecognizerp->lastCompletionSymbolp != NULL)) {
     /* In theory it is not possible to not have a parent recognizer here */
-    if (marpaESLIFRecognizerp->marpaESLIFRecognizerParentp != NULL) {
+    if (MARPAESLIFRECOGNIZER_IS_CHILD(marpaESLIFRecognizerp)) {
       marpaESLIFRecognizerp->marpaESLIFRecognizerParentp->discardEvents  = marpaESLIFRecognizerp->lastCompletionEvents;
       marpaESLIFRecognizerp->marpaESLIFRecognizerParentp->discardSymbolp = marpaESLIFRecognizerp->lastCompletionSymbolp;
       marpaESLIFRecognizerp->marpaESLIFRecognizerParentp->discardEvente  = marpaESLIFRecognizerp->lastCompletionEvente;
@@ -9326,7 +9347,7 @@ short marpaESLIFRecognizer_alternativeb(marpaESLIFRecognizer_t *marpaESLIFRecogn
   MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "start");
 
   /* Not allowed if there is a parent recognizer */
-  if (marpaESLIFRecognizerp->marpaESLIFRecognizerParentp != NULL) {
+  if (MARPAESLIFRECOGNIZER_IS_CHILD(marpaESLIFRecognizerp)) {
     MARPAESLIF_ERROR(marpaESLIFRecognizerp->marpaESLIFp, "Not allowed in when there is a parent recognizer");
     errno = EPERM;
     rcb = 0;
@@ -9475,7 +9496,7 @@ short marpaESLIFRecognizer_alternative_completeb(marpaESLIFRecognizer_t *marpaES
   }
 
   /* Not allowed if there is a parent recognizer */
-  if (marpaESLIFRecognizerp->marpaESLIFRecognizerParentp != NULL) {
+  if (MARPAESLIFRECOGNIZER_IS_CHILD(marpaESLIFRecognizerp)) {
     errno = EPERM;
     rcb = 0;
     goto fast_done;
@@ -9782,7 +9803,7 @@ short marpaESLIFRecognizer_alternative_readb(marpaESLIFRecognizer_t *marpaESLIFR
   MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "start");
 
   /* Not allowed if there is a parent recognizer */
-  if (marpaESLIFRecognizerp->marpaESLIFRecognizerParentp != NULL) {
+  if (MARPAESLIFRECOGNIZER_IS_CHILD(marpaESLIFRecognizerp)) {
     MARPAESLIF_ERROR(marpaESLIFRecognizerp->marpaESLIFp, "Not allowed in when there is a parent recognizer");
     errno = EPERM;
     rcb = 0;
@@ -10019,7 +10040,7 @@ short marpaESLIFRecognizer_event_onoffb(marpaESLIFRecognizer_t *marpaESLIFRecogn
   }
 
   /* Not allowed if there is a parent recognizer */
-  if (marpaESLIFRecognizerp->marpaESLIFRecognizerParentp != NULL) {
+  if (MARPAESLIFRECOGNIZER_IS_CHILD(marpaESLIFRecognizerp)) {
     errno = EPERM;
     rcb = 0;
     goto fast_done;
@@ -10451,7 +10472,7 @@ short marpaESLIFRecognizer_eventb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp,
    Memory management of the event array is done so that free/malloc/realloc are avoided as much as
    possible.
   */
-  if (marpaESLIFRecognizerp->marpaESLIFRecognizerParentp != NULL) {
+  if (MARPAESLIFRECOGNIZER_IS_CHILD(marpaESLIFRecognizerp)) {
     goto no_push;
   }
 
@@ -10587,7 +10608,7 @@ static inline short _marpaESLIFRecognizer_set_symbolDatab(marpaESLIFRecognizer_t
    Memory management of the pause chunk is done so that free/malloc/realloc are avoided as much as
    possible.
   */
-  if (marpaESLIFRecognizerp->marpaESLIFRecognizerParentp != NULL) {
+  if (MARPAESLIFRECOGNIZER_IS_CHILD(marpaESLIFRecognizerp)) {
     goto no_set;
   }
   /* These statements have a cost - execute them only if we really set the pause */
@@ -10775,7 +10796,7 @@ static inline short _marpaESLIFRecognizer_push_grammar_eventsb(marpaESLIFRecogni
     /* By definition, here exhaustedb is a true value. */
     /* If we are not already in the discard mode, try to discard if discardOnOffb is true */
     /* This is done only for the top-level recognizer */
-    if (marpaESLIFRecognizerp->marpaESLIFRecognizerParentp == NULL) {
+    if (MARPAESLIFRECOGNIZER_IS_TOP(marpaESLIFRecognizerp)) {
       /* This is the end the parsing (we are called when parsing is exhausted) - we try to discard as much as possible */
       /* to avoid the eventual error message "Grammar is exhausted but lexeme remains" */
 
@@ -11451,7 +11472,7 @@ short marpaESLIFRecognizer_set_exhausted_flagb(marpaESLIFRecognizer_t *marpaESLI
   }
 
   /* Not allowed if there is a parent recognizer */
-  if (marpaESLIFRecognizerp->marpaESLIFRecognizerParentp != NULL) {
+  if (MARPAESLIFRECOGNIZER_IS_CHILD(marpaESLIFRecognizerp)) {
     errno = EPERM;
     rcb = 0;
     goto fast_done;
@@ -12066,7 +12087,7 @@ static inline short __marpaESLIFValue_valueb(marpaESLIFValue_t *marpaESLIFValuep
   MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "start");
 
   /* Lexeme short cut for maximum performance - in practice, the caller should name its variable marpaESLIFValueResultArray. */
-  if ((marpaESLIFValueResultp != NULL) && (marpaESLIFRecognizerp->marpaESLIFRecognizerParentp != NULL)) {
+  if ((marpaESLIFValueResultp != NULL) && MARPAESLIFRECOGNIZER_IS_CHILD(marpaESLIFRecognizerp)) {
     MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "Lexeme shortcut with result passed in arguments");
     rcb = marpaWrapperValue_valueb(marpaESLIFValuep->marpaWrapperValuep,
                                    (void *) marpaESLIFValuep,
@@ -12096,7 +12117,7 @@ static inline short __marpaESLIFValue_valueb(marpaESLIFValue_t *marpaESLIFValuep
   /* parent recognizer: we are in a lexeme recognizer per definition and      */
   /* all we want to know is if the corresponding grammar valuates ok, unless  */
   /* the caller really enforces true valuation (case of paramaterized symbol) */
-  if ((marpaESLIFRecognizerp->marpaESLIFRecognizerParentp != NULL)) {
+  if (MARPAESLIFRECOGNIZER_IS_CHILD(marpaESLIFRecognizerp)) {
     MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "Lexeme shortcut with result via standard mechanism");
     rcb = marpaWrapperValue_valueb(marpaESLIFValuep->marpaWrapperValuep,
                                    (void *) marpaESLIFValuep,
@@ -14611,7 +14632,7 @@ static inline short _marpaESLIFRecognizer_appendDatab(marpaESLIFRecognizer_t *ma
     goto done;
   }
 
-  if ((marpaESLIFRecognizerp->marpaESLIFRecognizerParentp == NULL) /* Lexeme mode ? */
+  if (MARPAESLIFRECOGNIZER_IS_TOP(marpaESLIFRecognizerp) /* Top recognizer ? */
       &&
       (marpaESLIF_streamp->peeki == 0)                             /* Peeked ? */
       ) {
@@ -15134,7 +15155,7 @@ static inline short _marpaESLIFRecognizer_start_charconvb(marpaESLIFRecognizer_t
   char                       *encodingasciis     = NULL;
   char                       *utf8s              = NULL;
   /* If a subgrammar cannot append data, next subgrammar may, using a different encoding in input. So we stay silent. */
-  short                       tconvsilentb       = (marpaESLIFRecognizerp->marpaESLIFRecognizerParentp != NULL) ? 1 : 0;
+  short                       tconvsilentb       = MARPAESLIFRECOGNIZER_IS_CHILD(marpaESLIFRecognizerp) ? 1 : 0;
   size_t                      utf8l;
   short                       appendDatab;
   short                       rcb;
@@ -16262,7 +16283,7 @@ static inline short _marpaESLIFRecognizer_internalStack_i_setb(marpaESLIFRecogni
   /* for a free, we just copy the result. So we need to check if there is something to free only when this */
   /* is the top recognizer and when forgetb is not set. */
   /* We do this optimization only when we are sure, i.e. when marpaESLIFValueResultOrigp->contextp is NULL. */
-  if (((marpaESLIFValueResultOrigp->contextp != NULL) || (marpaESLIFRecognizerp->marpaESLIFRecognizerParentp == NULL)) && (! forgetb)) {
+  if (((marpaESLIFValueResultOrigp->contextp != NULL) || MARPAESLIFRECOGNIZER_IS_TOP(marpaESLIFRecognizerp)) && (! forgetb)) {
     if (! _marpaESLIFRecognizer_pointers_cleanupb(marpaESLIFRecognizerp, marpaESLIFValueResultOrigp, marpaESLIFValueResultp)) {
       goto err;
     }
@@ -18946,7 +18967,7 @@ short marpaESLIFRecognizer_hook_discardb(marpaESLIFRecognizer_t *marpaESLIFRecog
   }
 
   /* Not allowed if there is a parent recognizer */
-  if (marpaESLIFRecognizerp->marpaESLIFRecognizerParentp != NULL) {
+  if (MARPAESLIFRECOGNIZER_IS_CHILD(marpaESLIFRecognizerp)) {
     errno = EPERM;
     rcb = 0;
     goto fast_done;
@@ -18992,7 +19013,7 @@ short marpaESLIFRecognizer_hook_discard_switchb(marpaESLIFRecognizer_t *marpaESL
   }
 
   /* Not allowed if there is a parent recognizer */
-  if (marpaESLIFRecognizerp->marpaESLIFRecognizerParentp != NULL) {
+  if (MARPAESLIFRECOGNIZER_IS_CHILD(marpaESLIFRecognizerp)) {
     errno = EPERM;
     rcb = 0;
     goto fast_done;
@@ -19125,7 +19146,7 @@ static inline short __marpaESLIFRecognizer_value_validb(marpaESLIFRecognizer_t *
       } else {
         if (marpaESLIFValueResultWorkp->u.a.sizel > 0) {
           /* This is legal only when there is no parent recognizer: sub recognizers uses this illegal value */
-          if (MARPAESLIF_UNLIKELY(marpaESLIFRecognizerp->marpaESLIFRecognizerParentp == NULL)) {
+          if (MARPAESLIF_UNLIKELY(MARPAESLIFRECOGNIZER_IS_TOP(marpaESLIFRecognizerp))) {
             MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "MARPAESLIF_VALUE_TYPE_ARRAY: pointer is not set but array size is set to %ld", (unsigned long) marpaESLIFValueResultWorkp->u.a.sizel);
             errno = EINVAL;
             goto err;
