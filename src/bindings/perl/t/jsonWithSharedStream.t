@@ -267,12 +267,18 @@ sub doparse {
                 $marpaESLIFRecognizerObject->set_exhausted_flag(1);
                 # Force read of the LCURLY symbol
                 $log->debug("LCURLY symbol read");
+                #
+                # With alternativeRead
+                #
                 $marpaESLIFRecognizerObject->alternativeRead('LCURLY', '{', 1); # In UTF-8 '{' is one byte
                 my $value = doparse($marpaESLIFRecognizerObject, undef, $recursionLevel + 1);
                 # Inject object's value
                 $log->debugf("Injecting value from sub grammar: %s", $value);
                 $log->debug("OBJECT_FROM_INNER_GRAMMAR symbol read");
-                $marpaESLIFRecognizer->alternativeRead('OBJECT_FROM_INNER_GRAMMAR', $value, 0); # Stream moved synchroneously
+                #
+                # With deprecated method lexemeRead
+                #
+                $marpaESLIFRecognizer->lexemeRead('OBJECT_FROM_INNER_GRAMMAR', $value, 0); # Stream moved synchroneously
                 $marpaESLIFRecognizerObject->unshare();
             }
             elsif ($event->{event} eq '^RCURLY') {
@@ -293,10 +299,38 @@ sub doparse {
 
         for (my $offset = -3; $offset < 3; $offset++) {
             my $bytes = $marpaESLIFRecognizer->input($offset);
-            $log->infof("input(%d) returns:: %s", $offset, $bytes);
+            $log->infof("input(%d) returns: %s", $offset, $bytes);
+            #
+            # When offset is 0, it is also the default value
+            #
+            if ($offset == 0) {
+                my $verif = $marpaESLIFRecognizer->input();
+                $log->infof("input()  returns: %s", $verif);
+                if ((! defined($bytes)) && defined($verif)) {
+                    BAIL_OUT("input($offset) output is not defined but input() output is defined");
+                } elsif (defined($bytes) && (! defined($verif))) {
+                    BAIL_OUT("input($offset) output is defined but input() output is not defined");
+                } elsif (defined($bytes) && ($bytes ne $verif)) {
+                    BAIL_OUT("input($offset) != input()");
+                }
+            }
             for (my $length = -3; $length < 3; $length++) {
                 $bytes = $marpaESLIFRecognizer->input($offset, $length);
-                $log->infof("input(%d, %d) returns:: %s", $offset, $length, $bytes);
+                $log->infof("input(%d, %d) returns: %s", $offset, $length, $bytes);
+                #
+                # When length is 0, it is also the default value
+                #
+                if ($length == 0) {
+                    my $verif = $marpaESLIFRecognizer->input($offset);
+                    $log->infof("input(%d) returns: %s", $offset, $verif);
+                    if ((! defined($bytes)) && defined($verif)) {
+                        BAIL_OUT("input($offset, 0) output is not defined but input($offset) output is defined");
+                    } elsif (defined($bytes) && (! defined($verif))) {
+                        BAIL_OUT("input($offset, 0) output is defined but input($offset) output is not defined");
+                    } elsif (defined($bytes) && ($bytes ne $verif)) {
+                        BAIL_OUT("input($offset, 0) != input($offset)");
+                    }
+                }
             }
         }
 

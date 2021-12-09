@@ -277,9 +277,11 @@ Forces the recognizer to read more data. Usually, the recognizer interface is ca
 
 Returns a boolean value indicating success or not.
 
-=head2 $eslifRecognizer->input(offset[, length])
+=head2 $eslifRecognizer->input([offset[, length]])
 
-Get a copy of the current internal recognizer buffer, where C<offset> and C<length> are in I<byte> unit and with the same semantics as builtin C<substr> function for the C<offset> parameter, same semantics for the C<length> parameter when is not C<0> (the zero value is ignored). An undefined output does not necessarily mean there is an error, but that the internal buffer is completely consumed. It is recommended to set C<length> parameter to a reasonable value, to prevent an internal copy of a potentially big number of bytes.
+Get a copy of the current internal recognizer buffer, where C<offset> and C<length> are in I<byte> unit and with the same semantics as builtin C<substr> function for the C<offset> parameter, same semantics for the C<length> parameter as well when it is not C<0> (the zero value is ignored). An undefined output does not necessarily mean there is an error, but that the internal buffer is completely consumed. It is recommended to set C<length> parameter to a reasonable value, to prevent an internal copy of a potentially big number of bytes.
+
+Default values for C<offset> and <length> are C<0>.
 
 Returns the associated input input, or C<undef>.
 
@@ -402,6 +404,64 @@ Hook the recognizer to switch the use of C<:discard> if it exists. This is a I<p
 =head2 $eslifRecognizer->symbolTry($symbol)
 
 Tries to match the external symbol C<$symbol>, that is an instance of L<MarpaX::ESLIF::Symbol>. Return the match or C<undef>.
+
+=head1 DEPRECATED METHODS
+
+=head2 $eslifRecognizer->lexemeAlternative($name, $anything, $grammarLength)
+
+Alias to C<alternative>.
+
+=cut
+
+sub lexemeAlternative { goto &alternative }
+
+=head2 $eslifRecognizer->lexemeComplete($length)
+
+Alias to C<alternativeComplete>.
+
+=cut
+
+sub lexemeComplete { goto &alternativeComplete }
+
+=head2 $eslifRecognizer->lexemeRead($name, $anything, $length, $grammarLength)
+
+Alias to C<alternativeRead>.
+
+=cut
+
+sub lexemeRead { goto &alternativeRead }
+
+=head2 $eslifRecognizer->lexemeTry($name)
+
+Alias to C<nameTry>.
+
+=cut
+
+sub lexemeTry { goto &nameTry }
+
+=head2 $eslifRecognizer->lexemeExpected()
+
+Alias to C<nameExpected>.
+
+=cut
+
+sub lexemeExpected { goto &nameExpected }
+
+=head2 $eslifRecognizer->lexemeLastPause($name)
+
+Alias to C<nameLastPause>.
+
+=cut
+
+sub lexemeLastPause { goto &nameLastPause }
+
+=head2 $eslifRecognizer->lexemeLastTry($name)
+
+Alias to C<nameLastTry>.
+
+=cut
+
+sub lexemeLastTry { goto &nameLastTry }
 
 =head1 SEE ALSO
 

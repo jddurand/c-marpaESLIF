@@ -5460,13 +5460,15 @@ OUTPUT:
 =cut
 
 SV *
-input(p, offset, ...)
+input(p, ...)
   SV *p;
-  int offset;
 PREINIT:
   static const char *funcs = "MarpaX::ESLIF::Recognizer::input";
 CODE:
   MarpaX_ESLIF_Recognizer_t *MarpaX_ESLIF_Recognizerp = marpaESLIFPerl_engine(aTHX_ p);
+  SV                        *Perl_offset;
+  int                        offset;
+  SV                        *Perl_length;
   int                        length;
   char                      *inputs;
   size_t                     inputl;
@@ -5476,14 +5478,29 @@ CODE:
   char                      *maxinputs;
   SV                        *svp;
 
-  if (items > 2) {
-    SV *Perl_length = ST(2);
+  /* Note that per guarantees that items is >= 1 */
+  if (items == 1) {
+    offset = 0;
+    length = 0;
+  } else if (items == 2) {
+    Perl_offset = ST(1);
+    if ((marpaESLIFPerl_getTypei(aTHX_ Perl_offset) & SCALAR) != SCALAR) {
+      MARPAESLIFPERL_CROAK("Offset argument must be a scalar");
+    }
+    offset = (int) SvIV(Perl_offset);
+    length = 0;
+  } else if (items >= 3) {
+    Perl_offset = ST(1);
+    if ((marpaESLIFPerl_getTypei(aTHX_ Perl_offset) & SCALAR) != SCALAR) {
+      MARPAESLIFPERL_CROAK("Offset argument must be a scalar");
+    }
+    offset = (int) SvIV(Perl_offset);
+
+    Perl_length = ST(2);
     if ((marpaESLIFPerl_getTypei(aTHX_ Perl_length) & SCALAR) != SCALAR) {
-      MARPAESLIFPERL_CROAK("Second argument must be a scalar");
+      MARPAESLIFPERL_CROAK("Length argument must be a scalar");
     }
     length = (int) SvIV(Perl_length);
-  } else {
-    length = 0;
   }
 
   if (MARPAESLIF_UNLIKELY(! marpaESLIFRecognizer_inputb(MarpaX_ESLIF_Recognizerp->marpaESLIFRecognizerp, &inputs, &inputl))) {
