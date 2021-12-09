@@ -5869,13 +5869,14 @@ static inline short _marpaESLIFRecognizer_terminal_matcherb(marpaESLIFRecognizer
       }
     }
 
-    if (MARPAESLIFRECOGNIZER_IS_TOP(marpaESLIFRecognizerp)) {
-      /* Update callout userdata context - take care this will segfault IF you have callouts in the regexp during bootstrap. */
-      marpaESLIF_regexp->callout_context.marpaESLIFRecognizerp = marpaESLIFRecognizerp;
-      pcre2_set_callout(marpaESLIF_regexp->match_contextp, _marpaESLIF_pcre2_callouti, &(marpaESLIF_regexp->callout_context));
-    } else {
-      /* No recognizer callback inside a sub-grammar */
-      pcre2_set_callout(marpaESLIF_regexp->match_contextp, NULL, NULL);
+    if (marpaESLIF_regexp->calloutb) {
+      if (MARPAESLIFRECOGNIZER_IS_TOP(marpaESLIFRecognizerp) && (marpaESLIFRecognizerp->marpaESLIFGrammarp->grammarp->defaultRegexActionp != NULL)) {
+        /* Update callout userdata context - take care this will segfault IF you have callouts in the regexp during bootstrap. */
+        marpaESLIF_regexp->callout_context.marpaESLIFRecognizerp = marpaESLIFRecognizerp;
+        pcre2_set_callout(marpaESLIF_regexp->match_contextp, _marpaESLIF_pcre2_callouti, &(marpaESLIF_regexp->callout_context));
+      } else {
+        pcre2_set_callout(marpaESLIF_regexp->match_contextp, NULL, NULL);
+      }
     }
 
     /* --------------------------------------------------------- */
