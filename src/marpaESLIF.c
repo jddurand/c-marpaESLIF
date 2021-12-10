@@ -1254,6 +1254,7 @@ static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *mar
   terminalp->bytel                                       = 0;
   terminalp->pseudob                                     = pseudob;
   terminalp->eventSeti                                   = eventSeti;
+  terminalp->regexActionp                                = NULL; /* Shallow pointer */
 
   /* ----------- Modifiers ------------ */
   if (modifiers != NULL) {
@@ -3166,7 +3167,7 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
     goto err;
   }
 
-  /* Set default symbol and rule action if not done */
+  /* Set default symbol and rule action if not done, terminal's regex-action */
   for (grammari = 0; grammari < GENERICSTACK_USED(grammarStackp); grammari++) {
     if (! GENERICSTACK_IS_PTR(grammarStackp, grammari)) {
       /* Sparse item in grammarStackp -; */
@@ -3209,7 +3210,7 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
     /* Nothing on defaultEncodings - it can be NULL */
     /* Nothing on fallbackEncodings - it can be NULL */
 
-    /* :start meta symbol check */
+    /* :start meta symbol check is embedded here */
     startp = NULL;
     for (symboli = 0; symboli < GENERICSTACK_USED(symbolStackp); symboli++) {
       MARPAESLIF_INTERNAL_GET_SYMBOL_FROM_STACK(marpaESLIFp, symbolp, symbolStackp, symboli);
@@ -3220,6 +3221,9 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
           MARPAESLIF_ERRORF(marpaESLIFp, "More than one :start symbol at grammar level %d (%s): symbols %d <%s> and %d <%s>", grammari, grammarp->descp->asciis, startp->idi, startp->descp->asciis, symbolp->idi, symbolp->descp->asciis);
           goto err;
         }
+      }
+      if (MARPAESLIF_IS_TERMINAL(symbolp)) {
+        symbolp->u.terminalp->regexActionp = grammarp->defaultRegexActionp;
       }
     }
 
@@ -4994,6 +4998,7 @@ static inline void _marpaESLIF_terminal_freev(marpaESLIF_terminal_t *terminalp)
     if (terminalp->bytes != NULL) {
       free(terminalp->bytes);
     }
+    /* Note that terminalp->regexActionp is a shallow pointer */
     free(terminalp);
   }
 }
@@ -5870,7 +5875,7 @@ static inline short _marpaESLIFRecognizer_terminal_matcherb(marpaESLIFRecognizer
     }
 
     if (marpaESLIF_regexp->calloutb) {
-      if (MARPAESLIFRECOGNIZER_IS_TOP(marpaESLIFRecognizerp) && (marpaESLIFRecognizerp->marpaESLIFGrammarp->grammarp->defaultRegexActionp != NULL)) {
+      if (MARPAESLIFRECOGNIZER_IS_TOP(marpaESLIFRecognizerp) && (terminalp->regexActionp != NULL)) {
         /* Update callout userdata context - take care this will segfault IF you have callouts in the regexp during bootstrap. */
         marpaESLIF_regexp->callout_context.marpaESLIFRecognizerp = marpaESLIFRecognizerp;
         pcre2_set_callout(marpaESLIF_regexp->match_contextp, _marpaESLIF_pcre2_callouti, &(marpaESLIF_regexp->callout_context));
@@ -21205,7 +21210,7 @@ static int _marpaESLIF_pcre2_callouti(pcre2_callout_block *blockp, void *userDat
   marpaESLIF_grammar_t               *grammarp                    = marpaESLIFGrammarp->grammarp;
   marpaESLIFValueResultPair_t        *marpaESLIFValuePairsp       = marpaESLIFRecognizerp->_marpaESLIFCalloutBlockPairs;
   marpaESLIF_terminal_t              *terminalp                   = contextp->terminalp;
-  marpaESLIFAction_t                 *regexActionp                = marpaESLIFRecognizerp->marpaESLIFGrammarp->grammarp->defaultRegexActionp;
+  marpaESLIFAction_t                 *regexActionp                = terminalp->regexActionp;
   marpaESLIFRecognizerRegexCallback_t regexCallbackp;
   int                                 rci;
   size_t                              offset_vectorl;
