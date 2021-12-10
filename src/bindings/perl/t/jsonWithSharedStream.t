@@ -16,7 +16,40 @@ sub isWithDisableThreshold { 0 }
 sub isWithExhaustion       { 0 }
 sub isWithNewline          { 1 }
 sub isWithTrack            { 1 }
-sub event_action           { my ($self) = shift; $log->debugf('Events: %s', \@_); 1 }
+sub if_action {
+    my ($self) = shift;
+
+    $log->debugf('if_action: %s', \@_);
+    $log->debugf('if_action: first 2 character are "%s"', $self->getRecognizer->input(0, 2));
+
+    return 1
+}
+sub event_action {
+    my ($self) = shift;
+
+    $log->debugf('event_action: %s', \@_);
+    $log->debugf('event_action: first 2 character are "%s"', $self->getRecognizer->input(0, 2));
+
+    return 1
+}
+sub regex_action {
+    my ($self) = shift;
+
+    $log->debugf('regex_action: %s', \@_);
+    $log->debugf('regex_action: first 2 character are "%s"', $self->getRecognizer->input(0, 2));
+
+    return 0
+}
+sub generator_action {
+    my ($self) = shift;
+
+    $log->debugf('generator_action: %s', \@_);
+    $log->debugf('generator_action: first 2 character are "%s"', $self->getRecognizer->input(0, 2));
+
+    return 'test ::= "XXX"'
+}
+sub setRecognizer          { my ($self, $recognizer) = @_; $log->debugf('setRecognizer: %s', $recognizer); $self->{recognizer} = $recognizer; }
+sub getRecognizer          { my ($self) = shift; $self->{recognizer} }
 
 package MyValueInterface;
 use strict;
@@ -66,17 +99,19 @@ Log::Any::Adapter->set('Log4perl');
 BEGIN { require_ok('MarpaX::ESLIF') };
 
 my $base_dsl = q{
-:default ::= action => ::shift event-action => event_action
+:default ::= action => ::shift event-action => event_action regex-action => regex_action
 :start       ::= XXXXXX # Replaced on-the-fly by json or object
 :discard ::= perl_comment event => perl_comment$
 perl_comment ::= /(?:(?:#)(?:[^\\n]*)(?:\\n|\\z))/u
+:symbol   ::= LCURLY if-action => if_action pause => after event => LCURLY$
 
 json         ::= object
                | array
+               | . => generator_action->(1, 'x')
 object       ::= (- LCURLY -) members (- RCURLY -)
                | OBJECT_FROM_INNER_GRAMMAR action => ::concat
 members      ::= pair*                       action => do_members separator => ',' hide-separator => 1
-pair         ::= string (- ':' -) value      action => ::row
+pair         ::= string (- /:(?C0)/ -) value      action => ::row
 event value$ = completed <value>
 event ^value = predicted <value>
 value        ::= string
@@ -86,8 +121,8 @@ value        ::= string
                | 'true'                         action => ::true
                | 'false'                        action => ::false
                | 'null'                         action => ::undef
-array        ::= (- '[' -)          (- ']' -)   action => ::row
-               | (- '[' -) elements (- ']' -)   action => ::row
+array        ::= (- /\[(?C1)/ -)          (- /\](?C2)/ -)   action => ::row
+               | (- /\[(?C1)/ -) elements (- /\](?C2)/ -)   action => ::row
 elements     ::= value+                         action => ::row separator => ',' hide-separator => 1
 number         ~ int
                | int frac
@@ -299,13 +334,13 @@ sub doparse {
 
         for (my $offset = -3; $offset < 3; $offset++) {
             my $bytes = $marpaESLIFRecognizer->input($offset);
-            $log->infof("input(%d) returns: %s", $offset, $bytes);
+            $log->debugf("input(%d) returns: %s", $offset, $bytes);
             #
             # When offset is 0, it is also the default value
             #
             if ($offset == 0) {
                 my $verif = $marpaESLIFRecognizer->input();
-                $log->infof("input()  returns: %s", $verif);
+                $log->debugf("input()  returns: %s", $verif);
                 if ((! defined($bytes)) && defined($verif)) {
                     BAIL_OUT("input($offset) output is not defined but input() output is defined");
                 } elsif (defined($bytes) && (! defined($verif))) {
@@ -316,13 +351,13 @@ sub doparse {
             }
             for (my $length = -3; $length < 3; $length++) {
                 $bytes = $marpaESLIFRecognizer->input($offset, $length);
-                $log->infof("input(%d, %d) returns: %s", $offset, $length, $bytes);
+                $log->debugf("input(%d, %d) returns: %s", $offset, $length, $bytes);
                 #
                 # When length is 0, it is also the default value
                 #
                 if ($length == 0) {
                     my $verif = $marpaESLIFRecognizer->input($offset);
-                    $log->infof("input(%d) returns: %s", $offset, $verif);
+                    $log->debugf("input(%d) returns: %s", $offset, $verif);
                     if ((! defined($bytes)) && defined($verif)) {
                         BAIL_OUT("input($offset, 0) output is not defined but input($offset) output is defined");
                     } elsif (defined($bytes) && (! defined($verif))) {

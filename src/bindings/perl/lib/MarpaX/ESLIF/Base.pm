@@ -94,6 +94,7 @@ sub new {
                     multiton  => $multiton,
                     clonable  => $clonable,
                     class     => $class,
+                    shallow   => 0,
                     arguments => \@_}, $class;
 
     if ($multiton) {
@@ -114,6 +115,11 @@ Generic destructor. It always calls C<$self>'s C<dispose> method.
 
 sub _destroy {
     my $self = shift;
+
+    #
+    # No op if it is a shallow'ed instance
+    #
+    return if $self->{shallow};
 
     #
     # Here it should never happen that engine is not set
@@ -235,6 +241,29 @@ sub CLONE {
     #
     map { $_->_clone() } grep { $_->{class} eq 'MarpaX::ESLIF' } @multitons;
     map { $_->_clone() } grep { $_->{class} ne 'MarpaX::ESLIF' } @multitons;
+}
+
+=head2 $class->SHALLOW($engine)
+
+Create a shallow instance of C<$class> based on C<$engine>, that is required. This instance cannot be cloned and, when being destroyed, will have no effect on the engine.
+
+=cut
+
+sub SHALLOW {
+    my $proto = shift;
+
+    my $class = ref($proto) || $proto;                # Because of MarpaX::ESLIF::Recognizer::newFrom that is an instance method
+
+    my $engine = shift // croak "\$engine is not defined";
+
+    return bless { engine    => $engine,
+                   allocate  => undef,
+                   dispose   => undef,
+                   multiton  => 0,
+                   clonable  => 0,
+                   class     => $class,
+                   shallow   => 1,
+                   arguments => undef}, $class;
 }
 
 1;
