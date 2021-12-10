@@ -895,7 +895,7 @@ int main() {
     if (! marpaESLIFRecognizer_discardb(marpaESLIFRecognizerp, &discardl)) {
       goto err;
     }
-    if (discardl) {
+    if (discardl > 0) {
       GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, ":discard was successful on %ld bytes as per marpaESLIFRecognizer_discardb", (unsigned long) discardl);
       if (! marpaESLIFRecognizer_discard_lastb(marpaESLIFRecognizerp, &discardLasts, &discardLastl)) {
         goto err;
