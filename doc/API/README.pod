@@ -2582,6 +2582,22 @@ Only C<e>, C<i>, C<j>, C<m>, C<n>, C<s>, C<x>, C<D>, C<J>, C<U>, C<a>, C<N>, C<u
 
 For meta symbols, also they can belong to any C<marpaESLIFGrammarp>, only the lexemes (i.e. those that are defined in a sub-grammar) can be tried with C<marpaESLIFSymbol_tryb> and C<marpaESLIFRecognizer_symbol_tryb>.
 
+For strings and regular expressions, the C<stringp> argument is without the delimiters, e:g:
+
+=over
+
+=item String
+
+  123  for the string "123"
+  "123 for the string "\"123" or '"123'
+
+=item Regular expressions
+
+  123   for the regular expression /123/
+  1[23] for the regular expression /1[23]/
+
+=back
+
 =head1 NOTES
 
 =over
