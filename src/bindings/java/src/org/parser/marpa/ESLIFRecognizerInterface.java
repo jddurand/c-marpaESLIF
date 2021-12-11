@@ -89,4 +89,18 @@ public interface ESLIFRecognizerInterface {
 	 * @return a boolean indicating if absolute position tracking is on
 	 */
 	public boolean isWithTrack();
+	/**
+	 * Set current recognizer
+	 * 
+	 * The if-action and regex-action callbacks are executed using an instance of ESLIFRecognizerInterface.
+	 *
+	 * Whenever ESLIF executes them, it will call this method with a shallow copy of current ESLIFRecognizer.
+	 */
+	public void setEslifRecognizer(ESLIFRecognizer eslifRecognizer);
+	/**
+	 * Get current recognizer
+	 * 
+	 * This method retrieve the current ESLIFRecognizer injected at every if-action and regex-action callbacks.
+	 */
+	public ESLIFRecognizer getEslifRecognizer();
 }

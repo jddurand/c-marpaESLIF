@@ -9,7 +9,7 @@ import java.io.UnsupportedEncodingException;
  * lexemes that come directly from the grammar are in the form of
  * a ByteBuffer.
  */
-public class AppValue implements ESLIFValueInterface {
+public class AppValueInterface implements ESLIFValueInterface {
 	private Object result = null;
 	private String symbolName;
 	private int symbolNumber;

@@ -4,6 +4,7 @@ import java.util.Arrays;
 
 public class AppEmptyRecognizer implements ESLIFRecognizerInterface {
 	private ESLIFLoggerInterface eslifLogger;
+	private ESLIFRecognizer eslifRecognizer;
 	
 	public AppEmptyRecognizer(ESLIFLoggerInterface eslifLogger) {
 		this.eslifLogger = eslifLogger;
@@ -48,5 +49,13 @@ public class AppEmptyRecognizer implements ESLIFRecognizerInterface {
 	public boolean java_eventAction(ESLIFEvent[] eventArray) {
 		this.eslifLogger.debug("event_action(" + Arrays.toString(eventArray) + ")");
 		return true;
+	}
+
+	public void setEslifRecognizer(ESLIFRecognizer eslifRecognizer) {
+		this.eslifRecognizer = eslifRecognizer;
+	}
+
+	public ESLIFRecognizer getEslifRecognizer() {
+		return this.eslifRecognizer;
 	}	
 }

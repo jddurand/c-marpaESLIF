@@ -139,8 +139,8 @@ public class AppThread implements Runnable {
 				String string = new String(strings[i]);
 	
 				BufferedReader reader = new BufferedReader(new StringReader(string));
-				AppRecognizer eslifAppRecognizer = new AppRecognizer(reader, eslifLogger, eslifGrammar);
-				AppValue eslifAppValue = new AppValue();
+				AppRecognizerInterface eslifAppRecognizerInterface = new AppRecognizerInterface(reader, eslifLogger);
+				AppValueInterface eslifAppValue = new AppValueInterface();
 				eslifLogger.info("Testing parse() on " + string);
 				try {
 					byte[] eslifSymbolMatch;
@@ -168,7 +168,7 @@ public class AppThread implements Runnable {
 						eslifLogger.info("Direct Meta \"'('\": no match");
 					}
 
-					if (eslifGrammar.parse(eslifAppRecognizer, eslifAppValue)) {
+					if (eslifGrammar.parse(eslifAppRecognizerInterface, eslifAppValue)) {
 						eslifLogger.info("Result: " + eslifAppValue.getResult());
 					}
 				} catch (Exception e) {
@@ -185,9 +185,9 @@ public class AppThread implements Runnable {
 				String string = new String(strings[i]);
 	
 				BufferedReader reader = new BufferedReader(new StringReader(string));
-				AppRecognizer eslifAppRecognizer = new AppRecognizer(reader, eslifLogger, eslifGrammar);
-				ESLIFRecognizer eslifRecognizerShared = new ESLIFRecognizer(eslifGrammar, eslifAppRecognizer);
-				ESLIFRecognizer eslifRecognizer = new ESLIFRecognizer(eslifGrammar, eslifAppRecognizer);
+				AppRecognizerInterface eslifAppRecognizerInterface = new AppRecognizerInterface(reader, eslifLogger);
+				ESLIFRecognizer eslifRecognizerShared = new ESLIFRecognizer(eslifGrammar, eslifAppRecognizerInterface);
+				ESLIFRecognizer eslifRecognizer = new ESLIFRecognizer(eslifGrammar, eslifAppRecognizerInterface);
 				eslifRecognizer.share(eslifRecognizerShared);
 				eslifLogger.info("");
 				eslifLogger.info("***********************************************************");
@@ -267,7 +267,7 @@ public class AppThread implements Runnable {
 						eslifLogger.debug("... Latest discarded string is \"" + discardLastString + "\"");
 					}
 					try {
-						AppValue eslifAppValue = new AppValue();
+						AppValueInterface eslifAppValue = new AppValueInterface();
 						eslifLogger.info("Testing value() on " + string);
 						ESLIFValue value = null;
 						try {

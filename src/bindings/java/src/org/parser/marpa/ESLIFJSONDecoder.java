@@ -37,6 +37,7 @@ public class ESLIFJSONDecoder extends ESLIFGrammar {
 	 */
 	private class ESLIFJSONDecoderRecognizer implements ESLIFRecognizerInterface {
 		private String s;
+		private ESLIFRecognizer eslifRecognizer;
 		
 		public ESLIFJSONDecoderRecognizer(String s) {
 			this.s = s;
@@ -92,6 +93,15 @@ public class ESLIFJSONDecoder extends ESLIFGrammar {
 		public boolean isWithTrack() {
 			return false;
 		}
+
+		public void setEslifRecognizer(ESLIFRecognizer eslifRecognizer) {
+			this.eslifRecognizer = eslifRecognizer;
+		}
+
+		public ESLIFRecognizer getEslifRecognizer() {
+			return this.eslifRecognizer;
+		}	
+
 	}
 
 	/*

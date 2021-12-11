@@ -600,7 +600,7 @@ public class ESLIFRecognizer {
 	protected ESLIFLoggerInterface getLoggerInterface() {
 		return (eslifGrammar != null) ? eslifGrammar.getLoggerInterface() : null;
 	}
-	private ESLIFGrammar getEslifGrammar() {
+	protected ESLIFGrammar getEslifGrammar() {
 		return eslifGrammar;
 	}
 	private void setEslifGrammar(ESLIFGrammar eslifGrammar) {

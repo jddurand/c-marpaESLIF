@@ -68,8 +68,8 @@ public class AppParameterizedRules implements Runnable {
 				String string = new String(strings[i]);
 	
 				BufferedReader reader = new BufferedReader(new StringReader(string));
-				AppRecognizer eslifAppRecognizer = new AppRecognizer(reader, eslifLogger, eslifGrammar);
-				AppValue eslifAppValue = new AppValue();
+				AppRecognizerInterface eslifAppRecognizerInterface = new AppRecognizerInterface(reader, eslifLogger);
+				AppValueInterface eslifAppValue = new AppValueInterface();
 				eslifLogger.info("Testing parse() on " + string);
 				try {
 					if (false) {
@@ -80,7 +80,7 @@ public class AppParameterizedRules implements Runnable {
 							System.err.println(e);
 						}
 					}
-					if (eslifGrammar.parse(eslifAppRecognizer, eslifAppValue)) {
+					if (eslifGrammar.parse(eslifAppRecognizerInterface, eslifAppValue)) {
 						eslifLogger.info("Result: " + eslifAppValue.getResult());
 					}
 				} catch (Exception e) {

@@ -1,8 +1,5 @@
 package org.parser.marpa;
 
-import java.nio.ByteBuffer;
-import java.nio.charset.Charset;
-
 /**
  * ESLIFJSON is a built-in ESLIFGrammar, targetting the JSON syntax, with an optional strict mode.
  *

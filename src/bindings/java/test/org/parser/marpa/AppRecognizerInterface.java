@@ -8,17 +8,17 @@ import java.util.Arrays;
 /**
  * Test Application Recognizer
  */
-public class AppRecognizer implements ESLIFRecognizerInterface {
-		private String               line           = null;
-		private BufferedReader       bufferedReader = null;
+public class AppRecognizerInterface implements ESLIFRecognizerInterface {
+		private String               line                 = null;
+		private BufferedReader       bufferedReader       = null;
 		private ESLIFLoggerInterface eslifLoggerInterface = null;
-		private ESLIFGrammar         eslifGrammar = null;
+		private ESLIFRecognizer      eslifRecognizer      = null;
 
 		/**
 		 * @param bufferedReader buffered reader
 		 * @throws Exception exception
 		 */
-		public AppRecognizer(BufferedReader bufferedReader, ESLIFLoggerInterface eslifLoggerInterface, ESLIFGrammar eslifGrammar) throws Exception {
+		public AppRecognizerInterface(BufferedReader bufferedReader, ESLIFLoggerInterface eslifLoggerInterface) throws Exception {
 			if (bufferedReader == null) {
 				throw new Exception("bufferedReader is null");
 			}
@@ -27,7 +27,6 @@ public class AppRecognizer implements ESLIFRecognizerInterface {
 				throw new Exception("eslifLoggerInterface is null");
 			}
 			this.eslifLoggerInterface = eslifLoggerInterface;
-			this.eslifGrammar = eslifGrammar;
 		}
 
 		public boolean read() {
@@ -73,6 +72,14 @@ public class AppRecognizer implements ESLIFRecognizerInterface {
 			return true;
 		}
 		
+		public void setEslifRecognizer(ESLIFRecognizer eslifRecognizer) {
+			this.eslifRecognizer = eslifRecognizer;
+		}
+
+		public ESLIFRecognizer getEslifRecognizer() {
+			return this.eslifRecognizer;
+		}	
+
 		public boolean if_number(byte[] byteArray) throws UnsupportedEncodingException {
 			String string = new String(byteArray, "UTF-8");
 			eslifLoggerInterface.debug("if_number(" + string + ")");
@@ -88,6 +95,7 @@ public class AppRecognizer implements ESLIFRecognizerInterface {
 			eslifLoggerInterface.debug("regex_action(" + eslifRegexCallout + ")");
 			int grammarLevel = eslifRegexCallout.getGrammarLevel();
 			int symbolId = eslifRegexCallout.getSymbolId();
+			ESLIFGrammar eslifGrammar  = this.getEslifRecognizer().getEslifGrammar();
 			ESLIFGrammarSymbolProperties eslifSymbolProperties = eslifGrammar.symbolPropertiesByLevel(grammarLevel, symbolId);
 			eslifLoggerInterface.debug("... regex_action was for symbol " + symbolId + " of grammar level " + grammarLevel + " :" + eslifSymbolProperties);
 			return 0;

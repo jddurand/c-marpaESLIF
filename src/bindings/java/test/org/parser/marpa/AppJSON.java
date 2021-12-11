@@ -130,8 +130,6 @@ public class AppJSON implements Runnable {
 					eslifLogger.info("Decode result: " + decodeDescribe);
 
 					String reencoded = eslifJSON.encode(decoded);
-				    d = new Describe();
-				    String encodeDescribe = d.describe(reencoded);
 					eslifLogger.info("Re-encoding result: " + reencoded);
 				} catch (Exception e) {
 					System.err.println("Failed to parse " + string + ": " + e.getMessage());
