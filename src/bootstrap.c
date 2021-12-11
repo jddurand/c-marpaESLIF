@@ -6843,6 +6843,7 @@ static short __marpaESLIF_bootstrap_G1_action_symbol_ruleb(void *userDatavp, mar
   marpaESLIF_bootstrap_rhs_primary_t          *rhsPrimaryp          = NULL;
   marpaESLIF_string_t                         *stringp              = NULL;
   marpaESLIF_bootstrap_utf_string_t           *namingp              = NULL;
+  marpaESLIF_action_t                         *regexactionp         = NULL;
   char                                        *lhsTypes;
   char                                        *lhsRuleTypes;
   marpaESLIF_symbol_t                         *symbolp;
@@ -6971,11 +6972,11 @@ static short __marpaESLIF_bootstrap_G1_action_symbol_ruleb(void *userDatavp, mar
                                                                               &priorityip,
                                                                               &pausei,
                                                                               NULL, /* latmbp */
-                                                                              (symbolp->type == MARPAESLIF_SYMBOL_TYPE_TERMINAL) ? &namingp : NULL,
+                                                                              MARPAESLIF_IS_TERMINAL(symbolp) ? &namingp : NULL,
                                                                               &symbolactionp,
                                                                               &eventInitializationp,
                                                                               &ifactionp,
-                                                                              NULL, /* regexactionpp */
+                                                                              MARPAESLIF_IS_TERMINAL(symbolp) ? &regexactionp : NULL,
                                                                               NULL, /* eventactionpp */
                                                                               NULL, /* defaultEncodingsp */
                                                                               NULL /* fallbackEncodingsp */
@@ -7042,6 +7043,14 @@ static short __marpaESLIF_bootstrap_G1_action_symbol_ruleb(void *userDatavp, mar
     _marpaESLIF_action_freev(symbolp->ifActionp);
     symbolp->ifActionp = _marpaESLIF_action_clonep(marpaESLIFp, ifactionp);
     if (MARPAESLIF_UNLIKELY(symbolp->ifActionp == NULL)) {
+      goto err;
+    }
+  }
+
+  if (regexactionp != NULL) {
+    _marpaESLIF_action_freev(symbolp->u.terminalp->regexActionp);
+    symbolp->u.terminalp->regexActionp = _marpaESLIF_action_clonep(marpaESLIFp, regexactionp);
+    if (MARPAESLIF_UNLIKELY(symbolp->u.terminalp->regexActionp == NULL)) {
       goto err;
     }
   }

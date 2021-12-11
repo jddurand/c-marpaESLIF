@@ -1254,7 +1254,8 @@ static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *mar
   terminalp->bytel                                       = 0;
   terminalp->pseudob                                     = pseudob;
   terminalp->eventSeti                                   = eventSeti;
-  terminalp->regexActionp                                = NULL; /* Shallow pointer */
+  terminalp->regexActionp                                = NULL; /* May be a shallow pointer unless an explicit regex-action in :symbol or :terminal rule */
+  terminalp->regexActionShallowb                         = 0; /* No op if regexActionp is NULL, c.f. _marpaESLIF_action_freev() */
 
   /* ----------- Modifiers ------------ */
   if (modifiers != NULL) {
@@ -3222,8 +3223,9 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
           goto err;
         }
       }
-      if (MARPAESLIF_IS_TERMINAL(symbolp)) {
-        symbolp->u.terminalp->regexActionp = grammarp->defaultRegexActionp;
+      if (MARPAESLIF_IS_TERMINAL(symbolp) && (symbolp->u.terminalp->regexActionp == NULL)) {
+        symbolp->u.terminalp->regexActionp        = grammarp->defaultRegexActionp;
+        symbolp->u.terminalp->regexActionShallowb = 1;
       }
     }
 
@@ -4998,7 +5000,9 @@ static inline void _marpaESLIF_terminal_freev(marpaESLIF_terminal_t *terminalp)
     if (terminalp->bytes != NULL) {
       free(terminalp->bytes);
     }
-    /* Note that terminalp->regexActionp is a shallow pointer */
+    if (! terminalp->regexActionShallowb) {
+      _marpaESLIF_action_freev(terminalp->regexActionp);
+    }
     free(terminalp);
   }
 }
@@ -13312,7 +13316,7 @@ static inline short __marpaESLIFRecognizer_readb(marpaESLIFRecognizer_t *marpaES
     }                                                           \
   } while (0)
 
-#define MARPAESLIF_SYMBOL_CREATESHOW(asciishowl, asciishows, symbolp) do { \
+#define _MARPAESLIF_SYMBOL_CREATESHOW(asciishowl, asciishows, symbolp, rhsb) do { \
     if (symbolp->lookaheadb > 0) {                                      \
       MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "(?= ");     \
     } else if (symbolp->lookaheadb < 0) {                               \
@@ -13320,7 +13324,13 @@ static inline short __marpaESLIFRecognizer_readb(marpaESLIFRecognizer_t *marpaES
     }                                                                   \
     switch (symbolp->type) {                                            \
     case MARPAESLIF_SYMBOL_TYPE_TERMINAL:                               \
-      MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, symbolp->u.terminalp->descp->asciis); \
+      /* If rhsb is set, we support the alias in the show */            \
+      if (rhsb && (symbolp->u.terminalp->descp != symbolp->descp)) {    \
+        MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "$");      \
+        MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, symbolp->descp->asciis); \
+      } else {                                                          \
+        MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, symbolp->u.terminalp->descp->asciis); \
+      }                                                                 \
       break;                                                            \
     case MARPAESLIF_SYMBOL_TYPE_META:                                   \
       if (symbolp->discardb) {                                          \
@@ -13347,8 +13357,12 @@ static inline short __marpaESLIFRecognizer_readb(marpaESLIFRecognizer_t *marpaES
     }                                                                   \
    } while (0)
 
+#define MARPAESLIF_SYMBOL_CREATESHOW(asciishowl, asciishows, symbolp) _MARPAESLIF_SYMBOL_CREATESHOW(asciishowl, asciishows, symbolp, 0)
+#define MARPAESLIF_RHS_SYMBOL_CREATESHOW(asciishowl, asciishows, symbolp) _MARPAESLIF_SYMBOL_CREATESHOW(asciishowl, asciishows, symbolp, 1)
+#define MARPAESLIF_LHS_SYMBOL_CREATESHOW(asciishowl, asciishows, symbolp) _MARPAESLIF_SYMBOL_CREATESHOW(asciishowl, asciishows, symbolp, 0)
+
 #define MARPAESLIF_LHS_CREATESHOW(asciishowl, asciishows, symbolp, declp) do { \
-    MARPAESLIF_SYMBOL_CREATESHOW(asciishowl, asciishows, symbolp);      \
+    MARPAESLIF_LHS_SYMBOL_CREATESHOW(asciishowl, asciishows, symbolp);  \
     if (declp != NULL) {                                                \
       MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, declp->luaparlistcb ? "<--" : "<-"); \
       MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, declp->luaparlists); \
@@ -13356,7 +13370,7 @@ static inline short __marpaESLIFRecognizer_readb(marpaESLIFRecognizer_t *marpaES
    } while (0)
 
 #define MARPAESLIF_RHS_CREATESHOW(asciishowl, asciishows, symbolp, callp) do { \
-    MARPAESLIF_SYMBOL_CREATESHOW(asciishowl, asciishows, symbolp);      \
+    MARPAESLIF_RHS_SYMBOL_CREATESHOW(asciishowl, asciishows, symbolp);  \
     if (callp != NULL) {                                                \
       MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, callp->luaexplistcb ? "-->" : "->"); \
       MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, callp->luaexplists); \
@@ -13685,7 +13699,8 @@ static inline void _marpaESLIF_grammar_createshowv(marpaESLIFGrammar_t *marpaESL
         ) {
       MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, ":symbol");
       MARPAESLIF_LEVEL_CREATESHOW(grammarp, asciishowl, asciishows);
-      MARPAESLIF_SYMBOL_CREATESHOW(asciishowl, asciishows, symbolp);
+      /* We voluntarily want to show the symbol as if it was an LHS definition */
+      MARPAESLIF_LHS_SYMBOL_CREATESHOW(asciishowl, asciishows, symbolp);
 
       if (symbolp->eventBefores != NULL) {
         MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, " pause => before event => ");

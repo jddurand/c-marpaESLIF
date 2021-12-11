@@ -171,6 +171,7 @@ struct marpaESLIF_terminal {
   short                          pseudob;             /* Pseudo terminal */
   int                            eventSeti;           /* Remember eventSeti */
   marpaESLIFAction_t            *regexActionp;        /* Shallow copy of grammar's default regex action */
+  short                          regexActionShallowb; /* Say if the pointer is shallow */
 };
 
 /* Matcher return values */
