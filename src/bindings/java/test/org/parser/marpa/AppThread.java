@@ -455,7 +455,7 @@ public class AppThread implements Runnable {
 			} else {
 				eslifLogger.debug("[" + context + "]  Input returned null");
 			}
-			for (int offset = -10; offset <= 10; offset++) {
+			for (int offset = -100; offset <= 100; offset++) {
 				bytes = eslifRecognizer.input(offset);
 				if (bytes != null) {
 					String input = new String(bytes, "UTF-8");

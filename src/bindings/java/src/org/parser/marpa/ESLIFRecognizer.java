@@ -78,7 +78,25 @@ public class ESLIFRecognizer {
 	private native void              jniPeek(ESLIFRecognizer eslifRecognizerPeeked) throws ESLIFException;
 	private native void              jniUnpeek() throws ESLIFException;
 	private native Object            jniSymbolTry(ESLIFSymbol eslifSymbol) throws ESLIFException;
+	private boolean                  shallow;
 
+	/**
+	 * A method that creates a valid instance from an internal marpaESLIFRecognizer engine.
+	 * This instance is guaranteed to not destroy the inner engine, and is used for recognizer callbacks
+	 * that are executed inside the ESLIFRecognizerInterface namespace.
+	 * 
+	 * @param eslifRecognizerInterface An ESLIFRecognizer interface
+	 * @throws ESLIFException if the interface failed
+	 * @return And ESLIFRecognizer instance
+	 */
+	public ESLIFRecognizer(ESLIFRecognizerInterface eslifRecognizerInterface) throws ESLIFException {
+		if (eslifRecognizerInterface == null) {
+			throw new IllegalArgumentException("eslifRecognizerInterface must not be null");
+		}
+		setEslifRecognizerInterface(eslifRecognizerInterface);
+		setShallow(true);
+	}
+	
 	/**
 	 * 
 	 * @param eslifGrammar the ESLIFGrammar instance
@@ -94,6 +112,7 @@ public class ESLIFRecognizer {
 		}
 		setEslifGrammar(eslifGrammar);
 		setEslifRecognizerInterface(eslifRecognizerInterface);
+		setShallow(false);
 		jniNew(eslifGrammar);
 	}
 	
@@ -617,5 +636,11 @@ public class ESLIFRecognizer {
 	}
 	private void setMarpaESLIFRecognizerContextp(ByteBuffer marpaESLIFRecognizerContextp) {
 		this.marpaESLIFRecognizerContextp = marpaESLIFRecognizerContextp;
+	}
+	private boolean isShallow() {
+		return shallow;
+	}
+	private void setShallow(boolean shallow) {
+		this.shallow = shallow;
 	}
 }

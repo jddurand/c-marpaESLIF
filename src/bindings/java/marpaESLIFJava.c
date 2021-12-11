@@ -781,6 +781,12 @@ static marpaESLIFJavaMethodCache_t marpaESLIFJavaMethodCacheArrayp[] = {
   #define MARPAESLIF_ESLIFRECOGNIZERINTERFACE_CLASS_setEslifRecognizer_METHODP      marpaESLIFJavaMethodCacheArrayp[118].methodp
   {      &MARPAESLIF_ESLIFRECOGNIZERINTERFACE_CLASSCACHE, "setEslifRecognizer",     "(Lorg/parser/marpa/ESLIFRecognizer;)V", 0 /* staticb */, NULL, 1 /* requiredb */ },
 
+  #define MARPAESLIF_ESLIFRECOGNIZER_CLASS_isShallow_METHODP                        marpaESLIFJavaMethodCacheArrayp[119].methodp
+  {      &MARPAESLIF_ESLIFRECOGNIZER_CLASSCACHE, "isShallow",                       "()Z", 0 /* staticb */, NULL, 1 /* requiredb */ },
+
+  #define MARPAESLIF_ESLIFRECOGNIZER_CLASS_setShallow_METHODP                       marpaESLIFJavaMethodCacheArrayp[120].methodp
+  {      &MARPAESLIF_ESLIFRECOGNIZER_CLASSCACHE, "setShallow",                      "(Z)V", 0 /* staticb */, NULL, 1 /* requiredb */ },
+
   { NULL }
 };
 
@@ -1158,6 +1164,7 @@ fieldsValuesStorage_t fieldsValues[] = {
 /* -------------- */
 static void  generateStringWithLoggerCallbackv(void *userDatavp, genericLoggerLevel_t logLeveli, const char *msgs);
 static void  genericLoggerCallbackv(void *userDatavp, genericLoggerLevel_t logLeveli, const char *msgs);
+static void  callLoggerInterfacev(jobject loggerInterfacep, genericLoggerLevel_t logLeveli, const char *msgs);
 static void  readerCallbackDisposev(void *userDatavp, char *inputcp, size_t inputl, short eofb, short characterStreamb, char *encodings, size_t encodingl);
 static short readerCallbackb(void *userDatavp, char **inputcpp, size_t *inputlp, short *eofbp, short *characterStreambp, char **encodingsp, size_t *encodinglp, marpaESLIFReaderDispose_t *disposeCallbackpp);
 static short ESLIF_contextb(JNIEnv *envp, jobject eslifp, genericLogger_t **genericLoggerpp, marpaESLIF_t **marpaESLIFpp);
@@ -2567,8 +2574,6 @@ static void genericLoggerCallbackv(void *userDatavp, genericLoggerLevel_t logLev
   marpaESLIFJavaGenericLoggerContext_t *marpaESLIFJavaGenericLoggerContextp = (marpaESLIFJavaGenericLoggerContext_t *) userDatavp;
   JNIEnv                               *envp;
   jobject                               loggerInterfacep;
-  jmethodID                             methodp;
-  jstring                               stringp;
 
   if (marpaESLIFJavaGenericLoggerContextp == NULL) {
     /* Impossible IMHO */
@@ -2582,6 +2587,22 @@ static void genericLoggerCallbackv(void *userDatavp, genericLoggerLevel_t logLev
 
   loggerInterfacep = (*envp)->CallStaticObjectMethod(envp, MARPAESLIF_ESLIFEVENTTYPE_CLASSP, MARPAESLIF_ESLIF_CLASS_getLoggerInterfaceByIndicep_METHODP, marpaESLIFJavaGenericLoggerContextp->indice);
   if (loggerInterfacep == NULL) {
+    return;
+  }
+
+  callLoggerInterfacev(loggerInterfacep, logLeveli, msgs);
+}
+
+/*****************************************************************************/
+static void callLoggerInterfacev(jobject loggerInterfacep, genericLoggerLevel_t logLeveli, const char *msgs)
+/*****************************************************************************/
+{
+  JNIEnv     *envp;
+  jmethodID   methodp;
+  jstring     stringp;
+
+  /* Logging callback is never running in another thread - no need to attach */
+  if (((*marpaESLIF_vmp)->GetEnv(marpaESLIF_vmp, (void **) &envp, MARPAESLIF_JNI_VERSION) != JNI_OK) || (envp == NULL)) {
     return;
   }
 
@@ -3438,14 +3459,13 @@ JNIEXPORT jbyteArray JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniInput(JNIE
   size_t                  realinputl;
   size_t                  deltal;
   char                   *maxinputs;
-  jobject                 eslifGrammarp;
-  jobject                 genericLoggerContextp;
+  jobject                 eslifLoggerInterfacep;
 
   if (! ESLIFRecognizer_contextb(envp, eslifRecognizerp, &marpaESLIFRecognizerp, NULL /* marpaESLIFJavaRecognizerContextpp */)) {
     goto err;
   }
 
-  if (!  marpaESLIFRecognizer_inputb(marpaESLIFRecognizerp, &inputs, &inputl)) {
+  if (! marpaESLIFRecognizer_inputb(marpaESLIFRecognizerp, &inputs, &inputl)) {
     RAISEEXCEPTIONF(envp, "marpaESLIFRecognizer_inputb failure, %s", strerror(errno));
   }
 
@@ -3458,15 +3478,10 @@ JNIEXPORT jbyteArray JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniInput(JNIE
     }
     realinputs += offset;
     if ((realinputs < inputs) || (realinputs > maxinputs)) {
-      /* Get eslif instance */
-      eslifGrammarp = (*envp)->CallObjectMethod(envp, eslifRecognizerp, MARPAESLIF_ESLIFRECOGNIZER_CLASS_getEslifGrammar_METHODP);
-      if (eslifGrammarp == NULL) {
-        RAISEEXCEPTION(envp, "eslifGrammarp is NULL");
-      }
-      /* Get genericLoggerContext */
-      genericLoggerContextp = (*envp)->CallObjectMethod(envp, eslifGrammarp, MARPAESLIF_ESLIF_CLASS_getGenericLoggerContextp_METHODP);
-      if (genericLoggerContextp != NULL) {
-        genericLoggerCallbackv(genericLoggerContextp, GENERICLOGGER_LOGLEVEL_WARNING, "input() goes beyond either end of input buffer");
+      /* Get eslifLoggerInterface instance */
+      eslifLoggerInterfacep = (*envp)->CallObjectMethod(envp, eslifRecognizerp, MARPAESLIF_ESLIFRECOGNIZER_CLASS_getLoggerInterfacep_METHODP);
+      if (eslifLoggerInterfacep != NULL) {
+        callLoggerInterfacev(eslifLoggerInterfacep, GENERICLOGGER_LOGLEVEL_WARNING, "input() goes beyond either end of input buffer");
       }
       /* Default value is already NULL */
     } else {
