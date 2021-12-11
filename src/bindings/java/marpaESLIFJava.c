@@ -775,6 +775,12 @@ static marpaESLIFJavaMethodCache_t marpaESLIFJavaMethodCacheArrayp[] = {
   #define MARPAESLIF_ESLIFSYMBOL_CLASS_setMarpaESLIFSymbolContextp_METHODP          marpaESLIFJavaMethodCacheArrayp[116].methodp
   {      &MARPAESLIF_ESLIFSYMBOL_CLASSCACHE, "setMarpaESLIFSymbolContextp",         "(Ljava/nio/ByteBuffer;)V", 0 /* staticb */, NULL, 1 /* requiredb */ },
 
+  #define MARPAESLIF_ESLIFRECOGNIZERINTERFACE_CLASS_getEslifRecognizer_METHODP      marpaESLIFJavaMethodCacheArrayp[117].methodp
+  {      &MARPAESLIF_ESLIFRECOGNIZERINTERFACE_CLASSCACHE, "getEslifRecognizer",     "()Lorg/parser/marpa/ESLIFRecognizer;", 0 /* staticb */, NULL, 1 /* requiredb */ },
+
+  #define MARPAESLIF_ESLIFRECOGNIZERINTERFACE_CLASS_setEslifRecognizer_METHODP      marpaESLIFJavaMethodCacheArrayp[118].methodp
+  {      &MARPAESLIF_ESLIFRECOGNIZERINTERFACE_CLASSCACHE, "setEslifRecognizer",     "(Lorg/parser/marpa/ESLIFRecognizer;)V", 0 /* staticb */, NULL, 1 /* requiredb */ },
+
   { NULL }
 };
 
@@ -4892,7 +4898,7 @@ static short marpaESLIFJava_recognizerIfCallbackb(void *userDatavp, marpaESLIFRe
   short                              rcb;
   jbyteArray                         byteArrayp;
 
-  /* Symbol callback is never running in another thread - no need to attach */
+  /* If callback is never running in another thread - no need to attach */
   if (((*marpaESLIF_vmp)->GetEnv(marpaESLIF_vmp, (void **) &envp, MARPAESLIF_JNI_VERSION) != JNI_OK) || (envp == NULL)) {
     goto err;
   }
@@ -5046,7 +5052,7 @@ static short marpaESLIFJava_recognizerRegexCallbackb(void *userDatavp, marpaESLI
   short                                      rcb;
   size_t                                     l;
 
-  /* Symbol callback is never running in another thread - no need to attach */
+  /* Regex callback is never running in another thread - no need to attach */
   if (((*marpaESLIF_vmp)->GetEnv(marpaESLIF_vmp, (void **) &envp, MARPAESLIF_JNI_VERSION) != JNI_OK) || (envp == NULL)) {
     goto err;
   }

@@ -92,7 +92,7 @@ public interface ESLIFRecognizerInterface {
 	/**
 	 * Set current recognizer
 	 * 
-	 * The if-action and regex-action callbacks are executed using an instance of ESLIFRecognizerInterface.
+	 * All recognizer callbacks are executed using an instance of ESLIFRecognizerInterface.
 	 *
 	 * Whenever ESLIF executes them, it will call this method with a shallow copy of current ESLIFRecognizer.
 	 */
@@ -100,7 +100,7 @@ public interface ESLIFRecognizerInterface {
 	/**
 	 * Get current recognizer
 	 * 
-	 * This method retrieve the current ESLIFRecognizer injected at every if-action and regex-action callbacks.
+	 * This method retrieve the current ESLIFRecognizer injected at every recognizer callback.
 	 */
 	public ESLIFRecognizer getEslifRecognizer();
 }
