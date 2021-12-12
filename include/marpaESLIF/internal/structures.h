@@ -326,7 +326,7 @@ struct marpaESLIF_grammar {
   marpaESLIFAction_t    *defaultRuleActionp;                 /* Default action for rules - never NULL */
   marpaESLIF_internal_rule_action_t defaultRuleActione;      /* For faster lookup */
   marpaESLIFAction_t    *defaultEventActionp;                /* Default action for events - can be NULL */
-  marpaESLIFAction_t    *defaultRegexActionp;                /* Default regex action, it is transversal and applies to all regexes of a grammar - can be NULL */
+  marpaESLIFAction_t    *defaultRegexActionp;                /* Default regex action, applies to all regexes of a grammar - can be NULL */
   int                    starti;                             /* Default start symbol ID - filled during grammar validation */
   char                  *starts;                             /* Default start symbol name - filled during grammar validation - shallow pointer */
   int                   *ruleip;                             /* Array of rule IDs - filled by grammar validation */
@@ -578,8 +578,8 @@ struct marpaESLIFRecognizer {
   size_t                       nSymbolPristinel;
   int                          *symbolArrayPristinep; /* This is shallow pointer! */
 
-  /* Last discard information is NOT available via last_complete because formally there is */
-  /* no token injected in the grammar: discard is a transversal thing. So, we trackb is on */
+  /* Last discard information is NOT available via last_complete because it is not */
+  /* associated with any particular grammar. So, when trackb is on */
   /* the only way to get last discard value is to have an explicit area for it. */
   size_t                       lastDiscardl;    /* Number of bytes */
   char                        *lastDiscards;    /* Bytes */

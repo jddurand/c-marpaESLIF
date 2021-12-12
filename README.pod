@@ -154,7 +154,9 @@ We say input stream: this is another dimension (we suppose from now on that the 
 
 =head3 Sub-recognizers
 
-The stream management mentioned above is transversal to any grammar: As soon as "terminal" is in reality a referenced symbol, a sub-recognizer is instantiated and it shares the stream with its parent:
+The stream management mentioned above applies to all grammars:
+As soon as "terminal" is in reality a referenced symbol,
+a sub-recognizer is instantiated and it shares the stream with its parent:
 
 
                     TOP RECOGNIZER ON GRAMMAR LEVEL 0
@@ -210,8 +212,7 @@ The stream management mentioned above is transversal to any grammar: As soon as 
 This is recursive: there will as many sub-recognizers instantiated as there are sub-grammars involved.
 For instance, if terminal C<U2> above is a referenced symbol at grammar level C<l>,
 a second sub-recognizer will be instantiated by the first sub-recognizer.
-Every child recognizer is shares all needed transveral information,
-that is everything about stream management.
+Every child recognizer shares all information about stream management.
 The main difference between the top recognizer
 and any child recognizer is that a child recognizer
 is always doing an internal valuation to retreive the span in the input stream for,
