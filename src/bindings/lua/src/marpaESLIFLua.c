@@ -1989,6 +1989,8 @@ static short marpaESLIFLua_paramIsRecognizerInterfacev(lua_State *L, int stacki)
 /****************************************************************************/
 {
   static const char *funcs = "marpaESLIFLua_paramIsRecognizerInterfacev";
+  int                i;
+  int                typei;
   static const char *recognizerFunctions[] = {
     "read",
     "isEof",
@@ -1998,12 +2000,10 @@ static short marpaESLIFLua_paramIsRecognizerInterfacev(lua_State *L, int stacki)
     "isWithDisableThreshold",
     "isWithExhaustion",
     "isWithNewline",
-    "isWithTrack",
-    "setRecognizer",
-    "getRecognizer"
+    "isWithTrack"
   };
-  int                i;
-  int                typei;
+  /* Note that when running embedded lua actions, setRecognizer and getRecognizer are NEVER available */
+  /* but the recognizer is always available through the global marpaESLIFRecognizer */
 
   /* Verify that the recognizer can do all wanted methods */
   if (! marpaESLIFLua_lua_type(&typei, L, stacki)) goto err;
@@ -2012,14 +2012,14 @@ static short marpaESLIFLua_paramIsRecognizerInterfacev(lua_State *L, int stacki)
     goto err;
   }
   for (i = 0; i < sizeof(recognizerFunctions)/sizeof(recognizerFunctions[0]); i++) {
-    if (! marpaESLIFLua_lua_getfield(NULL,L, stacki, recognizerFunctions[i])) goto err;                             /* Stack: stack1, ..., stacki, field */
+    if (! marpaESLIFLua_lua_getfield(NULL,L, stacki, recognizerFunctions[i])) goto err; /* Stack: stack1, ..., stacki, field */
     if (! marpaESLIFLua_lua_type(&typei, L, -1)) goto err;
     if (typei != LUA_TFUNCTION) {
-      if (! marpaESLIFLua_lua_pop(L, 1)) goto err;                               /* Stack: stack1, ..., stacki */
+      if (! marpaESLIFLua_lua_pop(L, 1)) goto err;                                      /* Stack: stack1, ..., stacki */
       marpaESLIFLua_luaL_errorf(L, "recognizer interface must have a field named '%s' that is a function", recognizerFunctions[i]);
       goto err;
     } else {
-      if (! marpaESLIFLua_lua_pop(L, 1)) goto err;                               /* Stack: stack1, ..., stacki */
+      if (! marpaESLIFLua_lua_pop(L, 1)) goto err;                                      /* Stack: stack1, ..., stacki */
     }
   }
 
@@ -10270,15 +10270,51 @@ static short marpaESLIFLua_setContextb(marpaESLIFRecognizer_t *marpaESLIFRecogni
 static inline short marpaESLIFLua_setRecognizerEngineForCallbackv(lua_State *L, marpaESLIFLuaRecognizerContext_t *marpaESLIFLuaRecognizerContextp, marpaESLIFRecognizer_t *marpaESLIFRecognizerp)
 /*****************************************************************************/
 {
-  short rcb;
+  short                                setRecognizerb;
+  int                                  typei;
+  marpaESLIFOption_t                  *marpaESLIFOptionp;
+  genericLogger_t                     *genericLoggerp;
+  marpaESLIFLuaGenericLoggerContext_t *marpaESLIFLuaGenericLoggerContextp = NULL;
+  short                                rcb;
 
-  /* The unmanaged object is on the stack - we inject it in the interface using setEslifRecognizer */
-  MARPAESLIFLUA_CALLBACKV(L,
-                          marpaESLIFLuaRecognizerContextp->recognizerInterface_r,
-                          "setRecognizer",
-                          1 /* nargs */,
-                          if (! marpaESLIFLua_marpaESLIFRecognizer_shallowi(L, marpaESLIFLuaRecognizerContextp->recognizerInterface_r, marpaESLIFRecognizerp)) goto err;
-                          );
+  if (marpaESLIFLuaRecognizerContextp->recognizerInterface_r != LUA_NOREF) {
+    MARPAESLIFLUA_DEREF(L, marpaESLIFLuaRecognizerContextp->recognizerInterface_r); /* Stack: ..., recognizerInterface */
+    if (! marpaESLIFLua_lua_getfield(NULL,L, -1, "setRecognizer")) goto err;        /* Stack: ..., recognizerInterface, field */
+    if (! marpaESLIFLua_lua_type(&typei, L, -1)) goto err;
+    if (typei != LUA_TNIL) {
+      if (typei != LUA_TFUNCTION) {
+        setRecognizerb = 0;
+        /* Try to emit a warning */
+        marpaESLIFOptionp = marpaESLIF_optionp(marpaESLIFGrammar_eslifp(marpaESLIFRecognizer_grammarp(marpaESLIFLuaRecognizerContextp->marpaESLIFRecognizerp)));
+        if (marpaESLIFOptionp != NULL) {
+          genericLoggerp = marpaESLIFOptionp->genericLoggerp;
+          if (genericLoggerp != NULL) {
+            marpaESLIFLuaGenericLoggerContextp = (marpaESLIFLuaGenericLoggerContext_t *) genericLogger_userDatavp_getp(genericLoggerp);
+            if (marpaESLIFLuaGenericLoggerContextp != NULL) {
+              marpaESLIFLua_genericLoggerCallbackv(marpaESLIFLuaGenericLoggerContextp, GENERICLOGGER_LOGLEVEL_WARNING, "setRecognizer exist but is not a function");
+            }
+          }
+        }
+      } else {
+        setRecognizerb = 1;
+      }
+    } else {
+      setRecognizerb = 0;
+    }
+    if (! marpaESLIFLua_lua_pop(L, 2)) goto err;                                    /* Stack: ...  */
+  } else {
+    setRecognizerb = 0;
+  }
+
+  if (setRecognizerb) {
+    /* The unmanaged object is on the stack - we inject it in the interface using setEslifRecognizer */
+    MARPAESLIFLUA_CALLBACKV(L,
+                            marpaESLIFLuaRecognizerContextp->recognizerInterface_r,
+                            "setRecognizer",
+                            1 /* nargs */,
+                            if (! marpaESLIFLua_marpaESLIFRecognizer_shallowi(L, marpaESLIFLuaRecognizerContextp->recognizerInterface_r, marpaESLIFRecognizerp)) goto err;
+                            );
+  }
 
   rcb = 1;
   goto done;
