@@ -1254,8 +1254,6 @@ static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *mar
   terminalp->bytel                                       = 0;
   terminalp->pseudob                                     = pseudob;
   terminalp->eventSeti                                   = eventSeti;
-  terminalp->regexActionp                                = NULL; /* May be a shallow pointer unless an explicit regex-action in :symbol or :terminal rule */
-  terminalp->regexActionShallowb                         = 0; /* No op if regexActionp is NULL, c.f. _marpaESLIF_action_freev() */
 
   /* ----------- Modifiers ------------ */
   if (modifiers != NULL) {
@@ -3223,10 +3221,6 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
           goto err;
         }
       }
-      if (MARPAESLIF_IS_TERMINAL(symbolp) && (symbolp->u.terminalp->regexActionp == NULL)) {
-        symbolp->u.terminalp->regexActionp        = grammarp->defaultRegexActionp;
-        symbolp->u.terminalp->regexActionShallowb = 1;
-      }
     }
 
     /* Before precomputing we have to clone. Why ? This is because the bootstrap is changing symbols event behaviours after creating them. */
@@ -5018,9 +5012,6 @@ static inline void _marpaESLIF_terminal_freev(marpaESLIF_terminal_t *terminalp)
     if (terminalp->bytes != NULL) {
       free(terminalp->bytes);
     }
-    if (! terminalp->regexActionShallowb) {
-      _marpaESLIF_action_freev(terminalp->regexActionp);
-    }
     free(terminalp);
   }
 }
@@ -5897,7 +5888,7 @@ static inline short _marpaESLIFRecognizer_terminal_matcherb(marpaESLIFRecognizer
     }
 
     if (marpaESLIF_regexp->calloutb) {
-      if (MARPAESLIFRECOGNIZER_IS_TOP(marpaESLIFRecognizerp) && (terminalp->regexActionp != NULL)) {
+      if (MARPAESLIFRECOGNIZER_IS_TOP(marpaESLIFRecognizerp) && (marpaESLIFRecognizerp->marpaESLIFGrammarp->grammarp->defaultRegexActionp != NULL)) {
         /* Update callout userdata context - take care this will segfault IF you have callouts in the regexp during bootstrap. */
         marpaESLIF_regexp->callout_context.marpaESLIFRecognizerp = marpaESLIFRecognizerp;
         pcre2_set_callout(marpaESLIF_regexp->match_contextp, _marpaESLIF_pcre2_callouti, &(marpaESLIF_regexp->callout_context));
@@ -21233,7 +21224,7 @@ static int _marpaESLIF_pcre2_callouti(pcre2_callout_block *blockp, void *userDat
   marpaESLIF_grammar_t               *grammarp                    = marpaESLIFGrammarp->grammarp;
   marpaESLIFValueResultPair_t        *marpaESLIFValuePairsp       = marpaESLIFRecognizerp->_marpaESLIFCalloutBlockPairs;
   marpaESLIF_terminal_t              *terminalp                   = contextp->terminalp;
-  marpaESLIFAction_t                 *regexActionp                = terminalp->regexActionp;
+  marpaESLIFAction_t                 *regexActionp                = grammarp->defaultRegexActionp;
   marpaESLIFRecognizerRegexCallback_t regexCallbackp;
   int                                 rci;
   size_t                              offset_vectorl;

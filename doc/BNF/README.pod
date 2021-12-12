@@ -614,14 +614,7 @@ Please note that the C<if-action> will always be called with an argument of type
 
 =item C<regex-action>
 
-The grammar's C<regex-action> can be overwritten by setting such a C<:symbol> adverb, e.g.:
-
-  ::symbol ::= /xxx(?C1)/         regex-action => Custom_regexaction1
-  ::symbol ::= /yyy(?C"A string") regex-action => ::lua->Custom_regexaction2
-
-A callout is in the form C<(?CX)> (where C<X> is a number or a double-quoted string). The C<regex-action> is called with a I<marpaESLIFCalloutBlockp> argument that is of type C<MARPAESLIF_VALUE_TYPE_TABLE>, i.e. a hash in perl, a table in lua, and an I<ESLIFRegexCallout> instance in java.
-
-Only terminals can have a C<regex-action>, and they are no-op unless on true regular expressions in the form C</.../> that have callouts.
+A regex callout is in the form C<(?CX)> (where C<X> is a number or a double-quoted string). The grammar's C<regex-action> is called with a I<marpaESLIFCalloutBlockp> argument that is of type C<MARPAESLIF_VALUE_TYPE_TABLE>, i.e. a hash in perl, a table in lua, and an I<ESLIFRegexCallout> instance in java.
 
 =back
 
