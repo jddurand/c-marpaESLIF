@@ -82,7 +82,7 @@ public class AppJSONLua implements Runnable {
 						"# ----------- \n" +
 						"# JSON Arrays \n" +
 						"# ----------- \n" +
-						"array    ::= (-'['-) elements (-']'-)                                         # ::shift (default action) \n" +
+						"array    ::= (-/(\\[)(?C1)/-) elements (-/(\\])(?C\"Rsquare\")/-)                                         # ::shift (default action) \n" +
 						"elements ::= value*                               action => ::row             # Returns [ value1, ..., valuen ] \n" +
 						"                                                  separator      => comma     # ... separated by comma \n" +
 						"                                                  proper         => 1         # ... with no trailing separator \n" +
@@ -167,7 +167,7 @@ public class AppJSONLua implements Runnable {
 						"# Number extension \n" +
 						"# ---------------- \n" +
 						"# \n" +
-						"# number ::= /\\-?(?:(?:[1-9]?[0-9]+)|[0-9])(?:\\.[0-9]+)?(?:[eE](?:[+-])?[0-9]+)?/ # /* bignum */action => ::lua->lua_number \n" +
+						"# number ::= /(?:\\-?(?:(?:[1-9]?[0-9]+)|[0-9])(?:\\.[0-9]+)?(?:[eE](?:[+-])?[0-9]+)?)(C?17)/ # /* bignum */action => ::lua->lua_number \n" +
 						" \n" +
 						"# /* nan */number   ::= '-NaN':i                               action => ::lua->lua_nan \n" +
 						"# /* nan */number   ::=  'NaN':i                               action => ::lua->lua_nan \n" +

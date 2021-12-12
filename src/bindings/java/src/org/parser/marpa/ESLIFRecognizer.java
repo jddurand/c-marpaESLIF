@@ -40,7 +40,7 @@ public class ESLIFRecognizer {
 	private ESLIFRecognizer          eslifRecognizerPeeked        = null;
 	private ByteBuffer               marpaESLIFRecognizerp        = null;
 	private ByteBuffer               marpaESLIFRecognizerContextp = null;
-	private native void              jniNew(ESLIFGrammar eslifGrammar) throws ESLIFException;
+	private native void              jniNew(ESLIFGrammar eslifGrammar, boolean shallow) throws ESLIFException;
 	private native void              jniFree() throws ESLIFException;
 	private native boolean			 jniScan(boolean initialEvents) throws ESLIFException;
 	private native boolean 			 jniResume(int deltaLength) throws ESLIFException;
@@ -78,42 +78,43 @@ public class ESLIFRecognizer {
 	private native void              jniPeek(ESLIFRecognizer eslifRecognizerPeeked) throws ESLIFException;
 	private native void              jniUnpeek() throws ESLIFException;
 	private native Object            jniSymbolTry(ESLIFSymbol eslifSymbol) throws ESLIFException;
-	private boolean                  shallow;
 
 	/**
-	 * A method that creates a valid instance from an internal marpaESLIFRecognizer engine.
-	 * This instance is guaranteed to not destroy the inner engine, and is used for recognizer callbacks
-	 * that are executed inside the ESLIFRecognizerInterface namespace.
-	 * 
-	 * @param eslifRecognizerInterface An ESLIFRecognizer interface
-	 * @throws ESLIFException if the interface failed
-	 * @return And ESLIFRecognizer instance
-	 */
-	public ESLIFRecognizer(ESLIFRecognizerInterface eslifRecognizerInterface) throws ESLIFException {
-		if (eslifRecognizerInterface == null) {
-			throw new IllegalArgumentException("eslifRecognizerInterface must not be null");
-		}
-		setEslifRecognizerInterface(eslifRecognizerInterface);
-		setShallow(true);
-	}
-	
-	/**
+	 * Creates an ESLIFRecognizer instance
 	 * 
 	 * @param eslifGrammar the ESLIFGrammar instance
 	 * @param eslifRecognizerInterface the recognizer interface
 	 * @throws ESLIFException if the interface failed
 	 */
 	public ESLIFRecognizer(ESLIFGrammar eslifGrammar, ESLIFRecognizerInterface eslifRecognizerInterface) throws ESLIFException {
+		this(eslifGrammar, eslifRecognizerInterface, false);
+	}
+	
+	/**
+	 * Creates a shallow ESLIFRecognizer instance from an ESLIFRecognizerInterface.
+	 * 
+	 * This constructor should not be used by the end-user. The JNI uses it to create a shallow instance injected in ESLIFRecognizerInterface.
+	 * 
+	 * @param eslifRecognizerInterface the recognizer interface
+	 * @throws ESLIFException if the interface failed
+	 */
+	public ESLIFRecognizer(ESLIFRecognizerInterface eslifRecognizerInterface) throws ESLIFException {
+		this(null, eslifRecognizerInterface, true);
+	}
+	
+	private ESLIFRecognizer(ESLIFGrammar eslifGrammar, ESLIFRecognizerInterface eslifRecognizerInterface, boolean shallow) throws ESLIFException {
 		if (eslifGrammar == null) {
-			throw new IllegalArgumentException("eslifGrammar must not be null");
+			// This is fatal unless shallow is set
+			if (! shallow) {
+				throw new IllegalArgumentException("eslifGrammar must not be null");
+			}
 		}
 		if (eslifRecognizerInterface == null) {
 			throw new IllegalArgumentException("eslifRecognizerInterface must not be null");
 		}
 		setEslifGrammar(eslifGrammar);
 		setEslifRecognizerInterface(eslifRecognizerInterface);
-		setShallow(false);
-		jniNew(eslifGrammar);
+		jniNew(eslifGrammar, shallow);
 	}
 	
 	/**
@@ -636,11 +637,5 @@ public class ESLIFRecognizer {
 	}
 	private void setMarpaESLIFRecognizerContextp(ByteBuffer marpaESLIFRecognizerContextp) {
 		this.marpaESLIFRecognizerContextp = marpaESLIFRecognizerContextp;
-	}
-	private boolean isShallow() {
-		return shallow;
-	}
-	private void setShallow(boolean shallow) {
-		this.shallow = shallow;
 	}
 }

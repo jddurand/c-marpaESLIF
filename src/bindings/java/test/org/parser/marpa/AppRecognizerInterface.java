@@ -73,6 +73,7 @@ public class AppRecognizerInterface implements ESLIFRecognizerInterface {
 		}
 		
 		public void setEslifRecognizer(ESLIFRecognizer eslifRecognizer) {
+			eslifLoggerInterface.debug("... setEslifRecognizer is called: " + eslifRecognizer);
 			this.eslifRecognizer = eslifRecognizer;
 		}
 
@@ -91,13 +92,21 @@ public class AppRecognizerInterface implements ESLIFRecognizerInterface {
 			return true;
 		}	
 
-		public int regex_action(ESLIFRegexCallout eslifRegexCallout) throws ESLIFException {
+		public int regex_action(ESLIFRegexCallout eslifRegexCallout) throws ESLIFException, UnsupportedEncodingException {
 			eslifLoggerInterface.debug("regex_action(" + eslifRegexCallout + ")");
 			int grammarLevel = eslifRegexCallout.getGrammarLevel();
 			int symbolId = eslifRegexCallout.getSymbolId();
 			ESLIFGrammar eslifGrammar  = this.getEslifRecognizer().getEslifGrammar();
 			ESLIFGrammarSymbolProperties eslifSymbolProperties = eslifGrammar.symbolPropertiesByLevel(grammarLevel, symbolId);
 			eslifLoggerInterface.debug("... regex_action was for symbol " + symbolId + " of grammar level " + grammarLevel + " :" + eslifSymbolProperties);
+			eslifLoggerInterface.debug("... regex_action current input length: " + eslifRecognizer.inputLength());
+			byte[] bytes = eslifRecognizer.input(0);
+			if (bytes != null) {
+				String input = new String(bytes, "UTF-8");
+				eslifLoggerInterface.debug("... regex_action current input is: " + input);
+			} else {
+				eslifLoggerInterface.debug("... regex_action current input is null");
+			}
 			return 0;
 		}	
 
