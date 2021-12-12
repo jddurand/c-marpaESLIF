@@ -5199,11 +5199,6 @@ static short marpaESLIFJava_recognizerRegexCallbackb(void *userDatavp, marpaESLI
   if (HAVEEXCEPTION(envp)) {
     goto err;
   }
-  /* Set the recognizer */
-  (*envp)->CallVoidMethod(envp, eslifRecognizerShallowp, MARPAESLIF_ESLIFRECOGNIZER_CLASS_setEslifGrammar_METHODP, marpaESLIFJavaRecognizerContextp->eslifGrammarp);
-  if (HAVEEXCEPTION(envp)) {
-    goto err;
-  }
 
   /* Store marpaESLIFRecognizerp */
   MARPAESLIF_PTR2BYTEBUFFER(marpaESLIFRecognizer, marpaESLIFRecognizerp);
