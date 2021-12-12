@@ -158,7 +158,7 @@ event Expression$ = completed Expression
 event ^Expression = predicted Expression
 Expression ::=
     Number                                           action => do_int            name => 'Expression is Number'
-    | '(' Expression ')'              assoc => group action => ::copy[1]         name => 'Expression is ()'
+    | /\((?C12)/ Expression ')'              assoc => group action => ::copy[1]         name => 'Expression is ()'
    ||     Expression '**' Expression  assoc => right                             name => 'Expression is **'
    ||     Expression  '*' Expression                                             name => 'Expression is *'
     |     Expression  '/' Expression                                             name => 'Expression is /'
@@ -440,31 +440,43 @@ recognizerInterface = {
       logger:tracef("isWithTrack => %s", tostring(isWithTrack))
       return isWithTrack
    end,
+   ["setRecognizer"]            = function(self, recognizer)
+      self._recognizer = recognizer
+   end,
+   ["getRecognizer"]            = function(self)
+      return self._recognizer
+   end,
    ["if_number"]            = function(self, lexeme)
       local if_number = true
       logger:tracef("if_number('%s') => %s", tostring(lexeme), tostring(if_number))
+      logger:tracef('if_number: recognizer             = %s', tostring(self:getRecognizer()))
+      logger:tracef('if_number: recognizer.input(0, 3) = %s', tostring(self:getRecognizer():input(0, 3)))
       return if_number
    end,
    ["do_event"]            = function(self, events)
       local do_event = true
       logger:tracef('%s', tableDump(events))
       logger:tracef("do_event => true", tostring(do_event))
+      logger:tracef('do_event: recognizer             = %s', tostring(self:getRecognizer()))
+      logger:tracef('do_event: recognizer.input(0, 3) = %s', tostring(self:getRecognizer():input(0, 3)))
       return do_event
    end,
    ["do_regex"]             = function(self, block)
       logger:tracef("do_regex(%s)", block)
-      logger:tracef('lua_regexaction: calloutNumber   = %s', tostring(block:getCalloutNumber()))
-      logger:tracef('lua_regexaction: calloutString   = %s', tostring(block:getCalloutString()))
-      logger:tracef('lua_regexaction: subject         = %s', tostring(block:getSubject()))
-      logger:tracef('lua_regexaction: pattern         = %s', tostring(block:getPattern()))
-      logger:tracef('lua_regexaction: captureTop      = %s', tostring(block:getCaptureTop()))
-      logger:tracef('lua_regexaction: captureLast     = %s', tostring(block:getCaptureLast()))
-      logger:tracef('lua_regexaction: offsetVector    = %s', tableDump(block:getOffsetVector()))
-      logger:tracef('lua_regexaction: mark            = %s', tostring(block:getMark()))
-      logger:tracef('lua_regexaction: currentPosition = %s', tostring(block:getCurrentPosition()))
-      logger:tracef('lua_regexaction: nextItem        = %s', tostring(block:getNextItem()))
-      logger:tracef('lua_regexaction: grammarLevel    = %s', tostring(block:getGrammarLevel()))
-      logger:tracef('lua_regexaction: symbolId        = %s', tostring(block:getSymbolId()))
+      logger:tracef('lua_regexaction: calloutNumber          = %s', tostring(block:getCalloutNumber()))
+      logger:tracef('lua_regexaction: calloutString          = %s', tostring(block:getCalloutString()))
+      logger:tracef('lua_regexaction: subject                = %s', tostring(block:getSubject()))
+      logger:tracef('lua_regexaction: pattern                = %s', tostring(block:getPattern()))
+      logger:tracef('lua_regexaction: captureTop             = %s', tostring(block:getCaptureTop()))
+      logger:tracef('lua_regexaction: captureLast            = %s', tostring(block:getCaptureLast()))
+      logger:tracef('lua_regexaction: offsetVector           = %s', tableDump(block:getOffsetVector()))
+      logger:tracef('lua_regexaction: mark                   = %s', tostring(block:getMark()))
+      logger:tracef('lua_regexaction: currentPosition        = %s', tostring(block:getCurrentPosition()))
+      logger:tracef('lua_regexaction: nextItem               = %s', tostring(block:getNextItem()))
+      logger:tracef('lua_regexaction: grammarLevel           = %s', tostring(block:getGrammarLevel()))
+      logger:tracef('lua_regexaction: symbolId               = %s', tostring(block:getSymbolId()))
+      logger:tracef('lua_regexaction: recognizer             = %s', tostring(self:getRecognizer()))
+      logger:tracef('lua_regexaction: recognizer.input(0, 3) = %s', tostring(self:getRecognizer():input(0, 3)))
       return 0
    end,
    ["parameterizedRhs"]             = function(self, parameter, undef, explanation)
@@ -480,6 +492,8 @@ recognizerInterface = {
         output = "start ::= . => parameterizedRhs->("..parameter..", { x = 'Value of x', y = 'Value of y' }, 'Input should be \""..parameter.."\"')"
       end
       logger:tracef("parameterizedRhs([%s] %s, [%s] %s, [%s] %s) => %s", type(parameter), tostring(parameter), type(undef), tostring(undef), type(explanation), tostring(explanation), output)
+      logger:tracef('parameterizedRhs: recognizer             = %s', tostring(self:getRecognizer()))
+      logger:tracef('parameterizedRhs: recognizer.input(0, 3) = %s', tostring(self:getRecognizer():input(0, 3)))
       return output
    end
 }

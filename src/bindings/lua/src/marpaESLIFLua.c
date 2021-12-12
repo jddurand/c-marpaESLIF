@@ -227,6 +227,7 @@ static int                                marpaESLIFLua_marpaESLIFRecognizer_new
 #ifdef MARPAESLIFLUA_EMBEDDED
 static int                                marpaESLIFLua_marpaESLIFRecognizer_newFromUnmanagedi(lua_State *L, marpaESLIFRecognizer_t *marpaESLIFRecognizerUnmanagedp);
 #endif
+static int                                marpaESLIFLua_marpaESLIFRecognizer_shallowi(lua_State *L, int recognizerInterface_r, marpaESLIFRecognizer_t *marpaESLIFRecognizerp);
 static int                                marpaESLIFLua_marpaESLIFRecognizer_freei(lua_State *L);
 static int                                marpaESLIFLua_marpaESLIFRecognizer_newFromi(lua_State *L);
 static int                                marpaESLIFLua_marpaESLIFRecognizer_set_exhausted_flagi(lua_State *L);
@@ -322,6 +323,7 @@ static short                              marpaESLIFLua_popContextb(marpaESLIFRe
 static short                              marpaESLIFLua_getContextb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFValueResult_t *contextp);
 static short                              marpaESLIFLua_setContextb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFValueResult_t *contextp);
 #endif
+static inline short                       marpaESLIFLua_setRecognizerEngineForCallbackv(lua_State *L, marpaESLIFLuaRecognizerContext_t *marpaESLIFLuaRecognizerContextp, marpaESLIFRecognizer_t *marpaESLIFRecognizerp);
 
 #define MARPAESLIFLUA_NOOP
 
@@ -1996,7 +1998,9 @@ static short marpaESLIFLua_paramIsRecognizerInterfacev(lua_State *L, int stacki)
     "isWithDisableThreshold",
     "isWithExhaustion",
     "isWithNewline",
-    "isWithTrack"
+    "isWithTrack",
+    "setRecognizer",
+    "getRecognizer"
   };
   int                i;
   int                typei;
@@ -2012,7 +2016,7 @@ static short marpaESLIFLua_paramIsRecognizerInterfacev(lua_State *L, int stacki)
     if (! marpaESLIFLua_lua_type(&typei, L, -1)) goto err;
     if (typei != LUA_TFUNCTION) {
       if (! marpaESLIFLua_lua_pop(L, 1)) goto err;                               /* Stack: stack1, ..., stacki */
-      marpaESLIFLua_luaL_errorf(L, "recognizer table must have a field named '%s' that is a function", recognizerFunctions[i]);
+      marpaESLIFLua_luaL_errorf(L, "recognizer interface must have a field named '%s' that is a function", recognizerFunctions[i]);
       goto err;
     } else {
       if (! marpaESLIFLua_lua_pop(L, 1)) goto err;                               /* Stack: stack1, ..., stacki */
@@ -2156,7 +2160,7 @@ static short  marpaESLIFLua_recognizerContextInitb(lua_State *L, marpaESLIF_t *m
   if (recognizerInterfaceStacki != 0) {
     if (! marpaESLIFLua_lua_pushnil(L)) goto err;                                                    /* Stack: xxx, nil */
     if (! marpaESLIFLua_lua_copy(L, recognizerInterfaceStacki, -1)) goto err;                        /* Stack: xxx, recognizerInterface */
-    MARPAESLIFLUA_REF(L, marpaESLIFLuaRecognizerContextp->recognizerInterface_r);            /* Stack: xxx */
+    MARPAESLIFLUA_REF(L, marpaESLIFLuaRecognizerContextp->recognizerInterface_r);                    /* Stack: xxx */
   } else {
     marpaESLIFLuaRecognizerContextp->recognizerInterface_r = LUA_NOREF;
   }
@@ -4113,6 +4117,9 @@ static short marpaESLIFLua_ifCallbackb(void *userDatavp, marpaESLIFRecognizer_t 
 
   /* fprintf(stdout, "... action %s start\n", marpaESLIFLuaRecognizerContextp->actions); fflush(stdout); fflush(stderr); */
 
+  /* We set a unmanaged recognizer object in recognizer interface */
+  if (! marpaESLIFLua_setRecognizerEngineForCallbackv(L, marpaESLIFLuaRecognizerContextp, marpaESLIFRecognizerp)) goto err;
+
   MARPAESLIFLUA_CALLBACKB(L,
                           marpaESLIFLuaRecognizerContextp->recognizerInterface_r,
                           actions,
@@ -4141,7 +4148,7 @@ static short marpaESLIFLua_ifCallbackb(void *userDatavp, marpaESLIFRecognizer_t 
 static short marpaESLIFLua_regexCallbackb(void *userDatavp, marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFValueResult_t *marpaESLIFCalloutBlockp, marpaESLIFValueResultInt_t *marpaESLIFValueResultOutp, short precompiledb)
 /*****************************************************************************/
 {
-  static const char           *funcs                      = "marpaESLIFLua_regexCallbackb";
+  static const char                *funcs                           = "marpaESLIFLua_regexCallbackb";
 #ifdef MARPAESLIFLUA_EMBEDDED
   marpaESLIFLuaRecognizerContext_t *marpaESLIFLuaRecognizerContextp = (marpaESLIFLuaRecognizerContext_t *) marpaESLIFRecognizerp->marpaESLIFLuaRecognizerContextp;
   /* When running embedded, the context can be injected by ESLIF or directly created inside Lua */
@@ -4157,6 +4164,9 @@ static short marpaESLIFLua_regexCallbackb(void *userDatavp, marpaESLIFRecognizer
   short                        rcb;
 
   /* fprintf(stdout, "... action %s start\n", marpaESLIFLuaRecognizerContextp->actions); fflush(stdout); fflush(stderr); */
+
+  /* We set a unmanaged recognizer object in recognizer interface */
+  if (! marpaESLIFLua_setRecognizerEngineForCallbackv(L, marpaESLIFLuaRecognizerContextp, marpaESLIFRecognizerp)) goto err;
 
   MARPAESLIFLUA_CALLBACKI(L,
                           marpaESLIFLuaRecognizerContextp->recognizerInterface_r,
@@ -4210,6 +4220,9 @@ static short marpaESLIFLua_generatorCallbackb(void *userDatavp, marpaESLIFRecogn
   size_t                        i;
 
   /* fprintf(stdout, "... action %s start\n", marpaESLIFLuaRecognizerContextp->actions); fflush(stdout); fflush(stderr); */
+
+  /* We set a unmanaged recognizer object in recognizer interface */
+  if (! marpaESLIFLua_setRecognizerEngineForCallbackv(L, marpaESLIFLuaRecognizerContextp, marpaESLIFRecognizerp)) goto err;
 
   MARPAESLIFLUA_CALLBACKS(L,
                           marpaESLIFLuaRecognizerContextp->recognizerInterface_r,
@@ -4265,6 +4278,9 @@ static short marpaESLIFLua_eventCallbackb(void *userDatavp, marpaESLIFRecognizer
   short                        rcb;
 
   /* fprintf(stdout, "... action %s start\n", marpaESLIFLuaRecognizerContextp->actions); fflush(stdout); fflush(stderr); */
+
+  /* We set a unmanaged recognizer object in recognizer interface */
+  if (! marpaESLIFLua_setRecognizerEngineForCallbackv(L, marpaESLIFLuaRecognizerContextp, marpaESLIFRecognizerp)) goto err;
 
   MARPAESLIFLUA_CALLBACKB(L,
                           marpaESLIFLuaRecognizerContextp->recognizerInterface_r,
@@ -4867,7 +4883,49 @@ static int marpaESLIFLua_marpaESLIFRecognizer_newFromUnmanagedi(lua_State *L, ma
  err:
   return 0;
 }
-#endif /* MARPAESLIFLUA_EMBEDDED */
+#endif
+
+/****************************************************************************/
+static int marpaESLIFLua_marpaESLIFRecognizer_shallowi(lua_State *L, int recognizerInterface_r, marpaESLIFRecognizer_t *marpaESLIFRecognizerp)
+/****************************************************************************/
+/* Quite the same as marpaESLIFLua_marpaESLIFRecognizer but for shallowing  */
+/* a recognizer, to be used in recognizer interface callback.               */
+/****************************************************************************/
+{
+  static const char                *funcs = "marpaESLIFLua_shallowi_newFromUnmanagedi";
+  marpaESLIFLuaRecognizerContext_t *marpaESLIFLuaRecognizerContextp;
+  marpaESLIF_t                     *marpaESLIFp;
+  int                               recognizerInterfaceStacki;
+  int                               topi;
+
+  if (! marpaESLIFLua_lua_gettop(&topi, L)) goto err;
+
+  marpaESLIFLuaRecognizerContextp = (marpaESLIFLuaRecognizerContext_t *) malloc(sizeof(marpaESLIFLuaRecognizerContext_t));
+  if (marpaESLIFLuaRecognizerContextp == NULL) {
+    marpaESLIFLua_luaL_errorf(L, "malloc failure, %s", strerror(errno));
+    goto err;
+  }
+
+  /* Push recognizer interface */
+  if (! marpaESLIFLua_lua_pushinteger(L, (lua_Integer) recognizerInterface_r)) goto err;
+  if (! marpaESLIFLua_lua_gettop(&recognizerInterfaceStacki, L)) goto err;
+
+  marpaESLIFp = marpaESLIFGrammar_eslifp(marpaESLIFRecognizer_grammarp(marpaESLIFRecognizerp));
+  if (! marpaESLIFLua_recognizerContextInitb(L, marpaESLIFp, 0 /* grammarStacki */, recognizerInterfaceStacki, 0 /* recognizerOrigStacki */, marpaESLIFLuaRecognizerContextp, 1 /* unmanagedb */)) goto err;
+  marpaESLIFLuaRecognizerContextp->marpaESLIFRecognizerp = marpaESLIFRecognizerp;
+  marpaESLIFLuaRecognizerContextp->managedb              = 0;
+
+  /* Clear the stack */
+  if (! marpaESLIFLua_lua_settop(L, topi)) goto err;
+
+  /* Push recognizer object */
+  MARPAESLIFLUA_PUSH_MARPAESLIFRECOGNIZER_OBJECT(L, marpaESLIFLuaRecognizerContextp);
+
+  return 1;
+
+ err:
+  return 0;
+}
 
 /****************************************************************************/
 static int marpaESLIFLua_marpaESLIFRecognizer_freei(lua_State *L)
@@ -9709,7 +9767,7 @@ static short marpaESLIFLuaJSONDecoder_readerb(void *userDatavp, char **inputcpp,
     int                            typei;                               \
     int                            topi;                                \
                                                                         \
-    fprintf(stderr, "... %s %s\n", methodName, memberName);             \
+    /* fprintf(stderr, "... %s %s\n", methodName, memberName); */       \
     if (! marpaESLIFLua_lua_gettop(&topi, L)) goto err;                 \
     if (topi != 1) {                                                    \
       marpaESLIFLua_luaL_errorf(L, "Usage: %s(%s)", funcs, "argument"); \
@@ -10207,3 +10265,27 @@ static short marpaESLIFLua_setContextb(marpaESLIFRecognizer_t *marpaESLIFRecogni
   return rcb;
 }
 #endif /* MARPAESLIFLUA_EMBEDDED */
+
+/*****************************************************************************/
+static inline short marpaESLIFLua_setRecognizerEngineForCallbackv(lua_State *L, marpaESLIFLuaRecognizerContext_t *marpaESLIFLuaRecognizerContextp, marpaESLIFRecognizer_t *marpaESLIFRecognizerp)
+/*****************************************************************************/
+{
+  short rcb;
+
+  /* The unmanaged object is on the stack - we inject it in the interface using setEslifRecognizer */
+  MARPAESLIFLUA_CALLBACKV(L,
+                          marpaESLIFLuaRecognizerContextp->recognizerInterface_r,
+                          "setRecognizer",
+                          1 /* nargs */,
+                          if (! marpaESLIFLua_marpaESLIFRecognizer_shallowi(L, marpaESLIFLuaRecognizerContextp->recognizerInterface_r, marpaESLIFRecognizerp)) goto err;
+                          );
+
+  rcb = 1;
+  goto done;
+
+ err:
+  rcb = 0;
+
+ done:
+  return rcb;
+}
