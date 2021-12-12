@@ -528,6 +528,10 @@ static const size_t  UTF8l = 5; /* "UTF-8" is 5 bytes in ASCII encoding */
     MARPAESLIFPERL_XV_STORE(hvp, key, newSViv((IV) iv));                \
   } while (0)
 
+#define MARPAESLIFPERL_XV_STORE_YESNO(hvp, key, yesno) do {             \
+    MARPAESLIFPERL_XV_STORE(hvp, key, ((yesno) ? &PL_sv_yes : &PL_sv_no)); \
+  } while (0)
+
 #define MARPAESLIFPERL_XV_STORE_IVARRAY(hvp, key, ivl, ivp) do {        \
     AV *_avp;                                                           \
     size_t _i;                                                          \
@@ -4158,7 +4162,8 @@ CODE:
   MARPAESLIFPERL_XV_STORE_IV         (avp, "eventBitSet",                symbolProperty.eventBitSet);
   MARPAESLIFPERL_XV_STORE_ACTION     (avp, "symbolAction",               symbolProperty.symbolActionp);
   MARPAESLIFPERL_XV_STORE_ACTION     (avp, "ifAction",                   symbolProperty.ifActionp);
-  MARPAESLIFPERL_XV_STORE_IV         (avp, "verbose",                    symbolProperty.verboseb);
+  MARPAESLIFPERL_XV_STORE_ACTION     (avp, "generatorAction",            symbolProperty.generatorActionp);
+  MARPAESLIFPERL_XV_STORE_YESNO      (avp, "verbose",                    symbolProperty.verboseb);
 
   RETVAL = marpaESLIFPerl_call_actionp(aTHX_ constantsp->MarpaX__ESLIF__Grammar__Symbol__Properties_svp, "new", avp, NULL /* MarpaX_ESLIF_Valuep */, 0 /* evalb */, 0 /* evalSilentb */, NULL /* subSvp */);
   av_undef(avp);
@@ -4216,7 +4221,8 @@ CODE:
   MARPAESLIFPERL_XV_STORE_IV         (avp, "eventBitSet",                symbolProperty.eventBitSet);
   MARPAESLIFPERL_XV_STORE_ACTION     (avp, "symbolAction",               symbolProperty.symbolActionp);
   MARPAESLIFPERL_XV_STORE_ACTION     (avp, "ifAction",                   symbolProperty.ifActionp);
-  MARPAESLIFPERL_XV_STORE_IV         (avp, "verbose",                    symbolProperty.verboseb);
+  MARPAESLIFPERL_XV_STORE_ACTION     (avp, "generatorAction",            symbolProperty.generatorActionp);
+  MARPAESLIFPERL_XV_STORE_YESNO      (avp, "verbose",                    symbolProperty.verboseb);
 
   RETVAL = marpaESLIFPerl_call_actionp(aTHX_ constantsp->MarpaX__ESLIF__Grammar__Symbol__Properties_svp, "new", avp, NULL /* MarpaX_ESLIF_Valuep */, 0 /* evalb */, 0 /* evalSilentb */, NULL /* subSvp */);
   av_undef(avp);

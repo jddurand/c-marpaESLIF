@@ -98,6 +98,7 @@ sub new {
         'eventBitSet'                => $args{eventBitSet},
         'symbolAction'               => $args{symbolAction},
         'ifAction'                   => $args{ifAction},
+        'generatorAction'            => $args{generatorAction},
         'verbose'                    => $args{verbose}
     };
 
@@ -558,6 +559,18 @@ sub getIfAction {
     my ($self) = @_;
 
     return $self->{ifAction}
+}
+
+=head2 $self->getGeneratorAction
+
+Returns the symbol generator action, null if there is none
+
+=cut
+
+sub getGeneratorAction {
+    my ($self) = @_;
+
+    return $self->{generatorAction}
 }
 
 =head2 $self->isVerbose
