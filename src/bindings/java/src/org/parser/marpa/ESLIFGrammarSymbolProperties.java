@@ -44,6 +44,7 @@ public class ESLIFGrammarSymbolProperties {
 	  private int             eventBitSet;
 	  private String          symbolAction;
 	  private String          ifAction;
+	  private String          generatorAction;
 	  private boolean         verbose;
 
 	/*
@@ -81,10 +82,11 @@ public class ESLIFGrammarSymbolProperties {
 	 * @param eventBitSet low-level grammar events
 	 * @param symbolAction specific action, null if there is none
 	 * @param ifAction if action, null if there is none
+	 * @param generatorAction generator action, null if there is none
 	 * @param verbose verbose priority
 	 * 
 	 */
-	public ESLIFGrammarSymbolProperties(ESLIFSymbolType type, boolean start, boolean discard, boolean discardRhs, boolean lhs, boolean top, int id, String description, String eventBefore, boolean eventBeforeInitialState, String eventAfter, boolean eventAfterInitialState, String eventPredicted, boolean eventPredictedInitialState, String eventNulled, boolean eventNulledInitialState, String eventCompleted, boolean eventCompletedInitialState, String discardEvent, boolean discardEventInitialState, int lookupResolvedLeveli, int priority, String nullableAction, int propertyBitSet, int eventBitSet, String symbolAction, String ifAction, boolean verbose) {
+	public ESLIFGrammarSymbolProperties(ESLIFSymbolType type, boolean start, boolean discard, boolean discardRhs, boolean lhs, boolean top, int id, String description, String eventBefore, boolean eventBeforeInitialState, String eventAfter, boolean eventAfterInitialState, String eventPredicted, boolean eventPredictedInitialState, String eventNulled, boolean eventNulledInitialState, String eventCompleted, boolean eventCompletedInitialState, String discardEvent, boolean discardEventInitialState, int lookupResolvedLeveli, int priority, String nullableAction, int propertyBitSet, int eventBitSet, String symbolAction, String ifAction, String generatorAction, boolean verbose) {
 		this.type                       = type;
 		this.start                      = start;
 		this.discard                    = discard;
@@ -112,6 +114,7 @@ public class ESLIFGrammarSymbolProperties {
 		this.eventBitSet                = eventBitSet;
 		this.symbolAction               = symbolAction;
 		this.ifAction                   = ifAction;
+		this.generatorAction            = generatorAction;
 		this.verbose                    = verbose;
 	}
 	
@@ -138,6 +141,7 @@ public class ESLIFGrammarSymbolProperties {
 		result = prime * result + (eventNulledInitialState ? 1231 : 1237);
 		result = prime * result + ((eventPredicted == null) ? 0 : eventPredicted.hashCode());
 		result = prime * result + (eventPredictedInitialState ? 1231 : 1237);
+		result = prime * result + ((generatorAction == null) ? 0 : generatorAction.hashCode());
 		result = prime * result + id;
 		result = prime * result + ((ifAction == null) ? 0 : ifAction.hashCode());
 		result = prime * result + (lhs ? 1231 : 1237);
@@ -158,99 +162,147 @@ public class ESLIFGrammarSymbolProperties {
 	 */
 	@Override
 	public boolean equals(Object obj) {
-		if (this == obj)
+		if (this == obj) {
 			return true;
-		if (obj == null)
+		}
+		if (obj == null) {
 			return false;
-		if (getClass() != obj.getClass())
+		}
+		if (getClass() != obj.getClass()) {
 			return false;
+		}
 		ESLIFGrammarSymbolProperties other = (ESLIFGrammarSymbolProperties) obj;
 		if (description == null) {
-			if (other.description != null)
+			if (other.description != null) {
 				return false;
-		} else if (!description.equals(other.description))
+			}
+		} else if (!description.equals(other.description)) {
 			return false;
-		if (discard != other.discard)
+		}
+		if (discard != other.discard) {
 			return false;
+		}
 		if (discardEvent == null) {
-			if (other.discardEvent != null)
+			if (other.discardEvent != null) {
 				return false;
-		} else if (!discardEvent.equals(other.discardEvent))
+			}
+		} else if (!discardEvent.equals(other.discardEvent)) {
 			return false;
-		if (discardEventInitialState != other.discardEventInitialState)
+		}
+		if (discardEventInitialState != other.discardEventInitialState) {
 			return false;
-		if (discardRhs != other.discardRhs)
+		}
+		if (discardRhs != other.discardRhs) {
 			return false;
+		}
 		if (eventAfter == null) {
-			if (other.eventAfter != null)
+			if (other.eventAfter != null) {
 				return false;
-		} else if (!eventAfter.equals(other.eventAfter))
+			}
+		} else if (!eventAfter.equals(other.eventAfter)) {
 			return false;
-		if (eventAfterInitialState != other.eventAfterInitialState)
+		}
+		if (eventAfterInitialState != other.eventAfterInitialState) {
 			return false;
+		}
 		if (eventBefore == null) {
-			if (other.eventBefore != null)
+			if (other.eventBefore != null) {
 				return false;
-		} else if (!eventBefore.equals(other.eventBefore))
+			}
+		} else if (!eventBefore.equals(other.eventBefore)) {
 			return false;
-		if (eventBeforeInitialState != other.eventBeforeInitialState)
+		}
+		if (eventBeforeInitialState != other.eventBeforeInitialState) {
 			return false;
-		if (eventBitSet != other.eventBitSet)
+		}
+		if (eventBitSet != other.eventBitSet) {
 			return false;
+		}
 		if (eventCompleted == null) {
-			if (other.eventCompleted != null)
+			if (other.eventCompleted != null) {
 				return false;
-		} else if (!eventCompleted.equals(other.eventCompleted))
+			}
+		} else if (!eventCompleted.equals(other.eventCompleted)) {
 			return false;
-		if (eventCompletedInitialState != other.eventCompletedInitialState)
+		}
+		if (eventCompletedInitialState != other.eventCompletedInitialState) {
 			return false;
+		}
 		if (eventNulled == null) {
-			if (other.eventNulled != null)
+			if (other.eventNulled != null) {
 				return false;
-		} else if (!eventNulled.equals(other.eventNulled))
+			}
+		} else if (!eventNulled.equals(other.eventNulled)) {
 			return false;
-		if (eventNulledInitialState != other.eventNulledInitialState)
+		}
+		if (eventNulledInitialState != other.eventNulledInitialState) {
 			return false;
+		}
 		if (eventPredicted == null) {
-			if (other.eventPredicted != null)
+			if (other.eventPredicted != null) {
 				return false;
-		} else if (!eventPredicted.equals(other.eventPredicted))
+			}
+		} else if (!eventPredicted.equals(other.eventPredicted)) {
 			return false;
-		if (eventPredictedInitialState != other.eventPredictedInitialState)
+		}
+		if (eventPredictedInitialState != other.eventPredictedInitialState) {
 			return false;
-		if (id != other.id)
+		}
+		if (generatorAction == null) {
+			if (other.generatorAction != null) {
+				return false;
+			}
+		} else if (!generatorAction.equals(other.generatorAction)) {
 			return false;
+		}
+		if (id != other.id) {
+			return false;
+		}
 		if (ifAction == null) {
-			if (other.ifAction != null)
+			if (other.ifAction != null) {
 				return false;
-		} else if (!ifAction.equals(other.ifAction))
+			}
+		} else if (!ifAction.equals(other.ifAction)) {
 			return false;
-		if (lhs != other.lhs)
+		}
+		if (lhs != other.lhs) {
 			return false;
-		if (lookupResolvedLeveli != other.lookupResolvedLeveli)
+		}
+		if (lookupResolvedLeveli != other.lookupResolvedLeveli) {
 			return false;
+		}
 		if (nullableAction == null) {
-			if (other.nullableAction != null)
+			if (other.nullableAction != null) {
 				return false;
-		} else if (!nullableAction.equals(other.nullableAction))
+			}
+		} else if (!nullableAction.equals(other.nullableAction)) {
 			return false;
-		if (priority != other.priority)
+		}
+		if (priority != other.priority) {
 			return false;
-		if (propertyBitSet != other.propertyBitSet)
+		}
+		if (propertyBitSet != other.propertyBitSet) {
 			return false;
-		if (start != other.start)
+		}
+		if (start != other.start) {
 			return false;
+		}
 		if (symbolAction == null) {
-			if (other.symbolAction != null)
+			if (other.symbolAction != null) {
 				return false;
-		} else if (!symbolAction.equals(other.symbolAction))
+			}
+		} else if (!symbolAction.equals(other.symbolAction)) {
 			return false;
-		if (top != other.top)
+		}
+		if (top != other.top) {
 			return false;
-		if (type != other.type)
+		}
+		if (type != other.type) {
 			return false;
-		if (verbose != other.verbose)
+		}
+		if (verbose != other.verbose) {
 			return false;
+		}
 		return true;
 	}
 
@@ -269,7 +321,8 @@ public class ESLIFGrammarSymbolProperties {
 				+ ", discardEvent=" + discardEvent + ", discardEventInitialState=" + discardEventInitialState
 				+ ", lookupResolvedLeveli=" + lookupResolvedLeveli + ", priority=" + priority + ", nullableAction="
 				+ nullableAction + ", propertyBitSet=" + propertyBitSet + ", eventBitSet=" + eventBitSet
-				+ ", symbolAction=" + symbolAction + ", ifAction=" + ifAction + ", verbose=" + verbose + "]";
+				+ ", symbolAction=" + symbolAction + ", ifAction=" + ifAction + ", generatorAction=" + generatorAction
+				+ ", verbose=" + verbose + "]";
 	}
 
 	/**
@@ -558,6 +611,13 @@ public class ESLIFGrammarSymbolProperties {
 	 */
 	public String getIfAction() {
 		return ifAction;
+	}
+
+	/**
+	 * @return the generator action
+	 */
+	public String getGeneratorAction() {
+		return generatorAction;
 	}
 
 	/**

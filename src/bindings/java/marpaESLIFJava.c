@@ -617,7 +617,7 @@ static marpaESLIFJavaMethodCache_t marpaESLIFJavaMethodCacheArrayp[] = {
   {      &MARPAESLIF_ESLIFGRAMMARRULEPROPERTIES_CLASSCACHE, "<init>",               "(ILjava/lang/String;Ljava/lang/String;II[I[ZILjava/lang/String;Ljava/lang/String;ZIZZZIIZ)V", 0 /* staticb */, NULL, 1 /* requiredb */ },
 
   #define MARPAESLIF_ESLIFGRAMMARSYMBOLPROPERTIES_CLASS_init_METHODP                marpaESLIFJavaMethodCacheArrayp[64].methodp
-  {      &MARPAESLIF_ESLIFGRAMMARSYMBOLPROPERTIES_CLASSCACHE, "<init>",             "(Lorg/parser/marpa/ESLIFSymbolType;ZZZZZILjava/lang/String;Ljava/lang/String;ZLjava/lang/String;ZLjava/lang/String;ZLjava/lang/String;ZLjava/lang/String;ZLjava/lang/String;ZIILjava/lang/String;IILjava/lang/String;Ljava/lang/String;Z)V", 0 /* staticb */, NULL, 1 /* requiredb */ },
+  {      &MARPAESLIF_ESLIFGRAMMARSYMBOLPROPERTIES_CLASSCACHE, "<init>",             "(Lorg/parser/marpa/ESLIFSymbolType;ZZZZZILjava/lang/String;Ljava/lang/String;ZLjava/lang/String;ZLjava/lang/String;ZLjava/lang/String;ZLjava/lang/String;ZLjava/lang/String;ZIILjava/lang/String;IILjava/lang/String;Ljava/lang/String;Ljava/lang/String;Z)V", 0 /* staticb */, NULL, 1 /* requiredb */ },
 
   #define MARPAESLIF_ESLIFSYMBOLTYPE_CLASS_get_METHODP                              marpaESLIFJavaMethodCacheArrayp[65].methodp
   {      &MARPAESLIF_ESLIFSYMBOLTYPE_CLASSCACHE, "get",                             "(I)Lorg/parser/marpa/ESLIFSymbolType;", 1 /* staticb */, NULL, 1 /* requiredb */ },
@@ -6242,12 +6242,13 @@ static jobject marpaESLIFJava_symbolPropertiesp(JNIEnv *envp, marpaESLIFSymbolPr
   jboolean           discardEventInitialState;
   jint               lookupResolvedLeveli;
   jint               priority;
-  jboolean           verbose;
   jstring            nullableAction;
   jint               propertyBitSet;
   jint               eventBitSet;
   jstring            symbolAction;
   jstring            ifAction;
+  jstring            generatorAction;
+  jboolean           verbose;
 
   type = (*envp)->CallStaticObjectMethod(envp, MARPAESLIF_ESLIFSYMBOLTYPE_CLASSP, MARPAESLIF_ESLIFSYMBOLTYPE_CLASS_get_METHODP, symbolPropertyp->type);
   if (type == NULL) {
@@ -6276,12 +6277,13 @@ static jobject marpaESLIFJava_symbolPropertiesp(JNIEnv *envp, marpaESLIFSymbolPr
   discardEventInitialState   = symbolPropertyp->discardEventb ? JNI_TRUE : JNI_FALSE;
   lookupResolvedLeveli       = (jint) symbolPropertyp->lookupResolvedLeveli;
   priority                   = (jint) symbolPropertyp->priorityi;
-  verbose                    = symbolPropertyp->verboseb ? JNI_TRUE : JNI_FALSE;
   nullableAction             = marpaESLIFJava_marpaESLIFActionToJavap(envp, symbolPropertyp->nullableActionp);
   propertyBitSet             = (jint) symbolPropertyp->propertyBitSet;
   eventBitSet                = (jint) symbolPropertyp->eventBitSet;
   symbolAction               = marpaESLIFJava_marpaESLIFActionToJavap(envp, symbolPropertyp->symbolActionp);
   ifAction                   = marpaESLIFJava_marpaESLIFActionToJavap(envp, symbolPropertyp->ifActionp);
+  generatorAction            = marpaESLIFJava_marpaESLIFActionToJavap(envp, symbolPropertyp->generatorActionp);
+  verbose                    = symbolPropertyp->verboseb ? JNI_TRUE : JNI_FALSE;
 
   propertiesp = (*envp)->NewObject(envp,
                                    MARPAESLIF_ESLIFGRAMMARSYMBOLPROPERTIES_CLASSP,
@@ -6313,6 +6315,7 @@ static jobject marpaESLIFJava_symbolPropertiesp(JNIEnv *envp, marpaESLIFSymbolPr
                                    eventBitSet,
                                    symbolAction,
                                    ifAction,
+                                   generatorAction,
                                    verbose
                                    );
 
