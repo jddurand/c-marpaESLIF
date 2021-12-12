@@ -55,7 +55,8 @@ public class AppJSONLua implements Runnable {
 						"# ------------------- \n" +
 						"# Composite separator \n" +
 						"# ------------------- \n" +
-						"comma    ::= ','                                  action         => ::undef   # No-op anyway, override ::shift (default action) \n" +
+						":symbol ::= ',' pause => after event => comma$ name => COMMA if-action => if_action_comma\n" +
+						"comma    ::= $COMMA                               action         => ::undef   # No-op anyway, override ::shift (default action) \n" +
 						" \n" +
 						"# ---------- \n" +
 						"# JSON value \n" +

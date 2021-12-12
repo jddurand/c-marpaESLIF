@@ -83,12 +83,20 @@ public class AppRecognizerInterface implements ESLIFRecognizerInterface {
 
 		public boolean if_number(byte[] byteArray) throws UnsupportedEncodingException {
 			String string = new String(byteArray, "UTF-8");
-			eslifLoggerInterface.debug("if_number(" + string + ")");
+			eslifLoggerInterface.debug("... if_number(" + string + ")");
 			return true;
 		}	
 
-		public boolean event_action(ESLIFEvent[] eventArray) {
-			eslifLoggerInterface.debug("event_action(" + Arrays.toString(eventArray) + ")");
+		public boolean event_action(ESLIFEvent[] eventArray) throws ESLIFException, UnsupportedEncodingException {
+			eslifLoggerInterface.debug("... event_action(" + Arrays.toString(eventArray) + ")");
+			eslifLoggerInterface.debug("... event_action current input length: " + eslifRecognizer.inputLength());
+			byte[] bytes = eslifRecognizer.input(0);
+			if (bytes != null) {
+				String input = new String(bytes, "UTF-8");
+				eslifLoggerInterface.debug("... regex_action current input is: " + input);
+			} else {
+				eslifLoggerInterface.debug("... regex_action current input is null");
+			}
 			return true;
 		}	
 
@@ -110,8 +118,22 @@ public class AppRecognizerInterface implements ESLIFRecognizerInterface {
 			return 0;
 		}	
 
+		public boolean if_action_comma(byte[] byteArray) throws ESLIFException, UnsupportedEncodingException {
+			String string = new String(byteArray, "UTF-8");
+			eslifLoggerInterface.debug("... if_action_comma(" + string + ")");
+			eslifLoggerInterface.debug("... if_action_comma current input length: " + eslifRecognizer.inputLength());
+			byte[] bytes = eslifRecognizer.input(0);
+			if (bytes != null) {
+				String input = new String(bytes, "UTF-8");
+				eslifLoggerInterface.debug("... if_action_comma current input is: " + input);
+			} else {
+				eslifLoggerInterface.debug("... if_action_comma current input is null");
+			}
+			return true;
+		}	
+
 		public String rhs(Object...list) throws UnsupportedEncodingException {
-			eslifLoggerInterface.debug("rhs called with " + list.length + " objects");
+			eslifLoggerInterface.debug("... rhs called with " + list.length + " objects");
 			for (int i = 0; i < list.length; i++) {
 				if (list[i] == null) {
 					eslifLoggerInterface.debug("... Object[" + i + "] is null");
