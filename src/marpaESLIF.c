@@ -10520,7 +10520,8 @@ short marpaESLIFRecognizer_eventb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp,
   }
 
   /* Hook for MARPAESLIF_EVENTTYPE_DISCARD: the associated symbol is NOT pushed to the grammar */
-  /* because a discard is a transversal thing. So if the end user wants to retreive the last */
+  /* because discards apply to all grammars, not any particular one. */
+  /* So if the end user wants to retrieve the last */
   /* discarded data, when trackb is on, he cannot. */
   if ((discardArrayp != NULL) && (discardArrayp->p != NULL) && (discardArrayp->sizel > 0)) {
     if (marpaESLIFRecognizerp->lastDiscards == NULL) {

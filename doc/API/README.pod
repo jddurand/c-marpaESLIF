@@ -34,7 +34,7 @@ Valuation phase.
 
 =back
 
-and a transversal type:
+and a universal type:
 
   typedef struct marpaESLIFString {
     char   *bytep;            /* pointer bytes */
@@ -43,7 +43,11 @@ and a transversal type:
     char   *asciis;           /* ASCII transliteration - never NULL if bytep is not NULL */
   } marpaESLIFString_t;
 
-which describe what is a I<string>: this is a sequence of C<bytel> bytes, starting at C<bytep> in memory, in eventual C<encodingasciis> encoding, and transliterated as much as possible into C<asciis>.
+which describe what is a I<string>:
+this is a sequence of C<bytel> bytes,
+starting at C<bytep> in memory,
+in eventual C<encodingasciis> encoding,
+and transliterated as much as possible into C<asciis>.
 
 =head2 ESLIF
 
