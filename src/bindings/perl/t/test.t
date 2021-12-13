@@ -1526,7 +1526,7 @@ my @strings = (
     "5 ** (2 / 3)",
     "1 + ( 2 + ( 3 + ( 4 + 5) )",
     "1 + ( 2 + ( 3 + ( 4 + 50) ) )   /* comment after */",
-    " 100"
+    " 100    "
     );
 
 #
@@ -1796,8 +1796,11 @@ sub doDiscardTry {
         $test = $eslifRecognizer->discardTry();
         $log->debugf("... Testing discard at current position returns %d", $test);
         if ($test) {
-            my $discard = $eslifRecognizer->discardLastTry();
-            $log->debugf("... Testing discard at current position gave \"%s\"", $discard);
+            my $todiscard = $eslifRecognizer->discardLastTry();
+            $log->debugf("... Testing discard at current position gave \"%s\" (%d bytes)", $todiscard, bytes::length($todiscard));
+            my $discardedbytes = $eslifRecognizer->discard();
+            $log->debugf("... Applying discard at current position removed %d bytes, prediction gave '%s' (%d bytes)", $discardedbytes, $todiscard, bytes::length($todiscard));
+            BAIL_OUT("Applying discard at current position removed $discardedbytes bytes != $todiscard bytes as per discardTry!") unless $discardedbytes == bytes::length($todiscard);
         }
     } catch {
         $log->debugf($_);

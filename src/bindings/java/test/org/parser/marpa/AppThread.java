@@ -339,6 +339,8 @@ public class AppThread implements Runnable {
 				byte[] bytes = eslifRecognizer.discardLastTry();
 				String string = new String(bytes, "UTF-8");
 				eslifLogger.debug("... Testing discard at current position gave \"" + string + "\"");
+				long discardedbytes = eslifRecognizer.discard(); 
+				eslifLogger.debug("... Applying discard at current position removed " + discardedbytes + " bytes, " + bytes.length + " were predicted");
 			}
 		} catch (ESLIFException e) {
 			// Because we test with a symbol that is not a vali name, and that raises an exception

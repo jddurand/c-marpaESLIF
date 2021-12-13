@@ -662,8 +662,10 @@ doDiscardTry = function(eslifRecognizer)
          test = eslifRecognizer:discardTry()
          logger:debugf("... Testing discard at current position returns %s", tostring(test))
          if (test) then
-            local lastTry = eslifRecognizer:discardLastTry()
-            logger:debugf("... Testing discard at current position gave \"%s\"", lastTry)
+            local todiscard = eslifRecognizer:discardLastTry()
+            logger:debugf("... Testing discard at current position gave \"%s\" (%d bytes)", tostring(todiscard), #todiscard)
+            local discardedbytes = eslifRecognizer:discard()
+            logger:debugf("... Applying discard at current position removed %d bytes, prediction gave '%s' (%d bytes)", discardedbytes, tostring(todiscard), #todiscard);
          end
       end,
       catch {
@@ -679,10 +681,10 @@ doTry = function(eslifRecognizer, symbol)
    local test
    try {
       function()
-         test = eslifRecognizer:try(symbol)
+         test = eslifRecognizer:nameTry(symbol)
          logger:debugf("... Testing %s lexeme at current position returns %s", symbol, tostring(test))
          if (test) then
-            local lastTry = eslifRecognizer:lastTry()
+            local lastTry = eslifRecognizer:nameLastTry()
             logger:debugf("... Testing symbol %s at current position gave \"%s\"", symbol, lastTry)
          end
       end,
@@ -789,9 +791,9 @@ for _, localstring in pairs(strings) do
                if (not doAlternativeRead(eslifRecognizer, "NUMBER", j, pause)) then
                   error("NUMBER expected but reading such lexeme fails!")
                end
-               doDiscardTry(eslifRecognizer)
                doTry(eslifRecognizer, "WHITESPACES")
                doTry(eslifRecognizer, "whitespaces")
+               doDiscardTry(eslifRecognizer)
             end
          end
          if (j == 0) then

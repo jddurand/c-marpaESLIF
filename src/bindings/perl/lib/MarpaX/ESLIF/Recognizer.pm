@@ -223,6 +223,12 @@ The end-user can ask the recognizer if a symbol identified by C<$name> may match
 
 Returns a boolean indicating if the lexeme is recognized.
 
+=head2 $eslifRecognizer->discard()
+
+Ask the recognizer to apply C<:discard>.
+
+Returns the number of bytes discarded.
+
 =head2 $eslifRecognizer->discardTry()
 
 The end-user can ask the recognizer if C<:discard> rule may match.

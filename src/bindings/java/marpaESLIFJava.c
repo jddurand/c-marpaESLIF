@@ -69,6 +69,7 @@ JNIEXPORT jboolean     JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniAlternat
 JNIEXPORT jboolean     JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniAlternativeComplete    (JNIEnv *envp, jobject eslifRecognizerp, jint lengthi);
 JNIEXPORT jboolean     JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniAlternativeRead        (JNIEnv *envp, jobject eslifRecognizerp, jstring namep, jobject objectp, jint lengthi, jint grammarLengthi);
 JNIEXPORT jboolean     JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniNameTry                (JNIEnv *envp, jobject eslifRecognizerp, jstring namep);
+JNIEXPORT jlong        JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniDiscard                (JNIEnv *envp, jobject eslifRecognizerp);
 JNIEXPORT jboolean     JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniDiscardTry             (JNIEnv *envp, jobject eslifRecognizerp);
 JNIEXPORT jobjectArray JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniNameExpected           (JNIEnv *envp, jobject eslifRecognizerp);
 JNIEXPORT jboolean     JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniIsEof                  (JNIEnv *envp, jobject eslifRecognizerp);
@@ -3246,6 +3247,34 @@ JNIEXPORT jboolean JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniNameTry(JNIE
   }
 
   return rcb;
+}
+
+/*****************************************************************************/
+JNIEXPORT jlong JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniDiscard(JNIEnv *envp, jobject eslifRecognizerp)
+/*****************************************************************************/
+{
+  static const char             *funcs = "Java_org_parser_marpa_ESLIFRecognizer_jniDiscard";
+  marpaESLIFRecognizer_t        *marpaESLIFRecognizerp;
+  short                          matchb;
+  size_t                         discardl;
+  jlong                          rcl;
+
+  if (! ESLIFRecognizer_contextb(envp, eslifRecognizerp, &marpaESLIFRecognizerp, NULL /* marpaESLIFJavaRecognizerContextpp */)) {
+    goto err;
+  }
+
+  if (! marpaESLIFRecognizer_discardb(marpaESLIFRecognizerp, &discardl)) {
+    RAISEEXCEPTION(envp, "marpaESLIFRecognizer_discardb failure");
+  }
+
+  rcl = (jlong) discardl;
+  goto done;
+
+ err:
+  rcl = 0;
+
+ done:
+  return rcl;
 }
 
 /*****************************************************************************/

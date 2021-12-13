@@ -53,6 +53,7 @@ public class ESLIFRecognizer {
 	private native boolean		 jniAlternativeComplete(int length) throws ESLIFException;
 	private native boolean           jniAlternativeRead(String name, Object object, int grammarLength, int length) throws ESLIFException;
 	private native boolean           jniNameTry(String name) throws ESLIFException;
+	private native long              jniDiscard() throws ESLIFException;
 	private native boolean           jniDiscardTry() throws ESLIFException;
 	private native String[]          jniNameExpected() throws ESLIFException;
 	private native byte[]            jniNameLastPause(String name) throws ESLIFException;
@@ -375,6 +376,16 @@ public class ESLIFRecognizer {
 	 */
 	public synchronized boolean discardTry() throws ESLIFException {
 		return jniDiscardTry();
+	}
+	
+	/**
+	 * Ask the recognizer to discard data
+	 * 
+	 * @return the number of bytes discarded
+	 * @throws ESLIFException if the interface failed
+	 */
+	public synchronized long discard() throws ESLIFException {
+		return jniDiscard();
 	}
 	
 	/**

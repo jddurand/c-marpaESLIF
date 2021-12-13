@@ -5325,6 +5325,34 @@ CODE:
 OUTPUT:
   RETVAL
 
+=for comment
+  /* ----------------------------------------------------------------------- */
+  /* MarpaX::ESLIF::Recognizer::discard                                      */
+  /* ----------------------------------------------------------------------- */
+=cut
+
+STRLEN
+discard(p)
+  SV *p;
+PREINIT:
+  static const char *funcs = "MarpaX::ESLIF::Recognizer::discard";
+CODE:
+  MarpaX_ESLIF_Recognizer_t *MarpaX_ESLIF_Recognizerp = marpaESLIFPerl_Perl2enginep(aTHX_ p);
+  size_t                     discardl;
+
+  if (MARPAESLIF_UNLIKELY(! marpaESLIFRecognizer_discardb(MarpaX_ESLIF_Recognizerp->marpaESLIFRecognizerp, &discardl))) {
+    MARPAESLIFPERL_CROAKF("marpaESLIFRecognizer_discardb failure, %s", strerror(errno));
+  }
+  RETVAL = (STRLEN) discardl;
+OUTPUT:
+  RETVAL
+
+=for comment
+  /* ----------------------------------------------------------------------- */
+  /* MarpaX::ESLIF::Recognizer::discardTry                                   */
+  /* ----------------------------------------------------------------------- */
+=cut
+
 bool
 discardTry(p)
   SV *p;
