@@ -1331,9 +1331,10 @@ static inline short marpaESLIFPerl_recognizerRegexCallbackb(void *userDatavp, ma
                                                  internalStackp,
                                                  marpaESLIFCalloutBlockp),
                  MarpaX_ESLIF_Recognizerp->constantsp->regexCalloutStashp);
-
   /* One reference count ownership is transfered to the array */
+  av_push(list, svp);
   actionResult = marpaESLIFPerl_recognizerCallbackActionp(aTHX_ MarpaX_ESLIF_Recognizerp, marpaESLIFRecognizerp, list);
+
   /* This will decrement by one the inner element reference count */
   av_undef(list);
 
