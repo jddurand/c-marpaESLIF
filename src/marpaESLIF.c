@@ -9883,9 +9883,9 @@ short _marpaESLIFRecognizer_name_tryb(marpaESLIFRecognizer_t *marpaESLIFRecogniz
   grammarp           = marpaESLIFGrammarp->grammarp;
 
   /* This must be an RHS */
-  symbolp = _marpaESLIF_symbol_findp(marpaESLIFp, grammarp, names, -1, NULL /* symbolip */, 0 /* silentb */, 0 /* onlyLhsb */, 1 /* onlyRhsb */, MARPAESLIF_SYMBOL_TYPE_NA);
+  symbolp = _marpaESLIF_symbol_findp(marpaESLIFp, grammarp, names, -1, NULL /* symbolip */, 1 /* silentb */, 0 /* onlyLhsb */, 1 /* onlyRhsb */, MARPAESLIF_SYMBOL_TYPE_NA);
   if (MARPAESLIF_UNLIKELY(symbolp == NULL)) {
-    MARPAESLIF_ERRORF(marpaESLIFp, "Failed to find name <%s> as an RHS", names);
+    MARPAESLIF_ERRORF(marpaESLIFp, "Failed to find symbol <%s> used only as an RHS", names);
     goto err;
   }
 
@@ -18482,9 +18482,9 @@ static inline short _marpaESLIFRecognizer_last_symbolDatab(marpaESLIFRecognizer_
   short                      rcb;
 
   /* A symbol that is matched must be an RHS in the current grammar */
-  symbolp = _marpaESLIF_symbol_findp(marpaESLIFp, grammarp, symbols, -1, NULL /* symbolip */, 0 /* silentb */, onlyLhsb, onlyRhsb, type);
+  symbolp = _marpaESLIF_symbol_findp(marpaESLIFp, grammarp, symbols, -1, NULL /* symbolip */, 1 /* silentb */, onlyLhsb, onlyRhsb, type);
   if (MARPAESLIF_UNLIKELY(symbolp == NULL)) {
-    MARPAESLIF_ERRORF(marpaESLIFp, "Failed to find symbol <%s> as RHS", symbols);
+    MARPAESLIF_ERRORF(marpaESLIFp, "Failed to find symbol <%s> used only as an RHS", symbols);
     goto err;
   }
 
@@ -22437,9 +22437,9 @@ static inline short _marpaESLIFRecognizer_alternativeb(marpaESLIFRecognizer_t *m
   MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "start");
 
   /* An alternative can only be an RHS */
-  symbolp = _marpaESLIF_symbol_findp(marpaESLIFp, grammarp, marpaESLIFAlternativep->names, -1, NULL /* symbolip */, 0 /* silentb */, 0 /* onlyLhsb */, 1 /* onlyRhsb */, MARPAESLIF_SYMBOL_TYPE_NA);
+  symbolp = _marpaESLIF_symbol_findp(marpaESLIFp, grammarp, marpaESLIFAlternativep->names, -1, NULL /* symbolip */, 1 /* silentb */, 0 /* onlyLhsb */, 1 /* onlyRhsb */, MARPAESLIF_SYMBOL_TYPE_NA);
   if (MARPAESLIF_UNLIKELY(symbolp == NULL)) {
-    MARPAESLIF_ERRORF(marpaESLIFp, "Failed to find name <%s> as an RHS", marpaESLIFAlternativep->names);
+    MARPAESLIF_ERRORF(marpaESLIFp, "Failed to find symbol <%s> used only as an RHS", marpaESLIFAlternativep->names);
     goto err;
   }
 
