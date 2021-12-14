@@ -247,8 +247,6 @@ struct marpaESLIFSymbol {
   marpaESLIFAction_t            *ifActionp;              /* if-action, only for terminals or lexemes */
   marpaESLIFAction_t            *generatorActionp;       /* generator-action */
   marpaESLIFSymbolOption_t       marpaESLIFSymbolOption;
-  /* Embedded lua - c.f. src/bindings/src/marpaESLIFLua.c */
-  void                          *marpaESLIFLuaSymbolContextp;
   /* When an external meta symbol is created, it duplicates a symbol content */
   short                          contentIsShallowb;
   marpaESLIFGrammar_t           *marpaESLIFGrammarp;     /* Shallow pointer, set by marpaESLIFSymbol_meta_newp() only */

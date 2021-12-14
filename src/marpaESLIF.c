@@ -4827,66 +4827,65 @@ static inline marpaESLIF_symbol_t *_marpaESLIF_symbol_newp(marpaESLIF_t *marpaES
   }
 
   /* External symbols will have to set the effective members explicitly - these are all shallow pointers */
-  symbolp->effectiveNullableActionp    = NULL;
-  symbolp->effectiveNullableActione    = MARPAESLIF_INTERNAL_RULE_ACTION_NA;
-  symbolp->effectiveSymbolActionp      = NULL;
-  symbolp->effectiveSymbolActione      = MARPAESLIF_INTERNAL_SYMBOL_ACTION_NA;
+  symbolp->effectiveNullableActionp = NULL;
+  symbolp->effectiveNullableActione = MARPAESLIF_INTERNAL_RULE_ACTION_NA;
+  symbolp->effectiveSymbolActionp   = NULL;
+  symbolp->effectiveSymbolActione   = MARPAESLIF_INTERNAL_SYMBOL_ACTION_NA;
 
   /* Union itself is undetermined at this stage */
-  symbolp->type                        = MARPAESLIF_SYMBOL_TYPE_NA;
-  symbolp->marpaESLIFp                 = marpaESLIFp;
-  symbolp->startb                      = 0;
-  symbolp->discardb                    = 0;
-  symbolp->discardRhsb                 = 0;
-  symbolp->lhsb                        = 0;
-  symbolp->topb                        = 0; /* Revisited by grammar validation */
-  symbolp->idi                         = -1;
-  symbolp->descp                       = NULL;
-  symbolp->eventBefores                = NULL;
-  symbolp->eventBeforeb                = 1; /* An event is on by default */
-  symbolp->eventBeforee                = MARPAESLIF_INTERNAL_EVENT_ACTION_NA;
-  symbolp->eventAfters                 = NULL;
-  symbolp->eventAfterb                 = 1; /* An event is on by default */
-  symbolp->eventAftere                 = MARPAESLIF_INTERNAL_EVENT_ACTION_NA;
-  symbolp->eventPredicteds             = NULL;
-  symbolp->eventPredictedb             = 1; /* An event is on by default */
-  symbolp->eventPredictede             = MARPAESLIF_INTERNAL_EVENT_ACTION_NA;
-  symbolp->eventNulleds                = NULL;
-  symbolp->eventNulledb                = 1; /* An event is on by default */
-  symbolp->eventNullede                = MARPAESLIF_INTERNAL_EVENT_ACTION_NA;
-  symbolp->eventCompleteds             = NULL;
-  symbolp->eventCompletedb             = 1; /* An event is on by default */
-  symbolp->eventCompletede             = MARPAESLIF_INTERNAL_EVENT_ACTION_NA;
-  symbolp->eventDeclp                  = NULL;
-  symbolp->discardEvents               = NULL; /* Shallow copy */
-  symbolp->discardEventb               = 1; /* An event is on by default */
-  symbolp->discardEvente               = MARPAESLIF_INTERNAL_EVENT_ACTION_NA;
-  symbolp->lookupLevelDeltai           = 1;   /* Default lookup is the next grammar level */
-  symbolp->lookupSymbolp               = NULL;
-  symbolp->lookupResolvedLeveli        = 0; /* This will be overwriten by _marpaESLIFGrammar_validateb() and used only when symbol is a lexeme from another grammar */
-  symbolp->priorityi                   = 0; /* Default priority is 0 */
-  symbolp->nullableRuleStackp          = NULL; /* Take care, this is a pointer to an stack inside symbol structure */
-  symbolp->nullableActionp             = NULL;
-  symbolp->nullableActione             = MARPAESLIF_INTERNAL_RULE_ACTION_NA;
-  symbolp->propertyBitSet              = 0; /* Filled by grammar validation */
-  symbolp->eventBitSet                 = 0; /* Filled by grammar validation */
-  symbolp->lhsRuleStackp               = NULL;
-  symbolp->exceptionp                  = NULL;
-  symbolp->symbolActionp               = NULL;
-  symbolp->symbolActione               = MARPAESLIF_INTERNAL_SYMBOL_ACTION_NA;
-  symbolp->ifActionp                   = NULL;
-  symbolp->generatorActionp            = NULL;
-  symbolp->marpaESLIFSymbolOption      = marpaESLIFSymbolOptionp != NULL ? *marpaESLIFSymbolOptionp : marpaESLIFSymbolOption_default_template;
-  symbolp->marpaESLIFLuaSymbolContextp = NULL;
-  symbolp->contentIsShallowb           = 0;
-  symbolp->marpaESLIFGrammarp          = NULL; /* Shallow pointer, set by marpaESLIFSymbol_meta_newp() only */
-  symbolp->verboseb                    = 0; /* Default verbose is 0 */
-  symbolp->parami                      = -1;
-  symbolp->parameterizedRhsb           = 0;
-  symbolp->declp                       = NULL;
-  symbolp->callp                       = NULL;
-  symbolp->pushContextActionp          = NULL;
-  symbolp->lookaheadb                  = 0;
+  symbolp->type                     = MARPAESLIF_SYMBOL_TYPE_NA;
+  symbolp->marpaESLIFp              = marpaESLIFp;
+  symbolp->startb                   = 0;
+  symbolp->discardb                 = 0;
+  symbolp->discardRhsb              = 0;
+  symbolp->lhsb                     = 0;
+  symbolp->topb                     = 0; /* Revisited by grammar validation */
+  symbolp->idi                      = -1;
+  symbolp->descp                    = NULL;
+  symbolp->eventBefores             = NULL;
+  symbolp->eventBeforeb             = 1; /* An event is on by default */
+  symbolp->eventBeforee             = MARPAESLIF_INTERNAL_EVENT_ACTION_NA;
+  symbolp->eventAfters              = NULL;
+  symbolp->eventAfterb              = 1; /* An event is on by default */
+  symbolp->eventAftere              = MARPAESLIF_INTERNAL_EVENT_ACTION_NA;
+  symbolp->eventPredicteds          = NULL;
+  symbolp->eventPredictedb          = 1; /* An event is on by default */
+  symbolp->eventPredictede          = MARPAESLIF_INTERNAL_EVENT_ACTION_NA;
+  symbolp->eventNulleds             = NULL;
+  symbolp->eventNulledb             = 1; /* An event is on by default */
+  symbolp->eventNullede             = MARPAESLIF_INTERNAL_EVENT_ACTION_NA;
+  symbolp->eventCompleteds          = NULL;
+  symbolp->eventCompletedb          = 1; /* An event is on by default */
+  symbolp->eventCompletede          = MARPAESLIF_INTERNAL_EVENT_ACTION_NA;
+  symbolp->eventDeclp               = NULL;
+  symbolp->discardEvents            = NULL; /* Shallow copy */
+  symbolp->discardEventb            = 1; /* An event is on by default */
+  symbolp->discardEvente            = MARPAESLIF_INTERNAL_EVENT_ACTION_NA;
+  symbolp->lookupLevelDeltai        = 1;   /* Default lookup is the next grammar level */
+  symbolp->lookupSymbolp            = NULL;
+  symbolp->lookupResolvedLeveli     = 0; /* This will be overwriten by _marpaESLIFGrammar_validateb() and used only when symbol is a lexeme from another grammar */
+  symbolp->priorityi                = 0; /* Default priority is 0 */
+  symbolp->nullableRuleStackp       = NULL; /* Take care, this is a pointer to an stack inside symbol structure */
+  symbolp->nullableActionp          = NULL;
+  symbolp->nullableActione          = MARPAESLIF_INTERNAL_RULE_ACTION_NA;
+  symbolp->propertyBitSet           = 0; /* Filled by grammar validation */
+  symbolp->eventBitSet              = 0; /* Filled by grammar validation */
+  symbolp->lhsRuleStackp            = NULL;
+  symbolp->exceptionp               = NULL;
+  symbolp->symbolActionp            = NULL;
+  symbolp->symbolActione            = MARPAESLIF_INTERNAL_SYMBOL_ACTION_NA;
+  symbolp->ifActionp                = NULL;
+  symbolp->generatorActionp         = NULL;
+  symbolp->marpaESLIFSymbolOption   = marpaESLIFSymbolOptionp != NULL ? *marpaESLIFSymbolOptionp : marpaESLIFSymbolOption_default_template;
+  symbolp->contentIsShallowb        = 0;
+  symbolp->marpaESLIFGrammarp       = NULL; /* Shallow pointer, set by marpaESLIFSymbol_meta_newp() only */
+  symbolp->verboseb                 = 0; /* Default verbose is 0 */
+  symbolp->parami                   = -1;
+  symbolp->parameterizedRhsb        = 0;
+  symbolp->declp                    = NULL;
+  symbolp->callp                    = NULL;
+  symbolp->pushContextActionp       = NULL;
+  symbolp->lookaheadb               = 0;
 
   symbolp->nullableRuleStackp = &(symbolp->_nullableRuleStack);
   GENERICSTACK_INIT(symbolp->nullableRuleStackp);
@@ -5128,15 +5127,15 @@ marpaESLIF_t *marpaESLIF_newp(marpaESLIFOption_t *marpaESLIFOptionp)
 static inline marpaESLIF_t *_marpaESLIF_newp(marpaESLIFOption_t *marpaESLIFOptionp)
 /*****************************************************************************/
 {
-  static const char            *funcs                  = "marpaESLIF_newp";
-  marpaESLIF_grammar_t         *grammarp               = NULL;
-  marpaESLIF_grammar_t         *grammar2p              = NULL;
-  marpaESLIF_t                 *marpaESLIFp            = NULL;
-  void                         *NULLp                  = NULL;
-  int                           zeroInteger            = 0;
-  void                         *p                      = NULL;
+  static const char            *funcs       = "marpaESLIF_newp";
+  marpaESLIF_grammar_t         *grammarp    = NULL;
+  marpaESLIF_grammar_t         *grammar2p   = NULL;
+  marpaESLIF_t                 *marpaESLIFp = NULL;
+  void                         *NULLp       = NULL;
+  int                           zeroInteger = 0;
+  void                         *p           = NULL;
 #ifdef MARPAESLIF_NAN
-  float                         nanf                   = MARPAESLIF_NAN;
+  float                         nanf        = MARPAESLIF_NAN;
 #endif /*  MARPAESLIF_NAN */
   genericLogger_t              *genericLoggerp;
   genericLoggerLevel_t          genericLoggerLeveli;

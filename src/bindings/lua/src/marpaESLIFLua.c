@@ -313,9 +313,6 @@ static int                                marpaESLIFLua_marpaESLIFRegexCallout_g
 static short                              marpaESLIFLua_symbolContextInitb(lua_State *L, marpaESLIF_t *marpaESLIFp, int eslifStacki, marpaESLIFLuaSymbolContext_t *marpaESLIFLuaSymbolContextp, short unmanagedb);
 static void                               marpaESLIFLua_symbolContextFreev(marpaESLIFLuaSymbolContext_t *marpaESLIFLuaSymbolContextp, short onStackb);
 static int                                marpaESLIFLua_marpaESLIFSymbol_newi(lua_State *L);
-#ifdef MARPAESLIFLUA_EMBEDDED
-static int                                marpaESLIFLua_marpaESLIFSymbol_newFromUnmanagedi(lua_State *L, marpaESLIFSymbol_t *marpaESLIFSymbolUnmanagedp);
-#endif
 static int                                marpaESLIFLua_marpaESLIFSymbol_tryi(lua_State *L);
 static int                                marpaESLIFLua_marpaESLIFSymbol_freei(lua_State *L);
 #ifdef MARPAESLIFLUA_EMBEDDED
@@ -4584,17 +4581,9 @@ static short marpaESLIFLua_recognizerImporterb(marpaESLIFRecognizer_t *marpaESLI
 static short marpaESLIFLua_symbolImporterb(marpaESLIFSymbol_t *marpaESLIFSymbolp, void *userDatavp, marpaESLIFValueResult_t *marpaESLIFValueResultp)
 /*****************************************************************************/
 {
-  static const char           *funcs                        = "marpaESLIFLua_symbolImporterb";
-#ifdef MARPAESLIFLUA_EMBEDDED
-  marpaESLIFLuaSymbolContext_t *marpaESLIFLuaSymbolContextp = (marpaESLIFLuaSymbolContext_t *) marpaESLIFSymbolp->marpaESLIFLuaSymbolContextp;
-  /* When running embedded, the context can be injected by ESLIF or directly created inside Lua */
-  if (marpaESLIFLuaSymbolContextp == NULL) {
-    marpaESLIFLuaSymbolContextp = (marpaESLIFLuaSymbolContext_t *) userDatavp;
-  }
-#else
+  static const char            *funcs                        = "marpaESLIFLua_symbolImporterb";
   marpaESLIFLuaSymbolContext_t *marpaESLIFLuaSymbolContextp = (marpaESLIFLuaSymbolContext_t *) userDatavp;
-#endif
-  lua_State                   *L                            = marpaESLIFLuaSymbolContextp->L;
+  lua_State                    *L                            = marpaESLIFLuaSymbolContextp->L;
 
   return marpaESLIFLuaL_importb(L, marpaESLIFValueResultp);
 }
@@ -10060,38 +10049,6 @@ static int marpaESLIFLua_marpaESLIFSymbol_newi(lua_State *L)
  err:
   return 0;
 }
-
-#ifdef MARPAESLIFLUA_EMBEDDED
-/****************************************************************************/
-static int marpaESLIFLua_marpaESLIFSymbol_newFromUnmanagedi(lua_State *L, marpaESLIFSymbol_t *marpaESLIFSymbolUnmanagedp)
-/****************************************************************************/
-{
-  static const char            *funcs = "marpaESLIFLua_marpaESLIFSymbol_newFromUnmanagedi";
-  marpaESLIFLuaSymbolContext_t *marpaESLIFLuaSymbolContextp;
-  marpaESLIF_t                 *marpaESLIFp;
-
-  marpaESLIFLuaSymbolContextp = malloc(sizeof(marpaESLIFLuaSymbolContext_t));
-  if (marpaESLIFLuaSymbolContextp == NULL) {
-    marpaESLIFLua_luaL_errorf(L, "malloc failure, %s", strerror(errno));
-    goto err;
-  }
-
-  marpaESLIFp = marpaESLIFSymbol_eslifp(marpaESLIFSymbolUnmanagedp);
-  if (! marpaESLIFLua_symbolContextInitb(L, marpaESLIFp, 0 /* eslifStacki */, marpaESLIFLuaSymbolContextp, 1 /* unmanagedb */)) goto err;
-  marpaESLIFLuaSymbolContextp->marpaESLIFSymbolp = marpaESLIFSymbolUnmanagedp;
-  marpaESLIFLuaSymbolContextp->managedb           = 0;
-
-  /* We are in embedded code, this mean that we have access to marpaESLIFSymbol structure */
-  marpaESLIFSymbolUnmanagedp->marpaESLIFLuaSymbolContextp = marpaESLIFLuaSymbolContextp;
-
-  MARPAESLIFLUA_PUSH_MARPAESLIFSYMBOL_OBJECT(L, marpaESLIFLuaSymbolContextp);
-
-  return 1;
-
- err:
-  return 0;
-}
-#endif
 
 /****************************************************************************/
 static int marpaESLIFLua_marpaESLIFSymbol_tryi(lua_State *L)
