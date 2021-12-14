@@ -4955,10 +4955,10 @@ CODE:
   }
 
   if (matchb) {
-    if (MARPAESLIF_UNLIKELY(marpaESLIFPerl_GENERICSTACK_USED(MarpaX_ESLIF_Recognizerp->internalStackp) != 1)) {
-      MARPAESLIFPERL_CROAKF("Internal value stack is %d instead of 1", marpaESLIFPerl_GENERICSTACK_USED(MarpaX_ESLIF_Recognizerp->internalStackp));
+    if (MARPAESLIF_UNLIKELY(marpaESLIFPerl_GENERICSTACK_USED(MarpaX_ESLIF_Symbolp->internalStackp) != 1)) {
+      MARPAESLIFPERL_CROAKF("Internal value stack is %d instead of 1", marpaESLIFPerl_GENERICSTACK_USED(MarpaX_ESLIF_Symbolp->internalStackp));
     }
-    RETVAL = (SV *) marpaESLIFPerl_GENERICSTACK_POP_PTR(MarpaX_ESLIF_Recognizerp->internalStackp);
+    RETVAL = (SV *) marpaESLIFPerl_GENERICSTACK_POP_PTR(MarpaX_ESLIF_Symbolp->internalStackp);
   } else {
     RETVAL = &PL_sv_undef;
   }

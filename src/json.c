@@ -162,7 +162,8 @@ static inline short                         _marpaESLIFJSONDecodeObjectOpeningb(
 static inline short                         _marpaESLIFJSONDecodeObjectClosingb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFJSONDecodeContext_t *marpaESLIFJSONDecodeContextp);
 static inline short                         _marpaESLIFJSONDecodeArrayOpeningb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFJSONDecodeContext_t *marpaESLIFJSONDecodeContextp);
 static inline short                         _marpaESLIFJSONDecodeArrayClosingb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFJSONDecodeContext_t *marpaESLIFJSONDecodeContextp);
-  
+static        short                         _marpaESLIFJSONDecodeSymbolImportProxyb(marpaESLIFSymbol_t *marpaESLIFSymbolp, void *userDatavp, marpaESLIFValueResult_t *marpaESLIFValueResultp);
+
 /*****************************************************************************/
 static inline marpaESLIFGrammar_t *_marpaESLIFJSON_decode_newp(marpaESLIF_t *marpaESLIFp, short strictb)
 /*****************************************************************************/
@@ -318,8 +319,8 @@ short marpaESLIFJSON_decodeb(marpaESLIFGrammar_t *marpaESLIFGrammarJSONp, marpaE
   short                                         continueb             = 1;
   char                                         *inputs;
   size_t                                        inputl                = 0;
-  marpaESLIFSymbol_t                           *jsonStringp           = marpaESLIFGrammarJSONp->jsonStringp;
-  marpaESLIFSymbol_t                           *jsonConstantOrNumberp = marpaESLIFGrammarJSONp->jsonConstantOrNumberp;
+  marpaESLIFSymbol_t                            jsonString;
+  marpaESLIFSymbol_t                            jsonConstantOrNumber;
   marpaESLIFRecognizerOption_t                  marpaESLIFRecognizerOption;
   marpaESLIFValueOption_t                       marpaESLIFValueOption;
   marpaESLIFJSONDecodeContext_t                 marpaESLIFJSONDecodeContext;
@@ -333,6 +334,11 @@ short marpaESLIFJSON_decodeb(marpaESLIFGrammar_t *marpaESLIFGrammarJSONp, marpaE
   size_t                                        discardl;
   int                                           depositStackpUsedi;
   short                                         rcb;
+
+  /* This is vicious but we do not want to recompute the symbols. Since we are internal */
+  /* we just get symbol content and overwrite the symbol option importer to our proxy.  */
+  jsonString = *(marpaESLIFGrammarJSONp->jsonStringp);
+  jsonConstantOrNumber = *(marpaESLIFGrammarJSONp->jsonConstantOrNumberp);
 
   /* Whatever happens, we take entire control on the callbacks so that we have our own context on top of it */
   marpaESLIFJSONDecodeContext.marpaESLIFp                 = marpaESLIFGrammarJSONp->marpaESLIFp;
@@ -377,6 +383,13 @@ short marpaESLIFJSON_decodeb(marpaESLIFGrammar_t *marpaESLIFGrammarJSONp, marpaE
   if (MARPAESLIF_UNLIKELY(marpaESLIFRecognizerp == NULL)) {
     goto err;
   }
+
+  /* We push marpaESLIFRecognizerp as the symbol import context to be able to proxy to it */
+  jsonString.marpaESLIFSymbolOption.userDatavp = marpaESLIFRecognizerp;
+  jsonString.marpaESLIFSymbolOption.importerp = _marpaESLIFJSONDecodeSymbolImportProxyb;
+
+  jsonConstantOrNumber.marpaESLIFSymbolOption.userDatavp = marpaESLIFRecognizerp;
+  jsonConstantOrNumber.marpaESLIFSymbolOption.importerp = _marpaESLIFJSONDecodeSymbolImportProxyb;
 
   MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_INC(marpaESLIFRecognizerp);
   MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "start");
@@ -480,7 +493,7 @@ short marpaESLIFJSON_decodeb(marpaESLIFGrammar_t *marpaESLIFGrammarJSONp, marpaE
 
     case '"':
       /* The external symbol has regex callouts */
-      if (MARPAESLIF_UNLIKELY(! _marpaESLIFRecognizer_symbol_tryb(marpaESLIFRecognizerp, jsonStringp, &matchb))) {
+      if (MARPAESLIF_UNLIKELY(! _marpaESLIFRecognizer_symbol_tryb(marpaESLIFRecognizerp, &jsonString, &matchb))) {
         goto err;
       }
       if (! matchb) {
@@ -523,7 +536,7 @@ short marpaESLIFJSON_decodeb(marpaESLIFGrammar_t *marpaESLIFGrammarJSONp, marpaE
     case 'i': /* Infinity - Only extended grammar will accept it */
     case 'I': /* Infinity - Only extended grammar will accept it */
       /* The external symbol has regex callouts */
-      if (MARPAESLIF_UNLIKELY(! marpaESLIFRecognizer_symbol_tryb(marpaESLIFRecognizerp, jsonConstantOrNumberp, &matchb))) {
+      if (MARPAESLIF_UNLIKELY(! marpaESLIFRecognizer_symbol_tryb(marpaESLIFRecognizerp, &jsonConstantOrNumber, &matchb))) {
         goto err;
       }
       if (! matchb) {
@@ -2357,5 +2370,14 @@ static inline short _marpaESLIFJSONDecodeArrayClosingb(marpaESLIFRecognizer_t *m
   MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "return %d", (int) rcb);
   MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_DEC(marpaESLIFRecognizerp);
   return rcb;
+}
+
+/*****************************************************************************/
+static short _marpaESLIFJSONDecodeSymbolImportProxyb(marpaESLIFSymbol_t *marpaESLIFSymbolp, void *userDatavp, marpaESLIFValueResult_t *marpaESLIFValueResultp)
+/*****************************************************************************/
+/* We want to proxy the the internal JSON Decoder recognizer.                */
+/*****************************************************************************/
+{
+  return _marpaESLIFRecognizer_importb((marpaESLIFRecognizer_t *) userDatavp, marpaESLIFValueResultp);
 }
 

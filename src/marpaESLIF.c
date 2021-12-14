@@ -21690,10 +21690,6 @@ short marpaESLIFSymbol_tryb(marpaESLIFSymbol_t *marpaESLIFSymbolp, char *inputs,
     marpaESLIFGrammar.hasLookaheadMetab     = 0;
   }
 
-  /* Import will be done using a recognizer importer that proxies the symbol importer. */
-  marpaESLIFRecognizerOption.userDatavp = marpaESLIFSymbolp;
-  marpaESLIFRecognizerOption.importerp  = _marpaESLIFRecognizerSymbolProxyImportb;
-  
   /* Fake a recognizer. EOF flag will be set automatically in fake mode */
   marpaESLIFRecognizerp = __marpaESLIFRecognizer_newp(&marpaESLIFGrammar,
                                                       &marpaESLIFRecognizerOption,
@@ -22531,7 +22527,7 @@ static inline short _marpaESLIFRecognizer_symbol_tryb(marpaESLIFRecognizer_t *ma
         *matchbp = 1;
       }
       /* Import, eventually */
-      if (! _marpaESLIFRecognizer_eslif2hostb(marpaESLIFRecognizerp, &marpaESLIFValueResultArray, NULL /* forcedUserDatavp */, NULL /* forcedImporterp */)) {
+      if (! _marpaESLIFRecognizer_eslif2hostb(marpaESLIFRecognizerp, &marpaESLIFValueResultArray, marpaESLIFSymbolp /* forcedUserDatavp */, _marpaESLIFRecognizerSymbolProxyImportb /* forcedImporterp */)) {
         goto err;
       }
       break;

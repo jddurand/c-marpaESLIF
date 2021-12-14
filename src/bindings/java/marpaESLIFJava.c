@@ -4241,18 +4241,18 @@ JNIEXPORT void JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniProgressLog(JNIE
 JNIEXPORT jobject JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniSymbolTry(JNIEnv *envp, jobject eslifRecognizerp, jobject eslifSymbolp)
 /*****************************************************************************/
 {
-  static const char                 *funcs = "Java_org_parser_marpa_ESLIFRecognizer_jniSymbolTry";
-  marpaESLIFRecognizer_t            *marpaESLIFRecognizerp;
-  marpaESLIFSymbol_t                *marpaESLIFSymbolp;
-  marpaESLIFJavaRecognizerContext_t *marpaESLIFJavaRecognizerContextp;
-  short                              matchb;
-  jobject                            objectp = NULL;
+  static const char             *funcs = "Java_org_parser_marpa_ESLIFRecognizer_jniSymbolTry";
+  marpaESLIFRecognizer_t        *marpaESLIFRecognizerp;
+  marpaESLIFSymbol_t            *marpaESLIFSymbolp;
+  marpaESLIFJavaSymbolContext_t *marpaESLIFJavaSymbolContextp;
+  short                          matchb;
+  jobject                        objectp = NULL;
 
-  if (! ESLIFRecognizer_contextb(envp, eslifRecognizerp, &marpaESLIFRecognizerp, &marpaESLIFJavaRecognizerContextp)) {
+  if (! ESLIFRecognizer_contextb(envp, eslifRecognizerp, &marpaESLIFRecognizerp, NULL /* marpaESLIFJavaRecognizerContextpp */)) {
     goto err;
   }
 
-  if (! ESLIFSymbol_contextb(envp, eslifSymbolp, NULL /* marpaESLIFpp */, &marpaESLIFSymbolp, NULL /* marpaESLIFJavaSymbolContextpp */)) {
+  if (! ESLIFSymbol_contextb(envp, eslifSymbolp, NULL /* marpaESLIFpp */, &marpaESLIFSymbolp, &marpaESLIFJavaSymbolContextp)) {
     goto err;
   }
 
@@ -4261,10 +4261,10 @@ JNIEXPORT jobject JNICALL Java_org_parser_marpa_ESLIFRecognizer_jniSymbolTry(JNI
   }
 
   if (matchb) {
-    if (GENERICSTACK_USED(marpaESLIFJavaRecognizerContextp->objectStackp) != 1) {
-      RAISEEXCEPTIONF(envp, "Internal value stack is %d instead of 1", GENERICSTACK_USED(marpaESLIFJavaRecognizerContextp->objectStackp));
+    if (GENERICSTACK_USED(marpaESLIFJavaSymbolContextp->objectStackp) != 1) {
+      RAISEEXCEPTIONF(envp, "Internal value stack is %d instead of 1", GENERICSTACK_USED(marpaESLIFJavaSymbolContextp->objectStackp));
     }
-    objectp = (jobject) GENERICSTACK_POP_PTR(marpaESLIFJavaRecognizerContextp->objectStackp);
+    objectp = (jobject) GENERICSTACK_POP_PTR(marpaESLIFJavaSymbolContextp->objectStackp);
   }
 
   goto done;
