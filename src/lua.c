@@ -310,8 +310,12 @@ static short _marpaESLIFRecognizer_lua_newb(marpaESLIFRecognizer_t *marpaESLIFRe
   marpaESLIFRecognizerp->L  = marpaESLIFRecognizerTopp->L;
 
  inject_current_recognizer:
-  if (MARPAESLIF_UNLIKELY(! marpaESLIFLua_marpaESLIFRecognizer_newFromUnmanagedi(marpaESLIFRecognizerp->L, marpaESLIFRecognizerp))) goto err;               /* stack: marpaESLIFRecognizer */
-  LUA_SETGLOBAL(marpaESLIFRecognizerp, "marpaESLIFRecognizer");                                                                        /* stack: */
+  /* No needed to reinject the same marpaESLIFRecognizerp twice */
+  if (marpaESLIFRecognizerp->marpaESLIFRecognizerLastInjectedp != marpaESLIFRecognizerp) {
+    if (MARPAESLIF_UNLIKELY(! marpaESLIFLua_marpaESLIFRecognizer_newFromUnmanagedi(marpaESLIFRecognizerp->L, marpaESLIFRecognizerp))) goto err; /* stack: marpaESLIFRecognizer */
+    marpaESLIFRecognizerp->marpaESLIFRecognizerLastInjectedp = marpaESLIFRecognizerp;
+    LUA_SETGLOBAL(marpaESLIFRecognizerp, "marpaESLIFRecognizer");                                                                               /* stack: */
+  }
 
   rcb = 1;
   goto done;

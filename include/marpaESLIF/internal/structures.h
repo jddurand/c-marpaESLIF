@@ -584,6 +584,7 @@ struct marpaESLIFRecognizer {
 
   /* For lua action callbacks */
   lua_State                   *L;              /* Only owned by the top-level recognizer */
+  marpaESLIFRecognizer_t      *marpaESLIFRecognizerLastInjectedp;
   char                        *actions;        /* Shallow pointer to action "name", depends on action type */
   marpaESLIF_action_t         *actionp;        /* Shallow pointer to action */
 

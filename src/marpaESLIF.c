@@ -11112,6 +11112,7 @@ static inline marpaESLIFRecognizer_t *__marpaESLIFRecognizer_newp(marpaESLIFGram
   marpaESLIFRecognizerp->lastDiscardl                       = 0;
   marpaESLIFRecognizerp->lastDiscards                       = NULL;
   marpaESLIFRecognizerp->L                                  = NULL;
+  marpaESLIFRecognizerp->marpaESLIFRecognizerLastInjectedp  = NULL;
   marpaESLIFRecognizerp->actions                            = NULL;
   marpaESLIFRecognizerp->actionp                            = NULL;
   marpaESLIFRecognizerp->marpaESLIFValueResultWorkStackp    = NULL;
@@ -19651,6 +19652,7 @@ static inline short _marpaESLIFRecognizer_getPristineFromCachep(marpaESLIF_t *ma
           marpaESLIFRecognizerp->marpaESLIFRecognizerOptionDiscard  = c.f. MARPAESLIFRECOGNIZER_GRAMMARDISCARD_INITIALIZER() macro
           marpaESLIFRecognizerp->marpaESLIFValueOptionDiscard       = c.f. MARPAESLIFRECOGNIZER_GRAMMARDISCARD_INITIALIZER() macro
           marpaESLIFRecognizerp->L                                 = NULL;
+          marpaESLIFRecognizerp->marpaESLIFRecognizerLastInjectedp = NULL;
         */
 
         marpaESLIFRecognizerp->marpaESLIFRecognizerTopp            = marpaESLIFRecognizerParentp->marpaESLIFRecognizerTopp;
