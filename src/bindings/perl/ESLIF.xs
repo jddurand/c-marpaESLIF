@@ -2348,7 +2348,7 @@ static inline short marpaESLIFPerl_importb(pTHX_ marpaESLIFPerl_importContext_t 
     if (marpaESLIFValueResultp->u.r.sizel > 0) {
       if (marpaESLIFValueResultp->u.r.sizel > 1) {
         /* Make sure there is enough room, once */
-        av_extend(avp, (SSize_t) marpaESLIFValueResultp->u.r.sizel - 1);
+        av_extend(avp, (SSize_t) (marpaESLIFValueResultp->u.r.sizel - 1));
       }
       for (i = 0, j = marpaESLIFValueResultp->u.r.sizel - 1; i < marpaESLIFValueResultp->u.r.sizel; i++, j--) {
 	svp = (SV *) marpaESLIFPerl_GENERICSTACK_POP_PTR(importStackp);
