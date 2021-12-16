@@ -16,7 +16,7 @@ typedef struct marpaESLIFTester_context {
 } marpaESLIFTester_context_t;
 
 const static char *dsl = "\n"
-":default ::= action => ::shift\n"
+":default ::= action => ::shift discard-is-fallback => 1\n"
 ":start       ::= XXXXXX # Replaced on-the-fly by json or object\n"
 "json         ::= object\n"
 "               | array\n"

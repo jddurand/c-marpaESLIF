@@ -99,7 +99,7 @@ Log::Any::Adapter->set('Log4perl');
 BEGIN { require_ok('MarpaX::ESLIF') };
 
 my $base_dsl = q{
-:default ::= action => ::shift event-action => event_action regex-action => regex_action
+:default ::= action => ::shift event-action => event_action regex-action => regex_action discard-is-fallback => 1
 :start       ::= XXXXXX # Replaced on-the-fly by json or object
 :discard ::= perl_comment event => perl_comment$
 perl_comment ::= /(?:(?:#)(?:[^\\n]*)(?:\\n|\\z))/u

@@ -31,6 +31,7 @@ typedef enum _marpaESLIFBootstrapStackTypeEnum {
   marpaESLIFBootstrapStackTypeEnum_ADVERB_ITEM_PRIORITY,
   marpaESLIFBootstrapStackTypeEnum_ADVERB_ITEM_PAUSE,
   marpaESLIFBootstrapStackTypeEnum_ADVERB_ITEM_LATM,
+  marpaESLIFBootstrapStackTypeEnum_ADVERB_ITEM_DISCARD_IS_FALLBACK,
   marpaESLIFBootstrapStackTypeEnum_ADVERB_ITEM_NAMING,
   marpaESLIFBootstrapStackTypeEnum_ADVERB_ITEM_SYMBOLACTION,
   marpaESLIFBootstrapStackTypeEnum_ADVERB_ITEM_EVENT_INITIALIZATION,
@@ -86,6 +87,7 @@ static char _MARPAESLIF_BOOTSTRAP_STACK_TYPE[_marpaESLIFBootstrapStackTypeEnum_L
 #define MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_ITEM_PRIORITY              &(_MARPAESLIF_BOOTSTRAP_STACK_TYPE[marpaESLIFBootstrapStackTypeEnum_ADVERB_ITEM_PRIORITY])
 #define MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_ITEM_PAUSE                 &(_MARPAESLIF_BOOTSTRAP_STACK_TYPE[marpaESLIFBootstrapStackTypeEnum_ADVERB_ITEM_PAUSE])
 #define MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_ITEM_LATM                  &(_MARPAESLIF_BOOTSTRAP_STACK_TYPE[marpaESLIFBootstrapStackTypeEnum_ADVERB_ITEM_LATM])
+#define MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_ITEM_DISCARD_IS_FALLBACK   &(_MARPAESLIF_BOOTSTRAP_STACK_TYPE[marpaESLIFBootstrapStackTypeEnum_ADVERB_ITEM_DISCARD_IS_FALLBACK])
 #define MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_ITEM_NAMING                &(_MARPAESLIF_BOOTSTRAP_STACK_TYPE[marpaESLIFBootstrapStackTypeEnum_ADVERB_ITEM_NAMING])
 #define MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_ITEM_SYMBOLACTION          &(_MARPAESLIF_BOOTSTRAP_STACK_TYPE[marpaESLIFBootstrapStackTypeEnum_ADVERB_ITEM_SYMBOLACTION])
 #define MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_ITEM_EVENT_INITIALIZATION  &(_MARPAESLIF_BOOTSTRAP_STACK_TYPE[marpaESLIFBootstrapStackTypeEnum_ADVERB_ITEM_EVENT_INITIALIZATION])
@@ -161,6 +163,7 @@ enum marpaESLIF_bootstrap_adverb_list_item_type {
   MARPAESLIF_BOOTSTRAP_ADVERB_LIST_ITEM_TYPE_PRIORITY,
   MARPAESLIF_BOOTSTRAP_ADVERB_LIST_ITEM_TYPE_PAUSE,
   MARPAESLIF_BOOTSTRAP_ADVERB_LIST_ITEM_TYPE_LATM,
+  MARPAESLIF_BOOTSTRAP_ADVERB_LIST_ITEM_TYPE_DISCARD_IS_FALLBACK,
   MARPAESLIF_BOOTSTRAP_ADVERB_LIST_ITEM_TYPE_NAMING,
   MARPAESLIF_BOOTSTRAP_ADVERB_LIST_ITEM_TYPE_SYMBOLACTION,
   MARPAESLIF_BOOTSTRAP_ADVERB_LIST_ITEM_TYPE_EVENT_INITIALIZATION,
@@ -246,6 +249,7 @@ struct marpaESLIF_bootstrap_adverb_list_item {
     int                                          priorityi;
     marpaESLIF_bootstrap_pause_type_t            pausei;
     short                                        latmb;
+    short                                        discardIsFallbackb;
     marpaESLIF_bootstrap_utf_string_t           *namingp;
     marpaESLIF_action_t                         *symbolactionp;
     marpaESLIF_bootstrap_event_initialization_t *eventInitializationp;

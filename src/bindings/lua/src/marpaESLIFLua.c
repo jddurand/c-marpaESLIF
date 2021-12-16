@@ -2985,6 +2985,7 @@ static int  marpaESLIFLua_marpaESLIFGrammar_currentPropertiesi(lua_State *L)
   MARPAESLIFLUA_STORE_INTEGER      (L, "maxlevel",            grammarProperty.maxLeveli);
   MARPAESLIFLUA_STORE_STRING       (L, "description",         grammarProperty.descp);
   MARPAESLIFLUA_STORE_BOOLEAN      (L, "latm",                grammarProperty.latmb);
+  MARPAESLIFLUA_STORE_BOOLEAN      (L, "discardIsFallback",   grammarProperty.discardIsFallbackb);
   MARPAESLIFLUA_STORE_ACTION       (L, "defaultSymbolAction", grammarProperty.defaultSymbolActionp);
   MARPAESLIFLUA_STORE_ACTION       (L, "defaultRuleAction",   grammarProperty.defaultRuleActionp);
   MARPAESLIFLUA_STORE_ACTION       (L, "defaultEventAction",  grammarProperty.defaultEventActionp);
@@ -3043,7 +3044,7 @@ static int  marpaESLIFLua_marpaESLIFGrammar_propertiesByLeveli(lua_State *L)
   MARPAESLIFLUA_STORE_INTEGER      (L, "level",               grammarProperty.leveli);
   MARPAESLIFLUA_STORE_INTEGER      (L, "maxlevel",            grammarProperty.maxLeveli);
   MARPAESLIFLUA_STORE_STRING       (L, "description",         grammarProperty.descp);
-  MARPAESLIFLUA_STORE_BOOLEAN      (L, "latm",                grammarProperty.latmb);
+  MARPAESLIFLUA_STORE_BOOLEAN      (L, "discardIsFallback",   grammarProperty.discardIsFallbackb);
   MARPAESLIFLUA_STORE_ACTION       (L, "defaultSymbolAction", grammarProperty.defaultSymbolActionp);
   MARPAESLIFLUA_STORE_ACTION       (L, "defaultRuleAction",   grammarProperty.defaultRuleActionp);
   MARPAESLIFLUA_STORE_ACTION       (L, "defaultEventAction",  grammarProperty.defaultEventActionp);

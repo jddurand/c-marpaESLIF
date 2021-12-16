@@ -615,7 +615,7 @@ static marpaESLIFJavaMethodCache_t marpaESLIFJavaMethodCacheArrayp[] = {
   {      &JAVA_LANG_STRING_CLASSCACHE, "getBytes",                                  "(Ljava/lang/String;)[B", 0 /* staticb */, NULL, 1 /* requiredb */ },
 
   #define MARPAESLIF_ESLIFGRAMMARPROPERTIES_CLASS_init_METHODP                      marpaESLIFJavaMethodCacheArrayp[62].methodp
-  {      &MARPAESLIF_ESLIFGRAMMARPROPERTIES_CLASSCACHE, "<init>",                   "(IILjava/lang/String;ZLjava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;II[I[ILjava/lang/String;Ljava/lang/String;)V", 0 /* staticb */, NULL, 1 /* requiredb */ },
+  {      &MARPAESLIF_ESLIFGRAMMARPROPERTIES_CLASSCACHE, "<init>",                   "(IILjava/lang/String;ZZLjava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;II[I[ILjava/lang/String;Ljava/lang/String;)V", 0 /* staticb */, NULL, 1 /* requiredb */ },
 
   #define MARPAESLIF_ESLIFGRAMMARRULEPROPERTIES_CLASS_init_METHODP                  marpaESLIFJavaMethodCacheArrayp[63].methodp
   {      &MARPAESLIF_ESLIFGRAMMARRULEPROPERTIES_CLASSCACHE, "<init>",               "(ILjava/lang/String;Ljava/lang/String;II[I[ZILjava/lang/String;Ljava/lang/String;ZIZZZIIZ)V", 0 /* staticb */, NULL, 1 /* requiredb */ },
@@ -6118,6 +6118,7 @@ static jobject marpaESLIFJava_grammarPropertiesp(JNIEnv *envp, marpaESLIFGrammar
   jint                         maxLevel;
   jstring                      description;
   jboolean                     latm;
+  jboolean                     discardIsFallback;
   jstring                      defaultSymbolAction;
   jstring                      defaultRuleAction;
   jstring                      defaultEventAction;
@@ -6136,6 +6137,7 @@ static jobject marpaESLIFJava_grammarPropertiesp(JNIEnv *envp, marpaESLIFGrammar
   maxLevel            = (jint) grammarPropertyp->maxLeveli;
   description         = marpaESLIFJava_marpaESLIFStringToJavap(envp, grammarPropertyp->descp);
   latm                = grammarPropertyp->latmb ? JNI_TRUE : JNI_FALSE;
+  discardIsFallback   = grammarPropertyp->discardIsFallbackb ? JNI_TRUE : JNI_FALSE;
   defaultSymbolAction = marpaESLIFJava_marpaESLIFActionToJavap(envp, grammarPropertyp->defaultSymbolActionp);
   defaultRuleAction   = marpaESLIFJava_marpaESLIFActionToJavap(envp, grammarPropertyp->defaultRuleActionp);
   defaultEventAction  = marpaESLIFJava_marpaESLIFActionToJavap(envp, grammarPropertyp->defaultEventActionp);
@@ -6194,6 +6196,7 @@ static jobject marpaESLIFJava_grammarPropertiesp(JNIEnv *envp, marpaESLIFGrammar
                                    maxLevel,
                                    description,
                                    latm,
+                                   discardIsFallback,
                                    defaultSymbolAction,
                                    defaultRuleAction,
                                    defaultEventAction,

@@ -4265,6 +4265,7 @@ static inline marpaESLIF_grammar_t *_marpaESLIF_grammar_newp(marpaESLIFGrammar_t
   grammarp->descp                              = NULL;
   grammarp->descautob                          = 0;
   grammarp->latmb                              = 1;    /* latmb true is the default */
+  grammarp->discardIsFallbackb                 = 0;
   grammarp->marpaWrapperGrammarStartp          = NULL;
   grammarp->marpaWrapperGrammarStartNoEventp   = NULL;
   grammarp->nTerminall                         = 0;
@@ -7425,6 +7426,7 @@ short marpaESLIFGrammar_grammarproperty_by_levelb(marpaESLIFGrammar_t *marpaESLI
     grammarPropertyp->maxLeveli               = GENERICSTACK_USED(grammarStackp) - 1; /* Per def it is > 0 here */
     grammarPropertyp->descp                   = grammarp->descp;
     grammarPropertyp->latmb                   = grammarp->latmb;
+    grammarPropertyp->discardIsFallbackb      = grammarp->discardIsFallbackb;
     grammarPropertyp->defaultSymbolActionp    = grammarp->defaultSymbolActionp;
     grammarPropertyp->defaultRuleActionp      = grammarp->defaultRuleActionp;
     grammarPropertyp->defaultEventActionp     = grammarp->defaultEventActionp;
@@ -9102,19 +9104,22 @@ static inline short _marpaESLIFRecognizer_resume_oneb(marpaESLIFRecognizer_t *ma
   }
 
   /* It is a non-sense to have lexemes of length maxMatchedl and a discard rule that would be greater.  */
-  /* In this case, :discard have precedence. The exception is a match on a pseudo-terminal, or on a */
-  /* lookup, that is valid despite the fact the it matched zero byte */
-  if (! (isPseudoTerminalMatchb || isLookupMetaMatchb)) {
-    if (! __marpaESLIFRecognizer_discardb(marpaESLIFRecognizerp, maxMatchedl /* minl */, &discardl, 0 /* appendEventb */)) {
-      goto err;
-    }
-    if (discardl > 0) {
-      /* If there is an event, get out of this method */
-      if (marpaESLIFRecognizerp->eventArrayl > 0) {
-        rcb = 1;
-        goto done;
-      } else {
-        goto retry;
+  /* In this case, :discard have precedence. The exception is a match on a pseudo-terminal, or on a     */
+  /* lookup, that is valid despite the fact the it matched zero byte.                                   */
+  /* This check is always off when discard is set as fallback.                                          */
+  if (! grammarp->discardIsFallbackb) {
+    if (! (isPseudoTerminalMatchb || isLookupMetaMatchb)) {
+      if (! __marpaESLIFRecognizer_discardb(marpaESLIFRecognizerp, maxMatchedl /* minl */, &discardl, 0 /* appendEventb */)) {
+        goto err;
+      }
+      if (discardl > 0) {
+        /* If there is an event, get out of this method */
+        if (marpaESLIFRecognizerp->eventArrayl > 0) {
+          rcb = 1;
+          goto done;
+        } else {
+          goto retry;
+        }
       }
     }
   }
@@ -13563,6 +13568,8 @@ static inline void _marpaESLIF_grammar_createshowv(marpaESLIFGrammar_t *marpaESL
       ||
       (grammarp->latmb)
       ||
+      (grammarp->discardIsFallbackb)
+      ||
       (grammarp->defaultEncodings != NULL)
       ||
       (grammarp->fallbackEncodings != NULL)
@@ -13659,6 +13666,9 @@ static inline void _marpaESLIF_grammar_createshowv(marpaESLIFGrammar_t *marpaESL
     }
     if (grammarp->latmb) {
       MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, " latm => 1");
+    }
+    if (grammarp->discardIsFallbackb) {
+      MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, " discard-is-fallback => 1");
     }
     if (grammarp->defaultEncodings != NULL) {
       MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, " default-encoding => ");

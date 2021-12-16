@@ -3959,6 +3959,7 @@ CODE:
   MARPAESLIFPERL_XV_STORE_IV         (avp, "maxLevel",            grammarProperty.maxLeveli);
   MARPAESLIFPERL_XV_STORE_STRING     (avp, "description",         grammarProperty.descp);
   MARPAESLIFPERL_XV_STORE_IV         (avp, "latm",                grammarProperty.latmb);
+  MARPAESLIFPERL_XV_STORE_IV         (avp, "discardIsFallback",   grammarProperty.discardIsFallbackb);
   MARPAESLIFPERL_XV_STORE_ACTION     (avp, "defaultSymbolAction", grammarProperty.defaultSymbolActionp);
   MARPAESLIFPERL_XV_STORE_ACTION     (avp, "defaultRuleAction",   grammarProperty.defaultRuleActionp);
   MARPAESLIFPERL_XV_STORE_ACTION     (avp, "defaultEventAction",  grammarProperty.defaultEventActionp);
@@ -4002,6 +4003,7 @@ CODE:
   MARPAESLIFPERL_XV_STORE_IV         (avp, "maxLevel",            grammarProperty.maxLeveli);
   MARPAESLIFPERL_XV_STORE_STRING     (avp, "description",         grammarProperty.descp);
   MARPAESLIFPERL_XV_STORE_IV         (avp, "latm",                grammarProperty.latmb);
+  MARPAESLIFPERL_XV_STORE_IV         (avp, "discardIsFallback",   grammarProperty.discardIsFallbackb);
   MARPAESLIFPERL_XV_STORE_ACTION     (avp, "defaultSymbolAction", grammarProperty.defaultSymbolActionp);
   MARPAESLIFPERL_XV_STORE_ACTION     (avp, "defaultRuleAction",   grammarProperty.defaultRuleActionp);
   MARPAESLIFPERL_XV_STORE_ACTION     (avp, "defaultEventAction",  grammarProperty.defaultEventActionp);

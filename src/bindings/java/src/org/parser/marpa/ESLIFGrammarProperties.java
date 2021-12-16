@@ -22,6 +22,7 @@ public class ESLIFGrammarProperties {
 	private int     maxLevel;
     private String  description;
     private boolean latm;
+    private boolean discardIsFallback;
     private String  defaultSymbolAction;
     private String  defaultRuleAction;
     private String  defaultEventAction;
@@ -45,6 +46,7 @@ public class ESLIFGrammarProperties {
 	 * @param maxLevel Maximum grammar level
 	 * @param description Grammar description
 	 * @param latm Grammar is in LATM (Longest Accepted Token Mode) ?
+	 * @param discardIsFallback Grammar's discard-is-fallback setting
 	 * @param defaultSymbolAction Grammar default symbol action
 	 * @param defaultRuleAction Grammar default rule action
 	 * @param defaultEventAction Grammar default event action
@@ -56,11 +58,12 @@ public class ESLIFGrammarProperties {
 	 * @param defaultEncoding Grammar default encoding
 	 * @param fallbackEncoding Grammar fallback encoding
 	 */
-	public ESLIFGrammarProperties(int level, int maxLevel, String description, boolean latm, String defaultSymbolAction, String defaultRuleAction, String defaultEventAction, String defaultRegexAction, int startId, int discardId, int[] symbolIds, int[] ruleIds, String defaultEncoding, String fallbackEncoding) {
+	public ESLIFGrammarProperties(int level, int maxLevel, String description, boolean latm, boolean discardIsFallback, String defaultSymbolAction, String defaultRuleAction, String defaultEventAction, String defaultRegexAction, int startId, int discardId, int[] symbolIds, int[] ruleIds, String defaultEncoding, String fallbackEncoding) {
 		this.level               = level;
 		this.maxLevel            = maxLevel;
 		this.description         = description;
 		this.latm                = latm;
+		this.discardIsFallback   = discardIsFallback;
 		this.defaultSymbolAction = defaultSymbolAction;
 		this.defaultRuleAction   = defaultRuleAction;
 		this.defaultEventAction  = defaultEventAction;
@@ -89,6 +92,7 @@ public class ESLIFGrammarProperties {
 		result = prime * result + discardId;
 		result = prime * result + ((fallbackEncoding == null) ? 0 : fallbackEncoding.hashCode());
 		result = prime * result + (latm ? 1231 : 1237);
+		result = prime * result + (discardIsFallback ? 1231 : 1237);
 		result = prime * result + level;
 		result = prime * result + maxLevel;
 		result = prime * result + Arrays.hashCode(ruleIds);
@@ -167,6 +171,9 @@ public class ESLIFGrammarProperties {
 		if (latm != other.latm) {
 			return false;
 		}
+		if (discardIsFallback != other.discardIsFallback) {
+			return false;
+		}
 		if (level != other.level) {
 			return false;
 		}
@@ -191,7 +198,7 @@ public class ESLIFGrammarProperties {
 	@Override
 	public String toString() {
 		return "ESLIFGrammarProperties [level=" + level + ", maxLevel=" + maxLevel + ", description=" + description
-				+ ", latm=" + latm + ", defaultSymbolAction=" + defaultSymbolAction + ", defaultRuleAction="
+				+ ", latm=" + latm + ", discardIsFallback=" + discardIsFallback + ", defaultSymbolAction=" + defaultSymbolAction + ", defaultRuleAction="
 				+ defaultRuleAction + ", defaultEventAction=" + defaultEventAction + ", defaultRegexAction=" + defaultRegexAction + ", startId=" + startId
 				+ ", discardId=" + discardId + ", symbolIds=" + Arrays.toString(symbolIds) + ", ruleIds="
 				+ Arrays.toString(ruleIds) + ", defaultEncoding=" + defaultEncoding + ", fallbackEncoding="
@@ -233,6 +240,22 @@ public class ESLIFGrammarProperties {
 	 */
 	public boolean getLatm() {
 		return isLatm();
+	}
+
+	/**
+	 * @return A boolean that returns the grammar's discard-is-fallback setting
+	 */
+	public boolean isDiscardIsFallback() {
+		return discardIsFallback;
+	}
+
+	/**
+	 * Alias to isDiscardIsFallback().
+	 * 
+	 * @return A boolean that returns the grammar's discard-is-fallback setting
+	 */
+	public boolean getDiscardIsFallback() {
+		return isDiscardIsFallback();
 	}
 
 	/**

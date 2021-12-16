@@ -92,6 +92,10 @@ Grammar description
 
 Grammar is in LATM (Longest Accepted Token Mode) ?
 
+=item discardIsFallback
+
+Grammar's :discard is a fallback
+
 =item defaultSymbolAction
 
 Grammar default symbol action
@@ -145,6 +149,7 @@ sub new {
                    maxLevel            => $args{maxLevel},
                    description         => $args{description},
                    latm                => $args{latm},
+                   discardIsFallback   => $args{discardIsFallback},
                    defaultSymbolAction => $args{defaultSymbolAction},
                    defaultRuleAction   => $args{defaultRuleAction},
                    defaultEventAction  => $args{defaultEventAction},
@@ -218,6 +223,28 @@ Alias to isLatm()
 
 sub getLatm {
   goto &isLatm
+}
+
+=head2 $self->isDiscardIsFallback
+
+Returns a boolean that returns the grammar's discard-is-fallback setting
+
+=cut
+
+sub isDiscardIsFallback {
+  my ($self) = @_;
+
+  return $self->{discardIsFallback}
+}
+
+=head2 $self->getDiscardIsFallback
+
+Alias to isDiscardIsFallback()
+
+=cut
+
+sub getDiscardIsFallback {
+  goto &isDiscardIsFallback
 }
 
 =head2 $self->getDefaultSymbolAction

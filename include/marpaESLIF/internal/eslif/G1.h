@@ -59,6 +59,7 @@ typedef enum bootstrap_grammar_G1_enum {
   G1_TERMINAL_ON,
   G1_TERMINAL_OFF,
   G1_TERMINAL_LATM,
+  G1_TERMINAL_DISCARD_IS_FALLBACK,
   G1_TERMINAL_BLESS,
   G1_TERMINAL_NAME,
   G1_TERMINAL_COMMA,
@@ -179,6 +180,7 @@ typedef enum bootstrap_grammar_G1_enum {
   G1_META_EVENT_INITIALIZER,
   G1_META_ON_OR_OFF,
   G1_META_LATM_SPECIFICATION,
+  G1_META_DISCARD_IS_FALLBACK_SPECIFICATION,
   G1_META_NAMING,
   G1_META_NULL_ADVERB,
   G1_META_ALTERNATIVE_NAME,
@@ -297,6 +299,7 @@ bootstrap_grammar_meta_t bootstrap_grammar_G1_metas[] = {
   { G1_META_EVENT_INITIALIZER,                "event initializer",                         0,       0,           0,            0,    0,               -1,       0,        NULL,       NULL },
   { G1_META_ON_OR_OFF,                        "on or off",                                 0,       0,           0,            0,    0,               -1,       0,        NULL,       NULL },
   { G1_META_LATM_SPECIFICATION,               "latm specification",                        0,       0,           0,            0,    0,               -1,       0,        NULL,       NULL },
+  { G1_META_DISCARD_IS_FALLBACK_SPECIFICATION,"discard is fallback specification",         0,       0,           0,            0,    0,               -1,       0,        NULL,       NULL },
   { G1_META_NAMING,                           "naming",                                    0,       0,           0,            0,    0,               -1,       0,        NULL,       NULL },
   { G1_META_NULL_ADVERB,                      "null adverb",                               0,       0,           0,            0,    0,               -1,       0,        NULL,       NULL },
   { G1_META_ALTERNATIVE_NAME,                 "alternative name",                          0,       0,           0,            0,    0,               -1,       0,        NULL,       NULL },
@@ -712,6 +715,14 @@ bootstrap_grammar_terminal_t bootstrap_grammar_G1_terminals[] = {
     "'latm'", NULL, NULL,
 #ifndef MARPAESLIF_NTRACE
     "latm", "lat"
+#else
+    NULL, NULL
+#endif
+  },
+  { G1_TERMINAL_DISCARD_IS_FALLBACK, MARPAESLIF_TERMINAL_TYPE_STRING, NULL,
+    "'discard-is-fallback'", NULL, NULL,
+#ifndef MARPAESLIF_NTRACE
+    "discard-is-fallback", "discard"
 #else
     NULL, NULL
 #endif
@@ -1409,6 +1420,7 @@ bootstrap_grammar_rule_t bootstrap_grammar_G1_rules[] = {
   { G1_META_ACTION,                           G1_RULE_ACTION_1,                               MARPAESLIF_RULE_TYPE_ALTERNATIVE, 3, { G1_TERMINAL_ACTION,
                                                                                                                                      G1_TERMINAL_THEN,
                                                                                                                                      G1_META_ACTION_NAME                          }, -1,                        -1,      -1,              0, G1_ACTION_ACTION_1 },
+  { G1_META_ADVERB_ITEM,                      G1_RULE_ADVERB_ITEM_24,                         MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_DISCARD_IS_FALLBACK_SPECIFICATION    }, -1,                        -1,      -1,              0, G1_ACTION_ADVERB_ITEM_24 },
   { G1_META_ACTION,                           G1_RULE_ACTION_2,                               MARPAESLIF_RULE_TYPE_ALTERNATIVE, 3, { G1_TERMINAL_ACTION,
                                                                                                                                      G1_TERMINAL_THEN,
                                                                                                                                      G1_META_STRING_LITERAL                       }, -1,                        -1,      -1,              0, G1_ACTION_ACTION_2 },
@@ -1497,6 +1509,12 @@ bootstrap_grammar_rule_t bootstrap_grammar_G1_rules[] = {
   { G1_META_LATM_SPECIFICATION,               G1_RULE_LATM_SPECIFICATION_2,                   MARPAESLIF_RULE_TYPE_ALTERNATIVE, 3, { G1_TERMINAL_LATM,
                                                                                                                                      G1_TERMINAL_THEN,
                                                                                                                                      G1_META_TRUE                                 }, -1,                        -1,      -1,              0, G1_ACTION_LATM_SPECIFICATION_2 },
+  { G1_META_DISCARD_IS_FALLBACK_SPECIFICATION,G1_RULE_DISCARD_IS_FALLBACK_SPECIFICATION_1,    MARPAESLIF_RULE_TYPE_ALTERNATIVE, 3, { G1_TERMINAL_DISCARD_IS_FALLBACK,
+                                                                                                                                     G1_TERMINAL_THEN,
+                                                                                                                                     G1_META_FALSE                                }, -1,                        -1,      -1,              0, G1_ACTION_DISCARD_IS_FALLBACK_SPECIFICATION_1 },
+  { G1_META_DISCARD_IS_FALLBACK_SPECIFICATION,G1_RULE_DISCARD_IS_FALLBACK_SPECIFICATION_2,    MARPAESLIF_RULE_TYPE_ALTERNATIVE, 3, { G1_TERMINAL_DISCARD_IS_FALLBACK,
+                                                                                                                                     G1_TERMINAL_THEN,
+                                                                                                                                     G1_META_TRUE                                 }, -1,                        -1,      -1,              0, G1_ACTION_DISCARD_IS_FALLBACK_SPECIFICATION_2 },
   { G1_META_NAMING,                           G1_RULE_NAMING,                                 MARPAESLIF_RULE_TYPE_ALTERNATIVE, 3, { G1_TERMINAL_NAME,
                                                                                                                                      G1_TERMINAL_THEN,
                                                                                                                                      G1_META_ALTERNATIVE_NAME                     }, -1,                        -1,      -1,              0, G1_ACTION_NAMING },
