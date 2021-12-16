@@ -1119,6 +1119,7 @@ static inline marpaESLIF_symbol_t *_marpaESLIF_bootstrap_find_terminal_by_nameb(
     break;
   }
 
+ err: /* When compiled without MARPAESLIF_NTRACE */
   return symbolp;
 }
 
