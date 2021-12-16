@@ -2346,11 +2346,12 @@ static inline short marpaESLIFPerl_importb(pTHX_ marpaESLIFPerl_importContext_t 
     /* We received elements in order: first, second, etc..., we pushed that in internalStack, so pop will say last, beforelast, etc..., second, first */
     avp = newAV();
     if (marpaESLIFValueResultp->u.r.sizel > 0) {
-      if (marpaESLIFValueResultp->u.r.sizel > 1) {
-        /* Make sure there is enough room, once */
-        av_extend(avp, (SSize_t) (marpaESLIFValueResultp->u.r.sizel - 1));
-      }
-      for (i = 0, j = marpaESLIFValueResultp->u.r.sizel - 1; i < marpaESLIFValueResultp->u.r.sizel; i++, j--) {
+      j = marpaESLIFValueResultp->u.r.sizel - 1;
+#ifdef av_extend
+      /* Size argument is the last indice */
+      av_extend(avp, (SSize_t) j);
+#endif
+      for (i = 0; i < marpaESLIFValueResultp->u.r.sizel; i++, j--) {
 	svp = (SV *) marpaESLIFPerl_GENERICSTACK_POP_PTR(importStackp);
         /* No need to MARPAESLIFPERL_REFCNT_INC(svp) because we always increase any SV that it is internalStack */
 	/* MARPAESLIFPERL_REFCNT_INC(svp); */
@@ -2369,6 +2370,10 @@ static inline short marpaESLIFPerl_importb(pTHX_ marpaESLIFPerl_importContext_t 
   case MARPAESLIF_VALUE_TYPE_TABLE:
     /* We received elements in order: firstkey, firstvalue, secondkey, secondvalue, etc..., we pushed that in internalStack, so pop will say lastvalue, lastkey, ..., firstvalue, firstkey */
     hvp = newHV();
+#ifdef hv_ksplit
+    /* Size argument seems to be the last indice + 1, i.e. the number of elements */
+    hv_ksplit(hvp, (IV) marpaESLIFValueResultp->u.t.sizel);
+#endif
     for (i = 0; i < marpaESLIFValueResultp->u.t.sizel; i++) {
       /* Note that importStackp contains only new SV's, or &PL_sv_undef, &PL_sv_yes, &PL_sv_no */
       /* This is why it is not necessary to SvREFCNT_inc/SvREFCNT_dec on valuep: all we do is create an SV and move it in the hash */
