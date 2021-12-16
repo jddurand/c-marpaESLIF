@@ -2346,6 +2346,10 @@ static inline short marpaESLIFPerl_importb(pTHX_ marpaESLIFPerl_importContext_t 
     /* We received elements in order: first, second, etc..., we pushed that in internalStack, so pop will say last, beforelast, etc..., second, first */
     avp = newAV();
     if (marpaESLIFValueResultp->u.r.sizel > 0) {
+      if (marpaESLIFValueResultp->u.r.sizel > 1) {
+        /* Make sure there is enough room, once */
+        av_extend(avp, (SSize_t) marpaESLIFValueResultp->u.r.sizel - 1);
+      }
       for (i = 0, j = marpaESLIFValueResultp->u.r.sizel - 1; i < marpaESLIFValueResultp->u.r.sizel; i++, j--) {
 	svp = (SV *) marpaESLIFPerl_GENERICSTACK_POP_PTR(importStackp);
         /* No need to MARPAESLIFPERL_REFCNT_INC(svp) because we always increase any SV that it is internalStack */
