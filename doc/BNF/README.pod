@@ -422,6 +422,7 @@ By default, symbol action is C<::transfer> and rule action is C<::concat>, i.e. 
 
   :default ::= action            => defaultRuleAction
                latm              => 1
+               discardIsFallback => 0
                symbol-action     => defaultSymbolAction
                regex-action      => defaultRegexAction
                default-encoding  => UTF-8
@@ -434,6 +435,8 @@ The C<symbol-action> adverb is how a match within a sub-grammar is transfered.
 The C<default-encoding> adverb gives default encoding when the recognizer runs in character mode and the end-user gave no encoding.
 
 The C<fallback-encoding> adverb gives fallback encoding when the recognizer runs in character mode and the end-user gave no encoding nor C<default-encoding>. Then marpaESLIF will try to I<guess> the encoding, and if this fail, will fallback to this setting. This is the desired setting when you grammar accept input in different encoding, and defaults to a given encoding if the guess fail. Please note that, when guessing an encoding, marpaESLIF takes into account an eventual BOM, retreiving the later from input characters if it exists.
+
+The C<discard-is-fallback> adverb indicates ESLIF that :discard should not be tried whenever scan/resume is entered. The default is the safe implementation, i.e. it is always tried, and no grammar terminal will match if :discard matches an equal number of bytes or longer. Nevertheless, if you are sure that the grammar's :discard cannot conflict with any other grammar terminal, then :discard, if successful, will always hit as a fallback alternative. The C<discard-is-fallback> enforces this mode, providing a safe performance improvement for grammars that has no conflict between :discard and any other grammar terminal.
 
 =item Meta actions
 
@@ -1061,6 +1064,7 @@ marpaESLIF BNF can be expressed in itself:
                                    | <priority specification>
                                    | <pause specification>
                                    | <latm specification>
+                                   | <discard is fallback specification>
                                    | <naming>
                                    | <null adverb>
                                    | <symbol action>
@@ -1101,6 +1105,8 @@ marpaESLIF BNF can be expressed in itself:
   <event initializer> ::= 
   <latm specification>           ::= 'latm' /=>|\x{21D2}/u <false>
                                    | 'latm' /=>|\x{21D2}/u <true>
+  <discard is fallback specification> ::= 'discard-is-fallback' /=>|\x{21D2}/u <false>
+                                        | 'discard-is-fallback' /=>|\x{21D2}/u <true>
   <naming>                       ::= 'name' /=>|\x{21D2}/u <alternative name>
   <null adverb>                  ::= ','
   <symbol action>                ::= 'symbol-action' /=>|\x{21D2}/u <symbol action name>
