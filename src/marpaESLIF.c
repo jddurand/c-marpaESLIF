@@ -2298,6 +2298,9 @@ static inline marpaESLIF_grammar_t *_marpaESLIF_bootstrap_grammarp(marpaESLIFGra
     goto err;
   }
 
+  /* We hardcode discardIsFallback for the bootstrap grammar */
+  grammarp->discardIsFallbackb = 1;
+
   /* First the terminals */
   for (i = 0; i < bootstrap_grammar_terminali; i++) {
     symbolp = _marpaESLIF_symbol_newp(marpaESLIFp, NULL /* marpaESLIFSymbolOptionp */);
