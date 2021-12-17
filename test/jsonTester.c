@@ -10,6 +10,13 @@
 
 static short inputReaderb(void *userDatavp, char **inputsp, size_t *inputlp, short *eofbp, short *characterStreambp, char **encodingsp, size_t *encodinglp, marpaESLIFReaderDispose_t *disposeCallbackpp);
 
+/* This function exist just to ease profiling with valgrind using the --toggle-collect=FUNCTIONNAME */
+#ifdef MARPAESLIF_JSONTESTER_EXTERNAL
+static short do_parseb(marpaESLIFGrammar_t *marpaESLIFGrammarp, marpaESLIFRecognizerOption_t *marpaESLIFRecognizerOptionp, marpaESLIFValueOption_t *marpaESLIFValueOptionp, short *exhaustedbp);
+#else
+static short do_parseb(marpaESLIFGrammar_t *marpaESLIFGrammarJSONp, marpaESLIFJSONDecodeOption_t *marpaESLIFJSONDecodeOptionp, marpaESLIFRecognizerOption_t *marpaESLIFRecognizerOptionp, marpaESLIFValueOption_t *marpaESLIFValueOptionp);
+#endif
+
 typedef struct marpaESLIFTester_context {
   char    *inputs;
   size_t   inputl;
@@ -194,9 +201,9 @@ int main(int argc, char **argv) {
     GENERICLOGGER_INFOF(genericLoggerp, "Scanning JSON %s", names);
 
 #ifdef MARPAESLIF_JSONTESTER_EXTERNAL
-    jsonb = marpaESLIFGrammar_parseb(marpaESLIFGrammarp, &marpaESLIFRecognizerOption, &marpaESLIFValueOption, NULL /* exhaustedbb */);
+    jsonb = do_parseb(marpaESLIFGrammarp, &marpaESLIFRecognizerOption, &marpaESLIFValueOption, NULL /* exhaustedbb */);
 #else
-    jsonb = marpaESLIFJSON_decodeb(marpaESLIFGrammarp, &marpaESLIFJSONDecodeOption, &marpaESLIFRecognizerOption, &marpaESLIFValueOption);
+    jsonb = do_parseb(marpaESLIFGrammarp, &marpaESLIFJSONDecodeOption, &marpaESLIFRecognizerOption, &marpaESLIFValueOption);
 #endif
     if (names[0] == 'i') {
       /* Implementation defined */
@@ -273,3 +280,15 @@ static short inputReaderb(void *userDatavp, char **inputsp, size_t *inputlp, sho
 
   return 1;
 }
+
+#ifdef MARPAESLIF_JSONTESTER_EXTERNAL
+static short do_parseb(marpaESLIFGrammar_t *marpaESLIFGrammarp, marpaESLIFRecognizerOption_t *marpaESLIFRecognizerOptionp, marpaESLIFValueOption_t *marpaESLIFValueOptionp, short *exhaustedbp)
+{
+  return marpaESLIFGrammar_parseb(marpaESLIFGrammarp, marpaESLIFRecognizerOptionp, marpaESLIFValueOptionp, exhaustedbp);
+}
+#else
+static short do_parseb(marpaESLIFGrammar_t *marpaESLIFGrammarJSONp, marpaESLIFJSONDecodeOption_t *marpaESLIFJSONDecodeOptionp, marpaESLIFRecognizerOption_t *marpaESLIFRecognizerOptionp, marpaESLIFValueOption_t *marpaESLIFValueOptionp)
+{
+  return marpaESLIFJSON_decodeb(marpaESLIFGrammarJSONp, marpaESLIFJSONDecodeOptionp, marpaESLIFRecognizerOptionp, marpaESLIFValueOptionp);
+}
+#endif
