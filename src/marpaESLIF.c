@@ -1,5 +1,6 @@
 /* #undef MARPAESLIF_NTRACE */
-/* #undef MARPAESLIF_NOTICE_ACTION /* /* For stack manipulation debug */
+/* For stack manipulation debug: */
+/* #define MARPAESLIF_NOTICE_ACTION */
 
 #include <stdlib.h>
 #include <errno.h>
@@ -12314,8 +12315,8 @@ static short _marpaESLIFValue_ruleCallbackWrapperb(void *userDatavp, int rulei, 
   
   MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_INC(marpaESLIFRecognizerp);
   MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "start [%d] <- [%d-%d]", resulti, arg0i, argni);
-#ifndef MARPAESLIF_NOTICE_ACTION
-  MARPAESLIFRECOGNIZER_NOTICEF(marpaESLIFRecognizerp, funcs, "start [%d] <- [%d-%d]", resulti, arg0i, argni);
+#ifdef MARPAESLIF_NOTICE_ACTION
+  MARPAESLIF_NOTICEF(marpaESLIFRecognizerp->marpaESLIFp, "%s: start [%d] <- [%d-%d]", funcs, resulti, arg0i, argni);
 #endif
 
   rulep = _marpaESLIF_rule_findp(marpaESLIFValuep->marpaESLIFp, grammarp, rulei);
