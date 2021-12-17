@@ -1,4 +1,5 @@
 /* #undef MARPAESLIF_NTRACE */
+/* #undef MARPAESLIF_NOTICE_ACTION /* /* For stack manipulation debug */
 
 #include <stdlib.h>
 #include <errno.h>
@@ -12312,7 +12313,10 @@ static short _marpaESLIFValue_ruleCallbackWrapperb(void *userDatavp, int rulei, 
   int                                 k;
   
   MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_INC(marpaESLIFRecognizerp);
-  MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "start [%d] = [%d-%d]", resulti, arg0i, argni);
+  MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "start [%d] <- [%d-%d]", resulti, arg0i, argni);
+#ifndef MARPAESLIF_NOTICE_ACTION
+  MARPAESLIFRECOGNIZER_NOTICEF(marpaESLIFRecognizerp, funcs, "start [%d] <- [%d-%d]", resulti, arg0i, argni);
+#endif
 
   rulep = _marpaESLIF_rule_findp(marpaESLIFValuep->marpaESLIFp, grammarp, rulei);
   if (MARPAESLIF_UNLIKELY(rulep == NULL)) {
@@ -12440,11 +12444,11 @@ static short _marpaESLIFValue_ruleCallbackWrapperb(void *userDatavp, int rulei, 
 	  k++; /* This element is not skipped */
 	}
       }
-      MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Hide value changed stack indices: [%d] = [%d-%d]", resulti, arg0i, argni);
+      MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Hide value changed stack indices: [%d] <- [%d-%d]", resulti, arg0i, argni);
     }
 
 #ifdef MARPAESLIF_NOTICE_ACTION
-    MARPAESLIF_NOTICEF(marpaESLIFRecognizerp->marpaESLIFp, "%s: Action %s: Symbol <%s>: [%d] = [%d-%d]", funcs, marpaESLIFValuep->actions, rulep->lhsp->descp->asciis, resulti, arg0i, argni);
+    MARPAESLIF_NOTICEF(marpaESLIFRecognizerp->marpaESLIFp, "%s: Action %s: Symbol <%s>: [%d] <- [%d-%d]", funcs, marpaESLIFValuep->actions, rulep->lhsp->descp->asciis, resulti, arg0i, argni);
 #endif
 
     if (MARPAESLIF_UNLIKELY(! ruleCallbackp(marpaESLIFValueOption.userDatavp, marpaESLIFValuep, arg0i, argni, resulti, 0 /* nullableb */))) {
@@ -12493,9 +12497,9 @@ static inline short _marpaESLIFValue_anySymbolCallbackWrapperb(void *userDatavp,
   MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_INC(marpaESLIFRecognizerp);
 #ifndef MARPAESLIF_NTRACE
   if (nullableb) {
-    MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "start(nullable=%d) [%d] ::=", (int) nullableb, resulti);
+    MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "start(nullable=%d) [%d] <-", (int) nullableb, resulti);
   } else {
-    MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "start(nullable=%d) [%d] ~ [%d]", (int) nullableb, resulti, argi);
+    MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "start(nullable=%d) [%d] <- [%d]", (int) nullableb, resulti, argi);
   }
 #endif
 
@@ -12517,9 +12521,9 @@ static inline short _marpaESLIFValue_anySymbolCallbackWrapperb(void *userDatavp,
 
 #ifdef MARPAESLIF_NOTICE_ACTION
   if (nullableb) {
-    MARPAESLIF_NOTICEF(marpaESLIFRecognizerp->marpaESLIFp, "%s: Action %s: Symbol <%s>: [%d] ::= ", funcs, marpaESLIFValuep->actions, symbolp->descp->asciis, resulti);
+    MARPAESLIF_NOTICEF(marpaESLIFRecognizerp->marpaESLIFp, "%s: Action %s: Symbol <%s>: [%d] <-", funcs, marpaESLIFValuep->actions, symbolp->descp->asciis, resulti);
   } else {
-    MARPAESLIF_NOTICEF(marpaESLIFRecognizerp->marpaESLIFp, "%s: Action %s: Symbol <%s>: [%d] ::= [%d]", funcs, marpaESLIFValuep->actions, symbolp->descp->asciis, resulti, argi);
+    MARPAESLIF_NOTICEF(marpaESLIFRecognizerp->marpaESLIFp, "%s: Action %s: Symbol <%s>: [%d] <- [%d]", funcs, marpaESLIFValuep->actions, symbolp->descp->asciis, resulti, argi);
   }
 #endif
 
@@ -20921,7 +20925,7 @@ static inline int _marpaESLIFRecognizer_pointers_tracki(marpaESLIFRecognizer_t *
 
     /* And also remember eventually the pointer in our internal hash of genericStack. */
     if (hashb) {
-#ifdef MARPAESLIF_NOTICE_TRACK
+#ifdef MARPAESLIF_NOTICE_ACTION
       MARPAESLIF_NOTICEF(marpaESLIFRecognizerp->marpaESLIFp, "_marpaESLIFRecognizer_pointers_tracki: hash %s (inner ptr %p)", _marpaESLIF_value_types(type), p);
 #endif
       hashi = _marpaESLIF_inlined_ptrhashi(p);
@@ -20932,7 +20936,7 @@ static inline int _marpaESLIFRecognizer_pointers_tracki(marpaESLIFRecognizer_t *
         goto err;
       }
     } else {
-#ifdef MARPAESLIF_NOTICE_TRACK
+#ifdef MARPAESLIF_NOTICE_ACTION
       MARPAESLIF_NOTICEF(marpaESLIFRecognizerp->marpaESLIFp, "_marpaESLIFRecognizer_pointers_tracki: push %s (inner ptr %p)", _marpaESLIF_value_types(type), p);
 #endif
       GENERICSTACK_PUSH_PTR(marpaESLIFValueResultStackp, marpaESLIFValueResultTmpp);
