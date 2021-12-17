@@ -9,7 +9,6 @@
 #include "jsonTesterData.c"
 
 static short inputReaderb(void *userDatavp, char **inputsp, size_t *inputlp, short *eofbp, short *characterStreambp, char **encodingsp, size_t *encodinglp, marpaESLIFReaderDispose_t *disposeCallbackpp);
-static short dumpb(size_t indentl, short commab, marpaESLIFValueResult_t *marpaESLIFValueResultp);
 
 typedef struct marpaESLIFTester_context {
   char    *inputs;
@@ -17,12 +16,16 @@ typedef struct marpaESLIFTester_context {
 } marpaESLIFTester_context_t;
 
 int main(int argc, char **argv) {
-  marpaESLIF_t                *marpaESLIFp            = NULL;
-  genericLogger_t             *genericLoggerp         = NULL;
-  marpaESLIFGrammar_t         *marpaESLIFGrammarJsonp = NULL;
+  marpaESLIF_t                *marpaESLIFp        = NULL;
+  genericLogger_t             *genericLoggerp     = NULL;
+  marpaESLIFGrammar_t         *marpaESLIFGrammarp = NULL;
   marpaESLIFOption_t           marpaESLIFOption;
   marpaESLIFRecognizerOption_t marpaESLIFRecognizerOption;
+#ifdef MARPAESLIF_JSONTESTER_EXTERNAL
+  marpaESLIFGrammarOption_t    marpaESLIFGrammarOption;
+#else
   marpaESLIFJSONDecodeOption_t marpaESLIFJSONDecodeOption;
+#endif
   marpaESLIFValueOption_t      marpaESLIFValueOption;
   marpaESLIFTester_context_t   marpaESLIFTester_context = { NULL, 0 };
   int                          exiti = 0;
@@ -46,13 +49,26 @@ int main(int argc, char **argv) {
     goto err;
   }
 
-  marpaESLIFGrammarJsonp = marpaESLIFJSON_decode_newp(marpaESLIFp, MARPAESLIF_JSONTESTER_STRICT);
-  if (marpaESLIFGrammarJsonp == NULL) {
+#ifdef MARPAESLIF_JSONTESTER_EXTERNAL
+  marpaESLIFGrammarOption.bytep               = (void *) grammars;
+  marpaESLIFGrammarOption.bytel               = strlen(grammars);
+  marpaESLIFGrammarOption.encodings           = NULL;
+  marpaESLIFGrammarOption.encodingl           = 0;
+
+  marpaESLIFGrammarp = marpaESLIFGrammar_newp(marpaESLIFp, &marpaESLIFGrammarOption);
+  if (marpaESLIFGrammarp == NULL) {
     goto err;
   }
+#else
+  marpaESLIFGrammarp = marpaESLIFJSON_decode_newp(marpaESLIFp, MARPAESLIF_JSONTESTER_STRICT);
+  if (marpaESLIFGrammarp == NULL) {
+    goto err;
+  }
+#endif
 
   GENERICLOGGER_LEVEL_SET(genericLoggerp, GENERICLOGGER_LOGLEVEL_TRACE);
 
+#ifndef MARPAESLIF_JSONTESTER_EXTERNAL
   marpaESLIFJSONDecodeOption.disallowDupkeysb                = 0;
   marpaESLIFJSONDecodeOption.maxDepthl                       = 0;
   marpaESLIFJSONDecodeOption.noReplacementCharacterb         = 0;
@@ -61,6 +77,7 @@ int main(int argc, char **argv) {
   marpaESLIFJSONDecodeOption.positiveNanActionp              = NULL; /* +Nan action */
   marpaESLIFJSONDecodeOption.negativeNanActionp              = NULL; /* -Nan action */
   marpaESLIFJSONDecodeOption.numberActionp                   = NULL; /* Number action */
+#endif
 
   test_elementp = &(tests[0]);
   
@@ -176,7 +193,11 @@ int main(int argc, char **argv) {
     names = (argc == 2) ? argv[1] : test_elementp->names;
     GENERICLOGGER_INFOF(genericLoggerp, "Scanning JSON %s", names);
 
-    jsonb = marpaESLIFJSON_decodeb(marpaESLIFGrammarJsonp, &marpaESLIFJSONDecodeOption, &marpaESLIFRecognizerOption, &marpaESLIFValueOption);
+#ifdef MARPAESLIF_JSONTESTER_EXTERNAL
+    jsonb = marpaESLIFGrammar_parseb(marpaESLIFGrammarp, &marpaESLIFRecognizerOption, &marpaESLIFValueOption, NULL /* exhaustedbb */);
+#else
+    jsonb = marpaESLIFJSON_decodeb(marpaESLIFGrammarp, &marpaESLIFJSONDecodeOption, &marpaESLIFRecognizerOption, &marpaESLIFValueOption);
+#endif
     if (names[0] == 'i') {
       /* Implementation defined */
       if (jsonb) {
@@ -230,7 +251,7 @@ int main(int argc, char **argv) {
     free(marpaESLIFTester_context.inputs);
   }
   GENERICLOGGER_INFOF(genericLoggerp, "Number of of tests in error: %d", nberrori);
-  marpaESLIFGrammar_freev(marpaESLIFGrammarJsonp);
+  marpaESLIFGrammar_freev(marpaESLIFGrammarp);
   marpaESLIF_freev(marpaESLIFp);
   GENERICLOGGER_FREE(genericLoggerp);
   exit(exiti);
