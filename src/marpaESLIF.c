@@ -12430,10 +12430,13 @@ static short _marpaESLIFValue_ruleCallbackWrapperb(void *userDatavp, int rulei, 
           goto err;
         }
       }
+#ifdef MARPAESLIF_NOTICE_ACTION
+      MARPAESLIF_NOTICEF(marpaESLIFRecognizerp->marpaESLIFp, "%s: Hide value changed stack indices: [%d] <- [%d-%d]", funcs, resulti, arg0i, argni);
+#endif
       argni = j;
     }
     
-    /* If the rule have a skipped elements, eventually remove them (starting at the latest indice) */
+    /* If the rule have skipped elements, eventually remove them (starting at the latest indice) */
     if (rulep->skipbp != NULL) {
       k = 0; /* k is the number of arguments to shift */
       for (i = argni; i >= arg0i; i--) {
@@ -12442,11 +12445,11 @@ static short _marpaESLIFValue_ruleCallbackWrapperb(void *userDatavp, int rulei, 
           if (k > 0) {
 	    /* There are k unhiden values scanned and we want to shift them. Current argument being skipped is at indice i. */
             for (j = i; j < i + k; j++) {
-              MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Hide value: Copy [%d] to [%d]", j + 1, j);
+              MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Hide value: Switching [%d] and [%d] contents", j + 1, j);
 #ifdef MARPAESLIF_NOTICE_ACTION
-              MARPAESLIF_NOTICEF(marpaESLIFRecognizerp->marpaESLIFp, "%s: Hide value: Copy [%d] to [%d]", funcs, j + 1, j);
+              MARPAESLIF_NOTICEF(marpaESLIFRecognizerp->marpaESLIFp, "%s: Hide value: Switching [%d] and [%d] contents", funcs, j + 1, j);
 #endif
-              if (MARPAESLIF_UNLIKELY(! _marpaESLIF_generic_action_copyb(marpaESLIFValueOption.userDatavp, marpaESLIFValuep, arg0i, argni, j + 1 /* argi */ , j /* resulti */, 0 /* nullable */))) {
+              if (MARPAESLIF_UNLIKELY(! _marpaESLIFValue_stack_switchb(marpaESLIFValuep, j + 1, j))) {
                 goto err;
               }
             }
@@ -12458,6 +12461,9 @@ static short _marpaESLIFValue_ruleCallbackWrapperb(void *userDatavp, int rulei, 
 	}
       }
       MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Hide value changed stack indices: [%d] <- [%d-%d]", resulti, arg0i, argni);
+#ifdef MARPAESLIF_NOTICE_ACTION
+      MARPAESLIF_TRACEF(marpaESLIFRecognizerp->marpaESLIFp, "%s: Hide value changed stack indices: [%d] <- [%d-%d]", funcs, resulti, arg0i, argni);
+#endif
     }
 
 #ifdef MARPAESLIF_NOTICE_ACTION
