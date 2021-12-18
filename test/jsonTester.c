@@ -30,6 +30,9 @@ int main(int argc, char **argv) {
   marpaESLIFRecognizerOption_t marpaESLIFRecognizerOption;
 #ifdef MARPAESLIF_JSONTESTER_EXTERNAL
   marpaESLIFGrammarOption_t    marpaESLIFGrammarOption;
+  int                          ngrammari;
+  char                        *grammarshows;
+  int                          leveli;
 #else
   marpaESLIFJSONDecodeOption_t marpaESLIFJSONDecodeOption;
 #endif
@@ -65,6 +68,16 @@ int main(int argc, char **argv) {
   marpaESLIFGrammarp = marpaESLIFGrammar_newp(marpaESLIFp, &marpaESLIFGrammarOption);
   if (marpaESLIFGrammarp == NULL) {
     goto err;
+  }
+  /* Dump JSON grammar */
+  if (marpaESLIFGrammar_ngrammarib(marpaESLIFGrammarp, &ngrammari)) {
+    for (leveli = 0; leveli < ngrammari; leveli++) {
+      if (marpaESLIFGrammar_grammarshowform_by_levelb(marpaESLIFGrammarp, &grammarshows, leveli, NULL)) {
+        GENERICLOGGER_INFO (marpaESLIFOption.genericLoggerp, "------------------------");
+        GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "JSON grammar at level %d:", leveli);
+        GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "------------------------\n\n%s", grammarshows);
+      }
+    }
   }
 #else
   marpaESLIFGrammarp = marpaESLIFJSON_decode_newp(marpaESLIFp, MARPAESLIF_JSONTESTER_STRICT);
