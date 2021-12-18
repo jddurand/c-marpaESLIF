@@ -469,6 +469,7 @@ struct marpaESLIFValue {
   genericLogger_t             *stringGeneratorLoggerp; /* Internal string generator logger, put here to avoid unnecessary genericLogger_newp()/genericLogger_freev() calls */
   char                        *luaprecompiledp;    /* Lua script source precompiled */
   size_t                       luaprecompiledl;    /* Lua script source precompiled length in byte */
+  short                        hideSeparatorb;     /* Hook for internal ::row and ::table actions to process more efficiently hide-separator adverb */
 };
 
 struct marpaESLIF_stream {

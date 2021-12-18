@@ -12413,27 +12413,31 @@ static short _marpaESLIFValue_ruleCallbackWrapperb(void *userDatavp, int rulei, 
     if ((rulep->separatorp != NULL) && rulep->hideseparatorb
         /* && (argni > arg0i) */             /* test not necessary in theory because we are not nullable */
         ) {
-      for (i = arg0i, j = arg0i; i <= argni; i += 2) {
-        if (i == j) {
-          /* First occurence always exit */
-          continue;
-        }
-        /* We are processing the (j+1)'th argument hosted at indice i, by definition indice j+1 is a separator: */
-        /* 0 ...  j  j+1  ...    i ... argni                                                                    */
-        /* We switch i and j+1 contents:                                                                        */
-        /* 0 ...  j *i   ... *(j+1) ... argni                                                                   */
-        MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Hide separator: Switching [%d] and [%d] contents", i, j + 1);
+      marpaESLIFValuep->hideSeparatorb = 1;
+      if ((rulep->effectiveRuleActione != MARPAESLIF_INTERNAL_RULE_ACTION___ROW) && (rulep->effectiveRuleActione != MARPAESLIF_INTERNAL_RULE_ACTION___TABLE)) {
+        /* We have internal hook in ::row and ::table that takes into account the hide-separator adverb */
+        for (i = arg0i, j = arg0i; i <= argni; i += 2) {
+          if (i == j) {
+            /* First occurence always exit */
+            continue;
+          }
+          /* We are processing the (j+1)'th argument hosted at indice i, by definition indice j+1 is a separator: */
+          /* 0 ...  j  j+1  ...    i ... argni                                                                    */
+          /* We switch i and j+1 contents:                                                                        */
+          /* 0 ...  j *i   ... *(j+1) ... argni                                                                   */
+          MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Hide separator: Switching [%d] and [%d] contents", i, j + 1);
 #ifdef MARPAESLIF_NOTICE_ACTION
-        MARPAESLIF_NOTICEF(marpaESLIFRecognizerp->marpaESLIFp, "%s: Hide separator: Switching [%d] and [%d] contents", funcs, i, j + 1);
+          MARPAESLIF_NOTICEF(marpaESLIFRecognizerp->marpaESLIFp, "%s: Hide separator: Switching [%d] and [%d] contents", funcs, i, j + 1);
 #endif
-        if (MARPAESLIF_UNLIKELY(! _marpaESLIFValue_stack_switchb(marpaESLIFValuep, i, ++j))) {
-          goto err;
+          if (MARPAESLIF_UNLIKELY(! _marpaESLIFValue_stack_switchb(marpaESLIFValuep, i, ++j))) {
+            goto err;
+          }
         }
+#ifdef MARPAESLIF_NOTICE_ACTION
+        MARPAESLIF_NOTICEF(marpaESLIFRecognizerp->marpaESLIFp, "%s: Hide value changed stack indices: [%d] <- [%d-%d]", funcs, resulti, arg0i, argni);
+#endif
+        argni = j;
       }
-#ifdef MARPAESLIF_NOTICE_ACTION
-      MARPAESLIF_NOTICEF(marpaESLIFRecognizerp->marpaESLIFp, "%s: Hide value changed stack indices: [%d] <- [%d-%d]", funcs, resulti, arg0i, argni);
-#endif
-      argni = j;
     }
     
     /* If the rule have skipped elements, eventually remove them (starting at the latest indice) */
@@ -12494,6 +12498,7 @@ static short _marpaESLIFValue_ruleCallbackWrapperb(void *userDatavp, int rulei, 
   marpaESLIFValuep->rulep              = NULL;
   marpaESLIFValuep->actions            = NULL;
   marpaESLIFValuep->stringp            = NULL;
+  marpaESLIFValuep->hideSeparatorb     = 0;
   return rcb;
 }
 
@@ -12581,6 +12586,7 @@ static inline short _marpaESLIFValue_anySymbolCallbackWrapperb(void *userDatavp,
   marpaESLIFValuep->rulep              = NULL;
   marpaESLIFValuep->actions            = NULL;
   marpaESLIFValuep->stringp            = NULL;
+  marpaESLIFValuep->hideSeparatorb     = 0;
   return rcb;
 }
 
@@ -16615,6 +16621,7 @@ static inline marpaESLIFValue_t *_marpaESLIFValue_newp(marpaESLIFRecognizer_t *m
   marpaESLIFValuep->stringGeneratorLoggerp                = NULL;
   marpaESLIFValuep->luaprecompiledp                       = NULL;
   marpaESLIFValuep->luaprecompiledl                       = 0;
+  marpaESLIFValuep->hideSeparatorb                        = 0;
 
   if (! fakeb) {
     marpaWrapperValueOption.genericLoggerp = silentb ? marpaESLIFp->traceLoggerp : marpaESLIFp->marpaESLIFOption.genericLoggerp;
@@ -17849,7 +17856,8 @@ static short _marpaESLIF_rule_action___rowb(void *userDatavp, marpaESLIFValue_t 
   marpaESLIFValueResult.representationp    = NULL;
   marpaESLIFValueResult.u.r.p              = NULL;
   marpaESLIFValueResult.u.r.shallowb       = 0;
-  marpaESLIFValueResult.u.r.sizel          = nullableb ? 0 : (argni - arg0i + 1);
+  /* Eventual trailing separator in case of proper => 0 is automatically off with the division */
+  marpaESLIFValueResult.u.r.sizel          = nullableb ? 0 : (marpaESLIFValuep->hideSeparatorb ? (argni - arg0i + 1) / 2: (argni - arg0i + 1));
   marpaESLIFValueResult.u.r.freeUserDatavp = marpaESLIFValuep->marpaESLIFp;
   marpaESLIFValueResult.u.r.freeCallbackp  = _marpaESLIF_generic_freeCallbackv;
 
@@ -17870,12 +17878,22 @@ static short _marpaESLIF_rule_action___rowb(void *userDatavp, marpaESLIFValue_t 
         marpaESLIFValueResult.u.r.p[i].type = MARPAESLIF_VALUE_TYPE_UNDEF;
       }
     }
-    for (i = 0, indicei = arg0i; i < marpaESLIFValueResult.u.r.sizel; i++, indicei++) {
-      if (MARPAESLIF_UNLIKELY(! _marpaESLIFValue_stack_getAndForgetb(marpaESLIFValuep, indicei, &item))) {
-        goto err;
+    if (! marpaESLIFValuep->hideSeparatorb) {
+      /* Take all items */
+      for (i = 0, indicei = arg0i; i < marpaESLIFValueResult.u.r.sizel; i++, indicei++) {
+        if (MARPAESLIF_UNLIKELY(! _marpaESLIFValue_stack_getAndForgetb(marpaESLIFValuep, indicei, &item))) {
+          goto err;
+        }
+        marpaESLIFValueResult.u.r.p[i] = item;
       }
-
-      marpaESLIFValueResult.u.r.p[i] = item;
+    } else {
+      /* Skip the separator (c.f. the += 2) */
+      for (i = 0, indicei = arg0i; i < marpaESLIFValueResult.u.r.sizel; i++, indicei += 2) {
+        if (MARPAESLIF_UNLIKELY(! _marpaESLIFValue_stack_getAndForgetb(marpaESLIFValuep, indicei, &item))) {
+          goto err;
+        }
+        marpaESLIFValueResult.u.r.p[i] = item;
+      }
     }
   }
 
@@ -17918,7 +17936,8 @@ static short _marpaESLIF_rule_action___tableb(void *userDatavp, marpaESLIFValue_
   marpaESLIFValueResult.representationp    = NULL;
   marpaESLIFValueResult.u.t.p              = NULL;
   marpaESLIFValueResult.u.t.shallowb       = 0;
-  argsl                                    = nullableb ? 0 : (argni - arg0i + 1);
+  /* Eventual trailing separator in case of proper => 0 is automatically off with the division */
+  argsl                                    = nullableb ? 0 : (marpaESLIFValuep->hideSeparatorb ? (argni - arg0i + 1) / 2: (argni - arg0i + 1));
   marpaESLIFValueResult.u.t.freeUserDatavp = marpaESLIFValuep->marpaESLIFp;
   marpaESLIFValueResult.u.t.freeCallbackp  = _marpaESLIF_generic_freeCallbackv;
 
@@ -17949,16 +17968,33 @@ static short _marpaESLIF_rule_action___tableb(void *userDatavp, marpaESLIFValue_
       }
     }
 
-    keyb = 1;
-    for (i = 0, indicei = arg0i, j = 0; i < argsl; i++, indicei++, keyb = !keyb) {
-      if (MARPAESLIF_UNLIKELY(! _marpaESLIFValue_stack_getAndForgetb(marpaESLIFValuep, indicei, &item))) {
-        goto err;
-      }
+    if (! marpaESLIFValuep->hideSeparatorb) {
+      /* Take all pairs */
+      keyb = 1;
+      for (i = 0, indicei = arg0i, j = 0; i < argsl; i++, indicei++, keyb = !keyb) {
+        if (MARPAESLIF_UNLIKELY(! _marpaESLIFValue_stack_getAndForgetb(marpaESLIFValuep, indicei, &item))) {
+          goto err;
+        }
 
-      if (keyb) {
-        marpaESLIFValueResult.u.t.p[j].key = item;
-      } else {
-        marpaESLIFValueResult.u.t.p[j++].value = item;
+        if (keyb) {
+          marpaESLIFValueResult.u.t.p[j].key = item;
+        } else {
+          marpaESLIFValueResult.u.t.p[j++].value = item;
+        }
+      }
+    } else {
+      /* Skip the separator (c.f. the += 2) */
+      keyb = 1;
+      for (i = 0, indicei = arg0i, j = 0; i < argsl; i++, indicei += 2, keyb = !keyb) {
+        if (MARPAESLIF_UNLIKELY(! _marpaESLIFValue_stack_getAndForgetb(marpaESLIFValuep, indicei, &item))) {
+          goto err;
+        }
+
+        if (keyb) {
+          marpaESLIFValueResult.u.t.p[j].key = item;
+        } else {
+          marpaESLIFValueResult.u.t.p[j++].value = item;
+        }
       }
     }
   }
