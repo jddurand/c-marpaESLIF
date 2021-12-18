@@ -1454,7 +1454,9 @@ marpaESLIF BNF can be expressed in itself:
 
 =over
 
-The embedded lua language have the following globals when executing its actions:
+=item Embedded lua language globals
+
+Every call to embedded lua provide the following globals:
 
 =over
 
@@ -1476,7 +1478,13 @@ Lua object representing current marpaESLIFValue instance, when doing valuation.
 
 =back
 
-Grammar events have a cost, and when possible lexeme or terminal events should be prefered.
+=item Grammar events
+
+The predicted, completed and nulled grammar events have a cost, and when possible lexeme or terminal events should be prefered.
+
+=item Hiden RHSs
+
+Using C<hide-separator> and C<(-...-)>, although convenient, are likely to be less performant than by taking that into account in your own actions.
 
 =back
 
