@@ -12308,6 +12308,9 @@ static short _marpaESLIFValue_ruleCallbackWrapperb(void *userDatavp, int rulei, 
   marpaESLIFGrammar_t                *marpaESLIFGrammarp    = marpaESLIFRecognizerp->marpaESLIFGrammarp;
   marpaESLIF_grammar_t               *grammarp              = marpaESLIFGrammarp->grammarp;
   marpaESLIFValueRuleCallback_t       ruleCallbackp         = NULL;
+  int                                 arg0origi             = arg0i;
+  int                                 argnorigi             = argni;
+  int                                 argi;
   marpaESLIF_rule_t                  *rulep;
   short                               rcb;
   int                                 i;
@@ -12479,6 +12482,24 @@ static short _marpaESLIFValue_ruleCallbackWrapperb(void *userDatavp, int rulei, 
       MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "Action %s failed for rule: %s", marpaESLIFValuep->actions, rulep->asciishows);
       goto err;
     }
+
+    /* Clean the stack */
+    /* If resulti is out of the [arg0origi-argnorigi] no need to check resulti */
+    if ((resulti >= arg0origi) && (resulti <= argnorigi)) {
+      for (argi = arg0origi; argi <= argnorigi; argi++) {
+        if (argi != resulti) {
+          if (MARPAESLIF_UNLIKELY(! _marpaESLIFValue_stack_setb(marpaESLIFValuep, argi, (marpaESLIFValueResult_t *) &marpaESLIFValueResultUndef))) {
+            goto err;
+          }
+        }
+      }
+    } else {
+      for (argi = arg0origi; argi <= argnorigi; argi++) {
+        if (MARPAESLIF_UNLIKELY(! _marpaESLIFValue_stack_setb(marpaESLIFValuep, argi, (marpaESLIFValueResult_t *) &marpaESLIFValueResultUndef))) {
+          goto err;
+        }
+      }
+    }
   }
 
   rcb = 1;
@@ -12602,8 +12623,24 @@ static short _marpaESLIFValue_symbolCallbackWrapperb(void *userDatavp, int symbo
   MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_INC(marpaESLIFRecognizerp);
   MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "start");
 
-  rcb = _marpaESLIFValue_anySymbolCallbackWrapperb(userDatavp, symboli, argi, resulti, 0 /* nullableb */);
+  if (MARPAESLIF_UNLIKELY(! _marpaESLIFValue_anySymbolCallbackWrapperb(userDatavp, symboli, argi, resulti, 0 /* nullableb */))) {
+    goto err;
+  }
 
+  /* Clean stack */
+  if  (resulti != argi) {
+    if (MARPAESLIF_UNLIKELY(! _marpaESLIFValue_stack_setb(marpaESLIFValuep, argi, (marpaESLIFValueResult_t *) &marpaESLIFValueResultUndef))) {
+      goto err;
+    }
+  }
+
+  rcb = 1;
+  goto done;
+
+ err:
+  rcb = 0;
+
+ done:
   MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "return %d", (int) rcb);
   MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_DEC(marpaESLIFRecognizerp);
   return rcb;
@@ -12621,8 +12658,17 @@ static short _marpaESLIFValue_nullingCallbackWrapperb(void *userDatavp, int symb
   MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_INC(marpaESLIFRecognizerp);
   MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "start");
 
-  rcb = _marpaESLIFValue_anySymbolCallbackWrapperb(userDatavp, symboli, -1 /* arg0i - not used when nullable is true */, resulti, 1 /* nullableb */);
+  if (MARPAESLIF_UNLIKELY(! _marpaESLIFValue_anySymbolCallbackWrapperb(userDatavp, symboli, -1 /* arg0i - not used when nullable is true */, resulti, 1 /* nullableb */))) {
+    goto err;
+  }
 
+  rcb = 1;
+  goto done;
+
+ err:
+  rcb = 0;
+
+ done:
   MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "return %d", (int) rcb);
   MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_DEC(marpaESLIFRecognizerp);
   return rcb;
@@ -19186,7 +19232,7 @@ static inline short _marpaESLIFRecognizer_value_validb(marpaESLIFRecognizer_t *m
   MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_INC(marpaESLIFRecognizerp);
   MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "start");
 
-  /* We consider that a value produced by us or the integrated Lua do not need to be valid */
+  /* We consider that a value produced by us or the integrated Lua do not need to be validated */
   if ((marpaESLIFValueResultp->contextp != NULL)
       &&
       (marpaESLIFValueResultp->contextp != (void *) MARPAESLIF_EMBEDDED_CONTEXT_LUA)
