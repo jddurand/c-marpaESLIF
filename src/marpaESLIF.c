@@ -948,6 +948,7 @@ static inline marpaESLIF_symbol_t   *_marpaESLIFSymbol_string_newp(marpaESLIF_t 
 static inline marpaESLIF_symbol_t   *_marpaESLIFSymbol_regex_newp(marpaESLIF_t *marpaESLIFp, marpaESLIFString_t *stringp, char *modifiers, marpaESLIFSymbolOption_t *marpaESLIFSymbolOptionp);
 static inline short                  _marpaESLIFRecognizer_symbol_tryb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFSymbol_t *marpaESLIFSymbolp, short *matchbp);
 static        short                  _marpaESLIFRecognizerSymbolProxyImportb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, void *userDatavp, marpaESLIFValueResult_t *marpaESLIFValueResultp);
+static inline short                  _marpaESLIFValue_stack_cleanb(marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti);
 
 /*****************************************************************************/
 static inline marpaESLIF_string_t *_marpaESLIF_string_newp(marpaESLIF_t *marpaESLIFp, char *encodingasciis, char *bytep, size_t bytel)
@@ -12310,7 +12311,6 @@ static short _marpaESLIFValue_ruleCallbackWrapperb(void *userDatavp, int rulei, 
   marpaESLIFValueRuleCallback_t       ruleCallbackp         = NULL;
   int                                 arg0origi             = arg0i;
   int                                 argnorigi             = argni;
-  int                                 argi;
   marpaESLIF_rule_t                  *rulep;
   short                               rcb;
   int                                 i;
@@ -12484,21 +12484,8 @@ static short _marpaESLIFValue_ruleCallbackWrapperb(void *userDatavp, int rulei, 
     }
 
     /* Clean the stack */
-    /* If resulti is out of the [arg0origi-argnorigi] no need to check resulti */
-    if ((resulti >= arg0origi) && (resulti <= argnorigi)) {
-      for (argi = arg0origi; argi <= argnorigi; argi++) {
-        if (argi != resulti) {
-          if (MARPAESLIF_UNLIKELY(! _marpaESLIFValue_stack_setb(marpaESLIFValuep, argi, (marpaESLIFValueResult_t *) &marpaESLIFValueResultUndef))) {
-            goto err;
-          }
-        }
-      }
-    } else {
-      for (argi = arg0origi; argi <= argnorigi; argi++) {
-        if (MARPAESLIF_UNLIKELY(! _marpaESLIFValue_stack_setb(marpaESLIFValuep, argi, (marpaESLIFValueResult_t *) &marpaESLIFValueResultUndef))) {
-          goto err;
-        }
-      }
+    if (MARPAESLIF_UNLIKELY(! _marpaESLIFValue_stack_cleanb(marpaESLIFValuep, arg0origi, argnorigi, resulti))) {
+      goto err;
     }
   }
 
@@ -12627,11 +12614,23 @@ static short _marpaESLIFValue_symbolCallbackWrapperb(void *userDatavp, int symbo
     goto err;
   }
 
+<<<<<<< Updated upstream
   /* Clean stack */
   if  (resulti != argi) {
     if (MARPAESLIF_UNLIKELY(! _marpaESLIFValue_stack_setb(marpaESLIFValuep, argi, (marpaESLIFValueResult_t *) &marpaESLIFValueResultUndef))) {
       goto err;
     }
+  }
+
+  rcb = 1;
+  goto done;
+
+ err:
+  rcb = 0;
+
+  /* Clean the stack */
+  if (MARPAESLIF_UNLIKELY(! _marpaESLIFValue_stack_cleanb(marpaESLIFValuep, argi, argi, resulti))) {
+    goto err;
   }
 
   rcb = 1;
@@ -22740,6 +22739,62 @@ static short _marpaESLIFRecognizerSymbolProxyImportb(marpaESLIFRecognizer_t *mar
     marpaESLIFSymbolp->marpaESLIFSymbolOption.importerp(marpaESLIFSymbolp, marpaESLIFSymbolp->marpaESLIFSymbolOption.userDatavp, marpaESLIFValueResultp)
     :
     1;
+}
+
+/*****************************************************************************/
+static inline short _marpaESLIFValue_stack_cleanb(marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti)
+/*****************************************************************************/
+{
+  static const char *funcs             = "marpaESLIFValue_stack_cleanb";
+  genericStack_t    *valueResultStackp = marpaESLIFValuep->valueResultStackp;
+  int                argi;
+  short              rcb;
+
+  /* If resulti is out of the [arg0i-argni] no need to check resulti     */
+  /* We voluntarily start at the end to affect stack's usedi if possible */
+
+  if ((resulti >= arg0i) && (resulti <= argni)) {
+    for (argi = argni; argi >= arg0i; argi--) {
+      if (argi != resulti) {
+#ifdef MARPAESLIF_NOTICE_ACTION
+        MARPAESLIF_NOTICEF(marpaESLIFRecognizerp->marpaESLIFp, "%s: Setting UNDEF at stack indice %d", funcs, indicei);
+#endif
+        if (MARPAESLIF_UNLIKELY(! _marpaESLIFValue_stack_setb(marpaESLIFValuep, argi, (marpaESLIFValueResult_t *) &marpaESLIFValueResultUndef))) {
+          goto err;
+        }
+        if (argi == GENERICSTACK_USED(valueResultStackp)) {
+#ifdef MARPAESLIF_NOTICE_ACTION
+          MARPAESLIF_NOTICEF(marpaESLIFRecognizerp->marpaESLIFp, "%s: Reducing stack size from %d to %d", funcs, argi, argi - 1);
+#endif
+          GENERICSTACK_USED(valueResultStackp)--;
+        }
+      }
+    }
+  } else {
+    for (argi = argni; argi >= arg0i; argi--) {
+#ifdef MARPAESLIF_NOTICE_ACTION
+        MARPAESLIF_NOTICEF(marpaESLIFRecognizerp->marpaESLIFp, "%s: Setting UNDEF at stack indice %d", funcs, indicei);
+#endif
+      if (MARPAESLIF_UNLIKELY(! _marpaESLIFValue_stack_setb(marpaESLIFValuep, argi, (marpaESLIFValueResult_t *) &marpaESLIFValueResultUndef))) {
+        goto err;
+      }
+      if (argi == GENERICSTACK_USED(valueResultStackp)) {
+#ifdef MARPAESLIF_NOTICE_ACTION
+          MARPAESLIF_NOTICEF(marpaESLIFRecognizerp->marpaESLIFp, "%s: Reducing stack size from %d to %d", funcs, argi, argi - 1);
+#endif
+        GENERICSTACK_USED(valueResultStackp)--;
+      }
+    }
+  }
+
+  rcb = 1;
+  goto done;
+
+ err:
+  rcb = 0;
+
+ done:
+  return rcb;
 }
 
 #include "bootstrap.c"
