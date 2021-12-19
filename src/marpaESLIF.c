@@ -883,6 +883,7 @@ static        short                  _marpaESLIF_symbol_action___falseb(void *us
 static        short                  _marpaESLIF_symbol_action___jsonb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, marpaESLIFValueResult_t *marpaESLIFValueResultp, int resulti);
 static        short                  _marpaESLIF_symbol_action___jsonfb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, marpaESLIFValueResult_t *marpaESLIFValueResultp, int resulti);
 static        int                    _marpaESLIF_event_sorti(const void *p1, const void *p2);
+static        int                    _marpaESLIF_cleanup_sorti(const void *p1, const void *p2);
 static inline unsigned long          _marpaESLIF_djb2_s(unsigned char *str, size_t lengthl);
 static inline int                    _marpaESLIF_inlined_ptrhashi(void *p);
 int                                  _marpaESLIF_ptrhashi(void *userDatavp, genericStackItemType_t itemType, void **pp);
@@ -905,7 +906,7 @@ static inline marpaESLIF_action_t    *_marpaESLIF_action_clonep(marpaESLIF_t *ma
 static inline void                    _marpaESLIF_action_freev(marpaESLIF_action_t *actionp);
 static inline short                   _marpaESLIF_string_removebomb(marpaESLIF_t *marpaESLIFp, char *bytep, size_t *bytelp, char *encodingasciis, size_t *bomsizelp);
 static inline short                   _marpaESLIFRecognizer_pointers_cleanupb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFValueResult_t *marpaESLIFValueResultOrigp, marpaESLIFValueResult_t *marpaESLIFValueResultNewp);
-static inline int                     _marpaESLIFRecognizer_pointers_tracki(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFValueResult_t *marpaESLIFValueResultp, short hashb);
+static inline int                     _marpaESLIFRecognizer_pointers_tracki(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFValueResult_t *marpaESLIFValueResultp, genericStack_t *marpaESLIFValueResultStackp);
 static inline marpaESLIFGrammar_t    *_marpaESLIFJSON_decode_newp(marpaESLIF_t *marpaESLIFp, short strictb);
 static inline marpaESLIFGrammar_t    *_marpaESLIFJSON_encode_newp(marpaESLIF_t *marpaESLIFp, short strictb);
 static inline short                   _marpaESLIFValueResult_is_signed_nanb(marpaESLIF_t *marpaESLIFp, marpaESLIFValueResult_t *marpaESLIFValueResultp, short negativeb, short *confidencebp);
@@ -11021,7 +11022,6 @@ static inline marpaESLIFRecognizer_t *__marpaESLIFRecognizer_newp(marpaESLIFGram
   int                            symboli;
   marpaESLIF_symbol_t           *symbolp;
   short                          discardEventb;
-  int                            i;
   genericStack_t                *marpaESLIFValueResultHashp;
 
   if (MARPAESLIF_UNLIKELY(marpaESLIFGrammarp == NULL)) {
@@ -11075,22 +11075,16 @@ static inline marpaESLIFRecognizer_t *__marpaESLIFRecognizer_newp(marpaESLIFGram
     marpaESLIFRecognizerp->marpaESLIF_streamp               = marpaESLIFRecognizerParentp->marpaESLIF_streamp;
     marpaESLIFRecognizerp->parentDeltal                     = marpaESLIFRecognizerParentp->marpaESLIF_streamp->inputs - marpaESLIFRecognizerParentp->marpaESLIF_streamp->buffers;
     marpaESLIFRecognizerp->marpaESLIFRecognizerTopp         = marpaESLIFRecognizerParentp->marpaESLIFRecognizerTopp;
-    marpaESLIFRecognizerp->marpaESLIFValueResultStackArrayp = marpaESLIFRecognizerParentp->marpaESLIFValueResultStackArrayp;
+    marpaESLIFRecognizerp->marpaESLIFValueResultStackOrigp  = marpaESLIFRecognizerParentp->marpaESLIFValueResultStackOrigp;
+    marpaESLIFRecognizerp->marpaESLIFValueResultStackNewp   = marpaESLIFRecognizerParentp->marpaESLIFValueResultStackNewp;
   } else {
     marpaESLIFRecognizerp->leveli                           = 0;
     marpaESLIFRecognizerp->marpaESLIFRecognizerHashp        = NULL; /* Pointer to a hash in the structure, initialized later */
     marpaESLIFRecognizerp->marpaESLIF_streamp               = NULL; /* Initialized below */
     marpaESLIFRecognizerp->parentDeltal                     = 0;
     marpaESLIFRecognizerp->marpaESLIFRecognizerTopp         = marpaESLIFRecognizerp; /* We are the top-level recognizer */
-    marpaESLIFRecognizerp->marpaESLIFValueResultStackArrayp = NULL; /* Only the top-level recognizer owns this pointer */
-    for (i = 0, marpaESLIFValueResultHashp = &(marpaESLIFRecognizerp->_marpaESLIFValueResultStackArray[0]); i < MARPAESLIF_HASH_SIZE; i++, marpaESLIFValueResultHashp++) {
-      GENERICSTACK_INIT(marpaESLIFValueResultHashp);
-      if (MARPAESLIF_UNLIKELY(GENERICSTACK_ERROR(marpaESLIFValueResultHashp))) {
-        MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "marpaESLIFRecognizerp->_marpaESLIFValueResultStackArray[%d] initialization failure, %s", i, strerror(errno));
-        goto err;
-      }
-    }
-    marpaESLIFRecognizerp->marpaESLIFValueResultStackArrayp = &(marpaESLIFRecognizerp->_marpaESLIFValueResultStackArray[0]);
+    marpaESLIFRecognizerp->marpaESLIFValueResultStackOrigp  = NULL; /* Only the top-level recognizer owns this pointer */
+    marpaESLIFRecognizerp->marpaESLIFValueResultStackNewp   = NULL; /* Only the top-level recognizer owns this pointer */
   }
   marpaESLIFRecognizerp->scanb                              = 0;
   marpaESLIFRecognizerp->noEventb                           = noEventb;
@@ -11127,7 +11121,8 @@ static inline marpaESLIFRecognizer_t *__marpaESLIFRecognizer_newp(marpaESLIFGram
   marpaESLIFRecognizerp->actions                            = NULL;
   marpaESLIFRecognizerp->actionp                            = NULL;
   marpaESLIFRecognizerp->marpaESLIFValueResultWorkStackp    = NULL;
-  marpaESLIFRecognizerp->marpaESLIFValueResultStackp        = NULL;
+  marpaESLIFRecognizerp->marpaESLIFValueResultStackOrigp    = NULL;
+  marpaESLIFRecognizerp->marpaESLIFValueResultStackNewp     = NULL;
   marpaESLIFRecognizerp->marpaESLIFCalloutBlockp            = NULL;
   marpaESLIFRecognizerp->expectedTerminalArrayp             = NULL;
   marpaESLIFRecognizerp->progressallocl                     = 0;
@@ -11358,11 +11353,19 @@ static inline marpaESLIFRecognizer_t *__marpaESLIFRecognizer_newp(marpaESLIFGram
     goto err;
   }
 
-  marpaESLIFRecognizerp->marpaESLIFValueResultStackp = &(marpaESLIFRecognizerp->_marpaESLIFValueResultStack);
-  GENERICSTACK_INIT(marpaESLIFRecognizerp->marpaESLIFValueResultStackp);
-  if (MARPAESLIF_UNLIKELY(GENERICSTACK_ERROR(marpaESLIFRecognizerp->marpaESLIFValueResultStackp))) {
-    MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "marpaESLIFRecognizerp->marpaESLIFValueResultStackp initialization failure, %s", strerror(errno));
-    marpaESLIFRecognizerp->marpaESLIFValueResultStackp = NULL;
+  marpaESLIFRecognizerp->marpaESLIFValueResultStackOrigp = &(marpaESLIFRecognizerp->_marpaESLIFValueResultStackOrig);
+  GENERICSTACK_INIT(marpaESLIFRecognizerp->marpaESLIFValueResultStackOrigp);
+  if (MARPAESLIF_UNLIKELY(GENERICSTACK_ERROR(marpaESLIFRecognizerp->marpaESLIFValueResultStackOrigp))) {
+    MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "marpaESLIFRecognizerp->marpaESLIFValueResultStackOrigp initialization failure, %s", strerror(errno));
+    marpaESLIFRecognizerp->marpaESLIFValueResultStackOrigp = NULL;
+    goto err;
+  }
+
+  marpaESLIFRecognizerp->marpaESLIFValueResultStackNewp = &(marpaESLIFRecognizerp->_marpaESLIFValueResultStackNew);
+  GENERICSTACK_INIT(marpaESLIFRecognizerp->marpaESLIFValueResultStackNewp);
+  if (MARPAESLIF_UNLIKELY(GENERICSTACK_ERROR(marpaESLIFRecognizerp->marpaESLIFValueResultStackNewp))) {
+    MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "marpaESLIFRecognizerp->marpaESLIFValueResultStackNewp initialization failure, %s", strerror(errno));
+    marpaESLIFRecognizerp->marpaESLIFValueResultStackNewp = NULL;
     goto err;
   }
 
@@ -15725,10 +15728,16 @@ static inline short _marpaESLIFValue_stack_setb(marpaESLIFValue_t *marpaESLIFVal
   MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "start indicei=%d", indicei);
 
   /* Validate the input */
+#ifdef MARPAESLIF_NOTICE_ACTION
+  MARPAESLIF_NOTICEF(marpaESLIFRecognizerp->marpaESLIFp, "%s: Validating value for destination stack indice %d", funcs, indicei);
+#endif
   if (MARPAESLIF_UNLIKELY(! _marpaESLIFRecognizer_value_validb(marpaESLIFRecognizerp, marpaESLIFValueResultp, NULL /* userDatavp */, NULL /* callbackp */))) {
     goto err;
   }
   
+#ifdef MARPAESLIF_NOTICE_ACTION
+  MARPAESLIF_NOTICEF(marpaESLIFRecognizerp->marpaESLIFp, "%s: Setting value at stack indice %d", funcs, indicei);
+#endif
   if (MARPAESLIF_UNLIKELY(! _marpaESLIFRecognizer_internalStack_i_setb(marpaESLIFRecognizerp,
 								       marpaESLIFValuep->valueResultStackp,
 								       indicei,
@@ -16697,6 +16706,9 @@ static inline short _marpaESLIFValue_stack_freeb(marpaESLIFValue_t *marpaESLIFVa
       marpaESLIFRecognizerp = marpaESLIFValuep->marpaESLIFRecognizerp;
       usedi                 = GENERICSTACK_USED(valueResultStackp);
 
+#ifdef MARPAESLIF_NOTICE_ACTION
+      MARPAESLIF_NOTICEF(marpaESLIFRecognizerp->marpaESLIFp, "%s: Freeing value stack", funcs);
+#endif
       for (i = 0; i < usedi; i++) {
         if (MARPAESLIF_UNLIKELY(! _marpaESLIFRecognizer_internalStack_i_setb(marpaESLIFRecognizerp,
 									     valueResultStackp,
@@ -17698,6 +17710,9 @@ static short _marpaESLIF_generic_action_copyb(void *userDatavp, marpaESLIFValue_
 
     /* When argi is resulti, this is a no-op */
     if (argi == resulti) {
+#ifdef MARPAESLIF_NOTICE_ACTION
+      MARPAESLIF_NOTICEF(marpaESLIFRecognizerp->marpaESLIFp, "%s: Action %s is a no-op for stack at indice %d", funcs, marpaESLIFValuep->actions, resulti);
+#endif
       MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "No-op");
       rcb = 1;
       goto done;
@@ -18919,6 +18934,17 @@ static int _marpaESLIF_event_sorti(const void *p1, const void *p2)
 }
 
 /*****************************************************************************/
+static int _marpaESLIF_cleanup_sorti(const void *p1, const void *p2)
+/*****************************************************************************/
+{
+  /* These marpaESLIFValueResult pointers are produced by _marpaESLIFRecognizer_pointers_tracki */
+  void *q1 = MARPAESLIFVALUERESULT_TO_P((marpaESLIFValueResult_t *) p1);
+  void *q2 = MARPAESLIFVALUERESULT_TO_P((marpaESLIFValueResult_t *) p2);
+
+  return (q1 < q2) ? -1 : ((q1 > q2) ? 1 : 0);
+}
+
+/*****************************************************************************/
 short marpaESLIFRecognizer_last_completedb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, char *names, char **offsetpp, size_t *lengthlp)
 /*****************************************************************************/
 {
@@ -19540,7 +19566,6 @@ static inline void _marpaESLIFRecognizer_freev(marpaESLIFRecognizer_t *marpaESLI
   short                  *beforeEventStatebp;
   short                  *afterEventStatebp;
   genericStack_t         *marpaESLIFValueResultHashp;
-  int                     i;
     
   /* We may decide to not free but say we can be reused, unless caller definitely want us to get out */
   if (! forceb) {
@@ -19556,8 +19581,17 @@ static inline void _marpaESLIFRecognizer_freev(marpaESLIFRecognizer_t *marpaESLI
 
   MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Freeing recognizer %p for grammar %p", marpaESLIFRecognizerp, marpaESLIFRecognizerp->marpaWrapperGrammarp);
 
+#ifdef MARPAESLIF_NOTICE_ACTION
+  MARPAESLIF_NOTICEF(marpaESLIFRecognizerp->marpaESLIFp, "%s: Freeing lexeme stack", funcs);
+#endif
   _marpaESLIFRecognizer_lexemeStack_freev(marpaESLIFRecognizerp);
+#ifdef MARPAESLIF_NOTICE_ACTION
+  MARPAESLIF_NOTICEF(marpaESLIFRecognizerp->marpaESLIFp, "%s: Freeing alternative stack", funcs);
+#endif
   _marpaESLIFRecognizer_alternativeStackSymbol_freev(marpaESLIFRecognizerp, marpaESLIFRecognizerp->alternativeStackSymbolp);
+#ifdef MARPAESLIF_NOTICE_ACTION
+  MARPAESLIF_NOTICEF(marpaESLIFRecognizerp->marpaESLIFp, "%s: Freeing commited alternative stack", funcs);
+#endif
   GENERICSTACK_RESET(marpaESLIFRecognizerp->commitedAlternativeStackSymbolp); /* Take care, this is a pointer to a stack inside recognizer's structure */
   if (marpaESLIFRecognizerp->marpaESLIFRecognizerOption.trackb) {
     GENERICSTACK_RESET(marpaESLIFRecognizerp->set2InputStackp); /* Take care, this is a pointer to a stack inside recognizer's structure */
@@ -19597,12 +19631,6 @@ static inline void _marpaESLIFRecognizer_freev(marpaESLIFRecognizer_t *marpaESLI
       /* This will free all cached recognizers in cascade -; */
       GENERICHASH_RESET(marpaESLIFRecognizerp->marpaESLIFRecognizerHashp, marpaESLIFRecognizerp->marpaESLIFp);
     }
-    /* Only the top-level recognizer owns this hash */
-    if (marpaESLIFRecognizerp->marpaESLIFValueResultStackArrayp != NULL) {
-      for (i = 0, marpaESLIFValueResultHashp = marpaESLIFRecognizerp->marpaESLIFValueResultStackArrayp; i < MARPAESLIF_HASH_SIZE; i++, marpaESLIFValueResultHashp++) {
-        GENERICSTACK_RESET(marpaESLIFValueResultHashp);
-      }
-    }
   } else {
     /* Parent's "current" position have to be updated */
     MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Restoring parent stream from {%p,%ld} to {%p,%ld}", marpaESLIFRecognizerParentp->marpaESLIF_streamp->inputs, marpaESLIFRecognizerParentp->marpaESLIF_streamp->inputl, marpaESLIFRecognizerParentp->marpaESLIF_streamp->buffers + marpaESLIFRecognizerp->parentDeltal, marpaESLIFRecognizerParentp->marpaESLIF_streamp->bufferl - marpaESLIFRecognizerp->parentDeltal);
@@ -19613,11 +19641,16 @@ static inline void _marpaESLIFRecognizer_freev(marpaESLIFRecognizer_t *marpaESLI
   if (marpaESLIFRecognizerp->lastDiscards != NULL) {
     free(marpaESLIFRecognizerp->lastDiscards);
   }
+
+  /* Internal stacks for pointers cleanup */
   if (marpaESLIFRecognizerp->marpaESLIFValueResultWorkStackp != NULL) {
     GENERICSTACK_RESET(marpaESLIFRecognizerp->marpaESLIFValueResultWorkStackp);
   }
-  if (marpaESLIFRecognizerp->marpaESLIFValueResultStackp != NULL) {
-    GENERICSTACK_RESET(marpaESLIFRecognizerp->marpaESLIFValueResultStackp);
+  if (marpaESLIFRecognizerp->marpaESLIFValueResultStackOrigp != NULL) {
+    GENERICSTACK_RESET(marpaESLIFRecognizerp->marpaESLIFValueResultStackOrigp);
+  }
+  if (marpaESLIFRecognizerp->marpaESLIFValueResultStackNewp != NULL) {
+    GENERICSTACK_RESET(marpaESLIFRecognizerp->marpaESLIFValueResultStackNewp);
   }
   _marpaESLIFCalloutBlock_disposev(marpaESLIFRecognizerp);
 
@@ -20936,19 +20969,16 @@ char *marpaESLIF_encodings(marpaESLIF_t *marpaESLIFp, char *bytep, size_t bytel)
 }
 
 /*****************************************************************************/
-static inline int _marpaESLIFRecognizer_pointers_tracki(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFValueResult_t *marpaESLIFValueResultp, short hashb)
+static inline int _marpaESLIFRecognizer_pointers_tracki(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFValueResult_t *marpaESLIFValueResultp, genericStack_t *marpaESLIFValueResultStackp)
 /*****************************************************************************/
-/* If output is < 0, there is an error, else this is the number of elements  */
-/* tracks (pushed in a single internal stack or in multiple internals stacks */
-/* when hashb is true)                                                       */
+/* If output is < 0, there is an error, else this is the number of elements. */
 /*****************************************************************************/
 {
+  static const char           *funcs                           = "_marpaESLIFRecognizer_pointers_tracki";
   genericStack_t              *marpaESLIFValueResultWorkStackp = marpaESLIFRecognizerp->marpaESLIFValueResultWorkStackp; /* Work area */
   marpaESLIFValueResult_t     *marpaESLIFValueResultTmpp;
   marpaESLIFValueResult_t     *marpaESLIFValueResultTmp2p;
   marpaESLIFValueResultPair_t *marpaESLIFValueResultPairp;
-  genericStack_t              *marpaESLIFValueResultStackp;
-  genericStack_t              *marpaESLIFValueResultHashp;
   marpaESLIFValueType_t        type;
   size_t                       sizel;
   size_t                       rowl;
@@ -20962,16 +20992,8 @@ static inline int _marpaESLIFRecognizer_pointers_tracki(marpaESLIFRecognizer_t *
   /* Relax the work stack */
   GENERICSTACK_RELAX(marpaESLIFValueResultWorkStackp);
 
-  /* Relax the output, depending on hashb */
-  if (hashb) {
-    marpaESLIFValueResultHashp = marpaESLIFRecognizerp->marpaESLIFValueResultStackArrayp;
-    for (i = 0; i < MARPAESLIF_HASH_SIZE; i++, marpaESLIFValueResultHashp++) {
-      GENERICSTACK_RELAX(marpaESLIFValueResultHashp);
-    }
-  } else {
-    marpaESLIFValueResultStackp = marpaESLIFRecognizerp->marpaESLIFValueResultStackp;
-    GENERICSTACK_RELAX(marpaESLIFValueResultStackp);
-  }
+  /* Relax the output */
+  GENERICSTACK_RELAX(marpaESLIFValueResultStackp);
 
   /* We start with the initial marpaESLIFValueResultp - no need to start with the  */
   /* PUSH because it is immediately followed by a POP.                             */
@@ -20997,35 +21019,26 @@ static inline int _marpaESLIFRecognizer_pointers_tracki(marpaESLIFRecognizer_t *
       break;
     }
 
-    /* shallowb is not set, per def p is set */
+    /* shallowb is not set ? */
     if (shallowb) {
+      continue;
+    }
+
+    /* It may be non-shallowed but is an empty container */
+    if (p == NULL) {
       continue;
     }
 
     /* Remember it */
     rci++;
 
-    /* And also remember eventually the pointer in our internal hash of genericStack. */
-    if (hashb) {
 #ifdef MARPAESLIF_NOTICE_ACTION
-      MARPAESLIF_NOTICEF(marpaESLIFRecognizerp->marpaESLIFp, "_marpaESLIFRecognizer_pointers_tracki: hash %s (inner ptr %p)", _marpaESLIF_value_types(type), p);
+    MARPAESLIF_NOTICEF(marpaESLIFRecognizerp->marpaESLIFp, "%s: push %s (inner ptr %p)", funcs, _marpaESLIF_value_types(type), p);
 #endif
-      hashi = _marpaESLIF_inlined_ptrhashi(p);
-      marpaESLIFValueResultHashp = marpaESLIFRecognizerp->marpaESLIFValueResultStackArrayp + hashi;
-      GENERICSTACK_PUSH_PTR(marpaESLIFValueResultHashp, p);
-      if (MARPAESLIF_UNLIKELY(GENERICSTACK_ERROR(marpaESLIFValueResultHashp))) {
-        MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "marpaESLIFValueResultHashp push failure, %s", strerror(errno));
-        goto err;
-      }
-    } else {
-#ifdef MARPAESLIF_NOTICE_ACTION
-      MARPAESLIF_NOTICEF(marpaESLIFRecognizerp->marpaESLIFp, "_marpaESLIFRecognizer_pointers_tracki: push %s (inner ptr %p)", _marpaESLIF_value_types(type), p);
-#endif
-      GENERICSTACK_PUSH_PTR(marpaESLIFValueResultStackp, marpaESLIFValueResultTmpp);
-      if (MARPAESLIF_UNLIKELY(GENERICSTACK_ERROR(marpaESLIFValueResultStackp))) {
-        MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "marpaESLIFValueResultStackp push failure, %s", strerror(errno));
-        goto err;
-      }
+    GENERICSTACK_PUSH_PTR(marpaESLIFValueResultStackp, marpaESLIFValueResultTmpp);
+    if (MARPAESLIF_UNLIKELY(GENERICSTACK_ERROR(marpaESLIFValueResultStackp))) {
+      MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "marpaESLIFValueResultStackp push failure, %s", strerror(errno));
+      goto err;
     }
 
     /* Push container content in work area */
@@ -21083,21 +21096,25 @@ static inline int _marpaESLIFRecognizer_pointers_tracki(marpaESLIFRecognizer_t *
 static inline short _marpaESLIFRecognizer_pointers_cleanupb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFValueResult_t *marpaESLIFValueResultOrigp, marpaESLIFValueResult_t *marpaESLIFValueResultNewp)
 /*****************************************************************************/
 {
-  genericStack_t          *marpaESLIFValueResultStackp;
-  marpaESLIFValueResult_t *marpaESLIFValueResultTmpp;
-  void                    *p;
-  int                      hashi;
-  genericStack_t          *marpaESLIFValueResultHashp;
+  static const char       *funcs                           = "_marpaESLIFRecognizer_pointers_cleanupb";
+  genericStack_t          *marpaESLIFValueResultStackOrigp = marpaESLIFRecognizerp->marpaESLIFValueResultStackOrigp;
+  genericStack_t          *marpaESLIFValueResultStackNewp;
+  marpaESLIFValueResult_t *marpaESLIFValueResultOrigTmpp;
+  marpaESLIFValueResult_t *marpaESLIFValueResultNewTmpp;
+  void                    *origp;
+  void                    *newp;
   int                      origUsedi;
   int                      newUsedi;
-  int                      usedi;
   int                      i;
   int                      j;
   short                    foundb;
   short                    rcb;
 
-  /* Remember non-shallowed old marpaESLIFValueResult */
-  origUsedi = _marpaESLIFRecognizer_pointers_tracki(marpaESLIFRecognizerp, marpaESLIFValueResultOrigp, 0 /* hashb */);
+  /* Track non-shallowed old marpaESLIFValueResult */
+#ifdef MARPAESLIF_NOTICE_ACTION
+  MARPAESLIF_NOTICEF(marpaESLIFRecognizerp->marpaESLIFp, "%s: Tracking original non-shallowed pointers", funcs);
+#endif
+  origUsedi = _marpaESLIFRecognizer_pointers_tracki(marpaESLIFRecognizerp, marpaESLIFValueResultOrigp, marpaESLIFValueResultStackOrigp);
   if (MARPAESLIF_UNLIKELY(origUsedi < 0)) {
     goto err;
   }
@@ -21108,48 +21125,73 @@ static inline short _marpaESLIFRecognizer_pointers_cleanupb(marpaESLIFRecognizer
     goto done;
   }
 
-  /* Remember non-shallowed new marpaESLIFValueResult and their inner ptr in our internal hash */
-  newUsedi = _marpaESLIFRecognizer_pointers_tracki(marpaESLIFRecognizerp, marpaESLIFValueResultNewp, 1 /* hashb */);
+  /* Track non-shallowed new marpaESLIFValueResult */
+#ifdef MARPAESLIF_NOTICE_ACTION
+  MARPAESLIF_NOTICEF(marpaESLIFRecognizerp->marpaESLIFp, "%s: Tracking new non-shallowed pointers", funcs);
+#endif
+  marpaESLIFValueResultStackNewp = marpaESLIFRecognizerp->marpaESLIFValueResultStackNewp;
+  newUsedi = _marpaESLIFRecognizer_pointers_tracki(marpaESLIFRecognizerp, marpaESLIFValueResultNewp, marpaESLIFValueResultStackNewp);
   if (MARPAESLIF_UNLIKELY(newUsedi < 0)) {
     goto err;
   }
 
-  /* If no non-shallowed pointer in the new marpaESLIFValueResult, no need to lookup to hash */
-  marpaESLIFValueResultStackp = marpaESLIFRecognizerp->marpaESLIFValueResultStackp;
+  /* If no non-shallowed pointer in the new marpaESLIFValueResult, no need to lookup with the array of origin non-shallowed pointers */
   if (! newUsedi) {
-    /* Loop on all original non-shallowed pointers. Those whose internal pointer do not exist in the internal hash should be freed */
-    /* It is VERY important to take the stack in reverse order */
-    /* Note that doing a GET is a little more performance than a POP in this case. */
+    /* Loop on all original non-shallowed pointers. It is VERY important to take the stack in reverse order */
+    /* Note that doing a GET is a little more performant than a POP in this case. */
+#ifdef MARPAESLIF_NOTICE_ACTION
+    MARPAESLIF_NOTICEF(marpaESLIFRecognizerp->marpaESLIFp, "%s: Freeing %d original pointers", funcs, origUsedi);
+#endif
     for (i = --origUsedi; i >= 0; i--) {
-      marpaESLIFValueResultTmpp = (marpaESLIFValueResult_t *) GENERICSTACK_GET_PTR(marpaESLIFValueResultStackp, i);
-      _marpaESLIFRecognizer_valueResultFreev(marpaESLIFRecognizerp, marpaESLIFValueResultTmpp);
+      marpaESLIFValueResultOrigTmpp = (marpaESLIFValueResult_t *) GENERICSTACK_GET_PTR(marpaESLIFValueResultStackOrigp, i);
+#ifdef MARPAESLIF_NOTICE_ACTION
+      origp = MARPAESLIFVALUERESULT_TO_P(marpaESLIFValueResultOrigTmpp);
+      MARPAESLIF_NOTICEF(marpaESLIFRecognizerp->marpaESLIFp, "%s: Freeing original pointer %p hosted by a %s", funcs, origp, _marpaESLIF_value_types(marpaESLIFValueResultOrigTmpp->type));
+#endif
+      _marpaESLIFRecognizer_valueResultFreev(marpaESLIFRecognizerp, marpaESLIFValueResultOrigTmpp);
     }
   } else {
-    /* Same as before, but with a lookup on the hash table */
+    /* Same as before, but with a lookup on the new pointers. This is very consuming, the fastest way I found is */
+    /* do a sort on the new pointers track first. */
+#ifdef MARPAESLIF_NOTICE_ACTION
+    MARPAESLIF_NOTICEF(marpaESLIFRecognizerp->marpaESLIFp, "%s: Sorting %d items from the new value", funcs, newUsedi);
+#endif
+    GENERICSTACK_SORT(marpaESLIFValueResultStackNewp, _marpaESLIF_cleanup_sorti);
+
+    /* j is the indice in the sorted tracked new pointers */
+    j = 0;
+
+#ifdef MARPAESLIF_NOTICE_ACTION
+    MARPAESLIF_NOTICEF(marpaESLIFRecognizerp->marpaESLIFp, "%s: Lookup %d original pointers within %d new pointers", funcs, origUsedi, newUsedi);
+#endif
     for (i = --origUsedi; i >= 0; i--) {
-      marpaESLIFValueResultTmpp = (marpaESLIFValueResult_t *) GENERICSTACK_GET_PTR(marpaESLIFValueResultStackp, i);
+      marpaESLIFValueResultOrigTmpp = (marpaESLIFValueResult_t *) GENERICSTACK_GET_PTR(marpaESLIFValueResultStackOrigp, i);
       /* By definition the pointer is ok */
-      p = MARPAESLIFVALUERESULT_TO_P(marpaESLIFValueResultTmpp);
+      origp = MARPAESLIFVALUERESULT_TO_P(marpaESLIFValueResultOrigTmpp);
+#ifdef MARPAESLIF_NOTICE_ACTION
+      MARPAESLIF_NOTICEF(marpaESLIFRecognizerp->marpaESLIFp, "%s: Lookup original pointer %p hosted by a %s within %d remaining new items", funcs, origp, _marpaESLIF_value_types(marpaESLIFValueResultOrigTmpp->type), newUsedi - j);
+#endif
 
-      hashi = _marpaESLIF_inlined_ptrhashi(p);
-      marpaESLIFValueResultHashp = marpaESLIFRecognizerp->marpaESLIFValueResultStackArrayp + hashi;
+      foundb = 0;
+      /* Continue traversal of sorted tracked new pointers */
+      while (j < newUsedi) {
+        marpaESLIFValueResultNewTmpp = (marpaESLIFValueResult_t *) GENERICSTACK_GET_PTR(marpaESLIFValueResultStackNewp, j++);
+        newp = MARPAESLIFVALUERESULT_TO_P(marpaESLIFValueResultNewTmpp);
+        if (origp == newp) {
+#ifdef MARPAESLIF_NOTICE_ACTION
+          MARPAESLIF_NOTICEF(marpaESLIFRecognizerp->marpaESLIFp, "%s: Found original pointer %p hosted by a %s within a new item that is a %s", funcs, origp, _marpaESLIF_value_types(marpaESLIFValueResultOrigTmpp->type), _marpaESLIF_value_types(marpaESLIFValueResultNewTmpp->type));
+#endif
+          foundb = 1;
+          break;
+        }
+      }
 
-      if ((usedi = GENERICSTACK_USED(marpaESLIFValueResultHashp)) <= 0) {
-        /* Cannot be found - this marpaESLIFValueResult can be freed */
-        _marpaESLIFRecognizer_valueResultFreev(marpaESLIFRecognizerp, marpaESLIFValueResultTmpp);
-      } else {
-        foundb = 0;
-        for (j = 0; j < usedi; j++) {
-          if (p == GENERICSTACK_GET_PTR(marpaESLIFValueResultHashp, j)) {
-            foundb = 1;
-            break;
-          }
-        }
-    
-        if (! foundb) {
-          /* Not found - this marpaESLIFValueResult can be freed */
-          _marpaESLIFRecognizer_valueResultFreev(marpaESLIFRecognizerp, marpaESLIFValueResultTmpp);
-        }
+      if (! foundb) {
+        /* Not found - this marpaESLIFValueResult can be freed */
+#ifdef MARPAESLIF_NOTICE_ACTION
+        MARPAESLIF_NOTICEF(marpaESLIFRecognizerp->marpaESLIFp, "%s: Freeing original pointer %p hosted by a %s", funcs, origp, _marpaESLIF_value_types(marpaESLIFValueResultOrigTmpp->type));
+#endif
+        _marpaESLIFRecognizer_valueResultFreev(marpaESLIFRecognizerp, marpaESLIFValueResultOrigTmpp);
       }
     }
   }
