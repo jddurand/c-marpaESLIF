@@ -53,12 +53,6 @@ and transliterated as much as possible into C<asciis>.
 
 Any application must start by instanciating a main ESLIF. This object is thread-safe, re-entrant, and can be reused as many times as needed, in contrary to other namespaces. The recommended usage is to create an ESLIF instance once for the entire process lifetime.
 
-=head3 C<marpaESLIF_versions>
-
-  const char *marpaESLIF_versions();
-
-Returns a non-C<NULL> string describing the ESLIF version, in the form "MAJOR.MINOR.PATCH".
-
 =head3 C<marpaESLIF_newp>
 
   typedef struct marpaESLIFOption {
@@ -81,7 +75,7 @@ A pointer to a L<genericLogger|https://github.com/jddurand/c-genericLogger> inst
 
   short marpaESLIF_versionb(marpaESLIF_t *marpaESLIFp, char **versionsp);
 
-Puts in C<versionsp>, if not C<NULL>, a pointer to a string containing ESLIF version.
+Puts in C<versionsp>, if not C<NULL>, a pointer to a C<NUL> terminated I<ASCII> string containing ESLIF version, in the form C<MAJOR.MINOR.PATCH>.
 
 Returns a true value on failure, a false value on failure.
 
@@ -161,7 +155,27 @@ Returns the ESLIF grammar itself, or C<NULL> if failure. The returned pointer mu
 
   marpaESLIF_EXPORT short marpaESLIF_numberb(marpaESLIF_t *marpaESLIFp, char *s, size_t sizel, marpaESLIFValueResult_t *marpaESLIFValueResultp, short *confidencebp);
 
-Tries to parse the I<ASCII> string pointed by C<s> of size C<sizel> bytes (if C<sizel> is 0, ESLIF will compute automatically the length) as a JSON relaxed number, i.e. with possible leading C<+> and zeroes. Returns in C<marpaESLIFValueResultp>, when not C<NULL>, the result, and in C<confidencebp>, when not C<NULL>, a true number if ESLIF is sure.
+Tries to parse the I<ASCII> string pointed by C<s> of size C<sizel> bytes (if C<sizel> is 0, ESLIF will compute automatically the length) as a JSON relaxed number, i.e. with possible leading C<+> and zeroes. Returns in C<marpaESLIFValueResultp>, when not C<NULL>, the result, and in C<confidencebp>, when not C<NULL>, a true number if ESLIF is sure. The value type in C<marpaESLIFValueResultp> is guaranteed to be one of these:
+
+=over
+
+=item MARPAESLIF_VALUE_TYPE_DOUBLE
+
+=item MARPAESLIF_VALUE_TYPE_SHORT
+
+=item MARPAESLIF_VALUE_TYPE_INT
+
+=item MARPAESLIF_VALUE_TYPE_LONG
+
+=item MARPAESLIF_VALUE_TYPE_LONG_LONG
+
+=item MARPAESLIF_VALUE_TYPE_LONG_DOUBLE
+
+=item MARPAESLIF_VALUE_TYPE_UNDEF
+
+=back 
+
+C<MARPAESLIF_VALUE_TYPE_UNDEF> indicates a failure, and always have C<*confidencebp> to C<0>.
 
 Returns a true value on success, a false value otherwise.
 
@@ -826,7 +840,6 @@ This is very exhaustive, and give internal information about all symbols and rul
 Return a true value on failure, a false value on failure.
 
 =head3 C<marpaESLIFGrammar_grammarshowscriptb>
-
   short marpaESLIFGrammar_grammarshowscriptb(marpaESLIFGrammar_t *marpaESLIFGrammarp, char **grammarscriptsp);
 
 Put in the value pointed by C<grammarscriptsp>, which can be C<NULL>, a NUL-terminated ASCII string containing all lua statements.
@@ -838,20 +851,15 @@ Return a true value on failure, a false value on failure.
   short marpaESLIFGrammar_parseb(marpaESLIFGrammar_t          *marpaESLIFGrammarp,
                                  marpaESLIFRecognizerOption_t *marpaESLIFRecognizerOptionp,
                                  marpaESLIFValueOption_t      *marpaESLIFValueOptionp,
-                                 short                        *isExhaustedbp,
-                                 marpaESLIFValueResult_t      *marpaESLIFValueResultp);
+                                 short                        *isExhaustedbp);
 
 Please refer to the documentation of:
 
 =over
 
-=item C<marpaESLIFGrammar_newp>
+=item C<marpaESLIFRecognizer_newp>
 
 for the C<marpaESLIFRecognizerOption_t> structure documentation.
-
-=item C<ESLIF Value Result>
-
-for the C<marpaESLIFValueResult_t> structure documentation.
 
 =item C<marpaESLIFValue_newp>
 
@@ -859,7 +867,7 @@ for the C<marpaESLIFValueOption_t> structures documentation.
 
 =back
 
-A short form of parsing and valuation, in which I<no event> is possible: the entire scanning is left to the marpaESLIF engine. The grammar at level C<0> is used.
+A short form of parsing and valuation, in which I<no event> but I<if> or I<regexp> callback is possible: the entire scanning is left to the marpaESLIF engine. The grammar at level C<0> is used.
 
 The value pointed by C<isExhaustedbp>, when not C<NULL>, is filled with a true value if the parsing exhausted (exhaustion roughly mean that the parsing stopped without consuming all the data), a false value otherwise. This flag does not depend on the existence of an exhaustion event or not.
 
@@ -872,8 +880,7 @@ Returns a true value on success, a false value otherwise.
                                           marpaESLIFValueOption_t      *marpaESLIFValueOptionp,
                                           short                        *isExhaustedbp,
                                           int                           leveli,
-                                          marpaESLIFString_t           *descp,
-                                          marpaESLIFValueResult_t      *marpaESLIFValueResultp);
+                                          marpaESLIFString_t           *descp);
 
 Same functionnality as C<marpaESLIFGrammar_parseb> for a wanted grammar from C<marpaESLIFGrammarp>, with these additional parameters:
 
@@ -1417,6 +1424,64 @@ Note that in this case, if the negative value is lower than C<PCRE2_ERROR_INTERN
 
 =back
 
+The C<marpaESLIFCalloutBlockp> is guaranteed to have the MARPAESLIF_VALUE_TYPE_TABLE type, with these keys:
+
+=over
+
+=item C<callout_number>
+
+A C<MARPAESLIF_VALUE_TYPE_LONG> or C<MARPAESLIF_VALUE_TYPE_UNDEF> value. C<MARPAESLIF_VALUE_TYPE_LONG> is when the callout is in the form C<(?Cnumber)>, C<MARPAESLIF_VALUE_TYPE_UNDEF> when the callout is the form C<(?C"string")>.
+
+=item C<callout_string>
+
+A C<MARPAESLIF_VALUE_TYPE_ARRAY> or C<MARPAESLIF_VALUE_TYPE_UNDEF> value. C<MARPAESLIF_VALUE_TYPE_ARRAY> is when the callout is in the form C<(?C"string")>, C<MARPAESLIF_VALUE_TYPE_UNDEF> when the callout is the form C<(?Cnumber)>. C<MARPAESLIF_VALUE_TYPE_ARRAY> points to the inner string.
+
+=item C<subject>
+
+A C<MARPAESLIF_VALUE_TYPE_ARRAY> pointing to current subject bytes.
+
+=item C<pattern>
+
+A C<MARPAESLIF_VALUE_TYPE_ARRAY> pointing to current PCRE2 pattern bytes.
+
+=item C<capture_top>
+
+A C<MARPAESLIF_VALUE_TYPE_LONG> giving the maximum current capture
+
+=item C<capture_last>
+
+A C<MARPAESLIF_VALUE_TYPE_LONG> giving the most recently closed capture.
+
+=item C<offset_vector>
+
+A C<MARPAESLIF_VALUE_TYPE_ROW> of C<MARPAESLIF_VALUE_TYPE_LONG>s giving offsets within the subject.
+
+=item C<mark>
+
+A C<MARPAESLIF_VALUE_TYPE_LONG> or C<MARPAESLIF_VALUE_TYPE_UNDEF> giving current mark offset.
+
+=item C<start_match>
+
+A C<MARPAESLIF_VALUE_TYPE_LONG> giving current match start attempt offset.
+
+=item C<current_position>
+
+A C<MARPAESLIF_VALUE_TYPE_LONG> giving current subject offset.
+
+=item C<next_item>
+
+A C<MARPAESLIF_VALUE_TYPE_ARRAY> or C<MARPAESLIF_VALUE_TYPE_UNDEF> giving next item the pattern.
+
+=item C<grammar_level>
+
+A C<MARPAESLIF_VALUE_TYPE_INT> giving current grammar level.
+
+=item C<symbol_id>
+
+A C<MARPAESLIF_VALUE_TYPE_INT> giving the current symbol identifier within current grammar.
+
+=back
+
 =item C<importerp>
 
 User-defined importer facility function during the recognizer phase. Please refer to the IMPORT VALUE section in this document.
@@ -1596,12 +1661,8 @@ Returns a true value on success, a false value on failure.
 
 =head3 C<marpaESLIFRecognizer_alternative_completeb>
 
-Deprecated, please refer C<marpaESLIFRecognizer_completeb>.
-
-=head3 C<marpaESLIFRecognizer_completeb>
-
-  short marpaESLIFRecognizer_completeb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp,
-                                       size_t lengthl);
+  short marpaESLIFRecognizer_alternative_completeb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp,
+                                                   size_t lengthl);
 
 Say to the recognizer pointed C<marpaESLIFRecognizerp> by that the current set of alternatives is complete, and that the stream should advance by C<length> bytes, where bytes is really the number of bytes in the internal recognizer buffer, i.e. an UTF-8 sequence of code points in case of a character-oriented stream. The reader callback may be called if necessary, in case the caller say to advance by more bytes than what is currently available. It is an error to specify more bytes than the recognizer can get (and eventually transform, in case of character-stream oriented buffer) from the reader. A a value of C<0> for the length is legal.
 
@@ -2990,6 +3051,126 @@ Current bindings exist for the Lua, Java and Perl languages, with this default i
 =item
 
 [17] IV or Math::BigInt
+
+=back
+
+=head1 Strings and Array lifetime
+
+Here are the rules for strings and arrays lifetime:
+
+=over
+
+=item C<marpaESLIF_versionb>
+
+The ASCII string returned in C<*versionsp> is persistent ESLIF is freed. You can access it directly in host space, though any change will result to undefined behaviour.
+
+=item C<marpaESLIFAction> type
+
+ESLIF guarantees that all string pointers in C<marpaESLIFAction> are persistent until the associated grammar is freed. You can access them directly in host space, though any change to them will result to undefined behaviour.
+
+=item C<marpaESLIFGrammar_grammar_by_levelb>
+
+ESLIF guarantees that the string returned in C<*descpp> is persistent until the associated grammar is freed. You can access it directly in host space, though any change will result to undefined behaviour.
+
+=item C<marpaESLIFGrammar_grammarproperty_currentb> 
+
+Any action and string returned in persistent until the associated grammar is freed. Any change to them will result to undefined behaviour.
+
+=item C<marpaESLIFGrammar_ruleproperty_currentb> and C<marpaESLIFGrammar_ruleproperty_by_levelb>
+
+Any action and string returned in persistent until the associated grammar is freed. Any change to them will result to undefined behaviour.
+
+=item C<marpaESLIFGrammar_ruledisplayform_currentb> and C<marpaESLIFGrammar_ruledisplayform_by_levelb>
+
+The I<ASCII> string returned in C<*ruledisplaysp> is persistent until the associated grammar is freed. Any change to it will result to undefined behaviour.
+
+=item C<marpaESLIFGrammar_symbolproperty_currentb> and C<marpaESLIFGrammar_symbolproperty_by_levelb>
+
+Any action and string returned in persistent until the associated grammar is freed. Any change to them will result to undefined behaviour.
+
+=item C<marpaESLIFGrammar_symboldisplayform_currentb> and C<marpaESLIFGrammar_symboldisplayform_by_levelb>
+
+The I<ASCII> string returned in C<*symboldisplaysp> is persistent until the associated grammar is freed. Any change to it will result to undefined behaviour.
+
+=item C<marpaESLIFGrammar_ruleshowform_currentb> and C<marpaESLIFGrammar_ruleshowform_by_levelb>
+
+The I<ASCII> string returned in C<*ruleshowsp> is persistent until the associated grammar is freed. Any change to it will result to undefined behaviour.
+
+=item C<marpaESLIFGrammar_grammarshowform_currentb> and C<marpaESLIFGrammar_grammarshowform_by_levelb>
+
+The I<ASCII> string returned in C<*grammarshowsp> is persistent until the associated grammar is freed. Any change to it will result to undefined behaviour.
+
+=item C<marpaESLIFGrammar_grammarshowscriptb>
+
+The I<ASCII> string returned in C<*grammarscriptsp> is persistent until the associated grammar is freed. Any change to it will result to undefined behaviour.
+
+=item C<marpaESLIFValue_contextb>
+
+The I<ASCII> strings returned in C<*symbolsp> and C<*rulesp> are persistent until the associated grammar is freed. Any change to them will result to undefined behaviour.
+
+=item Recognizer callbacks
+
+All string and arrays are valid during the callback and are guaranteed to not change C<if> ESLIF recognizer state is not affected by any user call. Calls that C<may> affect ESLIF recognizer state are:
+
+=over
+
+=item C<marpaESLIFRecognizer_scanb>
+
+=item C<marpaESLIFRecognizer_resumeb>
+
+=item C<marpaESLIFRecognizer_alternative_readb>
+
+=item C<marpaESLIFRecognizer_alternative_completeb>
+
+=item C<marpaESLIFRecognizer_readb>
+
+=back
+
+Callbacks that give direct pointers to memory are:
+
+=over
+
+=item C<marpaESLIFRecognizerIfCallback_t>
+
+=item C<marpaESLIFRecognizerEventCallback_t>
+
+=item C<marpaESLIFRecognizerRegexCallback_t>
+
+=item C<marpaESLIFRecognizerImport_t>
+
+=back
+
+The memory pointers if the above methods are I<always> of type array, ESLIF bindings then guarantees that:
+
+=over
+
+=item Perl language
+
+A read-only C<SV*> is used to access the memory content.
+
+=item Lua language
+
+A implementation very closed to L<xstring-lua|https://github.com/chipdude/xstring-lua> is used to access the memory content. Any attempt to change memory will result in unpredicted behaviour.
+
+=item Java language
+
+A C<DirectByteBuffer> is used to access the memory content. Any attempt to change memory will result in unpredicted behaviour.
+
+=back
+
+=item Imports
+
+=over
+
+=item C<marpaESLIFValue_importb>
+
+Any data after the call is freed. The end-user must import strings and arrays in its namespace.
+
+=item C<marpaESLIFRecognizer_importb>
+
+The strings and arrays will be valid until ESLIF recognizer state is changed.
+
+=back
 
 =back
 
