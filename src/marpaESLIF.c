@@ -21509,61 +21509,15 @@ static inline void _marpaESLIFCalloutBlock_initb(marpaESLIFRecognizer_t *marpaES
 /*****************************************************************************/
 {
   marpaESLIFValueResultPair_t *marpaESLIFValuePairsp = marpaESLIFRecognizerp->_marpaESLIFCalloutBlockPairs;
-  static const char           *callout_numbers       = "callout_number";
-  static const char           *callout_strings       = "callout_string";
-  static const char           *subjects              = "subject";
-  static const char           *patterns              = "pattern";
-  static const char           *capture_tops          = "capture_top";
-  static const char           *capture_lasts         = "capture_last";
-  static const char           *offset_vectors        = "offset_vector";
-  static const char           *marks                 = "mark";
-  static const char           *start_matchs          = "start_match";
-  static const char           *current_positions     = "current_position";
-  static const char           *next_items            = "next_item";
-  static const char           *grammar_levels        = "grammar_level";
-  static const char           *symbol_ids            = "symbol_id";
+  int                          i;
 
   /* Remember current offset_vectorl size */
   marpaESLIFRecognizerp->_offset_vector_allocl = 0;
 
-  MARPAESLIFCALLOUTBLOCK_INIT_STRING(marpaESLIFValuePairsp[MARPAESLIFCALLOUTBLOCK_CALLOUT_NUMBER].key, callout_numbers, strlen(callout_numbers));
-  MARPAESLIFCALLOUTBLOCK_INIT_UNDEF (marpaESLIFValuePairsp[MARPAESLIFCALLOUTBLOCK_CALLOUT_NUMBER].value);
-
-  MARPAESLIFCALLOUTBLOCK_INIT_STRING(marpaESLIFValuePairsp[MARPAESLIFCALLOUTBLOCK_CALLOUT_STRING].key, callout_strings, strlen(callout_strings));
-  MARPAESLIFCALLOUTBLOCK_INIT_UNDEF (marpaESLIFValuePairsp[MARPAESLIFCALLOUTBLOCK_CALLOUT_STRING].value);
-
-  MARPAESLIFCALLOUTBLOCK_INIT_STRING(marpaESLIFValuePairsp[MARPAESLIFCALLOUTBLOCK_SUBJECT].key, subjects, strlen(subjects));
-  MARPAESLIFCALLOUTBLOCK_INIT_UNDEF (marpaESLIFValuePairsp[MARPAESLIFCALLOUTBLOCK_SUBJECT].value);
-
-  MARPAESLIFCALLOUTBLOCK_INIT_STRING(marpaESLIFValuePairsp[MARPAESLIFCALLOUTBLOCK_PATTERN].key, patterns, strlen(patterns));
-  MARPAESLIFCALLOUTBLOCK_INIT_UNDEF (marpaESLIFValuePairsp[MARPAESLIFCALLOUTBLOCK_PATTERN].value);
-
-  MARPAESLIFCALLOUTBLOCK_INIT_STRING(marpaESLIFValuePairsp[MARPAESLIFCALLOUTBLOCK_CAPTURE_TOP].key, capture_tops, strlen(capture_tops));
-  MARPAESLIFCALLOUTBLOCK_INIT_UNDEF (marpaESLIFValuePairsp[MARPAESLIFCALLOUTBLOCK_CAPTURE_TOP].value);
-
-  MARPAESLIFCALLOUTBLOCK_INIT_STRING(marpaESLIFValuePairsp[MARPAESLIFCALLOUTBLOCK_CAPTURE_LAST].key, capture_lasts, strlen(capture_lasts));
-  MARPAESLIFCALLOUTBLOCK_INIT_UNDEF (marpaESLIFValuePairsp[MARPAESLIFCALLOUTBLOCK_CAPTURE_LAST].value);
-
-  MARPAESLIFCALLOUTBLOCK_INIT_STRING(marpaESLIFValuePairsp[MARPAESLIFCALLOUTBLOCK_OFFSET_VECTOR].key, offset_vectors, strlen(offset_vectors));
-  MARPAESLIFCALLOUTBLOCK_INIT_UNDEF (marpaESLIFValuePairsp[MARPAESLIFCALLOUTBLOCK_OFFSET_VECTOR].value);
-
-  MARPAESLIFCALLOUTBLOCK_INIT_STRING(marpaESLIFValuePairsp[MARPAESLIFCALLOUTBLOCK_MARK].key, marks, strlen(marks));
-  MARPAESLIFCALLOUTBLOCK_INIT_UNDEF (marpaESLIFValuePairsp[MARPAESLIFCALLOUTBLOCK_MARK].value);
-
-  MARPAESLIFCALLOUTBLOCK_INIT_STRING(marpaESLIFValuePairsp[MARPAESLIFCALLOUTBLOCK_START_MATCH].key, start_matchs, strlen(start_matchs));
-  MARPAESLIFCALLOUTBLOCK_INIT_UNDEF (marpaESLIFValuePairsp[MARPAESLIFCALLOUTBLOCK_START_MATCH].value);
-
-  MARPAESLIFCALLOUTBLOCK_INIT_STRING(marpaESLIFValuePairsp[MARPAESLIFCALLOUTBLOCK_CURRENT_POSITION].key, current_positions, strlen(current_positions));
-  MARPAESLIFCALLOUTBLOCK_INIT_UNDEF (marpaESLIFValuePairsp[MARPAESLIFCALLOUTBLOCK_CURRENT_POSITION].value);
-
-  MARPAESLIFCALLOUTBLOCK_INIT_STRING(marpaESLIFValuePairsp[MARPAESLIFCALLOUTBLOCK_NEXT_ITEM].key, next_items, strlen(next_items));
-  MARPAESLIFCALLOUTBLOCK_INIT_UNDEF (marpaESLIFValuePairsp[MARPAESLIFCALLOUTBLOCK_NEXT_ITEM].value);
-
-  MARPAESLIFCALLOUTBLOCK_INIT_STRING(marpaESLIFValuePairsp[MARPAESLIFCALLOUTBLOCK_GRAMMAR_LEVEL].key, grammar_levels, strlen(grammar_levels));
-  MARPAESLIFCALLOUTBLOCK_INIT_UNDEF (marpaESLIFValuePairsp[MARPAESLIFCALLOUTBLOCK_GRAMMAR_LEVEL].value);
-
-  MARPAESLIFCALLOUTBLOCK_INIT_STRING(marpaESLIFValuePairsp[MARPAESLIFCALLOUTBLOCK_SYMBOL_ID].key, symbol_ids, strlen(symbol_ids));
-  MARPAESLIFCALLOUTBLOCK_INIT_UNDEF (marpaESLIFValuePairsp[MARPAESLIFCALLOUTBLOCK_SYMBOL_ID].value);
+  for (i = 0; i < _MARPAESLIFCALLOUTBLOCK_SIZE; i++) {
+    MARPAESLIFCALLOUTBLOCK_INIT_STRING(marpaESLIFValuePairsp[i].key, marpaESLIFCalloutKeysp[i], strlen(marpaESLIFCalloutKeysp[i]));
+    MARPAESLIFCALLOUTBLOCK_INIT_UNDEF (marpaESLIFValuePairsp[i].value);
+  }
 
   marpaESLIFRecognizerp->_marpaESLIFCalloutBlock.contextp           = NULL;
   marpaESLIFRecognizerp->_marpaESLIFCalloutBlock.representationp    = NULL;

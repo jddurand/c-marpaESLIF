@@ -128,6 +128,24 @@ typedef enum marpaESLIFCalloutBlockEnum {
                                          _MARPAESLIFCALLOUTBLOCK_SIZE
 } marpaESLIFCalloutBlockEnum_t;
 
+/* marpaESLIFCallout table Keys */
+static const char *marpaESLIFCalloutKeysp[_MARPAESLIFCALLOUTBLOCK_SIZE] = {
+  "callout_number",
+  "callout_string",
+  "subject",
+  "pattern",
+  "capture_top",
+  "capture_last",
+  "offset_vector",
+  "mark",
+  "start_match",
+  "current_position",
+  "next_item",
+  "grammar_level",
+  "symbol_id"
+};
+
+
 /* -------------------------------------------------------------------------------- */
 /* You MUST refer to                                                                */
 /* https://www.pcre.org/current/doc/html/pcre2callout.html#calloutinterface         */

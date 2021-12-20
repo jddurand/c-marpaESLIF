@@ -94,6 +94,9 @@ typedef struct marpaESLIFLuaRecognizerContext {
   marpaESLIFRecognizer_t *marpaESLIFRecognizerp;
   short                   managedb;               /* True if we own marpaESLIFRecognizerp */
   marpaESLIF_t           *marpaESLIFp;
+  /* Regex callouts are always sequential for a recognizer. We cache a dummy version of the object */
+  /* Just to make sure the the strings used as keys are never garbage collected */
+  int                     calloutTable_r;
 } marpaESLIFLuaRecognizerContext_t;
 
 /* Value proxy context */
@@ -282,7 +285,7 @@ static int                                marpaESLIFLua_nexti(lua_State *L);
 static short                              marpaESLIFLua_pairsb(int *rcip, lua_State *L, int idx, int *iteratorip, int *statevariableip);
 static int                                marpaESLIFLua_marpaESLIFOpaque_freei(lua_State *L);
 static short                              marpaESLIFLua_metatypeb(int *luaip, lua_State *L, int index);
-static short                              marpaESLIFLua_createniledtableb(lua_State *L, int narr, int nrec, short arrayb);
+static short                              marpaESLIFLua_createniledtableb(lua_State *L, int narr, short arrayb);
 static short                              marpaESLIFLua_metanextb(int *rcip, lua_State *L, int idx);
 static int                                marpaESLIFLua_marpaESLIFJSONEncoder_newi(lua_State *L);
 #ifdef MARPAESLIFLUA_EMBEDDED
@@ -2169,10 +2172,11 @@ static short marpaESLIFLua_grammarContextInitb(lua_State *L, marpaESLIF_t *marpa
 }
 
 /****************************************************************************/
-static short  marpaESLIFLua_recognizerContextInitb(lua_State *L, marpaESLIF_t *marpaESLIFp, int grammarStacki, int recognizerInterfaceStacki, int recognizerOrigStacki, marpaESLIFLuaRecognizerContext_t *marpaESLIFLuaRecognizerContextp, short unmanagedb)
+static short marpaESLIFLua_recognizerContextInitb(lua_State *L, marpaESLIF_t *marpaESLIFp, int grammarStacki, int recognizerInterfaceStacki, int recognizerOrigStacki, marpaESLIFLuaRecognizerContext_t *marpaESLIFLuaRecognizerContextp, short unmanagedb)
 /****************************************************************************/
 {
   static const char *funcs = "marpaESLIFLua_recognizerContextInitb";
+  int                i;
 
   marpaESLIFLuaRecognizerContextp->L           = L;
   marpaESLIFLuaRecognizerContextp->marpaESLIFp = marpaESLIFp;
@@ -2207,6 +2211,11 @@ static short  marpaESLIFLua_recognizerContextInitb(lua_State *L, marpaESLIF_t *m
   }
   marpaESLIFLuaRecognizerContextp->marpaESLIFRecognizerp = NULL;
   marpaESLIFLuaRecognizerContextp->managedb              = 0;
+
+  /* Cache a dummy callout table */
+  if (! marpaESLIFLua_lua_newtable(L)) goto err;
+  MARPAESLIFLUA_MAKE_MARPAESLIFREGEXCALLBACK_OBJECT(L);
+  MARPAESLIFLUA_REF(L, marpaESLIFLuaRecognizerContextp->calloutTable_r);
 
   return 1;
 
@@ -2253,6 +2262,7 @@ static void  marpaESLIFLua_recognizerContextFreev(marpaESLIFLuaRecognizerContext
 {
   static const char *funcs = "marpaESLIFLua_recognizerContextFreev";
   lua_State         *L;
+  int                i;
 
   if (marpaESLIFLuaRecognizerContextp != NULL) {
     L = marpaESLIFLuaRecognizerContextp->L;
@@ -2278,6 +2288,8 @@ static void  marpaESLIFLua_recognizerContextFreev(marpaESLIFLuaRecognizerContext
     } else {
       marpaESLIFLuaRecognizerContextp->marpaESLIFRecognizerp = NULL;
     }
+
+    MARPAESLIFLUA_UNREF(L, marpaESLIFLuaRecognizerContextp->calloutTable_r);
 
     if (! onStackb) {
       free(marpaESLIFLuaRecognizerContextp);
@@ -4525,7 +4537,7 @@ static short marpaESLIFLua_importb(lua_State *L, marpaESLIFValueResult_t *marpaE
       marpaESLIFLua_luaL_errorf(L, "table size %ld too big, maximum is %d", (unsigned long) marpaESLIFValueResultp->u.r.sizel, INT_MAX);
       goto err;
     }
-    if (! marpaESLIFLua_createniledtableb(L, (int) marpaESLIFValueResultp->u.r.sizel, 0, 1 /* arrayb */)) goto err;           /* Stack: val1, ..., valn, table */
+    if (! marpaESLIFLua_createniledtableb(L, (int) marpaESLIFValueResultp->u.r.sizel, 1 /* arrayb */)) goto err;              /* Stack: val1, ..., valn, table */
     if (marpaESLIFValueResultp->u.r.sizel > 0) {
       for (i = marpaESLIFValueResultp->u.r.sizel; i > 0 ; i--) {
         if (! marpaESLIFLua_lua_insert(L, -2)) goto err;                                                                      /* Stack: val1, ..., table, valn */
@@ -4541,7 +4553,7 @@ static short marpaESLIFLua_importb(lua_State *L, marpaESLIFValueResult_t *marpaE
       marpaESLIFLua_luaL_errorf(L, "table size %ld too big, maximum is %d", (unsigned long) marpaESLIFValueResultp->u.t.sizel, INT_MAX);
       goto err;
     }
-    if (! marpaESLIFLua_createniledtableb(L, (int) marpaESLIFValueResultp->u.r.sizel, 0, 0 /* arrayb */)) goto err;           /* Stack: keyn, valn, ..., key1, val1, table */
+    if (! marpaESLIFLua_createniledtableb(L, (int) marpaESLIFValueResultp->u.r.sizel, 0 /* arrayb */)) goto err;              /* Stack: keyn, valn, ..., key1, val1, table */
 
     /* By definition the stack contains t.sizel even elements that are {key,value} tuples */
     for (i = 0; i < marpaESLIFValueResultp->u.t.sizel; i++) {
@@ -9299,7 +9311,7 @@ static short marpaESLIFLua_metatypeb(int *rcip, lua_State *L, int index)
 }
 
 /****************************************************************************/
-static short marpaESLIFLua_createniledtableb(lua_State *L, int narr, int nrec, short arrayb)
+static short marpaESLIFLua_createniledtableb(lua_State *L, int narr, short arrayb)
 /****************************************************************************/
 {
   static const char *funcs = "marpaESLIFLua_createniledtableb";
