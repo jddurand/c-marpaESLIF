@@ -21421,22 +21421,14 @@ static int _marpaESLIF_pcre2_callouti(pcre2_callout_block *blockp, void *userDat
     MARPAESLIFCALLOUTBLOCK_INIT_UNDEF (marpaESLIFValuePairsp[MARPAESLIFCALLOUTBLOCK_CALLOUT_STRING].value);
   } else {
     MARPAESLIFCALLOUTBLOCK_INIT_UNDEF (marpaESLIFValuePairsp[MARPAESLIFCALLOUTBLOCK_CALLOUT_NUMBER].value);
-    MARPAESLIFCALLOUTBLOCK_INIT_STRING(marpaESLIFValuePairsp[MARPAESLIFCALLOUTBLOCK_CALLOUT_STRING].value, blockp->callout_string, blockp->callout_string_length);
+    MARPAESLIFCALLOUTBLOCK_INIT_ARRAY (marpaESLIFValuePairsp[MARPAESLIFCALLOUTBLOCK_CALLOUT_STRING].value, blockp->callout_string, blockp->callout_string_length);
   }
-#ifndef MARPAESLIF_NTRACE
   /* Note that in fact blockp->subject is stream's inputs, and blockp->subject_length is stream's inputl */
-  MARPAESLIFCALLOUTBLOCK_INIT_ARRAY (marpaESLIFValuePairsp[MARPAESLIFCALLOUTBLOCK_SUBJECT].value, blockp->subject, blockp->subject_length);
-#else
-  MARPAESLIFCALLOUTBLOCK_INIT_UNDEF (marpaESLIFValuePairsp[MARPAESLIFCALLOUTBLOCK_SUBJECT].value);
-#endif
-#ifndef MARPAESLIF_NTRACE
-  MARPAESLIFCALLOUTBLOCK_INIT_STRING(marpaESLIFValuePairsp[MARPAESLIFCALLOUTBLOCK_PATTERN].value, terminalp->patterns, terminalp->patternl);
-#else
-  MARPAESLIFCALLOUTBLOCK_INIT_UNDEF (marpaESLIFValuePairsp[MARPAESLIFCALLOUTBLOCK_PATTERN].value);
-#endif
-  MARPAESLIFCALLOUTBLOCK_INIT_LONG  (marpaESLIFValuePairsp[MARPAESLIFCALLOUTBLOCK_CAPTURE_TOP].value, blockp->capture_top);
-  MARPAESLIFCALLOUTBLOCK_INIT_LONG  (marpaESLIFValuePairsp[MARPAESLIFCALLOUTBLOCK_CAPTURE_LAST].value, blockp->capture_last);
-  MARPAESLIFCALLOUTBLOCK_INIT_ROW(marpaESLIFValuePairsp[MARPAESLIFCALLOUTBLOCK_OFFSET_VECTOR].value, marpaESLIFValueResultOvectorp, offset_vectorl);
+  MARPAESLIFCALLOUTBLOCK_INIT_ARRAY   (marpaESLIFValuePairsp[MARPAESLIFCALLOUTBLOCK_SUBJECT].value, blockp->subject, blockp->subject_length);
+  MARPAESLIFCALLOUTBLOCK_INIT_ARRAY   (marpaESLIFValuePairsp[MARPAESLIFCALLOUTBLOCK_PATTERN].value, terminalp->patterns, terminalp->patternl);
+  MARPAESLIFCALLOUTBLOCK_INIT_LONG    (marpaESLIFValuePairsp[MARPAESLIFCALLOUTBLOCK_CAPTURE_TOP].value, blockp->capture_top);
+  MARPAESLIFCALLOUTBLOCK_INIT_LONG    (marpaESLIFValuePairsp[MARPAESLIFCALLOUTBLOCK_CAPTURE_LAST].value, blockp->capture_last);
+  MARPAESLIFCALLOUTBLOCK_INIT_ROW     (marpaESLIFValuePairsp[MARPAESLIFCALLOUTBLOCK_OFFSET_VECTOR].value, marpaESLIFValueResultOvectorp, offset_vectorl);
   for (i = 0; i < offset_vectorl; i++) {
     MARPAESLIFCALLOUTBLOCK_INIT_LONG  (marpaESLIFValuePairsp[MARPAESLIFCALLOUTBLOCK_OFFSET_VECTOR].value.u.r.p[i], blockp->offset_vector[i]);
   }
@@ -21446,15 +21438,15 @@ static int _marpaESLIF_pcre2_callouti(pcre2_callout_block *blockp, void *userDat
     /* As per the doc, mark is a pointer to a zero-terminated string */
     MARPAESLIFCALLOUTBLOCK_INIT_STRING(marpaESLIFValuePairsp[MARPAESLIFCALLOUTBLOCK_MARK].value, blockp->mark, strlen((char *) blockp->mark));
   }
-  MARPAESLIFCALLOUTBLOCK_INIT_LONG (marpaESLIFValuePairsp[MARPAESLIFCALLOUTBLOCK_START_MATCH].value, blockp->start_match);
+  MARPAESLIFCALLOUTBLOCK_INIT_LONG    (marpaESLIFValuePairsp[MARPAESLIFCALLOUTBLOCK_START_MATCH].value, blockp->start_match);
   MARPAESLIFCALLOUTBLOCK_INIT_LONG (marpaESLIFValuePairsp[MARPAESLIFCALLOUTBLOCK_CURRENT_POSITION].value, blockp->current_position);
   if (blockp->next_item_length == 0) {
     MARPAESLIFCALLOUTBLOCK_INIT_UNDEF (marpaESLIFValuePairsp[MARPAESLIFCALLOUTBLOCK_NEXT_ITEM].value);
   } else {
-    MARPAESLIFCALLOUTBLOCK_INIT_STRING(marpaESLIFValuePairsp[MARPAESLIFCALLOUTBLOCK_NEXT_ITEM].value, terminalp->patterns + blockp->pattern_position, blockp->next_item_length);
+    MARPAESLIFCALLOUTBLOCK_INIT_ARRAY (marpaESLIFValuePairsp[MARPAESLIFCALLOUTBLOCK_NEXT_ITEM].value, terminalp->patterns + blockp->pattern_position, blockp->next_item_length);
   }
-  MARPAESLIFCALLOUTBLOCK_INIT_INT  (marpaESLIFValuePairsp[MARPAESLIFCALLOUTBLOCK_GRAMMAR_LEVEL].value, grammarp->leveli);
-  MARPAESLIFCALLOUTBLOCK_INIT_INT  (marpaESLIFValuePairsp[MARPAESLIFCALLOUTBLOCK_SYMBOL_ID].value, terminalp->idi);
+  MARPAESLIFCALLOUTBLOCK_INIT_INT     (marpaESLIFValuePairsp[MARPAESLIFCALLOUTBLOCK_GRAMMAR_LEVEL].value, grammarp->leveli);
+  MARPAESLIFCALLOUTBLOCK_INIT_INT     (marpaESLIFValuePairsp[MARPAESLIFCALLOUTBLOCK_SYMBOL_ID].value, terminalp->idi);
 
   /* MARPAESLIF_NOTICEF(marpaESLIFRecognizerp->marpaESLIFp, "... Calling regex callback on terminal: %s", terminalp->descp->asciis); */
   if (MARPAESLIF_UNLIKELY(! regexCallbackp(marpaESLIFRecognizerp->marpaESLIFRecognizerOption.userDatavp, marpaESLIFRecognizerp, marpaESLIFRecognizerp->marpaESLIFCalloutBlockp, &marpaESLIFValueResultInt))) {

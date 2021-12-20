@@ -2974,13 +2974,16 @@ Current bindings exist for the Lua, Java and Perl languages, with this default i
     MARPAESLIF_VALUE_TYPE_FLOAT           LUA_TNUMBER       Depends [7]           NV
     MARPAESLIF_VALUE_TYPE_DOUBLE          LUA_TNUMBER       Depends [8]           NV
     MARPAESLIF_VALUE_TYPE_PTR             Depends [1]       Depends [9]           Depends [13]
-    MARPAESLIF_VALUE_TYPE_ARRAY           LUA_TSTRING       byte[]                PV*
     MARPAESLIF_VALUE_TYPE_BOOL            LUA_TBOOLEAN      java.lang.Bool        Depends [14]
     MARPAESLIF_VALUE_TYPE_STRING          LUA_TSTRING [2]   java.lang.String      Depends [15]
     MARPAESLIF_VALUE_TYPE_ROW             LUA_TTABLE [3]    object[]              AV*
     MARPAESLIF_VALUE_TYPE_TABLE           LUA_TTABLE [4]    java.util.HashMap     HV*
     MARPAESLIF_VALUE_TYPE_LONG_DOUBLE     LUA_TNUMBER       Depends [10]          Depends [16]
     MARPAESLIF_VALUE_TYPE_LONG_LONG       LUA_TNUMBER       Depends [11]          Depends [17]
+
+    MARPAESLIF_VALUE_TYPE_ARRAY           LUA_TSTRING       byte[]                PV*
+    or [18]
+    MARPAESLIF_VALUE_TYPE_ARRAY           LUA_XSTRING       DirectyByteBuffer     readonly PV*
 
 =over
 
@@ -3051,6 +3054,46 @@ Current bindings exist for the Lua, Java and Perl languages, with this default i
 =item
 
 [17] IV or Math::BigInt
+
+=item
+
+[18] In recognizer callbacks, every container is an array. For languages binding efficiency, no copy is done is direct access to memory is given via:
+
+=over
+
+=item Perl language
+
+A readonly C<SV*> that is a C<PV*> pointing directly to the memory region.
+
+=item Lua language
+
+A L<xstring-lua|https://github.com/chipdude/xstring-lua>-like object, where only four methods exists:
+
+=over
+
+=item C<len(s)>
+
+Returns the number of bytes of the region
+
+=item C<sub(s, [i, [j]])>
+
+Returns a new I<xtring> instance mapped to the given subregion.
+
+=item C<byte(s, [i, [j]])>
+
+Returns numeric code of the given subregion.
+
+=item C<string(s)>
+
+Returns a true Lua string out of this xstring. This operation will involve a memory copy.
+
+=back
+
+Any attempt to stringify automatically this xstring will result in a creation of a true Lua string.
+
+=item 
+
+=back
 
 =back
 

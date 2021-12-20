@@ -1082,6 +1082,13 @@ static short marpaESLIFLua_luaL_checkinteger(lua_Integer *rcp, lua_State *L, int
 }
 
 /****************************************************************************/
+static short marpaESLIFLua_luaL_optinteger(lua_Integer *rcp, lua_State *L, int arg, lua_Integer def)
+/****************************************************************************/
+{
+  return ! luaunpanicL_optinteger(rcp, L, arg, def);
+}
+
+/****************************************************************************/
 static short marpaESLIFLua_lua_getmetatable(int *rcip, lua_State *L, int index)
 /****************************************************************************/
 {
@@ -1163,6 +1170,13 @@ static short marpaESLIFLua_lua_isinteger(int *rcip, lua_State *L, int idx)
 /****************************************************************************/
 {
   return ! luaunpanic_isinteger(rcip, L, idx);
+}
+
+/****************************************************************************/
+static short marpaESLIFLua_luaL_checkudata(void **rcpp, lua_State *L, int ud, const char *tname)
+/****************************************************************************/
+{
+  return ! luaunpanicL_checkudata(rcpp, L, ud, tname);
 }
 
 /****************************************************************************/
