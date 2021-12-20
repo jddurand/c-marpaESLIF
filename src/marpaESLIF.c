@@ -12469,7 +12469,7 @@ static short _marpaESLIFValue_ruleCallbackWrapperb(void *userDatavp, int rulei, 
       }
       MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Hide value changed stack indices: [%d] <- [%d-%d]", resulti, arg0i, argni);
 #ifdef MARPAESLIF_NOTICE_ACTION
-      MARPAESLIF_TRACEF(marpaESLIFRecognizerp->marpaESLIFp, "%s: Hide value changed stack indices: [%d] <- [%d-%d]", funcs, resulti, arg0i, argni);
+      MARPAESLIF_TRACEF(marpaESLIFRecognizerp->marpaESLIFp, funcs, "Hide value changed stack indices: [%d] <- [%d-%d]", resulti, arg0i, argni);
 #endif
     }
 
@@ -15767,7 +15767,7 @@ static inline short _marpaESLIFValue_stack_switchb(marpaESLIFValue_t *marpaESLIF
   short              rcb;
 
   MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_INC(marpaESLIFValuep->marpaESLIFRecognizerp);
-  MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFValuep->marpaESLIFRecognizerp, funcs, "start indicei=%d", indicei);
+  MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFValuep->marpaESLIFRecognizerp, funcs, "start i=%d j=%d", i, j);
 
   GENERICSTACK_SWITCH(marpaESLIFValuep->valueResultStackp, i, j);
   if (MARPAESLIF_UNLIKELY(GENERICSTACK_ERROR(marpaESLIFValuep->valueResultStackp))) {
@@ -18937,9 +18937,13 @@ static int _marpaESLIF_event_sorti(const void *p1, const void *p2)
 static int _marpaESLIF_cleanup_sorti(const void *p1, const void *p2)
 /*****************************************************************************/
 {
-  /* These marpaESLIFValueResult pointers are produced by _marpaESLIFRecognizer_pointers_tracki */
-  void *q1 = MARPAESLIFVALUERESULT_TO_P((marpaESLIFValueResult_t *) p1);
-  void *q2 = MARPAESLIFVALUERESULT_TO_P((marpaESLIFValueResult_t *) p2);
+  static const char *funcs = "_marpaESLIFRecognizer_pointers_cleanupb";
+  /* C.f. _marpaESLIFRecognizer_pointers_tracki:                                */
+  /* It is pushing PTRs that are pointers to marpaESLIFValueResult_t structures */
+  marpaESLIFValueResult_t *marpaESLIFValueResult1p = ((genericStackItem_t *) p1)->u.p;
+  marpaESLIFValueResult_t *marpaESLIFValueResult2p = ((genericStackItem_t *) p2)->u.p;
+  void                    *q1                      = MARPAESLIFVALUERESULT_TO_P(marpaESLIFValueResult1p);
+  void                    *q2                      = MARPAESLIFVALUERESULT_TO_P(marpaESLIFValueResult2p);
 
   return (q1 < q2) ? -1 : ((q1 > q2) ? 1 : 0);
 }
