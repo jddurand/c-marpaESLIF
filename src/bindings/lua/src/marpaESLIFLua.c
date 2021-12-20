@@ -218,7 +218,7 @@ static void                               marpaESLIFLua_genericFreeCallbackv(voi
 static short                              marpaESLIFLua_valueImporterb(marpaESLIFValue_t *marpaESLIFValuep, void *userDatavp, marpaESLIFValueResult_t *marpaESLIFValueResultp);
 static short                              marpaESLIFLua_recognizerImporterb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, void *userDatavp, marpaESLIFValueResult_t *marpaESLIFValueResultp);
 static short                              marpaESLIFLua_symbolImporterb(marpaESLIFSymbol_t *marpaESLIFSymbolp, void *userDatavp, marpaESLIFValueResult_t *marpaESLIFValueResultp);
-static short                              marpaESLIFLuaL_importb(lua_State *L, marpaESLIFValueResult_t *marpaESLIFValueResultp);
+static short                              marpaESLIFLua_importb(lua_State *L, marpaESLIFValueResult_t *marpaESLIFValueResultp);
 static short                              marpaESLIFLua_pushValueb(marpaESLIFLuaValueContext_t *marpaESLIFLuaValueContextp, marpaESLIFValue_t *marpaESLIFValuep, int stackindicei, marpaESLIFValueResult_t *marpaESLIFValueResultSymbolp);
 static short                              marpaESLIFLua_pushRecognizerb(marpaESLIFLuaRecognizerContext_t *marpaESLIFLuaRecognizerContextp, marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFValueResult_t *marpaESLIFValueResultp);
 static void                               marpaESLIFLua_representationDisposev(void *userDatavp, char *inputcp, size_t inputl, char *encodings);
@@ -322,7 +322,7 @@ static short                              marpaESLIFLua_getContextb(marpaESLIFRe
 static short                              marpaESLIFLua_setContextb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFValueResult_t *contextp);
 #endif
 static inline short                       marpaESLIFLua_setRecognizerEngineForCallbackv(lua_State *L, marpaESLIFLuaRecognizerContext_t *marpaESLIFLuaRecognizerContextp, marpaESLIFRecognizer_t *marpaESLIFRecognizerp);
-static int                                marpaESLIFLua_xstring_newi(lua_State *L, char *p, size_t sizel);
+static inline short                       marpaESLIFLua_xstring_newb(lua_State *L, char *p, size_t sizel);
 static int                                marpaESLIFLua_xstring_freei(lua_State *L);
 static int                                marpaESLIFLua_xstring_leni(lua_State *L);
 static int                                marpaESLIFLua_xstring_subi(lua_State *L);
@@ -4433,10 +4433,10 @@ static void marpaESLIFLua_genericFreeCallbackv(void *userDatavp, marpaESLIFValue
 }
 
 /*****************************************************************************/
-static short marpaESLIFLuaL_importb(lua_State *L, marpaESLIFValueResult_t *marpaESLIFValueResultp)
+static short marpaESLIFLua_importb(lua_State *L, marpaESLIFValueResult_t *marpaESLIFValueResultp)
 /*****************************************************************************/
 {
-  static const char           *funcs = "marpaESLIFLuaL_importb";
+  static const char           *funcs = "marpaESLIFLua_importb";
   size_t                       i;
   marpaESLIFValueResult_t     *marpaESLIFValueResultDupp;
   short                        rcb;
@@ -4590,7 +4590,7 @@ static short marpaESLIFLua_valueImporterb(marpaESLIFValue_t *marpaESLIFValuep, v
 #endif
   lua_State                   *L                          = marpaESLIFLuaValueContextp->L;
 
-  return marpaESLIFLuaL_importb(L, marpaESLIFValueResultp);
+  return marpaESLIFLua_importb(L, marpaESLIFValueResultp);
 }
 
 /*****************************************************************************/
@@ -4609,7 +4609,7 @@ static short marpaESLIFLua_recognizerImporterb(marpaESLIFRecognizer_t *marpaESLI
 #endif
   lua_State                   *L                          = marpaESLIFLuaRecognizerContextp->L;
 
-  return marpaESLIFLuaL_importb(L, marpaESLIFValueResultp);
+  return marpaESLIFLua_importb(L, marpaESLIFValueResultp);
 }
 
 /*****************************************************************************/
@@ -4620,7 +4620,7 @@ static short marpaESLIFLua_symbolImporterb(marpaESLIFSymbol_t *marpaESLIFSymbolp
   marpaESLIFLuaSymbolContext_t *marpaESLIFLuaSymbolContextp = (marpaESLIFLuaSymbolContext_t *) userDatavp;
   lua_State                    *L                            = marpaESLIFLuaSymbolContextp->L;
 
-  return marpaESLIFLuaL_importb(L, marpaESLIFValueResultp);
+  return marpaESLIFLua_importb(L, marpaESLIFValueResultp);
 }
 
 /*****************************************************************************/
@@ -10390,12 +10390,12 @@ static inline short marpaESLIFLua_setRecognizerEngineForCallbackv(lua_State *L, 
 }
 
 /*****************************************************************************/
-static int marpaESLIFLua_xstring_newi(lua_State *L, char *p, size_t sizel)
+static inline short marpaESLIFLua_xstring_newb(lua_State *L, char *p, size_t sizel)
 /*****************************************************************************/
 {
-  static const char             *funcs = "marpaESLIFLua_xstring_newi";
+  static const char             *funcs = "marpaESLIFLua_xstring_newb";
   marpaESLIFLuaXstringContext_t *marpaESLIFLuaXstringContextp;
-  short                          rci;
+  short                          rcb;
 
   marpaESLIFLuaXstringContextp = malloc(sizeof(marpaESLIFLuaXstringContext_t));
   if (marpaESLIFLuaXstringContextp == NULL) {
@@ -10408,14 +10408,14 @@ static int marpaESLIFLua_xstring_newi(lua_State *L, char *p, size_t sizel)
 
   MARPAESLIFLUA_PUSH_XSTRING_OBJECT(L, marpaESLIFLuaXstringContextp);
 
-  rci = 1;
+  rcb = 1;
   goto done;
 
  err:
-  rci = 0;
+  rcb = 0;
 
  done:
-  return rci;
+  return rcb;
 }
 
 /*****************************************************************************/
@@ -10487,7 +10487,7 @@ static int marpaESLIFLua_xstring_subi(lua_State *L)
     /* As per the doc, return an empty string */
     if (! marpaESLIFLua_lua_pushstring(NULL, L, "")) goto err;
   } else {
-    if (! marpaESLIFLua_xstring_newi(L, p + fromi - 1 /* p */, (size_t) (toi - fromi + 1) /* sizel */)) goto err;
+    if (! marpaESLIFLua_xstring_newb(L, p + fromi - 1 /* p */, (size_t) (toi - fromi + 1) /* sizel */)) goto err;
   }
 
   rci = 1;
