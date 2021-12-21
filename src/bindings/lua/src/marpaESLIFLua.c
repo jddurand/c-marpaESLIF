@@ -4509,9 +4509,9 @@ static short marpaESLIFLua_importb(lua_State *L, marpaESLIFValueResult_t *marpaE
   case MARPAESLIF_VALUE_TYPE_ARRAY:
     /* fprintf(stdout, "import array\n"); fflush(stdout); fflush(stderr); */
     if (arraycopyb) {
-      if (! marpaESLIFLua_lua_pushlstring(NULL, L, marpaESLIFValueResultp->u.a.p, marpaESLIFValueResultp->u.a.sizel)) goto err;
-    } else {
       if (! marpaESLIFLua_xstring_newb(L, marpaESLIFValueResultp->u.a.p, marpaESLIFValueResultp->u.a.sizel)) goto err;
+    } else {
+      if (! marpaESLIFLua_lua_pushlstring(NULL, L, marpaESLIFValueResultp->u.a.p, marpaESLIFValueResultp->u.a.sizel)) goto err;
     }
     break;
   case MARPAESLIF_VALUE_TYPE_BOOL:
