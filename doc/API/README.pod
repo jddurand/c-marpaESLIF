@@ -3105,51 +3105,51 @@ Here are the rules for strings and arrays lifetime:
 
 =item C<marpaESLIF_versionb>
 
-The ASCII string returned in C<*versionsp> is persistent ESLIF is freed. You can access it directly in host space, though any change will result to undefined behaviour.
+The ASCII string returned in C<*versionsp> is persistent until ESLIF is freed.
 
 =item C<marpaESLIFAction> type
 
-ESLIF guarantees that all string pointers in C<marpaESLIFAction> are persistent until the associated grammar is freed. You can access them directly in host space, though any change to them will result to undefined behaviour.
+ESLIF guarantees that all string pointers in C<marpaESLIFAction> are persistent until the associated grammar is freed.
 
 =item C<marpaESLIFGrammar_grammar_by_levelb>
 
-ESLIF guarantees that the string returned in C<*descpp> is persistent until the associated grammar is freed. You can access it directly in host space, though any change will result to undefined behaviour.
+ESLIF guarantees that the string returned in C<*descpp> is persistent until the associated grammar is freed.
 
 =item C<marpaESLIFGrammar_grammarproperty_currentb> 
 
-Any action and string returned in persistent until the associated grammar is freed. Any change to them will result to undefined behaviour.
+Any action and string returned in persistent until the associated grammar is freed.
 
 =item C<marpaESLIFGrammar_ruleproperty_currentb> and C<marpaESLIFGrammar_ruleproperty_by_levelb>
 
-Any action and string returned in persistent until the associated grammar is freed. Any change to them will result to undefined behaviour.
+Any action and string returned in persistent until the associated grammar is freed.
 
 =item C<marpaESLIFGrammar_ruledisplayform_currentb> and C<marpaESLIFGrammar_ruledisplayform_by_levelb>
 
-The I<ASCII> string returned in C<*ruledisplaysp> is persistent until the associated grammar is freed. Any change to it will result to undefined behaviour.
+The I<ASCII> string returned in C<*ruledisplaysp> is persistent until the associated grammar is freed.
 
 =item C<marpaESLIFGrammar_symbolproperty_currentb> and C<marpaESLIFGrammar_symbolproperty_by_levelb>
 
-Any action and string returned in persistent until the associated grammar is freed. Any change to them will result to undefined behaviour.
+Any action and string returned in persistent until the associated grammar is freed.
 
 =item C<marpaESLIFGrammar_symboldisplayform_currentb> and C<marpaESLIFGrammar_symboldisplayform_by_levelb>
 
-The I<ASCII> string returned in C<*symboldisplaysp> is persistent until the associated grammar is freed. Any change to it will result to undefined behaviour.
+The I<ASCII> string returned in C<*symboldisplaysp> is persistent until the associated grammar is freed.
 
 =item C<marpaESLIFGrammar_ruleshowform_currentb> and C<marpaESLIFGrammar_ruleshowform_by_levelb>
 
-The I<ASCII> string returned in C<*ruleshowsp> is persistent until the associated grammar is freed. Any change to it will result to undefined behaviour.
+The I<ASCII> string returned in C<*ruleshowsp> is persistent until the associated grammar is freed.
 
 =item C<marpaESLIFGrammar_grammarshowform_currentb> and C<marpaESLIFGrammar_grammarshowform_by_levelb>
 
-The I<ASCII> string returned in C<*grammarshowsp> is persistent until the associated grammar is freed. Any change to it will result to undefined behaviour.
+The I<ASCII> string returned in C<*grammarshowsp> is persistent until the associated grammar is freed.
 
 =item C<marpaESLIFGrammar_grammarshowscriptb>
 
-The I<ASCII> string returned in C<*grammarscriptsp> is persistent until the associated grammar is freed. Any change to it will result to undefined behaviour.
+The I<ASCII> string returned in C<*grammarscriptsp> is persistent until the associated grammar is freed.
 
 =item C<marpaESLIFValue_contextb>
 
-The I<ASCII> strings returned in C<*symbolsp> and C<*rulesp> are persistent until the associated grammar is freed. Any change to them will result to undefined behaviour.
+The I<ASCII> strings returned in C<*symbolsp> and C<*rulesp> are persistent until the associated grammar is freed.
 
 =item Recognizer callbacks
 
@@ -3169,21 +3169,23 @@ All string and arrays are valid during the callback and are guaranteed to not ch
 
 =back
 
-Callbacks that give direct pointers to memory are:
+Cases where ESLIF always returns the direct memory pointers are:
 
 =over
 
-=item C<marpaESLIFRecognizerIfCallback_t>
+=item C<marpaESLIFRecognizer_inputb()>
 
-=item C<marpaESLIFRecognizerEventCallback_t>
+=item C<marpaESLIFRecognizerIfCallback_t> structures in if callbacks
 
-=item C<marpaESLIFRecognizerRegexCallback_t>
+=item C<marpaESLIFRecognizerEventCallback_t> structures in event callbacks
 
-=item C<marpaESLIFRecognizerImport_t>
+=item C<marpaESLIFRecognizerRegexCallback_t> structures in regular expression callbacks
+
+=item C<marpaESLIFRecognizerImport_t()>
 
 =back
 
-The memory pointers if the above methods are I<always> of type array, ESLIF bindings then guarantees that:
+The memory pointers in the above methods are I<always> of type C<MARPAESLIF_VALUE_TYPE_ARRAY>, ESLIF bindings then guarantees that:
 
 =over
 
@@ -3193,13 +3195,50 @@ A read-only C<SV*> is used to access the memory content.
 
 =item Lua language
 
-A implementation very closed to L<xstring-lua|https://github.com/chipdude/xstring-lua> is used to access the memory content. Any attempt to change memory will result in unpredicted behaviour.
+A read-only <external string> implementation, very closed to L<xstring-lua|https://github.com/chipdude/xstring-lua> is used to access the memory content. Take care these are I<not> true strings from Lua point of view. The following methods exist on such object:
+
+=over
+
+=item self:len()
+
+Returns the byte length.
+
+=item self:sub(offset[, length])
+
+Returns a new external string instance starting at offset of length bytes. It obeys the same rules as native Lua native string.sub(s, offset[, length]).
+
+=item self:byte()
+
+Returns an array of integers representing the values starting at offset of length bytes. It obeys the same rules as native Lua native string.byte(s, offset[, length]).
+
+=item self:string()
+
+Returns a true Lua string. This method will trigger a I<copy into Lua>.
+
+=back
+
+The explicit stringification tostring() on an xstring is calling self:string().
 
 =item Java language
 
 A C<DirectByteBuffer> is used to access the memory content. Any attempt to change memory will result in unpredicted behaviour.
 
 =back
+
+In conclusion, if the end-user is asking the recognizer anything that returns a direct pointer to its internal memory, the end-user must take into account that any call that will change ESLIF state will invalidate the previous result. So he should consider that this is a one-shot valid thing. For example, a sequence like:
+
+  Get input using marpaESLIFRecognizer_inputb
+  Test input first byte
+  Read a grammar terminal of size one byte using marpaESLIFRecognizer_alternative_readb
+  Test input second byte
+
+is wrong, and must be changed to:
+
+  Get input using marpaESLIFRecognizer_inputb
+  Test input first byte
+  Read a grammar terminal of size one byte using marpaESLIFRecognizer_alternative_readb
+  Get input using marpaESLIFRecognizer_inputb
+  Test input first byte
 
 =item Imports
 
