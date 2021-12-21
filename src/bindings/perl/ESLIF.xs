@@ -412,6 +412,8 @@ static inline void                           *marpaESLIFPerl_Perl2enginep(pTHX_ 
 static inline SV                             *marpaESLIFPerl_engine2Perlp(pTHX_ MarpaX_ESLIF_Recognizer_t *MarpaX_ESLIF_Recognizerp);
 static inline void                            marpaESLIFPerl_setRecognizerEngineForCallbackv(pTHX_ MarpaX_ESLIF_Recognizer_t *MarpaX_ESLIF_Recognizerp, marpaESLIFRecognizer_t *marpaESLIFRecognizerp);
 static inline void                            marpaESLIFPerl_restoreRecognizerEngineForCallbackv(pTHX_ MarpaX_ESLIF_Recognizer_t *MarpaX_ESLIF_Recognizerp);
+static inline SV                             *marpaESLIFPerl_arraycopyp(pTHX_ char *p, STRLEN sizel, short arraycopyb);
+
 
 /* Static constants */
 static const char   *UTF8s = "UTF-8";
@@ -2261,21 +2263,7 @@ static inline short marpaESLIFPerl_importb(pTHX_ marpaESLIFPerl_importContext_t 
     break;
   case MARPAESLIF_VALUE_TYPE_ARRAY:
     if ((marpaESLIFValueResultp->u.a.p != NULL) && (marpaESLIFValueResultp->u.a.sizel > 0)) {
-      /* We do not really want to create a Perl string - we do an import. */
-      /* C.f .https://codeverge.com/perl.perl5.porters/xs-question/200124 */
-      if (arraycopyb) {
-        /* We want an explicit copy */
-        svp = newSVpvn((const char *) marpaESLIFValueResultp->u.a.p, (STRLEN) marpaESLIFValueResultp->u.a.sizel);
-      } else {
-        /* We do not want a copy */
-        svp = newSV(0);
-        SvUPGRADE(svp, SVt_PV);
-        SvPOK_only(svp);
-        SvPV_set(svp, marpaESLIFValueResultp->u.a.p);
-        SvLEN_set(svp, 0);
-        SvCUR_set(svp, (STRLEN) marpaESLIFValueResultp->u.a.sizel);
-        SvREADONLY_on(svp);
-      }
+      svp = marpaESLIFPerl_arraycopyp(aTHX_ marpaESLIFValueResultp->u.a.p, (STRLEN) marpaESLIFValueResultp->u.a.sizel, arraycopyb);
     } else {
       /* Empty string */
       svp = newSVpv("", 0);
@@ -2538,7 +2526,7 @@ static inline short marpaESLIFPerl_symbolImportb(marpaESLIFSymbol_t *marpaESLIFS
   importContext.PerlInterpreterp = MarpaX_ESLIF_Symbolp->PerlInterpreterp;
 #endif
 
-  return marpaESLIFPerl_importb(aTHX_ &importContext, marpaESLIFValueResultp, 0 /* arraycopyb */);
+  return marpaESLIFPerl_importb(aTHX_ &importContext, marpaESLIFValueResultp, 1 /* arraycopyb */);
 }
 
 /*****************************************************************************/
@@ -3293,6 +3281,31 @@ static inline void marpaESLIFPerl_restoreRecognizerEngineForCallbackv(pTHX_ Marp
   if (MarpaX_ESLIF_Recognizerp->setRecognizerSvp != &PL_sv_undef) {
     MarpaX_ESLIF_Recognizerp->marpaESLIFRecognizerp = MarpaX_ESLIF_Recognizerp->marpaESLIFRecognizerBackupp;
   }
+}
+
+/*****************************************************************************/
+static inline SV *marpaESLIFPerl_arraycopyp(pTHX_ char *p, STRLEN sizel, short arraycopyb)
+/*****************************************************************************/
+{
+  static const char *funcs = "marpaESLIFPerl_arraycopyp";
+  SV                *svp;
+
+  if (arraycopyb) {
+    /* We want an explicit copy */
+    svp = newSVpvn(p, sizel);
+  } else {
+    /* We do not really want to create a Perl string - we do an import. */
+    /* C.f .https://codeverge.com/perl.perl5.porters/xs-question/200124 */
+    svp = newSV(0);
+    SvUPGRADE(svp, SVt_PV);
+    SvPOK_only(svp);
+    SvPV_set(svp, p);
+    SvLEN_set(svp, 0);
+    SvCUR_set(svp, sizel);
+    SvREADONLY_on(svp);
+  }
+
+  return svp;
 }
 
 =for comment
@@ -5641,7 +5654,7 @@ CODE:
   char                      *maxinputs;
   SV                        *svp;
 
-  /* Note that per guarantees that items is >= 1 */
+  /* Note that perl guarantees that items is >= 1 */
   if (items == 1) {
     offset = 0;
     length = 0;
@@ -5708,7 +5721,7 @@ CODE:
           realinputl = 0; /* Skipping more bytes that what is available */
         }
       }
-      svp = MARPAESLIFPERL_NEWSVPVN_UTF8(realinputs, realinputl);
+      svp = marpaESLIFPerl_arraycopyp(aTHX_ realinputs, realinputl, 0 /* arraycopyb */);
     }
   } else {
     svp = &PL_sv_undef;
