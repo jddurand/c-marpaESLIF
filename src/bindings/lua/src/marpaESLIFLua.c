@@ -4509,9 +4509,9 @@ static short marpaESLIFLua_importb(lua_State *L, marpaESLIFValueResult_t *marpaE
   case MARPAESLIF_VALUE_TYPE_ARRAY:
     /* fprintf(stdout, "import array\n"); fflush(stdout); fflush(stderr); */
     if (arraycopyb) {
-      if (! marpaESLIFLua_xstring_newb(L, marpaESLIFValueResultp->u.a.p, marpaESLIFValueResultp->u.a.sizel)) goto err;
-    } else {
       if (! marpaESLIFLua_lua_pushlstring(NULL, L, marpaESLIFValueResultp->u.a.p, marpaESLIFValueResultp->u.a.sizel)) goto err;
+    } else {
+      if (! marpaESLIFLua_xstring_newb(L, marpaESLIFValueResultp->u.a.p, marpaESLIFValueResultp->u.a.sizel)) goto err;
     }
     break;
   case MARPAESLIF_VALUE_TYPE_BOOL:
@@ -4606,7 +4606,7 @@ static short marpaESLIFLua_valueImporterb(marpaESLIFValue_t *marpaESLIFValuep, v
 #endif
   lua_State                   *L                          = marpaESLIFLuaValueContextp->L;
 
-  return marpaESLIFLua_importb(L, marpaESLIFValueResultp, 0 /* arraycopyb */);
+  return marpaESLIFLua_importb(L, marpaESLIFValueResultp, 1 /* arraycopyb */);
 }
 
 /*****************************************************************************/
@@ -4625,7 +4625,7 @@ static short marpaESLIFLua_recognizerImporterb(marpaESLIFRecognizer_t *marpaESLI
 #endif
   lua_State                   *L                          = marpaESLIFLuaRecognizerContextp->L;
 
-  return marpaESLIFLua_importb(L, marpaESLIFValueResultp, 1 /* arraycopyb */);
+  return marpaESLIFLua_importb(L, marpaESLIFValueResultp, 0 /* arraycopyb */);
 }
 
 /*****************************************************************************/
@@ -4636,7 +4636,7 @@ static short marpaESLIFLua_symbolImporterb(marpaESLIFSymbol_t *marpaESLIFSymbolp
   marpaESLIFLuaSymbolContext_t *marpaESLIFLuaSymbolContextp = (marpaESLIFLuaSymbolContext_t *) userDatavp;
   lua_State                    *L                            = marpaESLIFLuaSymbolContextp->L;
 
-  return marpaESLIFLua_importb(L, marpaESLIFValueResultp, 0 /* arraycopyb */);
+  return marpaESLIFLua_importb(L, marpaESLIFValueResultp, 1 /* arraycopyb */);
 }
 
 /*****************************************************************************/
