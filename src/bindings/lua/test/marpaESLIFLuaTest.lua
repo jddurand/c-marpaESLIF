@@ -441,9 +441,11 @@ recognizerInterface = {
       return isWithTrack
    end,
    ["setRecognizer"]            = function(self, recognizer)
+      logger:tracef("setRecognizer <= %s", tostring(recognizer))
       self._recognizer = recognizer
    end,
    ["getRecognizer"]            = function(self)
+      logger:tracef("getRecognizer => %s", tostring(self._recognizer))
       return self._recognizer
    end,
    ["if_number"]            = function(self, lexeme)
