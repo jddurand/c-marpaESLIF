@@ -1895,10 +1895,10 @@ comment ::= /(?:(?:(?:\/\/)(?:[^\n]*)(?:\n|\z))|(?:(?:\/\*)(?:(?:[^\*]+|\*(?!\/)
 function test_if_action(lexeme)
   return true
 end
-function lua_regexAction(callout)
-  print('Lua regex callback: '..tostring(callout))
-  print('... Callout number: '..tostring(callout['callout_number']))
-  print('... Callout string: '..tostring(callout['callout_string']))
+function lua_regexAction(block)
+  print('Lua regex callback: '..tostring(block))
+  print('... Callout number: '..tostring(block:getCalloutNumber()))
+  print('... Callout string: '..tostring(block:getCalloutString()))
   return 0
 end
 </luascript>
