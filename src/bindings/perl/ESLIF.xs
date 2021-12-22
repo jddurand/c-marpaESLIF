@@ -279,6 +279,7 @@ typedef struct MarpaX_ESLIF_Recognizer {
   MarpaX_ESLIF_t           *MarpaX_ESLIFp;
   marpaESLIFRecognizer_t   *marpaESLIFRecognizerp;
   marpaESLIFRecognizer_t   *marpaESLIFRecognizerBackupp; /* Used recognizer callbacks */
+  marpaESLIFRecognizer_t   *marpaESLIFRecognizerLastp; /* Last used marpaESLIFRecognizerp in recognizer callbacks */
   SV                       *Perl_MarpaX_ESLIF_Grammarp;
   SV                       *Perl_recognizerInterfacep;
   SV                       *Perl_recognizer_origp;
@@ -1634,12 +1635,14 @@ static inline void marpaESLIFPerl_recognizerContextInitv(pTHX_ MarpaX_ESLIF_Gram
 
   MarpaX_ESLIF_Recognizerp->MarpaX_ESLIF_Grammarp         = MarpaX_ESLIF_Grammarp;
   MarpaX_ESLIF_Recognizerp->MarpaX_ESLIFp                 = MarpaX_ESLIFp;
+  MarpaX_ESLIF_Recognizerp->marpaESLIFRecognizerp         = NULL;
+  MarpaX_ESLIF_Recognizerp->marpaESLIFRecognizerBackupp   = NULL;
+  MarpaX_ESLIF_Recognizerp->marpaESLIFRecognizerLastp     = NULL;
   MarpaX_ESLIF_Recognizerp->Perl_recognizerInterfacep     = Perl_recognizerInterfacep;
   MarpaX_ESLIF_Recognizerp->Perl_MarpaX_ESLIF_Grammarp    = Perl_MarpaX_ESLIF_Grammarp;
   MarpaX_ESLIF_Recognizerp->Perl_recognizer_origp         = Perl_recognizer_origp;
   MarpaX_ESLIF_Recognizerp->Perl_datap                    = NULL;
   MarpaX_ESLIF_Recognizerp->Perl_encodingp                = NULL;
-  MarpaX_ESLIF_Recognizerp->marpaESLIFRecognizerp         = NULL;
 #ifdef PERL_IMPLICIT_CONTEXT
   MarpaX_ESLIF_Recognizerp->PerlInterpreterp              = aTHX;
 #endif
@@ -3263,12 +3266,15 @@ static inline void marpaESLIFPerl_setRecognizerEngineForCallbackv(pTHX_ MarpaX_E
     MarpaX_ESLIF_Recognizerp->marpaESLIFRecognizerBackupp = MarpaX_ESLIF_Recognizerp->marpaESLIFRecognizerp;
     MarpaX_ESLIF_Recognizerp->marpaESLIFRecognizerp = marpaESLIFRecognizerp;
 
-    shallowp = marpaESLIFPerl_engine2Perlp(aTHX_ MarpaX_ESLIF_Recognizerp);
-    marpaESLIFPerl_call_methodv(aTHX_ MarpaX_ESLIF_Recognizerp->Perl_recognizerInterfacep,
-                                "setRecognizer",
-                                shallowp,
-                                MarpaX_ESLIF_Recognizerp->setRecognizerSvp);
-    MARPAESLIFPERL_REFCNT_DEC(shallowp);
+    if (MarpaX_ESLIF_Recognizerp->marpaESLIFRecognizerLastp != marpaESLIFRecognizerp) {
+      shallowp = marpaESLIFPerl_engine2Perlp(aTHX_ MarpaX_ESLIF_Recognizerp);
+      marpaESLIFPerl_call_methodv(aTHX_ MarpaX_ESLIF_Recognizerp->Perl_recognizerInterfacep,
+                                  "setRecognizer",
+                                  shallowp,
+                                  MarpaX_ESLIF_Recognizerp->setRecognizerSvp);
+      MARPAESLIFPERL_REFCNT_DEC(shallowp);
+      MarpaX_ESLIF_Recognizerp->marpaESLIFRecognizerLastp = marpaESLIFRecognizerp;
+    }
   }
 }
 
