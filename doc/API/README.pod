@@ -2645,7 +2645,7 @@ Only C<e>, C<i>, C<j>, C<m>, C<n>, C<s>, C<x>, C<D>, C<J>, C<U>, C<a>, C<N>, C<u
 
 =back
 
-For meta symbols, also they can belong to any C<marpaESLIFGrammarp>, only the lexemes (i.e. those that are defined in a sub-grammar) can be tried with C<marpaESLIFSymbol_tryb> and C<marpaESLIFRecognizer_symbol_tryb>.
+For meta symbols, also they can belong to any C<marpaESLIFGrammarp>, only the grammar terminals can be tried with C<marpaESLIFSymbol_tryb> and C<marpaESLIFRecognizer_symbol_tryb>.
 
 For strings and regular expressions, the C<stringp> argument is without the delimiters, e:g:
 
@@ -2660,6 +2660,20 @@ For strings and regular expressions, the C<stringp> argument is without the deli
 
   123   for the regular expression /123/
   1[23] for the regular expression /1[23]/
+
+=back
+
+Please note this difference about import:
+
+=over
+
+=item C<marpaESLIFRecognizer_symbol_tryb()>
+
+The I<recognizer>'s importer, if any, is used.
+
+=item C<marpaESLIFSymbol_tryb()>
+
+The I<symbol>'s importer, if any, is used.
 
 =back
 
@@ -3182,6 +3196,8 @@ Cases where ESLIF always returns the direct memory pointers are:
 =item C<marpaESLIFRecognizerRegexCallback_t> structures in regular expression callbacks
 
 =item C<marpaESLIFRecognizerImport_t()>
+
+=item C<marpaESLIFRecognizer_symbol_tryb()>
 
 =back
 

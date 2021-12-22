@@ -947,7 +947,9 @@ static inline short                  _marpaESLIFRecognizer_discard_last_tryb(mar
 static inline short                  _marpaESLIFRecognizer_alternativeb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFAlternative_t *marpaESLIFAlternativep);
 static inline marpaESLIF_symbol_t   *_marpaESLIFSymbol_string_newp(marpaESLIF_t *marpaESLIFp, marpaESLIFString_t *stringp, char *modifiers, marpaESLIFSymbolOption_t *marpaESLIFSymbolOptionp);
 static inline marpaESLIF_symbol_t   *_marpaESLIFSymbol_regex_newp(marpaESLIF_t *marpaESLIFp, marpaESLIFString_t *stringp, char *modifiers, marpaESLIFSymbolOption_t *marpaESLIFSymbolOptionp);
+static inline short                  _marpaESLIFSymbol_tryb(marpaESLIFSymbol_t *marpaESLIFSymbolp, char *inputs, size_t inputl, short *matchbp);
 static inline short                  _marpaESLIFRecognizer_symbol_tryb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFSymbol_t *marpaESLIFSymbolp, short *matchbp);
+static inline short                 __marpaESLIFRecognizer_symbol_tryb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFSymbol_t *marpaESLIFSymbolp, short *matchbp, short recognizerImportb);
 static        short                  _marpaESLIFRecognizerSymbolProxyImportb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, void *userDatavp, marpaESLIFValueResult_t *marpaESLIFValueResultp);
 
 /*****************************************************************************/
@@ -21747,18 +21749,34 @@ marpaESLIF_t *marpaESLIFSymbol_eslifp(marpaESLIFSymbol_t *marpaESLIFSymbolp)
 short marpaESLIFSymbol_tryb(marpaESLIFSymbol_t *marpaESLIFSymbolp, char *inputs, size_t inputl, short *matchbp)
 /*****************************************************************************/
 {
-  /* This is almost like marpaESLIFRecognizer_symbol_tryb: we fake a recognizer on a complete fake stream */
+  short                         rcb;
+
+  if (MARPAESLIF_UNLIKELY((marpaESLIFSymbolp == NULL) || (inputs == NULL) || (inputl <= 0))) {
+    errno = EINVAL;
+    goto err;
+  }
+
+  rcb = _marpaESLIFSymbol_tryb(marpaESLIFSymbolp, inputs, inputl, matchbp);
+  goto done;
+
+ err:
+  rcb = 0;
+
+ done:
+  return rcb;
+}
+
+/*****************************************************************************/
+static inline short _marpaESLIFSymbol_tryb(marpaESLIFSymbol_t *marpaESLIFSymbolp, char *inputs, size_t inputl, short *matchbp)
+/*****************************************************************************/
+{
+  /* This is almost like _marpaESLIFRecognizer_symbol_tryb: we fake a recognizer on a complete fake stream */
   /* We just have to take of the import: we inherit symbol's import parameters.                           */
   marpaESLIFRecognizer_t       *marpaESLIFRecognizerp      = NULL;
   marpaESLIFRecognizerOption_t  marpaESLIFRecognizerOption = marpaESLIFRecognizerOption_default_template;
   marpaESLIFGrammar_t           marpaESLIFGrammar;
   marpaESLIF_stream_t          *marpaESLIF_streamp;
   short                         rcb;
-
-  if (MARPAESLIF_UNLIKELY(marpaESLIFSymbolp == NULL)) {
-    errno = EINVAL;
-    goto err;
-  }
 
   if (marpaESLIFSymbolp->marpaESLIFGrammarp != NULL) {
     /* Case of meta symbol only */
@@ -21803,7 +21821,7 @@ short marpaESLIFSymbol_tryb(marpaESLIFSymbol_t *marpaESLIFSymbolp, char *inputs,
   marpaESLIF_streamp->inputl = inputl;
   marpaESLIF_streamp->eofb   = 1;
 
-  rcb = _marpaESLIFRecognizer_symbol_tryb(marpaESLIFRecognizerp, marpaESLIFSymbolp, matchbp);
+  rcb = __marpaESLIFRecognizer_symbol_tryb(marpaESLIFRecognizerp, marpaESLIFSymbolp, matchbp, 0 /* recognizerImportb */);
   goto done;
 
  err:
@@ -21840,6 +21858,13 @@ short marpaESLIFRecognizer_symbol_tryb(marpaESLIFRecognizer_t *marpaESLIFRecogni
   MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_DEC(marpaESLIFRecognizerp);
  fast_done:
   return rcb;
+}
+
+/*****************************************************************************/
+static inline short _marpaESLIFRecognizer_symbol_tryb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFSymbol_t *marpaESLIFSymbolp, short *matchbp)
+/*****************************************************************************/
+{
+  return __marpaESLIFRecognizer_symbol_tryb(marpaESLIFRecognizerp, marpaESLIFSymbolp, matchbp, 1 /* recognizerImportb */);
 }
 
 /*****************************************************************************/
@@ -22555,10 +22580,10 @@ static inline short _marpaESLIFRecognizer_alternativeb(marpaESLIFRecognizer_t *m
 }
 
 /*****************************************************************************/
-static inline short _marpaESLIFRecognizer_symbol_tryb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFSymbol_t *marpaESLIFSymbolp, short *matchbp)
+static inline short __marpaESLIFRecognizer_symbol_tryb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFSymbol_t *marpaESLIFSymbolp, short *matchbp, short recognizerImportb)
 /*****************************************************************************/
 {
-  static const char          *funcs = "_marpaESLIFRecognizer_symbol_tryb";
+  static const char          *funcs = "__marpaESLIFRecognizer_symbol_tryb";
   marpaESLIF_matcher_value_t  rci;
   short                       rcb;
   marpaESLIFValueResult_t     marpaESLIFValueResultArray = marpaESLIFValueResultUndef;
@@ -22620,8 +22645,14 @@ static inline short _marpaESLIFRecognizer_symbol_tryb(marpaESLIFRecognizer_t *ma
         *matchbp = 1;
       }
       /* Import, eventually */
-      if (! _marpaESLIFRecognizer_eslif2hostb(marpaESLIFRecognizerp, &marpaESLIFValueResultArray, marpaESLIFSymbolp /* forcedUserDatavp */, _marpaESLIFRecognizerSymbolProxyImportb /* forcedImporterp */)) {
-        goto err;
+      if (recognizerImportb) {
+	if (! _marpaESLIFRecognizer_eslif2hostb(marpaESLIFRecognizerp, &marpaESLIFValueResultArray, NULL /* forcedUserDatavp */, NULL /* forcedImporterp */)) {
+	  goto err;
+	}
+      } else {
+	if (! _marpaESLIFRecognizer_eslif2hostb(marpaESLIFRecognizerp, &marpaESLIFValueResultArray, marpaESLIFSymbolp /* forcedUserDatavp */, _marpaESLIFRecognizerSymbolProxyImportb /* forcedImporterp */)) {
+	  goto err;
+	}
       }
       break;
     default:
