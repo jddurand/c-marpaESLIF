@@ -2282,7 +2282,7 @@ static inline short marpaESLIFPerl_importb(pTHX_ marpaESLIFPerl_importContext_t 
     break;
   case MARPAESLIF_VALUE_TYPE_STRING:
     if ((marpaESLIFValueResultp->u.s.p != NULL) && (marpaESLIFValueResultp->u.s.sizel > 0)) {
-      stringp = newSVpvn((const char *) marpaESLIFValueResultp->u.s.p, (STRLEN) marpaESLIFValueResultp->u.s.sizel);
+      stringp = marpaESLIFPerl_arraycopyp(aTHX_ marpaESLIFValueResultp->u.s.p, (STRLEN) marpaESLIFValueResultp->u.s.sizel, arraycopyb);
     } else {
       /* Empty string */
       stringp = newSVpv("", 0);
@@ -3294,7 +3294,7 @@ static inline SV *marpaESLIFPerl_arraycopyp(pTHX_ char *p, STRLEN sizel, short a
     /* We want an explicit copy */
     svp = newSVpvn(p, sizel);
   } else {
-    /* We do not really want to create a Perl string - we do an import. */
+    /* We do not really want memcpy - we do an import based on the address. */
     /* C.f .https://codeverge.com/perl.perl5.porters/xs-question/200124 */
     svp = newSV(0);
     SvUPGRADE(svp, SVt_PV);
