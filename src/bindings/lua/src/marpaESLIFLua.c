@@ -92,6 +92,7 @@ typedef struct marpaESLIFLuaRecognizerContext {
   int                     recognizer_orig_r;      /* Lua original recognizer reference in case of newFrom(), share(), peek() */
   char                   *actions;                /* Shallow copy of last resolved name */
   marpaESLIFRecognizer_t *marpaESLIFRecognizerp;
+  marpaESLIFRecognizer_t *marpaESLIFRecognizerLastp; /* Last marpaESLIFRecognizerp set in callbacks */
   short                   managedb;               /* True if we own marpaESLIFRecognizerp */
   marpaESLIF_t           *marpaESLIFp;
   /* Regex callouts are always sequential for a recognizer. We cache a dummy version of the object */
@@ -2209,8 +2210,9 @@ static short marpaESLIFLua_recognizerContextInitb(lua_State *L, marpaESLIF_t *ma
   } else {
     marpaESLIFLuaRecognizerContextp->recognizer_orig_r = LUA_NOREF;
   }
-  marpaESLIFLuaRecognizerContextp->marpaESLIFRecognizerp = NULL;
-  marpaESLIFLuaRecognizerContextp->managedb              = 0;
+  marpaESLIFLuaRecognizerContextp->marpaESLIFRecognizerp     = NULL;
+  marpaESLIFLuaRecognizerContextp->marpaESLIFRecognizerLastp = NULL;
+  marpaESLIFLuaRecognizerContextp->managedb                  = 0;
 
   /* Cache a dummy callout table */
   if (! marpaESLIFLua_lua_newtable(L)) goto err;
@@ -10363,43 +10365,47 @@ static inline short marpaESLIFLua_setRecognizerEngineForCallbackv(lua_State *L, 
   marpaESLIFLuaGenericLoggerContext_t *marpaESLIFLuaGenericLoggerContextp = NULL;
   short                                rcb;
 
-  if (marpaESLIFLuaRecognizerContextp->recognizerInterface_r != LUA_NOREF) {
-    MARPAESLIFLUA_DEREF(L, marpaESLIFLuaRecognizerContextp->recognizerInterface_r); /* Stack: ..., recognizerInterface */
-    if (! marpaESLIFLua_lua_getfield(NULL,L, -1, "setRecognizer")) goto err;        /* Stack: ..., recognizerInterface, field */
-    if (! marpaESLIFLua_lua_type(&typei, L, -1)) goto err;
-    if (typei != LUA_TNIL) {
-      if (typei != LUA_TFUNCTION) {
-        setRecognizerb = 0;
-        /* Try to emit a warning */
-        marpaESLIFOptionp = marpaESLIF_optionp(marpaESLIFGrammar_eslifp(marpaESLIFRecognizer_grammarp(marpaESLIFLuaRecognizerContextp->marpaESLIFRecognizerp)));
-        if (marpaESLIFOptionp != NULL) {
-          genericLoggerp = marpaESLIFOptionp->genericLoggerp;
-          if (genericLoggerp != NULL) {
-            marpaESLIFLuaGenericLoggerContextp = (marpaESLIFLuaGenericLoggerContext_t *) genericLogger_userDatavp_getp(genericLoggerp);
-            if (marpaESLIFLuaGenericLoggerContextp != NULL) {
-              marpaESLIFLua_genericLoggerCallbackv(marpaESLIFLuaGenericLoggerContextp, GENERICLOGGER_LOGLEVEL_WARNING, "setRecognizer exist but is not a function");
+  if (marpaESLIFLuaRecognizerContextp->marpaESLIFRecognizerLastp != marpaESLIFRecognizerp) {
+    if (marpaESLIFLuaRecognizerContextp->recognizerInterface_r != LUA_NOREF) {
+      MARPAESLIFLUA_DEREF(L, marpaESLIFLuaRecognizerContextp->recognizerInterface_r); /* Stack: ..., recognizerInterface */
+      if (! marpaESLIFLua_lua_getfield(NULL,L, -1, "setRecognizer")) goto err;        /* Stack: ..., recognizerInterface, field */
+      if (! marpaESLIFLua_lua_type(&typei, L, -1)) goto err;
+      if (typei != LUA_TNIL) {
+        if (typei != LUA_TFUNCTION) {
+          setRecognizerb = 0;
+          /* Try to emit a warning */
+          marpaESLIFOptionp = marpaESLIF_optionp(marpaESLIFGrammar_eslifp(marpaESLIFRecognizer_grammarp(marpaESLIFLuaRecognizerContextp->marpaESLIFRecognizerp)));
+          if (marpaESLIFOptionp != NULL) {
+            genericLoggerp = marpaESLIFOptionp->genericLoggerp;
+            if (genericLoggerp != NULL) {
+              marpaESLIFLuaGenericLoggerContextp = (marpaESLIFLuaGenericLoggerContext_t *) genericLogger_userDatavp_getp(genericLoggerp);
+              if (marpaESLIFLuaGenericLoggerContextp != NULL) {
+                marpaESLIFLua_genericLoggerCallbackv(marpaESLIFLuaGenericLoggerContextp, GENERICLOGGER_LOGLEVEL_WARNING, "setRecognizer exist but is not a function");
+              }
             }
           }
+        } else {
+          setRecognizerb = 1;
         }
       } else {
-        setRecognizerb = 1;
+        setRecognizerb = 0;
       }
+      if (! marpaESLIFLua_lua_pop(L, 2)) goto err;                                    /* Stack: ...  */
     } else {
       setRecognizerb = 0;
     }
-    if (! marpaESLIFLua_lua_pop(L, 2)) goto err;                                    /* Stack: ...  */
-  } else {
-    setRecognizerb = 0;
-  }
 
-  if (setRecognizerb) {
-    /* The unmanaged object is on the stack - we inject it in the interface using setEslifRecognizer */
-    MARPAESLIFLUA_CALLBACKV(L,
-                            marpaESLIFLuaRecognizerContextp->recognizerInterface_r,
-                            "setRecognizer",
-                            1 /* nargs */,
-                            if (! marpaESLIFLua_marpaESLIFRecognizer_shallowi(L, marpaESLIFLuaRecognizerContextp->recognizerInterface_r, marpaESLIFRecognizerp)) goto err;
-                            );
+    if (setRecognizerb) {
+      /* The unmanaged object is on the stack - we inject it in the interface using setEslifRecognizer */
+      MARPAESLIFLUA_CALLBACKV(L,
+                              marpaESLIFLuaRecognizerContextp->recognizerInterface_r,
+                              "setRecognizer",
+                              1 /* nargs */,
+                              if (! marpaESLIFLua_marpaESLIFRecognizer_shallowi(L, marpaESLIFLuaRecognizerContextp->recognizerInterface_r, marpaESLIFRecognizerp)) goto err;
+                              );
+    }
+
+    marpaESLIFLuaRecognizerContextp->marpaESLIFRecognizerLastp = marpaESLIFRecognizerp;
   }
 
   rcb = 1;
