@@ -10658,7 +10658,7 @@ static int marpaESLIFLua_xstring_bytei(lua_State *L)
   lua_Integer                    toi;
   short                          rci;
   lua_Integer                    i;
-  size_t                         j;
+  lua_Integer                    j;
   int                            topi;
   int                            typei;
 
