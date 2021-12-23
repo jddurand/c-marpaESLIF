@@ -2599,7 +2599,7 @@ static inline short _marpaESLIF_numberb(marpaESLIF_t *marpaESLIFp, char *s, size
   /* From now on the work area is numbers, with numberl ASCII characters, ending with a '\0' at indice numberl */
   endptrendp = numbers + numberl;
 
-  MARPAESLIF_TRACEF(marpaESLIFp, funcs, "%s: %ld bytes", numbers, (unsigned long) numberl);
+  MARPAESLIF_TRACEF(marpaESLIFp, funcs, "%.*s: %ld bytes", (int) numberl, numbers, (unsigned long) numberl);
 
   /* Look for the eventual exponent */
   exponentp = NULL;
@@ -2676,7 +2676,7 @@ static inline short _marpaESLIF_numberb(marpaESLIF_t *marpaESLIFp, char *s, size
     /*       ^pmax   */
     /*    ^p         */
 
-    MARPAESLIF_TRACEF(marpaESLIFp, funcs, "%s: Removing %ld non significant left digits", numbers, (unsigned long) numberOfUnsignificantDigitl);
+    MARPAESLIF_TRACEF(marpaESLIFp, funcs, "%.*s: Removing %ld non significant left digits", (int) numberl, numbers, (unsigned long) numberOfUnsignificantDigitl);
     /* We modify the input in place, keep a copy for restoring at the end */
     dups = strdup(s);
     if (MARPAESLIF_UNLIKELY(dups == NULL)) {
@@ -2695,7 +2695,7 @@ static inline short _marpaESLIF_numberb(marpaESLIF_t *marpaESLIFp, char *s, size
       exponentp -= numberOfUnsignificantDigitl;
     }
 
-    MARPAESLIF_TRACEF(marpaESLIFp, funcs, "%s: Now %ld bytes", numbers, (unsigned long) numberl);
+    MARPAESLIF_TRACEF(marpaESLIFp, funcs, "%.*s: Now %ld bytes", (int) numberl, numbers, (unsigned long) numberl);
   }
 
   /* Remove non significant digits after the dot character. */
@@ -2729,7 +2729,7 @@ static inline short _marpaESLIF_numberb(marpaESLIF_t *marpaESLIFp, char *s, size
         /*           ^pmax */
         /*     ^p          */
         numberOfUnsignificantDigitl += 2;
-        MARPAESLIF_TRACEF(marpaESLIFp, funcs, "%s: Removing the dot part", numbers, (unsigned long) numberOfUnsignificantDigitl);
+        MARPAESLIF_TRACEF(marpaESLIFp, funcs, "%.*s: Removing the dot part", (int) numberl, numbers, (unsigned long) numberOfUnsignificantDigitl);
         if (dups == NULL) {
           /* No backup copy yet */
           dups = strdup(s);
@@ -2745,7 +2745,7 @@ static inline short _marpaESLIF_numberb(marpaESLIF_t *marpaESLIFp, char *s, size
         /*     ^pmin       */
         /*           ^pmax */
         /*       ^p        */
-        MARPAESLIF_TRACEF(marpaESLIFp, funcs, "%s: Removing %ld non significant right digits", numbers, (unsigned long) numberOfUnsignificantDigitl);
+        MARPAESLIF_TRACEF(marpaESLIFp, funcs, "%.*s: Removing %ld non significant right digits", (int) numberl, numbers, (unsigned long) numberOfUnsignificantDigitl);
         ++p;
         if (dups == NULL) {
           /* No backup copy yet */
@@ -2765,7 +2765,7 @@ static inline short _marpaESLIF_numberb(marpaESLIF_t *marpaESLIFp, char *s, size
         exponentp -= numberOfUnsignificantDigitl;
       }
 
-      MARPAESLIF_TRACEF(marpaESLIFp, funcs, "%s: Now %ld bytes", numbers, (unsigned long) numberl);
+      MARPAESLIF_TRACEF(marpaESLIFp, funcs, "%.*s: Now %ld bytes", (int) numberl, numbers, (unsigned long) numberl);
     }
   }
 
@@ -2780,7 +2780,7 @@ static inline short _marpaESLIF_numberb(marpaESLIF_t *marpaESLIFp, char *s, size
     exponentl = strtol(exponentp + 1, &endptrp, 10);
     /* Note that the exponent in a JSON number always have at least one digit */
     if ((endptrp != endptrendp) || (errno != 0)) {
-      MARPAESLIF_TRACEF(marpaESLIFp, funcs, "%s: Exponent parsing failure", numbers, errno != 0 ? strerror(errno) : "bad final pointer");
+      MARPAESLIF_TRACEF(marpaESLIFp, funcs, "%.*s: Exponent parsing failure", (int) numberl, numbers, errno != 0 ? strerror(errno) : "bad final pointer");
       goto parsing_to_double;
     }
   }
@@ -2844,7 +2844,7 @@ static inline short _marpaESLIF_numberb(marpaESLIF_t *marpaESLIFp, char *s, size
     }
   }
 
-  MARPAESLIF_TRACEF(marpaESLIFp, funcs, "%s: %ld decimals, exponent value is %ld => %sa true floating point number", numbers, (unsigned long) decimall, (long) exponentl, isFloatb ? "" : "not ");
+  MARPAESLIF_TRACEF(marpaESLIFp, funcs, "%.*s: %ld decimals, exponent value is %ld => %sa true floating point number", (int) numberl, numbers, (unsigned long) decimall, (long) exponentl, isFloatb ? "" : "not ");
 
   if (isFloatb) {
     /* A floating point number always trigger the proposal */
@@ -2858,7 +2858,7 @@ static inline short _marpaESLIF_numberb(marpaESLIF_t *marpaESLIFp, char *s, size
   if ((numbers[0] == '-') && (numbers[1] == '0')) {
     /* It is a signed zero. This test is enough because we removed all non significant digits on */
     /* the left side, keeping at most one digit. If this digit is '0' we are done.               */
-    MARPAESLIF_TRACEF(marpaESLIFp, funcs, "%s: signed zero detected, forcing true floating point number", numbers);
+    MARPAESLIF_TRACEF(marpaESLIFp, funcs, "%.*s: signed zero detected, forcing true floating point number", (int) numberl, numbers);
     marpaESLIFValueResult.contextp        = NULL;
     marpaESLIFValueResult.representationp = NULL;
     marpaESLIFValueResult.type            = MARPAESLIF_VALUE_TYPE_DOUBLE;
@@ -2866,30 +2866,30 @@ static inline short _marpaESLIF_numberb(marpaESLIF_t *marpaESLIFp, char *s, size
     goto proposal;
   }
 
-  MARPAESLIF_TRACEF(marpaESLIFp, funcs, "%s: %ld characters are needed to completely represent this non-floating pointer number", numbers, (unsigned long) charsl);
+  MARPAESLIF_TRACEF(marpaESLIFp, funcs, "%.*s: %ld characters are needed to completely represent this non-floating pointer number", (int) numberl, numbers, (unsigned long) charsl);
 
   /* Is it too long for the largest non-floating pointer integer that we have */
   if (isNegb) {
 #ifdef MARPAESLIF_HAVE_LONG_LONG
     if (charsl > marpaESLIFp->llongmincharsl) {
-      MARPAESLIF_TRACEF(marpaESLIFp, funcs, "%s: charsl is %ld > %ld (LLONG_MIN) : go to proposal", numbers, (unsigned long) charsl, (unsigned long) marpaESLIFp->llongmincharsl);
+      MARPAESLIF_TRACEF(marpaESLIFp, funcs, "%.*s: charsl is %ld > %ld (LLONG_MIN) : go to proposal", (int) numberl, numbers, (unsigned long) charsl, (unsigned long) marpaESLIFp->llongmincharsl);
       goto parsing_to_double;
     }
 #else
     if (charsl > marpaESLIFp->longmincharsl) {
-      MARPAESLIF_TRACEF(marpaESLIFp, funcs, "%s: charsl is %ld > %ld (LONG_MIN) : go to proposal", numbers, (unsigned long) charsl, (unsigned long) marpaESLIFp->longmincharsl);
+      MARPAESLIF_TRACEF(marpaESLIFp, funcs, "%.*s: charsl is %ld > %ld (LONG_MIN) : go to proposal", (int) numberl, numbers, (unsigned long) charsl, (unsigned long) marpaESLIFp->longmincharsl);
       goto parsing_to_double;
     }
 #endif
   } else {
 #ifdef MARPAESLIF_HAVE_LONG_LONG
     if (charsl > marpaESLIFp->llongmaxcharsl) {
-      MARPAESLIF_TRACEF(marpaESLIFp, funcs, "%s: charsl is %ld > %ld (LLONG_MAX) : go to proposal", numbers, (unsigned long) charsl, (unsigned long) marpaESLIFp->llongmaxcharsl);
+      MARPAESLIF_TRACEF(marpaESLIFp, funcs, "%.*s: charsl is %ld > %ld (LLONG_MAX) : go to proposal", (int) numberl, numbers, (unsigned long) charsl, (unsigned long) marpaESLIFp->llongmaxcharsl);
       goto parsing_to_double;
     }
 #else
     if (charsl > marpaESLIFp->longmaxcharsl) {
-      MARPAESLIF_TRACEF(marpaESLIFp, funcs, "%s: charsl is %ld > %ld (LONG_MAX) : go to proposal", numbers, (unsigned long) charsl, (unsigned long) marpaESLIFp->longmaxcharsl);
+      MARPAESLIF_TRACEF(marpaESLIFp, funcs, "%.*s: charsl is %ld > %ld (LONG_MAX) : go to proposal", (int) numberl, numbers, (unsigned long) charsl, (unsigned long) marpaESLIFp->longmaxcharsl);
       goto parsing_to_double
     }
 #endif
@@ -2934,7 +2934,7 @@ static inline short _marpaESLIF_numberb(marpaESLIF_t *marpaESLIFp, char *s, size
   }
 
   integers[charsl] = '\0';
-  MARPAESLIF_TRACEF(marpaESLIFp, funcs, "%s: Transformed for parsing to %s", numbers, integers);
+  MARPAESLIF_TRACEF(marpaESLIFp, funcs, "%.*s: Transformed for parsing to %s", (int) numberl, numbers, integers);
   endptrendp = integers + charsl;
 
 #if defined(MARPAESLIF_HAVE_LONG_LONG) && defined(C_STRTOLL)
@@ -2943,31 +2943,31 @@ static inline short _marpaESLIF_numberb(marpaESLIF_t *marpaESLIFp, char *s, size
   valuell = C_STRTOLL(integers, &endptrp, 10);
   /* Note that the exponent in a JSON number always have at least one digit */
   if ((endptrp != endptrendp) || (errno != 0)) {
-    MARPAESLIF_TRACEF(marpaESLIFp, funcs, "%s: %s parsing failure, %s", numbers, integers, errno != 0 ? strerror(errno) : "bad final pointer");
+    MARPAESLIF_TRACEF(marpaESLIFp, funcs, "%.*s: %s parsing failure, %s", (int) numberl, numbers, integers, errno != 0 ? strerror(errno) : "bad final pointer");
     goto parsing_to_double;
   }
-  MARPAESLIF_TRACEF(marpaESLIFp, funcs, "%s: %s parsing success", numbers, integers);
+  MARPAESLIF_TRACEF(marpaESLIFp, funcs, "%.*s: %s parsing success", (int) numberl, numbers, integers);
   /* Can we promote it to a less higher thingy ? */
   if ((SHRT_MIN <= valuell) && (valuell <= SHRT_MAX)) {
-    MARPAESLIF_TRACEF(marpaESLIFp, funcs, "%s: %d fits in a SHORT", numbers, (int) valuell);
+    MARPAESLIF_TRACEF(marpaESLIFp, funcs, "%.*s: %d fits in a SHORT", (int) numberl, numbers, (int) valuell);
     marpaESLIFValueResult.contextp        = NULL;
     marpaESLIFValueResult.representationp = NULL;
     marpaESLIFValueResult.type            = MARPAESLIF_VALUE_TYPE_SHORT;
     marpaESLIFValueResult.u.b             = (short) valuell;
   } else if ((INT_MIN <= valuell) && (valuell <= INT_MAX)) {
-    MARPAESLIF_TRACEF(marpaESLIFp, funcs, "%s: %d fits in an INT", numbers, (int) valuell);
+    MARPAESLIF_TRACEF(marpaESLIFp, funcs, "%.*s: %d fits in an INT", (int) numberl, numbers, (int) valuell);
     marpaESLIFValueResult.contextp        = NULL;
     marpaESLIFValueResult.representationp = NULL;
     marpaESLIFValueResult.type            = MARPAESLIF_VALUE_TYPE_INT;
     marpaESLIFValueResult.u.i             = (int) valuell;
   } else if ((LONG_MIN <= valuell) && (valuell <= LONG_MAX)) {
-    MARPAESLIF_TRACEF(marpaESLIFp, funcs, "%s: %ld fits in a LONG", numbers, (long) valuell);
+    MARPAESLIF_TRACEF(marpaESLIFp, funcs, "%.*s: %ld fits in a LONG", (int) numberl, numbers, (long) valuell);
     marpaESLIFValueResult.contextp        = NULL;
     marpaESLIFValueResult.representationp = NULL;
     marpaESLIFValueResult.type            = MARPAESLIF_VALUE_TYPE_LONG;
     marpaESLIFValueResult.u.l             = (long) valuell;
   } else {
-    MARPAESLIF_TRACEF(marpaESLIFp, funcs, "%s: " MARPAESLIF_LONG_LONG_FMT " remains a LONG LONG", numbers, valuell);
+    MARPAESLIF_TRACEF(marpaESLIFp, funcs, "%.*s: " MARPAESLIF_LONG_LONG_FMT " remains a LONG LONG", (int) numberl, numbers, valuell);
     marpaESLIFValueResult.contextp        = NULL;
     marpaESLIFValueResult.representationp = NULL;
     marpaESLIFValueResult.type            = MARPAESLIF_VALUE_TYPE_LONG_LONG;
@@ -2979,25 +2979,25 @@ static inline short _marpaESLIF_numberb(marpaESLIF_t *marpaESLIFp, char *s, size
   valuel = strtol(integers, &endptrp, 10);
   /* Note that the exponent in a JSON number always have at least one digit */
   if ((endptrp != endptrendp) || (errno != 0)) {
-    MARPAESLIF_TRACEF(marpaESLIFp, funcs, "%s: %s parsing failure, %s", numbers, integers, errno != 0 ? strerror(errno) : "bad final pointer");
+    MARPAESLIF_TRACEF(marpaESLIFp, funcs, "%.*s: %s parsing failure, %s", (int) numberl, numbers, integers, errno != 0 ? strerror(errno) : "bad final pointer");
     goto parsing_to_double;
   }
-  MARPAESLIF_TRACEF(marpaESLIFp, funcs, "%s: %s parsing success", numbers, integers);
+  MARPAESLIF_TRACEF(marpaESLIFp, funcs, "%.*s: %s parsing success", (int) numberl, numbers, integers);
   /* Can we promote it to a less higher thingy ? */
   if ((SHRT_MIN <= valuel) && (valuel <= SHRT_MAX)) {
-    MARPAESLIF_TRACEF(marpaESLIFp, funcs, "%s: %d fits in a SHORT", numbers, (int) valuel);
+    MARPAESLIF_TRACEF(marpaESLIFp, funcs, "%.*s: %d fits in a SHORT", (int) numberl, numbers, (int) valuel);
     marpaESLIFValueResult.contextp        = NULL;
     marpaESLIFValueResult.representationp = NULL;
     marpaESLIFValueResult.type            = MARPAESLIF_VALUE_TYPE_SHORT;
     marpaESLIFValueResult.u.b             = (short) valuel;
   } else if ((INT_MIN <= valuel) && (valuel <= INT_MAX)) {
-    MARPAESLIF_TRACEF(marpaESLIFp, funcs, "%s: %d fits in an INT", numbers, (int) valuel);
+    MARPAESLIF_TRACEF(marpaESLIFp, funcs, "%.*s: %d fits in an INT", (int) numberl, numbers, (int) valuel);
     marpaESLIFValueResult.contextp        = NULL;
     marpaESLIFValueResult.representationp = NULL;
     marpaESLIFValueResult.type            = MARPAESLIF_VALUE_TYPE_INT;
     marpaESLIFValueResult.u.i             = (int) valuel;
   } else if ((LONG_MIN <= valuel) && (valuel <= LONG_MAX)) {
-    MARPAESLIF_TRACEF(marpaESLIFp, funcs, "%s: %ld remains a LONG", numbers, valuel);
+    MARPAESLIF_TRACEF(marpaESLIFp, funcs, "%.*s: %ld remains a LONG", (int) numberl, numbers, valuel);
     marpaESLIFValueResult.contextp        = NULL;
     marpaESLIFValueResult.representationp = NULL;
     marpaESLIFValueResult.type            = MARPAESLIF_VALUE_TYPE_LONG;
@@ -3029,13 +3029,13 @@ static inline short _marpaESLIF_numberb(marpaESLIF_t *marpaESLIFp, char *s, size
          ||
          ((valueld == 0.) && (errno != 0)) /* Underflow */
          )) {
-    MARPAESLIF_TRACEF(marpaESLIFp, funcs, "%s: long double parsing success", numbers);
+    MARPAESLIF_TRACEF(marpaESLIFp, funcs, "%.*s: long double parsing success", (int) numberl, numbers);
     marpaESLIFValueResult.contextp        = NULL;
     marpaESLIFValueResult.representationp = NULL;
     marpaESLIFValueResult.type            = MARPAESLIF_VALUE_TYPE_LONG_DOUBLE;
     marpaESLIFValueResult.u.ld            = valueld;
   } else {
-    MARPAESLIF_TRACEF(marpaESLIFp, funcs, "%s: long double parsing failure, %s", numbers, errno != 0 ? strerror(errno) : "bad final pointer");
+    MARPAESLIF_TRACEF(marpaESLIFp, funcs, "%.*s: long double parsing failure, %s", (int) numberl, numbers, errno != 0 ? strerror(errno) : "bad final pointer");
     marpaESLIFValueResult.contextp        = NULL;
     marpaESLIFValueResult.representationp = NULL;
     marpaESLIFValueResult.type            = MARPAESLIF_VALUE_TYPE_UNDEF;
@@ -3062,13 +3062,13 @@ static inline short _marpaESLIF_numberb(marpaESLIF_t *marpaESLIFp, char *s, size
          ||
          ((valued == 0.) && (errno != 0)) /* Underflow */
          )) {
-    MARPAESLIF_TRACEF(marpaESLIFp, funcs, "%s: double parsing success", numbers);
+    MARPAESLIF_TRACEF(marpaESLIFp, funcs, "%.*s: double parsing success", (int) numberl, numbers);
     marpaESLIFValueResult.contextp        = NULL;
     marpaESLIFValueResult.representationp = NULL;
     marpaESLIFValueResult.type            = MARPAESLIF_VALUE_TYPE_DOUBLE;
     marpaESLIFValueResult.u.d             = valued;
   } else {
-    MARPAESLIF_TRACEF(marpaESLIFp, funcs, "%s: double parsing failure, %s", numbers, errno != 0 ? strerror(errno) : "bad final pointer");
+    MARPAESLIF_TRACEF(marpaESLIFp, funcs, "%.*s: double parsing failure, %s", (int) numberl, numbers, errno != 0 ? strerror(errno) : "bad final pointer");
     marpaESLIFValueResult.contextp        = NULL;
     marpaESLIFValueResult.representationp = NULL;
     marpaESLIFValueResult.type            = MARPAESLIF_VALUE_TYPE_UNDEF;
@@ -3077,7 +3077,7 @@ static inline short _marpaESLIF_numberb(marpaESLIF_t *marpaESLIFp, char *s, size
     *decimalPoints = '.';
   }
 #  else /* C_STRTOD && MARPAESLIF_HUGE_VAL */
-  MARPAESLIF_TRACEF(marpaESLIFp, funcs, "%s: No lib call available for parsing", numbers);
+  MARPAESLIF_TRACEF(marpaESLIFp, funcs, "%.*s: No lib call available for parsing", (int) numberl, numbers);
   marpaESLIFValueResult.contextp        = NULL;
   marpaESLIFValueResult.representationp = NULL;
   marpaESLIFValueResult.type            = MARPAESLIF_VALUE_TYPE_UNDEF;

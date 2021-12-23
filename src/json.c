@@ -1531,7 +1531,7 @@ static inline short _marpaESLIFJSONDecodeProposalb(marpaESLIFRecognizer_t *marpa
       goto err;
     }
   } else if (currentValuep->type == MARPAESLIF_VALUE_TYPE_UNDEF) {
-    MARPAESLIF_WARNF(marpaESLIFRecognizerp->marpaESLIFp, "%s: Parsing failure, using undefined value", inputs);
+    MARPAESLIF_WARNF(marpaESLIFRecognizerp->marpaESLIFp, "%.*s: Parsing failure, using undefined value", (int) inputl, inputs);
   }
 
   rcb = 1;
