@@ -1435,7 +1435,7 @@ static inline short _marpaESLIFJSONDecodeAppendCharb(marpaESLIFRecognizer_t *mar
       for (i = 0, j = 1; i < uint32l; i++, j++) {
         c = uint32p[i];
 
-        if ((j < uint32l) && (c >= 0xD800) && (c <= 0xDBFF) && (uint32p[j] >= 0xDC00) && (uint32p[j] <= 0xDFFF)) {
+        if ((c >= 0xD800) && (c <= 0xDBFF) && (j < uint32l) && (uint32p[j] >= 0xDC00) && (uint32p[j] <= 0xDFFF)) {
           /* Surrogate UTF-16 pair */
           c = 0x10000 + ((c & 0x3FF) << 10) + (uint32p[j] & 0x3FF);
           ++i;
