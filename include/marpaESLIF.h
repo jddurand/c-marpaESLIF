@@ -59,7 +59,6 @@ typedef int                                marpaESLIFValueResultInt_t;
 typedef struct marpaESLIFValueResultString marpaESLIFValueResultString_t;
 typedef struct marpaESLIFEvent             marpaESLIFEvent_t;
 typedef struct marpaESLIFSymbol            marpaESLIFSymbol_t;
-typedef struct marpaESLIFString            marpaESLIFString_t;
 
 /* ========= */
 /* Callbacks */
@@ -294,14 +293,14 @@ enum marpaESLIFValueResultBool {
   MARPAESLIFVALUERESULTBOOL_FALSE = 0,
   MARPAESLIFVALUERESULTBOOL_TRUE = 1
 };
-typedef struct marpaESLIFValueResultString {
+struct marpaESLIFValueResultString {
   unsigned char                       *p;
   short                                shallowb;
   void                                *freeUserDatavp;
   marpaESLIFValueResultFreeCallback_t  freeCallbackp;
   size_t                               sizel;
   char                                *encodingasciis;
-} marpaESLIFValueResultString_t;
+};
 typedef struct marpaESLIFValueResultRow {
   marpaESLIFValueResult_t             *p;
   short                                shallowb;
