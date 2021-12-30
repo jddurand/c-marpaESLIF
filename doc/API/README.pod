@@ -1307,7 +1307,7 @@ The place where the user will give a size of the buffer starting at C<*encodings
 
 =item C<disposeCallbackpp>
 
-A uesr-defined function pointer that, if not C<NULL>, is guaranteed to be called as soon as ESLIF do not need anymore what the reader returned.
+A user-defined function pointer that, if not C<NULL>, is guaranteed to be called as soon as ESLIF do not need anymore what the reader returned.
 
 =back
 
@@ -3104,8 +3104,6 @@ Returns a true Lua string out of this xstring. This operation will involve a mem
 =back
 
 Any attempt to stringify automatically this xstring will result in a creation of a true Lua string.
-
-=item 
 
 =back
 
