@@ -19433,22 +19433,39 @@ static inline unsigned long _marpaESLIF_djb2_s(unsigned char *str, size_t length
   return hash;
 }
 
+#if SIZEOF_VOID_STAR <= 4
 /****************************************************************************/
 static inline int _marpaESLIF_inlined_ptrhashi(void *p)
 /****************************************************************************/
 {
-  /* C.f. https://jfdube.wordpress.com/2011/10/12/hashing-strings-and-pointers-avoiding-common-pitfalls/ */
+  /* C.f. https://nullprogram.com/blog/2018/07/31/ */
   marpaESLIF_uint32_t u32 = (marpaESLIF_uint32_t) p;
 
-  u32 = ~u32 + (u32 << 15);
-  u32 = u32 ^ (u32 >> 12);
-  u32 = u32 + (u32 << 2);
-  u32 = u32 ^ (u32 >> 4);
-  u32 = u32 * 2057;
-  u32 = u32 ^ (u32 >> 16);
+  u32 ^= u32 >> 16;
+  u32 *= 0x7feb352d;
+  u32 ^= u32 >> 15;
+  u32 *= 0x846ca68b;
+  u32 ^= u32 >> 16;
 
   return (int) (u32 % MARPAESLIF_HASH_SIZE);
 }
+#else
+/****************************************************************************/
+static inline int _marpaESLIF_inlined_ptrhashi(void *p)
+/****************************************************************************/
+{
+  /* C.f. https://stackoverflow.com/questions/53110781/whats-the-fastest-portable-way-to-hash-pointers-we-know-are-pointer-aligned-to?noredirect=1&lq=1 */
+  marpaESLIF_uint64_t u64 = (marpaESLIF_uint64_t) p;
+
+  u64 ^= (u64 >> 33);
+  u64 *= 0xff51afd7ed558ccd;
+  u64 ^= (u64 >> 33);
+  u64 *= 0xc4ceb9fe1a85ec53;
+  u64 ^= (u64 >> 33);
+
+  return (int) (u64 % MARPAESLIF_HASH_SIZE);
+}
+#endif
 
 /****************************************************************************/
 int _marpaESLIF_ptrhashi(void *userDatavp, genericStackItemType_t itemType, void **pp)

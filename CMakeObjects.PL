@@ -514,6 +514,31 @@ typedef unsigned int marpaESLIF_uint32_t;
 #  endif
 #endif
 
+#if defined(SIZEOF_UINT64_T) && (SIZEOF_UINT64_T == 8)
+typedef uint64_t marpaESLIF_uint64_t;
+#else
+#  if defined(SIZEOF__UINT64_T) && (SIZEOF__UINT64_T == 8)
+typedef _uint64_t marpaESLIF_uint64_t;
+#  else
+#    if defined(SIZEOF___UINT64_T) && (SIZEOF___UINT64_T == 8)
+typedef __uint64_t marpaESLIF_uint64_t;
+#      if defined(SIZEOF_UNSIGNED_LONG_LONG) && (SIZEOF_UNSIGNED_LONG_LONG == 8)
+typedef unsigned long long marpaESLIF_uint64_t;
+#      else
+#        if defined(SIZEOF_UNSIGNED_LONG) && (SIZEOF_UNSIGNED_LONG == 8)
+typedef unsigned long marpaESLIF_uint64_t;
+#        else
+#          if defined(SIZEOF_UNSIGNED_INT) && (SIZEOF_UNSIGNED_INT == 8)
+typedef unsigned int marpaESLIF_uint64_t;
+#          else
+#            error "Cannot determine marpaESLIF_uint64_t"
+#          endif
+#        endif
+#      endif
+#    endif
+#  endif
+#endif
+
 #ifdef C_HAVE_HUGE_VAL_REPLACEMENT
 # define C_HUGE_VAL_REPLACEMENT
 #endif

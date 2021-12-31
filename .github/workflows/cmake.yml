@@ -20,6 +20,18 @@ jobs:
     steps:
     - uses: actions/checkout@v2
 
+    - name: Perl pre-requesites
+      run: sudo apt-get install cpanminus
+      run: sudo apt-get install libdist-zilla-perl
+      # Upgrade Dist::Zilla, Path::Tiny (I dislike its github issue 144 -;)
+      run: sudo cpanm --notest Path::Tiny
+      # This is not in the prereqs it seems, but the latest MooseX::Role::Parameterized is highly recommended -; let's do it for Moo and Moose as well
+      run: sudo cpanm --notest Moo Moose MooseX::Role::Parameterized
+      # For my scripts, prefered over dzil --listdeps that is too long
+      run: sudo cpanm --notest Archive::Tar Class::Tiny Config::AutoConf::INI ExtUtils::CBuilder ExtUtils::CppGuess ExtUtils::MakeMaker File::Basename File::chdir File::Copy File::Copy::Recursive File::Find File::Path File::Spec File::Temp IPC::Open3 IPC::Run Params::Validate Perl::OSType Role::Tiny Scalar::Util Test::More Test::More::UTF8 Log::Log4perl Log::Any Log::Any::Adapter Log::Any::Adapter::Log4perl Test::EOL Test::Kwalitee Test::NoTabs Test::Pod::Coverage namespace::clean JSON::MaybeXS
+      run: sudo cpanm --notest Dist::Zilla::PluginBundle::RJBS
+      run: pushd src/bindings/perl && dzil authordeps --missing | xargs sudo cpanm --notest && popd
+
     - name: Configure CMake
       # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
       # See https://cmake.org/cmake/help/latest/variable/CMAKE_BUILD_TYPE.html?highlight=cmake_build_type
@@ -33,5 +45,5 @@ jobs:
       working-directory: ${{github.workspace}}/build
       # Execute tests defined by the CMake configuration.  
       # See https://cmake.org/cmake/help/latest/manual/ctest.1.html for more detail
-      run: cmake check
+      run: make check VERBOSE=1
       

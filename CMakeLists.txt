@@ -37,6 +37,15 @@ ELSE ()
 ENDIF ()
 SET (MARPAESLIF_UINT32_T ${MYPACKAGE_UINT32_TYPEDEF})
 #
+# ... Portable uint64 type
+#
+IF (NOT HAVE_MYPACKAGE_UINT64)
+  MESSAGE (FATAL_ERROR "Could not detect a valid unsigned 64-bit integer type")
+ELSE ()
+  MESSAGE (STATUS ".. unsigned 64-bit integer type is ${MYPACKAGE_UINT64_TYPEDEF}")
+ENDIF ()
+SET (MARPAESLIF_UINT64_T ${MYPACKAGE_UINT64_TYPEDEF})
+#
 # We need to know endianness in case there is no signbit
 #
 INCLUDE (TestBigEndian)
