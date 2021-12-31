@@ -650,7 +650,7 @@ marpaESLIF follows the L<Semantic Versioning 2.0.0|https://semver.org/spec/v2.0.
 
 You must use a L<CMake|http://cmake.org> version 3 at least. Recommended pattern is:
 
-  cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo -DTCONV_USE_ICU=NO .
+  cmake -Wno-dev -DCMAKE_BUILD_TYPE=RelWithDebInfo -DTCONV_USE_ICU=NO .
   make
   make check
 
