@@ -3887,7 +3887,6 @@ static marpaESLIFValueRuleCallback_t marpaESLIFLua_valueRuleActionResolver(void 
 #else
   marpaESLIFLuaValueContext_t *marpaESLIFLuaValueContextp = (marpaESLIFLuaValueContext_t *) userDatavp;
 #endif
-  lua_State                   *L                          = marpaESLIFLuaValueContextp->L;
 
   /* Just remember the action name - lua will croak if calling this method fails */
   marpaESLIFLuaValueContextp->actions = actions;
@@ -3909,7 +3908,6 @@ static marpaESLIFValueSymbolCallback_t marpaESLIFLua_valueSymbolActionResolver(v
 #else
   marpaESLIFLuaValueContext_t *marpaESLIFLuaValueContextp = (marpaESLIFLuaValueContext_t *) userDatavp;
 #endif
-  lua_State                   *L                          = marpaESLIFLuaValueContextp->L;
 
   /* Just remember the action name - lua will croak if calling this method fails */
   marpaESLIFLuaValueContextp->actions = actions;
@@ -3931,7 +3929,6 @@ static marpaESLIFRecognizerIfCallback_t marpaESLIFLua_recognizerIfActionResolver
 #else
   marpaESLIFLuaRecognizerContext_t *marpaESLIFLuaRecognizerContextp = (marpaESLIFLuaRecognizerContext_t *) userDatavp;
 #endif
-  lua_State                   *L                          = marpaESLIFLuaRecognizerContextp->L;
 
   /* Just remember the action name - lua will croak if calling this method fails */
   marpaESLIFLuaRecognizerContextp->actions = actions;
@@ -3953,7 +3950,6 @@ static marpaESLIFRecognizerEventCallback_t marpaESLIFLua_recognizerEventActionRe
 #else
   marpaESLIFLuaRecognizerContext_t *marpaESLIFLuaRecognizerContextp = (marpaESLIFLuaRecognizerContext_t *) userDatavp;
 #endif
-  lua_State                   *L                          = marpaESLIFLuaRecognizerContextp->L;
 
   /* Just remember the action name - lua will croak if calling this method fails */
   marpaESLIFLuaRecognizerContextp->actions = actions;
@@ -3975,7 +3971,6 @@ static marpaESLIFRecognizerRegexCallback_t marpaESLIFLua_recognizerRegexActionRe
 #else
   marpaESLIFLuaRecognizerContext_t *marpaESLIFLuaRecognizerContextp = (marpaESLIFLuaRecognizerContext_t *) userDatavp;
 #endif
-  lua_State                   *L                          = marpaESLIFLuaRecognizerContextp->L;
 
   /* Just remember the action name - lua will croak if calling this method fails */
   marpaESLIFLuaRecognizerContextp->actions = actions;
@@ -3997,7 +3992,6 @@ static marpaESLIFRecognizerGeneratorCallback_t marpaESLIFLua_recognizerGenerator
 #else
   marpaESLIFLuaRecognizerContext_t *marpaESLIFLuaRecognizerContextp = (marpaESLIFLuaRecognizerContext_t *) userDatavp;
 #endif
-  lua_State                   *L                          = marpaESLIFLuaRecognizerContextp->L;
 
   /* Just remember the action name - lua will croak if calling this method fails */
   marpaESLIFLuaRecognizerContextp->actions = actions;
@@ -4603,9 +4597,8 @@ static short marpaESLIFLua_valueImporterb(marpaESLIFValue_t *marpaESLIFValuep, v
 #else
   marpaESLIFLuaValueContext_t *marpaESLIFLuaValueContextp = (marpaESLIFLuaValueContext_t *) userDatavp;
 #endif
-  lua_State                   *L                          = marpaESLIFLuaValueContextp->L;
 
-  return marpaESLIFLua_importb(L, marpaESLIFValueResultp, 1 /* arraycopyb */);
+  return marpaESLIFLua_importb(marpaESLIFLuaValueContextp->L, marpaESLIFValueResultp, 1 /* arraycopyb */);
 }
 
 /*****************************************************************************/
@@ -4622,9 +4615,8 @@ static short marpaESLIFLua_recognizerImporterb(marpaESLIFRecognizer_t *marpaESLI
 #else
   marpaESLIFLuaRecognizerContext_t *marpaESLIFLuaRecognizerContextp = (marpaESLIFLuaRecognizerContext_t *) userDatavp;
 #endif
-  lua_State                   *L                          = marpaESLIFLuaRecognizerContextp->L;
 
-  return marpaESLIFLua_importb(L, marpaESLIFValueResultp, 0 /* arraycopyb */);
+  return marpaESLIFLua_importb(marpaESLIFLuaRecognizerContextp->L, marpaESLIFValueResultp, 0 /* arraycopyb */);
 }
 
 /*****************************************************************************/
@@ -4633,9 +4625,8 @@ static short marpaESLIFLua_symbolImporterb(marpaESLIFSymbol_t *marpaESLIFSymbolp
 {
   static const char            *funcs                        = "marpaESLIFLua_symbolImporterb";
   marpaESLIFLuaSymbolContext_t *marpaESLIFLuaSymbolContextp = (marpaESLIFLuaSymbolContext_t *) userDatavp;
-  lua_State                    *L                            = marpaESLIFLuaSymbolContextp->L;
 
-  return marpaESLIFLua_importb(L, marpaESLIFValueResultp, 1 /* arraycopyb */);
+  return marpaESLIFLua_importb(marpaESLIFLuaSymbolContextp->L, marpaESLIFValueResultp, 1 /* arraycopyb */);
 }
 
 /*****************************************************************************/
