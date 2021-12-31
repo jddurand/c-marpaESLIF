@@ -728,7 +728,6 @@ static short _marpaESLIFJSONDecodeRegexCallbackb(void *userDatavp, marpaESLIFRec
   char                          *subjects;
   char                          *matchs;
   size_t                         matchl;
-  marpaESLIFJSONDecodeDeposit_t  marpaESLIFJSONDecodeDeposit;
   short                          rcb;
 
   MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_INC(marpaESLIFRecognizerp);
@@ -1257,8 +1256,6 @@ static inline short _marpaESLIFJSONDecodeAppendCharb(marpaESLIFRecognizer_t *mar
   size_t                   i;
   size_t                   j;
   size_t                   previousSizel;
-  size_t                   correctedSizel; /* Because we overestimated the needed size */
-  marpaESLIF_uint32_t      uint32i;
   short                    rcb;
 
   MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_INC(marpaESLIFRecognizerp);

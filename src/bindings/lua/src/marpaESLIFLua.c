@@ -2177,7 +2177,6 @@ static short marpaESLIFLua_recognizerContextInitb(lua_State *L, marpaESLIF_t *ma
 /****************************************************************************/
 {
   static const char *funcs = "marpaESLIFLua_recognizerContextInitb";
-  int                i;
 
   marpaESLIFLuaRecognizerContextp->L           = L;
   marpaESLIFLuaRecognizerContextp->marpaESLIFp = marpaESLIFp;
@@ -2264,7 +2263,6 @@ static void  marpaESLIFLua_recognizerContextFreev(marpaESLIFLuaRecognizerContext
 {
   static const char *funcs = "marpaESLIFLua_recognizerContextFreev";
   lua_State         *L;
-  int                i;
 
   if (marpaESLIFLuaRecognizerContextp != NULL) {
     L = marpaESLIFLuaRecognizerContextp->L;
@@ -4262,7 +4260,6 @@ static short marpaESLIFLua_generatorCallbackb(void *userDatavp, marpaESLIFRecogn
   size_t                        nargs                      = contextp->u.r.sizel;
   char                         *strings;
   size_t                        stringl;
-  marpaESLIFLuaSymbolContext_t *marpaESLIFLuaSymbolContextp;
   short                         rcb;
   char                         *encodingasciis;
   size_t                        i;
@@ -10453,7 +10450,6 @@ static int marpaESLIFLua_xstring_freei(lua_State *L)
 {
   static const char             *funcs = "marpaESLIFLua_xstring_freei";
   marpaESLIFLuaXstringContext_t *marpaESLIFLuaXstringContextp;
-  short                          rci;
 
   if (! marpaESLIFLua_lua_getfield(NULL, L, 1, "marpaESLIFLuaXstringContextp")) goto err; /* Stack: {...}, marpaESLIFLuaXstringContextp */
   if (! marpaESLIFLua_lua_touserdata((void **) &marpaESLIFLuaXstringContextp, L, -1)) goto err;

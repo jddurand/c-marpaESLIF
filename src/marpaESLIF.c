@@ -3131,7 +3131,6 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
   int                               rulej;
   marpaESLIF_grammar_t             *grammarp;
   marpaESLIF_grammar_t             *subGrammarp;
-  marpaESLIF_symbol_t              *lhsp;
   marpaESLIF_symbol_t              *startp;
   marpaESLIF_symbol_t              *discardp;
   marpaESLIF_symbol_t              *exceptionp;
@@ -5742,7 +5741,6 @@ static inline short _marpaESLIFRecognizer_terminal_matcherb(marpaESLIFRecognizer
   short                              rcb;
   char                              *bytes;
   size_t                             bytel;
-  marpaESLIF_pcre2_callout_context_t callout_context;
   short                              rcMatcherb;
 
   MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_INC(marpaESLIFRecognizerp);
@@ -6153,9 +6151,7 @@ static inline short _marpaESLIFRecognizer_meta_matcherb(marpaESLIFRecognizer_t *
   marpaESLIFRecognizerGeneratorCallback_t  generatorCallbackp;
   marpaESLIFGrammarOption_t                generatedGrammarOption;
   marpaESLIFValueResult_t                 *contextp;
-  short                                    generatedSymbolMatchb;
   short                                    rcb;
-  int                                      generatedSymbolRci;
 
   MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_INC(marpaESLIFRecognizerp);
   MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "start");
@@ -11024,7 +11020,6 @@ static inline marpaESLIFRecognizer_t *__marpaESLIFRecognizer_newp(marpaESLIFGram
   int                            symboli;
   marpaESLIF_symbol_t           *symbolp;
   short                          discardEventb;
-  genericStack_t                *marpaESLIFValueResultHashp;
 
   if (MARPAESLIF_UNLIKELY(marpaESLIFGrammarp == NULL)) {
     MARPAESLIF_ERROR(marpaESLIFp, "Null grammar pointer");
@@ -17866,7 +17861,6 @@ static short _marpaESLIF_rule_action___rowb(void *userDatavp, marpaESLIFValue_t 
   int                      indicei;
   marpaESLIFValueResult_t  marpaESLIFValueResult;
   marpaESLIFValueResult_t  item;
-  short                   *origshallowbp;
 
   marpaESLIFValueResult.type               = MARPAESLIF_VALUE_TYPE_ROW;
   marpaESLIFValueResult.contextp           = NULL;
@@ -19571,7 +19565,6 @@ static inline void _marpaESLIFRecognizer_freev(marpaESLIFRecognizer_t *marpaESLI
   short                  *discardEventStatebp;
   short                  *beforeEventStatebp;
   short                  *afterEventStatebp;
-  genericStack_t         *marpaESLIFValueResultHashp;
     
   /* We may decide to not free but say we can be reused, unless caller definitely want us to get out */
   if (! forceb) {
@@ -20990,9 +20983,7 @@ static inline int _marpaESLIFRecognizer_pointers_tracki(marpaESLIFRecognizer_t *
   size_t                       rowl;
   size_t                       pairl;
   void                        *p;
-  int                          hashi;
   short                        shallowb;
-  int                          i;
   int                          rci = 0;
 
   /* Relax the work stack */

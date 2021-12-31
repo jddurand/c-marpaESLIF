@@ -1859,10 +1859,12 @@ static short _marpaESLIFRecognizer_lua_push_contextb(marpaESLIFRecognizer_t *mar
   genericLogger_t              *genericLoggerp       = NULL;
   char                         *parlistWithoutParens = NULL;
   int                           topi                 = -1;
+#ifndef MARPAESLIF_NTRACE
   int                           i;
   char                         *p;
   char                         *p2;
   char                          c;
+#endif
   marpaESLIF_stringGenerator_t  marpaESLIF_stringGenerator;
   short                         rcb;
 
