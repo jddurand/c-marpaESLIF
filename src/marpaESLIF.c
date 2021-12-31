@@ -19247,7 +19247,7 @@ static inline short __marpaESLIFRecognizer_value_validb(marpaESLIFRecognizer_t *
 /****************************************************************************/
 {
   static const char           *funcs      = "__marpaESLIFRecognizer_value_validb";
-  genericStack_t              *todoStackp = marpaESLIFRecognizerp->marpaESLIFValueResultWorkStackp;;
+  genericStack_t              *todoStackp = marpaESLIFRecognizerp->marpaESLIFValueResultWorkStackp;
   short                        rcb;
   size_t                       i;
   marpaESLIFValueResult_t     *marpaESLIFValueResultWorkp;
