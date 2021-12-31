@@ -91,8 +91,8 @@ clone_folder: C:\projects\%APPVEYOR_PROJECT_NAME%
 #   fast_finish: true # Immediately finish build once one of the jobs fails
 
 init:
-  - IF "%_CC%" == "VS2022" IF "%_GENERATOR%"=="NMake Makefiles" IF "%_ARCH%" == "x86" call "C:\Program Files (x86)\Microsoft Visual Studio\2022\Community\VC\Auxiliary\Build\vcvars32.bat"
-  - IF "%_CC%" == "VS2022" IF "%_GENERATOR%"=="NMake Makefiles" IF "%_ARCH%" == "x64" call "C:\Program Files (x86)\Microsoft Visual Studio\2022\Community\VC\Auxiliary\Build\vcvars64.bat"
+  - IF "%_CC%" == "VS2022" IF "%_GENERATOR%"=="NMake Makefiles" IF "%_ARCH%" == "x86" call "%ProgramFiles%\Microsoft Visual Studio\2022\Community\VC\Auxiliary\Build\vcvars32.bat"
+  - IF "%_CC%" == "VS2022" IF "%_GENERATOR%"=="NMake Makefiles" IF "%_ARCH%" == "x64" call "%ProgramFiles%\Microsoft Visual Studio\2022\Community\VC\Auxiliary\Build\vcvars64.bat"
   - IF "%_CC%" == "VS2019" IF "%_GENERATOR%"=="NMake Makefiles" IF "%_ARCH%" == "x86" call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvars32.bat"
   - IF "%_CC%" == "VS2019" IF "%_GENERATOR%"=="NMake Makefiles" IF "%_ARCH%" == "x64" call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvars64.bat"
   - IF "%_CC%" == "VS2017" IF "%_GENERATOR%"=="NMake Makefiles" IF "%_ARCH%" == "x86" call "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Auxiliary\Build\vcvars32.bat"
