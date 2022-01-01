@@ -758,8 +758,9 @@ CONFIG
 }
 
 sub try_compile {
-    my ($csource, $extra_compiler_flags) = @_;
+    my ($csource, $extra_compiler_flags, $link) = @_;
 
+    $link //= 0;
     my $fh = File::Temp->new(UNLINK => 0, SUFFIX => '.c');
     print $fh "$csource\n";
     close($fh);
@@ -774,11 +775,22 @@ sub try_compile {
             object_file          => $obj,
             extra_compiler_flags => $extra_compiler_flags
             );
+        if ($link) {
+            $cbuilder->link_executable(
+                objects              => [ $obj ],
+                );
+        }
         $rc = 1;
     };
     unlink $fh->filename;
 
     return $rc;
+}
+
+sub try_link {
+    my ($csource, $extra_compiler_flags) = @_;
+
+    return try_compile($csource, $extra_compiler_flags, 1);
 }
 
 sub get_math_constant {
