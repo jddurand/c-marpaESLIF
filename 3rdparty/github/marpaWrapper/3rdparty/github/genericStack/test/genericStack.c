@@ -16,6 +16,7 @@ typedef struct myStruct {
 static short myFunction1(genericStack_t *myStackp);
 static short myFunction2(genericStack_t *myStackp);
 static short subMain(genericStack_t *myStackp);
+static int   myStack_sorti(const void *p1, const void *p2);
 
 typedef struct myStruct1 {
   int i;
@@ -131,6 +132,9 @@ static short subMain(genericStack_t *myStackp) {
   GENERICSTACK_DUMP(myStackp);
 
   if (myFunction2(myStackp) == 0) { return 1; }
+
+  printf("[19] SORT\n"); GENERICSTACK_SORT(myStackp, myStack_sorti);
+  GENERICSTACK_DUMP(myStackp);
 
   return 0;
 }
@@ -318,4 +322,10 @@ static short myFunction2(genericStack_t *myStackp) {
   }
 
   return rcb;
+}
+
+static int myStack_sorti(const void *p1, const void *p2)
+{
+  int rci = (rand() % 3) - 1;
+  return rci;
 }
