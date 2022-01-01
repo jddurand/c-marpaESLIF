@@ -205,7 +205,7 @@ int main(char *argv[], int argc)
    return 0;
 }
 __BUILTIN_EXPECT
-    if (try_compile($__builtin_expect)) {
+    if (try_link($__builtin_expect)) {
         $ac->msg_result('yes');
         $ac->define_var("C___BUILTIN_EXPECT", "__builtin_expect");
     } else {
