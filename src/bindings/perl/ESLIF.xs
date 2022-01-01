@@ -3086,6 +3086,7 @@ static inline short marpaESLIFPerl_JSONDecodeNegativeNanAction(void *userDatavp,
   MarpaX_ESLIF_Recognizer_t *MarpaX_ESLIF_Recognizerp = (MarpaX_ESLIF_Recognizer_t *) userDatavp;
   MarpaX_ESLIF_constants_t  *constantsp               = MarpaX_ESLIF_Recognizerp->constantsp;
   AV                        *listp;
+  SV                        *svp;
   dTHXa(MarpaX_ESLIF_Recognizerp->PerlInterpreterp);
 
   if (confidenceb) {
