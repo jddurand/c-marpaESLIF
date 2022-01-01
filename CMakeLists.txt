@@ -4,10 +4,10 @@ IF (NOT MYPACKAGEBOOTSTRAP_DONE)
 ENDIF ()
 #
 # Usually the version here correspong to the NEXT version - it is git tagged
-# when we do make marpaESLIFPerlRelease
+# when we do make marpaESLIFPerlRelease or marpaESLIFPerlReleaseTrial
 #
 # SET (MYPACKAGE_DEBUG TRUE)
-MYPACKAGESTART (marpaESLIF 6 0 8)
+MYPACKAGESTART (marpaESLIF 6 0 9)
 
 ###########
 # Library #
