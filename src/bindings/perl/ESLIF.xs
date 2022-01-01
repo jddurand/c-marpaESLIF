@@ -478,7 +478,7 @@ static const size_t  UTF8l = 5; /* "UTF-8" is 5 bytes in ASCII encoding */
     }                                                   \
   } while (0)
 
-#define MARPAESLIFPERL_XV_STORE_UNDEF(xvp, key) MARPAESLIFPERL_XV_STORE(xvp, key, newSV(0))
+#define MARPAESLIFPERL_XV_STORE_UNDEF(xvp, key) MARPAESLIFPERL_XV_STORE(xvp, key, &PL_sv_undef)
 
 #define MARPAESLIFPERL_XV_STORE_ACTION(hvp, key, actionp) do {          \
     SV *_svp;                                                           \
@@ -1284,7 +1284,7 @@ static inline short marpaESLIFPerl_recognizerEventCallbackb(void *userDatavp, ma
         SvUTF8_on(svp);
       }
     } else {
-      svp = &PL_sv_undef;
+      svp = newSV(0);
     }
     if (MARPAESLIF_UNLIKELY(hv_store(hv, "symbol", strlen("symbol"), svp, 0) == NULL)) {
       MARPAESLIFPERL_CROAKF("hv_store failure for symbol => %s", (eventArrayp[i].symbols != NULL) ? eventArrayp[i].symbols : "");
@@ -1296,7 +1296,7 @@ static inline short marpaESLIFPerl_recognizerEventCallbackb(void *userDatavp, ma
         SvUTF8_on(svp);
       }
     } else {
-      svp = &PL_sv_undef;
+      svp = newSV(0);
     }
     if (MARPAESLIF_UNLIKELY(hv_store(hv, "event",  strlen("event"),  svp, 0) == NULL)) {
       MARPAESLIFPERL_CROAKF("hv_store failure for event => %s", (eventArrayp[i].events != NULL) ? eventArrayp[i].events : "");
@@ -2085,7 +2085,7 @@ static inline short marpaESLIFPerl_importb(pTHX_ marpaESLIFPerl_importContext_t 
   /*
     marpaESLIF Type                    C type    C nb_bits      Perl Type
 
-    MARPAESLIF_VALUE_TYPE_UNDEF                                 &PL_sv_undef
+    MARPAESLIF_VALUE_TYPE_UNDEF                                 newSV(0)
     MARPAESLIF_VALUE_TYPE_CHAR         char      CHAR_BIT       PV*
     MARPAESLIF_VALUE_TYPE_SHORT        short     >= 16          IV or Math::BigInt
     MARPAESLIF_VALUE_TYPE_INT          int       >= 16          IV or Math::BigInt
@@ -2105,7 +2105,7 @@ static inline short marpaESLIFPerl_importb(pTHX_ marpaESLIFPerl_importContext_t 
 
   switch (marpaESLIFValueResultp->type) {
   case MARPAESLIF_VALUE_TYPE_UNDEF:
-    svp = &PL_sv_undef;
+    svp = newSV(0);
     marpaESLIFPerl_GENERICSTACK_PUSH_PTR(importStackp, svp);
     if (MARPAESLIF_UNLIKELY(marpaESLIFPerl_GENERICSTACK_ERROR(importStackp))) {
       MARPAESLIFPERL_CROAKF("importStackp push failure, %s", strerror(errno));
@@ -5167,7 +5167,7 @@ CODE:
         SvUTF8_on(svp);
       }
     } else {
-      svp = &PL_sv_undef;
+      svp = newSV(0);
     }
     if (MARPAESLIF_UNLIKELY(hv_store(hv, "symbol", strlen("symbol"), svp, 0) == NULL)) {
       MARPAESLIFPERL_CROAKF("hv_store failure for symbol => %s", (eventArrayp[i].symbols != NULL) ? eventArrayp[i].symbols : "");
@@ -5179,7 +5179,7 @@ CODE:
         SvUTF8_on(svp);
       }
     } else {
-      svp = &PL_sv_undef;
+      svp = newSV(0);
     }
     if (MARPAESLIF_UNLIKELY(hv_store(hv, "event",  strlen("event"),  svp, 0) == NULL)) {
       MARPAESLIFPERL_CROAKF("hv_store failure for event => %s", (eventArrayp[i].events != NULL) ? eventArrayp[i].events : "");
@@ -5445,9 +5445,9 @@ CODE:
           SvUTF8_on(svp);
         }
       } else {
-        svp = &PL_sv_undef;
+        svp = newSV(0);
       }
-      av_push(list, (svp == &PL_sv_undef) ? newSV(0) : svp);
+      av_push(list, svp);
     }
   }
   RETVAL = newRV_noinc((SV *)list);
