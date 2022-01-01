@@ -1362,7 +1362,6 @@ static inline short marpaESLIFPerl_recognizerGeneratorCallbackb(void *userDatavp
   size_t                     i;
   SV                        *svp;
   SV                        *actionResult;
-  marpaESLIFValueResult_t    marpaESLIFValueResult;
   int                        typei;
   char                      *strings = NULL;
   STRLEN                     stringl = 0;
@@ -3087,7 +3086,6 @@ static inline short marpaESLIFPerl_JSONDecodeNegativeNanAction(void *userDatavp,
   MarpaX_ESLIF_Recognizer_t *MarpaX_ESLIF_Recognizerp = (MarpaX_ESLIF_Recognizer_t *) userDatavp;
   MarpaX_ESLIF_constants_t  *constantsp               = MarpaX_ESLIF_Recognizerp->constantsp;
   AV                        *listp;
-  SV                        *svp;
   dTHXa(MarpaX_ESLIF_Recognizerp->PerlInterpreterp);
 
   if (confidenceb) {
@@ -3226,7 +3224,6 @@ static inline SV *marpaESLIFPerl_engine2Perlp(pTHX_ MarpaX_ESLIF_Recognizer_t *M
 /*****************************************************************************/
 {
   static const char *funcs = "marpaESLIFPerl_engine2Perlp";
-  SV                *MarpaX_ESLIF_RecognizerShallowp;
   AV                *avp;
   SV                *svp;
 
@@ -5752,7 +5749,6 @@ PREINIT:
 CODE:
   MarpaX_ESLIF_Recognizer_t *MarpaX_ESLIF_Recognizerp = marpaESLIFPerl_Perl2enginep(aTHX_ p);
   size_t                     inputl;
-  SV                        *svp;
 
   if (MARPAESLIF_UNLIKELY(! marpaESLIFRecognizer_inputb(MarpaX_ESLIF_Recognizerp->marpaESLIFRecognizerp, NULL, &inputl))) {
     MARPAESLIFPERL_CROAKF("marpaESLIFRecognizer_inputb failure, %s", strerror(errno));
