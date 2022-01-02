@@ -127,7 +127,6 @@ typedef struct MarpaX_ESLIF_constants {
   SV *MarpaX__ESLIF__Grammar__Properties_svp;
   SV *MarpaX__ESLIF__Grammar__Rule__Properties_svp;
   SV *MarpaX__ESLIF__Grammar__Symbol__Properties_svp;
-  HV *regexCalloutStashp;
   SV *MarpaX__ESLIF__String_svp;
   SV *MarpaX__ESLIF__String__new_svp;
   SV *MarpaX__ESLIF__String__encoding_svp;
@@ -1333,7 +1332,7 @@ static inline short marpaESLIFPerl_recognizerRegexCallbackb(void *userDatavp, ma
   svp = sv_bless(marpaESLIFPerl_recognizerGetSvp(aTHX_ marpaESLIFRecognizerp,
                                                  internalStackp,
                                                  marpaESLIFCalloutBlockp),
-                 MarpaX_ESLIF_Recognizerp->constantsp->regexCalloutStashp);
+                 gv_stashpv("MarpaX::ESLIF::RegexCallout", 0));
   /* One reference count ownership is transfered to the array */
   av_push(list, svp);
   actionResult = marpaESLIFPerl_recognizerCallbackActionp(aTHX_ MarpaX_ESLIF_Recognizerp, marpaESLIFRecognizerp, list);
@@ -3179,7 +3178,6 @@ static inline void marpaESLIFPerl_constants_initv(pTHX_ MarpaX_ESLIF_constants_t
   if (! marpaESLIFPerl_canb(aTHX_ constantsp->Encode_svp, "decode", &(constantsp->Encode__decode_svp))) {
     MARPAESLIFPERL_CROAK("Encode must do \"decode\"");
   }
-  constantsp->regexCalloutStashp = gv_stashpv("MarpaX::ESLIF::RegexCallout", 0);
   constantsp->MarpaX__ESLIF__Recognizer_svp  = newSVpvn("MarpaX::ESLIF::Recognizer", strlen("MarpaX::ESLIF::Recognizer"));
   if (! marpaESLIFPerl_canb(aTHX_ constantsp->MarpaX__ESLIF__Recognizer_svp, "SHALLOW", &(constantsp->MarpaX__ESLIF__Recognizer__SHALLOW_svp))) {
     MARPAESLIFPERL_CROAK("MarpaX::ESLIF::Recognizer must do \"SHALLOW\"");
@@ -3214,7 +3212,6 @@ static inline void marpaESLIFPerl_constants_disposev(pTHX_ MarpaX_ESLIF_constant
   MARPAESLIFPERL_REFCNT_DEC(constantsp->MarpaX__ESLIF__String__value_svp);
   MARPAESLIFPERL_REFCNT_DEC(constantsp->Encode_svp);
   MARPAESLIFPERL_REFCNT_DEC(constantsp->Encode__decode_svp);
-  MARPAESLIFPERL_REFCNT_DEC((SV *)constantsp->regexCalloutStashp);
   MARPAESLIFPERL_REFCNT_DEC(constantsp->MarpaX__ESLIF__Recognizer_svp);
   MARPAESLIFPERL_REFCNT_DEC(constantsp->MarpaX__ESLIF__Recognizer__SHALLOW_svp);
 }
