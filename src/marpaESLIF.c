@@ -3168,9 +3168,8 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
   }
   grammarp = (marpaESLIF_grammar_t *) GENERICSTACK_GET_PTR(grammarStackp, 0);
 
-  /* Precompile lua script */
-  if (MARPAESLIF_UNLIKELY(! _marpaESLIFGrammar_lua_precompileb(marpaESLIFGrammarp, 1 /* popb */))) {
-    MARPAESLIF_ERROR(marpaESLIFp, "Lua precompilation failure");
+  /* Get a lua "thread" - eventually precompile lua script */
+  if (MARPAESLIF_UNLIKELY(_marpaESLIFGrammar_lua_newp(marpaESLIFGrammarp) == NULL)) {
     goto err;
   }
 
@@ -5180,6 +5179,14 @@ static inline marpaESLIF_t *_marpaESLIF_newp(marpaESLIFOption_t *marpaESLIFOptio
     goto err;
   }
 
+  /* A lua interpreter - with the same lifetime as marpaESLIFp that should be coded like a singleton in userspace */
+  if (MARPAESLIF_UNLIKELY(_marpaESLIF_lua_newp(marpaESLIFp) == NULL)) {
+    if (genericLoggerp != NULL) {
+      GENERICLOGGER_ERRORF(genericLoggerp, "malloc failure, %s", strerror(errno));
+    }
+    goto err;
+  }
+
   marpaESLIFp->marpaESLIFGrammarLuap     = NULL;
   marpaESLIFp->marpaESLIFGrammarLuapp[0] = NULL;
   marpaESLIFp->marpaESLIFGrammarLuapp[1] = NULL;
@@ -5523,13 +5530,6 @@ static inline marpaESLIF_t *_marpaESLIF_newp(marpaESLIFOption_t *marpaESLIFOptio
 #endif
   marpaESLIFp->marpaESLIFGrammarp->grammarp = (marpaESLIF_grammar_t *) GENERICSTACK_GET_PTR(marpaESLIFp->marpaESLIFGrammarp->grammarStackp, 0);
 
-#ifndef MARPAESLIF_NTRACE
-  GENERICLOGGER_TRACE(marpaESLIFp->marpaESLIFOption.genericLoggerp, "=====================");
-  GENERICLOGGER_TRACE(marpaESLIFp->marpaESLIFOption.genericLoggerp, "ESLIF phase 1 follows");
-  GENERICLOGGER_TRACE(marpaESLIFp->marpaESLIFOption.genericLoggerp, "=====================");
-  _marpaESLIF_dump(marpaESLIFp);
-#endif
-
   /* ----------------------------------------------------- */
   /* Prepare lazy stuff by first compiling the lua grammar */
   /* ----------------------------------------------------- */
@@ -5619,14 +5619,6 @@ static inline marpaESLIF_t *_marpaESLIF_newp(marpaESLIFOption_t *marpaESLIFOptio
   }
 #endif
   marpaESLIFp->marpaESLIFGrammarp->grammarp = (marpaESLIF_grammar_t *) GENERICSTACK_GET_PTR(marpaESLIFp->marpaESLIFGrammarp->grammarStackp, 0);
-
-  
-#ifndef MARPAESLIF_NTRACE
-  GENERICLOGGER_TRACE(marpaESLIFp->marpaESLIFOption.genericLoggerp, "=====================");
-  GENERICLOGGER_TRACE(marpaESLIFp->marpaESLIFOption.genericLoggerp, "ESLIF phase 2 follows");
-  GENERICLOGGER_TRACE(marpaESLIFp->marpaESLIFOption.genericLoggerp, "=====================");
-  _marpaESLIF_dump(marpaESLIFp);
-#endif
 
   goto done;
   
@@ -5719,6 +5711,7 @@ void marpaESLIF_freev(marpaESLIF_t *marpaESLIFp)
       _marpaESLIF_symbol_freev(marpaESLIFp->jsonConstantOrNumberpp[i]); /* This is NULL protected */
     }
     /* free(marpaESLIFp->lconvp); */ /* output of localeconv() should never be freed */
+    _marpaESLIF_lua_freev(marpaESLIFp);
     free(marpaESLIFp);
   }
 }
@@ -7045,6 +7038,7 @@ static inline marpaESLIFGrammar_t *_marpaESLIFGrammar_newp(marpaESLIF_t *marpaES
   marpaESLIFGrammarp->hasLookaheadMetab       = 0;
   marpaESLIFGrammarp->jsonStringp             = NULL;
   marpaESLIFGrammarp->jsonConstantOrNumberp   = NULL;
+  marpaESLIFGrammarp->L                       = NULL;
 
   /* Our internal grammar reader callback */
   marpaESLIF_readerContext.marpaESLIFp              = marpaESLIFp;
@@ -12645,6 +12639,7 @@ static inline void _marpaESLIFGrammar_freev(marpaESLIFGrammar_t *marpaESLIFGramm
       /* This will free all cached grammars in cascade -; */
       GENERICHASH_RESET(marpaESLIFGrammarp->lexemeGrammarHashp, marpaESLIFGrammarp->marpaESLIFp);
     }
+    _marpaESLIFGrammar_lua_freev(marpaESLIFGrammarp);
     if (! onStackb) {
       free(marpaESLIFGrammarp);
     }
