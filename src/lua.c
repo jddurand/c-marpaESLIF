@@ -636,9 +636,10 @@ static lua_State *_marpaESLIFGrammar_lua_newp(marpaESLIFGrammar_t *marpaESLIFGra
   if ((marpaESLIFGrammarp->luabytep != NULL) && (marpaESLIFGrammarp->luabytel > 0)) {
     /* Compiles lua script present in the grammar */
     LUAL_LOADBUFFER(marpaESLIFp, L, marpaESLIFGrammarp->luabytep, marpaESLIFGrammarp->luabytel, "=<luascript/>");
-    /* Result is a "function" at the top of the stack - we now have to dump it so that lua knows about it  */
-    LUA_DUMP(marpaESLIFp, L, _marpaESLIFGrammar_lua_writeri, marpaESLIFGrammarp, 0 /* strip */);
-    LUA_POP(marpaESLIFp, L, 1);
+    /* Result is a "function" at the top of the stack */
+    LUA_PCALL(marpaESLIFp, L, 0, LUA_MULTRET, 0);
+    /* Clear the stack */
+    LUA_SETTOP(marpaESLIFp, L, 0);
   }
 
   goto done;
