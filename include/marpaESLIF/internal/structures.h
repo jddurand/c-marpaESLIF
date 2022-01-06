@@ -420,7 +420,8 @@ struct marpaESLIFGrammar {
   /* For JSON grammars : the symbols that depend on strictness */
   marpaESLIF_symbol_t       *jsonStringp; /* Shallow pointer */
   marpaESLIF_symbol_t       *jsonConstantOrNumberp; /* Shallow pointer */
-  lua_State                 *L; /* A lua "thread" */
+  lua_State                 *L;                  /* A lua "thread" */
+  char                       Lids[1024];         /* Global identifier of current thread in the parent thread */
 };
 
 struct marpaESLIF_meta {
@@ -588,6 +589,7 @@ struct marpaESLIFRecognizer {
 
   /* For lua action callbacks */
   lua_State                   *L;              /* A lua "thread" - only owned by the top-level recognizer */
+  char                         Lids[1024];     /* Global identifier of current thread in the parent thread */
   marpaESLIFRecognizer_t      *marpaESLIFRecognizerLastInjectedp;
   char                        *actions;        /* Shallow pointer to action "name", depends on action type */
   marpaESLIF_action_t         *actionp;        /* Shallow pointer to action */

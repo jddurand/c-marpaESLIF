@@ -277,8 +277,9 @@ static lua_State *_marpaESLIFRecognizer_lua_newp(marpaESLIFRecognizer_t *marpaES
   marpaESLIFRecognizerTopp->L = L;
   marpaESLIFRecognizerp->L    = L;
 
-  /* We store the thread in a global that is in the lua execution stack of the recognizer */
-  LUA_SETGLOBAL(marpaESLIFp, L, "marpaESLIFRecognizerLuathreadp");
+  /* We store the thread in a global that is in the lua execution stack of the parent thread */
+  sprintf(marpaESLIFRecognizerTopp->Lids, "marpaESLIFRecognizerLuathread%p", marpaESLIFRecognizerTopp);
+  LUA_SETGLOBAL(marpaESLIFp, marpaESLIFGrammarp->L, marpaESLIFRecognizerTopp->Lids);
 
   /* We are embedded: instantiate the marpaESLIFContextStack object */
   LUA_GETGLOBAL(NULL, marpaESLIFp, L, "marpaESLIFContextStack");                      /* stack: ..., marpaESLIFContextStack */
@@ -319,15 +320,14 @@ static void _marpaESLIFValue_lua_freev(marpaESLIFValue_t *marpaESLIFValuep)
 static void _marpaESLIFRecognizer_lua_freev(marpaESLIFRecognizer_t *marpaESLIFRecognizerp)
 /*****************************************************************************/
 {
-  marpaESLIF_t *marpaESLIFp = marpaESLIFRecognizerp->marpaESLIFp;
-  lua_State    *L           = marpaESLIFRecognizerp->L;
+  lua_State *L = marpaESLIFRecognizerp->L;
 
   if (L != NULL) {
     /* It is owned by the top-level recognizer */
     if (marpaESLIFRecognizerp == marpaESLIFRecognizerp->marpaESLIFRecognizerTopp) {
-      /* The thread is in the global "marpaESLIFRecognizerLuathreadp" - we push nil and overwrite the global - garbage collection will take over */
-      if (marpaESLIFLua_lua_pushnil(L)) {
-        LUA_SETGLOBAL(marpaESLIFp, L, "marpaESLIFRecognizerLuathreadp");
+      /* The thread is in the parent's global marpaESLIFRecognizerp->marpaESLIFRecognizerTopp->Lids - we push nil and overwrite this global - garbage collection will take over */
+      if (marpaESLIFLua_lua_pushnil(marpaESLIFRecognizerp->marpaESLIFGrammarp->L)) {
+        LUA_SETGLOBAL(marpaESLIFRecognizerp->marpaESLIFp, marpaESLIFRecognizerp->marpaESLIFGrammarp->L, marpaESLIFRecognizerp->marpaESLIFRecognizerTopp->Lids);
       }
     }
     marpaESLIFRecognizerp->L = NULL;
@@ -625,8 +625,9 @@ static lua_State *_marpaESLIFGrammar_lua_newp(marpaESLIFGrammar_t *marpaESLIFGra
 
   marpaESLIFGrammarp->L = L;
 
-  /* We store the thread in a global that is in the lua execution stack of the grammar */
-  LUA_SETGLOBAL(marpaESLIFp, L, "marpaESLIFGrammarLuathreadp");
+  /* We store the thread in a global that is in the lua execution stack of the parent thread */
+  sprintf(marpaESLIFGrammarp->Lids, "marpaESLIFGrammarLuathread%p", marpaESLIFGrammarp);
+  LUA_SETGLOBAL(marpaESLIFp, marpaESLIFGrammarp->marpaESLIFp->L, marpaESLIFGrammarp->Lids);
 
   /* Inject current grammar */
   if (MARPAESLIF_UNLIKELY(! marpaESLIFLua_marpaESLIFGrammar_newFromUnmanagedi(marpaESLIFGrammarp->L, marpaESLIFGrammarp))) goto err;
@@ -654,9 +655,9 @@ static void _marpaESLIFGrammar_lua_freev(marpaESLIFGrammar_t *marpaESLIFGrammarp
 /*****************************************************************************/
 {
   if (marpaESLIFGrammarp->L != NULL) {
-    /* The thread is in the global "marpaESLIFLuathreadp" - we push nil and overwrite the global - garbage collection will take over */
-    if (marpaESLIFLua_lua_pushnil(marpaESLIFGrammarp->L)) {
-      LUA_SETGLOBAL(marpaESLIFGrammarp->marpaESLIFp, marpaESLIFGrammarp->L, "marpaESLIFGrammarLuathreadp");
+    /* The thread is in the parent's global marpaESLIFGrammarp->Lids - we push nil and overwrite this global - garbage collection will take over */
+    if (marpaESLIFLua_lua_pushnil(marpaESLIFGrammarp->marpaESLIFp->L)) {
+      LUA_SETGLOBAL(marpaESLIFGrammarp->marpaESLIFp, marpaESLIFGrammarp->marpaESLIFp->L, marpaESLIFGrammarp->Lids);
     }
   }
  err:
@@ -1575,7 +1576,7 @@ static marpaESLIFGrammar_t *_marpaESLIF_luaGrammarp(marpaESLIF_t *marpaESLIFp, c
   marpaESLIFGrammarOption.encodings = "ASCII";
   marpaESLIFGrammarOption.encodingl = 5;
 
-  rcp = _marpaESLIFGrammar_newp(marpaESLIFp, &marpaESLIFGrammarOption, 0 /* startGrammarIsLexemeb */);
+  rcp = _marpaESLIFGrammar_newp(marpaESLIFp, &marpaESLIFGrammarOption, 0 /* startGrammarIsLexemeb */, 0 /* luaNewThreadb */);
   goto done;
 
  err:
