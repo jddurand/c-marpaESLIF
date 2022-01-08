@@ -1954,6 +1954,7 @@ static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *mar
     marpaESLIFGrammar.jsonStringp           = NULL;
     marpaESLIFGrammar.jsonConstantOrNumberp = NULL;
     marpaESLIFGrammar.L                     = NULL;
+    marpaESLIFGrammar.L_r                   = LUA_NOREF;
 
     /* Fake a recognizer. EOF flag will be set automatically in fake mode */
     marpaESLIFRecognizerTestp = __marpaESLIFRecognizer_newp(&marpaESLIFGrammar,
@@ -5182,6 +5183,7 @@ static inline marpaESLIF_t *_marpaESLIF_newp(marpaESLIFOption_t *marpaESLIFOptio
     goto err;
   }
 
+  marpaESLIFp->L                         = NULL;
   marpaESLIFp->marpaESLIFGrammarLuap     = NULL;
   marpaESLIFp->marpaESLIFGrammarLuapp[0] = NULL;
   marpaESLIFp->marpaESLIFGrammarLuapp[1] = NULL;
@@ -5268,6 +5270,10 @@ static inline marpaESLIF_t *_marpaESLIF_newp(marpaESLIFOption_t *marpaESLIFOptio
   }
 
   /* From now on we can use MARPAESLIF_ERRORF */
+  if (MARPAESLIF_UNLIKELY(! _marpaESLIF_lua_newb(marpaESLIFp))) {
+    goto err;
+  }
+
   marpaESLIFp->tablesp = pcre2_maketables(NULL);
   if (MARPAESLIF_UNLIKELY(marpaESLIFp->tablesp == NULL)) {
     MARPAESLIF_ERRORF(marpaESLIFp, "pcre2_maketables failure, %s", strerror(errno));
@@ -5462,6 +5468,7 @@ static inline marpaESLIF_t *_marpaESLIF_newp(marpaESLIFOption_t *marpaESLIFOptio
   marpaESLIFp->marpaESLIFGrammarp->jsonStringp             = NULL;
   marpaESLIFp->marpaESLIFGrammarp->jsonConstantOrNumberp   = NULL;
   marpaESLIFp->marpaESLIFGrammarp->L                       = NULL;
+  marpaESLIFp->marpaESLIFGrammarp->L_r                     = LUA_NOREF;
 
   marpaESLIFp->marpaESLIFGrammarp->grammarStackp = &(marpaESLIFp->marpaESLIFGrammarp->_grammarStack);
   GENERICSTACK_INIT(marpaESLIFp->marpaESLIFGrammarp->grammarStackp);
@@ -5723,6 +5730,7 @@ void marpaESLIF_freev(marpaESLIF_t *marpaESLIFp)
       _marpaESLIF_symbol_freev(marpaESLIFp->jsonStringpp[i]); /* This is NULL protected */
       _marpaESLIF_symbol_freev(marpaESLIFp->jsonConstantOrNumberpp[i]); /* This is NULL protected */
     }
+    _marpaESLIF_lua_freev(marpaESLIFp);
     /* free(marpaESLIFp->lconvp); */ /* output of localeconv() should never be freed */
     free(marpaESLIFp);
   }
@@ -7051,6 +7059,7 @@ static inline marpaESLIFGrammar_t *_marpaESLIFGrammar_newp(marpaESLIF_t *marpaES
   marpaESLIFGrammarp->jsonStringp             = NULL;
   marpaESLIFGrammarp->jsonConstantOrNumberp   = NULL;
   marpaESLIFGrammarp->L                       = NULL;
+  marpaESLIFGrammarp->L_r                     = LUA_NOREF;
 
   /* Our internal grammar reader callback */
   marpaESLIF_readerContext.marpaESLIFp              = marpaESLIFp;
@@ -11119,7 +11128,9 @@ static inline marpaESLIFRecognizer_t *__marpaESLIFRecognizer_newp(marpaESLIFGram
   marpaESLIFRecognizerp->symbolArrayPristinep               = NULL;
   marpaESLIFRecognizerp->lastDiscardl                       = 0;
   marpaESLIFRecognizerp->lastDiscards                       = NULL;
+  marpaESLIFRecognizerp->L                                  = NULL;
   marpaESLIFRecognizerp->marpaESLIFRecognizerLastInjectedp  = NULL;
+  marpaESLIFRecognizerp->L_r                                = LUA_NOREF;
   marpaESLIFRecognizerp->actions                            = NULL;
   marpaESLIFRecognizerp->actionp                            = NULL;
   marpaESLIFRecognizerp->marpaESLIFValueResultWorkStackp    = NULL;
@@ -12294,6 +12305,9 @@ void marpaESLIFValue_freev(marpaESLIFValue_t *marpaESLIFValuep)
     if (marpaESLIFValuep->luaprecompiledp != NULL) {
       free(marpaESLIFValuep->luaprecompiledp);
     }
+
+    /* Dispose lua if needed */
+    _marpaESLIFValue_lua_freev(marpaESLIFValuep);
 
     free(marpaESLIFValuep);
   }
@@ -16620,7 +16634,7 @@ static inline marpaESLIFValue_t *_marpaESLIFValue_newp(marpaESLIFRecognizer_t *m
   marpaESLIFValuep->inValuationb                          = 0;
   marpaESLIFValuep->symbolp                               = NULL;
   marpaESLIFValuep->rulep                                 = NULL;
-  marpaESLIFValuep->marpaESLIFValueLastInjectedp          = NULL;
+  marpaESLIFValuep->marpaESLIFValueLastInjectedp          = NULL; /* Shallow pointer */
   marpaESLIFValuep->actions                               = NULL;
   marpaESLIFValuep->actionp                               = NULL;
   marpaESLIFValuep->stringp                               = NULL;
@@ -19673,6 +19687,9 @@ static inline void _marpaESLIFRecognizer_freev(marpaESLIFRecognizer_t *marpaESLI
   }
   _marpaESLIFCalloutBlock_disposev(marpaESLIFRecognizerp);
 
+  /* Dispose lua if needed */
+  _marpaESLIFRecognizer_lua_freev(marpaESLIFRecognizerp);
+
   if (marpaESLIFRecognizerp->expectedTerminalArrayp != NULL) {
     free(marpaESLIFRecognizerp->expectedTerminalArrayp);
   }
@@ -19795,12 +19812,13 @@ static inline short _marpaESLIFRecognizer_getPristineFromCachep(marpaESLIF_t *ma
         /* marpaESLIFRecognizerp->pristineb                       = 1; */
         marpaESLIFRecognizerp->grammarDiscardInitializedb         = 0;
         /*
-          marpaESLIFRecognizerp->marpaESLIFGrammarDiscard           = c.f. MARPAESLIFRECOGNIZER_GRAMMARDISCARD_INITIALIZER() macro
-          marpaESLIFRecognizerp->grammarDiscard                     = c.f. MARPAESLIFRECOGNIZER_GRAMMARDISCARD_INITIALIZER() macro
-          marpaESLIFRecognizerp->marpaESLIFRecognizerOptionDiscard  = c.f. MARPAESLIFRECOGNIZER_GRAMMARDISCARD_INITIALIZER() macro
-          marpaESLIFRecognizerp->marpaESLIFValueOptionDiscard       = c.f. MARPAESLIFRECOGNIZER_GRAMMARDISCARD_INITIALIZER() macro
-          marpaESLIFRecognizerp->L                                 = NULL;
+          marpaESLIFRecognizerp->marpaESLIFGrammarDiscard          = c.f. MARPAESLIFRECOGNIZER_GRAMMARDISCARD_INITIALIZER() macro
+          marpaESLIFRecognizerp->grammarDiscard                    = c.f. MARPAESLIFRECOGNIZER_GRAMMARDISCARD_INITIALIZER() macro
+          marpaESLIFRecognizerp->marpaESLIFRecognizerOptionDiscard = c.f. MARPAESLIFRECOGNIZER_GRAMMARDISCARD_INITIALIZER() macro
+          marpaESLIFRecognizerp->marpaESLIFValueOptionDiscard      = c.f. MARPAESLIFRECOGNIZER_GRAMMARDISCARD_INITIALIZER() macro
           marpaESLIFRecognizerp->marpaESLIFRecognizerLastInjectedp = NULL;
+          marpaESLIFRecognizerp->L                                 = NULL;
+          marpaESLIFRecognizerp->L_r                               = LUA_NOREF;
         */
 
         marpaESLIFRecognizerp->marpaESLIFRecognizerTopp            = marpaESLIFRecognizerParentp->marpaESLIFRecognizerTopp;
@@ -21810,6 +21828,7 @@ static inline short _marpaESLIFSymbol_tryb(marpaESLIFSymbol_t *marpaESLIFSymbolp
     marpaESLIFGrammar.jsonStringp           = NULL;
     marpaESLIFGrammar.jsonConstantOrNumberp = NULL;
     marpaESLIFGrammar.L                     = NULL;
+    marpaESLIFGrammar.L_r                   = LUA_NOREF;
   }
 
   /* Fake a recognizer. EOF flag will be set automatically in fake mode */
