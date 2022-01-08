@@ -419,6 +419,7 @@ struct marpaESLIFGrammar {
   /* For JSON grammars : the symbols that depend on strictness */
   marpaESLIF_symbol_t       *jsonStringp; /* Shallow pointer */
   marpaESLIF_symbol_t       *jsonConstantOrNumberp; /* Shallow pointer */
+  lua_State                 *L;                  /* A new lua state */
 };
 
 struct marpaESLIF_meta {
@@ -459,10 +460,10 @@ struct marpaESLIFValue {
   short                        inValuationb;
   marpaESLIF_symbol_t         *symbolp;
   marpaESLIF_rule_t           *rulep;
+  marpaESLIFValue_t           *marpaESLIFValueLastInjectedp;
   char                        *actions; /* Shallow pointer to action "name", depends on action type */
   marpaESLIF_action_t         *actionp; /* Shallow pointer to action */
   marpaESLIF_string_t         *stringp; /* Not NULL only when is a literal - then callback is forced to be internal */
-  lua_State                   *L;       /* Shallow copy of the L that is in the top-level recognizer */
   void                        *marpaESLIFLuaValueContextp;
   marpaESLIFRepresentation_t   proxyRepresentationp; /* Proxy representation callback, c.f. json.c for an example */
   marpaESLIF_stringGenerator_t stringGenerator; /* Internal string generator, put here to avoid unnecessary malloc()/free() calls */
@@ -585,7 +586,6 @@ struct marpaESLIFRecognizer {
   char                        *lastDiscards;    /* Bytes */
 
   /* For lua action callbacks */
-  lua_State                   *L;              /* Only owned by the top-level recognizer */
   marpaESLIFRecognizer_t      *marpaESLIFRecognizerLastInjectedp;
   char                        *actions;        /* Shallow pointer to action "name", depends on action type */
   marpaESLIF_action_t         *actionp;        /* Shallow pointer to action */

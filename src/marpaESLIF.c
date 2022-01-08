@@ -1951,6 +1951,9 @@ static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *mar
     marpaESLIFGrammar.hasSolPseudoTerminalb = 0;
     marpaESLIFGrammar.lexemeGrammarHashp    = NULL;
     marpaESLIFGrammar.hasLookaheadMetab     = 0;
+    marpaESLIFGrammar.jsonStringp           = NULL;
+    marpaESLIFGrammar.jsonConstantOrNumberp = NULL;
+    marpaESLIFGrammar.L                     = NULL;
 
     /* Fake a recognizer. EOF flag will be set automatically in fake mode */
     marpaESLIFRecognizerTestp = __marpaESLIFRecognizer_newp(&marpaESLIFGrammar,
@@ -3168,9 +3171,8 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
   }
   grammarp = (marpaESLIF_grammar_t *) GENERICSTACK_GET_PTR(grammarStackp, 0);
 
-  /* Precompile lua script */
-  if (MARPAESLIF_UNLIKELY(! _marpaESLIFGrammar_lua_precompileb(marpaESLIFGrammarp, 1 /* popb */))) {
-    MARPAESLIF_ERROR(marpaESLIFp, "Lua precompilation failure");
+  /* Precompile eventual luascript */
+  if (MARPAESLIF_UNLIKELY(! _marpaESLIFGrammar_lua_precompileb(marpaESLIFGrammarp))) {
     goto err;
   }
 
@@ -5457,6 +5459,9 @@ static inline marpaESLIF_t *_marpaESLIF_newp(marpaESLIFOption_t *marpaESLIFOptio
   marpaESLIFp->marpaESLIFGrammarp->hasSolPseudoTerminalb   = 0;
   marpaESLIFp->marpaESLIFGrammarp->lexemeGrammarHashp      = NULL;
   marpaESLIFp->marpaESLIFGrammarp->hasLookaheadMetab       = 0;
+  marpaESLIFp->marpaESLIFGrammarp->jsonStringp             = NULL;
+  marpaESLIFp->marpaESLIFGrammarp->jsonConstantOrNumberp   = NULL;
+  marpaESLIFp->marpaESLIFGrammarp->L                       = NULL;
 
   marpaESLIFp->marpaESLIFGrammarp->grammarStackp = &(marpaESLIFp->marpaESLIFGrammarp->_grammarStack);
   GENERICSTACK_INIT(marpaESLIFp->marpaESLIFGrammarp->grammarStackp);
@@ -7045,6 +7050,7 @@ static inline marpaESLIFGrammar_t *_marpaESLIFGrammar_newp(marpaESLIF_t *marpaES
   marpaESLIFGrammarp->hasLookaheadMetab       = 0;
   marpaESLIFGrammarp->jsonStringp             = NULL;
   marpaESLIFGrammarp->jsonConstantOrNumberp   = NULL;
+  marpaESLIFGrammarp->L                       = NULL;
 
   /* Our internal grammar reader callback */
   marpaESLIF_readerContext.marpaESLIFp              = marpaESLIFp;
@@ -11113,7 +11119,6 @@ static inline marpaESLIFRecognizer_t *__marpaESLIFRecognizer_newp(marpaESLIFGram
   marpaESLIFRecognizerp->symbolArrayPristinep               = NULL;
   marpaESLIFRecognizerp->lastDiscardl                       = 0;
   marpaESLIFRecognizerp->lastDiscards                       = NULL;
-  marpaESLIFRecognizerp->L                                  = NULL;
   marpaESLIFRecognizerp->marpaESLIFRecognizerLastInjectedp  = NULL;
   marpaESLIFRecognizerp->actions                            = NULL;
   marpaESLIFRecognizerp->actionp                            = NULL;
@@ -12283,9 +12288,6 @@ void marpaESLIFValue_freev(marpaESLIFValue_t *marpaESLIFValuep)
     GENERICSTACK_FREE(marpaESLIFValuep->valueResultStackp);
     */
 
-    /* Dispose lua if needed */
-    _marpaESLIFValue_lua_freev(marpaESLIFValuep);
-
     _marpaESLIF_stringGeneratorFreev(&(marpaESLIFValuep->stringGenerator), 1 /* onStackb */);
     GENERICLOGGER_FREE(marpaESLIFValuep->stringGeneratorLoggerp);
 
@@ -12645,6 +12647,7 @@ static inline void _marpaESLIFGrammar_freev(marpaESLIFGrammar_t *marpaESLIFGramm
       /* This will free all cached grammars in cascade -; */
       GENERICHASH_RESET(marpaESLIFGrammarp->lexemeGrammarHashp, marpaESLIFGrammarp->marpaESLIFp);
     }
+    _marpaESLIFGrammar_lua_freev(marpaESLIFGrammarp);
     if (! onStackb) {
       free(marpaESLIFGrammarp);
     }
@@ -16617,10 +16620,10 @@ static inline marpaESLIFValue_t *_marpaESLIFValue_newp(marpaESLIFRecognizer_t *m
   marpaESLIFValuep->inValuationb                          = 0;
   marpaESLIFValuep->symbolp                               = NULL;
   marpaESLIFValuep->rulep                                 = NULL;
+  marpaESLIFValuep->marpaESLIFValueLastInjectedp          = NULL;
   marpaESLIFValuep->actions                               = NULL;
   marpaESLIFValuep->actionp                               = NULL;
   marpaESLIFValuep->stringp                               = NULL;
-  marpaESLIFValuep->L                                     = NULL;
   marpaESLIFValuep->marpaESLIFLuaValueContextp            = NULL; /* Shallow pointer */
   marpaESLIFValuep->proxyRepresentationp                  = NULL;
   _marpaESLIF_stringGeneratorInitv(marpaESLIFp, &(marpaESLIFValuep->stringGenerator));
@@ -19670,9 +19673,6 @@ static inline void _marpaESLIFRecognizer_freev(marpaESLIFRecognizer_t *marpaESLI
   }
   _marpaESLIFCalloutBlock_disposev(marpaESLIFRecognizerp);
 
-  /* Dispose lua if needed */
-  _marpaESLIFRecognizer_lua_freev(marpaESLIFRecognizerp);
-
   if (marpaESLIFRecognizerp->expectedTerminalArrayp != NULL) {
     free(marpaESLIFRecognizerp->expectedTerminalArrayp);
   }
@@ -21807,6 +21807,9 @@ static inline short _marpaESLIFSymbol_tryb(marpaESLIFSymbol_t *marpaESLIFSymbolp
     marpaESLIFGrammar.hasSolPseudoTerminalb = 0;
     marpaESLIFGrammar.lexemeGrammarHashp    = NULL;
     marpaESLIFGrammar.hasLookaheadMetab     = 0;
+    marpaESLIFGrammar.jsonStringp           = NULL;
+    marpaESLIFGrammar.jsonConstantOrNumberp = NULL;
+    marpaESLIFGrammar.L                     = NULL;
   }
 
   /* Fake a recognizer. EOF flag will be set automatically in fake mode */
