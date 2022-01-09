@@ -10757,74 +10757,70 @@ static inline short _marpaESLIFRecognizer_push_grammar_eventsb(marpaESLIFRecogni
                                                          0 /* forceReloadb */))) {
       goto err;
     }
+  } else {
+    grammarEventl = 0;
+  }
 
-    if (grammarEventl > 0) {
+  if (grammarEventl > 0) {
 
-      for (i = 0; i < grammarEventl; i++) {
-        symboli = grammarEventp[i].symboli;
-        type    = MARPAESLIF_EVENTTYPE_NONE;
-        events  = NULL;
-        if (symboli >= 0) {
-          /* Look for the symbol */
-          MARPAESLIF_INTERNAL_GET_SYMBOL_FROM_STACK(marpaESLIFRecognizerp->marpaESLIFp, symbolp, symbolStackp, symboli);
-        } else {
-          symbolp = NULL;
+    for (i = 0; i < grammarEventl; i++) {
+      symboli = grammarEventp[i].symboli;
+      type    = MARPAESLIF_EVENTTYPE_NONE;
+      events  = NULL;
+      if (symboli >= 0) {
+        /* Look for the symbol */
+        MARPAESLIF_INTERNAL_GET_SYMBOL_FROM_STACK(marpaESLIFRecognizerp->marpaESLIFp, symbolp, symbolStackp, symboli);
+      } else {
+        symbolp = NULL;
+      }
+
+      /* Our grammar made sure there can by only one named event per symbol */
+      /* In addition, marpaWrapper guarantee there is a symbol associated to */
+      /* completion, nulled or prediction events */
+      switch (grammarEventp[i].eventType) {
+      case MARPAWRAPPERGRAMMAR_EVENT_COMPLETED:
+        type        = MARPAESLIF_EVENTTYPE_COMPLETED;
+        if (symbolp != NULL) {
+          /* The discard event is only possible on completion in discard mode */
+          marpaESLIFRecognizerp->lastCompletionEvents  = events        = marpaESLIFRecognizerp->discardb ? symbolp->discardEvents : symbolp->eventCompleteds;
+          marpaESLIFRecognizerp->lastCompletionSymbolp = symbolp;
+          marpaESLIFRecognizerp->lastCompletionEvente  = event_actione = marpaESLIFRecognizerp->discardb ? symbolp->discardEvente : symbolp->eventCompletede;
         }
-
-        /* Our grammar made sure there can by only one named event per symbol */
-        /* In addition, marpaWrapper guarantee there is a symbol associated to */
-        /* completion, nulled or prediction events */
-        switch (grammarEventp[i].eventType) {
-
-        case MARPAWRAPPERGRAMMAR_EVENT_COMPLETED:
-          type        = MARPAESLIF_EVENTTYPE_COMPLETED;
-          if (symbolp != NULL) {
-            /* The discard event is only possible on completion in discard mode */
-            marpaESLIFRecognizerp->lastCompletionEvents  = events        = marpaESLIFRecognizerp->discardb ? symbolp->discardEvents : symbolp->eventCompleteds;
-            marpaESLIFRecognizerp->lastCompletionSymbolp = symbolp;
-            marpaESLIFRecognizerp->lastCompletionEvente  = event_actione = marpaESLIFRecognizerp->discardb ? symbolp->discardEvente : symbolp->eventCompletede;
-          }
-          marpaESLIFRecognizerp->completedb = 1;
-          MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "%s: completion event", (symbolp != NULL) ? symbolp->descp->asciis : "??");
-          break;
-
-        case MARPAWRAPPERGRAMMAR_EVENT_NULLED:
-          type        = MARPAESLIF_EVENTTYPE_NULLED;
-          if (symbolp != NULL) {
-            events        = symbolp->eventNulleds;
-            event_actione = symbolp->eventNullede;
-          }
-          MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "%s: nullable event", (symbolp != NULL) ? symbolp->descp->asciis : "??");
-          break;
-
-        case MARPAWRAPPERGRAMMAR_EVENT_EXPECTED:
-          type        = MARPAESLIF_EVENTTYPE_PREDICTED;
-          if (symbolp != NULL) {
-            events        = symbolp->eventPredicteds;
-            event_actione = symbolp->eventPredictede;
-          }
-          MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "%s: prediction event", (symbolp != NULL) ? symbolp->descp->asciis : "??");
-          break;
-
-        case MARPAWRAPPERGRAMMAR_EVENT_EXHAUSTED:
-          type          = MARPAESLIF_EVENTTYPE_EXHAUSTED;
-          events        = MARPAESLIF_EVENTTYPE_EXHAUSTED_NAME;
-          event_actione = MARPAESLIF_INTERNAL_EVENT_ACTION_NA;
-          isExhaustedb = 1;
-          MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "Exhausted event");
-          /* Force discard of remaining data */
-          last_discard_loopb = 1;
-          /* symboli will be -1 as per marpaWrapper spec */
-          break;
-
-        default:
-          MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "%s: unsupported event type %d", (symbolp != NULL) ? symbolp->descp->asciis : "??", grammarEventp[i].eventType);
-          break;
+        marpaESLIFRecognizerp->completedb = 1;
+        MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "%s: completion event", (symbolp != NULL) ? symbolp->descp->asciis : "??");
+        break;
+      case MARPAWRAPPERGRAMMAR_EVENT_NULLED:
+        type        = MARPAESLIF_EVENTTYPE_NULLED;
+        if (symbolp != NULL) {
+          events        = symbolp->eventNulleds;
+          event_actione = symbolp->eventNullede;
         }
-
-        if (MARPAESLIF_UNLIKELY(! _marpaESLIFRecognizer_push_eventb(marpaESLIFRecognizerp, type, symbolp, events, NULL /* discardArrayp */, event_actione))) {
-          goto err;
+        MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "%s: nullable event", (symbolp != NULL) ? symbolp->descp->asciis : "??");
+        break;
+      case MARPAWRAPPERGRAMMAR_EVENT_EXPECTED:
+        type        = MARPAESLIF_EVENTTYPE_PREDICTED;
+        if (symbolp != NULL) {
+          events        = symbolp->eventPredicteds;
+          event_actione = symbolp->eventPredictede;
         }
+        MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "%s: prediction event", (symbolp != NULL) ? symbolp->descp->asciis : "??");
+        break;
+      case MARPAWRAPPERGRAMMAR_EVENT_EXHAUSTED:
+        type          = MARPAESLIF_EVENTTYPE_EXHAUSTED;
+        events        = MARPAESLIF_EVENTTYPE_EXHAUSTED_NAME;
+        event_actione = MARPAESLIF_INTERNAL_EVENT_ACTION_NA;
+        isExhaustedb = 1;
+        MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "Exhausted event");
+        /* Force discard of remaining data */
+        last_discard_loopb = 1;
+        /* symboli will be -1 as per marpaWrapper spec */
+        break;
+      default:
+        MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "%s: unsupported event type %d", (symbolp != NULL) ? symbolp->descp->asciis : "??", grammarEventp[i].eventType);
+        break;
+      }
+      if (MARPAESLIF_UNLIKELY(! _marpaESLIFRecognizer_push_eventb(marpaESLIFRecognizerp, type, symbolp, events, NULL /* discardArrayp */, event_actione))) {
+        goto err;
       }
     }
   }
