@@ -94,9 +94,6 @@ typedef struct marpaESLIFLuaRecognizerContext {
   marpaESLIFRecognizer_t *marpaESLIFRecognizerLastp; /* Last marpaESLIFRecognizerp set in callbacks */
   short                   managedb;               /* True if we own marpaESLIFRecognizerp */
   marpaESLIF_t           *marpaESLIFp;
-  /* Regex callouts are always sequential for a recognizer. We cache a dummy version of the object */
-  /* Just to make sure the the strings used as keys are never garbage collected */
-  int                     calloutTable_r;
 } marpaESLIFLuaRecognizerContext_t;
 
 /* Value proxy context */
@@ -2212,11 +2209,6 @@ static short marpaESLIFLua_recognizerContextInitb(lua_State *L, marpaESLIF_t *ma
   marpaESLIFLuaRecognizerContextp->marpaESLIFRecognizerLastp = NULL;
   marpaESLIFLuaRecognizerContextp->managedb                  = 0;
 
-  /* Cache a dummy callout table */
-  if (! marpaESLIFLua_lua_newtable(L)) goto err;
-  MARPAESLIFLUA_MAKE_MARPAESLIFREGEXCALLBACK_OBJECT(L);
-  MARPAESLIFLUA_REF(L, marpaESLIFLuaRecognizerContextp->calloutTable_r);
-
   return 1;
 
  err:
@@ -2283,8 +2275,6 @@ static void  marpaESLIFLua_recognizerContextFreev(lua_State *L, marpaESLIFLuaRec
     } else {
       marpaESLIFLuaRecognizerContextp->marpaESLIFRecognizerp = NULL;
     }
-
-    MARPAESLIFLUA_UNREF(L, marpaESLIFLuaRecognizerContextp->calloutTable_r);
 
     if (! onStackb) {
       free(marpaESLIFLuaRecognizerContextp);
