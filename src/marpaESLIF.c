@@ -10748,17 +10748,12 @@ static inline short _marpaESLIFRecognizer_push_grammar_eventsb(marpaESLIFRecogni
   marpaESLIFRecognizerp->completedb            = 0;
 
   /* Collect grammar native events and push them in the events stack */
-  /* We know this is a no-op if current recognizer is running in the noevent mode */
-  if (! marpaESLIFRecognizerp->noEventb) {
-    if (MARPAESLIF_UNLIKELY(! marpaWrapperGrammar_eventb(marpaESLIFRecognizerp->marpaWrapperGrammarp,
-                                                         &grammarEventl,
-                                                         &grammarEventp,
-                                                         1, /* exhaustedb */
-                                                         0 /* forceReloadb */))) {
-      goto err;
-    }
-  } else {
-    grammarEventl = 0;
+  if (MARPAESLIF_UNLIKELY(! marpaWrapperGrammar_eventb(marpaESLIFRecognizerp->marpaWrapperGrammarp,
+                                                       &grammarEventl,
+                                                       &grammarEventp,
+                                                       1, /* exhaustedb */
+                                                       0 /* forceReloadb */))) {
+    goto err;
   }
 
   if (grammarEventl > 0) {
