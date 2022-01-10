@@ -22,6 +22,9 @@
 /* Shall this module determine automatically string encoding ? */
 /* #define MARPAESLIFLUA_AUTO_ENCODING_DETECT */
 
+/* Shall we try to detect nil when importing ROW and TABLE ? */
+/* #define MARPAESLIFLUA_IMPORT_DETECT_NIL */
+
 /* Global table for the multiton pattern */
 #define MARPAESLIFMULTITONSTABLE "__marpaESLIFLuaMultitonsTable"
 /* Every key   is a marpaESLIFLuaContext light userdata */
@@ -910,6 +913,14 @@ typedef struct marpaESLIFLuaXstringContext {
   char         *p;
   size_t        sizel;
 } marpaESLIFLuaXstringContext_t;
+
+/* canarray aware general table */
+#define MARPAESLIFLUA_PUSH_CANARRAY_AWARE_TABLE(L, narr, nrec, canarrayb) do { \
+    if (! marpaESLIFLua_lua_createtable(L, narr, nrec)) goto err;                 /* Stack: ..., {} */ \
+    if (! marpaESLIFLua_lua_newtable(L)) goto err;                                /* Stack: ..., {}, {} */ \
+    MARPAESLIFLUA_STORE_BOOLEAN(L, MARPAESLIF_CANARRAY, canarrayb);               /* Stack: ..., {}, { "canarray" = canarrayb } */ \
+    if (! marpaESLIFLua_lua_setmetatable(L, -2)) goto err;                        /* Stack: ..., {} meta = { "canarray" = canarrayb } */ \
+  } while (0)
 
 /* C.f. https://github.com/chipdude/xstring-lua */
 #define MARPAESLIFLUA_PUSH_XSTRING_OBJECT(L, marpaESLIFLuaXstringContextp) do { \
@@ -4426,7 +4437,12 @@ static short marpaESLIFLua_importb(lua_State *L, marpaESLIFValueResult_t *marpaE
 {
   static const char           *funcs = "marpaESLIFLua_importb";
   size_t                       i;
+  size_t                       j;
   marpaESLIFValueResult_t     *marpaESLIFValueResultDupp;
+#ifdef MARPAESLIFLUA_IMPORT_DETECT_NIL
+  short                        haveNilb;
+#endif
+  int                          typei;
   short                        rcb;
 
   switch (marpaESLIFValueResultp->type) {
@@ -4517,7 +4533,28 @@ static short marpaESLIFLua_importb(lua_State *L, marpaESLIFValueResult_t *marpaE
       marpaESLIFLua_luaL_errorf(L, "table size %ld too big, maximum is %d", (unsigned long) marpaESLIFValueResultp->u.r.sizel, INT_MAX);
       goto err;
     }
-    if (! marpaESLIFLua_createniledtableb(L, (int) marpaESLIFValueResultp->u.r.sizel, 1 /* arrayb */)) goto err;              /* Stack: val1, ..., valn, table */
+
+#ifdef MARPAESLIFLUA_IMPORT_DETECT_NIL
+    /* We inspect the marpaESLIFValueResultp->u.r.sizel on the stack to decide if we have to use createniledtableb */
+    haveNilb = 0;
+    for (i = 1; i <= marpaESLIFValueResultp->u.r.sizel; i++) {
+      /* We inspect stack at indices -1, etc..., -marpaESLIFValueResultp->u.r.sizel */
+      if (! marpaESLIFLua_lua_type(&typei, L, (int) -i)) goto err;
+      if (typei == LUA_TNIL) {
+        haveNilb = 1;
+        break;
+      }
+    }
+
+    if (haveNilb) {
+      if (! marpaESLIFLua_createniledtableb(L, (int) marpaESLIFValueResultp->u.r.sizel, 1 /* arrayb */)) goto err;            /* Stack: val1, ..., valn, niledtable */
+    } else {
+      MARPAESLIFLUA_PUSH_CANARRAY_AWARE_TABLE(L, (int) marpaESLIFValueResultp->u.r.sizel, 0 /* nrec */, 1 /* canarrayb */);   /* Stack: val1, ..., valn, niledtable */
+    }
+#else
+    if (! marpaESLIFLua_createniledtableb(L, (int) marpaESLIFValueResultp->u.r.sizel, 1 /* arrayb */)) goto err;              /* Stack: val1, ..., valn, niledtable */
+#endif
+
     if (marpaESLIFValueResultp->u.r.sizel > 0) {
       for (i = marpaESLIFValueResultp->u.r.sizel; i > 0 ; i--) {
         if (! marpaESLIFLua_lua_insert(L, -2)) goto err;                                                                      /* Stack: val1, ..., table, valn */
@@ -4528,12 +4565,31 @@ static short marpaESLIFLua_importb(lua_State *L, marpaESLIFValueResult_t *marpaE
   case MARPAESLIF_VALUE_TYPE_TABLE:
     /* fprintf(stdout, "import table\n"); fflush(stdout); fflush(stderr); */
     /* We received elements importer callbacks in order; i.e. key0, val0, ..., keyn, valn */
-    /* We pushed that in lua stack, i.e. the lua stack then contains:  valn imported, keyn imported, ..., val0 imported, key0 imported */
     if (marpaESLIFValueResultp->u.t.sizel > INT_MAX) {
       marpaESLIFLua_luaL_errorf(L, "table size %ld too big, maximum is %d", (unsigned long) marpaESLIFValueResultp->u.t.sizel, INT_MAX);
       goto err;
     }
-    if (! marpaESLIFLua_createniledtableb(L, (int) marpaESLIFValueResultp->u.r.sizel, 0 /* arrayb */)) goto err;              /* Stack: keyn, valn, ..., key1, val1, table */
+
+#ifdef MARPAESLIFLUA_IMPORT_DETECT_NIL
+    /* We inspect the marpaESLIFValueResultp->u.t.sizel on the stack to decide if we have to use createniledtableb */
+    haveNilb = 0;
+    for (i = 0, j = 1; i < marpaESLIFValueResultp->u.t.sizel; i++, j += 2) {
+      /* We inspect stack at indices -1, -3, etc..., -marpaESLIFValueResultp->u.t.sizel + 1 */
+      if (! marpaESLIFLua_lua_type(&typei, L, (int) -j)) goto err;
+      if (typei == LUA_TNIL) {
+        haveNilb = 1;
+        break;
+      }
+    }
+
+    if (haveNilb) {
+      if (! marpaESLIFLua_createniledtableb(L, (int) marpaESLIFValueResultp->u.t.sizel, 0 /* arrayb */)) goto err;            /* Stack: keyn, valn, ..., key1, val1, table */
+    } else {
+      MARPAESLIFLUA_PUSH_CANARRAY_AWARE_TABLE(L, (int) marpaESLIFValueResultp->u.t.sizel, 0 /* nrec */, 0 /* canarrayb */);   /* Stack: keyn, valn, ..., key1, val1, table */
+    }
+#else
+    if (! marpaESLIFLua_createniledtableb(L, (int) marpaESLIFValueResultp->u.t.sizel, 0 /* arrayb */)) goto err;              /* Stack: keyn, valn, ..., key1, val1, table */
+#endif
 
     /* By definition the stack contains t.sizel even elements that are {key,value} tuples */
     for (i = 0; i < marpaESLIFValueResultp->u.t.sizel; i++) {
