@@ -409,6 +409,10 @@ static short marpaESLIFLua_lua_gettable(int *rcip, lua_State *L, int idx);
 static short marpaESLIFLua_lua_isinteger(int *rcip, lua_State *L, int idx);
 static short marpaESLIFLua_luaL_checkudata(void **rcpp, lua_State *L, int ud, const char *tname);
 static short marpaESLIFLua_lua_newthread(lua_State **Lp, lua_State *L);
+static short marpaESLIFLua_lua_getstack(int *rcip, lua_State *L, int level, lua_Debug *ar);
+static short marpaESLIFLua_lua_getinfo(int *rcip, lua_State *L, const char *what, lua_Debug *ar);
+static short marpaESLIFLua_lua_getlocal(const char **rcsp, lua_State *L, const lua_Debug *ar, int n);
+static short marpaESLIFLua_lua_setlocal(const char **rcsp, lua_State *L, const lua_Debug *ar, int n);
 
 /* Grrr lua defines that with a macro */
 #ifndef marpaESLIFLua_luaL_newlib
@@ -8448,6 +8452,62 @@ static short marpaESLIFLua_lua_newthread(lua_State **Lp, lua_State *L)
   Lnew = lua_newthread(L);
   if (Lp != NULL) {
     *Lp = Lnew;
+  }
+
+  return 1;
+}
+
+/****************************************************************************/
+static short marpaESLIFLua_lua_getstack(int *rcip, lua_State *L, int level, lua_Debug *ar)
+/****************************************************************************/
+{
+  int rci;
+
+  rci = lua_getstack(L, level, ar);
+  if (rcip != NULL) {
+    *rcip = rci;
+  }
+
+  return 1;
+}
+
+/****************************************************************************/
+static short marpaESLIFLua_lua_getinfo(int *rcip, lua_State *L, const char *what, lua_Debug *ar)
+/****************************************************************************/
+{
+  int rci;
+
+  rci = lua_getinfo(L, what, ar);
+  if (rcip != NULL) {
+    *rcip = rci;
+  }
+
+  return 1;
+}
+
+/****************************************************************************/
+static short marpaESLIFLua_lua_getlocal(const char **rcsp, lua_State *L, const lua_Debug *ar, int n)
+/****************************************************************************/
+{
+  const char *rcs;
+
+  rcs = lua_getlocal(L, ar, n);
+  if (rcsp != NULL) {
+    *rcsp = rcs;
+  }
+
+  return 1;
+}
+
+/****************************************************************************/
+static short marpaESLIFLua_lua_setlocal(const char **rcsp, lua_State *L, const lua_Debug *ar, int n)
+/****************************************************************************/
+{
+  const char *rcs;
+
+  rcs = lua_setlocal(L, ar, n);
+  if (rcsp != NULL) {
+    *rcsp = rcs;
   }
 
   return 1;

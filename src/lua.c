@@ -38,6 +38,9 @@ static short _marpaESLIFValue_lua_function_loadb(marpaESLIFValue_t *marpaESLIFVa
 static short _marpaESLIFRecognizer_lua_function_loadb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp);
 static short _marpaESLIFRecognizer_lua_function_precompileb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, char *luabytep, size_t luabytel, short stripb, int popi);
 
+static short _marpaESLIF_lua_setlocalb(marpaESLIF_t *marpaESLIFp, lua_State *L, const char *names);
+static short  _marpaESLIF_lua_get_call_stack_sizeb(marpaESLIF_t *marpaESLIFp, lua_State *L, int *sizeip);
+
 #define MARPAESLIFLUA_LOG_ERROR_STRING(marpaESLIFp, L, f) do {          \
     if (L != NULL) {                                                    \
       const char *_errorstring;                                         \
@@ -1289,6 +1292,34 @@ static short marpaESLIFLua_lua_newthread(lua_State **Lp, lua_State *L)
 }
 
 /****************************************************************************/
+static short marpaESLIFLua_lua_getstack(int *rcip, lua_State *L, int level, lua_Debug *ar)
+/****************************************************************************/
+{
+  return ! luaunpanic_getstack(rcip, L, level, ar);
+}
+
+/****************************************************************************/
+static short marpaESLIFLua_lua_getinfo(int *rcip, lua_State *L, const char *what, lua_Debug *ar)
+/****************************************************************************/
+{
+  return ! luaunpanic_getinfo(rcip, L, what, ar);
+}
+
+/****************************************************************************/
+static short marpaESLIFLua_lua_getlocal(const char **rcsp, lua_State *L, const lua_Debug *ar, int n)
+/****************************************************************************/
+{
+  return ! luaunpanic_getlocal(rcsp, L, ar, n);
+}
+
+/****************************************************************************/
+static short marpaESLIFLua_lua_setlocal(const char **rcsp, lua_State *L, const lua_Debug *ar, int n)
+/****************************************************************************/
+{
+  return ! luaunpanic_setlocal(rcsp, L, ar, n);
+}
+
+/****************************************************************************/
 static short _marpaESLIFValue_lua_representationb(void *userDatavp, marpaESLIFValueResult_t *marpaESLIFValueResultp, char **inputcpp, size_t *inputlp, char **encodingasciisp, marpaESLIFRepresentationDispose_t *disposeCallbackpp, short *stringbp)
 /****************************************************************************/
 {
@@ -2370,3 +2401,94 @@ static short _marpaESLIFRecognizer_lua_set_contextb(marpaESLIFRecognizer_t *marp
   }
   return rcb;
 }
+
+/*****************************************************************************/
+static short _marpaESLIF_lua_get_call_stack_sizeb(marpaESLIF_t *marpaESLIFp, lua_State *L, int *sizeip)
+/*****************************************************************************/
+/* Get call stack size.                                                      */
+/* Inspired from:                                                            */
+/* https://github.com/JorjBauer/lua-getopt/blob/master/set-lua-variable.c    */
+/* Returns -1 in case of failure.                                            */
+/*****************************************************************************/
+{
+  static const char *funcs  = "_marpaESLIF_lua_get_call_stack_sizei";
+  int                sizei = 0;
+  int                stacki;
+  lua_Debug          ar;
+  short              rcb;
+  
+  while (1) {
+    if (! marpaESLIFLua_lua_getstack(&stacki, L, sizei, &ar)) goto err;
+    if (stacki == 0) {
+      break;
+    }
+    sizei++;
+  }
+
+  if (sizeip != NULL) {
+    *sizeip = sizei;
+  }
+  rcb = 1;
+  goto done;
+
+ err:
+  MARPAESLIFLUA_LOG_LATEST_ERROR(marpaESLIFp, L);
+  rcb = 0;
+
+ done:
+  return rcb;
+}
+
+/*****************************************************************************/
+static short _marpaESLIF_lua_setlocalb(marpaESLIF_t *marpaESLIFp, lua_State *L, const char *names)
+/*****************************************************************************/
+/* The variable to set is assumed to be at the top of the stack.             */
+/* Inspired from:                                                            */
+/* https://github.com/JorjBauer/lua-getopt/blob/master/set-lua-variable.c    */
+/*****************************************************************************/
+{
+  static const char *funcs       = "_marpaESLIF_lua_setlocalb";
+  lua_Debug          ar;
+  int                stacksizei;
+  int                stackleveli;
+  int                i;
+  const char        *local_names;
+  short              rcb;
+
+  if (! _marpaESLIF_lua_get_call_stack_sizeb(marpaESLIFp, L, &stacksizei)) goto err;
+
+  for (stackleveli = 0; stackleveli < stacksizei; stackleveli++) {
+
+    if (! marpaESLIFLua_lua_getstack(NULL, L, stackleveli, &ar)) goto err;
+    if (! marpaESLIFLua_lua_getinfo(NULL, L, "nSluf", &ar)) goto err; /* Get all the info there is. Could probably be whittled down. */
+
+    i = 1;
+    while (1) {
+      if (! marpaESLIFLua_lua_getlocal(&local_names, L, &ar, i)) goto err;
+      if (local_names == NULL) {
+        break;
+      }
+      LUA_POP(marpaESLIFp, L, 1);                                    /* Pop the local's old value */
+      if (strcmp(names, local_names) == 1) {
+        /* Found - remember that the caller have already pushed the wanted local value at the top of the stack */
+        if (! marpaESLIFLua_lua_setlocal(NULL, L, &ar, i)) goto err; /* Set the value */
+        rcb = 1;
+        goto done;
+      }
+      ++i;
+    }
+  }  
+
+  /* Didn't find a local with that name anywhere. Set it as a global. */
+  LUA_SETGLOBAL(marpaESLIFp, L, names);
+  rcb = 1;
+  goto done;
+
+ err:
+  MARPAESLIFLUA_LOG_LATEST_ERROR(marpaESLIFp, L);
+  rcb = 0;
+
+ done:
+  return rcb;
+}
+
