@@ -349,7 +349,6 @@ enum marpaESLIF_json_type {
 #define MARPAESLIFGRAMMARLUA_FOR_PARLIST 0
 #define MARPAESLIFGRAMMARLUA_FOR_EXPLIST 1
 struct marpaESLIF {
-  lua_State              *L;                           /* There is one lua state per ESLIF */
   marpaESLIFGrammar_t    *marpaESLIFGrammarLuap;
   marpaESLIFGrammar_t    *marpaESLIFGrammarLuapp[2];   /* C.f. MARPAESLIFGRAMMARLUA_FOR_PARLIST and MARPAESLIFGRAMMARLUA_FOR_EXPLIST */
   marpaESLIFGrammar_t    *marpaESLIFGrammarp;          /* ESLIF has its own grammar -; */
@@ -420,8 +419,8 @@ struct marpaESLIFGrammar {
   /* For JSON grammars : the symbols that depend on strictness */
   marpaESLIF_symbol_t       *jsonStringp; /* Shallow pointer */
   marpaESLIF_symbol_t       *jsonConstantOrNumberp; /* Shallow pointer */
-  lua_State                 *L;                  /* A Lua thread */
-  int                        L_r;                /* Reference to the lua thread in the main thread */
+  lua_State                 *L;                  /* A Lua instance */
+  short                      Lshallowb;          /* Specific to bootstrap, used to avoid creating more than one L instance */
 };
 
 struct marpaESLIF_meta {
@@ -463,6 +462,7 @@ struct marpaESLIFValue {
   marpaESLIF_symbol_t         *symbolp;
   marpaESLIF_rule_t           *rulep;
   marpaESLIFValue_t           *marpaESLIFValueLastInjectedp;
+  lua_State                   *L;       /* Shallow copy of the grammar lua instance */
   char                        *actions; /* Shallow pointer to action "name", depends on action type */
   marpaESLIF_action_t         *actionp; /* Shallow pointer to action */
   marpaESLIF_string_t         *stringp; /* Not NULL only when is a literal - then callback is forced to be internal */
@@ -589,8 +589,7 @@ struct marpaESLIFRecognizer {
 
   /* For lua action callbacks */
   marpaESLIFRecognizer_t      *marpaESLIFRecognizerLastInjectedp;
-  lua_State                   *L;              /* A Lua thread - only the top-level recognizer owns it */
-  int                          L_r;            /* Reference to the lua thread in the main thread */
+  lua_State                   *L;              /* Shallow copy of the grammar lua instance */
   char                        *actions;        /* Shallow pointer to action "name", depends on action type */
   marpaESLIF_action_t         *actionp;        /* Shallow pointer to action */
 
