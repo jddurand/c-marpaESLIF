@@ -8713,7 +8713,7 @@ static short _marpaESLIF_bootstrap_G1_action_lua_functionb(void *userDatavp, mar
   *p = '\0';
 
   /* We precompile the stripped version */
-  if (! _marpaESLIFValue_lua_precompileb(marpaESLIFValuep, actions, actionl, 1 /* stripb */, 1 /* popi */)) {
+  if (! _marpaESLIF_lua_value_precompileb(marpaESLIFValuep, actions, actionl, 1 /* stripb */, 1 /* popi */)) {
     goto err;
   }
 

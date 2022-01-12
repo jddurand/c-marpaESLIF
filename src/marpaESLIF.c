@@ -3173,7 +3173,7 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
   grammarp = (marpaESLIF_grammar_t *) GENERICSTACK_GET_PTR(grammarStackp, 0);
 
   /* Precompile eventual luascript */
-  if (MARPAESLIF_UNLIKELY(! _marpaESLIFGrammar_lua_precompileb(marpaESLIFGrammarp, forceLuaStateCreationb))) {
+  if (MARPAESLIF_UNLIKELY(! _marpaESLIF_lua_grammar_precompileb(marpaESLIFGrammarp, forceLuaStateCreationb))) {
     goto err;
   }
 
@@ -5545,7 +5545,7 @@ static inline marpaESLIF_t *_marpaESLIF_newp(marpaESLIFOption_t *marpaESLIFOptio
   /* We doing so ? This is because ESLIF by itself is minimal, and rewriting the whole Lua    */
   /* grammar by hand using the bootstrap mechanism is very prone to error. By doing such hack */
   /* it is more maintanable, modulo the hook below, and makes easier to extends ESLIF.        */
-  marpaESLIFp->marpaESLIFGrammarLuap = _marpaESLIF_luaGrammarp(marpaESLIFp, NULL, marpaESLIFp->marpaESLIFGrammarp->L /* Lshallowp */);
+  marpaESLIFp->marpaESLIFGrammarLuap = _marpaESLIF_lua_grammarp(marpaESLIFp, NULL, marpaESLIFp->marpaESLIFGrammarp->L /* Lshallowp */);
   if (marpaESLIFp->marpaESLIFGrammarLuap == NULL) {
     goto err;
   }
@@ -5558,11 +5558,11 @@ static inline marpaESLIF_t *_marpaESLIF_newp(marpaESLIFOption_t *marpaESLIFOptio
 
   /* Prepare stuff for bootstrap: it needs to know the number of arguments and parameters for */
   /* parameterized symbols.                                                                   */
-  marpaESLIFp->marpaESLIFGrammarLuapp[MARPAESLIFGRAMMARLUA_FOR_PARLIST] = _marpaESLIF_luaGrammarp(marpaESLIFp, G1_META_LUA_OPTIONAL_PARLIST_AFTER_LPAREN_DESC, marpaESLIFp->marpaESLIFGrammarp->L /* Lshallowp */);
+  marpaESLIFp->marpaESLIFGrammarLuapp[MARPAESLIFGRAMMARLUA_FOR_PARLIST] = _marpaESLIF_lua_grammarp(marpaESLIFp, G1_META_LUA_OPTIONAL_PARLIST_AFTER_LPAREN_DESC, marpaESLIFp->marpaESLIFGrammarp->L /* Lshallowp */);
   if (marpaESLIFp->marpaESLIFGrammarLuapp[MARPAESLIFGRAMMARLUA_FOR_PARLIST] == NULL) {
     goto err;
   }
-  marpaESLIFp->marpaESLIFGrammarLuapp[MARPAESLIFGRAMMARLUA_FOR_EXPLIST] = _marpaESLIF_luaGrammarp(marpaESLIFp, G1_META_LUA_ARGS_AFTER_LPAREN_DESC, marpaESLIFp->marpaESLIFGrammarp->L /* Lshallowp */);
+  marpaESLIFp->marpaESLIFGrammarLuapp[MARPAESLIFGRAMMARLUA_FOR_EXPLIST] = _marpaESLIF_lua_grammarp(marpaESLIFp, G1_META_LUA_ARGS_AFTER_LPAREN_DESC, marpaESLIFp->marpaESLIFGrammarp->L /* Lshallowp */);
   if (marpaESLIFp->marpaESLIFGrammarLuapp[MARPAESLIFGRAMMARLUA_FOR_EXPLIST] == NULL) {
     goto err;
   }
@@ -6180,7 +6180,7 @@ static inline short _marpaESLIFRecognizer_meta_matcherb(marpaESLIFRecognizer_t *
                                 symbolp->callp->luaexplists,
                                 symbolp->declp != NULL ? symbolp->declp->luaparlists : "nil",
                                 symbolp->callp->luaexplists);
-    if (! _marpaESLIFRecognizer_lua_push_contextb(marpaESLIFRecognizerp, symbolp)) {
+    if (! _marpaESLIF_lua_recognizer_push_contextb(marpaESLIFRecognizerp, symbolp)) {
       goto err;
     }
     contextb = 1;
@@ -6312,7 +6312,7 @@ static inline short _marpaESLIFRecognizer_meta_matcherb(marpaESLIFRecognizer_t *
                                 symbolp->callp->luaexplists,
                                 symbolp->declp != NULL ? symbolp->declp->luaparlists : "nil",
                                 symbolp->callp->luaexplists);
-    if (! _marpaESLIFRecognizer_lua_pop_contextb(marpaESLIFRecognizerp)) {
+    if (! _marpaESLIF_lua_recognizer_pop_contextb(marpaESLIFRecognizerp)) {
       rcb = 0;
     }
   }
@@ -11480,7 +11480,7 @@ marpaESLIFRecognizer_t *marpaESLIFRecognizer_newFromp(marpaESLIFGrammar_t *marpa
   MARPAESLIF_MAKE_MARPAESLIFVALUERESULT_SHALLOW(context);
 
   /* Inject is in our own lua interpreter */
-  if (! _marpaESLIFRecognizer_lua_set_contextb(marpaESLIFRecognizerp, &context)) {
+  if (! _marpaESLIF_lua_recognizer_set_contextb(marpaESLIFRecognizerp, &context)) {
     goto err;
   }
 
@@ -12299,7 +12299,7 @@ void marpaESLIFValue_freev(marpaESLIFValue_t *marpaESLIFValuep)
     }
 
     /* Dispose lua if needed */
-    _marpaESLIFValue_lua_freev(marpaESLIFValuep);
+    _marpaESLIF_lua_value_freev(marpaESLIFValuep);
 
     free(marpaESLIFValuep);
   }
@@ -12653,7 +12653,7 @@ static inline void _marpaESLIFGrammar_freev(marpaESLIFGrammar_t *marpaESLIFGramm
       /* This will free all cached grammars in cascade -; */
       GENERICHASH_RESET(marpaESLIFGrammarp->lexemeGrammarHashp, marpaESLIFGrammarp->marpaESLIFp);
     }
-    _marpaESLIFGrammar_lua_freev(marpaESLIFGrammarp);
+    _marpaESLIF_lua_grammar_freev(marpaESLIFGrammarp);
     if (! onStackb) {
       free(marpaESLIFGrammarp);
     }
@@ -16863,7 +16863,7 @@ static short _marpaESLIFRecognizer_concat_valueResultCallbackb(void *userDatavp,
 
     if ((marpaESLIFValueResultp->type == MARPAESLIF_VALUE_TYPE_PTR) && (marpaESLIFValueResultp->contextp == (void *) MARPAESLIF_EMBEDDED_CONTEXT_LUA)) {
       /* Specific to lua embedded: we use our proxy, then userDatavp is forced to be marpaESLIFValuep */
-      representationp = _marpaESLIFValue_lua_representationb;
+      representationp = _marpaESLIF_lua_value_representationb;
       representationUserDatavp = marpaESLIFValuep;
     } else {
       /* Origin representation, userDatavp is the one from original context */
@@ -19681,7 +19681,7 @@ static inline void _marpaESLIFRecognizer_freev(marpaESLIFRecognizer_t *marpaESLI
   _marpaESLIFCalloutBlock_disposev(marpaESLIFRecognizerp);
 
   /* Dispose lua if needed */
-  _marpaESLIFRecognizer_lua_freev(marpaESLIFRecognizerp);
+  _marpaESLIF_lua_recognizer_freev(marpaESLIFRecognizerp);
 
   if (marpaESLIFRecognizerp->expectedTerminalArrayp != NULL) {
     free(marpaESLIFRecognizerp->expectedTerminalArrayp);
@@ -20355,7 +20355,7 @@ static inline short _marpaESLIFValue_ruleActionCallbackb(marpaESLIFValue_t *marp
 
   case MARPAESLIF_ACTION_TYPE_LUA:
     /* Lua action: this is a built-in */
-    ruleCallbackp                        = _marpaESLIFValue_lua_actionb;
+    ruleCallbackp                        = _marpaESLIF_lua_value_actionb;
     marpaESLIFValuep->actions            = actionp->u.luas;
     marpaESLIFValuep->actionp            = NULL;
     marpaESLIFValuep->stringp            = NULL;
@@ -20363,7 +20363,7 @@ static inline short _marpaESLIFValue_ruleActionCallbackb(marpaESLIFValue_t *marp
 
   case MARPAESLIF_ACTION_TYPE_LUA_FUNCTION:
     /* Lua function: this is a built-in */
-    ruleCallbackp                        = _marpaESLIFValue_lua_action_functionb;
+    ruleCallbackp                        = _marpaESLIF_lua_value_action_functionb;
     marpaESLIFValuep->actions            = actionp->u.luaFunction.luas;
     marpaESLIFValuep->actionp            = actionp;
     marpaESLIFValuep->stringp            = NULL;
@@ -20491,7 +20491,7 @@ static inline short _marpaESLIFValue_symbolActionCallbackb(marpaESLIFValue_t *ma
 
     case MARPAESLIF_ACTION_TYPE_LUA:
       /* Lua action: this is a built-in */
-      symbolCallbackp           = _marpaESLIFValue_lua_symbolb;
+      symbolCallbackp           = _marpaESLIF_lua_value_symbolb;
       marpaESLIFValuep->actions = symbolp->effectiveSymbolActionp->u.luas;
       marpaESLIFValuep->actionp = symbolp->effectiveSymbolActionp;
       marpaESLIFValuep->stringp = NULL;
@@ -20499,7 +20499,7 @@ static inline short _marpaESLIFValue_symbolActionCallbackb(marpaESLIFValue_t *ma
 
     case MARPAESLIF_ACTION_TYPE_LUA_FUNCTION:
       /* Lua function: this is a built-in */
-      symbolCallbackp           = _marpaESLIFValue_lua_symbol_functionb;
+      symbolCallbackp           = _marpaESLIF_lua_value_symbol_functionb;
       marpaESLIFValuep->actions = symbolp->effectiveSymbolActionp->u.luaFunction.luas;
       marpaESLIFValuep->actionp = symbolp->effectiveSymbolActionp;
       marpaESLIFValuep->stringp = NULL;
@@ -20555,13 +20555,13 @@ static inline short _marpaESLIFRecognizer_recognizerIfActionCallbackb(marpaESLIF
     break;
   case MARPAESLIF_ACTION_TYPE_LUA:
     /* Lua action: this is a built-in */
-    ifCallbackp                    = _marpaESLIFRecognizer_lua_ifactionb;
+    ifCallbackp                    = _marpaESLIF_lua_recognizer_ifactionb;
     marpaESLIFRecognizerp->actions = ifActionp->u.luas;
     marpaESLIFRecognizerp->actionp = ifActionp;
     break;
   case MARPAESLIF_ACTION_TYPE_LUA_FUNCTION:
     /* Lua inline function: this is a built-in */
-    ifCallbackp                    = _marpaESLIFRecognizer_lua_ifaction_functionb;
+    ifCallbackp                    = _marpaESLIF_lua_recognizer_ifaction_functionb;
     marpaESLIFRecognizerp->actions = ifActionp->u.luaFunction.luas;
     marpaESLIFRecognizerp->actionp = ifActionp;
     break;
@@ -20613,13 +20613,13 @@ static inline short _marpaESLIFRecognizer_recognizerRegexActionCallbackb(marpaES
     break;
   case MARPAESLIF_ACTION_TYPE_LUA:
     /* Lua action: this is a built-in */
-    regexCallbackp                 = _marpaESLIFRecognizer_lua_regexactionb;
+    regexCallbackp                 = _marpaESLIF_lua_recognizer_regexactionb;
     marpaESLIFRecognizerp->actions = regexActionp->u.luas;
     marpaESLIFRecognizerp->actionp = regexActionp;
     break;
   case MARPAESLIF_ACTION_TYPE_LUA_FUNCTION:
     /* Lua action: this is a built-in */
-    regexCallbackp                 = _marpaESLIFRecognizer_lua_regexaction_functionb;
+    regexCallbackp                 = _marpaESLIF_lua_recognizer_regexaction_functionb;
     marpaESLIFRecognizerp->actions = regexActionp->u.luaFunction.luas;
     marpaESLIFRecognizerp->actionp = regexActionp;
     break;
@@ -20671,13 +20671,13 @@ static inline short _marpaESLIFRecognizer_recognizerGeneratorActionCallbackb(mar
     break;
   case MARPAESLIF_ACTION_TYPE_LUA:
     /* Lua action: this is a built-in */
-    generatorCallbackp       = _marpaESLIFRecognizer_lua_generatoractionb;
+    generatorCallbackp       = _marpaESLIF_lua_recognizer_generatoractionb;
     marpaESLIFRecognizerp->actions = generatorActionp->u.luas;
     marpaESLIFRecognizerp->actionp = generatorActionp;
     break;
   case MARPAESLIF_ACTION_TYPE_LUA_FUNCTION:
     /* Lua action: this is a built-in */
-    generatorCallbackp       = _marpaESLIFRecognizer_lua_generatoraction_functionb;
+    generatorCallbackp       = _marpaESLIF_lua_recognizer_generatoraction_functionb;
     marpaESLIFRecognizerp->actions = generatorActionp->u.luaFunction.luas;
     marpaESLIFRecognizerp->actionp = generatorActionp;
     break;
@@ -20729,13 +20729,13 @@ static inline short _marpaESLIFRecognizer_recognizerEventActionCallbackb(marpaES
     break;
   case MARPAESLIF_ACTION_TYPE_LUA:
     /* Lua action: this is a built-in */
-    eventCallbackp                 = _marpaESLIFRecognizer_lua_eventactionb;
+    eventCallbackp                 = _marpaESLIF_lua_recognizer_eventactionb;
     marpaESLIFRecognizerp->actions = eventActionp->u.luas;
     marpaESLIFRecognizerp->actionp = eventActionp;
     break;
   case MARPAESLIF_ACTION_TYPE_LUA_FUNCTION:
     /* Lua action: this is a built-in */
-    eventCallbackp                 = _marpaESLIFRecognizer_lua_eventaction_functionb;
+    eventCallbackp                 = _marpaESLIF_lua_recognizer_eventaction_functionb;
     marpaESLIFRecognizerp->actions = eventActionp->u.luaFunction.luas;
     marpaESLIFRecognizerp->actionp = eventActionp;
     break;
@@ -22360,7 +22360,7 @@ static inline marpaESLIFValueResult_t *_marpaESLIFRecognizer_context_getp(marpaE
   marpaESLIFValueResult_t  context;
   marpaESLIFValueResult_t *rcp;
 
-  if (MARPAESLIF_UNLIKELY(! _marpaESLIFRecognizer_lua_get_contextp(marpaESLIFRecognizerp, &context))) {
+  if (MARPAESLIF_UNLIKELY(! _marpaESLIF_lua_recognizer_get_contextp(marpaESLIFRecognizerp, &context))) {
     goto err;
   }
 
