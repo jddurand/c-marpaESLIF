@@ -24,7 +24,7 @@
 #define FILENAMES "lua.c" /* For logging */
 
 
-static inline lua_State *_marpaESLIF_lua_recognizerlua_newp(marpaESLIFRecognizer_t *marpaESLIFRecognizerp);
+static inline lua_State *_marpaESLIF_lua_recognizer_newp(marpaESLIFRecognizer_t *marpaESLIFRecognizerp);
 static inline lua_State *_marpaESLIF_lua_value_newp(marpaESLIFValue_t *marpaESLIFValuep);
 static inline int        _marpaESLIF_lua_writeri(marpaESLIF_t *marpaESLIFp, char **luaprecompiledpp, size_t *luaprecompiledlp, const void* p, size_t sz);
 static int               _marpaESLIF_lua_grammar_writeri(lua_State *L, const void* p, size_t sz, void* ud);
@@ -325,7 +325,7 @@ static short _marpaESLIF_lua_recognizer_ifactionb(void *userDatavp, marpaESLIFRe
   static const char                *funcs       = "_marpaESLIF_lua_recognizer_ifactionb";
   marpaESLIF_t                     *marpaESLIFp = marpaESLIFRecognizerp->marpaESLIFp;
   int                               topi        = -1;
-  lua_State                        *L           = _marpaESLIF_lua_recognizerlua_newp(marpaESLIFRecognizerp);
+  lua_State                        *L           = _marpaESLIF_lua_recognizer_newp(marpaESLIFRecognizerp);
   marpaESLIFRecognizerIfCallback_t  ifCallbackp;
   short                             rcb;
 
@@ -371,7 +371,7 @@ static short _marpaESLIF_lua_recognizer_regexactionb(void *userDatavp, marpaESLI
   static const char                   *funcs       = "_marpaESLIF_lua_recognizer_regexactionb";
   marpaESLIF_t                        *marpaESLIFp = marpaESLIFRecognizerp->marpaESLIFp;
   int                                  topi        = -1;
-  lua_State                           *L           = _marpaESLIF_lua_recognizerlua_newp(marpaESLIFRecognizerp);
+  lua_State                           *L           = _marpaESLIF_lua_recognizer_newp(marpaESLIFRecognizerp);
   marpaESLIFRecognizerRegexCallback_t  regexCallbackp;
   short                                rcb;
 
@@ -417,7 +417,7 @@ static short _marpaESLIF_lua_recognizer_generatoractionb(void *userDatavp, marpa
   static const char                       *funcs       = "_marpaESLIF_lua_recognizer_generatoractionb";
   marpaESLIF_t                            *marpaESLIFp = marpaESLIFRecognizerp->marpaESLIFp;
   int                                      topi        = -1;
-  lua_State                               *L           = _marpaESLIF_lua_recognizerlua_newp(marpaESLIFRecognizerp);
+  lua_State                               *L           = _marpaESLIF_lua_recognizer_newp(marpaESLIFRecognizerp);
   marpaESLIFRecognizerGeneratorCallback_t  generatorCallbackp;
   short                                    rcb;
 
@@ -544,7 +544,7 @@ static lua_State *_marpaESLIF_lua_grammar_newp(marpaESLIFGrammar_t *marpaESLIFGr
 }
 
 /*****************************************************************************/
-static inline lua_State *_marpaESLIF_lua_recognizerlua_newp(marpaESLIFRecognizer_t *marpaESLIFRecognizerp)
+static inline lua_State *_marpaESLIF_lua_recognizer_newp(marpaESLIFRecognizer_t *marpaESLIFRecognizerp)
 /*****************************************************************************/
 /* By design all recognizers under a grammar run sychroneously. This is why  */
 /* L is a shallow pointer and owned only by the top-level recognizer.        */
@@ -609,7 +609,7 @@ static inline lua_State *_marpaESLIF_lua_value_newp(marpaESLIFValue_t *marpaESLI
     marpaESLIFp        = marpaESLIFValuep->marpaESLIFp;
 
     /* Get the instance attached to the recognizer */
-    L = _marpaESLIF_lua_recognizerlua_newp(marpaESLIFValuep->marpaESLIFRecognizerp);
+    L = _marpaESLIF_lua_recognizer_newp(marpaESLIFValuep->marpaESLIFRecognizerp);
     if (L == NULL) {
       goto err;
     }
@@ -1339,7 +1339,7 @@ static short _marpaESLIF_lua_recognizer_eventactionb(void *userDatavp, marpaESLI
 {
   static const char                   *funcs       = "_marpaESLIF_lua_recognizer_eventactionb";
   marpaESLIF_t                        *marpaESLIFp = marpaESLIFRecognizerp->marpaESLIFp;
-  lua_State                           *L           = _marpaESLIF_lua_recognizerlua_newp(marpaESLIFRecognizerp);
+  lua_State                           *L           = _marpaESLIF_lua_recognizer_newp(marpaESLIFRecognizerp);
   marpaESLIFRecognizerEventCallback_t  eventCallbackp;
   short                                rcb;
 
@@ -1725,7 +1725,7 @@ static short _marpaESLIF_lua_recognizer_ifaction_functionb(void *userDatavp, mar
   static const char *funcs       = "_marpaESLIF_lua_recognizer_ifaction_functionb";
   marpaESLIF_t      *marpaESLIFp = marpaESLIFRecognizerp->marpaESLIFp;
   int                topi        = -1;
-  lua_State         *L           = _marpaESLIF_lua_recognizerlua_newp(marpaESLIFRecognizerp);
+  lua_State         *L           = _marpaESLIF_lua_recognizer_newp(marpaESLIFRecognizerp);
   short              rcb;
 
   if (MARPAESLIF_UNLIKELY(L == NULL)) {
@@ -1767,7 +1767,7 @@ static short _marpaESLIF_lua_recognizer_regexaction_functionb(void *userDatavp, 
   static const char *funcs       = "_marpaESLIF_lua_recognizer_regexaction_functionb";
   marpaESLIF_t      *marpaESLIFp = marpaESLIFRecognizerp->marpaESLIFp;
   int                topi        = -1;
-  lua_State         *L           = _marpaESLIF_lua_recognizerlua_newp(marpaESLIFRecognizerp);
+  lua_State         *L           = _marpaESLIF_lua_recognizer_newp(marpaESLIFRecognizerp);
   short              rcb;
 
   if (MARPAESLIF_UNLIKELY(L == NULL)) {
@@ -1809,7 +1809,7 @@ static short _marpaESLIF_lua_recognizer_generatoraction_functionb(void *userData
   static const char *funcs       = "_marpaESLIF_lua_recognizer_generatoraction_functionb";
   marpaESLIF_t      *marpaESLIFp = marpaESLIFRecognizerp->marpaESLIFp;
   int                topi        = -1;
-  lua_State         *L           = _marpaESLIF_lua_recognizerlua_newp(marpaESLIFRecognizerp);
+  lua_State         *L           = _marpaESLIF_lua_recognizer_newp(marpaESLIFRecognizerp);
   short              rcb;
 
   if (MARPAESLIF_UNLIKELY(L == NULL)) {
@@ -1851,7 +1851,7 @@ static short _marpaESLIF_lua_recognizer_eventaction_functionb(void *userDatavp, 
   static const char *funcs        = "_marpaESLIF_lua_recognizer_eventaction_functionb";
   marpaESLIF_t       *marpaESLIFp = marpaESLIFRecognizerp->marpaESLIFp;
   int                topi         = -1;
-  lua_State         *L            = _marpaESLIF_lua_recognizerlua_newp(marpaESLIFRecognizerp);
+  lua_State         *L            = _marpaESLIF_lua_recognizer_newp(marpaESLIFRecognizerp);
   short              rcb;
 
   if (MARPAESLIF_UNLIKELY(L == NULL)) {
@@ -1939,7 +1939,7 @@ static inline short _marpaESLIF_lua_recognizer_function_loadb(marpaESLIFRecogniz
 {
   char         *actions     = marpaESLIFRecognizerp->actionp->u.luaFunction.actions;
   marpaESLIF_t *marpaESLIFp = marpaESLIFRecognizerp->marpaESLIFp;
-  lua_State    *L           = _marpaESLIF_lua_recognizerlua_newp(marpaESLIFRecognizerp);
+  lua_State    *L           = _marpaESLIF_lua_recognizer_newp(marpaESLIFRecognizerp);
   short         rcb;
 
   if (MARPAESLIF_UNLIKELY(L == NULL)) {
@@ -1985,7 +1985,7 @@ static inline short _marpaESLIF_lua_recognizer_function_precompileb(marpaESLIFRe
 /*****************************************************************************/
 {
   marpaESLIF_t *marpaESLIFp = marpaESLIFRecognizerp->marpaESLIFp;
-  lua_State    *L           = _marpaESLIF_lua_recognizerlua_newp(marpaESLIFRecognizerp);
+  lua_State    *L           = _marpaESLIF_lua_recognizer_newp(marpaESLIFRecognizerp);
   short         rcb;
 
   if (MARPAESLIF_UNLIKELY(L == NULL)) {
@@ -2026,7 +2026,7 @@ static short _marpaESLIF_lua_recognizer_push_contextb(marpaESLIFRecognizer_t *ma
   genericLogger_t              *genericLoggerp       = NULL;
   char                         *parlistWithoutParens = NULL;
   int                           topi                 = -1;
-  lua_State                    *L                    = _marpaESLIF_lua_recognizerlua_newp(marpaESLIFRecognizerp);
+  lua_State                    *L                    = _marpaESLIF_lua_recognizer_newp(marpaESLIFRecognizerp);
 #ifndef MARPAESLIF_NTRACE
   int                           i;
   char                         *p;
@@ -2194,7 +2194,7 @@ static short _marpaESLIF_lua_recognizer_pop_contextb(marpaESLIFRecognizer_t *mar
   static const char *funcs       = "_marpaESLIF_lua_recognizer_pop_contextb";
   marpaESLIF_t      *marpaESLIFp = marpaESLIFRecognizerp->marpaESLIFp;
   int                topi        = -1;
-  lua_State         *L           = _marpaESLIF_lua_recognizerlua_newp(marpaESLIFRecognizerp);
+  lua_State         *L           = _marpaESLIF_lua_recognizer_newp(marpaESLIFRecognizerp);
   const char        *pops        =
     "return function()\n"
     "  marpaESLIFContextStackp:pop()\n"
@@ -2271,7 +2271,7 @@ static short _marpaESLIF_lua_recognizer_get_contextp(marpaESLIFRecognizer_t *mar
   static const char *funcs       = "_marpaESLIF_lua_recognizer_get_contextp";
   marpaESLIF_t      *marpaESLIFp = marpaESLIFRecognizerp->marpaESLIFp;
   int                topi        = -1;
-  lua_State         *L           = _marpaESLIF_lua_recognizerlua_newp(marpaESLIFRecognizerp);
+  lua_State         *L           = _marpaESLIF_lua_recognizer_newp(marpaESLIFRecognizerp);
   const char        *gets        =
     "return function()\n"
     "  return marpaESLIFContextStackp:get()\n"
@@ -2348,7 +2348,7 @@ static short _marpaESLIF_lua_recognizer_set_contextb(marpaESLIFRecognizer_t *mar
   static const char *funcs       = "_marpaESLIF_lua_recognizer_set_contextb";
   marpaESLIF_t      *marpaESLIFp = marpaESLIFRecognizerp->marpaESLIFp;
   int                topi        = -1;
-  lua_State         *L           = _marpaESLIF_lua_recognizerlua_newp(marpaESLIFRecognizerp);
+  lua_State         *L           = _marpaESLIF_lua_recognizer_newp(marpaESLIFRecognizerp);
   const char        *sets        =
     "return function(context)\n"
     "  marpaESLIFContextStackp:set(context)\n"
