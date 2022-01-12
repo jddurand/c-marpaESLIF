@@ -200,14 +200,15 @@ static inline short      _marpaESLIF_lua_recognizer_function_precompileb(marpaES
     }                                                                   \
   } while (0)
 
-#define LUA_PCALL(marpaESLIFp, L, n, r, f) do {                         \
-    int _rci;                                                           \
-    if (MARPAESLIF_UNLIKELY(luaunpanic_pcall(&_rci, L, n, r, f) || _rci)) { \
-      MARPAESLIFLUA_LOG_ERROR_STRING(marpaESLIFp, L, lua_pcall);        \
+#define LUA_CALLK(marpaESLIFp, L, n, r, ctx, k) do {                    \
+    if (MARPAESLIF_UNLIKELY(luaunpanic_callk(L, n, r, ctx, k))) {       \
+      MARPAESLIFLUA_LOG_ERROR_STRING(marpaESLIFp, L, lua_callk);        \
       errno = ENOSYS;                                                   \
       goto err;                                                         \
     }                                                                   \
   } while (0)
+
+#define LUA_CALL(marpaESLIFp, L, n, r) LUA_CALLK(marpaESLIFp, L, n, r, 0, NULL)
 
 #define LUA_PUSHSTRING(sp, marpaESLIFp, L, s) do {                      \
     if (MARPAESLIF_UNLIKELY(luaunpanic_pushstring(sp, L, s))) {         \
@@ -475,7 +476,7 @@ static short _marpaESLIF_lua_grammar_precompileb(marpaESLIFGrammar_t *marpaESLIF
     if (haveBufferb) {
       LUAL_LOADBUFFER(marpaESLIFp, L, marpaESLIFGrammarp->luabytep, marpaESLIFGrammarp->luabytel, "=<luascript/>");
       /* Result is a "function" at the top of the stack */
-      LUA_PCALL(marpaESLIFp, L, 0, LUA_MULTRET, 0);                                                                               /* stack: output1, output2, etc... */
+      LUA_CALL(marpaESLIFp, L, 0, LUA_MULTRET);                                                                                   /* stack: output1, output2, etc... */
       /* Clear the stack */
       LUA_SETTOP(marpaESLIFp, L, 0);                                                                                              /* stack: */
     }
@@ -569,7 +570,7 @@ static inline lua_State *_marpaESLIF_lua_recognizerlua_newp(marpaESLIFRecognizer
     LUA_GETGLOBAL(NULL, marpaESLIFp, L, "marpaESLIFContextStack");                                                                /* stack: marpaESLIFContextStack */
     LUA_GETFIELD(NULL, marpaESLIFp, L, -1, "new");                                                                                /* stack: marpaESLIFContextStack, marpaESLIFContextStack.new */
     LUA_REMOVE(marpaESLIFp, L, -2);                                                                                               /* stack: marpaESLIFContextStack.new */
-    LUA_PCALL(marpaESLIFp, L, 0, 1, 0);                                                                                           /* stack: marpaESLIFContextStack.new() output */
+    LUA_CALL(marpaESLIFp, L, 0, 1);                                                                                               /* stack: marpaESLIFContextStack.new() output */
     LUA_SETGLOBAL(marpaESLIFp, L, "marpaESLIFContextStackp");                                                                     /* stack: */
   }
 
@@ -1920,7 +1921,7 @@ static inline short _marpaESLIF_lua_value_function_loadb(marpaESLIFValue_t *marp
   }
 
   /* We injected a function that returns a function */
-  LUA_PCALL(marpaESLIFp, L, 0, 1, 0);
+  LUA_CALL(marpaESLIFp, L, 0, 1);
 
   rcb = 1;
   goto done;
@@ -1967,7 +1968,7 @@ static inline short _marpaESLIF_lua_recognizer_function_loadb(marpaESLIFRecogniz
   }
 
   /* We injected a function that returns a function */
-  LUA_PCALL(marpaESLIFp, L, 0, 1, 0);
+  LUA_CALL(marpaESLIFp, L, 0, 1);
 
   rcb = 1;
   goto done;
