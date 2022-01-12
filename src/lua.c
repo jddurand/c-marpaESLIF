@@ -1795,12 +1795,12 @@ static short _marpaESLIFRecognizer_lua_eventaction_functionb(void *userDatavp, m
     goto err;
   }
 
-  rcb = 1;
-  goto done;
-
   if (topi >= 0) {
     LUA_SETTOP(marpaESLIFp, L, topi);
   }
+
+  rcb = 1;
+  goto done;
 
  err:
   rcb = 0;
