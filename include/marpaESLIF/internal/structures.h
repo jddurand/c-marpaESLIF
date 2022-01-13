@@ -419,8 +419,7 @@ struct marpaESLIFGrammar {
   /* For JSON grammars : the symbols that depend on strictness */
   marpaESLIF_symbol_t       *jsonStringp; /* Shallow pointer */
   marpaESLIF_symbol_t       *jsonConstantOrNumberp; /* Shallow pointer */
-  lua_State                 *L;                  /* A Lua instance */
-  short                      Lshallowb;          /* Specific to bootstrap, used to avoid creating more than one L instance */
+  lua_State                 *L;                  /* A Lua instance, used only during validation */
 };
 
 struct marpaESLIF_meta {
@@ -461,8 +460,6 @@ struct marpaESLIFValue {
   short                        inValuationb;
   marpaESLIF_symbol_t         *symbolp;
   marpaESLIF_rule_t           *rulep;
-  marpaESLIFValue_t           *marpaESLIFValueLastInjectedp;
-  lua_State                   *L;       /* Shallow copy of the grammar lua instance */
   char                        *actions; /* Shallow pointer to action "name", depends on action type */
   marpaESLIF_action_t         *actionp; /* Shallow pointer to action */
   marpaESLIF_string_t         *stringp; /* Not NULL only when is a literal - then callback is forced to be internal */
