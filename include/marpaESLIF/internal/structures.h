@@ -392,6 +392,7 @@ struct marpaESLIF {
   /* For JSON grammars : the symbols that depend on strictness */
   marpaESLIF_symbol_t    *jsonStringpp[_MARPAESLIF_JSON_TYPE_LAST];
   marpaESLIF_symbol_t    *jsonConstantOrNumberpp[_MARPAESLIF_JSON_TYPE_LAST];
+  lua_State              *L;                           /* A Lua instance, used by all sub-grammars of ESLIF */
 };
 
 struct marpaESLIFGrammar {
@@ -419,7 +420,11 @@ struct marpaESLIFGrammar {
   /* For JSON grammars : the symbols that depend on strictness */
   marpaESLIF_symbol_t       *jsonStringp; /* Shallow pointer */
   marpaESLIF_symbol_t       *jsonConstantOrNumberp; /* Shallow pointer */
-  lua_State                 *L;                  /* A Lua instance, used only during validation */
+  lua_State                 *L;                  /* A Lua instance */
+  short                      Lownerb;            /* Specific for grammars that are the sub-grammars of ESLIF. Then it is true. Always false otherwise. */
+  marpaESLIFRecognizer_t    *marpaESLIFRecognizerUnsharedTopp;  /* The unshared top-level recognizer that is running on this grammar */
+  marpaESLIFRecognizer_t    *marpaESLIFRecognizerLastInjectedp;
+  marpaESLIFValue_t         *marpaESLIFValueLastInjectedp;
 };
 
 struct marpaESLIF_meta {
@@ -585,8 +590,6 @@ struct marpaESLIFRecognizer {
   char                        *lastDiscards;    /* Bytes */
 
   /* For lua action callbacks */
-  marpaESLIFRecognizer_t      *marpaESLIFRecognizerLastInjectedp;
-  lua_State                   *L;              /* Shallow copy of the grammar lua instance */
   char                        *actions;        /* Shallow pointer to action "name", depends on action type */
   marpaESLIF_action_t         *actionp;        /* Shallow pointer to action */
 
@@ -622,6 +625,8 @@ struct marpaESLIFRecognizer {
   marpaESLIFAction_t             *getContextActionp;  /* Getting the context is a common function that is stored at recognizer level */
   marpaESLIFAction_t             *setContextActionp;  /* Setting the context is a common function that is stored at recognizer level */
   marpaESLIFAction_t             *popContextActionp;  /* Getting the context is a common function that is stored at recognizer level */
+
+  marpaESLIFRecognizer_t         *marpaESLIFRecognizerSharedp;
 };
 
 struct marpaESLIF_symbol_data {

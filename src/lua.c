@@ -24,7 +24,6 @@
 #define FILENAMES "lua.c" /* For logging */
 
 
-static inline lua_State *_marpaESLIF_lua_newp(marpaESLIF_t *marpaESLIFp);
 static inline lua_State *_marpaESLIF_lua_recognizer_newp(marpaESLIFRecognizer_t *marpaESLIFRecognizerp);
 static inline lua_State *_marpaESLIF_lua_value_newp(marpaESLIFValue_t *marpaESLIFValuep);
 static inline int        _marpaESLIF_lua_writeri(marpaESLIF_t *marpaESLIFp, char **luaprecompiledpp, size_t *luaprecompiledlp, const void* p, size_t sz);
@@ -36,12 +35,12 @@ static inline short      _marpaESLIF_lua_recognizer_function_loadb(marpaESLIFRec
 static inline short      _marpaESLIF_lua_recognizer_function_precompileb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, char *luabytep, size_t luabytel, short stripb, int popi);
 
 #define MARPAESLIFLUA_LOG_ERROR_STRING(marpaESLIFp, L, f) do {          \
-    if (L != NULL) {                                                    \
+    if (MARPAESLIF_LIKELY(L != NULL)) {                                 \
       const char *_errorstring;                                         \
-      if (luaunpanic_tostring(&_errorstring, L, -1)) {                  \
+      if (MARPAESLIF_UNLIKELY(luaunpanic_tostring(&_errorstring, L, -1))) { \
         MARPAESLIF_ERRORF(marpaESLIFp, "%s failure", #f);               \
       } else {                                                          \
-        if (_errorstring == NULL) {                                     \
+          if (MARPAESLIF_UNLIKELY(_errorstring == NULL)) {              \
           MARPAESLIF_ERRORF(marpaESLIFp, "%s failure", #f);             \
         } else {                                                        \
           MARPAESLIF_ERRORF(marpaESLIFp, "%s", _errorstring);           \
@@ -268,7 +267,6 @@ static short _marpaESLIF_lua_value_actionb(void *userDatavp, marpaESLIFValue_t *
 
   L = _marpaESLIF_lua_value_newp(marpaESLIFValuep);
   if (MARPAESLIF_UNLIKELY(L == NULL)) {
-    MARPAESLIF_ERROR(marpaESLIFp, "Lua state is not set");
     errno = ENOSYS;
     goto err;
   }
@@ -276,7 +274,7 @@ static short _marpaESLIF_lua_value_actionb(void *userDatavp, marpaESLIFValue_t *
   LUA_GETTOP(marpaESLIFp, L, &topi);
 
   ruleCallbackp = marpaESLIFLua_valueRuleActionResolver(userDatavp, marpaESLIFValuep, marpaESLIFValuep->actions);
-  if (MARPAESLIF_UNLIKELY(ruleCallbackp == NULL)) {
+  if (MARPAESLIF_UNLIKELY(MARPAESLIF_UNLIKELY(ruleCallbackp == NULL))) {
     MARPAESLIF_ERROR(marpaESLIFp, "Lua bindings returned no rule callback");
     errno = ENOSYS;
     goto err; /* Lua will shutdown anyway */
@@ -315,7 +313,6 @@ static short _marpaESLIF_lua_value_symbolb(void *userDatavp, marpaESLIFValue_t *
 
   L = _marpaESLIF_lua_value_newp(marpaESLIFValuep);
   if (MARPAESLIF_UNLIKELY(L == NULL)) {
-    MARPAESLIF_ERROR(marpaESLIFp, "Lua state is not set");
     errno = ENOSYS;
     goto err;
   }
@@ -362,7 +359,6 @@ static short _marpaESLIF_lua_recognizer_ifactionb(void *userDatavp, marpaESLIFRe
 
   L = _marpaESLIF_lua_recognizer_newp(marpaESLIFRecognizerp);
   if (MARPAESLIF_UNLIKELY(L == NULL)) {
-    MARPAESLIF_ERROR(marpaESLIFp, "Lua state is not set");
     errno = ENOSYS;
     goto err;
   }
@@ -409,7 +405,6 @@ static short _marpaESLIF_lua_recognizer_regexactionb(void *userDatavp, marpaESLI
 
   L = _marpaESLIF_lua_recognizer_newp(marpaESLIFRecognizerp);
   if (MARPAESLIF_UNLIKELY(L == NULL)) {
-    MARPAESLIF_ERROR(marpaESLIFp, "Lua state is not set");
     errno = ENOSYS;
     goto err;
   }
@@ -456,7 +451,6 @@ static short _marpaESLIF_lua_recognizer_generatoractionb(void *userDatavp, marpa
 
   L = _marpaESLIF_lua_recognizer_newp(marpaESLIFRecognizerp);
   if (MARPAESLIF_UNLIKELY(L == NULL)) {
-    MARPAESLIF_ERROR(marpaESLIFp, "Lua state is not set");
     errno = ENOSYS;
     goto err;
   }
@@ -491,7 +485,7 @@ static short _marpaESLIF_lua_recognizer_generatoractionb(void *userDatavp, marpa
 }
 
 /*****************************************************************************/
-static short _marpaESLIF_lua_grammar_precompileb(marpaESLIFGrammar_t *marpaESLIFGrammarp)
+static inline short _marpaESLIF_lua_grammar_precompileb(marpaESLIFGrammar_t *marpaESLIFGrammarp)
 /*****************************************************************************/
 {
   marpaESLIF_t *marpaESLIFp = marpaESLIFGrammarp->marpaESLIFp;
@@ -527,25 +521,26 @@ static short _marpaESLIF_lua_grammar_precompileb(marpaESLIFGrammar_t *marpaESLIF
 }
 
 /*****************************************************************************/
-static lua_State *_marpaESLIF_lua_grammar_newp(marpaESLIFGrammar_t *marpaESLIFGrammarp)
+static inline lua_State *_marpaESLIF_lua_grammar_newp(marpaESLIFGrammar_t *marpaESLIFGrammarp)
 /*****************************************************************************/
 {
-  lua_State *L = marpaESLIFGrammarp->L;
+  marpaESLIF_t *marpaESLIFp = marpaESLIFGrammarp->marpaESLIFp;
+  lua_State    *L           = marpaESLIFGrammarp->L;
   
   if (L == NULL) {
-    L = _marpaESLIF_lua_newp(marpaESLIFGrammarp->marpaESLIFp);
-    if (L == NULL) {
+    L = _marpaESLIF_lua_newp(marpaESLIFp);
+    if (MARPAESLIF_UNLIKELY(L == NULL)) {
       goto err;
     }
     marpaESLIFGrammarp->L = L;
 
     /* Inject current marpaESLIFGrammar */
     if (MARPAESLIF_UNLIKELY(! marpaESLIFLua_marpaESLIFGrammar_newFromUnmanagedi(L, marpaESLIFGrammarp))) {                        /* stack: marpaESLIFGrammar */
-      MARPAESLIFLUA_LOG_ERROR_STRING(marpaESLIFGrammarp->marpaESLIFp, L, marpaESLIFLua_marpaESLIFGrammar_newFromUnmanagedi);
+      MARPAESLIFLUA_LOG_ERROR_STRING(marpaESLIFp, L, marpaESLIFLua_marpaESLIFGrammar_newFromUnmanagedi);
       errno = ENOSYS;
       goto err;
     }
-    LUA_SETGLOBAL(marpaESLIFGrammarp->marpaESLIFp, L, "marpaESLIFGrammar");                                                                           /* stack: */
+    LUA_SETGLOBAL(marpaESLIFp, L, "marpaESLIFGrammar");                                                                           /* stack: */
   }
 
   goto done;
@@ -560,55 +555,47 @@ static lua_State *_marpaESLIF_lua_grammar_newp(marpaESLIFGrammar_t *marpaESLIFGr
 /*****************************************************************************/
 static inline lua_State *_marpaESLIF_lua_recognizer_newp(marpaESLIFRecognizer_t *marpaESLIFRecognizerp)
 /*****************************************************************************/
-/* Lua is created lazyly. Only the top recognizer can own it.                */
-/*****************************************************************************/
 {
-  marpaESLIFRecognizer_t *marpaESLIFRecognizerTopp = marpaESLIFRecognizerp->marpaESLIFRecognizerTopp;
-  lua_State              *L                        = marpaESLIFRecognizerTopp->L;
-  marpaESLIFGrammar_t    *marpaESLIFGrammarp;
+  marpaESLIFGrammar_t    *marpaESLIFGrammarp = marpaESLIFRecognizerp->marpaESLIFGrammarp;
+  marpaESLIF_t           *marpaESLIFp        = marpaESLIFRecognizerp->marpaESLIFp;
+  marpaESLIFRecognizer_t *marpaESLIFRecognizerUnsharedp;
+  lua_State              *L;
 
-  if (L == NULL) {
-    L = _marpaESLIF_lua_newp(marpaESLIFRecognizerTopp->marpaESLIFp);
-    if (L == NULL) {
-      goto err;
-    }
-    marpaESLIFRecognizerTopp->L = L;
-    marpaESLIFGrammarp = marpaESLIFRecognizerTopp->marpaESLIFGrammarp;
-
-    if ((marpaESLIFGrammarp->luabytep != NULL) && (marpaESLIFGrammarp->luabytel > 0)) {
-      LUAL_LOADBUFFER(marpaESLIFGrammarp->marpaESLIFp, L, marpaESLIFGrammarp->luabytep, marpaESLIFGrammarp->luabytel, "=<luascript/>");
-      /* Result is a "function" at the top of the stack */
-      LUA_CALL(marpaESLIFGrammarp->marpaESLIFp, L, 0, LUA_MULTRET);                                                                                   /* stack: output1, output2, etc... */
-      /* Clear the stack */
-      LUA_SETTOP(marpaESLIFGrammarp->marpaESLIFp, L, 0);                                                                                              /* stack: */
-    }
-
-    /* Inject current marpaESLIFGrammar */
-    if (MARPAESLIF_UNLIKELY(! marpaESLIFLua_marpaESLIFGrammar_newFromUnmanagedi(L, marpaESLIFRecognizerTopp->marpaESLIFGrammarp))) { /* stack: marpaESLIFGrammar */
-      MARPAESLIFLUA_LOG_ERROR_STRING(marpaESLIFRecognizerTopp->marpaESLIFp, L, marpaESLIFLua_marpaESLIFGrammar_newFromUnmanagedi);
-      errno = ENOSYS;
-      goto err;
-    }
-    LUA_SETGLOBAL(marpaESLIFRecognizerTopp->marpaESLIFp, L, "marpaESLIFGrammar");                                                    /* stack: */
-
-    /* Instantiate a marpaESLIFContextStack object */
-    LUA_GETGLOBAL(NULL, marpaESLIFRecognizerTopp->marpaESLIFp, L, "marpaESLIFContextStack");                                         /* stack: marpaESLIFContextStack */
-    LUA_GETFIELD(NULL, marpaESLIFRecognizerTopp->marpaESLIFp, L, -1, "new");                                                         /* stack: marpaESLIFContextStack, marpaESLIFContextStack.new */
-    LUA_REMOVE(marpaESLIFRecognizerTopp->marpaESLIFp, L, -2);                                                                        /* stack: marpaESLIFContextStack.new */
-    LUA_CALL(marpaESLIFRecognizerTopp->marpaESLIFp, L, 0, 1);                                                                        /* stack: marpaESLIFContextStack.new() output */
-    LUA_SETGLOBAL(marpaESLIFRecognizerTopp->marpaESLIFp, L, "marpaESLIFContextStackp");                                              /* stack: */
+  L = _marpaESLIF_lua_grammar_newp(marpaESLIFGrammarp);
+  if (MARPAESLIF_UNLIKELY(L == NULL)) {
+    goto err;
   }
 
-  /* No need to reinject the same value twice */
-  if (marpaESLIFRecognizerTopp->marpaESLIFRecognizerLastInjectedp != marpaESLIFRecognizerp) {
+  if (marpaESLIFGrammarp->marpaESLIFRecognizerUnsharedTopp == NULL) {
+    /* Get the unshared top-level recognizer */
+    marpaESLIFRecognizerUnsharedp = marpaESLIFRecognizerp;
+    while (marpaESLIFRecognizerUnsharedp->marpaESLIFRecognizerSharedp != NULL) {
+      marpaESLIFRecognizerUnsharedp = marpaESLIFRecognizerUnsharedp->marpaESLIFRecognizerSharedp;
+    }
+    marpaESLIFGrammarp->marpaESLIFRecognizerUnsharedTopp = marpaESLIFRecognizerUnsharedp->marpaESLIFRecognizerTopp;
+
+    /* Instantiate a marpaESLIFContextStack object */
+    LUA_GETGLOBAL(NULL, marpaESLIFp, L, "marpaESLIFContextStack");                                                /* stack: marpaESLIFContextStack */
+    LUA_GETFIELD(NULL, marpaESLIFp, L, -1, "new");                                                                /* stack: marpaESLIFContextStack, marpaESLIFContextStack.new */
+    LUA_REMOVE(marpaESLIFp, L, -2);                                                                               /* stack: marpaESLIFContextStack.new */
+    LUA_CALL(marpaESLIFp, L, 0, 1);                                                                               /* stack: marpaESLIFContextStack.new() output */
+    LUA_SETGLOBAL(marpaESLIFp, L, "marpaESLIFContextStackp");                                                     /* stack: */
+
+    /* Reset last injected pointers */
+    marpaESLIFGrammarp->marpaESLIFRecognizerLastInjectedp = NULL;
+    marpaESLIFGrammarp->marpaESLIFValueLastInjectedp      = NULL;
+  }
+
+  /* No need to reinject the recognizer twice */
+  if (marpaESLIFGrammarp->marpaESLIFRecognizerLastInjectedp != marpaESLIFRecognizerp) {
     /* Inject current recognizer */
-    if (MARPAESLIF_UNLIKELY(! marpaESLIFLua_marpaESLIFRecognizer_newFromUnmanagedi(L, marpaESLIFRecognizerp))) {                     /* stack: marpaESLIFRecognizer */
-      MARPAESLIFLUA_LOG_ERROR_STRING(marpaESLIFRecognizerTopp->marpaESLIFp, L, marpaESLIFLua_marpaESLIFRecognizer_newFromUnmanagedi);
+    if (MARPAESLIF_UNLIKELY(! marpaESLIFLua_marpaESLIFRecognizer_newFromUnmanagedi(L, marpaESLIFRecognizerp))) {  /* stack: marpaESLIFRecognizer */
+      MARPAESLIFLUA_LOG_ERROR_STRING(marpaESLIFp, L, marpaESLIFLua_marpaESLIFRecognizer_newFromUnmanagedi);
       errno = ENOSYS;
       goto err;
     }
-    marpaESLIFRecognizerTopp->marpaESLIFRecognizerLastInjectedp = marpaESLIFRecognizerp;
-    LUA_SETGLOBAL(marpaESLIFRecognizerTopp->marpaESLIFp, L, "marpaESLIFRecognizer");                                                 /* stack: */
+    marpaESLIFGrammarp->marpaESLIFRecognizerLastInjectedp = marpaESLIFRecognizerp;
+    LUA_SETGLOBAL(marpaESLIFp, L, "marpaESLIFRecognizer");                                                        /* stack: */
   }
 
   goto done;
@@ -626,23 +613,27 @@ static inline lua_State *_marpaESLIF_lua_value_newp(marpaESLIFValue_t *marpaESLI
 /* Valuator reuses the recognizer's L. It just updates the global.           */
 /*****************************************************************************/
 {
+  marpaESLIF_t           *marpaESLIFp           = marpaESLIFValuep->marpaESLIFp;
+  marpaESLIFRecognizer_t *marpaESLIFRecognizerp = marpaESLIFValuep->marpaESLIFRecognizerp;
   lua_State *L;
 
-  L = _marpaESLIF_lua_recognizer_newp(marpaESLIFValuep->marpaESLIFRecognizerp);
+  L = _marpaESLIF_lua_recognizer_newp(marpaESLIFRecognizerp);
   if (MARPAESLIF_UNLIKELY(L == NULL)) {
-    MARPAESLIF_ERROR(marpaESLIFValuep->marpaESLIFp, "Lua state is not set");
     errno = ENOSYS;
     goto err;
   }
 
-  /* Inject current valuator */
-  if (MARPAESLIF_UNLIKELY(! marpaESLIFLua_marpaESLIFValue_newFromUnmanagedi(L, marpaESLIFValuep))) {        /* stack: marpaESLIFValue */
-    MARPAESLIFLUA_LOG_ERROR_STRING(marpaESLIFValuep->marpaESLIFp, L, marpaESLIFLua_marpaESLIFValue_newFromUnmanagedi);
-    errno = ENOSYS;
-    goto err;
+  /* No need to reinject the valuator twice */
+  if (marpaESLIFRecognizerp->marpaESLIFGrammarp->marpaESLIFValueLastInjectedp != marpaESLIFValuep) {
+    /* Inject current valuator */
+    if (MARPAESLIF_UNLIKELY(! marpaESLIFLua_marpaESLIFValue_newFromUnmanagedi(L, marpaESLIFValuep))) { /* stack: marpaESLIFValue */
+      MARPAESLIFLUA_LOG_ERROR_STRING(marpaESLIFp, L, marpaESLIFLua_marpaESLIFValue_newFromUnmanagedi);
+      errno = ENOSYS;
+      goto err;
+    }
+    LUA_SETGLOBAL(marpaESLIFp, L, "marpaESLIFValue");                                                  /* stack: */
+    marpaESLIFRecognizerp->marpaESLIFGrammarp->marpaESLIFValueLastInjectedp = marpaESLIFValuep;
   }
-
-  LUA_SETGLOBAL(marpaESLIFValuep->marpaESLIFp, L, "marpaESLIFValue");                                        /* stack: */
 
   goto done;
 
@@ -654,10 +645,22 @@ static inline lua_State *_marpaESLIF_lua_value_newp(marpaESLIFValue_t *marpaESLI
 }
 
 /*****************************************************************************/
-static void _marpaESLIF_lua_grammar_freev(marpaESLIFGrammar_t *marpaESLIFGrammarp)
+static inline void _marpaESLIF_lua_freev(marpaESLIF_t *marpaESLIFp)
 /*****************************************************************************/
 {
-  if (marpaESLIFGrammarp->L != NULL) {
+  if (marpaESLIFp->L != NULL) {
+    LUA_CLOSE(marpaESLIFp, marpaESLIFp->L);
+    marpaESLIFp->L = NULL;
+  }
+ err:
+  return;
+}
+
+/*****************************************************************************/
+static inline void _marpaESLIF_lua_grammar_freev(marpaESLIFGrammar_t *marpaESLIFGrammarp)
+/*****************************************************************************/
+{
+  if ((marpaESLIFGrammarp->L != NULL) && marpaESLIFGrammarp->Lownerb) {
     LUA_CLOSE(marpaESLIFGrammarp->marpaESLIFp, marpaESLIFGrammarp->L);
     marpaESLIFGrammarp->L = NULL;
   }
@@ -666,27 +669,12 @@ static void _marpaESLIF_lua_grammar_freev(marpaESLIFGrammar_t *marpaESLIFGrammar
 }
 
 /*****************************************************************************/
-static void _marpaESLIF_lua_recognizer_freev(marpaESLIFRecognizer_t *marpaESLIFRecognizerp)
-/*****************************************************************************/
-/* Only the top-level recognizer owns L.                                     */
-/*****************************************************************************/
-{
-  if (MARPAESLIFRECOGNIZER_IS_TOP(marpaESLIFRecognizerp) && (marpaESLIFRecognizerp->L != NULL)) {
-    LUA_CLOSE(marpaESLIFRecognizerp->marpaESLIFp, marpaESLIFRecognizerp->L);
-    marpaESLIFRecognizerp->L = NULL;
-  }
-
- err:
-  return;
-}
-
-/*****************************************************************************/
-static void _marpaESLIF_lua_value_freev(marpaESLIFValue_t *marpaESLIFValuep)
+static inline void _marpaESLIF_lua_value_freev(marpaESLIFValue_t *marpaESLIFValuep)
 /*****************************************************************************/
 /* Valuator reuses the recognizer's L. It just updates the global.           */
 /*****************************************************************************/
 {
-  lua_State *L = marpaESLIFValuep->marpaESLIFRecognizerp->marpaESLIFRecognizerTopp->L;
+  lua_State *L = marpaESLIFValuep->marpaESLIFRecognizerp->marpaESLIFGrammarp->L;
 
   if (L != NULL) {
     /* Set globals to nil */
@@ -699,15 +687,35 @@ static void _marpaESLIF_lua_value_freev(marpaESLIFValue_t *marpaESLIFValuep)
 }
 
 /*****************************************************************************/
-static short _marpaESLIF_lua_value_precompileb(marpaESLIFValue_t *marpaESLIFValuep, char *luabytep, size_t luabytel, short stripb, int popi)
+static inline void _marpaESLIF_lua_recognizer_freev(marpaESLIFRecognizer_t *marpaESLIFRecognizerp)
+/*****************************************************************************/
+{
+  marpaESLIFGrammar_t    *marpaESLIFGrammarp               = marpaESLIFRecognizerp->marpaESLIFGrammarp;
+  lua_State              *L                                = marpaESLIFGrammarp->L;
+  marpaESLIFRecognizer_t *marpaESLIFRecognizerUnsharedTopp = marpaESLIFGrammarp->marpaESLIFRecognizerUnsharedTopp;
+
+  if ((L != NULL) && (marpaESLIFRecognizerUnsharedTopp == marpaESLIFRecognizerp)) {
+    /* Remove a marpaESLIFContextStack object */
+    LUA_PUSHNIL(marpaESLIFRecognizerp->marpaESLIFp, L);                                                      /* stack: nil */
+    LUA_SETGLOBAL(marpaESLIFRecognizerp->marpaESLIFp, L, "marpaESLIFContextStackp");                         /* stack: */
+
+    marpaESLIFGrammarp->marpaESLIFRecognizerUnsharedTopp = NULL;
+  }
+
+ err:
+  return;
+}
+
+/*****************************************************************************/
+static inline short _marpaESLIF_lua_value_precompileb(marpaESLIFValue_t *marpaESLIFValuep, char *luabytep, size_t luabytel, short stripb, int popi)
 /*****************************************************************************/
 {
   marpaESLIF_t *marpaESLIFp = marpaESLIFValuep->marpaESLIFp;
-  lua_State    *L           = _marpaESLIF_lua_value_newp(marpaESLIFValuep);
+  lua_State    *L;
   short         rcb;
 
+  L = _marpaESLIF_lua_value_newp(marpaESLIFValuep);
   if (MARPAESLIF_UNLIKELY(L == NULL)) {
-    MARPAESLIF_ERROR(marpaESLIFp, "Lua state is not set");
     errno = ENOSYS;
     goto err;
   }
@@ -814,11 +822,11 @@ static inline short marpaESLIFLua_lua_assertstack(lua_State *L, int extra)
   int rci;
 
   /* Make sure there are extra free stack slots in the stack */
-  if (luaunpanic_checkstack(&rci, L, extra)) {
+  if (MARPAESLIF_UNLIKELY(luaunpanic_checkstack(&rci, L, extra))) {
     marpaESLIFLua_luaL_error(L, "lua_checkstack failure");
     return 0;
   }
-  if (! rci) {
+  if (MARPAESLIF_UNLIKELY(! rci)) {
     marpaESLIFLua_luaL_errorf(L, "Cannot ensure there are at least %d free stack slots", extra);
   }
 
@@ -1308,13 +1316,13 @@ static short _marpaESLIF_lua_value_representationb(void *userDatavp, marpaESLIFV
   /* Internal function: we force userDatavp to be marpaESLIFValuep */
   marpaESLIFValue_t                *marpaESLIFValuep      = (marpaESLIFValue_t *) userDatavp;
   marpaESLIF_t                     *marpaESLIFp           = marpaESLIFValuep->marpaESLIFp;
-  lua_State                        *L                     = _marpaESLIF_lua_value_newp(marpaESLIFValuep);
+  lua_State                        *L;
   marpaESLIFLuaValueContext_t      *marpaESLIFLuaValueContextp;
   int                               typei;
   short                             rcb;
 
+  L = _marpaESLIF_lua_value_newp(marpaESLIFValuep);
   if (MARPAESLIF_UNLIKELY(L == NULL)) {
-    MARPAESLIF_ERROR(marpaESLIFp, "Lua state is not set");
     errno = ENOSYS;
     goto err;
   }
@@ -1359,12 +1367,12 @@ static short _marpaESLIF_lua_recognizer_eventactionb(void *userDatavp, marpaESLI
 {
   static const char                   *funcs       = "_marpaESLIF_lua_recognizer_eventactionb";
   marpaESLIF_t                        *marpaESLIFp = marpaESLIFRecognizerp->marpaESLIFp;
-  lua_State                           *L           = _marpaESLIF_lua_recognizer_newp(marpaESLIFRecognizerp);
+  lua_State                           *L;
   marpaESLIFRecognizerEventCallback_t  eventCallbackp;
   short                                rcb;
 
+  L = _marpaESLIF_lua_recognizer_newp(marpaESLIFRecognizerp);
   if (MARPAESLIF_UNLIKELY(L == NULL)) {
-    MARPAESLIF_ERROR(marpaESLIFp, "Lua state is not set");
     errno = ENOSYS;
     goto err;
   }
@@ -1393,7 +1401,7 @@ static short _marpaESLIF_lua_recognizer_eventactionb(void *userDatavp, marpaESLI
 }
 
 /*****************************************************************************/
-static marpaESLIFGrammar_t *_marpaESLIF_lua_grammarp(marpaESLIF_t *marpaESLIFp, char *starts)
+static inline marpaESLIFGrammar_t *_marpaESLIF_lua_grammarp(marpaESLIF_t *marpaESLIFp, char *starts)
 /*****************************************************************************/
 {
   static const char *luas =
@@ -1627,7 +1635,7 @@ static marpaESLIFGrammar_t *_marpaESLIF_lua_grammarp(marpaESLIF_t *marpaESLIFp, 
       + strlen(starts)
       + strlen(">\n");
     grammars = (char *) malloc(grammarl + 1);
-    if (grammars == NULL) {
+    if (MARPAESLIF_UNLIKELY(grammars == NULL)) {
       MARPAESLIF_ERRORF(marpaESLIFp, "malloc failure, %s", strerror(errno));
       goto err;
     }
@@ -1641,7 +1649,7 @@ static marpaESLIFGrammar_t *_marpaESLIF_lua_grammarp(marpaESLIF_t *marpaESLIFp, 
   marpaESLIFGrammarOption.encodings = "ASCII";
   marpaESLIFGrammarOption.encodingl = 5;
 
-  rcp = _marpaESLIFGrammar_newp(marpaESLIFp, &marpaESLIFGrammarOption, 0 /* startGrammarIsLexemeb */);
+  rcp = _marpaESLIFGrammar_newp(marpaESLIFp, &marpaESLIFGrammarOption, 0 /* startGrammarIsLexemeb */, marpaESLIFp->L);
   goto done;
 
  err:
@@ -1661,11 +1669,11 @@ static short _marpaESLIF_lua_value_action_functionb(void *userDatavp, marpaESLIF
   static const char *funcs       = "_marpaESLIF_lua_value_action_functionb";
   marpaESLIF_t      *marpaESLIFp = marpaESLIFValuep->marpaESLIFp;
   int                topi        = -1;
-  lua_State         *L           = _marpaESLIF_lua_value_newp(marpaESLIFValuep);
+  lua_State         *L;
   short              rcb;
 
+  L = _marpaESLIF_lua_value_newp(marpaESLIFValuep);
   if (MARPAESLIF_UNLIKELY(L == NULL)) {
-    MARPAESLIF_ERROR(marpaESLIFp, "Lua state is not set");
     errno = ENOSYS;
     goto err;
   }
@@ -1703,11 +1711,11 @@ static short _marpaESLIF_lua_value_symbol_functionb(void *userDatavp, marpaESLIF
   static const char *funcs       = "_marpaESLIF_lua_value_symbol_functionb";
   marpaESLIF_t      *marpaESLIFp = marpaESLIFValuep->marpaESLIFp;
   int                topi        = -1;
-  lua_State         *L           = _marpaESLIF_lua_value_newp(marpaESLIFValuep);
+  lua_State         *L;
   short              rcb;
 
+  L = _marpaESLIF_lua_value_newp(marpaESLIFValuep);
   if (MARPAESLIF_UNLIKELY(L == NULL)) {
-    MARPAESLIF_ERROR(marpaESLIFp, "Lua state is not set");
     errno = ENOSYS;
     goto err;
   }
@@ -1745,11 +1753,11 @@ static short _marpaESLIF_lua_recognizer_ifaction_functionb(void *userDatavp, mar
   static const char *funcs       = "_marpaESLIF_lua_recognizer_ifaction_functionb";
   marpaESLIF_t      *marpaESLIFp = marpaESLIFRecognizerp->marpaESLIFp;
   int                topi        = -1;
-  lua_State         *L           = _marpaESLIF_lua_recognizer_newp(marpaESLIFRecognizerp);
+  lua_State         *L;
   short              rcb;
 
+  L = _marpaESLIF_lua_recognizer_newp(marpaESLIFRecognizerp);
   if (MARPAESLIF_UNLIKELY(L == NULL)) {
-    MARPAESLIF_ERROR(marpaESLIFp, "Lua state is not set");
     errno = ENOSYS;
     goto err;
   }
@@ -1787,11 +1795,11 @@ static short _marpaESLIF_lua_recognizer_regexaction_functionb(void *userDatavp, 
   static const char *funcs       = "_marpaESLIF_lua_recognizer_regexaction_functionb";
   marpaESLIF_t      *marpaESLIFp = marpaESLIFRecognizerp->marpaESLIFp;
   int                topi        = -1;
-  lua_State         *L           = _marpaESLIF_lua_recognizer_newp(marpaESLIFRecognizerp);
+  lua_State         *L;
   short              rcb;
 
+  L = _marpaESLIF_lua_recognizer_newp(marpaESLIFRecognizerp);
   if (MARPAESLIF_UNLIKELY(L == NULL)) {
-    MARPAESLIF_ERROR(marpaESLIFp, "Lua state is not set");
     errno = ENOSYS;
     goto err;
   }
@@ -1829,11 +1837,11 @@ static short _marpaESLIF_lua_recognizer_generatoraction_functionb(void *userData
   static const char *funcs       = "_marpaESLIF_lua_recognizer_generatoraction_functionb";
   marpaESLIF_t      *marpaESLIFp = marpaESLIFRecognizerp->marpaESLIFp;
   int                topi        = -1;
-  lua_State         *L           = _marpaESLIF_lua_recognizer_newp(marpaESLIFRecognizerp);
+  lua_State         *L;
   short              rcb;
 
+  L = _marpaESLIF_lua_recognizer_newp(marpaESLIFRecognizerp);
   if (MARPAESLIF_UNLIKELY(L == NULL)) {
-    MARPAESLIF_ERROR(marpaESLIFp, "Lua state is not set");
     errno = ENOSYS;
     goto err;
   }
@@ -1871,11 +1879,11 @@ static short _marpaESLIF_lua_recognizer_eventaction_functionb(void *userDatavp, 
   static const char *funcs        = "_marpaESLIF_lua_recognizer_eventaction_functionb";
   marpaESLIF_t       *marpaESLIFp = marpaESLIFRecognizerp->marpaESLIFp;
   int                topi         = -1;
-  lua_State         *L            = _marpaESLIF_lua_recognizer_newp(marpaESLIFRecognizerp);
+  lua_State         *L;
   short              rcb;
 
+  L = _marpaESLIF_lua_recognizer_newp(marpaESLIFRecognizerp);
   if (MARPAESLIF_UNLIKELY(L == NULL)) {
-    MARPAESLIF_ERROR(marpaESLIFp, "Lua state is not set");
     errno = ENOSYS;
     goto err;
   }
@@ -1912,11 +1920,11 @@ static inline short _marpaESLIF_lua_value_function_loadb(marpaESLIFValue_t *marp
 {
   char         *actions     = marpaESLIFValuep->actionp->u.luaFunction.actions;
   marpaESLIF_t *marpaESLIFp = marpaESLIFValuep->marpaESLIFp;
-  lua_State    *L           = _marpaESLIF_lua_value_newp(marpaESLIFValuep);
+  lua_State    *L;
   short         rcb;
 
+  L = _marpaESLIF_lua_value_newp(marpaESLIFValuep);
   if (MARPAESLIF_UNLIKELY(L == NULL)) {
-    MARPAESLIF_ERROR(marpaESLIFp, "Lua state is not set");
     errno = ENOSYS;
     goto err;
   }
@@ -1959,11 +1967,11 @@ static inline short _marpaESLIF_lua_recognizer_function_loadb(marpaESLIFRecogniz
 {
   char         *actions     = marpaESLIFRecognizerp->actionp->u.luaFunction.actions;
   marpaESLIF_t *marpaESLIFp = marpaESLIFRecognizerp->marpaESLIFp;
-  lua_State    *L           = _marpaESLIF_lua_recognizer_newp(marpaESLIFRecognizerp);
+  lua_State    *L;
   short         rcb;
 
+  L = _marpaESLIF_lua_recognizer_newp(marpaESLIFRecognizerp);
   if (MARPAESLIF_UNLIKELY(L == NULL)) {
-    MARPAESLIF_ERROR(marpaESLIFp, "Lua state is not set");
     errno = ENOSYS;
     goto err;
   }
@@ -2005,11 +2013,11 @@ static inline short _marpaESLIF_lua_recognizer_function_precompileb(marpaESLIFRe
 /*****************************************************************************/
 {
   marpaESLIF_t *marpaESLIFp = marpaESLIFRecognizerp->marpaESLIFp;
-  lua_State    *L           = _marpaESLIF_lua_recognizer_newp(marpaESLIFRecognizerp);
+  lua_State    *L;
   short         rcb;
 
+  L = _marpaESLIF_lua_recognizer_newp(marpaESLIFRecognizerp);
   if (MARPAESLIF_UNLIKELY(L == NULL)) {
-    MARPAESLIF_ERROR(marpaESLIFp, "Lua state is not set");
     errno = ENOSYS;
     goto err;
   }
@@ -2035,7 +2043,7 @@ static inline short _marpaESLIF_lua_recognizer_function_precompileb(marpaESLIFRe
 }
 
 /*****************************************************************************/
-static short _marpaESLIF_lua_recognizer_push_contextb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIF_symbol_t *symbolp)
+static inline short _marpaESLIF_lua_recognizer_push_contextb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIF_symbol_t *symbolp)
 /*****************************************************************************/
 /* Note: by def, symbolp->callp is != NULL, symbolp->declp may be NULL,      */
 /* symbolp->parameterizedRhsLhsp is != NULL                                  */
@@ -2046,7 +2054,7 @@ static short _marpaESLIF_lua_recognizer_push_contextb(marpaESLIFRecognizer_t *ma
   genericLogger_t              *genericLoggerp       = NULL;
   char                         *parlistWithoutParens = NULL;
   int                           topi                 = -1;
-  lua_State                    *L                    = _marpaESLIF_lua_recognizer_newp(marpaESLIFRecognizerp);
+  lua_State                    *L;
 #ifndef MARPAESLIF_NTRACE
   int                           i;
   char                         *p;
@@ -2058,8 +2066,8 @@ static short _marpaESLIF_lua_recognizer_push_contextb(marpaESLIFRecognizer_t *ma
 
   marpaESLIF_stringGenerator.s = NULL;
 
+  L = _marpaESLIF_lua_recognizer_newp(marpaESLIFRecognizerp);
   if (MARPAESLIF_UNLIKELY(L == NULL)) {
-    MARPAESLIF_ERROR(marpaESLIFp, "Lua state is not set");
     errno = ENOSYS;
     goto err;
   }
@@ -2075,7 +2083,7 @@ static short _marpaESLIF_lua_recognizer_push_contextb(marpaESLIFRecognizer_t *ma
   if (symbolp->pushContextActionp == NULL) {
     /* We initialize the correct action content. */
     symbolp->pushContextActionp = (marpaESLIF_action_t *) malloc(sizeof(marpaESLIF_action_t));
-    if (symbolp->pushContextActionp == NULL) {
+    if (MARPAESLIF_UNLIKELY(symbolp->pushContextActionp == NULL)) {
       MARPAESLIF_ERRORF(marpaESLIFp, "malloc failure, %s", strerror(errno));
       goto err;
     }
@@ -2095,7 +2103,7 @@ static short _marpaESLIF_lua_recognizer_push_contextb(marpaESLIFRecognizer_t *ma
     marpaESLIF_stringGenerator.allocl      = 0;
 
     genericLoggerp = GENERICLOGGER_CUSTOM(_marpaESLIF_generateStringWithLoggerCallback, (void *) &marpaESLIF_stringGenerator, GENERICLOGGER_LOGLEVEL_TRACE);
-    if (genericLoggerp == NULL) {
+    if (MARPAESLIF_UNLIKELY(genericLoggerp == NULL)) {
       goto err;
     }
 
@@ -2107,7 +2115,7 @@ static short _marpaESLIF_lua_recognizer_push_contextb(marpaESLIFRecognizer_t *ma
     }
     if ((symbolp->declp != NULL) && (symbolp->declp->sizei > 0)) {
       parlistWithoutParens = strdup(symbolp->declp->luaparlists);
-      if (parlistWithoutParens == NULL) {
+      if (MARPAESLIF_UNLIKELY(parlistWithoutParens == NULL)) {
         MARPAESLIF_ERRORF(marpaESLIFp, "strdup failure, %s", strerror(errno));
         goto err;
       }
@@ -2208,21 +2216,21 @@ static short _marpaESLIF_lua_recognizer_push_contextb(marpaESLIFRecognizer_t *ma
 }
 
 /*****************************************************************************/
-static short _marpaESLIF_lua_recognizer_pop_contextb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp)
+static inline short _marpaESLIF_lua_recognizer_pop_contextb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp)
 /*****************************************************************************/
 {
   static const char *funcs       = "_marpaESLIF_lua_recognizer_pop_contextb";
   marpaESLIF_t      *marpaESLIFp = marpaESLIFRecognizerp->marpaESLIFp;
   int                topi        = -1;
-  lua_State         *L           = _marpaESLIF_lua_recognizer_newp(marpaESLIFRecognizerp);
+  lua_State         *L;
   const char        *pops        =
     "return function()\n"
     "  marpaESLIFContextStackp:pop()\n"
     "end\n";
   short              rcb;
 
+  L = _marpaESLIF_lua_recognizer_newp(marpaESLIFRecognizerp);
   if (MARPAESLIF_UNLIKELY(L == NULL)) {
-    MARPAESLIF_ERROR(marpaESLIFp, "Lua state is not set");
     errno = ENOSYS;
     goto err;
   }
@@ -2237,7 +2245,7 @@ static short _marpaESLIF_lua_recognizer_pop_contextb(marpaESLIFRecognizer_t *mar
   if (marpaESLIFRecognizerp->popContextActionp == NULL) {
     /* We initialize the correct action content. */
     marpaESLIFRecognizerp->popContextActionp = (marpaESLIF_action_t *) malloc(sizeof(marpaESLIF_action_t));
-    if (marpaESLIFRecognizerp->popContextActionp == NULL) {
+    if (MARPAESLIF_UNLIKELY(marpaESLIFRecognizerp->popContextActionp == NULL)) {
       MARPAESLIF_ERRORF(marpaESLIFp, "malloc failure, %s", strerror(errno));
       goto err;
     }
@@ -2285,21 +2293,21 @@ static short _marpaESLIF_lua_recognizer_pop_contextb(marpaESLIFRecognizer_t *mar
 }
 
 /*****************************************************************************/
-static short _marpaESLIF_lua_recognizer_get_contextp(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFValueResult_t *contextp)
+static inline short _marpaESLIF_lua_recognizer_get_contextp(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFValueResult_t *contextp)
 /*****************************************************************************/
 {
   static const char *funcs       = "_marpaESLIF_lua_recognizer_get_contextp";
   marpaESLIF_t      *marpaESLIFp = marpaESLIFRecognizerp->marpaESLIFp;
   int                topi        = -1;
-  lua_State         *L           = _marpaESLIF_lua_recognizer_newp(marpaESLIFRecognizerp);
+  lua_State         *L;
   const char        *gets        =
     "return function()\n"
     "  return marpaESLIFContextStackp:get()\n"
     "end\n";
   short              rcb;
 
+  L = _marpaESLIF_lua_recognizer_newp(marpaESLIFRecognizerp);
   if (MARPAESLIF_UNLIKELY(L == NULL)) {
-    MARPAESLIF_ERROR(marpaESLIFp, "Lua state is not set");
     errno = ENOSYS;
     goto err;
   }
@@ -2314,7 +2322,7 @@ static short _marpaESLIF_lua_recognizer_get_contextp(marpaESLIFRecognizer_t *mar
   if (marpaESLIFRecognizerp->getContextActionp == NULL) {
     /* We initialize the correct action content. */
     marpaESLIFRecognizerp->getContextActionp = (marpaESLIF_action_t *) malloc(sizeof(marpaESLIF_action_t));
-    if (marpaESLIFRecognizerp->getContextActionp == NULL) {
+    if (MARPAESLIF_UNLIKELY(marpaESLIFRecognizerp->getContextActionp == NULL)) {
       MARPAESLIF_ERRORF(marpaESLIFp, "malloc failure, %s", strerror(errno));
       goto err;
     }
@@ -2362,21 +2370,21 @@ static short _marpaESLIF_lua_recognizer_get_contextp(marpaESLIFRecognizer_t *mar
 }
 
 /*****************************************************************************/
-static short _marpaESLIF_lua_recognizer_set_contextb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFValueResult_t *contextp)
+static inline short _marpaESLIF_lua_recognizer_set_contextb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFValueResult_t *contextp)
 /*****************************************************************************/
 {
   static const char *funcs       = "_marpaESLIF_lua_recognizer_set_contextb";
   marpaESLIF_t      *marpaESLIFp = marpaESLIFRecognizerp->marpaESLIFp;
   int                topi        = -1;
-  lua_State         *L           = _marpaESLIF_lua_recognizer_newp(marpaESLIFRecognizerp);
+  lua_State         *L;
   const char        *sets        =
     "return function(context)\n"
     "  marpaESLIFContextStackp:set(context)\n"
     "end\n";
   short              rcb;
 
+  L = _marpaESLIF_lua_recognizer_newp(marpaESLIFRecognizerp);
   if (MARPAESLIF_UNLIKELY(L == NULL)) {
-    MARPAESLIF_ERROR(marpaESLIFp, "Lua state is not set");
     errno = ENOSYS;
     goto err;
   }
@@ -2391,7 +2399,7 @@ static short _marpaESLIF_lua_recognizer_set_contextb(marpaESLIFRecognizer_t *mar
   if (marpaESLIFRecognizerp->setContextActionp == NULL) {
     /* We initialize the correct action content. */
     marpaESLIFRecognizerp->setContextActionp = (marpaESLIF_action_t *) malloc(sizeof(marpaESLIF_action_t));
-    if (marpaESLIFRecognizerp->setContextActionp == NULL) {
+    if (MARPAESLIF_UNLIKELY(marpaESLIFRecognizerp->setContextActionp == NULL)) {
       MARPAESLIF_ERRORF(marpaESLIFp, "malloc failure, %s", strerror(errno));
       goto err;
     }

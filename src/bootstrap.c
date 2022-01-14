@@ -5189,7 +5189,7 @@ static short _marpaESLIF_bootstrap_G1_action_terminal_3b(void *userDatavp, marpa
     shallowb = 0;
   }
   /* Fake a recognizer. EOF flag will be set automatically in fake mode */
-  marpaESLIFGrammar.marpaESLIFp = marpaESLIFp;
+  MARPAESLIFGRAMMAR_FAKE(marpaESLIFGrammar, marpaESLIFp, NULL /* grammarp */, NULL /* L */);
   marpaESLIFRecognizerp = __marpaESLIFRecognizer_newp(&marpaESLIFGrammar,
                                                       NULL, /* marpaESLIFRecognizerOptionp */
                                                       0, /* discardb - no effect anway because we are in fake mode */
@@ -7848,7 +7848,7 @@ static inline marpaESLIF_bootstrap_utf_string_t *_marpaESLIF_bootstrap_regex_to_
   /* ... Since we are internal anyway I choose (what I think is) the costless method: the regexp */
 
   /* Fake a recognizer. EOF flag will be set automatically in fake mode */
-  marpaESLIFGrammar.marpaESLIFp = marpaESLIFp;
+  MARPAESLIFGRAMMAR_FAKE(marpaESLIFGrammar, marpaESLIFp, NULL /* grammarp */, NULL /* L */);
   marpaESLIFRecognizerp = __marpaESLIFRecognizer_newp(&marpaESLIFGrammar,
                                                       NULL, /* marpaESLIFRecognizerOptionp */
                                                       0, /* discardb - no effect anway because we are in fake mode */
@@ -7993,7 +7993,7 @@ static inline marpaESLIF_bootstrap_utf_string_t *_marpaESLIF_bootstrap_character
   /* ... Since we are internal anyway I choose (what I think is) the costless method: the regexp */
 
   /* Fake a recognizer. EOF flag will be set automatically in fake mode */
-  marpaESLIFGrammar.marpaESLIFp = marpaESLIFp;
+  MARPAESLIFGRAMMAR_FAKE(marpaESLIFGrammar, marpaESLIFp, NULL /* grammarp */, NULL /* L */);
   marpaESLIFRecognizerp = __marpaESLIFRecognizer_newp(&marpaESLIFGrammar,
                                                       NULL, /* marpaESLIFRecognizerOptionp */
                                                       0, /* discardb */
