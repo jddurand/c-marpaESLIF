@@ -511,7 +511,7 @@ static inline short marpaESLIFLua_luaL_loadbuffer(int *rcp, lua_State *L, const 
     if ((integerp != NULL) && (integerl > 0)) {                         \
       for (_iteratorl = 0; _iteratorl < integerl; _iteratorl++) {       \
         if (! marpaESLIFLua_lua_pushinteger(L, (lua_Integer) integerp[_iteratorl])) goto err; \
-        if (! marpaESLIFLua_lua_seti(L, -2, (lua_Integer) _iteratorl)) goto err; \
+        if (! marpaESLIFLua_lua_rawseti(L, -2, (lua_Integer) _iteratorl)) goto err; \
       }                                                                 \
     }                                                                   \
   } while (0)
@@ -523,7 +523,7 @@ static inline short marpaESLIFLua_luaL_loadbuffer(int *rcp, lua_State *L, const 
     if ((booleanp != NULL) && (booleanl > 0)) {                         \
       for (_iteratorl = 0; _iteratorl < booleanl; _iteratorl++) {       \
         if (! marpaESLIFLua_lua_pushboolean(L, (int) booleanp[_iteratorl])) goto err; \
-        if (! marpaESLIFLua_lua_seti(L, -2, (lua_Integer) _iteratorl)) goto err; \
+        if (! marpaESLIFLua_lua_rawseti(L, -2, (lua_Integer) _iteratorl)) goto err; \
       }                                                                 \
     }                                                                   \
   } while (0)
@@ -535,7 +535,7 @@ static inline short marpaESLIFLua_luaL_loadbuffer(int *rcp, lua_State *L, const 
     if ((stringp != NULL) && (stringl > 0)) {                           \
       for (_iteratorl = 0; _iteratorl < stringl; _iteratorl++) {        \
         if (! marpaESLIFLua_lua_pushstring(NULL, L, stringp[_iteratorl])) goto err; \
-        if (! marpaESLIFLua_lua_seti(L, -2, (lua_Integer) _iteratorl)) goto err; \
+        if (! marpaESLIFLua_lua_rawseti(L, -2, (lua_Integer) _iteratorl)) goto err; \
       }                                                                 \
     }                                                                   \
   } while (0)
@@ -4331,7 +4331,7 @@ static short marpaESLIFLua_eventCallbackb(void *userDatavp, marpaESLIFRecognizer
                               MARPAESLIFLUA_STORE_INTEGER(L, "type", eventArrayp[i].type);          /* Stack: function, {}, {"type" => type} */
                               MARPAESLIFLUA_STORE_ASCIISTRING(L, "symbol", eventArrayp[i].symbols); /* Stack: function, {}, {"type" => type, "symbol" => symbol} */
                               MARPAESLIFLUA_STORE_ASCIISTRING(L, "event", eventArrayp[i].events);   /* Stack: function, {}, {"type" => type, "symbol" => symbol, "event" => event} */
-                              if (! marpaESLIFLua_lua_seti(L, -2, (lua_Integer) (i + 1))) goto err; /* Stack: function, {i => {"type" => type, "symbol" => symbol, "event" => event}} */
+                              if (! marpaESLIFLua_lua_rawseti(L, -2, (lua_Integer) (i + 1))) goto err; /* Stack: function, {i => {"type" => type, "symbol" => symbol, "event" => event}} */
                             }
                           },
                           &tmpi
@@ -4563,7 +4563,7 @@ static short marpaESLIFLua_importb(lua_State *L, marpaESLIFValueResult_t *marpaE
     if (marpaESLIFValueResultp->u.r.sizel > 0) {
       for (i = marpaESLIFValueResultp->u.r.sizel; i > 0 ; i--) {
         if (! marpaESLIFLua_lua_insert(L, -2)) goto err;                                                                      /* Stack: val1, ..., table, valn */
-        if (! marpaESLIFLua_lua_seti(L, -2, (int) i)) goto err;                                                               /* Stack: val1, ..., table */
+        if (! marpaESLIFLua_lua_rawseti(L, -2, (int) i)) goto err;                                                            /* Stack: val1, ..., table */
       }
     }
     break;
@@ -5594,7 +5594,7 @@ static int marpaESLIFLua_marpaESLIFRecognizer_eventsi(lua_State *L)
     MARPAESLIFLUA_STORE_INTEGER(L, "type", eventArrayp[i].type);          /* Stack: {}, {"type" => type} */
     MARPAESLIFLUA_STORE_ASCIISTRING(L, "symbol", eventArrayp[i].symbols); /* Stack: {}, {"type" => type, "symbol" => symbol} */
     MARPAESLIFLUA_STORE_ASCIISTRING(L, "event", eventArrayp[i].events);   /* Stack: {}, {"type" => type, "symbol" => symbol, "event" => event} */
-    if (! marpaESLIFLua_lua_seti(L, -2, (lua_Integer) i)) goto err;       /* Stack: {i => {"type" => type, "symbol" => symbol, "event" => event}} */
+    if (! marpaESLIFLua_lua_rawseti(L, -2, (lua_Integer) i)) goto err;    /* Stack: {i => {"type" => type, "symbol" => symbol, "event" => event}} */
   }
 
   rci = 1;
@@ -5678,7 +5678,7 @@ static int marpaESLIFLua_marpaESLIFRecognizer_progressi(lua_State *L)
     MARPAESLIFLUA_STORE_INTEGER(L, "earleySetOrigId", progressp[i].earleySetOrigIdi);
     MARPAESLIFLUA_STORE_INTEGER(L, "rule", progressp[i].rulei);
     MARPAESLIFLUA_STORE_INTEGER(L, "position", progressp[i].positioni);
-    if (! marpaESLIFLua_lua_seti(L, -2, (lua_Integer) i)) goto err;           /* Stack: {i => {"type" => type, and so on }} */
+    if (! marpaESLIFLua_lua_rawseti(L, -2, (lua_Integer) i)) goto err;        /* Stack: {i => {"type" => type, and so on }} */
   }
 
   rci = 1;
