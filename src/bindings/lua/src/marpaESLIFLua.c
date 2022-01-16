@@ -409,6 +409,10 @@ static inline short marpaESLIFLua_lua_gettable(int *rcip, lua_State *L, int idx)
 static inline short marpaESLIFLua_lua_isinteger(int *rcip, lua_State *L, int idx);
 static inline short marpaESLIFLua_luaL_checkudata(void **rcpp, lua_State *L, int ud, const char *tname);
 static inline short marpaESLIFLua_lua_newthread(lua_State **Lp, lua_State *L);
+static inline short marpaESLIFLua_luaL_checkversion(lua_State *L);
+static inline short marpaESLIFLua_luaL_openlibs(lua_State *L);
+static inline short marpaESLIFLua_lua_dump(int *rcip, lua_State *L, lua_Writer writer, void *data, int strip);
+static inline short marpaESLIFLua_luaL_loadbuffer(int *rcp, lua_State *L, const char *buff, size_t sz, const char *name);
 
 /* Grrr lua defines that with a macro */
 #ifndef marpaESLIFLua_luaL_newlib
@@ -2586,7 +2590,8 @@ static int marpaESLIFLua_marpaESLIFGrammar_newFromUnmanagedi(lua_State *L, marpa
     goto err;
   }
 
-  marpaESLIFp = marpaESLIFGrammar_eslifp(marpaESLIFGrammarUnmanagedp);
+  /* We are embedded: we have access to the ESLIF structures */
+  marpaESLIFp = marpaESLIFGrammarUnmanagedp->marpaESLIFp;
   if (! marpaESLIFLua_grammarContextInitb(L, marpaESLIFp, 0 /* eslifStacki */, marpaESLIFLuaGrammarContextp, 1 /* unmanagedb */)) goto err;
   marpaESLIFLuaGrammarContextp->marpaESLIFGrammarp = marpaESLIFGrammarUnmanagedp;
   marpaESLIFLuaGrammarContextp->managedb           = 0;
@@ -4939,7 +4944,8 @@ static int marpaESLIFLua_marpaESLIFRecognizer_newFromUnmanagedi(lua_State *L, ma
     goto err;
   }
 
-  marpaESLIFp = marpaESLIFGrammar_eslifp(marpaESLIFRecognizer_grammarp(marpaESLIFRecognizerUnmanagedp));
+  /* We are embedded: we have access to the ESLIF structures */
+  marpaESLIFp = marpaESLIFRecognizerUnmanagedp->marpaESLIFp;
   if (! marpaESLIFLua_recognizerContextInitb(L, marpaESLIFp, 0 /* grammarStacki */, 0 /* recognizerInterfaceStacki */, 0 /* recognizerOrigStacki */, marpaESLIFLuaRecognizerContextp, 1 /* unmanagedb */)) goto err;
   marpaESLIFLuaRecognizerContextp->marpaESLIFRecognizerp = marpaESLIFRecognizerUnmanagedp;
   marpaESLIFLuaRecognizerContextp->managedb              = 0;
@@ -4963,7 +4969,7 @@ static int marpaESLIFLua_marpaESLIFRecognizer_shallowi(lua_State *L, int recogni
 /* a recognizer, to be used in recognizer interface callback.               */
 /****************************************************************************/
 {
-  static const char                *funcs = "marpaESLIFLua_shallowi_newFromUnmanagedi";
+  static const char                *funcs = "marpaESLIFLua_marpaESLIFRecognizer_shallowi";
   marpaESLIFLuaRecognizerContext_t *marpaESLIFLuaRecognizerContextp;
   marpaESLIF_t                     *marpaESLIFp;
   int                               recognizerInterfaceStacki;
@@ -7294,7 +7300,8 @@ static int marpaESLIFLua_marpaESLIFValue_newFromUnmanagedi(lua_State *L, marpaES
     goto err;
   }
 
-  marpaESLIFp = marpaESLIFGrammar_eslifp(marpaESLIFRecognizer_grammarp(marpaESLIFValue_recognizerp(marpaESLIFValueUnmanagedp)));
+  /* We are embedded: we have access to the ESLIF structures */
+  marpaESLIFp = marpaESLIFValueUnmanagedp->marpaESLIFp;
   if (! marpaESLIFLua_valueContextInitb(L, marpaESLIFp, 0 /* grammarStacki */, 0 /* recognizerStacki */, 0 /* valueInterfaceStacki */, marpaESLIFLuaValueContextp, 1 /* unmanagedb */, 1 /* grammarStackiCanBeZerob */)) goto err;
   marpaESLIFLuaValueContextp->marpaESLIFValuep = marpaESLIFValueUnmanagedp;
   marpaESLIFLuaValueContextp->managedb           = 0;
@@ -8499,6 +8506,70 @@ static inline short marpaESLIFLua_lua_newthread(lua_State **Lp, lua_State *L)
   return rcb;
 }
 
+/****************************************************************************/
+static inline short marpaESLIFLua_luaL_checkversion(lua_State *L)
+/****************************************************************************/
+{
+  luaL_checkversion(L);
+  return 1;
+}
+
+/****************************************************************************/
+static inline short marpaESLIFLua_luaL_openlibs(lua_State *L)
+/****************************************************************************/
+{
+  luaL_openlibs(L);
+  return 1;
+}
+
+/****************************************************************************/
+static inline short marpaESLIFLua_lua_dump(int *rcip, lua_State *L, lua_Writer writer, void *data, int strip)
+/****************************************************************************/
+{
+  int   rci;
+  short rcb;
+
+  if (! marpaESLIFLua_lua_assertstack(L, 1 /* extra */)) goto err;
+
+  rci = lua_dump(L, writer, data, strip);
+  if (rcip != NULL) {
+    *rcip = rci;
+  }
+
+  rcb = 1;
+  goto done;
+
+ err:
+  rcb = 0;
+
+ done:
+  return rcb;
+}
+
+/****************************************************************************/
+static inline short marpaESLIFLua_luaL_loadbuffer(int *rcip, lua_State *L, const char *buff, size_t sz, const char *name)
+/****************************************************************************/
+{
+  int   rci;
+  short rcb;
+
+  if (! marpaESLIFLua_lua_assertstack(L, 1 /* extra */)) goto err;
+
+  rci = luaL_loadbuffer(L, buff, sz, name);
+  if (rcip != NULL) {
+    *rcip = rci;
+  }
+
+  rcb = 1;
+  goto done;
+
+ err:
+  rcb = 0;
+
+ done:
+  return rcb;
+}
+
 #endif /* MARPAESLIFLUA_EMBEDDED */
 
 /****************************************************************************/
@@ -9571,7 +9642,8 @@ static int marpaESLIFLua_marpaESLIFJSONEncoder_newFromUnmanagedi(lua_State *L, m
     goto err;
   }
 
-  marpaESLIFp = marpaESLIFGrammar_eslifp(marpaESLIFGrammarUnmanagedp);
+  /* We are in embedded code, this mean that we have access to marpaESLIFValue structure */
+  marpaESLIFp = marpaESLIFGrammarUnmanagedp->marpaESLIFp;
   if (! marpaESLIFLua_grammarContextInitb(L, marpaESLIFp, 0 /* eslifStacki */, marpaESLIFLuaJSONEncoderContextp, 1 /* unmanagedb */)) goto err;
   marpaESLIFLuaJSONEncoderContextp->marpaESLIFGrammarp = marpaESLIFGrammarUnmanagedp;
   marpaESLIFLuaJSONEncoderContextp->managedb           = 0;
@@ -9726,7 +9798,8 @@ static int marpaESLIFLua_marpaESLIFJSONDecoder_newFromUnmanagedi(lua_State *L, m
     goto err;
   }
 
-  marpaESLIFp = marpaESLIFGrammar_eslifp(marpaESLIFGrammarUnmanagedp);
+  /* We are in embedded code, this mean that we have access to marpaESLIFValue structure */
+  marpaESLIFp = marpaESLIFGrammarUnmanagedp->marpaESLIFp;
   if (! marpaESLIFLua_grammarContextInitb(L, marpaESLIFp, 0 /* eslifStacki */, marpaESLIFLuaJSONDecoderContextp, 1 /* unmanagedb */)) goto err;
   marpaESLIFLuaJSONDecoderContextp->marpaESLIFGrammarp = marpaESLIFGrammarUnmanagedp;
   marpaESLIFLuaJSONDecoderContextp->managedb           = 0;

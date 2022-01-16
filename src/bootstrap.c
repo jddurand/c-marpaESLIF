@@ -5156,7 +5156,6 @@ static short _marpaESLIF_bootstrap_G1_action_terminal_3b(void *userDatavp, marpa
   size_t                            bytel;
   short                             shallowb              = 0;
   char                             *tmps;
-  marpaESLIFGrammar_t               marpaESLIFGrammar; /* Fake grammar for the same reason */
   marpaESLIFValueResult_t           marpaESLIFValueResult;
   size_t                            sizel;
   marpaESLIF_matcher_value_t        rci;
@@ -5189,8 +5188,8 @@ static short _marpaESLIF_bootstrap_G1_action_terminal_3b(void *userDatavp, marpa
     shallowb = 0;
   }
   /* Fake a recognizer. EOF flag will be set automatically in fake mode */
-  MARPAESLIFGRAMMAR_FAKE(marpaESLIFGrammar, marpaESLIFp, NULL /* grammarp */, NULL /* L */);
-  marpaESLIFRecognizerp = __marpaESLIFRecognizer_newp(&marpaESLIFGrammar,
+  marpaESLIFRecognizerp = __marpaESLIFRecognizer_newp(marpaESLIFp,
+                                                      NULL, /* grammarp */
                                                       NULL, /* marpaESLIFRecognizerOptionp */
                                                       0, /* discardb - no effect anway because we are in fake mode */
                                                       1, /* noEventb - no effect anway because we are in fake mode */
@@ -7829,7 +7828,6 @@ static inline marpaESLIF_bootstrap_utf_string_t *_marpaESLIF_bootstrap_regex_to_
   void                              *newbytep              = NULL;
   marpaESLIFRecognizer_t            *marpaESLIFRecognizerp = NULL; /* Fake recognizer to use the internal regex */
   size_t                             newbytel;
-  marpaESLIFGrammar_t                marpaESLIFGrammar; /* Fake grammar for the same reason */
   marpaESLIFValueResult_t            marpaESLIFValueResult;
   size_t                             sizel;
   marpaESLIF_matcher_value_t         rci;
@@ -7848,8 +7846,8 @@ static inline marpaESLIF_bootstrap_utf_string_t *_marpaESLIF_bootstrap_regex_to_
   /* ... Since we are internal anyway I choose (what I think is) the costless method: the regexp */
 
   /* Fake a recognizer. EOF flag will be set automatically in fake mode */
-  MARPAESLIFGRAMMAR_FAKE(marpaESLIFGrammar, marpaESLIFp, NULL /* grammarp */, NULL /* L */);
-  marpaESLIFRecognizerp = __marpaESLIFRecognizer_newp(&marpaESLIFGrammar,
+  marpaESLIFRecognizerp = __marpaESLIFRecognizer_newp(marpaESLIFp,
+                                                      NULL, /* grammarp */
                                                       NULL, /* marpaESLIFRecognizerOptionp */
                                                       0, /* discardb - no effect anway because we are in fake mode */
                                                       1, /* noEventb - no effect anway because we are in fake mode */
@@ -7962,7 +7960,6 @@ static inline marpaESLIF_bootstrap_utf_string_t *_marpaESLIF_bootstrap_character
   marpaESLIFRecognizer_t            *marpaESLIFRecognizerp = NULL; /* Fake recognizer to use the internal regex */
   void                              *dupp                  = NULL;
   size_t                             dupl;
-  marpaESLIFGrammar_t                marpaESLIFGrammar; /* Fake grammar for the same reason */
   marpaESLIFValueResult_t            marpaESLIFValueResult;
   size_t                             sizel;
   marpaESLIF_matcher_value_t         rci;
@@ -7993,8 +7990,8 @@ static inline marpaESLIF_bootstrap_utf_string_t *_marpaESLIF_bootstrap_character
   /* ... Since we are internal anyway I choose (what I think is) the costless method: the regexp */
 
   /* Fake a recognizer. EOF flag will be set automatically in fake mode */
-  MARPAESLIFGRAMMAR_FAKE(marpaESLIFGrammar, marpaESLIFp, NULL /* grammarp */, NULL /* L */);
-  marpaESLIFRecognizerp = __marpaESLIFRecognizer_newp(&marpaESLIFGrammar,
+  marpaESLIFRecognizerp = __marpaESLIFRecognizer_newp(marpaESLIFp,
+                                                      NULL, /* grammarp */
                                                       NULL, /* marpaESLIFRecognizerOptionp */
                                                       0, /* discardb */
                                                       1, /* noEventb - no effect anway because we are in fake mode */

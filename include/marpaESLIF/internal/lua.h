@@ -9,7 +9,6 @@ static char _MARPAESLIF_EMBEDDED_CONTEXT_LUA;
 
 static inline lua_State    *_marpaESLIF_lua_newp(marpaESLIF_t *marpaESLIFp);
 static inline void          _marpaESLIF_lua_freev(marpaESLIF_t *marpaESLIFp);
-static inline lua_State    *_marpaESLIF_lua_grammar_newp(marpaESLIFGrammar_t *marpaESLIFGrammarp);
 static inline void          _marpaESLIF_lua_grammar_freev(marpaESLIFGrammar_t *marpaESLIFGrammarp);
 static inline short         _marpaESLIF_lua_grammar_precompileb(marpaESLIFGrammar_t *marpaESLIFGrammarp);
 static inline short         _marpaESLIF_lua_value_precompileb(marpaESLIFValue_t *marpaESLIFValuep, char *luabytep, size_t luabytel, short stripb, int popi);
