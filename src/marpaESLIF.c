@@ -158,13 +158,20 @@ static inline int _marpaESLIF_signbit_d(double x)
 #endif
 
 /* Internal marpaESLIFValueResult used to do lazy row transformation: we use an INVALID type */
-/* that only marpaESLIF can set because its contextp is NULL, and fill its u.p.p with the */
-/* marpaESLIFValueResultp that got lazy */
-#define MARPAESLIF_VALUE_TYPE_LAZY -1
-static marpaESLIFValueResult_t marpaESLIFValueResultLazy = {
+/* that only marpaESLIF can set because its contextp is NULL.                                */
+/* We distinguish containers that have UNDEF or not.                                         */
+#define MARPAESLIF_VALUE_TYPE_LAZY_NOUNDEF -1
+static marpaESLIFValueResult_t marpaESLIFValueResultLazyNoUndef = {
   NULL,                      /* contextp */
   NULL,                      /* representationp */
-  MARPAESLIF_VALUE_TYPE_LAZY /* type */
+  MARPAESLIF_VALUE_TYPE_LAZY_NOUNDEF /* type */
+};
+
+#define MARPAESLIF_VALUE_TYPE_LAZY_WITHUNDEF -2
+static marpaESLIFValueResult_t marpaESLIFValueResultLazyWithUndef = {
+  NULL,                      /* contextp */
+  NULL,                      /* representationp */
+  MARPAESLIF_VALUE_TYPE_LAZY_WITHUNDEF /* type */
 };
 
 /* -------------------------------------------------------------------------------------------- */
@@ -626,7 +633,7 @@ typedef struct marpaESLIF_pcre2_callout_enumerate_context {
 } marpaESLIF_pcre2_callout_enumerate_context_t;
 
 /* Generic importer signature */
-typedef short (*marpaESLIFGenericImport_t)(void *namespacep, void *userDatavp, marpaESLIFValueResult_t *marpaESLIFValueResultp);
+typedef short (*marpaESLIFGenericImport_t)(void *namespacep, void *userDatavp, marpaESLIFValueResult_t *marpaESLIFValueResultp, short haveUndefb);
 
 static const char *MARPAESLIF_EMPTY_STRING = "";
 static const char *MARPAESLIF_UTF8_STRING = "UTF-8";
@@ -930,7 +937,7 @@ static inline marpaESLIF_symbol_t   *_marpaESLIFSymbol_regex_newp(marpaESLIF_t *
 static inline short                  _marpaESLIFSymbol_tryb(marpaESLIFSymbol_t *marpaESLIFSymbolp, char *inputs, size_t inputl, short *matchbp);
 static inline short                  _marpaESLIFRecognizer_symbol_tryb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFSymbol_t *marpaESLIFSymbolp, short *matchbp);
 static inline short                 __marpaESLIFRecognizer_symbol_tryb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFSymbol_t *marpaESLIFSymbolp, short *matchbp, short recognizerImportb);
-static        short                  _marpaESLIFRecognizerSymbolProxyImportb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, void *userDatavp, marpaESLIFValueResult_t *marpaESLIFValueResultp);
+static        short                  _marpaESLIFRecognizerSymbolProxyImportb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, void *userDatavp, marpaESLIFValueResult_t *marpaESLIFValueResultp, short haveUndefb);
 
 /*****************************************************************************/
 static inline marpaESLIF_string_t *_marpaESLIF_string_newp(marpaESLIF_t *marpaESLIFp, char *encodingasciis, char *bytep, size_t bytel)
@@ -15943,10 +15950,11 @@ static inline short _marpaESLIFRecognizer_expectedTerminalsb(marpaESLIFRecognize
 static inline short _marpaESLIF_eslif2hostb(marpaESLIF_t *marpaESLIFp, void *namespacep, marpaESLIFValueResult_t *marpaESLIFValueResultp, void *userDatavp, marpaESLIFGenericImport_t importerp)
 /*****************************************************************************/
 {
-  static const char                *funcs                 = "_marpaESLIF_eslif2hostb";
+  static const char                *funcs                       = "_marpaESLIF_eslif2hostb";
   genericStack_t                    marpaESLIFValueResultStack;
   genericStack_t                   *marpaESLIFValueResultStackp = &(marpaESLIFValueResultStack);
-  short                             resolvedDoneb         = 0;
+  short                             haveUndefb;
+  int                               lazyIndicei;
   short                             rcb;
   size_t                            i;
   marpaESLIFValueResult_t           *marpaESLIFValueResultWorkp;
@@ -15976,7 +15984,9 @@ static inline short _marpaESLIF_eslif2hostb(marpaESLIF_t *marpaESLIFp, void *nam
 
   while (GENERICSTACK_USED(marpaESLIFValueResultStackp) > 0) {
     marpaESLIFValueResultWorkp = (marpaESLIFValueResult_t *) GENERICSTACK_POP_PTR(marpaESLIFValueResultStackp);
-    if (marpaESLIFValueResultWorkp->type == MARPAESLIF_VALUE_TYPE_LAZY) {
+    switch (marpaESLIFValueResultWorkp->type) {
+    case MARPAESLIF_VALUE_TYPE_LAZY_NOUNDEF:
+      haveUndefb = 0;
       /* Next item is a marpaESLIFValueResult that got lazy'ed */
       if (MARPAESLIF_UNLIKELY(GENERICSTACK_USED(marpaESLIFValueResultStackp) <= 0)) {
         MARPAESLIF_ERROR(marpaESLIFp, "Internal error: lazy marker but nothing else in the work stack");
@@ -15985,16 +15995,29 @@ static inline short _marpaESLIF_eslif2hostb(marpaESLIF_t *marpaESLIFp, void *nam
       }
       marpaESLIFValueResultWorkp = (marpaESLIFValueResult_t *) GENERICSTACK_POP_PTR(marpaESLIFValueResultStackp);
       lazyb = 1;
-    } else {
+      break;
+    case MARPAESLIF_VALUE_TYPE_LAZY_WITHUNDEF:
+      haveUndefb = 1;
+      /* Next item is a marpaESLIFValueResult that got lazy'ed */
+      if (MARPAESLIF_UNLIKELY(GENERICSTACK_USED(marpaESLIFValueResultStackp) <= 0)) {
+        MARPAESLIF_ERROR(marpaESLIFp, "Internal error: lazy marker but nothing else in the work stack");
+        errno = ENOENT;
+        goto err;
+      }
+      marpaESLIFValueResultWorkp = (marpaESLIFValueResult_t *) GENERICSTACK_POP_PTR(marpaESLIFValueResultStackp);
+      lazyb = 1;
+      break;
+    default:
       lazyb = 0;
-    }
-
-    if (! resolvedDoneb) {
-      resolvedDoneb = 1;
+      break;
     }
 
     switch (marpaESLIFValueResultWorkp->type) {
     case MARPAESLIF_VALUE_TYPE_UNDEF:
+      if (MARPAESLIF_UNLIKELY(! importerp(namespacep, userDatavp, marpaESLIFValueResultWorkp, 1 /* haveUndefb */))) {
+        goto err;
+      }
+      break;
     case MARPAESLIF_VALUE_TYPE_CHAR:
     case MARPAESLIF_VALUE_TYPE_SHORT:
     case MARPAESLIF_VALUE_TYPE_INT:
@@ -16009,13 +16032,14 @@ static inline short _marpaESLIF_eslif2hostb(marpaESLIF_t *marpaESLIFp, void *nam
     case MARPAESLIF_VALUE_TYPE_LONG_LONG:
 #endif
     case MARPAESLIF_VALUE_TYPE_ARRAY:
-      if (MARPAESLIF_UNLIKELY(! importerp(namespacep, userDatavp, marpaESLIFValueResultWorkp))) {
+      if (MARPAESLIF_UNLIKELY(! importerp(namespacep, userDatavp, marpaESLIFValueResultWorkp, 0 /* haveUndefb */))) {
         goto err;
       }
       break;
     case MARPAESLIF_VALUE_TYPE_ROW:
       if (lazyb) {
-        if (MARPAESLIF_UNLIKELY(! importerp(namespacep, userDatavp, marpaESLIFValueResultWorkp))) {
+        /* haveUndefb was set when testing previous marpaESLIFValueResultWorkp->type */
+        if (MARPAESLIF_UNLIKELY(! importerp(namespacep, userDatavp, marpaESLIFValueResultWorkp, haveUndefb))) {
           goto err;
         }
       } else {
@@ -16025,17 +16049,28 @@ static inline short _marpaESLIF_eslif2hostb(marpaESLIF_t *marpaESLIFp, void *nam
           MARPAESLIF_ERRORF(marpaESLIFp, "marpaESLIFValueResultStackp push failure, %s", strerror(errno));
           goto err;
         }
-        /* Push lazy marker */
-        GENERICSTACK_PUSH_PTR(marpaESLIFValueResultStackp, &marpaESLIFValueResultLazy);
+
+        /* We assume that most common case: there is no undef */
+        haveUndefb = 0;
+        GENERICSTACK_PUSH_PTR(marpaESLIFValueResultStackp, &marpaESLIFValueResultLazyNoUndef);
         if (MARPAESLIF_UNLIKELY(GENERICSTACK_ERROR(marpaESLIFValueResultStackp))) {
           MARPAESLIF_ERRORF(marpaESLIFp, "marpaESLIFValueResultStackp push failure, %s", strerror(errno));
           goto err;
         }
+
+        /* But if are wrong, remember the lazy indice to change that */
+        lazyIndicei = GENERICSTACK_USED(marpaESLIFValueResultStackp) - 1;
+
         /* Push inner elements in reverse order i.e. 3, 2, 1 so that inner elements are imported in order, i.e. 1, 2, 3 */
         if ((sizel = marpaESLIFValueResultWorkp->u.r.sizel) > 0) {
           for (i = 0, marpaESLIFValueResultTmpp = &(marpaESLIFValueResultWorkp->u.r.p[sizel - 1]);
                i < sizel;
                i++, marpaESLIFValueResultTmpp--) {
+            if (! haveUndefb) {
+              if (marpaESLIFValueResultTmpp->type == MARPAESLIF_VALUE_TYPE_UNDEF) {
+                haveUndefb = 1;
+              }
+            }
             GENERICSTACK_PUSH_PTR(marpaESLIFValueResultStackp, marpaESLIFValueResultTmpp);
             if (MARPAESLIF_UNLIKELY(GENERICSTACK_ERROR(marpaESLIFValueResultStackp))) {
               MARPAESLIF_ERRORF(marpaESLIFp, "marpaESLIFValueResultStackp push failure, %s", strerror(errno));
@@ -16043,11 +16078,21 @@ static inline short _marpaESLIF_eslif2hostb(marpaESLIF_t *marpaESLIFp, void *nam
             }
           }
         }
+
+        /* Finally, there is an undef value in the ROW */
+        if (haveUndefb) {
+          GENERICSTACK_SET_PTR(marpaESLIFValueResultStackp, &marpaESLIFValueResultLazyWithUndef, lazyIndicei);
+          if (MARPAESLIF_UNLIKELY(GENERICSTACK_ERROR(marpaESLIFValueResultStackp))) {
+            MARPAESLIF_ERRORF(marpaESLIFp, "marpaESLIFValueResultStackp set failure, %s", strerror(errno));
+            goto err;
+          }
+        }
       }
       break;
     case MARPAESLIF_VALUE_TYPE_TABLE:
       if (lazyb) {
-        if (MARPAESLIF_UNLIKELY(! importerp(namespacep, userDatavp, marpaESLIFValueResultWorkp))) {
+        /* haveUndefb was set when testing previous marpaESLIFValueResultWorkp->type */
+        if (MARPAESLIF_UNLIKELY(! importerp(namespacep, userDatavp, marpaESLIFValueResultWorkp, haveUndefb))) {
           goto err;
         }
       } else {
@@ -16057,28 +16102,53 @@ static inline short _marpaESLIF_eslif2hostb(marpaESLIF_t *marpaESLIFp, void *nam
           MARPAESLIF_ERRORF(marpaESLIFp, "marpaESLIFValueResultStackp push failure, %s", strerror(errno));
           goto err;
         }
-        /* Push lazy marker */
-        GENERICSTACK_PUSH_PTR(marpaESLIFValueResultStackp, &marpaESLIFValueResultLazy);
+
+        /* We assume that most common case: there is no undef */
+        haveUndefb = 0;
+        GENERICSTACK_PUSH_PTR(marpaESLIFValueResultStackp, &marpaESLIFValueResultLazyNoUndef);
         if (MARPAESLIF_UNLIKELY(GENERICSTACK_ERROR(marpaESLIFValueResultStackp))) {
           MARPAESLIF_ERRORF(marpaESLIFp, "marpaESLIFValueResultStackp push failure, %s", strerror(errno));
           goto err;
         }
+
+        /* But if are wrong, remember the lazy indice to change that */
+        lazyIndicei = GENERICSTACK_USED(marpaESLIFValueResultStackp) - 1;
+
         /* We push valn, keyn, ...., val0, key0, so that importer is called in this order: */
         /* key0, val0, ..., keyn, valn */
         if ((sizel = marpaESLIFValueResultWorkp->u.t.sizel) > 0) {
           for (i = 0, marpaESLIFValueResultPairp = &(marpaESLIFValueResultWorkp->u.t.p[sizel - 1]);
                i < sizel;
                i++, marpaESLIFValueResultPairp--) {
+            if (! haveUndefb) {
+              if (marpaESLIFValueResultPairp->value.type == MARPAESLIF_VALUE_TYPE_UNDEF) {
+                haveUndefb = 1;
+              }
+            }
             GENERICSTACK_PUSH_PTR(marpaESLIFValueResultStackp, &(marpaESLIFValueResultPairp->value));
             if (MARPAESLIF_UNLIKELY(GENERICSTACK_ERROR(marpaESLIFValueResultStackp))) {
               MARPAESLIF_ERRORF(marpaESLIFp, "marpaESLIFValueResultStackp push failure, %s", strerror(errno));
               goto err;
+            }
+            if (! haveUndefb) {
+              if (marpaESLIFValueResultPairp->key.type == MARPAESLIF_VALUE_TYPE_UNDEF) {
+                haveUndefb = 1;
+              }
             }
             GENERICSTACK_PUSH_PTR(marpaESLIFValueResultStackp, &(marpaESLIFValueResultPairp->key));
             if (MARPAESLIF_UNLIKELY(GENERICSTACK_ERROR(marpaESLIFValueResultStackp))) {
               MARPAESLIF_ERRORF(marpaESLIFp, "marpaESLIFValueResultStackp push failure, %s", strerror(errno));
               goto err;
             }
+          }
+        }
+
+        /* Finally, there is an undef value in the TABLE */
+        if (haveUndefb) {
+          GENERICSTACK_SET_PTR(marpaESLIFValueResultStackp, &marpaESLIFValueResultLazyWithUndef, lazyIndicei);
+          if (MARPAESLIF_UNLIKELY(GENERICSTACK_ERROR(marpaESLIFValueResultStackp))) {
+            MARPAESLIF_ERRORF(marpaESLIFp, "marpaESLIFValueResultStackp set failure, %s", strerror(errno));
+            goto err;
           }
         }
       }
@@ -22574,7 +22644,7 @@ short marpaESLIFRecognizer_isStartCompleteb(marpaESLIFRecognizer_t *marpaESLIFRe
 }
 
 /*****************************************************************************/
-static short _marpaESLIFRecognizerSymbolProxyImportb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, void *userDatavp, marpaESLIFValueResult_t *marpaESLIFValueResultp)
+static short _marpaESLIFRecognizerSymbolProxyImportb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, void *userDatavp, marpaESLIFValueResult_t *marpaESLIFValueResultp, short haveUndefb)
 /*****************************************************************************/
 {
   marpaESLIFSymbol_t *marpaESLIFSymbolp = (marpaESLIFSymbol_t *) userDatavp;
@@ -22582,7 +22652,7 @@ static short _marpaESLIFRecognizerSymbolProxyImportb(marpaESLIFRecognizer_t *mar
   return
     (marpaESLIFSymbolp->marpaESLIFSymbolOption.importerp != NULL)
     ?
-    marpaESLIFSymbolp->marpaESLIFSymbolOption.importerp(marpaESLIFSymbolp, marpaESLIFSymbolp->marpaESLIFSymbolOption.userDatavp, marpaESLIFValueResultp)
+    marpaESLIFSymbolp->marpaESLIFSymbolOption.importerp(marpaESLIFSymbolp, marpaESLIFSymbolp->marpaESLIFSymbolOption.userDatavp, marpaESLIFValueResultp, haveUndefb)
     :
     1;
 }

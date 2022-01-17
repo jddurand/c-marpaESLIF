@@ -1247,7 +1247,8 @@ At any location in the grammar, possible alternatives can be of the two major ty
   /* End-user recognizer importer facility */
   typedef short (*marpaESLIFRecognizerImport_t)(marpaESLIFRecognizer_t *marpaESLIFRecognizerp,
                                                 void *userDatavp,
-                                                marpaESLIFValueResult_t *marpaESLIFValueResultp);
+                                                marpaESLIFValueResult_t *marpaESLIFValueResultp,
+                                                short haveUndefb);
 
   typedef struct marpaESLIFRecognizerOption {
     void                *userDatavp;                  /* User specific context */
@@ -2203,7 +2204,8 @@ At any point in the parsing lifetime it is possible to call for parse tree value
   /* End-user valuator importer facility */
   typedef short (*marpaESLIFValueImport_t)(marpaESLIFValue_t *marpaESLIFValuep,
                                            void *userDatavp,
-                                           marpaESLIFValueResult_t *marpaESLIFValueResultp);
+                                           marpaESLIFValueResult_t *marpaESLIFValueResultp,
+                                           short haveUndefb);
 
   typedef struct marpaESLIFValueOption {
     void                                 *userDatavp;            /* User specific context */
@@ -2591,6 +2593,11 @@ Tries to convert accurately C<ld> to a string. Result a C<NUL> terminated ASCII 
 
 =head2 External symbols
 
+  typedef short (*marpaESLIFSymbolImport_t)(marpaESLIFSymbol_t *marpaESLIFSymbolp,
+                                            void *userDatavp,
+                                            marpaESLIFValueResult_t *marpaESLIFValueResultp,
+                                            short haveUndefb);
+
   typedef struct marpaESLIFSymbolOption {
     void                     *userDatavp;          /* User specific context */
     marpaESLIFSymbolImport_t  importerp;           /* If end-user want to import a marpaESLIFValueResult */
@@ -2880,10 +2887,38 @@ Automatic imports rely on the C<importerp> option in their respective constructo
 
 These callbacks must return function pointers that have this signature (function names here are just examples):
 
-  short userDefinedRecognizerImporter(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, void *userDatavp, marpaESLIFValueResult_t *marpaESLIFValueResultp);
-  short userDefinedValueImporter(marpaESLIFValue_t *marpaESLIFValuep, void *userDatavp, marpaESLIFValueResult_t *marpaESLIFValueResultp);
+  short userDefinedRecognizerImporter(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, void *userDatavp, marpaESLIFValueResult_t *marpaESLIFValueResultp, short haveUndefb);
+  short userDefinedValueImporter(marpaESLIFValue_t *marpaESLIFValuep, void *userDatavp, marpaESLIFValueResult_t *marpaESLIFValueResultp, short haveUndefb);
 
 i.e. they are called with their respective namespace and user-defined C<userDatavp> that is set in their respective constructors.
+
+The flag C<haveUndefb> is always:
+
+=over
+
+=item a true value
+
+when the import is on the type:
+
+=over
+
+=item C<MARPAESLIF_VALUE_TYPE_UNDEF>
+
+=item C<MARPAESLIF_VALUE_TYPE_ROW>
+
+and one of the elements is of type C<MARPAESLIF_VALUE_TYPE_UNDEF>
+
+=item C<MARPAESLIF_VALUE_TYPE_TABLE>
+
+and one of the elements (that can be the key or the value) is of type C<MARPAESLIF_VALUE_TYPE_UNDEF>.
+
+=back
+
+=item a false value
+
+In all other cases.
+
+=back
 
 On-demande imports are also possible using these methods:
 

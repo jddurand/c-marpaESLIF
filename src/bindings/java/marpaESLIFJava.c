@@ -1206,10 +1206,10 @@ static jobject marpaESLIFJava_rulePropertiesp(JNIEnv *envp, marpaESLIFRuleProper
 static jobject marpaESLIFJava_symbolPropertiesp(JNIEnv *envp, marpaESLIFSymbolProperty_t *symbolPropertyp);
 static short marpaESLIFJava_valueGetObjectp(JNIEnv *envp, marpaESLIFJavaValueContext_t *marpaESLIFJavaValueContextp, marpaESLIFValue_t *marpaESLIFValuep, int stackindicei, marpaESLIFValueResult_t *marpaESLIFValueResultSymbolp, jobject *objectpp);
 static short marpaESLIFJava_recognizerGetObjectp(JNIEnv *envp, marpaESLIFJavaRecognizerContext_t *marpaESLIFJavaRecognizerContextp, marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFValueResult_t *marpaESLIFValueResultp, jobject *objectpp);
-static short marpaESLIFJava_valueImportb(marpaESLIFValue_t *marpaESLIFValuep, void *userDatavp, marpaESLIFValueResult_t *marpaESLIFValueResultp);
-static short marpaESLIFJava_recognizerImportb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, void *userDatavp, marpaESLIFValueResult_t *marpaESLIFValueResultp);
-static short marpaESLIFJava_symbolImportb(marpaESLIFSymbol_t *marpaESLIFSymbolp, void *userDatavp, marpaESLIFValueResult_t *marpaESLIFValueResultp);
-static short marpaESLIFJava_importb(marpaESLIF_t *marpaESLIFp, genericStack_t *objectStackp, marpaESLIFValueResult_t *marpaESLIFValueResultp);
+static short marpaESLIFJava_valueImportb(marpaESLIFValue_t *marpaESLIFValuep, void *userDatavp, marpaESLIFValueResult_t *marpaESLIFValueResultp, short haveUndefb);
+static short marpaESLIFJava_recognizerImportb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, void *userDatavp, marpaESLIFValueResult_t *marpaESLIFValueResultp, short haveUndefb);
+static short marpaESLIFJava_symbolImportb(marpaESLIFSymbol_t *marpaESLIFSymbolp, void *userDatavp, marpaESLIFValueResult_t *marpaESLIFValueResultp, short haveUndefb);
+static short marpaESLIFJava_importb(marpaESLIF_t *marpaESLIFp, genericStack_t *objectStackp, marpaESLIFValueResult_t *marpaESLIFValueResultp, short haveUndefb);
 static jstring marpaESLIFJava_marpaESLIFStringToJavap(JNIEnv *envp, marpaESLIFString_t *marpaESLIFStringp);
 static jstring marpaESLIFJava_marpaESLIFASCIIToJavap(JNIEnv *envp, char *asciis);
 static jstring marpaESLIFJava_marpaESLIFActionToJavap(JNIEnv *envp, marpaESLIFAction_t *actionp);
@@ -6524,27 +6524,27 @@ static short marpaESLIFJava_recognizerGetObjectp(JNIEnv *envp, marpaESLIFJavaRec
 }
 
 /*****************************************************************************/
-static short marpaESLIFJava_valueImportb(marpaESLIFValue_t *marpaESLIFValuep, void *userDatavp, marpaESLIFValueResult_t *marpaESLIFValueResultp)
+static short marpaESLIFJava_valueImportb(marpaESLIFValue_t *marpaESLIFValuep, void *userDatavp, marpaESLIFValueResult_t *marpaESLIFValueResultp, short haveUndefb)
 /*****************************************************************************/
 {
   marpaESLIFJavaValueContext_t *marpaESLIFJavaValueContextp = (marpaESLIFJavaValueContext_t *) userDatavp;
   marpaESLIF_t                 *marpaESLIFp                 = marpaESLIFGrammar_eslifp(marpaESLIFRecognizer_grammarp(marpaESLIFValue_recognizerp(marpaESLIFValuep)));
 
-  return marpaESLIFJava_importb(marpaESLIFp, marpaESLIFJavaValueContextp->objectStackp, marpaESLIFValueResultp);
+  return marpaESLIFJava_importb(marpaESLIFp, marpaESLIFJavaValueContextp->objectStackp, marpaESLIFValueResultp, haveUndefb);
 }
 
 /*****************************************************************************/
-static short marpaESLIFJava_recognizerImportb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, void *userDatavp, marpaESLIFValueResult_t *marpaESLIFValueResultp)
+static short marpaESLIFJava_recognizerImportb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, void *userDatavp, marpaESLIFValueResult_t *marpaESLIFValueResultp, short haveUndefb)
 /*****************************************************************************/
 {
   marpaESLIFJavaRecognizerContext_t *marpaESLIFJavaRecognizerContextp = (marpaESLIFJavaRecognizerContext_t *) userDatavp;
   marpaESLIF_t                      *marpaESLIFp                      = marpaESLIFGrammar_eslifp(marpaESLIFRecognizer_grammarp(marpaESLIFRecognizerp));
 
-  return marpaESLIFJava_importb(marpaESLIFp, marpaESLIFJavaRecognizerContextp->objectStackp, marpaESLIFValueResultp);
+  return marpaESLIFJava_importb(marpaESLIFp, marpaESLIFJavaRecognizerContextp->objectStackp, marpaESLIFValueResultp, haveUndefb);
 }
 
 /*****************************************************************************/
-static short marpaESLIFJava_symbolImportb(marpaESLIFSymbol_t *marpaESLIFSymbolp, void *userDatavp, marpaESLIFValueResult_t *marpaESLIFValueResultp)
+static short marpaESLIFJava_symbolImportb(marpaESLIFSymbol_t *marpaESLIFSymbolp, void *userDatavp, marpaESLIFValueResult_t *marpaESLIFValueResultp, short haveUndefb)
 /*****************************************************************************/
 /* No need of userDatavp here */
 /*****************************************************************************/
@@ -6552,11 +6552,11 @@ static short marpaESLIFJava_symbolImportb(marpaESLIFSymbol_t *marpaESLIFSymbolp,
   marpaESLIFJavaSymbolContext_t *marpaESLIFJavaSymbolContextp = (marpaESLIFJavaSymbolContext_t *) userDatavp;
   marpaESLIF_t *marpaESLIFp = marpaESLIFSymbol_eslifp(marpaESLIFSymbolp);
 
-  return marpaESLIFJava_importb(marpaESLIFp, marpaESLIFJavaSymbolContextp->objectStackp, marpaESLIFValueResultp);
+  return marpaESLIFJava_importb(marpaESLIFp, marpaESLIFJavaSymbolContextp->objectStackp, marpaESLIFValueResultp, haveUndefb);
 }
 
 /*****************************************************************************/
-static short marpaESLIFJava_importb(marpaESLIF_t *marpaESLIFp, genericStack_t *objectStackp, marpaESLIFValueResult_t *marpaESLIFValueResultp)
+static short marpaESLIFJava_importb(marpaESLIF_t *marpaESLIFp, genericStack_t *objectStackp, marpaESLIFValueResult_t *marpaESLIFValueResultp, short haveUndefb)
 /*****************************************************************************/
 {
   static const char *funcs      = "marpaESLIFJava_importb";
