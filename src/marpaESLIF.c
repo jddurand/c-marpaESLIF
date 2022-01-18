@@ -1,6 +1,10 @@
 /* #undef MARPAESLIF_NTRACE */
+
 /* For stack manipulation debug: */
 /* #define MARPAESLIF_NOTICE_ACTION */
+
+/* Loop on terminals or call the single method ? */
+#define MARPAESLIF_USE_MARPAWRAPPERRECOGNIZER_EXPECTEDB
 
 #include <stdlib.h>
 #include <errno.h>
