@@ -2285,7 +2285,7 @@ static inline marpaESLIF_bootstrap_utf_string_t *_marpaESLIF_bootstrap_unquote_s
 static marpaESLIFValueRuleCallback_t _marpaESLIF_bootstrap_ruleActionResolver(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, char *actions)
 /*****************************************************************************/
 {
-  marpaESLIFGrammar_t           *marpaESLIFGrammarp = marpaESLIFRecognizer_grammarp(marpaESLIFValue_recognizerp(marpaESLIFValuep));
+  marpaESLIFGrammar_t           *marpaESLIFGrammarp = marpaESLIFValuep->marpaESLIFRecognizerp->marpaESLIFGrammarp; /* marpaESLIFRecognizer_grammarp(marpaESLIFValue_recognizerp(marpaESLIFValuep)); */
   marpaESLIF_t                  *marpaESLIFp        = marpaESLIFGrammarp->marpaESLIFp; /* marpaESLIFGrammar_eslifp(marpaESLIFGrammarp); */
   marpaESLIFValueRuleCallback_t  marpaESLIFValueRuleCallbackp;
   int                            leveli;
