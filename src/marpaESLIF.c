@@ -5153,7 +5153,6 @@ static inline marpaESLIF_t *_marpaESLIF_newp(marpaESLIFOption_t *marpaESLIFOptio
   marpaESLIFp->marpaESLIFGrammarp        = NULL;
   marpaESLIFp->anycharp                  = NULL;
   marpaESLIFp->newlinep                  = NULL;
-  marpaESLIFp->newlineSymbolp            = NULL;
   marpaESLIFp->stringModifiersp          = NULL;
   marpaESLIFp->characterClassModifiersp  = NULL;
   marpaESLIFp->regexModifiersp           = NULL;
@@ -5687,8 +5686,8 @@ void marpaESLIF_freev(marpaESLIF_t *marpaESLIFp)
 static inline short _marpaESLIFRecognizer_terminal_matcherb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIF_stream_t *marpaESLIF_streamp, marpaESLIF_terminal_t *terminalp, char *inputs, size_t inputl, short eofb, marpaESLIF_matcher_value_t *rcip, marpaESLIFValueResult_t *marpaESLIFValueResultp, size_t *matchedLengthlp)
 /*****************************************************************************/
 {
-  static const char                 *funcs = "_marpaESLIFRecognizer_terminal_matcherb";
-  marpaESLIF_matcher_value_t         rci;
+  static const char                 *funcs          = "_marpaESLIFRecognizer_terminal_matcherb";
+  marpaESLIF_matcher_value_t         rci            = MARPAESLIF_MATCH_FAILURE; /* Default value. It is also faster from generated code point of view. */
   marpaESLIF_regex_t                *marpaESLIF_regexp;
   int                                pcre2Errornumberi;
   PCRE2_UCHAR                        pcre2ErrorBuffer[256];
@@ -5699,63 +5698,12 @@ static inline short _marpaESLIFRecognizer_terminal_matcherb(marpaESLIFRecognizer
   short                              binmodeb;
   short                              needUtf8Validationb;
   short                              rcb;
+  char                              *bytes;
+  size_t                             bytel;
   short                              rcMatcherb;
 
   MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_INC(marpaESLIFRecognizerp);
   MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "start");
-
-  /* The most common case is when there is data in the buffer, and we are */
-  /* using internally a memcmp that do not require UTF-8 validation.      */
-  if (inputl > 0) {
-    if (terminalp->memcmpb && (marpaESLIF_streamp->utfb /* Stream was UTF-8 validated */
-                               ||
-                               (! terminalp->regex.utfb) /* No need of UTF-8 validation */)) {
-
-      /* Empty string is allowed and never matches - unfortunately memcmp on zero bytes returns 0 when we want a failure. */
-      if (terminalp->bytel > 0) {
-        MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Doing memcmp on %ld bytes, inputl=%ld", (unsigned long) bytel, (unsigned long) inputl);
-        if (memcmp(inputs, terminalp->bytes, terminalp->bytel) != 0) {
-          rci = MARPAESLIF_MATCH_FAILURE;
-          MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "%s for %s", "MARPAESLIF_MATCH_FAILURE", terminalp->descp->asciis);
-        } else {
-          if (inputl >= terminalp->bytel) {
-            rci = MARPAESLIF_MATCH_OK;
-            MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "%s for %s", "MARPAESLIF_MATCH_OK", terminalp->descp->asciis);
-            matchedp       = inputs;
-            matchedLengthl = terminalp->bytel;
-          } else {
-            /* Partial match ? */
-            if (eofb) {
-              /* Yes unless we reached EOF */
-              rci = MARPAESLIF_MATCH_FAILURE;
-              MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "%s for %s", "MARPAESLIF_MATCH_FAILURE", terminalp->descp->asciis);
-            } else {
-              rci = MARPAESLIF_MATCH_AGAIN;
-              MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "%s for %s", "MARPAESLIF_MATCH_AGAIN", terminalp->descp->asciis);
-            }
-          }
-        }
-      } else {
-        rci = MARPAESLIF_MATCH_FAILURE;
-        MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "%s for %s", "MARPAESLIF_MATCH_FAILURE", terminalp->descp->asciis);
-      }
-
-      goto string_done;
-    }
-    /* The else case is continuing below: there is always a compiled regex even when memcmpb is set. */
-  } else {
-    if (eofb) {
-      rci = MARPAESLIF_MATCH_FAILURE;
-      MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "%s (inputl <= 0)", "MARPAESLIF_MATCH_FAILURE");
-    } else {
-      rci = MARPAESLIF_MATCH_AGAIN;
-      MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "%s (inputl <= 0)", "MARPAESLIF_MATCH_AGAIN");
-    }
-    goto noinput_done;
-  }
-
-  /* Set default rci value */
-  rci = MARPAESLIF_MATCH_FAILURE;
 
   /*********************************************************************************/
   /* A matcher tries to match a terminal v.s. input that is eventually incomplete. */
@@ -5823,224 +5771,271 @@ static inline short _marpaESLIFRecognizer_terminal_matcherb(marpaESLIFRecognizer
 
     goto builtin_done;
   }
+  
+  if (inputl > 0) {
 
-  marpaESLIF_regexp = &(terminalp->regex);
+    marpaESLIF_regexp = &(terminalp->regex);
 
-  /* If the regexp is working in UTF mode then we check that character conversion   */
-  /* was done. This is how we are sure that calling regexp with PCRE2_NO_UTF_CHECK  */
-  /* is ok: we have done ourself the UTF-8 validation on the subject.               */
-  if (marpaESLIF_regexp->utfb) {                    /* UTF-8 correctness is required */
-    if (! marpaESLIF_streamp->utfb) {
-      pcre2_optioni = pcre2_option_binary_default;  /* We have done no check : PCRE2 will do it */
-      binmodeb = 1;
-      needUtf8Validationb = 1;
+    /* If the regexp is working in UTF mode then we check that character conversion   */
+    /* was done. This is how we are sure that calling regexp with PCRE2_NO_UTF_CHECK  */
+    /* is ok: we have done ourself the UTF-8 validation on the subject.               */
+    if (marpaESLIF_regexp->utfb) {                    /* UTF-8 correctness is required */
+      if (! marpaESLIF_streamp->utfb) {
+        pcre2_optioni = pcre2_option_binary_default;  /* We have done no check : PCRE2 will do it */
+        binmodeb = 1;
+        needUtf8Validationb = 1;
+      } else {
+        pcre2_optioni = pcre2_option_char_default;    /* We made sure this is ok */
+        binmodeb = 0;
+        needUtf8Validationb = 0;
+      }
     } else {
-      pcre2_optioni = pcre2_option_char_default;    /* We made sure this is ok */
-      binmodeb = 0;
+      pcre2_optioni = pcre2_option_binary_default;    /* Not needed */
+      binmodeb = 1;
       needUtf8Validationb = 0;
     }
-  } else {
-    pcre2_optioni = pcre2_option_binary_default;    /* Not needed */
-    binmodeb = 1;
-    needUtf8Validationb = 0;
-  }
 
-  /* --------------------------------------------------------- */
-  /* Anchored regex...                                         */
-  /* --------------------------------------------------------- */
-  /*
-    Patterns are always compiled with PCRE2_ANCHORED by default,
-    except when there is the "A" modifier. In this case, we allow
-    to execute the regex ONLY if the whole stream was read in one
-    call to the user's read callback.
-  */
-  if (! marpaESLIF_regexp->isAnchoredb) {
-    if (! marpaESLIF_streamp->noAnchorIsOkb) {
-      /* This is an error unless we are at EOF */
-      if (MARPAESLIF_UNLIKELY(! eofb)) {
-        MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "%s: You used the \"A\" modifier to set the pattern non-anchored, but then you must read the whole input in one go, and you have not reached EOF yet", terminalp->descp->asciis);
-        goto err;
-      }
-    }
-  }
+    /* --------------------------------------------------------- */
+    /* Is is a true string and UTF-8 validation is not needed ?  */
+    /* Then do a direct memcmp -;                                */
+    /* --------------------------------------------------------- */
+    if ((! needUtf8Validationb) && terminalp->memcmpb) {
+      bytes = terminalp->bytes;
+      bytel = terminalp->bytel;
 
-  if (marpaESLIF_regexp->calloutb) {
-    if (MARPAESLIFRECOGNIZER_IS_TOP(marpaESLIFRecognizerp) && (marpaESLIFRecognizerp->grammarp->defaultRegexActionp != NULL)) {
-      /* Update callout userdata context - take care this will segfault IF you have callouts in the regexp during bootstrap. */
-      marpaESLIF_regexp->callout_context.marpaESLIFRecognizerp = marpaESLIFRecognizerp;
-      pcre2_set_callout(marpaESLIF_regexp->match_contextp, _marpaESLIF_pcre2_callouti, &(marpaESLIF_regexp->callout_context));
-    } else {
-      pcre2_set_callout(marpaESLIF_regexp->match_contextp, NULL, NULL);
-    }
-  }
-
-  /* --------------------------------------------------------- */
-  /* EOF mode:                                                 */
-  /* return full match status: OK or FAILURE.                  */
-  /* --------------------------------------------------------- */
-  /* NOT EOF mode:                                             */
-  /* If the full match is successful:                          */
-  /* - if it reaches the end of the buffer, return EGAIN.      */
-  /* - if it does not reach the end of the buffer, return OK.  */
-  /* Else if the partial match is successul:                   */
-  /* - return EGAIN.                                           */
-  /* Else                                                      */
-  /* - return FAILURE.                                         */
-  /*                                                           */
-  /* In conclusion we always start with the full match.        */
-  /* --------------------------------------------------------- */
-#ifdef PCRE2_CONFIG_JIT
-  if ((!needUtf8Validationb) && marpaESLIF_regexp->jitCompleteb) {    /* JIT fast path is never doing UTF-8 validation */
-    pcre2Errornumberi = pcre2_jit_match(marpaESLIF_regexp->patternp,  /* code */
-                                        (PCRE2_SPTR) inputs,          /* subject */
-                                        (PCRE2_SIZE) inputl,          /* length */
-                                        (PCRE2_SIZE) 0,               /* startoffset */
-                                        pcre2_optioni,                /* options */
-                                        marpaESLIF_regexp->match_datap, /* match data */
-                                        marpaESLIF_regexp->match_contextp /* match context */
-                                        );
-    if (pcre2Errornumberi == PCRE2_ERROR_JIT_STACKLIMIT) {
-      /* Back luck, out of stack for JIT */
-      pcre2_get_error_message(pcre2Errornumberi, pcre2ErrorBuffer, sizeof(pcre2ErrorBuffer));
-      goto eof_nojitcomplete;
-    }
-  } else {
-  eof_nojitcomplete:
-#endif
-    pcre2Errornumberi = pcre2_match(marpaESLIF_regexp->patternp,  /* code */
-                                    (PCRE2_SPTR) inputs,          /* subject */
-                                    (PCRE2_SIZE) inputl,          /* length */
-                                    (PCRE2_SIZE) 0,               /* startoffset */
-                                    pcre2_optioni,                /* options */
-                                    marpaESLIF_regexp->match_datap, /* match data */
-                                    marpaESLIF_regexp->match_contextp    /* match context */
-                                    );
-#ifdef PCRE2_CONFIG_JIT
-  }
-#endif
-
-  /* Whatever happened, PCRE2_ERROR_CALLOUT is a user exception, that is stopping everything */
-  if (pcre2Errornumberi == PCRE2_ERROR_CALLOUT) {
-    MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "%s: fatal user error caught", terminalp->descp->asciis);
-    goto fatal;
-  }
-
-  /* In any case - set UTF buffer correctness if needed and if possible */
-  if (binmodeb && marpaESLIF_regexp->utfb) {
-    if ((pcre2Errornumberi >= 0) || (pcre2Errornumberi == PCRE2_ERROR_NOMATCH)) {
-      /* Either regex is successful, either it failed with the accepted failure code PCRE2_ERROR_NOMATCH */
-      MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "%s: UTF-8 correctness successful and remembered", terminalp->descp->asciis);
-      marpaESLIF_streamp->utfb = 1;
-    }
-  }
-
-  if (eofb) {
-    if (pcre2Errornumberi < 0) {
-      /* Only PCRE2_ERROR_NOMATCH is an acceptable error. */
-      if (MARPAESLIF_UNLIKELY(pcre2Errornumberi != PCRE2_ERROR_NOMATCH)) {
-        pcre2_get_error_message(pcre2Errornumberi, pcre2ErrorBuffer, sizeof(pcre2ErrorBuffer));
-        MARPAESLIF_WARNF(marpaESLIFRecognizerp->marpaESLIFp, "%s: Uncaught pcre2 match failure: %s", terminalp->descp->asciis, pcre2ErrorBuffer);
-      }
-      MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "%s for %s", "MARPAESLIF_MATCH_FAILURE", terminalp->descp->asciis);
-    } else {
-      /* Check the length of matched data */
-      if (MARPAESLIF_UNLIKELY(pcre2_get_ovector_count(marpaESLIF_regexp->match_datap) <= 0)) {
-        MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "%s: pcre2_get_ovector_count returned no number of pairs of values", terminalp->descp->asciis);
-        goto err;
-      }
-      pcre2_ovectorp = pcre2_get_ovector_pointer(marpaESLIF_regexp->match_datap);
-      if (MARPAESLIF_UNLIKELY(pcre2_ovectorp == NULL)) {
-        MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "%s: pcre2_get_ovector_pointer returned NULL", terminalp->descp->asciis);
-        goto err;
-      }
-      /* We said PCRE2_NOTEMPTY so this cannot be empty */
-      matchedLengthl = pcre2_ovectorp[1] - pcre2_ovectorp[0];
-      if (MARPAESLIF_UNLIKELY(matchedLengthl <= 0)) {
-        MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "%s: Empty match when it is configured as not possible", terminalp->descp->asciis);
-        goto err;
-      }
-      /* Very good -; */
-      matchedp = inputs + pcre2_ovectorp[0];
-      rci = MARPAESLIF_MATCH_OK;
-      MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "%s for %s", "MARPAESLIF_MATCH_OK", terminalp->descp->asciis);
-    }
-  } else {
-    if (pcre2Errornumberi >= 0) {
-      /* Full match is successful. */
-      /* Check the length of matched data */
-      if (MARPAESLIF_UNLIKELY(pcre2_get_ovector_count(marpaESLIF_regexp->match_datap) <= 0)) {
-        MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "%s: pcre2_get_ovector_count returned no number of pairs of values", terminalp->descp->asciis);
-        goto err;
-      }
-      pcre2_ovectorp = pcre2_get_ovector_pointer(marpaESLIF_regexp->match_datap);
-      if (MARPAESLIF_UNLIKELY(pcre2_ovectorp == NULL)) {
-        MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "%s: pcre2_get_ovector_pointer returned NULL", terminalp->descp->asciis);
-        goto err;
-      }
-      /* We said PCRE2_NOTEMPTY so this cannot be empty */
-      matchedLengthl = pcre2_ovectorp[1] - pcre2_ovectorp[0];
-      if (MARPAESLIF_UNLIKELY(matchedLengthl <= 0)) {
-        MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "%s: Empty match when it is configured as not possible", terminalp->descp->asciis);
-        goto err;
-      }
-      if (matchedLengthl >= inputl) {
-        /* But end of the buffer is reached, and we are not at the eof! We have to ask for more bytes. */
-        rci = MARPAESLIF_MATCH_AGAIN;
-        MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "%s for %s", "MARPAESLIF_MATCH_AGAIN", terminalp->descp->asciis);
+      MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Doing memcmp on %ld bytes, inputl=%ld", (unsigned long) bytel, (unsigned long) inputl);
+      /* Empty string is allowed and never matches */
+      if (bytel <= 0) {
+        MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "%s for %s", "MARPAESLIF_MATCH_FAILURE", terminalp->descp->asciis);
       } else {
-        /* And end of the buffer is not reached */
+        /* We consider it is faster to compare a char than calling memcmp */
+        if (inputl >= bytel) {
+          if ((bytel == 1) ? (inputs[0] == bytes[0]) : (memcmp(inputs, bytes, bytel) == 0)) {
+            rci = MARPAESLIF_MATCH_OK;
+            MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "%s for %s", "MARPAESLIF_MATCH_OK", terminalp->descp->asciis);
+            matchedp       = inputs;
+            matchedLengthl = bytel;
+          } else {
+            MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "%s for %s", "MARPAESLIF_MATCH_FAILURE", terminalp->descp->asciis);
+          }
+        } else {
+          if ((inputl == 1) ? (inputs[0] == bytes[0]) : (memcmp(inputs, bytes, inputl) == 0)) {
+            /* Partial match */
+            if (eofb) {
+              MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "%s for %s", "MARPAESLIF_MATCH_FAILURE", terminalp->descp->asciis);
+            } else {
+              rci = MARPAESLIF_MATCH_AGAIN;
+              MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "%s for %s", "MARPAESLIF_MATCH_AGAIN", terminalp->descp->asciis);
+            }
+          } else {
+            MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "%s for %s", "MARPAESLIF_MATCH_FAILURE", terminalp->descp->asciis);
+          }
+        }
+      }
+      goto string_done;
+    }
+
+    /* --------------------------------------------------------- */
+    /* Anchored regex...                                         */
+    /* --------------------------------------------------------- */
+    /*
+     Patterns are always compiled with PCRE2_ANCHORED by default,
+     except when there is the "A" modifier. In this case, we allow
+     to execute the regex ONLY if the whole stream was read in one
+     call to the user's read callback.
+    */
+    if (! marpaESLIF_regexp->isAnchoredb) {
+      if (! marpaESLIF_streamp->noAnchorIsOkb) {
+        /* This is an error unless we are at EOF */
+        if (MARPAESLIF_UNLIKELY(! eofb)) {
+          MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "%s: You used the \"A\" modifier to set the pattern non-anchored, but then you must read the whole input in one go, and you have not reached EOF yet", terminalp->descp->asciis);
+          goto err;
+        }
+      }
+    }
+
+    if (marpaESLIF_regexp->calloutb) {
+      if (MARPAESLIFRECOGNIZER_IS_TOP(marpaESLIFRecognizerp) && (marpaESLIFRecognizerp->grammarp->defaultRegexActionp != NULL)) {
+        /* Update callout userdata context - take care this will segfault IF you have callouts in the regexp during bootstrap. */
+        marpaESLIF_regexp->callout_context.marpaESLIFRecognizerp = marpaESLIFRecognizerp;
+        pcre2_set_callout(marpaESLIF_regexp->match_contextp, _marpaESLIF_pcre2_callouti, &(marpaESLIF_regexp->callout_context));
+      } else {
+        pcre2_set_callout(marpaESLIF_regexp->match_contextp, NULL, NULL);
+      }
+    }
+
+    /* --------------------------------------------------------- */
+    /* EOF mode:                                                 */
+    /* return full match status: OK or FAILURE.                  */
+    /* --------------------------------------------------------- */
+    /* NOT EOF mode:                                             */
+    /* If the full match is successful:                          */
+    /* - if it reaches the end of the buffer, return EGAIN.      */
+    /* - if it does not reach the end of the buffer, return OK.  */
+    /* Else if the partial match is successul:                   */
+    /* - return EGAIN.                                           */
+    /* Else                                                      */
+    /* - return FAILURE.                                         */
+    /*                                                           */
+    /* In conclusion we always start with the full match.        */
+    /* --------------------------------------------------------- */
+#ifdef PCRE2_CONFIG_JIT
+    if ((!needUtf8Validationb) && marpaESLIF_regexp->jitCompleteb) {    /* JIT fast path is never doing UTF-8 validation */
+      pcre2Errornumberi = pcre2_jit_match(marpaESLIF_regexp->patternp,  /* code */
+                                          (PCRE2_SPTR) inputs,          /* subject */
+                                          (PCRE2_SIZE) inputl,          /* length */
+                                          (PCRE2_SIZE) 0,               /* startoffset */
+                                          pcre2_optioni,                /* options */
+                                          marpaESLIF_regexp->match_datap, /* match data */
+                                          marpaESLIF_regexp->match_contextp /* match context */
+                                          );
+      if (pcre2Errornumberi == PCRE2_ERROR_JIT_STACKLIMIT) {
+        /* Back luck, out of stack for JIT */
+        pcre2_get_error_message(pcre2Errornumberi, pcre2ErrorBuffer, sizeof(pcre2ErrorBuffer));
+        goto eof_nojitcomplete;
+      }
+    } else {
+    eof_nojitcomplete:
+#endif
+      pcre2Errornumberi = pcre2_match(marpaESLIF_regexp->patternp,  /* code */
+                                      (PCRE2_SPTR) inputs,          /* subject */
+                                      (PCRE2_SIZE) inputl,          /* length */
+                                      (PCRE2_SIZE) 0,               /* startoffset */
+                                      pcre2_optioni,                /* options */
+                                      marpaESLIF_regexp->match_datap, /* match data */
+                                      marpaESLIF_regexp->match_contextp    /* match context */
+                                      );
+#ifdef PCRE2_CONFIG_JIT
+    }
+#endif
+
+    /* Whatever happened, PCRE2_ERROR_CALLOUT is a user exception, that is stopping everything */
+    if (pcre2Errornumberi == PCRE2_ERROR_CALLOUT) {
+      MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "%s: fatal user error caught", terminalp->descp->asciis);
+      goto fatal;
+    }
+
+    /* In any case - set UTF buffer correctness if needed and if possible */
+    if (binmodeb && marpaESLIF_regexp->utfb) {
+      if ((pcre2Errornumberi >= 0) || (pcre2Errornumberi == PCRE2_ERROR_NOMATCH)) {
+        /* Either regex is successful, either it failed with the accepted failure code PCRE2_ERROR_NOMATCH */
+        MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "%s: UTF-8 correctness successful and remembered", terminalp->descp->asciis);
+        marpaESLIF_streamp->utfb = 1;
+      }
+    }
+
+    if (eofb) {
+      if (pcre2Errornumberi < 0) {
+        /* Only PCRE2_ERROR_NOMATCH is an acceptable error. */
+        if (MARPAESLIF_UNLIKELY(pcre2Errornumberi != PCRE2_ERROR_NOMATCH)) {
+          pcre2_get_error_message(pcre2Errornumberi, pcre2ErrorBuffer, sizeof(pcre2ErrorBuffer));
+          MARPAESLIF_WARNF(marpaESLIFRecognizerp->marpaESLIFp, "%s: Uncaught pcre2 match failure: %s", terminalp->descp->asciis, pcre2ErrorBuffer);
+        }
+        MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "%s for %s", "MARPAESLIF_MATCH_FAILURE", terminalp->descp->asciis);
+      } else {
+        /* Check the length of matched data */
+        if (MARPAESLIF_UNLIKELY(pcre2_get_ovector_count(marpaESLIF_regexp->match_datap) <= 0)) {
+          MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "%s: pcre2_get_ovector_count returned no number of pairs of values", terminalp->descp->asciis);
+          goto err;
+        }
+        pcre2_ovectorp = pcre2_get_ovector_pointer(marpaESLIF_regexp->match_datap);
+        if (MARPAESLIF_UNLIKELY(pcre2_ovectorp == NULL)) {
+          MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "%s: pcre2_get_ovector_pointer returned NULL", terminalp->descp->asciis);
+          goto err;
+        }
+        /* We said PCRE2_NOTEMPTY so this cannot be empty */
+        matchedLengthl = pcre2_ovectorp[1] - pcre2_ovectorp[0];
+        if (MARPAESLIF_UNLIKELY(matchedLengthl <= 0)) {
+          MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "%s: Empty match when it is configured as not possible", terminalp->descp->asciis);
+          goto err;
+        }
+        /* Very good -; */
         matchedp = inputs + pcre2_ovectorp[0];
         rci = MARPAESLIF_MATCH_OK;
         MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "%s for %s", "MARPAESLIF_MATCH_OK", terminalp->descp->asciis);
       }
     } else {
-      /* Do a partial match. This section cannot return MARPAESLIF_MATCH_OK. */
-      /* Please note that we explicitely NEVER ask for UTF-8 correctness here, because previous section */
-      /* made sure it has always been done. */
-#ifdef PCRE2_CONFIG_JIT
-      if (marpaESLIF_regexp->jitPartialb) {
-        pcre2Errornumberi = pcre2_jit_match(marpaESLIF_regexp->patternp,  /* code */
-                                            (PCRE2_SPTR) inputs,          /* subject */
-                                            (PCRE2_SIZE) inputl,          /* length */
-                                            (PCRE2_SIZE) 0,               /* startoffset */
-                                            pcre2_option_partial_default, /* options - this one is supported in JIT mode */
-                                            marpaESLIF_regexp->match_datap, /* match data */
-                                            marpaESLIF_regexp->match_contextp /* match context */
-                                            );
-        if (pcre2Errornumberi == PCRE2_ERROR_JIT_STACKLIMIT) {
-          /* Back luck, out of stack for JIT */
-          pcre2_get_error_message(pcre2Errornumberi, pcre2ErrorBuffer, sizeof(pcre2ErrorBuffer));
-          goto eof_nojitpartial;
+      if (pcre2Errornumberi >= 0) {
+        /* Full match is successful. */
+        /* Check the length of matched data */
+        if (MARPAESLIF_UNLIKELY(pcre2_get_ovector_count(marpaESLIF_regexp->match_datap) <= 0)) {
+          MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "%s: pcre2_get_ovector_count returned no number of pairs of values", terminalp->descp->asciis);
+          goto err;
+        }
+        pcre2_ovectorp = pcre2_get_ovector_pointer(marpaESLIF_regexp->match_datap);
+        if (MARPAESLIF_UNLIKELY(pcre2_ovectorp == NULL)) {
+          MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "%s: pcre2_get_ovector_pointer returned NULL", terminalp->descp->asciis);
+          goto err;
+        }
+        /* We said PCRE2_NOTEMPTY so this cannot be empty */
+        matchedLengthl = pcre2_ovectorp[1] - pcre2_ovectorp[0];
+        if (MARPAESLIF_UNLIKELY(matchedLengthl <= 0)) {
+          MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "%s: Empty match when it is configured as not possible", terminalp->descp->asciis);
+          goto err;
+        }
+        if (matchedLengthl >= inputl) {
+          /* But end of the buffer is reached, and we are not at the eof! We have to ask for more bytes. */
+          rci = MARPAESLIF_MATCH_AGAIN;
+          MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "%s for %s", "MARPAESLIF_MATCH_AGAIN", terminalp->descp->asciis);
+        } else {
+          /* And end of the buffer is not reached */
+          matchedp = inputs + pcre2_ovectorp[0];
+          rci = MARPAESLIF_MATCH_OK;
+          MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "%s for %s", "MARPAESLIF_MATCH_OK", terminalp->descp->asciis);
         }
       } else {
-      eof_nojitpartial:
-#endif
-        pcre2Errornumberi = pcre2_match(marpaESLIF_regexp->patternp,  /* code */
-                                        (PCRE2_SPTR) inputs,          /* subject */
-                                        (PCRE2_SIZE) inputl,          /* length */
-                                        (PCRE2_SIZE) 0,               /* startoffset */
-                                        pcre2_option_partial_default, /* options - this one is supported in JIT mode */
-                                        marpaESLIF_regexp->match_datap, /* match data */
-                                        marpaESLIF_regexp->match_contextp /* match context */
-                                        );
+        /* Do a partial match. This section cannot return MARPAESLIF_MATCH_OK. */
+        /* Please note that we explicitely NEVER ask for UTF-8 correctness here, because previous section */
+        /* made sure it has always been done. */
 #ifdef PCRE2_CONFIG_JIT
-      }
+        if (marpaESLIF_regexp->jitPartialb) {
+          pcre2Errornumberi = pcre2_jit_match(marpaESLIF_regexp->patternp,  /* code */
+                                              (PCRE2_SPTR) inputs,          /* subject */
+                                              (PCRE2_SIZE) inputl,          /* length */
+                                              (PCRE2_SIZE) 0,               /* startoffset */
+                                              pcre2_option_partial_default, /* options - this one is supported in JIT mode */
+                                              marpaESLIF_regexp->match_datap, /* match data */
+                                              marpaESLIF_regexp->match_contextp /* match context */
+                                              );
+          if (pcre2Errornumberi == PCRE2_ERROR_JIT_STACKLIMIT) {
+            /* Back luck, out of stack for JIT */
+            pcre2_get_error_message(pcre2Errornumberi, pcre2ErrorBuffer, sizeof(pcre2ErrorBuffer));
+            goto eof_nojitpartial;
+          }
+        } else {
+        eof_nojitpartial:
 #endif
-      /* Only PCRE2_ERROR_PARTIAL is an acceptable error */
-      if (pcre2Errornumberi == PCRE2_ERROR_PARTIAL) {
-        /* Partial match is successful */
-        rci = MARPAESLIF_MATCH_AGAIN;
-        MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "%s for %s", "MARPAESLIF_MATCH_AGAIN", terminalp->descp->asciis);
-      } else {
-        /* Partial match is not successful */
-        MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "%s for %s", "MARPAESLIF_MATCH_FAILURE", terminalp->descp->asciis);
+          pcre2Errornumberi = pcre2_match(marpaESLIF_regexp->patternp,  /* code */
+                                          (PCRE2_SPTR) inputs,          /* subject */
+                                          (PCRE2_SIZE) inputl,          /* length */
+                                          (PCRE2_SIZE) 0,               /* startoffset */
+                                          pcre2_option_partial_default, /* options - this one is supported in JIT mode */
+                                          marpaESLIF_regexp->match_datap, /* match data */
+                                          marpaESLIF_regexp->match_contextp /* match context */
+                                          );
+#ifdef PCRE2_CONFIG_JIT
+        }
+#endif
+        /* Only PCRE2_ERROR_PARTIAL is an acceptable error */
+        if (pcre2Errornumberi == PCRE2_ERROR_PARTIAL) {
+          /* Partial match is successful */
+          rci = MARPAESLIF_MATCH_AGAIN;
+          MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "%s for %s", "MARPAESLIF_MATCH_AGAIN", terminalp->descp->asciis);
+        } else {
+          /* Partial match is not successful */
+          MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "%s for %s", "MARPAESLIF_MATCH_FAILURE", terminalp->descp->asciis);
+        }
       }
     }
+  } else {
+    if (! eofb) {
+      rci = MARPAESLIF_MATCH_AGAIN;
+    }
+    MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "%s (inputl <= 0)", eofb ? "MARPAESLIF_MATCH_FAILURE" : "MARPAESLIF_MATCH_AGAIN");
   }
 
  builtin_done:
  string_done:
- noinput_done:
   if (rcip != NULL) {
     *rcip = rci;
   }
