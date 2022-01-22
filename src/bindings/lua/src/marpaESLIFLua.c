@@ -131,20 +131,20 @@ typedef struct marpaESLIFLuaJsonDecoderReaderContext {
 /* Global table for the duplicated marpaESLIFValueResult's during import */
 #define MARPAESLIFOPAQUETABLE "__marpaESLIFLuaOpaqueTable"
 
-static void                               marpaESLIFLua_stackdumpv(lua_State* L, int forcelookupi);
-static void                               marpaESLIFLua_tabledumpv(lua_State *L, const char *texts, int indicei, unsigned int identi);
-static void                               marpaESLIFLua_tabledump_usingpairsv(lua_State *L, const char *texts, int indicei, unsigned int identi);
-static short                              marpaESLIFLua_paramIsLoggerInterfaceOrNilb(lua_State *L, int stacki);
-static short                              marpaESLIFLua_paramIsRecognizerInterfacev(lua_State *L, int stacki);
-static short                              marpaESLIFLua_paramIsValueInterfacev(lua_State *L, int stacki);
-static short                              marpaESLIFLua_contextInitb(lua_State *L, marpaESLIFLuaContext_t *marpaESLIFLuaContextp, short unmanagedb);
-static void                               marpaESLIFLua_contextFreev(marpaESLIFLuaContext_t *marpaESLIFLuaContextp, short multitonDestroyModeb);
-static short                              marpaESLIFLua_grammarContextInitb(lua_State *L, marpaESLIF_t *marpaESLIFp, int eslifStacki, marpaESLIFLuaGrammarContext_t *marpaESLIFLuaGrammarContextp, short unmanagedb);
-static short                              marpaESLIFLua_recognizerContextInitb(lua_State *L, marpaESLIF_t *marpaESLIFp, int grammarStacki, int recognizerInterfaceStacki, int recognizerOrigStacki, marpaESLIFLuaRecognizerContext_t *marpaESLIFLuaRecognizerContextp, short unmanagedb);
-static short                              marpaESLIFLua_valueContextInitb(lua_State *L, marpaESLIF_t *marpaESLIFp, int grammarStacki, int recognizerStacki, int valueInterfaceStacki, marpaESLIFLuaValueContext_t    *marpaESLIFLuaValueContextp, short unmanagedb, short grammarStackiCanBeZerob);
-static void                               marpaESLIFLua_grammarContextFreev(lua_State *L, marpaESLIFLuaGrammarContext_t *marpaESLIFLuaGrammarContextp, short onStackb);
-static void                               marpaESLIFLua_recognizerContextFreev(lua_State *L, marpaESLIFLuaRecognizerContext_t *marpaESLIFLuaRecognizerContextp, short onStackb);
-static void                               marpaESLIFLua_valueContextFreev(lua_State *L, marpaESLIFLuaValueContext_t *marpaESLIFLuaValueContextp, short onStackb);
+static inline void                        marpaESLIFLua_stackdumpv(lua_State* L, int forcelookupi);
+static inline void                        marpaESLIFLua_tabledumpv(lua_State *L, const char *texts, int indicei, unsigned int identi);
+static inline void                        marpaESLIFLua_tabledump_usingpairsv(lua_State *L, const char *texts, int indicei, unsigned int identi);
+static inline short                       marpaESLIFLua_paramIsLoggerInterfaceOrNilb(lua_State *L, int stacki);
+static inline short                       marpaESLIFLua_paramIsRecognizerInterfacev(lua_State *L, int stacki);
+static inline short                       marpaESLIFLua_paramIsValueInterfacev(lua_State *L, int stacki);
+static inline short                       marpaESLIFLua_contextInitb(lua_State *L, marpaESLIFLuaContext_t *marpaESLIFLuaContextp, short unmanagedb);
+static inline void                        marpaESLIFLua_contextFreev(marpaESLIFLuaContext_t *marpaESLIFLuaContextp, short multitonDestroyModeb);
+static inline short                       marpaESLIFLua_grammarContextInitb(lua_State *L, marpaESLIF_t *marpaESLIFp, int eslifStacki, marpaESLIFLuaGrammarContext_t *marpaESLIFLuaGrammarContextp, short unmanagedb);
+static inline short                       marpaESLIFLua_recognizerContextInitb(lua_State *L, marpaESLIF_t *marpaESLIFp, int grammarStacki, int recognizerInterfaceStacki, int recognizerOrigStacki, marpaESLIFLuaRecognizerContext_t *marpaESLIFLuaRecognizerContextp, short unmanagedb);
+static inline short                       marpaESLIFLua_valueContextInitb(lua_State *L, marpaESLIF_t *marpaESLIFp, int grammarStacki, int recognizerStacki, int valueInterfaceStacki, marpaESLIFLuaValueContext_t    *marpaESLIFLuaValueContextp, short unmanagedb, short grammarStackiCanBeZerob);
+static inline void                        marpaESLIFLua_grammarContextFreev(lua_State *L, marpaESLIFLuaGrammarContext_t *marpaESLIFLuaGrammarContextp, short onStackb);
+static inline void                        marpaESLIFLua_recognizerContextFreev(lua_State *L, marpaESLIFLuaRecognizerContext_t *marpaESLIFLuaRecognizerContextp, short onStackb);
+static inline void                        marpaESLIFLua_valueContextFreev(lua_State *L, marpaESLIFLuaValueContext_t *marpaESLIFLuaValueContextp, short onStackb);
 static void                               marpaESLIFLua_genericLoggerCallbackv(void *userDatavp, genericLoggerLevel_t logLeveli, const char *msgs);
 static int                                marpaESLIFLua_installi(lua_State *L);
 static int                                marpaESLIFLua_versioni(lua_State *L);
@@ -218,9 +218,9 @@ static void                               marpaESLIFLua_genericFreeCallbackv(voi
 static short                              marpaESLIFLua_valueImporterb(marpaESLIFValue_t *marpaESLIFValuep, void *userDatavp, marpaESLIFValueResult_t *marpaESLIFValueResultp, short haveUndefb);
 static short                              marpaESLIFLua_recognizerImporterb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, void *userDatavp, marpaESLIFValueResult_t *marpaESLIFValueResultp, short haveUndefb);
 static short                              marpaESLIFLua_symbolImporterb(marpaESLIFSymbol_t *marpaESLIFSymbolp, void *userDatavp, marpaESLIFValueResult_t *marpaESLIFValueResultp, short haveUndefb);
-static short                              marpaESLIFLua_importb(lua_State *L, marpaESLIFValueResult_t *marpaESLIFValueResultp, short arraycopyb, short haveUndefb);
-static short                              marpaESLIFLua_pushValueb(marpaESLIFLuaValueContext_t *marpaESLIFLuaValueContextp, marpaESLIFValue_t *marpaESLIFValuep, int stackindicei, marpaESLIFValueResult_t *marpaESLIFValueResultSymbolp);
-static short                              marpaESLIFLua_pushRecognizerb(marpaESLIFLuaRecognizerContext_t *marpaESLIFLuaRecognizerContextp, marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFValueResult_t *marpaESLIFValueResultp);
+static inline short                       marpaESLIFLua_importb(lua_State *L, marpaESLIFValueResult_t *marpaESLIFValueResultp, short arraycopyb, short haveUndefb);
+static inline short                       marpaESLIFLua_pushValueb(marpaESLIFLuaValueContext_t *marpaESLIFLuaValueContextp, marpaESLIFValue_t *marpaESLIFValuep, int stackindicei, marpaESLIFValueResult_t *marpaESLIFValueResultSymbolp);
+static inline short                       marpaESLIFLua_pushRecognizerb(marpaESLIFLuaRecognizerContext_t *marpaESLIFLuaRecognizerContextp, marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFValueResult_t *marpaESLIFValueResultp);
 static void                               marpaESLIFLua_representationDisposev(void *userDatavp, char *inputcp, size_t inputl, char *encodings);
 static short                              marpaESLIFLua_representationb(void *userDatavp, marpaESLIFValueResult_t *marpaESLIFValueResultp, char **inputcpp, size_t *inputlp, char **encodingsp, marpaESLIFRepresentationDispose_t *disposeCallbackpp, short *stringbp);
 static int                                marpaESLIFLua_marpaESLIFRecognizer_newi(lua_State *L);
@@ -275,15 +275,15 @@ static int                                marpaESLIFLua_marpaESLIFValue_newFromU
 #endif
 static int                                marpaESLIFLua_marpaESLIFValue_freei(lua_State *L);
 static int                                marpaESLIFLua_marpaESLIFValue_valuei(lua_State *L);
-static short                              marpaESLIFLua_stack_setb(lua_State *L, marpaESLIF_t *marpaESLIFp, marpaESLIFValue_t *marpaESLIFValuep, int resulti, marpaESLIFValueResult_t *marpaESLIFValueResultOutputp);
-static short                              marpaESLIFLua_table_canarray_getb(lua_State *L, int indicei, short *canarraybp);
-static short                              marpaESLIFLua_table_opaque_getb(lua_State *L, int indicei, short *opaquebp);
+static inline short                       marpaESLIFLua_stack_setb(lua_State *L, marpaESLIF_t *marpaESLIFp, marpaESLIFValue_t *marpaESLIFValuep, int resulti, marpaESLIFValueResult_t *marpaESLIFValueResultOutputp);
+static inline short                       marpaESLIFLua_table_canarray_getb(lua_State *L, int indicei, short *canarraybp);
+static inline short                       marpaESLIFLua_table_opaque_getb(lua_State *L, int indicei, short *opaquebp);
 static int                                marpaESLIFLua_nexti(lua_State *L);
-static short                              marpaESLIFLua_pairsb(int *rcip, lua_State *L, int idx, int *iteratorip, int *statevariableip);
+static inline short                       marpaESLIFLua_pairsb(int *rcip, lua_State *L, int idx, int *iteratorip, int *statevariableip);
 static int                                marpaESLIFLua_marpaESLIFOpaque_freei(lua_State *L);
-static short                              marpaESLIFLua_metatypeb(int *luaip, lua_State *L, int index);
-static short                              marpaESLIFLua_createniledtableb(lua_State *L, int narr, short arrayb);
-static short                              marpaESLIFLua_metanextb(int *rcip, lua_State *L, int idx);
+static inline short                       marpaESLIFLua_metatypeb(int *luaip, lua_State *L, int index);
+static inline short                       marpaESLIFLua_createniledtableb(lua_State *L, int narr, short arrayb);
+static inline short                       marpaESLIFLua_metanextb(int *rcip, lua_State *L, int idx);
 static int                                marpaESLIFLua_marpaESLIFJSONEncoder_newi(lua_State *L);
 #ifdef MARPAESLIFLUA_EMBEDDED
 static int                                marpaESLIFLua_marpaESLIFJSONEncoder_newFromUnmanagedi(lua_State *L, marpaESLIFGrammar_t *marpaESLIFJSONEncoderUnmanagedp);
@@ -310,8 +310,8 @@ static int                                marpaESLIFLua_marpaESLIFRegexCallout_g
 static int                                marpaESLIFLua_marpaESLIFRegexCallout_getGrammarLeveli(lua_State *L);
 static int                                marpaESLIFLua_marpaESLIFRegexCallout_getSymbolIdi(lua_State *L);
 
-static short                              marpaESLIFLua_symbolContextInitb(lua_State *L, marpaESLIF_t *marpaESLIFp, int eslifStacki, marpaESLIFLuaSymbolContext_t *marpaESLIFLuaSymbolContextp, short unmanagedb);
-static void                               marpaESLIFLua_symbolContextFreev(marpaESLIFLuaSymbolContext_t *marpaESLIFLuaSymbolContextp, short onStackb);
+static inline short                       marpaESLIFLua_symbolContextInitb(lua_State *L, marpaESLIF_t *marpaESLIFp, int eslifStacki, marpaESLIFLuaSymbolContext_t *marpaESLIFLuaSymbolContextp, short unmanagedb);
+static inline void                        marpaESLIFLua_symbolContextFreev(marpaESLIFLuaSymbolContext_t *marpaESLIFLuaSymbolContextp, short onStackb);
 static int                                marpaESLIFLua_marpaESLIFSymbol_newi(lua_State *L);
 static int                                marpaESLIFLua_marpaESLIFSymbol_tryi(lua_State *L);
 static int                                marpaESLIFLua_marpaESLIFSymbol_freei(lua_State *L);
@@ -1803,7 +1803,7 @@ static int  marpaESLIFLua_marpaESLIF_newFromUnmanagedi(lua_State *L, marpaESLIF_
 #endif /* MARPAESLIFLUA_EMBEDDED */
 
 /****************************************************************************/
-static void marpaESLIFLua_stackdumpv(lua_State* L, int forcelookupi)
+static inline void marpaESLIFLua_stackdumpv(lua_State* L, int forcelookupi)
 /****************************************************************************/
 /* Reference: https://groups.google.com/forum/#!topic/lua5/gc3Ghjo6ipg      */
 /****************************************************************************/
@@ -1856,7 +1856,7 @@ static void marpaESLIFLua_stackdumpv(lua_State* L, int forcelookupi)
 }
 
 /****************************************************************************/
-static void marpaESLIFLua_tabledumpv(lua_State *L, const char *texts, int indicei, unsigned int identi)
+static inline void marpaESLIFLua_tabledumpv(lua_State *L, const char *texts, int indicei, unsigned int identi)
 /****************************************************************************/
 /* Copy of https://github.com/Tieske/Lua_library_template/blob/master/udtype_example/udtype.c */
 /****************************************************************************/
@@ -1912,7 +1912,7 @@ static void marpaESLIFLua_tabledumpv(lua_State *L, const char *texts, int indice
 }
 
 /****************************************************************************/
-static void marpaESLIFLua_tabledump_usingpairsv(lua_State *L, const char *texts, int indicei, unsigned int identi)
+static inline void marpaESLIFLua_tabledump_usingpairsv(lua_State *L, const char *texts, int indicei, unsigned int identi)
 /****************************************************************************/
 /* Copy of https://github.com/Tieske/Lua_library_template/blob/master/udtype_example/udtype.c */
 /****************************************************************************/
@@ -1983,7 +1983,7 @@ static void marpaESLIFLua_tabledump_usingpairsv(lua_State *L, const char *texts,
 }
 
 /****************************************************************************/
-static short marpaESLIFLua_paramIsLoggerInterfaceOrNilb(lua_State *L, int stacki)
+static inline short marpaESLIFLua_paramIsLoggerInterfaceOrNilb(lua_State *L, int stacki)
 /****************************************************************************/
 {
   static const char *funcs = "marpaESLIFLua_paramIsLoggerInterfaceOrNilb";
@@ -2031,7 +2031,7 @@ static short marpaESLIFLua_paramIsLoggerInterfaceOrNilb(lua_State *L, int stacki
 }
 
 /****************************************************************************/
-static short marpaESLIFLua_paramIsRecognizerInterfacev(lua_State *L, int stacki)
+static inline short marpaESLIFLua_paramIsRecognizerInterfacev(lua_State *L, int stacki)
 /****************************************************************************/
 {
   static const char *funcs = "marpaESLIFLua_paramIsRecognizerInterfacev";
@@ -2076,7 +2076,7 @@ static short marpaESLIFLua_paramIsRecognizerInterfacev(lua_State *L, int stacki)
 }
 
 /****************************************************************************/
-static short marpaESLIFLua_paramIsValueInterfacev(lua_State *L, int stacki)
+static inline short marpaESLIFLua_paramIsValueInterfacev(lua_State *L, int stacki)
 /****************************************************************************/
 {
   static const char *funcs = "marpaESLIFLua_paramIsValueInterfacev";
@@ -2117,7 +2117,7 @@ static short marpaESLIFLua_paramIsValueInterfacev(lua_State *L, int stacki)
 }
 
 /****************************************************************************/
-static short marpaESLIFLua_contextInitb(lua_State *L, marpaESLIFLuaContext_t *marpaESLIFLuaContextp, short unmanagedb /* not used */)
+static inline short marpaESLIFLua_contextInitb(lua_State *L, marpaESLIFLuaContext_t *marpaESLIFLuaContextp, short unmanagedb /* not used */)
 /****************************************************************************/
 {
   static const char *funcs = "marpaESLIFLua_contextInitb";
@@ -2129,7 +2129,7 @@ static short marpaESLIFLua_contextInitb(lua_State *L, marpaESLIFLuaContext_t *ma
 }
 
 /****************************************************************************/
-static void marpaESLIFLua_contextFreev(marpaESLIFLuaContext_t *marpaESLIFLuaContextp, short multitonDestroyModeb)
+static inline void marpaESLIFLua_contextFreev(marpaESLIFLuaContext_t *marpaESLIFLuaContextp, short multitonDestroyModeb)
 /****************************************************************************/
 {
   static const char *funcs = "marpaESLIFLua_contextFreev";
@@ -2151,7 +2151,7 @@ static void marpaESLIFLua_contextFreev(marpaESLIFLuaContext_t *marpaESLIFLuaCont
 }
 
 /****************************************************************************/
-static short marpaESLIFLua_grammarContextInitb(lua_State *L, marpaESLIF_t *marpaESLIFp, int eslifStacki, marpaESLIFLuaGrammarContext_t *marpaESLIFLuaGrammarContextp, short unmanagedb)
+static inline short marpaESLIFLua_grammarContextInitb(lua_State *L, marpaESLIF_t *marpaESLIFp, int eslifStacki, marpaESLIFLuaGrammarContext_t *marpaESLIFLuaGrammarContextp, short unmanagedb)
 /****************************************************************************/
 {
   static const char *funcs = "marpaESLIFLua_grammarContextInitb";
@@ -2181,7 +2181,7 @@ static short marpaESLIFLua_grammarContextInitb(lua_State *L, marpaESLIF_t *marpa
 }
 
 /****************************************************************************/
-static short marpaESLIFLua_recognizerContextInitb(lua_State *L, marpaESLIF_t *marpaESLIFp, int grammarStacki, int recognizerInterfaceStacki, int recognizerOrigStacki, marpaESLIFLuaRecognizerContext_t *marpaESLIFLuaRecognizerContextp, short unmanagedb)
+static inline short marpaESLIFLua_recognizerContextInitb(lua_State *L, marpaESLIF_t *marpaESLIFp, int grammarStacki, int recognizerInterfaceStacki, int recognizerOrigStacki, marpaESLIFLuaRecognizerContext_t *marpaESLIFLuaRecognizerContextp, short unmanagedb)
 /****************************************************************************/
 {
   static const char *funcs = "marpaESLIFLua_recognizerContextInitb";
@@ -2228,7 +2228,7 @@ static short marpaESLIFLua_recognizerContextInitb(lua_State *L, marpaESLIF_t *ma
 }
 
 /****************************************************************************/
-static void marpaESLIFLua_grammarContextFreev(lua_State *L, marpaESLIFLuaGrammarContext_t *marpaESLIFLuaGrammarContextp, short onStackb)
+static inline void marpaESLIFLua_grammarContextFreev(lua_State *L, marpaESLIFLuaGrammarContext_t *marpaESLIFLuaGrammarContextp, short onStackb)
 /****************************************************************************/
 {
   static const char *funcs = "marpaESLIFLua_grammarContextFreev";
@@ -2259,7 +2259,7 @@ static void marpaESLIFLua_grammarContextFreev(lua_State *L, marpaESLIFLuaGrammar
 }
 
 /****************************************************************************/
-static void  marpaESLIFLua_recognizerContextFreev(lua_State *L, marpaESLIFLuaRecognizerContext_t *marpaESLIFLuaRecognizerContextp, short onStackb)
+static inline void marpaESLIFLua_recognizerContextFreev(lua_State *L, marpaESLIFLuaRecognizerContext_t *marpaESLIFLuaRecognizerContextp, short onStackb)
 /****************************************************************************/
 {
   static const char *funcs = "marpaESLIFLua_recognizerContextFreev";
@@ -2298,7 +2298,7 @@ static void  marpaESLIFLua_recognizerContextFreev(lua_State *L, marpaESLIFLuaRec
 }
 
 /****************************************************************************/
-static void  marpaESLIFLua_valueContextFreev(lua_State *L, marpaESLIFLuaValueContext_t *marpaESLIFLuaValueContextp, short onStackb)
+static inline void marpaESLIFLua_valueContextFreev(lua_State *L, marpaESLIFLuaValueContext_t *marpaESLIFLuaValueContextp, short onStackb)
 /****************************************************************************/
 {
   static const char *funcs = "marpaESLIFLua_valueContextFreev";
@@ -2336,7 +2336,7 @@ static void  marpaESLIFLua_valueContextFreev(lua_State *L, marpaESLIFLuaValueCon
 }
 
 /****************************************************************************/
-static short  marpaESLIFLua_valueContextInitb(lua_State *L, marpaESLIF_t *marpaESLIFp, int grammarStacki, int recognizerStacki, int valueInterfaceStacki, marpaESLIFLuaValueContext_t *marpaESLIFLuaValueContextp, short unmanagedb, short grammarStackiCanBeZerob)
+static inline short marpaESLIFLua_valueContextInitb(lua_State *L, marpaESLIF_t *marpaESLIFp, int grammarStacki, int recognizerStacki, int valueInterfaceStacki, marpaESLIFLuaValueContext_t *marpaESLIFLuaValueContextp, short unmanagedb, short grammarStackiCanBeZerob)
 /****************************************************************************/
 {
   static const char *funcs = "marpaESLIFLua_valueContextInitb";
@@ -4434,7 +4434,7 @@ static void marpaESLIFLua_genericFreeCallbackv(void *userDatavp, marpaESLIFValue
 }
 
 /*****************************************************************************/
-static short marpaESLIFLua_importb(lua_State *L, marpaESLIFValueResult_t *marpaESLIFValueResultp, short arraycopyb, short haveUndefb)
+static inline short marpaESLIFLua_importb(lua_State *L, marpaESLIFValueResult_t *marpaESLIFValueResultp, short arraycopyb, short haveUndefb)
 /*****************************************************************************/
 {
   static const char           *funcs = "marpaESLIFLua_importb";
@@ -4645,7 +4645,7 @@ static short marpaESLIFLua_symbolImporterb(marpaESLIFSymbol_t *marpaESLIFSymbolp
 }
 
 /*****************************************************************************/
-static short marpaESLIFLua_pushValueb(marpaESLIFLuaValueContext_t *marpaESLIFLuaValueContextp, marpaESLIFValue_t *marpaESLIFValuep, int stackindicei, marpaESLIFValueResult_t *marpaESLIFValueResultSymbolp)
+static inline short marpaESLIFLua_pushValueb(marpaESLIFLuaValueContext_t *marpaESLIFLuaValueContextp, marpaESLIFValue_t *marpaESLIFValuep, int stackindicei, marpaESLIFValueResult_t *marpaESLIFValueResultSymbolp)
 /*****************************************************************************/
 {
   static const char       *funcs = "marpaESLIFLua_pushValueb";
@@ -4684,7 +4684,7 @@ static short marpaESLIFLua_pushValueb(marpaESLIFLuaValueContext_t *marpaESLIFLua
 }
 
 /*****************************************************************************/
-static short marpaESLIFLua_pushRecognizerb(marpaESLIFLuaRecognizerContext_t *marpaESLIFLuaRecognizerContextp, marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFValueResult_t *marpaESLIFValueResultp)
+static inline short marpaESLIFLua_pushRecognizerb(marpaESLIFLuaRecognizerContext_t *marpaESLIFLuaRecognizerContextp, marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFValueResult_t *marpaESLIFValueResultp)
 /*****************************************************************************/
 {
   static const char       *funcs = "marpaESLIFLua_pushRecognizerb";
@@ -8686,7 +8686,7 @@ static inline short marpaESLIFLua_luaL_loadbuffer(int *rcip, lua_State *L, const
 #endif /* MARPAESLIFLUA_EMBEDDED */
 
 /****************************************************************************/
-static short marpaESLIFLua_stack_setb(lua_State *L, marpaESLIF_t *marpaESLIFp, marpaESLIFValue_t *marpaESLIFValuep, int resulti, marpaESLIFValueResult_t *marpaESLIFValueResultOutputp)
+static inline short marpaESLIFLua_stack_setb(lua_State *L, marpaESLIF_t *marpaESLIFp, marpaESLIFValue_t *marpaESLIFValuep, int resulti, marpaESLIFValueResult_t *marpaESLIFValueResultOutputp)
 /****************************************************************************/
 /* Take care: IF resulti is >= 0, then marpaESLIFValuep must be != NULL     */
 /****************************************************************************/
@@ -9333,7 +9333,7 @@ static short marpaESLIFLua_stack_setb(lua_State *L, marpaESLIF_t *marpaESLIFp, m
 }
 
 /****************************************************************************/
-static short marpaESLIFLua_table_canarray_getb(lua_State *L, int indicei, short *canarraybp)
+static inline short marpaESLIFLua_table_canarray_getb(lua_State *L, int indicei, short *canarraybp)
 /****************************************************************************/
 {
   static const char *funcs     = "marpaESLIFLua_table_canarray_getb";
@@ -9364,7 +9364,7 @@ static short marpaESLIFLua_table_canarray_getb(lua_State *L, int indicei, short 
 }
 
 /****************************************************************************/
-static short marpaESLIFLua_table_opaque_getb(lua_State *L, int indicei, short *opaquebp)
+static inline short marpaESLIFLua_table_opaque_getb(lua_State *L, int indicei, short *opaquebp)
 /****************************************************************************/
 {
   static const char *funcs   = "marpaESLIFLua_table_opaque_getb";
@@ -9422,7 +9422,7 @@ static int marpaESLIFLua_nexti(lua_State *L)
 }
 
 /****************************************************************************/
-static short marpaESLIFLua_pairsb(int *rcip, lua_State *L, int idx, int *iteratorip, int *statevariableip)
+static inline short marpaESLIFLua_pairsb(int *rcip, lua_State *L, int idx, int *iteratorip, int *statevariableip)
 /****************************************************************************/
 /* This method uses pairs() if available. It must be called with non-NULL iteratorip and statevariableip variables */
 /****************************************************************************/
@@ -9520,7 +9520,7 @@ static int marpaESLIFLua_marpaESLIFOpaque_freei(lua_State *L)
 }
 
 /****************************************************************************/
-static short marpaESLIFLua_metatypeb(int *rcip, lua_State *L, int index)
+static inline short marpaESLIFLua_metatypeb(int *rcip, lua_State *L, int index)
 /****************************************************************************/
 /* This function does quite the same thing as the _G.type override          */
 /****************************************************************************/
@@ -9595,7 +9595,7 @@ static short marpaESLIFLua_metatypeb(int *rcip, lua_State *L, int index)
 }
 
 /****************************************************************************/
-static short marpaESLIFLua_createniledtableb(lua_State *L, int narr, short arrayb)
+static inline short marpaESLIFLua_createniledtableb(lua_State *L, int narr, short arrayb)
 /****************************************************************************/
 {
   static const char *funcs = "marpaESLIFLua_createniledtableb";
@@ -9615,7 +9615,7 @@ static short marpaESLIFLua_createniledtableb(lua_State *L, int narr, short array
 }
 
 /****************************************************************************/
-static short marpaESLIFLua_metanextb(int *rcip, lua_State *L, int idx)
+static inline short marpaESLIFLua_metanextb(int *rcip, lua_State *L, int idx)
 /****************************************************************************/
 /* This function does quite the same thing as the _G.next override          */
 /* Note: it is ASSUMED that there is a key in the stack                     */
@@ -10201,7 +10201,7 @@ static int marpaESLIFLua_marpaESLIFRegexCallout_getSymbolIdi(lua_State *L)      
 /****************************************************************************/
 
 /****************************************************************************/
-static short marpaESLIFLua_symbolContextInitb(lua_State *L, marpaESLIF_t *marpaESLIFp, int eslifStacki, marpaESLIFLuaSymbolContext_t *marpaESLIFLuaSymbolContextp, short unmanagedb)
+static inline short marpaESLIFLua_symbolContextInitb(lua_State *L, marpaESLIF_t *marpaESLIFp, int eslifStacki, marpaESLIFLuaSymbolContext_t *marpaESLIFLuaSymbolContextp, short unmanagedb)
 /****************************************************************************/
 {
   static const char *funcs = "marpaESLIFLua_symbolContextInitb";
@@ -10232,7 +10232,7 @@ static short marpaESLIFLua_symbolContextInitb(lua_State *L, marpaESLIF_t *marpaE
 }
 
 /****************************************************************************/
-static void marpaESLIFLua_symbolContextFreev(marpaESLIFLuaSymbolContext_t *marpaESLIFLuaSymbolContextp, short onStackb)
+static inline void marpaESLIFLua_symbolContextFreev(marpaESLIFLuaSymbolContext_t *marpaESLIFLuaSymbolContextp, short onStackb)
 /****************************************************************************/
 {
   static const char *funcs = "marpaESLIFLua_symbolContextFreev";
