@@ -1238,6 +1238,7 @@ static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *mar
   terminalp->regex.isAnchoredb                           = 0;
   terminalp->regex.utfb                                  = 0;
   terminalp->regex.compile_contextp                      = NULL;
+  terminalp->regex.calloutb                              = 0;
   terminalp->regex.match_contextp                        = NULL;
   terminalp->regex.callout_context.marpaESLIFRecognizerp = NULL; /* Changed at every call, c.f. _marpaESLIFRecognizer_terminal_matcherb */
   terminalp->regex.callout_context.terminalp             = NULL;
@@ -5153,6 +5154,7 @@ static inline marpaESLIF_t *_marpaESLIF_newp(marpaESLIFOption_t *marpaESLIFOptio
   marpaESLIFp->marpaESLIFGrammarp        = NULL;
   marpaESLIFp->anycharp                  = NULL;
   marpaESLIFp->newlinep                  = NULL;
+  marpaESLIFp->newlineSymbolp            = NULL;
   marpaESLIFp->stringModifiersp          = NULL;
   marpaESLIFp->characterClassModifiersp  = NULL;
   marpaESLIFp->regexModifiersp           = NULL;
