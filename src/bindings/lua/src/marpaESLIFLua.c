@@ -7355,8 +7355,8 @@ static int marpaESLIFLua_marpaESLIFValue_valuei(lua_State *L)
 /* When MARPAESLIFLUA_EMBEDDED the file that includes this source must      */
 /* provide the following implementations.                                   */
 /****************************************************************************/
-#ifndef MARPAESLIFLUA_EMBEDDED
 
+#if (!defined(MARPAESLIFLUA_EMBEDDED)) || defined(MARPAESLIFLUA_EMBEDDED_NATIVECALL_LUA_ASSERTSTACK)
 /****************************************************************************/
 static inline short marpaESLIFLua_lua_assertstack(lua_State *L, int extra)
 /****************************************************************************/
@@ -7372,7 +7372,9 @@ static inline short marpaESLIFLua_lua_assertstack(lua_State *L, int extra)
 
   return 1;
 }
+#endif
 
+#if (!defined(MARPAESLIFLUA_EMBEDDED)) || defined(MARPAESLIFLUA_EMBEDDED_NATIVECALL_LUA_PUSHINTEGER)
 /****************************************************************************/
 static inline short marpaESLIFLua_lua_pushinteger(lua_State *L, lua_Integer n)
 /****************************************************************************/
@@ -7390,7 +7392,9 @@ static inline short marpaESLIFLua_lua_pushinteger(lua_State *L, lua_Integer n)
  done:
   return rcb;
 }
+#endif
 
+#if (!defined(MARPAESLIFLUA_EMBEDDED)) || defined(MARPAESLIFLUA_EMBEDDED_NATIVECALL_LUA_SETGLOBAL)
 /****************************************************************************/
 static inline short marpaESLIFLua_lua_setglobal (lua_State *L, const char *name)
 /****************************************************************************/
@@ -7398,7 +7402,9 @@ static inline short marpaESLIFLua_lua_setglobal (lua_State *L, const char *name)
   lua_setglobal(L, name); /* Native lua call */
   return 1;
 }
+#endif
 
+#if (!defined(MARPAESLIFLUA_EMBEDDED)) || defined(MARPAESLIFLUA_EMBEDDED_NATIVECALL_LUA_GETGLOBAL)
 /****************************************************************************/
 static inline short marpaESLIFLua_lua_getglobal (int *rcip, lua_State *L, const char *name)
 /****************************************************************************/
@@ -7425,7 +7431,9 @@ static inline short marpaESLIFLua_lua_getglobal (int *rcip, lua_State *L, const 
  done:
   return rcb;
 }
+#endif
 
+#if (!defined(MARPAESLIFLUA_EMBEDDED)) || defined(MARPAESLIFLUA_EMBEDDED_NATIVECALL_LUA_TYPE)
 /****************************************************************************/
 static inline short marpaESLIFLua_lua_type(int *rcip, lua_State *L, int index)
 /****************************************************************************/
@@ -7439,7 +7447,9 @@ static inline short marpaESLIFLua_lua_type(int *rcip, lua_State *L, int index)
 
   return 1;
 }
+#endif
 
+#if (!defined(MARPAESLIFLUA_EMBEDDED)) || defined(MARPAESLIFLUA_EMBEDDED_NATIVECALL_LUA_POP)
 /****************************************************************************/
 static inline short marpaESLIFLua_lua_pop(lua_State *L, int n)
 /****************************************************************************/
@@ -7448,7 +7458,9 @@ static inline short marpaESLIFLua_lua_pop(lua_State *L, int n)
 
   return 1;
 }
+#endif
 
+#if (!defined(MARPAESLIFLUA_EMBEDDED)) || defined(MARPAESLIFLUA_EMBEDDED_NATIVECALL_LUA_NEWTABLE)
 /****************************************************************************/
 static inline short marpaESLIFLua_lua_newtable(lua_State *L)
 /****************************************************************************/
@@ -7467,7 +7479,9 @@ static inline short marpaESLIFLua_lua_newtable(lua_State *L)
  done:
   return rcb;
 }
+#endif
 
+#if (!defined(MARPAESLIFLUA_EMBEDDED)) || defined(MARPAESLIFLUA_EMBEDDED_NATIVECALL_LUA_PUSHCFUNCTION)
 /****************************************************************************/
 static inline short marpaESLIFLua_lua_pushcfunction (lua_State *L, lua_CFunction f)
 /****************************************************************************/
@@ -7486,7 +7500,9 @@ static inline short marpaESLIFLua_lua_pushcfunction (lua_State *L, lua_CFunction
  done:
   return rcb;
 }
+#endif
 
+#if (!defined(MARPAESLIFLUA_EMBEDDED)) || defined(MARPAESLIFLUA_EMBEDDED_NATIVECALL_LUA_SETFIELD)
 /****************************************************************************/
 static inline short marpaESLIFLua_lua_setfield(lua_State *L, int index, const char *k)
 /****************************************************************************/
@@ -7495,7 +7511,9 @@ static inline short marpaESLIFLua_lua_setfield(lua_State *L, int index, const ch
 
   return 1;
 }
+#endif
 
+#if (!defined(MARPAESLIFLUA_EMBEDDED)) || defined(MARPAESLIFLUA_EMBEDDED_NATIVECALL_LUA_SETMETATABLE)
 /****************************************************************************/
 static inline short marpaESLIFLua_lua_setmetatable (lua_State *L, int index)
 /****************************************************************************/
@@ -7504,7 +7522,9 @@ static inline short marpaESLIFLua_lua_setmetatable (lua_State *L, int index)
 
   return 1;
 }
+#endif
 
+#if (!defined(MARPAESLIFLUA_EMBEDDED)) || defined(MARPAESLIFLUA_EMBEDDED_NATIVECALL_LUA_INSERT)
 /****************************************************************************/
 static inline short marpaESLIFLua_lua_insert(lua_State *L, int index)
 /****************************************************************************/
@@ -7523,7 +7543,9 @@ static inline short marpaESLIFLua_lua_insert(lua_State *L, int index)
  done:
   return rcb;
 }
+#endif
 
+#if (!defined(MARPAESLIFLUA_EMBEDDED)) || defined(MARPAESLIFLUA_EMBEDDED_NATIVECALL_LUA_RAWGETI)
 /****************************************************************************/
 static inline short marpaESLIFLua_lua_rawgeti(int *rcip, lua_State *L, int index, lua_Integer n)
 /****************************************************************************/
@@ -7540,7 +7562,9 @@ static inline short marpaESLIFLua_lua_rawgeti(int *rcip, lua_State *L, int index
 
   return 1;
 }
+#endif
 
+#if (!defined(MARPAESLIFLUA_EMBEDDED)) || defined(MARPAESLIFLUA_EMBEDDED_NATIVECALL_LUA_RAWGET)
 /****************************************************************************/
 static inline short marpaESLIFLua_lua_rawget(int *rcip, lua_State *L, int index)
 /****************************************************************************/
@@ -7557,7 +7581,9 @@ static inline short marpaESLIFLua_lua_rawget(int *rcip, lua_State *L, int index)
 
   return 1;
 }
+#endif
 
+#if (!defined(MARPAESLIFLUA_EMBEDDED)) || defined(MARPAESLIFLUA_EMBEDDED_NATIVECALL_LUA_RAWGETP)
 /****************************************************************************/
 static inline short marpaESLIFLua_lua_rawgetp(int *rcip, lua_State *L, int index, const void *p)
 /****************************************************************************/
@@ -7574,7 +7600,9 @@ static inline short marpaESLIFLua_lua_rawgetp(int *rcip, lua_State *L, int index
 
   return 1;
 }
+#endif
 
+#if (!defined(MARPAESLIFLUA_EMBEDDED)) || defined(MARPAESLIFLUA_EMBEDDED_NATIVECALL_LUA_REMOVE)
 /****************************************************************************/
 static inline short marpaESLIFLua_lua_remove(lua_State *L, int index)
 /****************************************************************************/
@@ -7583,7 +7611,9 @@ static inline short marpaESLIFLua_lua_remove(lua_State *L, int index)
 
   return 1;
 }
+#endif
 
+#if (!defined(MARPAESLIFLUA_EMBEDDED)) || defined(MARPAESLIFLUA_EMBEDDED_NATIVECALL_LUA_CREATETABLE)
 /****************************************************************************/
 static inline short marpaESLIFLua_lua_createtable(lua_State *L, int narr, int nrec)
 /****************************************************************************/
@@ -7602,7 +7632,9 @@ static inline short marpaESLIFLua_lua_createtable(lua_State *L, int narr, int nr
  done:
   return rcb;
 }
+#endif
 
+#if (!defined(MARPAESLIFLUA_EMBEDDED)) || defined(MARPAESLIFLUA_EMBEDDED_NATIVECALL_LUA_RAWSETI)
 /****************************************************************************/
 static inline short marpaESLIFLua_lua_rawseti(lua_State *L, int index, lua_Integer i)
 /****************************************************************************/
@@ -7611,7 +7643,9 @@ static inline short marpaESLIFLua_lua_rawseti(lua_State *L, int index, lua_Integ
 
   return 1;
 }
+#endif
 
+#if (!defined(MARPAESLIFLUA_EMBEDDED)) || defined(MARPAESLIFLUA_EMBEDDED_NATIVECALL_LUA_SETI)
 /****************************************************************************/
 static inline short marpaESLIFLua_lua_seti(lua_State *L, int index, lua_Integer i)
 /****************************************************************************/
@@ -7628,7 +7662,9 @@ static inline short marpaESLIFLua_lua_seti(lua_State *L, int index, lua_Integer 
 
   return 1;
 }
+#endif
 
+#if (!defined(MARPAESLIFLUA_EMBEDDED)) || defined(MARPAESLIFLUA_EMBEDDED_NATIVECALL_LUA_PUSHSTRING)
 /****************************************************************************/
 static inline short marpaESLIFLua_lua_pushstring(const char **luasp, lua_State *L, const char *s)
 /****************************************************************************/
@@ -7649,7 +7685,9 @@ static inline short marpaESLIFLua_lua_pushstring(const char **luasp, lua_State *
  done:
   return rcb;
 }
+#endif
 
+#if (!defined(MARPAESLIFLUA_EMBEDDED)) || defined(MARPAESLIFLUA_EMBEDDED_NATIVECALL_LUA_PUSHLSTRING)
 /****************************************************************************/
 static inline short marpaESLIFLua_lua_pushlstring(const char **luasp, lua_State *L, const char *s, size_t len)
 /****************************************************************************/
@@ -7670,7 +7708,9 @@ static inline short marpaESLIFLua_lua_pushlstring(const char **luasp, lua_State 
  done:
   return rcb;
 }
+#endif
 
+#if (!defined(MARPAESLIFLUA_EMBEDDED)) || defined(MARPAESLIFLUA_EMBEDDED_NATIVECALL_LUA_PUSHNIL)
 /****************************************************************************/
 static inline short marpaESLIFLua_lua_pushnil(lua_State *L)
 /****************************************************************************/
@@ -7689,7 +7729,9 @@ static inline short marpaESLIFLua_lua_pushnil(lua_State *L)
  done:
   return rcb;
 }
+#endif
 
+#if (!defined(MARPAESLIFLUA_EMBEDDED)) || defined(MARPAESLIFLUA_EMBEDDED_NATIVECALL_LUA_GETFIELD)
 /****************************************************************************/
 static inline short marpaESLIFLua_lua_getfield(int *rcip, lua_State *L, int index, const char *k)
 /****************************************************************************/
@@ -7716,7 +7758,9 @@ static inline short marpaESLIFLua_lua_getfield(int *rcip, lua_State *L, int inde
  done:
   return rcb;
 }
+#endif
 
+#if (!defined(MARPAESLIFLUA_EMBEDDED)) || defined(MARPAESLIFLUA_EMBEDDED_NATIVECALL_LUA_CALL)
 /****************************************************************************/
 static inline short marpaESLIFLua_lua_call(lua_State *L, int nargs, int nresults)
 /****************************************************************************/
@@ -7736,7 +7780,9 @@ static inline short marpaESLIFLua_lua_call(lua_State *L, int nargs, int nresults
  done:
   return rcb;
 }
+#endif
 
+#if (!defined(MARPAESLIFLUA_EMBEDDED)) || defined(MARPAESLIFLUA_EMBEDDED_NATIVECALL_LUA_SETTOP)
 /****************************************************************************/
 static short inline marpaESLIFLua_lua_settop(lua_State *L, int index)
 /****************************************************************************/
@@ -7745,7 +7791,9 @@ static short inline marpaESLIFLua_lua_settop(lua_State *L, int index)
 
   return 1;
 }
+#endif
 
+#if (!defined(MARPAESLIFLUA_EMBEDDED)) || defined(MARPAESLIFLUA_EMBEDDED_NATIVECALL_LUA_COPY)
 /****************************************************************************/
 static inline short marpaESLIFLua_lua_copy(lua_State *L, int fromidx, int toidx)
 /****************************************************************************/
@@ -7765,7 +7813,9 @@ static inline short marpaESLIFLua_lua_copy(lua_State *L, int fromidx, int toidx)
  done:
   return rcb;
 }
+#endif
 
+#if (!defined(MARPAESLIFLUA_EMBEDDED)) || defined(MARPAESLIFLUA_EMBEDDED_NATIVECALL_LUA_RAWSETP)
 /****************************************************************************/
 static inline short marpaESLIFLua_lua_rawsetp(lua_State *L, int index, const void *p)
 /****************************************************************************/
@@ -7774,7 +7824,9 @@ static inline short marpaESLIFLua_lua_rawsetp(lua_State *L, int index, const voi
 
   return 1;
 }
+#endif
 
+#if (!defined(MARPAESLIFLUA_EMBEDDED)) || defined(MARPAESLIFLUA_EMBEDDED_NATIVECALL_LUA_RAWSET)
 /****************************************************************************/
 static inline short marpaESLIFLua_lua_rawset(lua_State *L, int index)
 /****************************************************************************/
@@ -7783,7 +7835,9 @@ static inline short marpaESLIFLua_lua_rawset(lua_State *L, int index)
 
   return 1;
 }
+#endif
 
+#if (!defined(MARPAESLIFLUA_EMBEDDED)) || defined(MARPAESLIFLUA_EMBEDDED_NATIVECALL_LUA_PUSHBOOLEAN)
 /****************************************************************************/
 static inline short marpaESLIFLua_lua_pushboolean(lua_State *L, int b)
 /****************************************************************************/
@@ -7803,7 +7857,9 @@ static inline short marpaESLIFLua_lua_pushboolean(lua_State *L, int b)
  done:
   return rcb;
 }
+#endif
 
+#if (!defined(MARPAESLIFLUA_EMBEDDED)) || defined(MARPAESLIFLUA_EMBEDDED_NATIVECALL_LUA_PUSHNUMBER)
 /****************************************************************************/
 static inline short marpaESLIFLua_lua_pushnumber(lua_State *L, lua_Number n)
 /****************************************************************************/
@@ -7823,7 +7879,9 @@ static inline short marpaESLIFLua_lua_pushnumber(lua_State *L, lua_Number n)
  done:
   return rcb;
 }
+#endif
 
+#if (!defined(MARPAESLIFLUA_EMBEDDED)) || defined(MARPAESLIFLUA_EMBEDDED_NATIVECALL_LUA_PUSHLIGHTUSERDATA)
 /****************************************************************************/
 static inline short marpaESLIFLua_lua_pushlightuserdata(lua_State *L, void *p)
 /****************************************************************************/
@@ -7843,7 +7901,9 @@ static inline short marpaESLIFLua_lua_pushlightuserdata(lua_State *L, void *p)
  done:
   return rcb;
 }
+#endif
 
+#if (!defined(MARPAESLIFLUA_EMBEDDED)) || defined(MARPAESLIFLUA_EMBEDDED_NATIVECALL_LUA_NEWUSERDATA)
 /****************************************************************************/
 static inline short marpaESLIFLua_lua_newuserdata(void **rcpp, lua_State *L, size_t sz)
 /****************************************************************************/
@@ -7865,7 +7925,9 @@ static inline short marpaESLIFLua_lua_newuserdata(void **rcpp, lua_State *L, siz
  done:
   return rcb;
 }
+#endif
 
+#if (!defined(MARPAESLIFLUA_EMBEDDED)) || defined(MARPAESLIFLUA_EMBEDDED_NATIVECALL_LUA_PUSHVALUE)
 /****************************************************************************/
 static inline short marpaESLIFLua_lua_pushvalue(lua_State *L, int index)
 /****************************************************************************/
@@ -7885,7 +7947,9 @@ static inline short marpaESLIFLua_lua_pushvalue(lua_State *L, int index)
  done:
   return rcb;
 }
+#endif
 
+#if (!defined(MARPAESLIFLUA_EMBEDDED)) || defined(MARPAESLIFLUA_EMBEDDED_NATIVECALL_LUAL_REF)
 /****************************************************************************/
 static inline short marpaESLIFLua_luaL_ref(int *rcip, lua_State *L, int t)
 /****************************************************************************/
@@ -7897,7 +7961,9 @@ static inline short marpaESLIFLua_luaL_ref(int *rcip, lua_State *L, int t)
 
   return 1;
 }
+#endif
 
+#if (!defined(MARPAESLIFLUA_EMBEDDED)) || defined(MARPAESLIFLUA_EMBEDDED_NATIVECALL_LUAL_UNREF)
 /****************************************************************************/
 static inline short marpaESLIFLua_luaL_unref(lua_State *L, int t, int ref)
 /****************************************************************************/
@@ -7905,7 +7971,9 @@ static inline short marpaESLIFLua_luaL_unref(lua_State *L, int t, int ref)
   luaL_unref(L, t, ref); /* Native lua call */
   return 1;
 }
+#endif
 
+#if (!defined(MARPAESLIFLUA_EMBEDDED)) || defined(MARPAESLIFLUA_EMBEDDED_NATIVECALL_LUAL_REQUIREF)
 /****************************************************************************/
 static inline short marpaESLIFLua_luaL_requiref(lua_State *L, const char *modname, lua_CFunction openf, int glb)
 /****************************************************************************/
@@ -7925,7 +7993,9 @@ static inline short marpaESLIFLua_luaL_requiref(lua_State *L, const char *modnam
  done:
   return rcb;
 }
+#endif
 
+#if (!defined(MARPAESLIFLUA_EMBEDDED)) || defined(MARPAESLIFLUA_EMBEDDED_NATIVECALL_LUA_TOUSERDATA)
 /****************************************************************************/
 static inline short marpaESLIFLua_lua_touserdata(void **rcpp, lua_State *L, int idx)
 /****************************************************************************/
@@ -7938,7 +8008,9 @@ static inline short marpaESLIFLua_lua_touserdata(void **rcpp, lua_State *L, int 
   }
   return 1;
 }
+#endif
 
+#if (!defined(MARPAESLIFLUA_EMBEDDED)) || defined(MARPAESLIFLUA_EMBEDDED_NATIVECALL_LUA_TOINTEGER)
 /****************************************************************************/
 static inline short marpaESLIFLua_lua_tointeger(lua_Integer *rcip, lua_State *L, int idx)
 /****************************************************************************/
@@ -7952,7 +8024,9 @@ static inline short marpaESLIFLua_lua_tointeger(lua_Integer *rcip, lua_State *L,
 
   return 1;
 }
+#endif
 
+#if (!defined(MARPAESLIFLUA_EMBEDDED)) || defined(MARPAESLIFLUA_EMBEDDED_NATIVECALL_LUA_TOINTEGERX)
 /****************************************************************************/
 static inline short marpaESLIFLua_lua_tointegerx(lua_Integer *rcip, lua_State *L, int idx, int *isnum)
 /****************************************************************************/
@@ -7966,7 +8040,9 @@ static inline short marpaESLIFLua_lua_tointegerx(lua_Integer *rcip, lua_State *L
 
   return 1;
 }
+#endif
 
+#if (!defined(MARPAESLIFLUA_EMBEDDED)) || defined(MARPAESLIFLUA_EMBEDDED_NATIVECALL_LUA_TONUMBER)
 /****************************************************************************/
 static inline short marpaESLIFLua_lua_tonumber(lua_Number *rcdp, lua_State *L, int idx)
 /****************************************************************************/
@@ -7980,7 +8056,9 @@ static inline short marpaESLIFLua_lua_tonumber(lua_Number *rcdp, lua_State *L, i
 
   return 1;
 }
+#endif
 
+#if (!defined(MARPAESLIFLUA_EMBEDDED)) || defined(MARPAESLIFLUA_EMBEDDED_NATIVECALL_LUA_TONUMBERX)
 /****************************************************************************/
 static inline short marpaESLIFLua_lua_tonumberx(lua_Number *rcdp, lua_State *L, int idx, int *isnum)
 /****************************************************************************/
@@ -7994,7 +8072,9 @@ static inline short marpaESLIFLua_lua_tonumberx(lua_Number *rcdp, lua_State *L, 
 
   return 1;
 }
+#endif
 
+#if (!defined(MARPAESLIFLUA_EMBEDDED)) || defined(MARPAESLIFLUA_EMBEDDED_NATIVECALL_LUA_TOBOOLEAN)
 /****************************************************************************/
 static inline short marpaESLIFLua_lua_toboolean(int *rcip, lua_State *L, int idx)
 /****************************************************************************/
@@ -8008,7 +8088,9 @@ static inline short marpaESLIFLua_lua_toboolean(int *rcip, lua_State *L, int idx
 
   return 1;
 }
+#endif
 
+#if (!defined(MARPAESLIFLUA_EMBEDDED)) || defined(MARPAESLIFLUA_EMBEDDED_NATIVECALL_LUAL_TOLSTRING)
 /****************************************************************************/
 static inline short marpaESLIFLua_luaL_tolstring(const char **rcpp, lua_State *L, int idx, size_t *len)
 /****************************************************************************/
@@ -8022,7 +8104,9 @@ static inline short marpaESLIFLua_luaL_tolstring(const char **rcpp, lua_State *L
 
   return 1;
 }
+#endif
 
+#if (!defined(MARPAESLIFLUA_EMBEDDED)) || defined(MARPAESLIFLUA_EMBEDDED_NATIVECALL_LUA_TOLSTRING)
 /****************************************************************************/
 static inline short marpaESLIFLua_lua_tolstring(const char **rcpp, lua_State *L, int idx, size_t *len)
 /****************************************************************************/
@@ -8036,7 +8120,9 @@ static inline short marpaESLIFLua_lua_tolstring(const char **rcpp, lua_State *L,
 
   return 1;
 }
+#endif
 
+#if (!defined(MARPAESLIFLUA_EMBEDDED)) || defined(MARPAESLIFLUA_EMBEDDED_NATIVECALL_LUA_TOSTRING)
 /****************************************************************************/
 static inline short marpaESLIFLua_lua_tostring(const char **rcpp, lua_State *L, int idx)
 /****************************************************************************/
@@ -8050,7 +8136,9 @@ static inline short marpaESLIFLua_lua_tostring(const char **rcpp, lua_State *L, 
 
   return 1;
 }
+#endif
 
+#if (!defined(MARPAESLIFLUA_EMBEDDED)) || defined(MARPAESLIFLUA_EMBEDDED_NATIVECALL_LUA_COMPARE)
 /****************************************************************************/
 static inline short marpaESLIFLua_lua_compare(int *rcip, lua_State *L, int idx1, int idx2, int op)
 /****************************************************************************/
@@ -8064,7 +8152,9 @@ static inline short marpaESLIFLua_lua_compare(int *rcip, lua_State *L, int idx1,
 
   return 1;
 }
+#endif
 
+#if (!defined(MARPAESLIFLUA_EMBEDDED)) || defined(MARPAESLIFLUA_EMBEDDED_NATIVECALL_LUA_RAWEQUAL)
 /****************************************************************************/
 static inline short marpaESLIFLua_lua_rawequal(int *rcip, lua_State *L, int idx1, int idx2)
 /****************************************************************************/
@@ -8078,7 +8168,9 @@ static inline short marpaESLIFLua_lua_rawequal(int *rcip, lua_State *L, int idx1
 
   return 1;
 }
+#endif
 
+#if (!defined(MARPAESLIFLUA_EMBEDDED)) || defined(MARPAESLIFLUA_EMBEDDED_NATIVECALL_LUA_ISNIL)
 /****************************************************************************/
 static inline short marpaESLIFLua_lua_isnil(int *rcip, lua_State *L, int n)
 /****************************************************************************/
@@ -8092,7 +8184,9 @@ static inline short marpaESLIFLua_lua_isnil(int *rcip, lua_State *L, int n)
 
   return 1;
 }
+#endif
 
+#if (!defined(MARPAESLIFLUA_EMBEDDED)) || defined(MARPAESLIFLUA_EMBEDDED_NATIVECALL_LUA_GETTOP)
 /****************************************************************************/
 static inline short marpaESLIFLua_lua_gettop(int *rcip, lua_State *L)
 /****************************************************************************/
@@ -8106,7 +8200,9 @@ static inline short marpaESLIFLua_lua_gettop(int *rcip, lua_State *L)
 
   return 1;
 }
+#endif
 
+#if (!defined(MARPAESLIFLUA_EMBEDDED)) || defined(MARPAESLIFLUA_EMBEDDED_NATIVECALL_LUA_ABSINDEX)
 /****************************************************************************/
 static inline short marpaESLIFLua_lua_absindex(int *rcip, lua_State *L, int idx)
 /****************************************************************************/
@@ -8120,7 +8216,9 @@ static inline short marpaESLIFLua_lua_absindex(int *rcip, lua_State *L, int idx)
 
   return 1;
 }
+#endif
 
+#if (!defined(MARPAESLIFLUA_EMBEDDED)) || defined(MARPAESLIFLUA_EMBEDDED_NATIVECALL_LUA_NEXT)
 /****************************************************************************/
 static inline short marpaESLIFLua_lua_next(int *rcip, lua_State *L, int idx)
 /****************************************************************************/
@@ -8146,7 +8244,9 @@ static inline short marpaESLIFLua_lua_next(int *rcip, lua_State *L, int idx)
  done:
   return rcb;
 }
+#endif
 
+#if (!defined(MARPAESLIFLUA_EMBEDDED)) || defined(MARPAESLIFLUA_EMBEDDED_NATIVECALL_LUAL_CHECKLSTRING)
 /****************************************************************************/
 static inline short marpaESLIFLua_luaL_checklstring(const char **rcpp, lua_State *L, int arg, size_t *l)
 /****************************************************************************/
@@ -8160,7 +8260,9 @@ static inline short marpaESLIFLua_luaL_checklstring(const char **rcpp, lua_State
 
   return 1;
 }
+#endif
 
+#if (!defined(MARPAESLIFLUA_EMBEDDED)) || defined(MARPAESLIFLUA_EMBEDDED_NATIVECALL_LUAL_CHECKSTRING)
 /****************************************************************************/
 static inline short marpaESLIFLua_luaL_checkstring(const char **rcpp, lua_State *L, int arg)
 /****************************************************************************/
@@ -8174,7 +8276,9 @@ static inline short marpaESLIFLua_luaL_checkstring(const char **rcpp, lua_State 
 
   return 1;
 }
+#endif
 
+#if (!defined(MARPAESLIFLUA_EMBEDDED)) || defined(MARPAESLIFLUA_EMBEDDED_NATIVECALL_LUAL_CHECKINTEGER)
 /****************************************************************************/
 static inline short marpaESLIFLua_luaL_checkinteger(lua_Integer *rcp, lua_State *L, int arg)
 /****************************************************************************/
@@ -8188,7 +8292,9 @@ static inline short marpaESLIFLua_luaL_checkinteger(lua_Integer *rcp, lua_State 
 
   return 1;
 }
+#endif
 
+#if (!defined(MARPAESLIFLUA_EMBEDDED)) || defined(MARPAESLIFLUA_EMBEDDED_NATIVECALL_LUAL_OPTINTEGER)
 /****************************************************************************/
 static inline short marpaESLIFLua_luaL_optinteger(lua_Integer *rcp, lua_State *L, int arg, lua_Integer def)
 /****************************************************************************/
@@ -8202,7 +8308,9 @@ static inline short marpaESLIFLua_luaL_optinteger(lua_Integer *rcp, lua_State *L
 
   return 1;
 }
+#endif
 
+#if (!defined(MARPAESLIFLUA_EMBEDDED)) || defined(MARPAESLIFLUA_EMBEDDED_NATIVECALL_LUA_GETMETATABLE)
 /****************************************************************************/
 static inline short marpaESLIFLua_lua_getmetatable(int *rcip, lua_State *L, int index)
 /****************************************************************************/
@@ -8226,7 +8334,9 @@ static inline short marpaESLIFLua_lua_getmetatable(int *rcip, lua_State *L, int 
  done:
   return rcb;
 }
+#endif
 
+#if (!defined(MARPAESLIFLUA_EMBEDDED)) || defined(MARPAESLIFLUA_EMBEDDED_NATIVECALL_LUAL_CALLMETA)
 /****************************************************************************/
 static inline short marpaESLIFLua_luaL_callmeta(int *rcip, lua_State *L, int obj, const char *e)
 /****************************************************************************/
@@ -8250,7 +8360,9 @@ static inline short marpaESLIFLua_luaL_callmeta(int *rcip, lua_State *L, int obj
  done:
   return rcb;
 }
+#endif
 
+#if (!defined(MARPAESLIFLUA_EMBEDDED)) || defined(MARPAESLIFLUA_EMBEDDED_NATIVECALL_LUAL_GETMETAFIELD)
 /****************************************************************************/
 static inline short marpaESLIFLua_luaL_getmetafield(int *rcip, lua_State *L, int obj, const char *e)
 /****************************************************************************/
@@ -8272,7 +8384,9 @@ static inline short marpaESLIFLua_luaL_getmetafield(int *rcip, lua_State *L, int
  done:
   return rcb;
 }
+#endif
 
+#if (!defined(MARPAESLIFLUA_EMBEDDED)) || defined(MARPAESLIFLUA_EMBEDDED_NATIVECALL_LUAL_CHECKTYPE)
 /****************************************************************************/
 static inline short marpaESLIFLua_luaL_checktype(lua_State *L, int arg, int t)
 /****************************************************************************/
@@ -8281,7 +8395,9 @@ static inline short marpaESLIFLua_luaL_checktype(lua_State *L, int arg, int t)
 
   return 1;
 }
+#endif
 
+#if (!defined(MARPAESLIFLUA_EMBEDDED)) || defined(MARPAESLIFLUA_EMBEDDED_NATIVECALL_LUA_TOPOINTER)
 /****************************************************************************/
 static inline short marpaESLIFLua_lua_topointer(const void **rcpp, lua_State *L, int idx)
 /****************************************************************************/
@@ -8295,7 +8411,9 @@ static inline short marpaESLIFLua_lua_topointer(const void **rcpp, lua_State *L,
 
   return 1;
 }
+#endif
 
+#if (!defined(MARPAESLIFLUA_EMBEDDED)) || defined(MARPAESLIFLUA_EMBEDDED_NATIVECALL_LUA_RAWLEN)
 /****************************************************************************/
 static inline short marpaESLIFLua_lua_rawlen(size_t *rcp, lua_State *L, int idx)
 /****************************************************************************/
@@ -8309,7 +8427,9 @@ static inline short marpaESLIFLua_lua_rawlen(size_t *rcp, lua_State *L, int idx)
 
   return 1;
 }
+#endif
 
+#if (!defined(MARPAESLIFLUA_EMBEDDED)) || defined(MARPAESLIFLUA_EMBEDDED_NATIVECALL_LUAL_DOSTRING)
 /****************************************************************************/
 static inline short marpaESLIFLua_luaL_dostring(int *rcip, lua_State *L, const char *fn)
 /****************************************************************************/
@@ -8333,7 +8453,9 @@ static inline short marpaESLIFLua_luaL_dostring(int *rcip, lua_State *L, const c
  done:
   return rcb;
 }
+#endif
 
+#if (!defined(MARPAESLIFLUA_EMBEDDED)) || defined(MARPAESLIFLUA_EMBEDDED_NATIVECALL_LUAL_LOADSTRING)
 /****************************************************************************/
 static inline short marpaESLIFLua_luaL_loadstring(int *rcip, lua_State *L, const char *fn)
 /****************************************************************************/
@@ -8357,7 +8479,9 @@ static inline short marpaESLIFLua_luaL_loadstring(int *rcip, lua_State *L, const
  done:
   return rcb;
 }
+#endif
 
+#if (!defined(MARPAESLIFLUA_EMBEDDED)) || defined(MARPAESLIFLUA_EMBEDDED_NATIVECALL_LUA_PUSHGLOBALTABLE)
 /****************************************************************************/
 static inline short marpaESLIFLua_lua_pushglobaltable(lua_State *L)
 /****************************************************************************/
@@ -8377,7 +8501,9 @@ static inline short marpaESLIFLua_lua_pushglobaltable(lua_State *L)
  done:
   return rcb;
 }
+#endif
 
+#if (!defined(MARPAESLIFLUA_EMBEDDED)) || defined(MARPAESLIFLUA_EMBEDDED_NATIVECALL_LUA_SETTABLE)
 /****************************************************************************/
 static inline short marpaESLIFLua_lua_settable(lua_State *L, int idx)
 /****************************************************************************/
@@ -8385,7 +8511,9 @@ static inline short marpaESLIFLua_lua_settable(lua_State *L, int idx)
   lua_settable(L, idx);
   return 1;
 }
+#endif
 
+#if (!defined(MARPAESLIFLUA_EMBEDDED)) || defined(MARPAESLIFLUA_EMBEDDED_NATIVECALL_LUA_GETTABLE)
 /****************************************************************************/
 static inline short marpaESLIFLua_lua_gettable(int *rcip, lua_State *L, int idx)
 /****************************************************************************/
@@ -8412,7 +8540,9 @@ static inline short marpaESLIFLua_lua_gettable(int *rcip, lua_State *L, int idx)
  done:
   return rcb;
 }
+#endif
 
+#if (!defined(MARPAESLIFLUA_EMBEDDED)) || defined(MARPAESLIFLUA_EMBEDDED_NATIVECALL_LUA_ISINTEGER)
 /****************************************************************************/
 static inline short marpaESLIFLua_lua_isinteger(int *rcip, lua_State *L, int idx)
 /****************************************************************************/
@@ -8438,7 +8568,9 @@ static inline short marpaESLIFLua_lua_isinteger(int *rcip, lua_State *L, int idx
 
   return 1;
 }
+#endif
 
+#if (!defined(MARPAESLIFLUA_EMBEDDED)) || defined(MARPAESLIFLUA_EMBEDDED_NATIVECALL_LUAL_CHECKUDATA)
 /****************************************************************************/
 static inline short marpaESLIFLua_luaL_checkudata(void **rcpp, lua_State *L, int ud, const char *tname)
 /****************************************************************************/
@@ -8452,7 +8584,9 @@ static inline short marpaESLIFLua_luaL_checkudata(void **rcpp, lua_State *L, int
 
   return 1;
 }
+#endif
 
+#if (!defined(MARPAESLIFLUA_EMBEDDED)) || defined(MARPAESLIFLUA_EMBEDDED_NATIVECALL_LUA_NEWTHREAD)
 /****************************************************************************/
 static inline short marpaESLIFLua_lua_newthread(lua_State **Lp, lua_State *L)
 /****************************************************************************/
@@ -8476,7 +8610,9 @@ static inline short marpaESLIFLua_lua_newthread(lua_State **Lp, lua_State *L)
  done:
   return rcb;
 }
+#endif
 
+#if (!defined(MARPAESLIFLUA_EMBEDDED)) || defined(MARPAESLIFLUA_EMBEDDED_NATIVECALL_LUAL_CHECKVERSION)
 /****************************************************************************/
 static inline short marpaESLIFLua_luaL_checkversion(lua_State *L)
 /****************************************************************************/
@@ -8484,7 +8620,9 @@ static inline short marpaESLIFLua_luaL_checkversion(lua_State *L)
   luaL_checkversion(L);
   return 1;
 }
+#endif
 
+#if (!defined(MARPAESLIFLUA_EMBEDDED)) || defined(MARPAESLIFLUA_EMBEDDED_NATIVECALL_LUAL_OPENLIBS)
 /****************************************************************************/
 static inline short marpaESLIFLua_luaL_openlibs(lua_State *L)
 /****************************************************************************/
@@ -8492,7 +8630,9 @@ static inline short marpaESLIFLua_luaL_openlibs(lua_State *L)
   luaL_openlibs(L);
   return 1;
 }
+#endif
 
+#if (!defined(MARPAESLIFLUA_EMBEDDED)) || defined(MARPAESLIFLUA_EMBEDDED_NATIVECALL_LUA_DUMP)
 /****************************************************************************/
 static inline short marpaESLIFLua_lua_dump(int *rcip, lua_State *L, lua_Writer writer, void *data, int strip)
 /****************************************************************************/
@@ -8516,7 +8656,9 @@ static inline short marpaESLIFLua_lua_dump(int *rcip, lua_State *L, lua_Writer w
  done:
   return rcb;
 }
+#endif
 
+#if (!defined(MARPAESLIFLUA_EMBEDDED)) || defined(MARPAESLIFLUA_EMBEDDED_NATIVECALL_LUAL_LOADBUFFER)
 /****************************************************************************/
 static inline short marpaESLIFLua_luaL_loadbuffer(int *rcip, lua_State *L, const char *buff, size_t sz, const char *name)
 /****************************************************************************/
