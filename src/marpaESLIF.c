@@ -15908,10 +15908,7 @@ static inline short _marpaESLIFRecognizer_expectedTerminalsb(marpaESLIFRecognize
   short                     rcb;
 
   /* Ask for expected grammar terminals */
-  if (marpaESLIFRecognizerp->pristineb) {
-    nSymboll     = marpaESLIFRecognizerp->nSymbolPristinel;
-    symbolArrayp = marpaESLIFRecognizerp->symbolArrayPristinep;
-  } else {
+  if (! marpaESLIFRecognizerp->pristineb) {
 #ifdef MARPAESLIF_USE_MARPAWRAPPERRECOGNIZER_EXPECTEDB
     marpaWrapperRecognizerp = marpaESLIFRecognizerp->marpaWrapperRecognizerp;
     if (MARPAESLIF_UNLIKELY(! marpaWrapperRecognizer_expectedb(marpaWrapperRecognizerp, &nSymboll, &symbolArrayp))) {
@@ -15933,6 +15930,9 @@ static inline short _marpaESLIFRecognizer_expectedTerminalsb(marpaESLIFRecognize
       }
     }
 #endif
+  } else {
+    nSymboll     = marpaESLIFRecognizerp->nSymbolPristinel;
+    symbolArrayp = marpaESLIFRecognizerp->symbolArrayPristinep;
   }
 
   *nSymbollp     = nSymboll;
