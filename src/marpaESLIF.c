@@ -15700,7 +15700,7 @@ static inline short _marpaESLIFValue_stack_switchb(marpaESLIFValue_t *marpaESLIF
 
   GENERICSTACK_SWITCH(marpaESLIFValuep->valueResultStackp, i, j);
   if (MARPAESLIF_UNLIKELY(GENERICSTACK_ERROR(marpaESLIFValuep->valueResultStackp))) {
-    MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "marpaESLIFValueResultStackp switch between %d and %d indices failure, stack current usage is %d, %s", i, j, GENERICSTACK_USED(marpaESLIFValuep->valueResultStackp), strerror(errno));
+    MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "valueResultStackp switch between %d and %d indices failure, stack current usage is %d, %s", i, j, GENERICSTACK_USED(marpaESLIFValuep->valueResultStackp), strerror(errno));
     goto err;
   }
 
@@ -16663,11 +16663,15 @@ static inline short _marpaESLIFValue_stack_newb(marpaESLIFValue_t *marpaESLIFVal
   short rcb;
 
   /* Initialize the stacks */
-  GENERICSTACK_NEW(marpaESLIFValuep->valueResultStackp);
-  if (MARPAESLIF_UNLIKELY(GENERICSTACK_ERROR(marpaESLIFValuep->valueResultStackp))) {
-    MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "marpaESLIFValuep->valueResultStackp initialization failure, %s", strerror(errno));
-    goto err;
-  }    
+  if (marpaESLIFValuep->valueResultStackp == NULL) {
+    marpaESLIFValuep->valueResultStackp = &(marpaESLIFValuep->_valueResultStack);
+    GENERICSTACK_INIT(marpaESLIFValuep->valueResultStackp);
+    if (MARPAESLIF_UNLIKELY(GENERICSTACK_ERROR(marpaESLIFValuep->valueResultStackp))) {
+      MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "valueResultStackp initialization failure, %s", strerror(errno));
+      marpaESLIFValuep->valueResultStackp = NULL;
+      goto err;
+    }
+  }
 
   rcb = 1;
   goto done;
@@ -16709,17 +16713,16 @@ static inline short _marpaESLIFValue_stack_freeb(marpaESLIFValue_t *marpaESLIFVa
           goto err;
         }
       }
-      GENERICSTACK_FREE(valueResultStackp);
+      GENERICSTACK_RESET(valueResultStackp);
     }
   }
+
   rcb = 1;
   goto done;
+
  err:
-  /* Makes sure all pointers are NULL anyway */
-  if (marpaESLIFValuep != NULL) {
-    marpaESLIFValuep->valueResultStackp = NULL;
-  }
   rcb = 0;
+
  done:
   return rcb;
 }

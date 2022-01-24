@@ -496,6 +496,7 @@ struct marpaESLIFValue {
   short                        previousPassWasPassthroughb;
   int                          previousArg0i;
   int                          previousArgni;
+  genericStack_t              _valueResultStack;
   genericStack_t              *valueResultStackp;
   short                        inValuationb;
   marpaESLIF_symbol_t         *symbolp;
