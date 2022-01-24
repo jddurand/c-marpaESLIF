@@ -6353,11 +6353,11 @@ static inline short _marpaESLIFRecognizer_symbol_matcherb(marpaESLIFRecognizer_t
     case MARPAESLIF_MATCH_AGAIN:
       /* We have to load more unless already at EOF */
       if (! marpaESLIF_streamp->eofb) {
-        if (! __marpaESLIFRecognizer_readb(marpaESLIFRecognizerp)) {
+        if (MARPAESLIF_LIKELY(__marpaESLIFRecognizer_readb(marpaESLIFRecognizerp))) {
+          goto match_again;
+        } else {
           /* We will return -1 */
           goto fatal;
-        } else {
-          goto match_again;
         }
       }
       break;
