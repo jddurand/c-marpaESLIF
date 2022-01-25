@@ -434,7 +434,7 @@ really mean that the sequence is embedded in the regular expression. The dump of
 
 =back
 
-In conclusion determining the need of the PCRE2_UTF8 will always be exact: either marpaESLIF will detect it correctly, either PCRE2 will yell, and you will have to explicitely set it using modifiers. Since character class is nothing else but a regular expression limited to a range of character, they both share the same possible set of modifiers.
+In conclusion determining the need of the PCRE2_UTF will always be exact: either marpaESLIF will detect it correctly, either PCRE2 will yell, and you will have to explicitely set it using modifiers. Since character class is nothing else but a regular expression limited to a range of character, they both share the same possible set of modifiers.
 
 =item Character class and Regular expression modifiers
 
