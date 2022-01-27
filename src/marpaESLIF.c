@@ -5703,6 +5703,7 @@ static inline short _marpaESLIFRecognizer_terminal_matcherb(marpaESLIFRecognizer
   char                              *bytes;
   size_t                             bytel;
   short                              rcMatcherb;
+  size_t                             memcmpl;
 
   MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_INC(marpaESLIFRecognizerp);
   MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "start");
@@ -5810,30 +5811,38 @@ static inline short _marpaESLIFRecognizer_terminal_matcherb(marpaESLIFRecognizer
       if (bytel <= 0) {
         MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "%s for %s", "MARPAESLIF_MATCH_FAILURE", terminalp->descp->asciis);
       } else {
-        /* We consider it is faster to compare a char than calling memcmp */
-        if (inputl >= bytel) {
-          if ((bytel == 1) ? (inputs[0] == bytes[0]) : (memcmp(inputs, bytes, bytel) == 0)) {
-            rci = MARPAESLIF_MATCH_OK;
-            MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "%s for %s", "MARPAESLIF_MATCH_OK", terminalp->descp->asciis);
-            matchedp       = inputs;
-            matchedLengthl = bytel;
-          } else {
-            MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "%s for %s", "MARPAESLIF_MATCH_FAILURE", terminalp->descp->asciis);
-          }
-        } else {
-          if ((inputl == 1) ? (inputs[0] == bytes[0]) : (memcmp(inputs, bytes, inputl) == 0)) {
-            /* Partial match */
-            if (eofb) {
-              MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "%s for %s", "MARPAESLIF_MATCH_FAILURE", terminalp->descp->asciis);
+        /* No need to call memcmp() if the first byte is not the same - appears to (always ?) be faster */
+        if (inputs[0] == bytes[0]) {
+          if (inputl >= bytel) {
+            /* No need to call memcmp() if the length to check if == 1 */
+            /* No need to call memcmp() if the last byte is not the same - appears to (always ?) be faster */
+            if ((bytel == 1) || (memcmpl = bytel - 1, (inputs[memcmpl] == bytes[memcmpl]) && (memcmp(inputs, bytes, bytel) == 0))) {
+              rci = MARPAESLIF_MATCH_OK;
+              MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "%s for %s", "MARPAESLIF_MATCH_OK", terminalp->descp->asciis);
+              matchedp       = inputs;
+              matchedLengthl = bytel;
             } else {
-              rci = MARPAESLIF_MATCH_AGAIN;
-              MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "%s for %s", "MARPAESLIF_MATCH_AGAIN", terminalp->descp->asciis);
+              MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "%s for %s", "MARPAESLIF_MATCH_FAILURE", terminalp->descp->asciis);
             }
           } else {
-            MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "%s for %s", "MARPAESLIF_MATCH_FAILURE", terminalp->descp->asciis);
+            /* No need to call memcmp() if the length to check if == 1 */
+            if ((inputl == 1) || (memcmpl = inputl - 1, (inputs[memcmpl] == bytes[memcmpl]) && (memcmp(inputs, bytes, inputl) == 0))) {
+              /* Partial match */
+              if (eofb) {
+                MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "%s for %s", "MARPAESLIF_MATCH_FAILURE", terminalp->descp->asciis);
+              } else {
+                rci = MARPAESLIF_MATCH_AGAIN;
+                MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "%s for %s", "MARPAESLIF_MATCH_AGAIN", terminalp->descp->asciis);
+              }
+            } else {
+              MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "%s for %s", "MARPAESLIF_MATCH_FAILURE", terminalp->descp->asciis);
+            }
           }
+        } else {
+          MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "%s for %s", "MARPAESLIF_MATCH_FAILURE", terminalp->descp->asciis);
         }
       }
+
       goto string_done;
     }
 
