@@ -8206,6 +8206,20 @@ static inline short __marpaESLIFRecognizer_resumeb(marpaESLIFRecognizer_t *marpa
   MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_INC(marpaESLIFRecognizerp);
   MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "start");
 
+  /* Checks */
+  if (! marpaESLIFRecognizerp->scanb) {
+    /* We allow scan/resume to not have been called only if the recognizer is not pristine */
+    if (marpaESLIFRecognizerp->pristineb) {
+      MARPAESLIF_ERROR(marpaESLIFRecognizerp->marpaESLIFp, "Scan must be called first");
+      goto err;
+    }
+  }
+
+  if (MARPAESLIF_UNLIKELY(! grammarp->latmb)) {
+    MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "Grammar No %d (%s) must be in LATM mode", grammarp->leveli, grammarp->descp->asciis);
+    goto err;
+  }
+
   /* Top level resume is looping on _marpaESLIFRecognizer_resume_oneb() until:
      - failure
      - event
@@ -8237,10 +8251,9 @@ static inline short __marpaESLIFRecognizer_resumeb(marpaESLIFRecognizer_t *marpa
     if (MARPAESLIF_UNLIKELY(! rcb)) {
       goto err;
     }
-    /* Makes sure initialEvents is true once only */
-    if (initialEventsb) {
-      initialEventsb = 0;
-    }
+    /* Makes sure initialEvents is true once only - testing initialEventsb is not necessary. */
+    initialEventsb = 0;
+
     if (marpaESLIFRecognizerp->eventArrayl > 0) {
       /* If grammar has an event-action, check it */
       if (grammarp->defaultEventActionp != NULL) {
@@ -8616,20 +8629,15 @@ static inline short _marpaESLIFRecognizer_isDiscardExpectedb(marpaESLIFRecognize
 /*****************************************************************************/
 static inline short _marpaESLIFRecognizer_resume_oneb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, short initialEventsb, short *canContinuebp, short *isExhaustedbp)
 /*****************************************************************************/
-/* Note: latmb check are left in this method, even if it can be reached only if latmb is true */
 /* This method is called very very often, therefore any optimization here is welcome. */
 /*****************************************************************************/
 {
   static const char               *funcs                             = "_marpaESLIFRecognizer_resume_oneb";
-  marpaESLIF_t                    *marpaESLIFp                       = marpaESLIFRecognizerp->marpaESLIFp;
   marpaESLIF_grammar_t            *grammarp                          = marpaESLIFRecognizerp->grammarp;
   genericStack_t                  *symbolStackp                      = grammarp->symbolStackp;
-  short                            latmb                             = grammarp->latmb;
   genericStack_t                  *alternativeStackSymbolp           = marpaESLIFRecognizerp->alternativeStackSymbolp;
-  marpaWrapperRecognizer_t        *marpaWrapperRecognizerp           = marpaESLIFRecognizerp->marpaWrapperRecognizerp;
-  int                              maxStartCompletionsi              = marpaESLIFRecognizerp->maxStartCompletionsi;
   marpaESLIF_stream_t             *marpaESLIF_streamp                = marpaESLIFRecognizerp->marpaESLIF_streamp;
-  short                            onlyPredictedLexemesb             = 0;
+  short                            onlyPredictedLexemesb;
   size_t                           nSymboll;
   short                            havePriorityb;
   short                            maxPriorityInitializedb;
@@ -8667,31 +8675,20 @@ static inline short _marpaESLIFRecognizer_resume_oneb(marpaESLIFRecognizer_t *ma
   short                            isLookupMetaMatchb;
 
   MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_INC(marpaESLIFRecognizerp);
-  MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "start, maxStartCompletionsi=%d", maxStartCompletionsi);
-
-  /* Checks */
-  if (! marpaESLIFRecognizerp->scanb) {
-    /* We allow scan/resume to not have been called only if the recognizer is not pristine */
-    if (marpaESLIFRecognizerp->pristineb) {
-      MARPAESLIF_ERROR(marpaESLIFp, "Scan must be called first");
-      goto err;
-    }
-  }
-  if (MARPAESLIF_UNLIKELY(! latmb)) {
-    MARPAESLIF_ERRORF(marpaESLIFp, "Grammar No %d (%s) must be in LATM mode", grammarp->leveli, grammarp->descp->asciis);
-    goto err;
-  }
+  MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "start, maxStartCompletionsi=%d", marpaESLIFRecognizerp->maxStartCompletionsi);
 
   /* Initializations */
   MARPAESLIFRECOGNIZER_RESUMECOUNTER_INC(marpaESLIFRecognizerp); /* Increment internal counter for tracing */
-  marpaESLIFRecognizerp->completedb      = 0;
+  marpaESLIFRecognizerp->completedb = 0;
 
   /* We always start by resetting and collecting current events */
   _marpaESLIFRecognizer_clear_all_eventsb(marpaESLIFRecognizerp);
 
-  /* We break immediately if there are events and the initialEventsb is set. This can happen once */
-  /* only in the whole lifetime of a recognizer. */
-  if (initialEventsb) {
+  if (! initialEventsb) {
+    onlyPredictedLexemesb = 0;
+  } else {
+    /* We break immediately if there are events and the initialEventsb is set. This can happen once */
+    /* only in the whole lifetime of a recognizer. */
     if (MARPAESLIF_UNLIKELY(! _marpaESLIFRecognizer_push_grammar_eventsb(marpaESLIFRecognizerp))) {
       goto err;
     }
@@ -8707,7 +8704,7 @@ static inline short _marpaESLIFRecognizer_resume_oneb(marpaESLIFRecognizer_t *ma
 #ifndef MARPAESLIF_NTRACE
   for (symboll = 0; symboll < nSymboll; symboll++) {
     symboli = symbolArrayp[symboll];
-    MARPAESLIF_INTERNAL_GET_SYMBOL_FROM_STACK(marpaESLIFp, symbolp, symbolStackp, symboli);
+    MARPAESLIF_INTERNAL_GET_SYMBOL_FROM_STACK(marpaESLIFRecognizerp->marpaESLIFp, symbolp, symbolStackp, symboli);
     MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Expected terminal: %s", symbolp->descp->asciis);
   }
 #endif
@@ -8748,7 +8745,7 @@ static inline short _marpaESLIFRecognizer_resume_oneb(marpaESLIFRecognizer_t *ma
 
   for (symboll = 0; symboll < nSymboll; symboll++) {
     symboli = symbolArrayp[symboll];
-    MARPAESLIF_INTERNAL_GET_SYMBOL_FROM_STACK(marpaESLIFp, symbolp, symbolStackp, symboli);
+    MARPAESLIF_INTERNAL_GET_SYMBOL_FROM_STACK(marpaESLIFRecognizerp->marpaESLIFp, symbolp, symbolStackp, symboli);
 
     if (onlyPredictedLexemesb) {
       /* Skip this symbol if it is not a predicted lexeme... */
@@ -8888,7 +8885,7 @@ static inline short _marpaESLIFRecognizer_resume_oneb(marpaESLIFRecognizer_t *ma
           alternative.marpaESLIFValueResult.representationp    = NULL;
           alternative.marpaESLIFValueResult.u.a.p              = malloc(marpaESLIFValueResultArray.u.a.sizel + 1); /* Hiden NUL byte for convenience */
           if (MARPAESLIF_UNLIKELY(alternative.marpaESLIFValueResult.u.a.p == NULL)) {
-            MARPAESLIF_ERRORF(marpaESLIFp, "malloc failure, %s", strerror(errno));
+            MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "malloc failure, %s", strerror(errno));
             goto err;
           }
           memcpy(alternative.marpaESLIFValueResult.u.a.p, marpaESLIFValueResultArray.u.a.p, marpaESLIFValueResultArray.u.a.sizel);
@@ -8940,7 +8937,7 @@ static inline short _marpaESLIFRecognizer_resume_oneb(marpaESLIFRecognizer_t *ma
       break;
     default:
       /* The case MARPAESLIF_MATCH_AGAIN is handled in the terminal section of _marpaESLIFRecognizer_symbol_matcherb() */
-      MARPAESLIF_ERRORF(marpaESLIFp, "Unsupported matcher return code %d", rci);
+      MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "Unsupported matcher return code %d", rci);
       goto err;
     }
   }
@@ -9072,33 +9069,30 @@ static inline short _marpaESLIFRecognizer_resume_oneb(marpaESLIFRecognizer_t *ma
     }
   }
 
-  /* Filter by length (LATM) - the test on latmb is "useless" in the sense that latmb is forced to be true, i.e. maxMatchedl is always meaningful */
-  if (latmb) {
-    for (alternativei = 0; alternativei < alternativeStackSymboli; alternativei++) {
-      alternativep = (marpaESLIF_alternative_t *) GENERICSTACK_GET_PTR(alternativeStackSymbolp, alternativei);
-      if (! alternativep->usedb) {
-        /* Out-prioritized */
-        continue;
-      }
+  for (alternativei = 0; alternativei < alternativeStackSymboli; alternativei++) {
+    alternativep = (marpaESLIF_alternative_t *) GENERICSTACK_GET_PTR(alternativeStackSymbolp, alternativei);
+    if (! alternativep->usedb) {
+      /* Out-prioritized */
+      continue;
+    }
 #ifndef MARPAESLIF_NTRACE
-      /* By definition here we should handle only the internal alternatives, that are ALWAYS of type */
-      /* MARPAESLIF_VALUE_TYPE_ARRAY */
-      if (alternativep->marpaESLIFValueResult.type != MARPAESLIF_VALUE_TYPE_ARRAY) {
-        continue;
-      }
+    /* By definition here we should handle only the internal alternatives, that are ALWAYS of type */
+    /* MARPAESLIF_VALUE_TYPE_ARRAY */
+    if (alternativep->marpaESLIFValueResult.type != MARPAESLIF_VALUE_TYPE_ARRAY) {
+      continue;
+    }
 #endif
 
-      sizel = alternativep->marpaESLIFValueResult.u.a.sizel;
-      if (sizel < maxMatchedl) {
-        MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp,
-                                    funcs,
-                                    "Alternative %s is skipped (length %ld < max length %ld)",
-                                    alternativep->symbolp->descp->asciis,
-                                    (unsigned long) sizel,
-                                    (unsigned long) maxMatchedl);
-        /* No need to set it to NULL, we use the alternativep->usedb flag */
-        alternativep->usedb = 0;
-      }
+    sizel = alternativep->marpaESLIFValueResult.u.a.sizel;
+    if (sizel < maxMatchedl) {
+      MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp,
+                                  funcs,
+                                  "Alternative %s is skipped (length %ld < max length %ld)",
+                                  alternativep->symbolp->descp->asciis,
+                                  (unsigned long) sizel,
+                                  (unsigned long) maxMatchedl);
+      /* No need to set it to NULL, we use the alternativep->usedb flag */
+      alternativep->usedb = 0;
     }
   }
 
@@ -9176,7 +9170,7 @@ static inline short _marpaESLIFRecognizer_resume_oneb(marpaESLIFRecognizer_t *ma
   }
 
   /* Is there a limit on start symbol completions ? Note that the value -1 is used to trigger the call to _marpaESLIFRecognizer_isStartCompleteb() */
-  if (maxStartCompletionsi != 0) {
+  if (marpaESLIFRecognizerp->maxStartCompletionsi != 0) {
     /* This will force a call to _marpaESLIFRecognizer_isStartCompleteb */
     if (MARPAESLIF_UNLIKELY(! _marpaESLIFRecognizer_isStartCompleteb(marpaESLIFRecognizerp, &completeb))) {
       goto err;
@@ -9186,13 +9180,13 @@ static inline short _marpaESLIFRecognizer_resume_oneb(marpaESLIFRecognizer_t *ma
       marpaESLIFRecognizerp->lastSizeBeforeCompletionl = marpaESLIFRecognizerp->lastSizel;
       previousNumberOfStartCompletionsi = marpaESLIFRecognizerp->numberOfStartCompletionsi++;
       if (MARPAESLIF_UNLIKELY(marpaESLIFRecognizerp->numberOfStartCompletionsi < previousNumberOfStartCompletionsi)) {
-        MARPAESLIF_ERROR(marpaESLIFp, "int turnaround when computing numberOfStartCompletionsi");
+        MARPAESLIF_ERROR(marpaESLIFRecognizerp->marpaESLIFp, "int turnaround when computing numberOfStartCompletionsi");
         goto err;
       }
       MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Number of start completions is %d", marpaESLIFRecognizerp->numberOfStartCompletionsi);
-      if (maxStartCompletionsi > 0) {
-        if (marpaESLIFRecognizerp->numberOfStartCompletionsi >= maxStartCompletionsi) {
-          MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Maximum number of start completions is %d and reached", maxStartCompletionsi);
+      if (marpaESLIFRecognizerp->maxStartCompletionsi > 0) {
+        if (marpaESLIFRecognizerp->numberOfStartCompletionsi >= marpaESLIFRecognizerp->maxStartCompletionsi) {
+          MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Maximum number of start completions is %d and reached", marpaESLIFRecognizerp->maxStartCompletionsi);
         } else {
           /* If grammar is exhausted and we did not reach wanted number of completions, then it is a failure */
           if (MARPAESLIF_UNLIKELY(! _marpaESLIFRecognizer_isExhaustedb(marpaESLIFRecognizerp, &isExhaustedb))) {
