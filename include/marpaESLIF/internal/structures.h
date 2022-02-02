@@ -362,6 +362,8 @@ struct marpaESLIF_grammar {
   char                  *defaultEncodings;                   /* Default encoding is reader returns NULL */
   char                  *fallbackEncodings;                  /* Fallback encoding is reader returns NULL and tconv fails to detect encoding */
   short                  fastDiscardb;                       /* True when :discard can be done in the context of the current recognizer */
+  genericHash_t          _progressToTerminalsHash;           /* Cache of progress <=> expected grammar terminals */
+  genericHash_t         *progressToTerminalsHashp;
 };
 
 enum marpaESLIF_json_type {
