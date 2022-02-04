@@ -362,6 +362,8 @@ struct marpaESLIF_grammar {
   char                  *defaultEncodings;                   /* Default encoding is reader returns NULL */
   char                  *fallbackEncodings;                  /* Fallback encoding is reader returns NULL and tconv fails to detect encoding */
   short                  fastDiscardb;                       /* True when :discard can be done in the context of the current recognizer */
+  marpaESLIF_terminal_t *groupedTerminalSensitivep;          /* A single terminal that merges all case sensitive terminals that can be matched with one call */
+  marpaESLIF_terminal_t *groupedTerminalInsensitivep;        /* A single terminal that merges all case insensitive terminals that can be matched with one call */
 };
 
 enum marpaESLIF_json_type {

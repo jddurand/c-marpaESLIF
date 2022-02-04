@@ -182,13 +182,14 @@ static marpaESLIFValueResult_t marpaESLIFValueResultLazyWithUndef = {
 /* -------------------------------------------------------------------------------------------- */
 /* Util macros on symbol                                                                        */
 /* -------------------------------------------------------------------------------------------- */
-#define MARPAESLIF_IS_META(symbolp)               ((symbolp)->type == MARPAESLIF_SYMBOL_TYPE_META)
-#define MARPAESLIF_IS_LEXEME(symbolp)             (MARPAESLIF_IS_META(symbolp) && (! (symbolp)->lhsb))
-#define MARPAESLIF_IS_TERMINAL(symbolp)           ((symbolp)->type == MARPAESLIF_SYMBOL_TYPE_TERMINAL)
-#define MARPAESLIF_IS_LEXEME_OR_TERMINAL(symbolp) (MARPAESLIF_IS_LEXEME(symbolp) || MARPAESLIF_IS_TERMINAL(symbolp))
-#define MARPAESLIF_IS_PSEUDO_TERMINAL(symbolp)    (MARPAESLIF_IS_TERMINAL(symbolp) && (symbolp)->u.terminalp->pseudob)
-#define MARPAESLIF_IS_META_LOOKAHEAD(symbolp)     (MARPAESLIF_IS_META(symbolp) && (symbolp)->lookaheadb)
-#define MARPAESLIF_IS_DISCARD(symbolp)            (symbolp)->discardb
+#define MARPAESLIF_IS_META(symbolp)                ((symbolp)->type == MARPAESLIF_SYMBOL_TYPE_META)
+#define MARPAESLIF_IS_LEXEME(symbolp)              (MARPAESLIF_IS_META(symbolp) && (! (symbolp)->lhsb))
+#define MARPAESLIF_IS_TERMINAL(symbolp)            ((symbolp)->type == MARPAESLIF_SYMBOL_TYPE_TERMINAL)
+#define MARPAESLIF_IS_LEXEME_OR_TERMINAL(symbolp)  (MARPAESLIF_IS_LEXEME(symbolp) || MARPAESLIF_IS_TERMINAL(symbolp))
+#define MARPAESLIF_IS_PSEUDO_TERMINAL(symbolp)     (MARPAESLIF_IS_TERMINAL(symbolp) && (symbolp)->u.terminalp->pseudob)
+#define MARPAESLIF_IS_TERMINAL_NOT_PSEUDO(symbolp) (MARPAESLIF_IS_TERMINAL(symbolp) && (! (symbolp)->u.terminalp->pseudob))
+#define MARPAESLIF_IS_META_LOOKAHEAD(symbolp)      (MARPAESLIF_IS_META(symbolp) && (symbolp)->lookaheadb)
+#define MARPAESLIF_IS_DISCARD(symbolp)             (symbolp)->discardb
 
 /* -------------------------------------------------------------------------------------------- */
 /* Util macros on recognizer                                                                    */
@@ -3083,6 +3084,12 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
   marpaESLIF_t                     *marpaESLIFp               = marpaESLIFGrammarp->marpaESLIFp;
   genericStack_t                   *grammarStackp             = marpaESLIFGrammarp->grammarStackp;
   marpaWrapperGrammar_t            *marpaWrapperGrammarClonep = NULL;
+  char                             *caselessp                 = NULL;
+  char                             *notcaselessp              = NULL;
+  size_t                            caselessl;
+  size_t                            notcaselessl;
+  char                             *casep;
+  size_t                           *caselp;
   marpaESLIF_meta_t                *metap;
   genericStack_t                   *symbolStackp;
   genericStack_t                   *ruleStackp;
@@ -3113,6 +3120,8 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
   int                              *symbolArrayp;
   size_t                            tmpl;
   short                             fastDiscardb;
+  marpaESLIF_uint32_t               pcre2Optioni;
+  int                               pcre2Errornumberi;
 
   marpaESLIF_cloneContext.marpaESLIFp = marpaESLIFp;
   marpaESLIF_cloneContext.grammarp    = NULL;
@@ -3976,6 +3985,7 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
   /* - total number of marpa terminals */
   /* - Internal event types */
   /* - Effective actions */
+  /* - Grouped terminal */
   for (grammari = 0; grammari < GENERICSTACK_USED(grammarStackp); grammari++) {
     if (! GENERICSTACK_IS_PTR(grammarStackp, grammari)) {
       continue;
@@ -4051,7 +4061,88 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
         symbolp->effectiveSymbolActionp   = (symbolp->symbolActionp   != NULL) ? symbolp->symbolActionp   : grammarp->defaultSymbolActionp;
         symbolp->effectiveSymbolActione   = (symbolp->symbolActionp   != NULL) ? symbolp->symbolActione   : grammarp->defaultSymbolActione;
       }
+
+      /* Look to symbols that are candidate for grouping. We distinguish two groups: */
+      /* - Those that have the same PCRE2 flag AND insensitive case                  */
+      /* - Those that have the same PCRE2 flag AND NOT insensitive case              */
+      caselessl = 0;
+      notcaselessl = 0;
+      for (symboli = 0; symboli < GENERICSTACK_USED(symbolStackp); symboli++) {
+        MARPAESLIF_INTERNAL_GET_SYMBOL_FROM_STACK(marpaESLIFp, symbolp, symbolStackp, symboli);
+        /* Only for non pseudo terminals */
+        if (! MARPAESLIF_IS_TERMINAL_NOT_PSEUDO(symbolp)) {
+          continue;
+        }
+        pcre2Optioni = 0;
+        pcre2Errornumberi = pcre2_pattern_info(symbolp->u.terminalp->regex.patternp, PCRE2_INFO_ALLOPTIONS, &pcre2Optioni);
+        if ((pcre2Optioni & PCRE2_CASELESS) == PCRE2_CASELESS) {
+          caselp = &caselessl;
+        } else {
+          caselp = &notcaselessl;
+        }
+        if (*caselp > 0) {
+          /* Not the first time */
+          (*caselp)++; /* "|" */
+        }
+        (*caselp) += 3 + symbolp->u.terminalp->patternl + 1; /* "(?:pattern)" */
+      }
+      if (caselessl > 0) {
+        /* There is at least one regex with :i modifier */
+        caselessp = (char *) malloc(caselessl + 1); /* +1 for a convenient NUL byte */
+        if (caselessp == NULL) {
+          MARPAESLIF_ERRORF(marpaESLIFp, "malloc failure, %s", strerror(errno));
+          goto err;
+        }
+        caselessp[0] = '\0';
+      }
+      if (notcaselessl > 0) {
+        /* There is at least one regex with :i modifier */
+        notcaselessp = (char *) malloc(notcaselessl + 1); /* +1 for a convenient NUL byte */
+        if (notcaselessp == NULL) {
+          MARPAESLIF_ERRORF(marpaESLIFp, "malloc failure, %s", strerror(errno));
+          goto err;
+        }
+        notcaselessp[0] = '\0';
+      }
+
+      caselessl = 0;
+      notcaselessl = 0;
+      for (symboli = 0; symboli < GENERICSTACK_USED(symbolStackp); symboli++) {
+        MARPAESLIF_INTERNAL_GET_SYMBOL_FROM_STACK(marpaESLIFp, symbolp, symbolStackp, symboli);
+        /* Only for non pseudo terminals */
+        if (! MARPAESLIF_IS_TERMINAL_NOT_PSEUDO(symbolp)) {
+          continue;
+        }
+        pcre2Optioni = 0;
+        pcre2Errornumberi = pcre2_pattern_info(symbolp->u.terminalp->regex.patternp, PCRE2_INFO_ALLOPTIONS, &pcre2Optioni);
+        if ((pcre2Optioni & PCRE2_CASELESS) == PCRE2_CASELESS) {
+          caselp = &caselessl;
+          casep = caselessp;
+        } else {
+          caselp = &notcaselessl;
+          casep = notcaselessp;
+        }
+        if (*caselp > 0) {
+          /* Not the first time */
+          *casep++ = '|';
+          (*caselp)++; /* "|" */
+        }
+        (*caselp) += 3 + symbolp->u.terminalp->patternl + 1; /* "(?:pattern)" */
+        *casep++ = '(';
+        *casep++ = '?';
+        *casep++ = ':';
+        memcpy(casep, symbolp->u.terminalp->patterns, symbolp->u.terminalp->patternl);
+        *casep++ = ')';
+        *casep = '\0';
+      }
     }
+  }
+
+  if (caselessp != NULL) {
+    fprintf(stderr, "========> caselessp = %s\n", caselessp);
+  }
+  if (notcaselessp != NULL) {
+    fprintf(stderr, "========> notcaselessp = %s\n", notcaselessp);
   }
 
   rcb = 1;
@@ -4063,6 +4154,12 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
  done:
   if (marpaWrapperGrammarClonep != NULL) {
     marpaWrapperGrammar_freev(marpaWrapperGrammarClonep);
+  }
+  if (caselessp != NULL) {
+    free(caselessp);
+  }
+  if (notcaselessp != NULL) {
+    free(notcaselessp);
   }
 
   MARPAESLIF_TRACEF(marpaESLIFp, funcs, "return %d", (int) rcb);
@@ -4272,6 +4369,8 @@ static inline marpaESLIF_grammar_t *_marpaESLIF_grammar_newp(marpaESLIFGrammar_t
   grammarp->defaultEncodings                   = NULL;
   grammarp->fallbackEncodings                  = NULL;
   grammarp->fastDiscardb                       = 0;    /* Filled by grammar validation */
+  grammarp->groupedTerminalSensitivep          = NULL; /* Filled by grammar validation */
+  grammarp->groupedTerminalInsensitivep        = NULL; /* Filled by grammar validation */
 
   grammarp->marpaWrapperGrammarStartp = marpaWrapperGrammar_newp(marpaWrapperGrammarOptionp);
   if (MARPAESLIF_UNLIKELY(grammarp->marpaWrapperGrammarStartp == NULL)) {
@@ -4438,6 +4537,8 @@ static inline void _marpaESLIF_grammar_freev(marpaESLIF_grammar_t *grammarp)
     if (grammarp->terminalArrayp != NULL) {
       free(grammarp->terminalArrayp);
     }
+    _marpaESLIF_terminal_freev(grammarp->groupedTerminalSensitivep);
+    _marpaESLIF_terminal_freev(grammarp->groupedTerminalInsensitivep);
     free(grammarp);
   }
 }
