@@ -10,10 +10,6 @@
 #define GENERICSTACK_CUSTOM marpaESLIFValueResult_t
 #include <genericStack.h>
 
-/* Grouped terminals are special and are not attached to the grammar */
-#define MARPAESLIF_GROUPEDSYMBOLUTF_IDI -1
-#define MARPAESLIF_GROUPEDSYMBOLNOTUTF_IDI -2
-
 /*
  * Prior to genericHash inclusion, we define our hash size - a subject number
  * --------------------------------------------------------------------------
@@ -382,8 +378,6 @@ struct marpaESLIF_grammar {
   genericHash_t         *groupedRegexHashp;
   marpaESLIF_symbol_t   *groupedSymbolUtfp;                  /* Internal symbol container for grouped utfb terminals */
   marpaESLIF_symbol_t   *groupedSymbolNotUtfp;               /* Internal symbol container for grouped !utfb terminals */
-  short                  groupedSymbolUtfScanb;              /* When using internal scan, is this grouped terminal in use ? */
-  short                  groupedSymbolNotUtfScanb;           /* When using internal scan, is this grouped terminal in use ? */
 };
 
 enum marpaESLIF_json_type {
