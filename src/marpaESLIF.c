@@ -3150,6 +3150,7 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
   int                               i;
   marpaESLIF_terminal_t           **groupedTerminalpp;
   unsigned int                      terminalCandidateNumberi;
+  char                              tmps[1024];
 
   marpaESLIF_cloneContext.marpaESLIFp = marpaESLIFp;
   marpaESLIF_cloneContext.grammarp    = NULL;
@@ -4092,6 +4093,8 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
 
       /* We compile grouped regex for string and character class terminals. The discriminant if the UTF flag. Eventual caseless is embedded */
       /* using (?i) within the pattern.                                                                                                     */
+      /* We have full control, callouts from user are meaningless. So we can insert our own callout... in the form (?CX) where X is the     */
+      /* original symbol Id.                                                                                                                */
       /* Note that candidates for grouping can only be string and characters, and it is not a hasard that we made sure they share the same  */
       /* possible modifiers, that can be only "i" or "c".                                                                                   */
       /* After compilation, finally, it is the marpaESLIF_regex.utfb flag that becomes the discriminant at compile time, when "i" is        */
@@ -4136,12 +4139,15 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
             previousPatternl = patternl;
           }
 
-          /* We generate this: (?:PATTERN) or (?i:PATTERN) */
+          /* We generate this: (?:PATTERN)(?CX) or (?i:PATTERN)(?CX) */
+          /* where X is the symbol Id.                               */
           if ((symbolp->u.terminalp->patterni & PCRE2_CASELESS) == PCRE2_CASELESS) {
-            patternl += 5 + symbolp->u.terminalp->patternl;
+            patternl += 4 /* "(?i:" */ + symbolp->u.terminalp->patternl + 1 /* ")" */;
           } else {
-            patternl += 4 + symbolp->u.terminalp->patternl;
+            patternl += 3 /* "(?:" */ + symbolp->u.terminalp->patternl + 1 /* ")" */;
           }
+          sprintf(tmps, "%d", symbolp->idi);
+          patternl += 3 /* "(?C" */ + strlen(tmps) + 1 /* ")" */;
           if (patternl < previousPatternl) {
             /* Paranoid case */
             MARPAESLIF_ERROR(marpaESLIFp, "size_t turnaround when computing lastSizel");
@@ -4186,7 +4192,8 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
               *p++ = '|';
             }
 
-            /* We generate this: (?:PATTERN) or (?i:PATTERN) */
+            /* We generate this: (?:PATTERN)(?CX) or (?i:PATTERN)(?CX) */
+            /* where X is the symbol Id.                               */
             *p++ = '(';
             *p++ = '?';
             if ((symbolp->u.terminalp->patterni & PCRE2_CASELESS) == PCRE2_CASELESS) {
@@ -4195,6 +4202,13 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
             *p++ = ':';
             memcpy(p, symbolp->u.terminalp->patterns, symbolp->u.terminalp->patternl);
             p += symbolp->u.terminalp->patternl;
+            *p++ = ')';
+            *p++ = '(';
+            *p++ = '?';
+            *p++ = 'C';
+            sprintf(tmps, "%d", symbolp->idi);
+            memcpy(p, tmps, strlen(tmps));
+            p += strlen(tmps);
             *p++ = ')';
           }
           *p = '\0';
