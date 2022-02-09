@@ -9008,6 +9008,14 @@ static inline short _marpaESLIFRecognizer_resume_oneb(marpaESLIFRecognizer_t *ma
   havePriorityb           = 0;
   maxPriorityInitializedb = 0;
 
+  /* If there are grouped terminals, try them first. */
+  if (groupedSymbolUtfp != NULL) {
+    _marpaESLIFRecognizer_symbol_matcherb(marpaESLIFRecognizerp, marpaESLIF_streamp, groupedSymbolUtfp, &rci, &marpaESLIFValueResultArray, 0 /* maxStartCompletionsi */, NULL /* lastSizeBeforeCompletionlp */, &numberOfStartCompletionsi);
+  }
+  if (groupedSymbolNotUtfp != NULL) {
+    _marpaESLIFRecognizer_symbol_matcherb(marpaESLIFRecognizerp, marpaESLIF_streamp, groupedSymbolNotUtfp, &rci, &marpaESLIFValueResultArray, 0 /* maxStartCompletionsi */, NULL /* lastSizeBeforeCompletionlp */, &numberOfStartCompletionsi);
+  }
+
   for (symboll = 0; symboll < nSymboll; symboll++) {
     symboli = symbolArrayp[symboll];
     MARPAESLIF_INTERNAL_GET_SYMBOL_FROM_STACK(marpaESLIFRecognizerp->marpaESLIFp, symbolp, symbolStackp, symboli);
