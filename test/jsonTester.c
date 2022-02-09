@@ -47,7 +47,7 @@ int main(int argc, char **argv) {
   char                        *names;
   short                        foundb = 0;
 
-  genericLoggerp = GENERICLOGGER_NEW(GENERICLOGGER_LOGLEVEL_INFO);
+  genericLoggerp = GENERICLOGGER_NEW(GENERICLOGGER_LOGLEVEL_TRACE);
   if (genericLoggerp == NULL) {
     perror("GENERICLOGGER_NEW");
     goto err;

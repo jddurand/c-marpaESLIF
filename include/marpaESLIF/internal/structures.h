@@ -10,6 +10,10 @@
 #define GENERICSTACK_CUSTOM marpaESLIFValueResult_t
 #include <genericStack.h>
 
+/* Grouped terminals are special and are not attached to the grammar */
+#define MARPAESLIF_GROUPEDSYMBOLUTF_IDI -1
+#define MARPAESLIF_GROUPEDSYMBOLNOTUTF_IDI -2
+
 /*
  * Prior to genericHash inclusion, we define our hash size - a subject number
  * --------------------------------------------------------------------------
@@ -204,7 +208,7 @@ struct marpaESLIF_terminal {
   short                           pseudob;             /* Pseudo terminal */
   int                             eventSeti;           /* Remember eventSeti */
   marpaESLIF_terminal_orig_type_t origType;            /* Original type as per grammar parsing */
-  marpaESLIF_terminal_t          *groupedTerminalp;    /* Is a member of this grouped terminal, when not NULL */
+  marpaESLIF_symbol_t            *groupedSymbolp;      /* Is a member of this grouped (terminal) symbol, when not NULL */
 };
 
 /* Matcher return values */
@@ -376,8 +380,10 @@ struct marpaESLIF_grammar {
   short                  fastDiscardb;                       /* True when :discard can be done in the context of the current recognizer */
   genericHash_t         _groupedRegexHash;                   /* All regexes are internally grouped together, discriminant is pcre2Optioni */
   genericHash_t         *groupedRegexHashp;
-  marpaESLIF_terminal_t *groupedTerminalUtfp;                /* All grammar terminals that can be grouped and have the UTF flag */
-  marpaESLIF_terminal_t *groupedTerminalNotUtfp;             /* All grammar terminals that can be grouped and do not have UTF flag */
+  marpaESLIF_symbol_t   *groupedSymbolUtfp;                  /* Internal symbol container for grouped utfb terminals */
+  marpaESLIF_symbol_t   *groupedSymbolNotUtfp;               /* Internal symbol container for grouped !utfb terminals */
+  short                  groupedSymbolUtfScanb;              /* When using internal scan, is this grouped terminal in use ? */
+  short                  groupedSymbolNotUtfScanb;           /* When using internal scan, is this grouped terminal in use ? */
 };
 
 enum marpaESLIF_json_type {
