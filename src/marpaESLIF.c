@@ -4243,6 +4243,30 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
           if (*groupedTerminalpp == NULL) {
             goto err;
           }
+
+          /* Assign groupedTerminal to every symbol that is a member of it */
+          for (symboli = 0; symboli < GENERICSTACK_USED(symbolStackp); symboli++) {
+            MARPAESLIF_INTERNAL_GET_SYMBOL_FROM_STACK(marpaESLIFp, symbolp, symbolStackp, symboli);
+            /* Only for terminals candidate for grouping */
+            if (! MARPAESLIF_IS_TERMINAL_GROUP_CANDIDATE(symbolp)) {
+              continue;
+            }
+
+            /* Filter on UTF flag */
+            if (i == 0) {
+              /* Only for terminal candidates with the UTF flag */
+              if (! symbolp->u.terminalp->regex.utfb) {
+                continue;
+              }
+            } else {
+              /* Only for terminal candidates without the UTF flag */
+              if (symbolp->u.terminalp->regex.utfb) {
+                continue;
+              }
+            }
+
+            symbolp->u.terminalp->groupedTerminalp = *groupedTerminalpp;
+          }
         }
       }
     }
