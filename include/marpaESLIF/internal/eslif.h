@@ -459,6 +459,7 @@
 typedef struct bootstrap_grammar_terminal {
   int                        idi;                 /* Identifier */
   marpaESLIF_terminal_type_t terminalType;        /* Terminal type */
+  short                      charclassb;          /* A character-class only regex ? */
   char                      *modifiers;           /* Modifiers */
   char                      *utf8s;               /* ASCII UTF-8 compatible encoding */
   char                      *eventBefores;

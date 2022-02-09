@@ -73,7 +73,11 @@ The presence of :sol pseudo-terminal anywhere in the grammar enforces the C<newl
 
 =item * Strings
 
-They can be single (C<'>), double-quoted (C<">), or LEFT DOUBLE QUOTATION MARK (C<“>) then RIGHT DOUBLE QUOTATION MARK (C<”>) enclosed. The content is any valid unicode character, and the C<\> character can be used to escape the expected right-side quote character (i.e. C<'>, C<">, or C<”>) or C<\> itself. The C<i> modifier can be used to force case-insensitive match:
+They can be single (C<'>), double-quoted (C<">), or LEFT DOUBLE QUOTATION MARK (C<“>) then RIGHT DOUBLE QUOTATION MARK (C<”>) enclosed. The content is any valid unicode character, and the C<\> character can be used to escape the expected right-side quote character (i.e. C<'>, C<">, or C<”>) or C<\> itself.
+
+Only C<i> and C<c> modifiers are allowed.
+
+The C<i> modifier forces case-insensitive match:
 
   'string'
   'string':i
@@ -81,12 +85,15 @@ They can be single (C<'>), double-quoted (C<">), or LEFT DOUBLE QUOTATION MARK (
   "string\"s\\"
   “str'"\”ing”:i
 
-and the modifier C<c> to force unicode character mode. Internally a string is nothing else but a regular expression, so the exact implementation of the C<i> and C<c> modifiers correspond to the PCRE2 flags listed below in the I<Regular expression> section. A string created with no modifier is faster when doing comparison (internally marpaESLIF will switch to a brutal memory comparison instead of calling the PCRE2 engine).
+Modifier C<c> forces character mode, i.e. the stream has to be a valid character stream.
+
 Please note this is really a I<quoted string>, B<not> a string terminal. I.e. everything inside the quote is taken as-is, with no interpretation.
 
 =item * Character classes
 
 They are always enclosed with left and right brackets C<[]>. Modifiers can start after a C<:> character. A character class class is nothing else but a lexically restricted regular expression.
+
+Alike string, only the C<i> and C<c> modifiers are allowed.
 
 =item * Regular expression
 

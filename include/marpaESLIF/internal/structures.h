@@ -29,8 +29,8 @@
 #define INTERNAL_ANYCHAR_PATTERN "."                    /* This ASCII string is UTF-8 compatible */
 #define INTERNAL_UTF8BOM_PATTERN "\\x{FEFF}"            /* FEFF Unicode code point i.e. EFBBBF in UTF-8 encoding */
 #define INTERNAL_NEWLINE_PATTERN "(*BSR_UNICODE).*?\\R" /* newline as per unicode - we do .*? because our regexps are always anchored */
-#define INTERNAL_STRINGMODIFIERS_PATTERN "i$"
-#define INTERNAL_CHARACTERCLASSMODIFIERS_PATTERN "[eijmnsxDJUuaNubcA]+$"
+#define INTERNAL_STRINGMODIFIERS_PATTERN "[ic]+$"
+#define INTERNAL_CHARACTERCLASSMODIFIERS_PATTERN "[ic]+$"
 #define INTERNAL_REGEXMODIFIERS_PATTERN "[eijmnsxDJUuaNubcA]*$"
 
 /* Forward definitions */
@@ -39,6 +39,7 @@ typedef struct  marpaESLIF_regex                 marpaESLIF_regex_t;
 typedef         marpaESLIFString_t               marpaESLIF_string_t;
 typedef enum    marpaESLIF_symbol_type           marpaESLIF_symbol_type_t;
 typedef enum    marpaESLIF_terminal_type         marpaESLIF_terminal_type_t;
+typedef enum    marpaESLIF_terminal_orig_type    marpaESLIF_terminal_orig_type_t;
 typedef struct  marpaESLIF_terminal              marpaESLIF_terminal_t;
 typedef struct  marpaESLIF_meta                  marpaESLIF_meta_t;
 typedef         marpaESLIFSymbol_t               marpaESLIF_symbol_t;
@@ -133,6 +134,15 @@ enum marpaESLIF_terminal_type {
   MARPAESLIF_TERMINAL_TYPE__SOL      /* :sol */
 };
 
+/* Terminal original types */
+enum marpaESLIF_terminal_orig_type {
+  MARPAESLIF_TERMINAL_ORIG_TYPE_NA = 0,
+  MARPAESLIF_TERMINAL_ORIG_TYPE_STRING,    /* String */
+  MARPAESLIF_TERMINAL_ORIG_TYPE_CHARCLASS, /* Character class */
+  MARPAESLIF_TERMINAL_ORIG_TYPE_REGEX,     /* Regular expression */
+  MARPAESLIF_TERMINAL_ORIG_TYPE_PSEUDO     /* Pseudo-terminal */
+};
+
 /* Regex modifiers - we take JPCRE2 matching semantics, c.f. https://neurobin.org/projects/softwares/libs/jpcre2/ */
 struct marpaESLIF_regex_option_map {
   char                       modifierc;
@@ -180,19 +190,21 @@ struct marpaESLIF_regex {
 };
 
 struct marpaESLIF_terminal {
-  int                            idi;                 /* Terminal Id */
-  marpaESLIF_string_t           *descp;               /* Terminal description */
-  char                          *modifiers;           /* Modifiers */
-  char                          *patterns;            /* This is what is sent to PCRE2 and what defines exactly the terminal */
-  size_t                         patternl;
-  marpaESLIF_uint32_t            patterni;            /* ... this includes pattern options */
-  marpaESLIF_terminal_type_t     type;                /* Original type. Used for description. When origin is STRING we know that patterns if ASCII safe */
-  marpaESLIF_regex_t             regex;               /* Regex version */
-  short                          memcmpb;             /* Flag saying that memcmp is possible */
-  char                          *bytes;               /* Original UTF-8 bytes, used for memcmp() when possible */
-  size_t                         bytel;               /* i.e. when this is a string terminal without modifier */
-  short                          pseudob;             /* Pseudo terminal */
-  int                            eventSeti;           /* Remember eventSeti */
+  int                             idi;                 /* Terminal Id */
+  marpaESLIF_string_t            *descp;               /* Terminal description */
+  char                           *modifiers;           /* Modifiers */
+  char                           *patterns;            /* This is what is sent to PCRE2 and what defines exactly the terminal */
+  size_t                          patternl;
+  marpaESLIF_uint32_t             patterni;            /* ... this includes pattern options */
+  marpaESLIF_terminal_type_t      type;                /* Original type. Used for description. When origin is STRING we know that patterns if ASCII safe */
+  marpaESLIF_regex_t              regex;               /* Regex version */
+  short                           memcmpb;             /* Flag saying that memcmp is possible */
+  char                           *bytes;               /* Original UTF-8 bytes, used for memcmp() when possible */
+  size_t                          bytel;               /* i.e. when this is a string terminal without modifier */
+  short                           pseudob;             /* Pseudo terminal */
+  int                             eventSeti;           /* Remember eventSeti */
+  marpaESLIF_terminal_orig_type_t origType;            /* Original type as per grammar parsing */
+  marpaESLIF_terminal_t          *groupedTerminalp;    /* Is a member of this grouped terminal, when not NULL */
 };
 
 /* Matcher return values */
@@ -270,7 +282,7 @@ struct marpaESLIFSymbol {
   marpaESLIFAction_t            *ifActionp;              /* if-action, only for terminals or lexemes */
   marpaESLIFAction_t            *generatorActionp;       /* generator-action */
   marpaESLIFSymbolOption_t       marpaESLIFSymbolOption;
-  /* When an external meta symbol is created, it duplicates a symbol content */
+  /* When an external meta symbol is created, it duplicates a symbol content - happens also for a grouped regex that is grouping nothing :) */
   short                          contentIsShallowb;
   marpaESLIFGrammar_t           *marpaESLIFGrammarp;     /* Shallow pointer, set by marpaESLIFSymbol_meta_newp() only */
   short                          verboseb;               /* Symbol is verbose */
@@ -362,8 +374,10 @@ struct marpaESLIF_grammar {
   char                  *defaultEncodings;                   /* Default encoding is reader returns NULL */
   char                  *fallbackEncodings;                  /* Fallback encoding is reader returns NULL and tconv fails to detect encoding */
   short                  fastDiscardb;                       /* True when :discard can be done in the context of the current recognizer */
-  marpaESLIF_terminal_t *groupedTerminalSensitivep;          /* A single terminal that merges all case sensitive terminals that can be matched with one call */
-  marpaESLIF_terminal_t *groupedTerminalInsensitivep;        /* A single terminal that merges all case insensitive terminals that can be matched with one call */
+  genericHash_t         _groupedRegexHash;                   /* All regexes are internally grouped together, discriminant is pcre2Optioni */
+  genericHash_t         *groupedRegexHashp;
+  marpaESLIF_terminal_t *groupedTerminalUtfp;                /* All grammar terminals that can be grouped and have the UTF flag */
+  marpaESLIF_terminal_t *groupedTerminalNotUtfp;             /* All grammar terminals that can be grouped and do not have UTF flag */
 };
 
 enum marpaESLIF_json_type {
