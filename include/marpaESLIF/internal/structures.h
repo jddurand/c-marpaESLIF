@@ -187,6 +187,7 @@ struct marpaESLIF_regex {
   short                  calloutb;     /* Do this regex have any callout ? */
   pcre2_match_context   *match_contextp;    /* Match context */
   marpaESLIF_pcre2_callout_context_t callout_context; /* Callout match */
+  int                  (*forcedCallbackip)(pcre2_callout_block *blockp, void *userDatavp);
 };
 
 struct marpaESLIF_terminal {
@@ -292,6 +293,7 @@ struct marpaESLIFSymbol {
   marpaESLIF_lua_functioncall_t *callp;                  /* For parameterized symbols, shallow pointer to callp */
   marpaESLIFAction_t            *pushContextActionp;     /* For parameterized symbols, context push action */
   short                          lookaheadb;             /* Lookahead symbol ? */
+  short                          groupedMatchb;          /* Used only in grouped match */
 };
 
 /* A rule */
@@ -378,6 +380,10 @@ struct marpaESLIF_grammar {
   genericHash_t         *groupedRegexHashp;
   marpaESLIF_symbol_t   *groupedSymbolUtfp;                  /* Internal symbol container for grouped utfb terminals */
   marpaESLIF_symbol_t   *groupedSymbolNotUtfp;               /* Internal symbol container for grouped !utfb terminals */
+  size_t                 groupedSymbolUtfpl;                 /* Number of symbols in the utf container */
+  marpaESLIF_symbol_t  **groupedSymbolUtfpp;                 /* Symbols in the utf container */
+  size_t                 groupedSymbolNotUtfpl;              /* Number of symbols in the !utf container */
+  marpaESLIF_symbol_t  **groupedSymbolNotUtfpp;              /* Symbols in the !utf container */
 };
 
 enum marpaESLIF_json_type {
