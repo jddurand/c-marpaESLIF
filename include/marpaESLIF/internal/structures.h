@@ -294,6 +294,8 @@ struct marpaESLIFSymbol {
   marpaESLIFAction_t            *pushContextActionp;     /* For parameterized symbols, context push action */
   short                          lookaheadb;             /* Lookahead symbol ? */
   short                          groupedMatchb;          /* Used only in grouped match */
+  char                          *groupedMatchp;          /* Used only in grouped match */
+  size_t                         groupedMatchl;          /* Used only in grouped match */
 };
 
 /* A rule */
