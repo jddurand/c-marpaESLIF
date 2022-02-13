@@ -404,7 +404,6 @@ struct marpaESLIFGrammar_Lshare {
 #define MARPAESLIFGRAMMARLUA_FOR_PARLIST 0
 #define MARPAESLIFGRAMMARLUA_FOR_EXPLIST 1
 struct marpaESLIF {
-  marpaESLIFGrammar_t        *marpaESLIFGrammarLuap;
   marpaESLIFGrammar_t        *marpaESLIFGrammarLuapp[2];   /* C.f. MARPAESLIFGRAMMARLUA_FOR_PARLIST and MARPAESLIFGRAMMARLUA_FOR_EXPLIST */
   marpaESLIFGrammar_t        *marpaESLIFGrammarp;          /* ESLIF has its own grammar -; */
   marpaESLIFOption_t          marpaESLIFOption;

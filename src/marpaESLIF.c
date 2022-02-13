@@ -3118,6 +3118,7 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
   marpaWrapperGrammar_t            *marpaWrapperGrammarClonep = NULL;
   marpaESLIF_terminal_t            *groupedTerminalp          = NULL;
   marpaESLIF_symbol_t              *groupedSymbolp            = NULL;
+  char                             *patterns                  = NULL;
   marpaESLIF_meta_t                *metap;
   genericStack_t                   *symbolStackp;
   genericStack_t                   *ruleStackp;
@@ -3151,7 +3152,6 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
   size_t                            tmpl;
   short                             fastDiscardb;
   marpaESLIF_uint32_t               pcre2Optioni;
-  char                             *patterns;
   size_t                            previousPatternl;
   size_t                            patternl;
   char                             *p;
@@ -3186,6 +3186,256 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
   /* Precompile eventual luascript */
   if (MARPAESLIF_UNLIKELY(! _marpaESLIF_lua_grammar_precompileb(marpaESLIFGrammarp))) {
     goto err;
+  }
+
+  /* Compile grouped symbols */
+  for (grammari = 0; grammari < GENERICSTACK_USED(grammarStackp); grammari++) {
+    if (! GENERICSTACK_IS_PTR(grammarStackp, grammari)) {
+      continue;
+    }
+    grammarp = (marpaESLIF_grammar_t *) GENERICSTACK_GET_PTR(grammarStackp, grammari);
+
+    MARPAESLIF_TRACEF(marpaESLIFp, funcs, "Looking at grouped symbols in grammar level %d (%s)", grammari, grammarp->descp->asciis);
+    symbolStackp = grammarp->symbolStackp;
+    for (symboli = 0; symboli < GENERICSTACK_USED(symbolStackp); symboli++) {
+      MARPAESLIF_INTERNAL_GET_SYMBOL_FROM_STACK(marpaESLIFp, symbolp, symbolStackp, symboli);
+
+      /* We compile grouped regex for string and character class terminals. The discriminant if the UTF flag. Eventual caseless is embedded */
+      /* using (?i) within the pattern.                                                                                                     */
+      /* We have full control, callouts from user are meaningless. So we can insert our own callout... in the form (?CX) where X is the     */
+      /* original symbol Id.                                                                                                                */
+      /* Note that candidates for grouping can only be string and characters, and it is not a hasard that we made sure they share the same  */
+      /* possible modifiers, that can be only "i" or "c".                                                                                   */
+      /* After compilation, finally, it is the marpaESLIF_regex.utfb flag that becomes the discriminant at compile time, when "i" is        */
+      /* embedded as (?i) in the pattern when applicable.                                                                                   */
+
+      for (i = 0; i < 2; i++) {
+        if (i == 0) {
+          groupedSymbolpp  = &(grammarp->groupedSymbolUtfp);
+          groupedSymbolplp = &(grammarp->groupedSymbolUtfpl);
+          groupedSymbolppp = &(grammarp->groupedSymbolUtfpp);
+        } else {
+          groupedSymbolpp  = &(grammarp->groupedSymbolNotUtfp);
+          groupedSymbolplp = &(grammarp->groupedSymbolNotUtfpl);
+          groupedSymbolppp = &(grammarp->groupedSymbolNotUtfpp);
+        }
+
+        /* We count the number of terminal candidates using the wanted size */
+        previousPatternl         = 0;
+        patternl                 = 0;
+        terminalCandidateNumberi = 0;
+
+        for (symboli = 0; symboli < GENERICSTACK_USED(symbolStackp); symboli++) {
+          MARPAESLIF_INTERNAL_GET_SYMBOL_FROM_STACK(marpaESLIFp, symbolp, symbolStackp, symboli);
+          /* Only for terminals candidate for grouping */
+          if (! MARPAESLIF_IS_TERMINAL_GROUP_CANDIDATE(symbolp)) {
+            continue;
+          }
+
+          /* Filter on UTF flag */
+          if (i == 0) {
+            /* Only for terminal candidates with the UTF flag */
+            if (! symbolp->u.terminalp->regex.utfb) {
+              continue;
+            }
+          } else {
+            /* Only for terminal candidates without the UTF flag */
+            if (symbolp->u.terminalp->regex.utfb) {
+              continue;
+            }
+          }
+
+          /* This is a candidate */
+          if (++terminalCandidateNumberi > 1) {
+            /* Not the first pattern: we insert the "|" character */
+            if (++patternl < previousPatternl) {
+              /* Paranoid case */
+              MARPAESLIF_ERROR(marpaESLIFp, "size_t turnaround when computing lastSizel");
+              goto err;
+            }
+            previousPatternl = patternl;
+          }
+
+          /* If terminalCandidateNumberi > 256:                                */
+          /*   we generate this: ((?:PATTERN))(?C"X") or ((?i:PATTERN))(?C"X") */
+          /* else:                                                             */
+          /*   we generate this: ((?:PATTERN))(?CX) or ((?i:PATTERN))(?CX)     */
+          /* where X is terminalCandidateNumberi - 1.                          */
+          if ((symbolp->u.terminalp->patterni & PCRE2_CASELESS) == PCRE2_CASELESS) {
+            patternl += 5 /* "((?i:" */ + symbolp->u.terminalp->patternl + 2 /* "))" */;
+          } else {
+            patternl += 4 /* "((?:" */ + symbolp->u.terminalp->patternl + 2 /* "))" */;
+          }
+          sprintf(tmps, "%d", terminalCandidateNumberi - 1);
+          if (terminalCandidateNumberi > 256) {
+            patternl += 4 /* "(?C\"" */ + strlen(tmps) + 2 /* "\")" */;
+          } else {
+            patternl += 3 /* "(?C" */ + strlen(tmps) + 1 /* ")" */;
+          }
+          if (patternl < previousPatternl) {
+            /* Paranoid case */
+            MARPAESLIF_ERROR(marpaESLIFp, "size_t turnaround when computing lastSizel");
+            goto err;
+          }
+          previousPatternl = patternl;
+        }
+
+        if (terminalCandidateNumberi > 1) {
+          /* More than one candidate: do the grouping */
+          *groupedSymbolplp = (size_t) terminalCandidateNumberi;
+          if (*groupedSymbolppp != NULL) {
+            free(*groupedSymbolppp);
+          }
+          *groupedSymbolppp = (marpaESLIF_symbol_t **) malloc(terminalCandidateNumberi * sizeof(marpaESLIF_symbol_t *));
+          if (*groupedSymbolppp == NULL) {
+            MARPAESLIF_ERRORF(marpaESLIFp, "malloc failure, %s", strerror(errno));
+            goto err;
+          }
+
+          if (patterns != NULL) {
+            free(patterns);
+          }
+          patterns = (char *) malloc(patternl + 1); /* +1 for a NUL convenient byte */
+          if (patterns == NULL) {
+            MARPAESLIF_ERRORF(marpaESLIFp, "malloc failure, %s", strerror(errno));
+            goto err;
+          }
+          p = patterns;
+
+          terminalCandidateNumberi = 0;
+          for (symboli = 0; symboli < GENERICSTACK_USED(symbolStackp); symboli++) {
+            MARPAESLIF_INTERNAL_GET_SYMBOL_FROM_STACK(marpaESLIFp, symbolp, symbolStackp, symboli);
+            /* Only for terminals candidate for grouping */
+            if (! MARPAESLIF_IS_TERMINAL_GROUP_CANDIDATE(symbolp)) {
+              continue;
+            }
+
+            /* Filter on UTF flag */
+            if (i == 0) {
+              /* Only for terminal candidates with the UTF flag */
+              if (! symbolp->u.terminalp->regex.utfb) {
+                continue;
+              }
+            } else {
+              /* Only for terminal candidates without the UTF flag */
+              if (symbolp->u.terminalp->regex.utfb) {
+                continue;
+              }
+            }
+
+            /* This is a candidate */
+            (*groupedSymbolppp)[terminalCandidateNumberi] = symbolp;
+
+            if (++terminalCandidateNumberi > 1) {
+              /* Not the first pattern: we insert the "|" character */
+              *p++ = '|';
+            }
+
+            /* If terminalCandidateNumberi > 256:                                */
+            /*   we generate this: ((?:PATTERN))(?C"X") or ((?i:PATTERN))(?C"X") */
+            /* else:                                                             */
+            /*   we generate this: ((?:PATTERN))(?CX) or ((?i:PATTERN))(?CX)     */
+            /* where X is terminalCandidateNumberi - 1.                          */
+            *p++ = '(';
+            *p++ = '(';
+            *p++ = '?';
+            if ((symbolp->u.terminalp->patterni & PCRE2_CASELESS) == PCRE2_CASELESS) {
+              *p++ = 'i';
+            }
+            *p++ = ':';
+            memcpy(p, symbolp->u.terminalp->patterns, symbolp->u.terminalp->patternl);
+            p += symbolp->u.terminalp->patternl;
+            *p++ = ')';
+            *p++ = ')';
+            *p++ = '(';
+            *p++ = '?';
+            *p++ = 'C';
+            sprintf(tmps, "%d", terminalCandidateNumberi - 1);
+            if (terminalCandidateNumberi > 256) {
+              *p++ = '"';
+            }
+            memcpy(p, tmps, strlen(tmps));
+            p += strlen(tmps);
+            if (terminalCandidateNumberi > 256) {
+              *p++ = '"';
+            }
+            *p++ = ')';
+          }
+
+          *p = '\0';
+
+          /* Try to create a symbol out of this grouped regex - this should not fail */
+#ifndef MARPAESLIF_NTRACE
+          if (i == 0) {
+            MARPAESLIF_TRACEF(marpaESLIFp, funcs, "Compiling grouped PCRE2_UTF terminal in grammar level %d (%s): %s", grammari, grammarp->descp->asciis, patterns);
+          } else {
+            MARPAESLIF_TRACEF(marpaESLIFp, funcs, "Compiling grouped !PCRE2_UTF terminal in grammar level %d (%s): %s", grammari, grammarp->descp->asciis, patterns);
+          }
+#endif
+          groupedTerminalp = _marpaESLIF_terminal_newp(marpaESLIFp,
+                                                       NULL, /* grammarp - a hack to prevent the symbol to be inserted in the grammar */
+                                                       MARPAWRAPPERGRAMMAR_EVENTTYPE_NONE,
+                                                       NULL, /* descEncodings */
+                                                       NULL, /* descs */
+                                                       0, /* descl */
+                                                       MARPAESLIF_TERMINAL_TYPE_REGEX,
+                                                       (i == 0) ? "u" : NULL,
+                                                       patterns,
+                                                       patternl,
+                                                       NULL, /* testFullMatchs */
+                                                       NULL, /* testPartialMatchs */
+                                                       0, /* pseudob */
+                                                       0 /* charclassb */);
+          if (groupedTerminalp == NULL) {
+            goto err;
+          }
+          groupedTerminalp->regex.forcedCallbackip = _marpaESLIF_pcre2_groupedSymbol_callouti;
+
+          groupedSymbolp = _marpaESLIF_symbol_newp(marpaESLIFp, NULL /* marpaESLIFSymbolOptionp */);
+          if (groupedSymbolp == NULL) {
+            goto err;
+          }
+
+          groupedSymbolp->type                        = MARPAESLIF_SYMBOL_TYPE_TERMINAL;
+          groupedSymbolp->u.terminalp                 = groupedTerminalp;
+          groupedSymbolp->idi                         = groupedTerminalp->idi;
+          groupedSymbolp->descp                       = groupedTerminalp->descp;
+          groupedSymbolp->u.terminalp->groupedSymbolp = groupedSymbolp; /* Linked to itself, c.f. _marpaESLIF_pcre2_groupedSymbol_callouti */
+          groupedTerminalp = NULL; /* Now in groupedSymbolp */
+
+          /* Assign groupedSymbolp to every symbol that is a member of it */
+          for (symboli = 0; symboli < GENERICSTACK_USED(symbolStackp); symboli++) {
+            MARPAESLIF_INTERNAL_GET_SYMBOL_FROM_STACK(marpaESLIFp, symbolp, symbolStackp, symboli);
+
+            /* Only for terminals candidate for grouping */
+            if (! MARPAESLIF_IS_TERMINAL_GROUP_CANDIDATE(symbolp)) {
+              continue;
+            }
+
+            /* Filter on UTF flag */
+            if (i == 0) {
+              /* Only for terminal candidates with the UTF flag */
+              if (! symbolp->u.terminalp->regex.utfb) {
+                continue;
+              }
+            } else {
+              /* Only for terminal candidates without the UTF flag */
+              if (symbolp->u.terminalp->regex.utfb) {
+                continue;
+              }
+            }
+
+            symbolp->u.terminalp->groupedSymbolp = groupedSymbolp; /* Shallow symbol by definition */
+          }
+
+          if (*groupedSymbolpp != NULL) {
+            _marpaESLIF_symbol_freev(*groupedSymbolpp);
+          }
+          *groupedSymbolpp = groupedSymbolp;
+          groupedSymbolp = NULL; /* Now in grammarp */
+        }
+      }
+    }
   }
 
   /* Set default symbol and rule action if not done, terminal's regex-action */
@@ -3682,6 +3932,8 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
       metap->_marpaESLIFGrammarLexemeClone             = *marpaESLIFGrammarp;
       metap->_marpaESLIFGrammarLexemeClone.grammarp    = &(metap->_grammar);
       metap->marpaESLIFGrammarLexemeClonep             = &(metap->_marpaESLIFGrammarLexemeClone);
+      /* Take care, grammarp contains a shallow pointer to its container */
+      metap->_marpaESLIFGrammarLexemeClone.grammarp->marpaESLIFGrammarp = metap->marpaESLIFGrammarLexemeClonep;
 
       marpaWrapperGrammarClonep = NULL;
 
@@ -4100,231 +4352,6 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
         symbolp->effectiveSymbolActionp   = (symbolp->symbolActionp   != NULL) ? symbolp->symbolActionp   : grammarp->defaultSymbolActionp;
         symbolp->effectiveSymbolActione   = (symbolp->symbolActionp   != NULL) ? symbolp->symbolActione   : grammarp->defaultSymbolActione;
       }
-
-      /* We compile grouped regex for string and character class terminals. The discriminant if the UTF flag. Eventual caseless is embedded */
-      /* using (?i) within the pattern.                                                                                                     */
-      /* We have full control, callouts from user are meaningless. So we can insert our own callout... in the form (?CX) where X is the     */
-      /* original symbol Id.                                                                                                                */
-      /* Note that candidates for grouping can only be string and characters, and it is not a hasard that we made sure they share the same  */
-      /* possible modifiers, that can be only "i" or "c".                                                                                   */
-      /* After compilation, finally, it is the marpaESLIF_regex.utfb flag that becomes the discriminant at compile time, when "i" is        */
-      /* embedded as (?i) in the pattern when applicable.                                                                                   */
-
-      for (i = 0; i < 2; i++) {
-        if (i == 0) {
-          groupedSymbolpp  = &(grammarp->groupedSymbolUtfp);
-          groupedSymbolplp = &(grammarp->groupedSymbolUtfpl);
-          groupedSymbolppp = &(grammarp->groupedSymbolUtfpp);
-        } else {
-          groupedSymbolpp  = &(grammarp->groupedSymbolNotUtfp);
-          groupedSymbolplp = &(grammarp->groupedSymbolNotUtfpl);
-          groupedSymbolppp = &(grammarp->groupedSymbolNotUtfpp);
-        }
-
-        /* We cound the number of terminal candidates using the wanted size */
-        previousPatternl         = 0;
-        patternl                 = 0;
-        terminalCandidateNumberi = 0;
-
-        for (symboli = 0; symboli < GENERICSTACK_USED(symbolStackp); symboli++) {
-          MARPAESLIF_INTERNAL_GET_SYMBOL_FROM_STACK(marpaESLIFp, symbolp, symbolStackp, symboli);
-          /* Only for terminals candidate for grouping */
-          if (! MARPAESLIF_IS_TERMINAL_GROUP_CANDIDATE(symbolp)) {
-            continue;
-          }
-
-          /* Filter on UTF flag */
-          if (i == 0) {
-            /* Only for terminal candidates with the UTF flag */
-            if (! symbolp->u.terminalp->regex.utfb) {
-              continue;
-            }
-          } else {
-            /* Only for terminal candidates without the UTF flag */
-            if (symbolp->u.terminalp->regex.utfb) {
-              continue;
-            }
-          }
-
-          /* This is a candidate */
-          if (++terminalCandidateNumberi > 1) {
-            /* Not the first pattern: we insert the "|" character */
-            if (++patternl < previousPatternl) {
-              /* Paranoid case */
-              MARPAESLIF_ERROR(marpaESLIFp, "size_t turnaround when computing lastSizel");
-              goto err;
-            }
-            previousPatternl = patternl;
-          }
-
-          /* If terminalCandidateNumberi > 256:                                */
-          /*   we generate this: ((?:PATTERN))(?C"X") or ((?i:PATTERN))(?C"X") */
-          /* else:                                                             */
-          /*   we generate this: ((?:PATTERN))(?CX) or ((?i:PATTERN))(?CX)     */
-          /* where X is terminalCandidateNumberi - 1.                          */
-          if ((symbolp->u.terminalp->patterni & PCRE2_CASELESS) == PCRE2_CASELESS) {
-            patternl += 5 /* "((?i:" */ + symbolp->u.terminalp->patternl + 2 /* "))" */;
-          } else {
-            patternl += 4 /* "((?:" */ + symbolp->u.terminalp->patternl + 2 /* "))" */;
-          }
-          sprintf(tmps, "%d", terminalCandidateNumberi - 1);
-          if (terminalCandidateNumberi < 256) {
-            patternl += 4 /* "((?C" */ + strlen(tmps) + 2 /* "))" */;
-          } else {
-            patternl += 5 /* "((?C\"" */ + strlen(tmps) + 3 /* "\"))" */;
-          }
-          if (patternl < previousPatternl) {
-            /* Paranoid case */
-            MARPAESLIF_ERROR(marpaESLIFp, "size_t turnaround when computing lastSizel");
-            goto err;
-          }
-          previousPatternl = patternl;
-        }
-
-        if (terminalCandidateNumberi > 1) {
-          /* More than one candidate: do the grouping */
-          *groupedSymbolplp = (size_t) terminalCandidateNumberi;
-          *groupedSymbolppp = (marpaESLIF_symbol_t **) malloc(terminalCandidateNumberi * sizeof(marpaESLIF_symbol_t *));
-          if (*groupedSymbolppp == NULL) {
-            MARPAESLIF_ERRORF(marpaESLIFp, "malloc failure, %s", strerror(errno));
-            goto err;
-          }
-
-          patterns = (char *) malloc(patternl + 1); /* +1 for a NUL convenient byte */
-          if (patterns == NULL) {
-            MARPAESLIF_ERRORF(marpaESLIFp, "malloc failure, %s", strerror(errno));
-            goto err;
-          }
-          p = patterns;
-
-          terminalCandidateNumberi = 0;
-          for (symboli = 0; symboli < GENERICSTACK_USED(symbolStackp); symboli++) {
-            MARPAESLIF_INTERNAL_GET_SYMBOL_FROM_STACK(marpaESLIFp, symbolp, symbolStackp, symboli);
-            /* Only for terminals candidate for grouping */
-            if (! MARPAESLIF_IS_TERMINAL_GROUP_CANDIDATE(symbolp)) {
-              continue;
-            }
-
-            /* Filter on UTF flag */
-            if (i == 0) {
-              /* Only for terminal candidates with the UTF flag */
-              if (! symbolp->u.terminalp->regex.utfb) {
-                continue;
-              }
-            } else {
-              /* Only for terminal candidates without the UTF flag */
-              if (symbolp->u.terminalp->regex.utfb) {
-                continue;
-              }
-            }
-
-            /* This is a candidate */
-            (*groupedSymbolppp)[terminalCandidateNumberi] = symbolp;
-
-            if (++terminalCandidateNumberi > 1) {
-              /* Not the first pattern: we insert the "|" character */
-              *p++ = '|';
-            }
-
-            /* If terminalCandidateNumberi > 256:                                */
-            /*   we generate this: ((?:PATTERN))(?C"X") or ((?i:PATTERN))(?C"X") */
-            /* else:                                                             */
-            /*   we generate this: ((?:PATTERN))(?CX) or ((?i:PATTERN))(?CX)     */
-            /* where X is terminalCandidateNumberi - 1.                          */
-            *p++ = '(';
-            *p++ = '(';
-            *p++ = '?';
-            if ((symbolp->u.terminalp->patterni & PCRE2_CASELESS) == PCRE2_CASELESS) {
-              *p++ = 'i';
-            }
-              *p++ = ':';
-            memcpy(p, symbolp->u.terminalp->patterns, symbolp->u.terminalp->patternl);
-            p += symbolp->u.terminalp->patternl;
-            *p++ = ')';
-            *p++ = ')';
-            *p++ = '(';
-            *p++ = '?';
-            *p++ = 'C';
-            if (terminalCandidateNumberi > 256) {
-              *p++ = '"';
-            }
-            sprintf(tmps, "%d", terminalCandidateNumberi - 1);
-            memcpy(p, tmps, strlen(tmps));
-            p += strlen(tmps);
-            if (terminalCandidateNumberi > 256) {
-              *p++ = '"';
-            }
-            *p++ = ')';
-          }
-          *p = '\0';
-
-          /* Try to create a symbol out of this grouped regex - this should not fail */
-#ifndef MARPAESLIF_NTRACE
-          if (i == 0) {
-            MARPAESLIF_TRACEF(marpaESLIFp, funcs, "Compiling grouped PCRE2_UTF terminal in grammar level %d (%s): %s", grammari, grammarp->descp->asciis, patterns);
-          } else {
-            MARPAESLIF_TRACEF(marpaESLIFp, funcs, "Compiling grouped !PCRE2_UTF terminal in grammar level %d (%s): %s", grammari, grammarp->descp->asciis, patterns);
-          }
-#endif
-          groupedTerminalp = _marpaESLIF_terminal_newp(marpaESLIFp,
-                                                       NULL, /* grammarp - a hack to prevent the symbol to be inserted in the grammar */
-                                                       MARPAWRAPPERGRAMMAR_EVENTTYPE_NONE,
-                                                       NULL, /* descEncodings */
-                                                       NULL, /* descs */
-                                                       0, /* descl */
-                                                       MARPAESLIF_TERMINAL_TYPE_REGEX,
-                                                       (i == 0) ? "u" : NULL,
-                                                       patterns,
-                                                       patternl,
-                                                       NULL, /* testFullMatchs */
-                                                       NULL, /* testPartialMatchs */
-                                                       0, /* pseudob */
-                                                       0 /* charclassb */);
-          if (groupedTerminalp == NULL) {
-            goto err;
-          }
-          groupedTerminalp->regex.forcedCallbackip = _marpaESLIF_pcre2_groupedSymbol_callouti;
-
-          groupedSymbolp = _marpaESLIF_symbol_newp(marpaESLIFp, NULL /* marpaESLIFSymbolOptionp */);
-          if (groupedSymbolp == NULL) {
-            goto err;
-          }
-
-          groupedSymbolp->type                        = MARPAESLIF_SYMBOL_TYPE_TERMINAL;
-          groupedSymbolp->u.terminalp                 = groupedTerminalp;
-          groupedSymbolp->idi                         = groupedTerminalp->idi;
-          groupedSymbolp->descp                       = groupedTerminalp->descp;
-          groupedSymbolp->u.terminalp->groupedSymbolp = groupedSymbolp; /* Linked to itself, c.f. _marpaESLIF_pcre2_groupedSymbol_callouti */
-          groupedTerminalp = NULL; /* Now in groupedSymbolp */
-
-          /* Assign groupedSymbolp to every symbol that is a member of it */
-          for (symboli = 0; symboli < GENERICSTACK_USED(symbolStackp); symboli++) {
-            MARPAESLIF_INTERNAL_GET_SYMBOL_FROM_STACK(marpaESLIFp, symbolp, symbolStackp, symboli);
-            /* Only for terminals candidate for grouping */
-            if (! MARPAESLIF_IS_TERMINAL_GROUP_CANDIDATE(symbolp)) {
-              continue;
-            }
-
-            /* Filter on UTF flag */
-            if (i == 0) {
-              /* Only for terminal candidates with the UTF flag */
-              if (! symbolp->u.terminalp->regex.utfb) {
-                continue;
-              }
-            } else {
-              /* Only for terminal candidates without the UTF flag */
-              if (symbolp->u.terminalp->regex.utfb) {
-                continue;
-              }
-            }
-
-            symbolp->u.terminalp->groupedSymbolp = groupedSymbolp; /* Shallow symbol by definition */
-          }
-          
-          *groupedSymbolpp = groupedSymbolp;
-          groupedSymbolp = NULL; /* Now in grammarp */
-        }
-      }
     }
   }
 
@@ -4337,6 +4364,9 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
  done:
   if (marpaWrapperGrammarClonep != NULL) {
     marpaWrapperGrammar_freev(marpaWrapperGrammarClonep);
+  }
+  if (patterns != NULL) {
+    free(patterns);
   }
   _marpaESLIF_terminal_freev(groupedTerminalp);
   _marpaESLIF_symbol_freev(groupedSymbolp);
@@ -5438,6 +5468,7 @@ static inline marpaESLIF_t *_marpaESLIF_newp(marpaESLIFOption_t *marpaESLIFOptio
   char                          tmps[MARPAESLIF_MAX_DECIMAL_DIGITS_LONG + 1];
 #endif
   marpaESLIFString_t            jsonString;
+  marpaESLIFGrammar_t           *marpaESLIFGrammarLuap;
 
   if (marpaESLIFOptionp == NULL) {
     marpaESLIFOptionp = &marpaESLIFOption_default_template;
@@ -5462,7 +5493,6 @@ static inline marpaESLIF_t *_marpaESLIF_newp(marpaESLIFOption_t *marpaESLIFOptio
     goto err;
   }
 
-  marpaESLIFp->marpaESLIFGrammarLuap     = NULL;
   marpaESLIFp->marpaESLIFGrammarLuapp[0] = NULL;
   marpaESLIFp->marpaESLIFGrammarLuapp[1] = NULL;
   marpaESLIFp->marpaESLIFOption          = *marpaESLIFOptionp;
@@ -5819,14 +5849,14 @@ static inline marpaESLIF_t *_marpaESLIF_newp(marpaESLIFOption_t *marpaESLIFOptio
   /* We doing so ? This is because ESLIF by itself is minimal, and rewriting the whole Lua    */
   /* grammar by hand using the bootstrap mechanism is very prone to error. By doing such hack */
   /* it is more maintanable, modulo the hook below, and makes easier to extends ESLIF.        */
-  marpaESLIFp->marpaESLIFGrammarLuap = _marpaESLIF_lua_grammarp(marpaESLIFp, NULL);
-  if (marpaESLIFp->marpaESLIFGrammarLuap == NULL) {
+  marpaESLIFGrammarLuap = _marpaESLIF_lua_grammarp(marpaESLIFp, NULL);
+  if (marpaESLIFGrammarLuap == NULL) {
     goto err;
   }
-  if (! _marpaESLIF_transfer_grammarb(marpaESLIFp, marpaESLIFp->marpaESLIFGrammarp, 2, marpaESLIFp->marpaESLIFGrammarLuap, 2)) {
+  if (! _marpaESLIF_transfer_grammarb(marpaESLIFp, marpaESLIFp->marpaESLIFGrammarp, 2, marpaESLIFGrammarLuap, 2)) {
     goto err;
   }
-  if (! _marpaESLIF_transfer_grammarb(marpaESLIFp, marpaESLIFp->marpaESLIFGrammarp, 3, marpaESLIFp->marpaESLIFGrammarLuap, 3)) {
+  if (! _marpaESLIF_transfer_grammarb(marpaESLIFp, marpaESLIFp->marpaESLIFGrammarp, 3, marpaESLIFGrammarLuap, 3)) {
     goto err;
   }
 
@@ -5861,6 +5891,8 @@ static inline marpaESLIF_t *_marpaESLIF_newp(marpaESLIFOption_t *marpaESLIFOptio
     MARPAESLIF_ERRORF(marpaESLIFp, "marpaESLIFp->marpaESLIFGrammarp->grammarStackp set failure, %s", strerror(errno));
     goto err;
   }
+  /* Take care, _marpaESLIF_grammar_t contains a shallow pointer to its container */
+  grammar2p->marpaESLIFGrammarp = marpaESLIFp->marpaESLIFGrammarp;
   grammar2p = NULL;
   _marpaESLIF_grammar_freev(grammarp);
   grammarp = NULL;
@@ -5881,6 +5913,8 @@ static inline marpaESLIF_t *_marpaESLIF_newp(marpaESLIFOption_t *marpaESLIFOptio
     MARPAESLIF_ERRORF(marpaESLIFp, "marpaESLIFp->marpaESLIFGrammarp->grammarStackp set failure, %s", strerror(errno));
     goto err;
   }
+  /* Take care, _marpaESLIF_grammar_t contains a shallow pointer to its container */
+  grammar2p->marpaESLIFGrammarp = marpaESLIFp->marpaESLIFGrammarp;
   grammar2p = NULL;
   _marpaESLIF_grammar_freev(grammarp);
   grammarp = NULL;
@@ -5920,6 +5954,7 @@ static inline marpaESLIF_t *_marpaESLIF_newp(marpaESLIFOption_t *marpaESLIFOptio
     genericLogger_logLevel_seti(marpaESLIFOptionp->genericLoggerp, genericLoggerLeveli);
   }
   
+  _marpaESLIFGrammar_freev(marpaESLIFGrammarLuap, 0 /* onStackb */);
   _marpaESLIF_grammar_freev(grammarp);
 #ifndef MARPAESLIF_NTRACE
   if ((marpaESLIFp != NULL) && (genericLoggerp != NULL)) {
@@ -5973,7 +6008,6 @@ void marpaESLIF_freev(marpaESLIF_t *marpaESLIFp)
   int i;
 
   if (marpaESLIFp != NULL) {
-    _marpaESLIFGrammar_freev(marpaESLIFp->marpaESLIFGrammarLuap, 0 /* onStackb */);
     _marpaESLIFGrammar_freev(marpaESLIFp->marpaESLIFGrammarLuapp[0], 0 /* onStackb */);
     _marpaESLIFGrammar_freev(marpaESLIFp->marpaESLIFGrammarLuapp[1], 0 /* onStackb */);
     _marpaESLIFGrammar_freev(marpaESLIFp->marpaESLIFGrammarp, 0 /* onStackb */);
@@ -22580,6 +22614,9 @@ static inline short _marpaESLIF_transfer_grammarb(marpaESLIF_t *marpaESLIFp, mar
     MARPAESLIF_ERRORF(marpaESLIFp, "GENERICSTACK_SET_PTR failure, %s", strerror(errno));
     goto err;
   }
+
+  /* Take care, marpaESLIF_grammar_t structures have a shallow pointer to their parent */
+  grammar_srcp->marpaESLIFGrammarp = dstp;
 
   rcb = 1;
   goto done;
