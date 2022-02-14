@@ -293,7 +293,8 @@ struct marpaESLIFSymbol {
   marpaESLIF_lua_functioncall_t *callp;                  /* For parameterized symbols, shallow pointer to callp */
   marpaESLIFAction_t            *pushContextActionp;     /* For parameterized symbols, context push action */
   short                          lookaheadb;             /* Lookahead symbol ? */
-  short                          groupedMatchb;          /* Used only in grouped match */
+  short                          groupMatchSupportb;     /* Used only in grouped match */
+  short                          groupedMatchi;          /* Used only in grouped match */
   char                          *groupedMatchp;          /* Used only in grouped match */
   size_t                         groupedMatchl;          /* Used only in grouped match */
 };
