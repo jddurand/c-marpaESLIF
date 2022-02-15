@@ -60,6 +60,7 @@ typedef struct  marpaESLIF_lua_functiondecl      marpaESLIF_lua_functiondecl_t;
 typedef enum    marpaESLIF_json_type             marpaESLIF_json_type_t;
 typedef struct  marpaESLIF_pcre2_callout_context marpaESLIF_pcre2_callout_context_t;
 typedef struct  marpaESLIFGrammar_Lshare         marpaESLIFGrammar_Lshare_t;
+typedef struct  marpaESLIF_groupedsymbol         marpaESLIF_groupedsymbol_t;
 
 #include "marpaESLIF/internal/lua.h" /* For lua_State* */
 
@@ -205,7 +206,7 @@ struct marpaESLIF_terminal {
   short                           pseudob;             /* Pseudo terminal */
   int                             eventSeti;           /* Remember eventSeti */
   marpaESLIF_terminal_orig_type_t origType;            /* Original type as per grammar parsing */
-  marpaESLIF_symbol_t            *groupedSymbolp;      /* Is a member of this grouped (terminal) symbol, when not NULL */
+  marpaESLIF_groupedsymbol_t     *groupedSymbolp;      /* Is a member of this grouped (terminal) symbol, when not NULL - shallow pointer */
 };
 
 /* Matcher return values */
@@ -223,6 +224,14 @@ enum marpaESLIF_event_type {
   MARPAESLIF_EVENT_TYPE_EXPECTED  = 0x04, /* Grammar event */
   MARPAESLIF_EVENT_TYPE_BEFORE    = 0x08, /* ESLIF lexeme event */
   MARPAESLIF_EVENT_TYPE_AFTER     = 0x10  /* ESLIF lexeme event */
+};
+
+/* A grouped symbol */
+struct marpaESLIF_groupedsymbol {
+  marpaESLIF_symbol_t        *symbolp;   /* The grouped symbol itself */
+  size_t                      symbolpl;  /* Number of symbols inside */
+  marpaESLIF_symbol_t       **symbolpp;  /* Symbols inside */
+  marpaESLIF_matcher_value_t  rci;       /* Grouped symbol current match state */
 };
 
 /* A symbol */
@@ -293,10 +302,10 @@ struct marpaESLIFSymbol {
   marpaESLIF_lua_functioncall_t *callp;                  /* For parameterized symbols, shallow pointer to callp */
   marpaESLIFAction_t            *pushContextActionp;     /* For parameterized symbols, context push action */
   short                          lookaheadb;             /* Lookahead symbol ? */
-  short                          groupMatchSupportb;     /* Used only in grouped match */
-  short                          groupedMatchi;          /* Used only in grouped match */
-  char                          *groupedMatchp;          /* Used only in grouped match */
-  size_t                         groupedMatchl;          /* Used only in grouped match */
+  marpaESLIF_groupedsymbol_t    *groupedSymbolp;         /* Is a member of this grouped (terminal) symbol, when not NULL - shallow pointer */
+  short                          groupedMatchi;          /* Current match value when used in group match */
+  char                          *groupedMatchp;          /* Current match pointer when used in group match */
+  size_t                         groupedMatchl;          /* Current match length when used in group match */
 };
 
 /* A rule */
@@ -381,12 +390,8 @@ struct marpaESLIF_grammar {
   short                  fastDiscardb;                       /* True when :discard can be done in the context of the current recognizer */
   genericHash_t         _groupedRegexHash;                   /* All regexes are internally grouped together, discriminant is pcre2Optioni */
   genericHash_t         *groupedRegexHashp;
-  marpaESLIF_symbol_t   *groupedSymbolUtfp;                  /* Internal symbol container for grouped utfb terminals */
-  marpaESLIF_symbol_t   *groupedSymbolNotUtfp;               /* Internal symbol container for grouped !utfb terminals */
-  size_t                 groupedSymbolUtfpl;                 /* Number of symbols in the utf container */
-  marpaESLIF_symbol_t  **groupedSymbolUtfpp;                 /* Symbols in the utf container */
-  size_t                 groupedSymbolNotUtfpl;              /* Number of symbols in the !utf container */
-  marpaESLIF_symbol_t  **groupedSymbolNotUtfpp;              /* Symbols in the !utf container */
+  marpaESLIF_groupedsymbol_t *groupedSymbolUtfp;             /* utf grouped symbol */
+  marpaESLIF_groupedsymbol_t *groupedSymbolNotUtfp;          /* !utf grouped symbol */
 };
 
 enum marpaESLIF_json_type {
