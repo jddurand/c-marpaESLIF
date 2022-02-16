@@ -93,7 +93,7 @@ Please note this is really a I<quoted string>, B<not> a string terminal. I.e. ev
 
 They are always enclosed with left and right brackets C<[]>. Modifiers can start after a C<:> character. A character class class is nothing else but a lexically restricted regular expression.
 
-Alike string, only the C<i> and C<c> modifiers are allowed.
+Alike string, C<i> and C<c> modifiers are allowed. The C<u> modifier is also supported. Code points in the form C<\x{}>or C<\o{}> that are too large requires the C<c> or C<u> modifier.
 
 =item * Regular expression
 

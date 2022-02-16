@@ -30,7 +30,7 @@
 #define INTERNAL_UTF8BOM_PATTERN "\\x{FEFF}"            /* FEFF Unicode code point i.e. EFBBBF in UTF-8 encoding */
 #define INTERNAL_NEWLINE_PATTERN "(*BSR_UNICODE).*?\\R" /* newline as per unicode - we do .*? because our regexps are always anchored */
 #define INTERNAL_STRINGMODIFIERS_PATTERN "[ic]+$"
-#define INTERNAL_CHARACTERCLASSMODIFIERS_PATTERN "[ic]+$"
+#define INTERNAL_CHARACTERCLASSMODIFIERS_PATTERN "[iuc]+$"
 #define INTERNAL_REGEXMODIFIERS_PATTERN "[eijmnsxDJUuaNubcA]*$"
 
 /* Forward definitions */
