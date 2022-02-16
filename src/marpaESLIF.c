@@ -1,4 +1,4 @@
-/* #undef MARPAESLIF_NTRACE */
+#undef MARPAESLIF_NTRACE
 /* For stack manipulation debug: */
 /* #define MARPAESLIF_NOTICE_ACTION */
 
@@ -540,12 +540,12 @@ static const char *MARPAESLIF_VALUE_TYPE_UNKNOWN_STRING     = "UNKNOWN";
 static const size_t copyl    = 6; /* strlen("::copy"); */
 static const size_t convertl = 9; /* strlen("::convert"); */
 
-static const marpaESLIF_uint32_t pcre2_option_binary_default  = PCRE2_NOTEMPTY;
-static const marpaESLIF_uint32_t pcre2_option_char_default    = PCRE2_NOTEMPTY|PCRE2_NO_UTF_CHECK;
-static const marpaESLIF_uint32_t pcre2_option_partial_default = PCRE2_NOTEMPTY|PCRE2_NO_UTF_CHECK|PCRE2_PARTIAL_HARD;
+static const marpaESLIF_uint32_t pcre2_option_binary_default                      = PCRE2_NOTEMPTY;
+static const marpaESLIF_uint32_t pcre2_option_char_default                        = PCRE2_NOTEMPTY|PCRE2_NO_UTF_CHECK;
+static const marpaESLIF_uint32_t pcre2_option_partial_default                     = PCRE2_NOTEMPTY|PCRE2_NO_UTF_CHECK|PCRE2_PARTIAL_HARD;
 
-static const marpaESLIF_uint32_t pcre2_option_groupedpartial_default_no_utf_check = PCRE2_NOTEMPTY|PCRE2_NO_UTF_CHECK|PCRE2_PARTIAL_HARD;
 static const marpaESLIF_uint32_t pcre2_option_groupedpartial_default              = PCRE2_NOTEMPTY|PCRE2_PARTIAL_HARD;
+static const marpaESLIF_uint32_t pcre2_option_groupedpartial_default_no_utf_check = PCRE2_NOTEMPTY|PCRE2_NO_UTF_CHECK|PCRE2_PARTIAL_HARD;
 
 static const char *MARPAESLIF_TERMINAL__EOF = ":eof";
 static const char *MARPAESLIF_TERMINAL__EOL = ":eol";
@@ -655,7 +655,7 @@ static inline void                   _marpaESLIF_string_freev(marpaESLIF_string_
 static inline short                  _marpaESLIF_string_utf8_eqb(marpaESLIF_string_t *string1p, marpaESLIF_string_t *string2p);
 static inline short                  _marpaESLIF_string_eqb(marpaESLIF_string_t *string1p, marpaESLIF_string_t *string2p);
 static inline marpaESLIF_string_t   *_marpaESLIF_string2utf8p(marpaESLIF_t *marpaESLIFp, marpaESLIF_string_t *stringp, short tconvsilentb);
-static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *marpaESLIFp, marpaESLIF_grammar_t *grammarp, int eventSeti, char *descEncodings, char *descs, size_t descl, marpaESLIF_terminal_type_t type, char *modifiers, char *utf8s, size_t utf8l, char *testFullMatchs, char *testPartialMatchs, short pseudob, short charclassb);
+static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *marpaESLIFp, marpaESLIF_grammar_t *grammarp, int eventSeti, char *descEncodings, char *descs, size_t descl, marpaESLIF_terminal_type_t type, char *modifiers, char *utf8s, size_t utf8l, char *testFullMatchs, char *testPartialMatchs, short pseudob, short charclassb, short groupb);
 static inline void                   _marpaESLIF_terminal_freev(marpaESLIF_terminal_t *terminalp);
 
 static inline marpaESLIF_meta_t     *_marpaESLIF_meta_newp(marpaESLIF_t *marpaESLIFp, marpaESLIF_grammar_t *grammarp, int eventSeti, char *asciinames, char *descEncodings, char *descs, size_t descl, short lazyb);
@@ -1150,7 +1150,7 @@ static inline short _marpaESLIF_string_eqb(marpaESLIF_string_t *string1p, marpaE
 }
 
 /*****************************************************************************/
-static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *marpaESLIFp, marpaESLIF_grammar_t *grammarp, int eventSeti, char *descEncodings, char *descs, size_t descl, marpaESLIF_terminal_type_t type, char *modifiers, char *utf8s, size_t utf8l, char *testFullMatchs, char *testPartialMatchs, short pseudob, short charclassb)
+static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *marpaESLIFp, marpaESLIF_grammar_t *grammarp, int eventSeti, char *descEncodings, char *descs, size_t descl, marpaESLIF_terminal_type_t type, char *modifiers, char *utf8s, size_t utf8l, char *testFullMatchs, char *testPartialMatchs, short pseudob, short charclassb, short groupb)
 /*****************************************************************************/
 /* This method is bootstraped at marpaESLIFp creation itself to have the internal regexps, with grammarp being NULL... */
 /*****************************************************************************/
@@ -1905,7 +1905,12 @@ static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *mar
       terminalp->regex.jitCompleteb = 0;
 #endif
 #ifdef PCRE2_JIT_PARTIAL_HARD
-      terminalp->regex.jitPartialb = (pcre2_jit_compile(terminalp->regex.patternp, PCRE2_JIT_PARTIAL_HARD) == 0) ? 1 : 0;
+      if (groupb) {
+        /* Grouped terminals are doing both partial and complete using only this pattern */
+        terminalp->regex.jitPartialb = (pcre2_jit_compile(terminalp->regex.patternp, PCRE2_JIT_PARTIAL_HARD|PCRE2_JIT_COMPLETE) == 0) ? 1 : 0;
+      } else {
+        terminalp->regex.jitPartialb = (pcre2_jit_compile(terminalp->regex.patternp, PCRE2_JIT_PARTIAL_HARD) == 0) ? 1 : 0;
+      }
 #else
       terminalp->regex.jitPartialb = 0;
 #endif /*  PCRE2_CONFIG_JIT */
@@ -2361,7 +2366,8 @@ static inline marpaESLIF_grammar_t *_marpaESLIF_bootstrap_grammarp(marpaESLIFGra
 					  bootstrap_grammar_terminalp[i].testFullMatchs,
 					  bootstrap_grammar_terminalp[i].testPartialMatchs,
                                           0, /* pseudob */
-                                          bootstrap_grammar_terminalp[i].charclassb);
+                                          bootstrap_grammar_terminalp[i].charclassb,
+                                          0 /* groupb */);
     if (MARPAESLIF_UNLIKELY(terminalp == NULL)) {
       goto err;
     }
@@ -3444,7 +3450,8 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
                                                        NULL, /* testFullMatchs */
                                                        NULL, /* testPartialMatchs */
                                                        0, /* pseudob */
-                                                       0 /* charclassb */);
+                                                       0, /* charclassb */
+                                                       1 /* groupb */);
           if (groupedTerminalp == NULL) {
             goto err;
           }
@@ -5747,7 +5754,8 @@ static inline marpaESLIF_t *_marpaESLIF_newp(marpaESLIFOption_t *marpaESLIFOptio
                                                     NULL, /* testFullMatchs */
                                                     NULL,  /* testPartialMatchs */
                                                     0, /* pseudob */
-                                                    0 /* charclassb */);
+                                                    0, /* charclassb */
+                                                    0 /* groupb */);
   if (MARPAESLIF_UNLIKELY(marpaESLIFp->anycharp == NULL)) {
     goto err;
   }
@@ -5767,7 +5775,8 @@ static inline marpaESLIF_t *_marpaESLIF_newp(marpaESLIFOption_t *marpaESLIFOptio
                                                     NULL, /* testFullMatchs */
                                                     NULL,  /* testPartialMatchs */
                                                     0, /* pseudob */
-                                                    0 /* charclassb */);
+                                                    0, /* charclassb */
+                                                    0 /* groupb */);
   if (MARPAESLIF_UNLIKELY(marpaESLIFp->newlinep == NULL)) {
     goto err;
   }
@@ -5800,7 +5809,8 @@ static inline marpaESLIF_t *_marpaESLIF_newp(marpaESLIFOption_t *marpaESLIFOptio
                                                             NULL, /* testFullMatchs */
                                                             NULL,  /* testPartialMatchs */
                                                             0, /* pseudob */
-                                                            0 /* charclassb */);
+                                                            0, /* charclassb */
+                                                            0 /* groupb */);
   if (MARPAESLIF_UNLIKELY(marpaESLIFp->stringModifiersp == NULL)) {
     goto err;
   }
@@ -5819,7 +5829,8 @@ static inline marpaESLIF_t *_marpaESLIF_newp(marpaESLIFOption_t *marpaESLIFOptio
                                                                     NULL, /* testFullMatchs */
                                                                     NULL,  /* testPartialMatchs */
                                                                     0, /* pseudob */
-                                                                    0 /* charclassb */);
+                                                                    0 /* charclassb */,
+                                                                    0 /* groupb */);
   if (MARPAESLIF_UNLIKELY(marpaESLIFp->characterClassModifiersp == NULL)) {
     goto err;
   }
@@ -5838,7 +5849,8 @@ static inline marpaESLIF_t *_marpaESLIF_newp(marpaESLIFOption_t *marpaESLIFOptio
                                                            NULL, /* testFullMatchs */
                                                            NULL,  /* testPartialMatchs */
                                                            0, /* pseudob */
-                                                           0 /* charclassb */);
+                                                           0 /* charclassb */,
+                                                           0 /* groupb */);
   if (MARPAESLIF_UNLIKELY(marpaESLIFp->regexModifiersp == NULL)) {
     goto err;
   }
@@ -6205,7 +6217,7 @@ static inline void _marpaESLIFRecognizer_groupedterminal_matcherv(marpaESLIFReco
                                           (PCRE2_SPTR) marpaESLIF_streamp->inputs,  /* subject */
                                           (PCRE2_SIZE) marpaESLIF_streamp->inputl,  /* length */
                                           (PCRE2_SIZE) 0,                           /* startoffset */
-                                          pcre2_partial_optioni|PCRE2_JIT_COMPLETE, /* options - PCRE2_JIT_COMPLETE is needed as per the doc */
+                                          pcre2_partial_optioni,                    /* Note that grouped terminal here is compiled with PCRE2_JIT_PARTIAL_HARD|PCRE2_JIT_COMPLETE option */
                                           marpaESLIF_regexp->match_datap,           /* match data */
                                           marpaESLIF_regexp->match_contextp         /* match context */
                                           );
@@ -7131,6 +7143,10 @@ static inline short _marpaESLIFRecognizer_groupedsymbol_matcherb(marpaESLIFRecog
   static const char    *funcs = "_marpaESLIFRecognizer_groupedsymbol_matcherb";
   size_t                symboll;
   short                 rcb;
+#ifndef MARPAESLIF_NTRACE
+  char                 *dumps;
+  size_t                dumpl;
+#endif
 
   MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_INC(marpaESLIFRecognizerp);
   MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "start");
@@ -7143,6 +7159,20 @@ static inline short _marpaESLIFRecognizer_groupedsymbol_matcherb(marpaESLIFRecog
     }
   
     MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Group match on %s, eofb=%d, inputl=%ld", groupedSymbolp->symbolp->descp->asciis, (int) marpaESLIF_streamp->eofb, marpaESLIF_streamp->inputl);
+#ifndef MARPAESLIF_NTRACE
+    /* If there is some information after, show it */
+    if ((marpaESLIF_streamp->inputs != NULL) && (marpaESLIF_streamp->inputl > 0)) {
+      dumps = marpaESLIF_streamp->inputs;
+      dumpl = marpaESLIF_streamp->inputl > 128 ? 128 : marpaESLIF_streamp->inputl;
+      MARPAESLIFRECOGNIZER_HEXDUMPV(funcs,
+                                    marpaESLIFRecognizerp,
+                                    "",
+                                    marpaESLIF_streamp->utfb ? "UTF-8 converted data" : "Raw data",
+                                    dumps,
+                                    dumpl,
+                                    1 /* traceb */);
+    }
+#endif
 
     /* We loop until global rci is FAILURE or OK */
     _marpaESLIFRecognizer_groupedterminal_matcherv(marpaESLIFRecognizerp, marpaESLIF_streamp, groupedSymbolp->symbolp->u.terminalp);
@@ -22089,8 +22119,8 @@ static int _marpaESLIF_pcre2_groupedSymbol_callouti(pcre2_callout_block *blockp,
   marpaESLIFRecognizer_t             *marpaESLIFRecognizerp       = contextp->marpaESLIFRecognizerp;
   marpaESLIF_stream_t                *marpaESLIF_streamp          = marpaESLIFRecognizerp->marpaESLIF_streamp;
   marpaESLIF_grammar_t               *grammarp                    = marpaESLIFRecognizerp->grammarp;
-  marpaESLIF_terminal_t              *terminalp                   = contextp->terminalp;
-  marpaESLIF_groupedsymbol_t         *groupedSymbolp              = terminalp->groupedSymbolp;
+  marpaESLIF_groupedsymbol_t         *groupedSymbolp              = contextp->terminalp->groupedSymbolp;
+  marpaESLIF_terminal_t              *terminalp;
   marpaESLIF_symbol_t                *symbolp;
   marpaESLIF_uint32_t                 calloutNumberi;
   marpaESLIF_uint32_t                 offset_vectori;
@@ -22106,6 +22136,9 @@ static int _marpaESLIF_pcre2_groupedSymbol_callouti(pcre2_callout_block *blockp,
 
   /* This is a match for the symbol at indice calloutNumberi */
   symbolp = groupedSymbolp->symbolpp[calloutNumberi];
+
+  /* ... which is by definition a terminal */
+  terminalp = symbolp->u.terminalp;
 
   /* By definition there is block entry at capture_last (that correspond to calloutNumberi) */
   offset_vectori = blockp->capture_last * 2;
@@ -22389,7 +22422,8 @@ static inline marpaESLIFSymbol_t *_marpaESLIFSymbol_terminal_newp(marpaESLIF_t *
 					NULL, /* testFullMatchs */
 					NULL, /* testPartialMatchs */
                                         0, /* pseudob */
-                                        0 /* charclassb - setting it is reserved to grammars scanned by ESLIF */);
+                                        0 /* charclassb - setting it is reserved to grammars scanned by ESLIF */,
+                                        0 /* groupb */);
   if (MARPAESLIF_UNLIKELY(terminalp == NULL)) {
     goto err;
   }
