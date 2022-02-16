@@ -1,4 +1,4 @@
-#undef MARPAESLIF_NTRACE
+/* #undef MARPAESLIF_NTRACE */
 /* For stack manipulation debug: */
 /* #define MARPAESLIF_NOTICE_ACTION */
 
@@ -6182,6 +6182,7 @@ static inline void _marpaESLIFRecognizer_groupedterminal_matcherv(marpaESLIFReco
   int                  pcre2Errornumberi;
   marpaESLIF_uint32_t  pcre2_partial_optioni;
   short                binmodeb;
+  PCRE2_UCHAR          pcre2ErrorBuffer[256];
 
   MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_INC(marpaESLIFRecognizerp);
   MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "start");
@@ -6240,6 +6241,28 @@ static inline void _marpaESLIFRecognizer_groupedterminal_matcherv(marpaESLIFReco
     }
 #endif
 
+    if (pcre2Errornumberi < 0) {
+      /* Only PCRE2_ERROR_PARTIAL or PCRE2_ERROR_NOMATCH are acceptable errors */
+      switch (pcre2Errornumberi) {
+      case PCRE2_ERROR_PARTIAL:
+        terminalp->groupedSymbolp->rci = MARPAESLIF_MATCH_AGAIN;
+        MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "%s for %s", "MARPAESLIF_MATCH_AGAIN", terminalp->descp->asciis);
+        break;
+      case PCRE2_ERROR_NOMATCH:
+        terminalp->groupedSymbolp->rci = MARPAESLIF_MATCH_FAILURE;
+        MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "%s for %s", "MARPAESLIF_MATCH_FAILURE", terminalp->descp->asciis);
+        break;
+      default:
+        pcre2_get_error_message(pcre2Errornumberi, pcre2ErrorBuffer, sizeof(pcre2ErrorBuffer));
+        MARPAESLIF_WARNF(marpaESLIFRecognizerp->marpaESLIFp, "%s: Uncaught pcre2 match failure: %s", terminalp->descp->asciis, pcre2ErrorBuffer);
+        terminalp->groupedSymbolp->rci = MARPAESLIF_MATCH_FAILURE;
+        MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "%s for %s", "MARPAESLIF_MATCH_FAILURE", terminalp->descp->asciis);
+      }
+    } else {
+      MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "%s for %s", "MARPAESLIF_MATCH_OK", terminalp->descp->asciis);
+      terminalp->groupedSymbolp->rci = MARPAESLIF_MATCH_OK;
+    }
+
     /* In any case - set UTF buffer correctness if needed and if possible */
     if (binmodeb && marpaESLIF_regexp->utfb) {
       if ((pcre2Errornumberi >= 0) || (pcre2Errornumberi == PCRE2_ERROR_NOMATCH)) {
@@ -6249,9 +6272,8 @@ static inline void _marpaESLIFRecognizer_groupedterminal_matcherv(marpaESLIFReco
       }
     }
   } else {
-    /* Initialize group symbol rci to again */
+    /* No data: force rci to MARPAESLIF_MATCH_AGAIN */
     terminalp->groupedSymbolp->rci = MARPAESLIF_MATCH_AGAIN;
-
   }
   
   MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "return");
@@ -22146,35 +22168,19 @@ static int _marpaESLIF_pcre2_groupedSymbol_callouti(pcre2_callout_block *blockp,
   symbolp->groupedMatchl = blockp->offset_vector[offset_vectori + 1] - blockp->offset_vector[offset_vectori];
 
   if (terminalp->memcmpb) {
-    /* By definition, this is a string */
-    if (terminalp->bytel == symbolp->groupedMatchl) {
-      MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "%s for %s", "MARPAESLIF_MATCH_OK", terminalp->descp->asciis);
-      symbolp->groupedMatchi = MARPAESLIF_MATCH_OK;
-      /* Unless there is a partial match, global rci is now ok */
-      symbolp->groupedSymbolp->rci = MARPAESLIF_MATCH_OK;
-    } else {
-      /* By definition, it matched less bytes - we need more unless if we are already at the eof */
-      if (! marpaESLIF_streamp->eofb) {
-        MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "%s for %s", "Global MARPAESLIF_MATCH_AGAIN", terminalp->descp->asciis);
-        /* No need to try the other alternations: caller will retry */
-        symbolp->groupedSymbolp->rci = MARPAESLIF_MATCH_AGAIN;
-        rci = 0;
-        goto done;
-      }
-    }
+    /* By definition, this is a string, i.e. a finite thing - match is ok */
+    MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "%s for %s", "MARPAESLIF_MATCH_OK", terminalp->descp->asciis);
+    symbolp->groupedMatchi = MARPAESLIF_MATCH_OK;
   } else {
-    /* By definition, this is a character class */
-    if (marpaESLIF_streamp->eofb) {
-      /* EOF: Nothing more to match */
+    /* By definition, this is a character class - ok if at eof or it buffer length is bigger than the match */
+    if (marpaESLIF_streamp->eofb || (marpaESLIF_streamp->inputl > symbolp->groupedMatchl)) {
       MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "%s for %s", "MARPAESLIF_MATCH_OK", terminalp->descp->asciis);
       symbolp->groupedMatchi = MARPAESLIF_MATCH_OK;
-      /* Unless there is a partial match, global rci is now ok */
-      symbolp->groupedSymbolp->rci = MARPAESLIF_MATCH_OK;
     } else {
-      /* Not EOF: it may be a partial match */
+      /* Not EOF and we matched up to the end of the buffer: it may be a partial match */
       MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "%s for %s", "Global MARPAESLIF_MATCH_AGAIN", terminalp->descp->asciis);
+      symbolp->groupedMatchi = MARPAESLIF_MATCH_AGAIN;
       /* No need to try the other alternations: caller will retry */
-      symbolp->groupedSymbolp->rci = MARPAESLIF_MATCH_AGAIN;
       rci = 0;
       goto done;
     }
