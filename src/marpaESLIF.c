@@ -21847,6 +21847,13 @@ static int _marpaESLIF_pcre2_callouti(pcre2_callout_block *blockp, void *userDat
   MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_INC(marpaESLIFRecognizerp);
   MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "start");
 
+  if (regexActionp == NULL) {
+    /* User wrote a callback (?Cxxx) but there is no defaultRegexActionp - this is a leftofver that should be fixed */
+    MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "%s: no regex action in the grammar", terminalp->descp->asciis);
+    rci = 1;
+    goto done;
+  }
+  
   if (MARPAESLIF_UNLIKELY(! _marpaESLIFRecognizer_recognizerRegexActionCallbackb(marpaESLIFRecognizerp, terminalp->descp->asciis, regexActionp, &regexCallbackp))) {
     goto err;
   }
