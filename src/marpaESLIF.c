@@ -6829,6 +6829,7 @@ static inline short _marpaESLIFRecognizer_symbol_matcherb(marpaESLIFRecognizer_t
 /*****************************************************************************/
 {
   static const char                       *funcs = "_marpaESLIFRecognizer_symbol_matcherb";
+  short                                    useGroupb = groupb && (symbolp->groupedtype != MARPAESLIF_GROUPEDREGEX_TYPE_NA) ? 1 : 0;
   marpaESLIF_grammar_t                    *grammarp;
   marpaESLIFValueResult_t                  marpaESLIFValueResultArray;
   marpaESLIFValueResult_t                 *marpaESLIFValueResultp;
@@ -6861,7 +6862,7 @@ static inline short _marpaESLIFRecognizer_symbol_matcherb(marpaESLIFRecognizer_t
 
  match_again:
   /* Grouped regex ? */
-  if (groupb && (symbolp->groupedtype != MARPAESLIF_GROUPEDREGEX_TYPE_NA)) {
+  if (useGroupb) {
     /* Grouped regex already done ? */
     grammarp = marpaESLIFRecognizerp->grammarp;
     if (! grammarp->groupedregexp->doneb[symbolp->groupedtype]) {
@@ -6878,13 +6879,16 @@ static inline short _marpaESLIFRecognizer_symbol_matcherb(marpaESLIFRecognizer_t
   case MARPAESLIF_SYMBOL_TYPE_TERMINAL:
     lastSizeBeforeCompletionl = 0;
     /* A terminal can match only once and have consumed nothing before completion */
+#ifndef MARPAESLIF_NTRACE
+    /* This is a paranoid test that does not happen in production */
     if (maxStartCompletionsi > 1) {
       MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "maxStartCompletionsi=%d is not possible with a terminal", maxStartCompletionsi);
       rci = MARPAESLIF_MATCH_FAILURE;
       rcb = 1;
       goto done;
     }
-    if (groupb && (symbolp->groupedtype != MARPAESLIF_GROUPEDREGEX_TYPE_NA)) {
+#endif
+    if (useGroupb) {
       /* A grouped regex can only have FAILURE or AGAIN */
       rci = (grammarp->groupedregexp->rci[symbolp->groupedtype] == MARPAESLIF_MATCH_AGAIN) ? MARPAESLIF_MATCH_AGAIN : symbolp->groupedrci;
       if (rci == MARPAESLIF_MATCH_OK) {
