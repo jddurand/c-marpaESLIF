@@ -13,7 +13,7 @@ typedef struct marpaESLIFTester_context {
 } marpaESLIFTester_context_t;
 
 const static char *base_dsl = "\n"
-  ":default ::= default-encoding => UTF-8 regex-action => JDD\n"
+  ":default ::= default-encoding => UTF-8\n"
   ":start ::= deal\n"
   "deal ::= hands\n"
   "hands ::= hand | hands ';' hand\n"
@@ -21,7 +21,7 @@ const static char *base_dsl = "\n"
   "card ~ face suit\n"
   "face ~ [2-9jqka] | '10'\n"
   "WS ~ [\\s]\n"
-  ":discard ::= /([\\s]+(?C51))/\n"
+  ":discard ::= /[\\s]+/\n"
   "\n"
   ":symbol ::= <card> pause => after event => card\n"
   ;

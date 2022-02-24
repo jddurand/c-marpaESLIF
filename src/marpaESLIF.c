@@ -9265,7 +9265,7 @@ short marpaESLIFRecognizer_alternativeb(marpaESLIFRecognizer_t *marpaESLIFRecogn
 
   /* Not allowed if there is a parent recognizer */
   if (MARPAESLIFRECOGNIZER_IS_CHILD(marpaESLIFRecognizerp)) {
-    MARPAESLIF_ERROR(marpaESLIFRecognizerp->marpaESLIFp, "Not allowed in when there is a parent recognizer");
+    MARPAESLIF_ERROR(marpaESLIFRecognizerp->marpaESLIFp, "Not allowed when there is a parent recognizer");
     errno = EPERM;
     rcb = 0;
     goto fast_done;
@@ -9708,7 +9708,7 @@ short marpaESLIFRecognizer_alternative_readb(marpaESLIFRecognizer_t *marpaESLIFR
 
   /* Not allowed if there is a parent recognizer */
   if (MARPAESLIFRECOGNIZER_IS_CHILD(marpaESLIFRecognizerp)) {
-    MARPAESLIF_ERROR(marpaESLIFRecognizerp->marpaESLIFp, "Not allowed in when there is a parent recognizer");
+    MARPAESLIF_ERROR(marpaESLIFRecognizerp->marpaESLIFp, "Not allowed when there is a parent recognizer");
     errno = EPERM;
     rcb = 0;
     goto fast_done;
@@ -21245,6 +21245,11 @@ static int _marpaESLIF_pcre2_callouti(pcre2_callout_block *blockp, void *userDat
 
   MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_INC(marpaESLIFRecognizerp);
   MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "start");
+
+  if (regexActionp == NULL) {
+    MARPAESLIF_ERROR(marpaESLIFRecognizerp->marpaESLIFp, "No regex default action");
+    goto err;
+  }
 
   if (MARPAESLIF_UNLIKELY(! _marpaESLIFRecognizer_recognizerRegexActionCallbackb(marpaESLIFRecognizerp, terminalp->descp->asciis, regexActionp, &regexCallbackp))) {
     goto err;
