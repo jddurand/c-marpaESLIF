@@ -36,6 +36,12 @@ static const int   MARPAESLIF_VERSION_MAJOR_STATIC = MARPAESLIF_VERSION_MAJOR;
 static const int   MARPAESLIF_VERSION_MINOR_STATIC = MARPAESLIF_VERSION_MINOR;
 static const int   MARPAESLIF_VERSION_PATCH_STATIC = MARPAESLIF_VERSION_PATCH;
 
+/* For ord2utf */
+static const int utf8_table1[] = { 0x7f, 0x7ff, 0xffff, 0x1fffff, 0x3ffffff, 0x7fffffff};
+static const int utf8_table1_size = sizeof(utf8_table1) / sizeof(int);
+static const int utf8_table2[] = { 0,    0xc0, 0xe0, 0xf0, 0xf8, 0xfc};
+static const int utf8_table3[] = { 0xff, 0x1f, 0x0f, 0x07, 0x03, 0x01};
+
 /* C.f. https://stackoverflow.com/questions/10536207/ansi-c-maximum-number-of-characters-printing-a-decimal-int */
 #define MARPAESLIF_MAX_DECIMAL_DIGITS_TYPE(type) ((3 * sizeof(type) * CHAR_BIT / 8) + 1) /* Rounded-up approximation, without NUL */
 #define MARPAESLIF_MAX_DECIMAL_DIGITS_CHAR     MARPAESLIF_MAX_DECIMAL_DIGITS_TYPE(char)
@@ -12156,7 +12162,6 @@ static short _marpaESLIFValue_ruleCallbackWrapperb(void *userDatavp, int rulei, 
   static const char                  *funcs                 = "_marpaESLIFValue_ruleCallbackWrapperb";
   marpaESLIFValue_t                  *marpaESLIFValuep      = (marpaESLIFValue_t *) userDatavp;
   marpaESLIFRecognizer_t             *marpaESLIFRecognizerp = marpaESLIFValuep->marpaESLIFRecognizerp;
-  marpaESLIFValueOption_t             marpaESLIFValueOption = marpaESLIFValuep->marpaESLIFValueOption;
   marpaESLIF_grammar_t               *grammarp              = marpaESLIFRecognizerp->grammarp;
   marpaESLIFValueRuleCallback_t       ruleCallbackp         = NULL;
   marpaESLIF_rule_t                  *rulep;
@@ -12325,7 +12330,7 @@ static short _marpaESLIFValue_ruleCallbackWrapperb(void *userDatavp, int rulei, 
     MARPAESLIF_NOTICEF(marpaESLIFRecognizerp->marpaESLIFp, "%s: Action %s: Symbol <%s>: [%d] <- [%d-%d]", funcs, marpaESLIFValuep->actions, rulep->lhsp->descp->asciis, resulti, arg0i, argni);
 #endif
 
-    if (MARPAESLIF_UNLIKELY(! ruleCallbackp(marpaESLIFValueOption.userDatavp, marpaESLIFValuep, arg0i, argni, resulti, 0 /* nullableb */))) {
+    if (MARPAESLIF_UNLIKELY(! ruleCallbackp(marpaESLIFValuep->marpaESLIFValueOption.userDatavp, marpaESLIFValuep, arg0i, argni, resulti, 0 /* nullableb */))) {
       /* marpaWrapper logging will not give rule description, so do we */
       MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "Action %s failed for rule: %s", marpaESLIFValuep->actions, rulep->asciishows);
       goto err;
@@ -12360,7 +12365,6 @@ static inline short _marpaESLIFValue_anySymbolCallbackWrapperb(void *userDatavp,
   static const char                    *funcs                 = "_marpaESLIFValue_anySymbolCallbackWrapperb";
   marpaESLIFValue_t                    *marpaESLIFValuep      = (marpaESLIFValue_t *) userDatavp;
   marpaESLIFRecognizer_t               *marpaESLIFRecognizerp = marpaESLIFValuep->marpaESLIFRecognizerp;
-  marpaESLIFValueOption_t               marpaESLIFValueOption = marpaESLIFValuep->marpaESLIFValueOption;
   marpaESLIF_grammar_t                 *grammarp              = marpaESLIFRecognizerp->grammarp;
   marpaESLIFValueSymbolCallback_t       symbolCallbackp       = NULL;
   marpaESLIFValueRuleCallback_t         ruleCallbackp         = NULL;
@@ -12406,13 +12410,13 @@ static inline short _marpaESLIFValue_anySymbolCallbackWrapperb(void *userDatavp,
     if (MARPAESLIF_UNLIKELY(marpaESLIFValueResultp == NULL)) {
       goto err;
     }
-    if (MARPAESLIF_UNLIKELY(! symbolCallbackp(marpaESLIFValueOption.userDatavp, marpaESLIFValuep, marpaESLIFValueResultp, resulti))) {
+    if (MARPAESLIF_UNLIKELY(! symbolCallbackp(marpaESLIFValuep->marpaESLIFValueOption.userDatavp, marpaESLIFValuep, marpaESLIFValueResultp, resulti))) {
       /* marpaWrapper logging will not give symbol description, so do we */
       MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "Action %s failed for symbol: %s", marpaESLIFValuep->actions, symbolp->descp->asciis);
       goto err;
     }
   } else {
-    if (MARPAESLIF_UNLIKELY(! ruleCallbackp(marpaESLIFValueOption.userDatavp, marpaESLIFValuep, -1, -1, resulti, nullableb))) {
+    if (MARPAESLIF_UNLIKELY(! ruleCallbackp(marpaESLIFValuep->marpaESLIFValueOption.userDatavp, marpaESLIFValuep, -1, -1, resulti, nullableb))) {
       /* marpaWrapper logging will not give symbol description, so do we */
       MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "Action %s failed for symbol: %s", marpaESLIFValuep->actions, symbolp->descp->asciis);
       goto err;
@@ -12939,7 +12943,6 @@ static inline short __marpaESLIFRecognizer_readb(marpaESLIFRecognizer_t *marpaES
 */
 {
   static const char            *funcs                      = "__marpaESLIFRecognizer_readb";
-  marpaESLIFRecognizerOption_t  marpaESLIFRecognizerOption = marpaESLIFRecognizerp->marpaESLIFRecognizerOption;
   marpaESLIF_t                 *marpaESLIFp                = marpaESLIFRecognizerp->marpaESLIFp;
   marpaESLIF_stream_t          *marpaESLIF_streamp         = marpaESLIFRecognizerp->marpaESLIF_streamp;
   marpaESLIF_grammar_t         *grammarp                   = marpaESLIFRecognizerp->grammarp;
@@ -12960,7 +12963,7 @@ static inline short __marpaESLIFRecognizer_readb(marpaESLIFRecognizer_t *marpaES
   MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_INC(marpaESLIFRecognizerp);
   MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "start");
 
-  if (MARPAESLIF_UNLIKELY(marpaESLIFRecognizerOption.readerCallbackp == NULL)) {
+  if (MARPAESLIF_UNLIKELY(marpaESLIFRecognizerp->marpaESLIFRecognizerOption.readerCallbackp == NULL)) {
     MARPAESLIF_ERROR(marpaESLIFp, "Null reader callback");
     goto err;
   }
@@ -12968,12 +12971,12 @@ static inline short __marpaESLIFRecognizer_readb(marpaESLIFRecognizer_t *marpaES
  again:
   if (disposeCallbackb) {
     if (disposeCallbackp != NULL) {
-      disposeCallbackp(marpaESLIFRecognizerOption.userDatavp, inputs, inputl, eofb, characterStreamb, encodings, encodingl);
+      disposeCallbackp(marpaESLIFRecognizerp->marpaESLIFRecognizerOption.userDatavp, inputs, inputl, eofb, characterStreamb, encodings, encodingl);
       disposeCallbackp = NULL;
     }
     disposeCallbackb = 0;
   }
-  if (MARPAESLIF_UNLIKELY(! marpaESLIFRecognizerOption.readerCallbackp(marpaESLIFRecognizerOption.userDatavp, &inputs, &inputl, &eofb, &characterStreamb, &encodings, &encodingl, &disposeCallbackp))) {
+  if (MARPAESLIF_UNLIKELY(! marpaESLIFRecognizerp->marpaESLIFRecognizerOption.readerCallbackp(marpaESLIFRecognizerp->marpaESLIFRecognizerOption.userDatavp, &inputs, &inputl, &eofb, &characterStreamb, &encodings, &encodingl, &disposeCallbackp))) {
     MARPAESLIF_ERROR(marpaESLIFp, "reader failure");
     goto err;
   }
@@ -13154,7 +13157,7 @@ static inline short __marpaESLIFRecognizer_readb(marpaESLIFRecognizer_t *marpaES
   }
   if (disposeCallbackb) {
     if (disposeCallbackp != NULL) {
-      disposeCallbackp(marpaESLIFRecognizerOption.userDatavp, inputs, inputl, eofb, characterStreamb, encodings, encodingl);
+      disposeCallbackp(marpaESLIFRecognizerp->marpaESLIFRecognizerOption.userDatavp, inputs, inputl, eofb, characterStreamb, encodings, encodingl);
     }
   }
 
@@ -14287,10 +14290,9 @@ Returns:      >  0 => the number of bytes consumed
 {
   marpaESLIF_uint32_t c = *utf8bytes++;
   marpaESLIF_uint32_t d = c;
-  int i, j, s;
-  const int utf8_table1[] = { 0x7f, 0x7ff, 0xffff, 0x1fffff, 0x3ffffff, 0x7fffffff};
-  const int utf8_table3[] = { 0xff, 0x1f, 0x0f, 0x07, 0x03, 0x01};
-  const int utf8_table1_size = sizeof(utf8_table1) / sizeof(int);
+  int                 i;
+  int                 j;
+  int                 s;
 
   for (i = -1; i < 6; i++) {               /* i is number of additional bytes */
     if ((d & 0x80) == 0) break;
@@ -20100,8 +20102,7 @@ static inline short _marpaESLIFValue_ruleActionCallbackb(marpaESLIFValue_t *marp
 /*****************************************************************************/
 {
   static const char                   *funcs                 = "_marpaESLIFValue_ruleActionCallbackb";
-  marpaESLIFValueOption_t              marpaESLIFValueOption = marpaESLIFValuep->marpaESLIFValueOption;
-  marpaESLIFValueRuleActionResolver_t  ruleActionResolverp   = marpaESLIFValueOption.ruleActionResolverp;
+  marpaESLIFValueRuleActionResolver_t  ruleActionResolverp   = marpaESLIFValuep->marpaESLIFValueOption.ruleActionResolverp;
   marpaESLIFRecognizer_t              *marpaESLIFRecognizerp = marpaESLIFValuep->marpaESLIFRecognizerp;
   marpaESLIF_grammar_t                *grammarp              = marpaESLIFRecognizerp->grammarp;
   marpaESLIFValueRuleCallback_t        ruleCallbackp;
@@ -20176,7 +20177,7 @@ static inline short _marpaESLIFValue_ruleActionCallbackb(marpaESLIFValue_t *marp
           MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "Cannot execute action \"%s\": no rule action resolver", names);
           goto err;
         }
-        ruleCallbackp = ruleActionResolverp(marpaESLIFValueOption.userDatavp, marpaESLIFValuep, names);
+        ruleCallbackp = ruleActionResolverp(marpaESLIFValuep->marpaESLIFValueOption.userDatavp, marpaESLIFValuep, names);
         break;
       }
 
@@ -20237,10 +20238,8 @@ static inline short _marpaESLIFValue_symbolActionCallbackb(marpaESLIFValue_t *ma
 {
   /* In case of a nullable a symbol callback can fallback to a rule callback */
   static const char                    *funcs                 = "_marpaESLIFValue_symbolActionCallbackb";
-  marpaESLIFValueOption_t               marpaESLIFValueOption = marpaESLIFValuep->marpaESLIFValueOption;
-  marpaESLIFValueSymbolActionResolver_t symbolActionResolverp = marpaESLIFValueOption.symbolActionResolverp;
-  marpaESLIFRecognizer_t               *marpaESLIFRecognizerp = marpaESLIFValuep->marpaESLIFRecognizerp;
-  marpaESLIF_grammar_t                 *grammarp              = marpaESLIFRecognizerp->grammarp;
+  marpaESLIF_grammar_t                 *grammarp;
+  marpaESLIFValueSymbolActionResolver_t symbolActionResolverp;
   marpaESLIFValueSymbolCallback_t       symbolCallbackp;
   marpaESLIFValueRuleCallback_t         ruleCallbackp;
   short                                 rcb;
@@ -20256,6 +20255,7 @@ static inline short _marpaESLIFValue_symbolActionCallbackb(marpaESLIFValue_t *ma
     ruleCallbackp   = NULL;
     if (MARPAESLIF_UNLIKELY(symbolp->effectiveSymbolActionp == NULL)) {
       /* Still no action ? */
+      grammarp = marpaESLIFValuep->marpaESLIFRecognizerp->grammarp;
       MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "At grammar level %d (%s): %s requires symbol-action => action_name",
                         grammarp->leveli,
                         grammarp->descp->asciis,
@@ -20307,11 +20307,12 @@ static inline short _marpaESLIFValue_symbolActionCallbackb(marpaESLIFValue_t *ma
           break;
         default:
           /* Not a built-in: ask to the resolver */
+          symbolActionResolverp = marpaESLIFValuep->marpaESLIFValueOption.symbolActionResolverp;
           if (MARPAESLIF_UNLIKELY(symbolActionResolverp == NULL)) {
             MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "Cannot execute symbol action \"%s\": no symbol action resolver", names);
             goto err;
           }
-          symbolCallbackp = symbolActionResolverp(marpaESLIFValueOption.userDatavp, marpaESLIFValuep, names);
+          symbolCallbackp = symbolActionResolverp(marpaESLIFValuep->marpaESLIFValueOption.userDatavp, marpaESLIFValuep, names);
           break;
         }
 
@@ -20319,7 +20320,7 @@ static inline short _marpaESLIFValue_symbolActionCallbackb(marpaESLIFValue_t *ma
           MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "%s: action \"%s\" resolved to NULL", symbolp->descp->asciis, names);
           goto err;
         } else {
-          MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "%s: action \"%s\" resolved to %p", symbolp->descp->asciis, names, symbolCallbackp);
+          MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFValuep->marpaESLIFRecognizerp, funcs, "%s: action \"%s\" resolved to %p", symbolp->descp->asciis, names, symbolCallbackp);
         }
       }
       break;
@@ -20372,10 +20373,9 @@ static inline short _marpaESLIFValue_symbolActionCallbackb(marpaESLIFValue_t *ma
 static inline short _marpaESLIFRecognizer_recognizerIfActionCallbackb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, char *asciishows, marpaESLIF_action_t *ifActionp, marpaESLIFRecognizerIfCallback_t *ifCallbackpp)
 /*****************************************************************************/
 {
-  static const char                      *funcs                      = "_marpaESLIFRecognizer_recognizerIfActionCallbackb";
-  marpaESLIFRecognizerOption_t            marpaESLIFRecognizerOption = marpaESLIFRecognizerp->marpaESLIFRecognizerOption;
-  marpaESLIFRecognizerIfActionResolver_t  ifActionResolverp          = marpaESLIFRecognizerOption.ifActionResolverp;
-  marpaESLIFRecognizerIfCallback_t        ifCallbackp                = NULL;
+  static const char                      *funcs             = "_marpaESLIFRecognizer_recognizerIfActionCallbackb";
+  marpaESLIFRecognizerIfActionResolver_t  ifActionResolverp = marpaESLIFRecognizerp->marpaESLIFRecognizerOption.ifActionResolverp;
+  marpaESLIFRecognizerIfCallback_t        ifCallbackp       = NULL;
   char                                   *ifactions;
   short                                   rcb;
 
@@ -20388,7 +20388,7 @@ static inline short _marpaESLIFRecognizer_recognizerIfActionCallbackb(marpaESLIF
       MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "Cannot execute if action \"%s\": no if action resolver", ifactions);
       goto err;
     }
-    ifCallbackp = ifActionResolverp(marpaESLIFRecognizerOption.userDatavp, marpaESLIFRecognizerp, ifactions);
+    ifCallbackp = ifActionResolverp(marpaESLIFRecognizerp->marpaESLIFRecognizerOption.userDatavp, marpaESLIFRecognizerp, ifactions);
     if (MARPAESLIF_UNLIKELY(ifCallbackp == NULL)) {
       MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "%s: action \"%s\" resolved to NULL", asciishows, ifactions);
       goto err;
@@ -20431,8 +20431,7 @@ static inline short _marpaESLIFRecognizer_recognizerRegexActionCallbackb(marpaES
 /*****************************************************************************/
 {
   static const char                         *funcs                      = "_marpaESLIFRecognizer_recognizerRegexActionCallbackb";
-  marpaESLIFRecognizerOption_t               marpaESLIFRecognizerOption = marpaESLIFRecognizerp->marpaESLIFRecognizerOption;
-  marpaESLIFRecognizerRegexActionResolver_t  regexActionResolverp       = marpaESLIFRecognizerOption.regexActionResolverp;
+  marpaESLIFRecognizerRegexActionResolver_t  regexActionResolverp       = marpaESLIFRecognizerp->marpaESLIFRecognizerOption.regexActionResolverp;
   marpaESLIFRecognizerRegexCallback_t        regexCallbackp             = NULL;
   char                                      *regexactions;
   short                                      rcb;
@@ -20446,7 +20445,7 @@ static inline short _marpaESLIFRecognizer_recognizerRegexActionCallbackb(marpaES
       MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "Cannot execute regex action \"%s\": no regex action resolver", regexactions);
       goto err;
     }
-    regexCallbackp = regexActionResolverp(marpaESLIFRecognizerOption.userDatavp, marpaESLIFRecognizerp, regexactions);
+    regexCallbackp = regexActionResolverp(marpaESLIFRecognizerp->marpaESLIFRecognizerOption.userDatavp, marpaESLIFRecognizerp, regexactions);
     if (MARPAESLIF_UNLIKELY(regexCallbackp == NULL)) {
       MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "%s: action \"%s\" resolved to NULL", asciishows, regexactions);
       goto err;
@@ -20488,9 +20487,8 @@ static inline short _marpaESLIFRecognizer_recognizerRegexActionCallbackb(marpaES
 static inline short _marpaESLIFRecognizer_recognizerGeneratorActionCallbackb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, char *asciishows, marpaESLIF_action_t *generatorActionp, marpaESLIFRecognizerGeneratorCallback_t *generatorCallbackpp)
 /*****************************************************************************/
 {
-  static const char                             *funcs                          = "_marpaESLIFRecognizer_recognizerGeneratorActionCallbackb";
-  marpaESLIFRecognizerOption_t                   marpaESLIFRecognizerOption     = marpaESLIFRecognizerp->marpaESLIFRecognizerOption;
-  marpaESLIFRecognizerGeneratorActionResolver_t  generatorActionResolverp = marpaESLIFRecognizerOption.generatorActionResolverp;
+  static const char                             *funcs                    = "_marpaESLIFRecognizer_recognizerGeneratorActionCallbackb";
+  marpaESLIFRecognizerGeneratorActionResolver_t  generatorActionResolverp = marpaESLIFRecognizerp->marpaESLIFRecognizerOption.generatorActionResolverp;
   marpaESLIFRecognizerGeneratorCallback_t        generatorCallbackp       = NULL;
   char                                          *generatoractions;
   short                                          rcb;
@@ -20504,7 +20502,7 @@ static inline short _marpaESLIFRecognizer_recognizerGeneratorActionCallbackb(mar
       MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "Cannot execute symbol generator action \"%s\": no symbol generator action resolver", generatoractions);
       goto err;
     }
-    generatorCallbackp = generatorActionResolverp(marpaESLIFRecognizerOption.userDatavp, marpaESLIFRecognizerp, generatoractions);
+    generatorCallbackp = generatorActionResolverp(marpaESLIFRecognizerp->marpaESLIFRecognizerOption.userDatavp, marpaESLIFRecognizerp, generatoractions);
     if (MARPAESLIF_UNLIKELY(generatorCallbackp == NULL)) {
       MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "%s: action \"%s\" resolved to NULL", asciishows, generatoractions);
       goto err;
@@ -20546,10 +20544,9 @@ static inline short _marpaESLIFRecognizer_recognizerGeneratorActionCallbackb(mar
 static inline short _marpaESLIFRecognizer_recognizerEventActionCallbackb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIF_action_t *eventActionp, marpaESLIFRecognizerEventCallback_t *eventCallbackpp)
 /*****************************************************************************/
 {
-  static const char                         *funcs                      = "_marpaESLIFRecognizer_recognizerEventActionCallbackb";
-  marpaESLIFRecognizerOption_t               marpaESLIFRecognizerOption = marpaESLIFRecognizerp->marpaESLIFRecognizerOption;
-  marpaESLIFRecognizerEventActionResolver_t  eventActionResolverp       = marpaESLIFRecognizerOption.eventActionResolverp;
-  marpaESLIFRecognizerEventCallback_t        eventCallbackp             = NULL;
+  static const char                         *funcs                = "_marpaESLIFRecognizer_recognizerEventActionCallbackb";
+  marpaESLIFRecognizerEventActionResolver_t  eventActionResolverp = marpaESLIFRecognizerp->marpaESLIFRecognizerOption.eventActionResolverp;
+  marpaESLIFRecognizerEventCallback_t        eventCallbackp       = NULL;
   char                                      *eventactions;
   short                                      rcb;
 
@@ -20562,7 +20559,7 @@ static inline short _marpaESLIFRecognizer_recognizerEventActionCallbackb(marpaES
       MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "Cannot execute event action \"%s\": no event action resolver", eventactions);
       goto err;
     }
-    eventCallbackp = eventActionResolverp(marpaESLIFRecognizerOption.userDatavp, marpaESLIFRecognizerp, eventactions);
+    eventCallbackp = eventActionResolverp(marpaESLIFRecognizerp->marpaESLIFRecognizerOption.userDatavp, marpaESLIFRecognizerp, eventactions);
     if (MARPAESLIF_UNLIKELY(eventCallbackp == NULL)) {
       MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "Action \"%s\" resolved to NULL", eventactions);
       goto err;
