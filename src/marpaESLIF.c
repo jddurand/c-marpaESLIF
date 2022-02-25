@@ -1183,6 +1183,7 @@ static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *mar
   size_t                            slashl;
   char                             *p;
   char                             *q;
+  size_t                            matchedLengthl;
 
   /* Check some required parameters */
   if (pseudob) {
@@ -1434,7 +1435,7 @@ static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *mar
     /* But we will never crash because marpaESLIFp never create its internal terminals using the STRING type -; */
     marpaESLIF_streamp = marpaESLIFRecognizerp->marpaESLIF_streamp;
     while (inputl > 0) {
-      if (MARPAESLIF_UNLIKELY(! _marpaESLIFRecognizer_terminal_matcherb(marpaESLIFRecognizerp, marpaESLIF_streamp, marpaESLIFp->anycharp, inputs, inputl, 1 /* eofb */, &rci, &marpaESLIFValueResult, NULL /* matchedLengthlp */))) {
+      if (MARPAESLIF_UNLIKELY(! _marpaESLIFRecognizer_terminal_matcherb(marpaESLIFRecognizerp, marpaESLIF_streamp, marpaESLIFp->anycharp, inputs, inputl, 1 /* eofb */, &rci, &marpaESLIFValueResult, &matchedLengthl))) {
         goto err;
       }
       if (MARPAESLIF_UNLIKELY(rci != MARPAESLIF_MATCH_OK)) {
@@ -1695,7 +1696,7 @@ static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *mar
 
       marpaESLIF_streamp = marpaESLIFRecognizerp->marpaESLIF_streamp;
       while (inputl > 0) {
-        if (MARPAESLIF_UNLIKELY(! _marpaESLIFRecognizer_terminal_matcherb(marpaESLIFRecognizerp, marpaESLIF_streamp, marpaESLIFp->anycharp, inputs, inputl, 1 /* eofb */, &rci, &marpaESLIFValueResult, NULL /* matchedLengthlp */))) {
+        if (MARPAESLIF_UNLIKELY(! _marpaESLIFRecognizer_terminal_matcherb(marpaESLIFRecognizerp, marpaESLIF_streamp, marpaESLIFp->anycharp, inputs, inputl, 1 /* eofb */, &rci, &marpaESLIFValueResult, &matchedLengthl))) {
           errno = EINVAL;
           goto err;
         }
@@ -1928,7 +1929,7 @@ static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *mar
     if (testFullMatchs != NULL) {
 
       marpaESLIF_streamp = marpaESLIFRecognizerTestp->marpaESLIF_streamp;
-      if (MARPAESLIF_UNLIKELY(! _marpaESLIFRecognizer_terminal_matcherb(marpaESLIFRecognizerTestp, marpaESLIF_streamp, terminalp, testFullMatchs, strlen(testFullMatchs), 1, &rci, NULL /* marpaESLIFValueResultp */, NULL /* matchedLengthlp */))) {
+      if (MARPAESLIF_UNLIKELY(! _marpaESLIFRecognizer_terminal_matcherb(marpaESLIFRecognizerTestp, marpaESLIF_streamp, terminalp, testFullMatchs, strlen(testFullMatchs), 1, &rci, NULL /* marpaESLIFValueResultp */, &matchedLengthl))) {
         MARPAESLIF_ERRORF(marpaESLIFp, "%s: testing full match: matcher general failure", terminalp->descp->asciis);
         errno = EINVAL;
         goto err;
@@ -1944,7 +1945,7 @@ static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *mar
     if (testPartialMatchs != NULL) {
 
       marpaESLIF_streamp = marpaESLIFRecognizerTestp->marpaESLIF_streamp;
-      if (MARPAESLIF_UNLIKELY(! _marpaESLIFRecognizer_terminal_matcherb(marpaESLIFRecognizerTestp, marpaESLIF_streamp, terminalp, testPartialMatchs, strlen(testPartialMatchs), 0, &rci, NULL /* marpaESLIFValueResultp */, NULL /* matchedLengthlp */))) {
+      if (MARPAESLIF_UNLIKELY(! _marpaESLIFRecognizer_terminal_matcherb(marpaESLIFRecognizerTestp, marpaESLIF_streamp, terminalp, testPartialMatchs, strlen(testPartialMatchs), 0, &rci, NULL /* marpaESLIFValueResultp */, &matchedLengthl))) {
         MARPAESLIF_ERRORF(marpaESLIFp, "%s: testing partial match: matcher general failure", terminalp->descp->asciis);
         errno = EINVAL;
         goto err;
@@ -5675,6 +5676,11 @@ void marpaESLIF_freev(marpaESLIF_t *marpaESLIFp)
 /*****************************************************************************/
 static inline short _marpaESLIFRecognizer_terminal_matcherb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIF_stream_t *marpaESLIF_streamp, marpaESLIF_terminal_t *terminalp, char *inputs, size_t inputl, short eofb, marpaESLIF_matcher_value_t *rcip, marpaESLIFValueResult_t *marpaESLIFValueResultp, size_t *matchedLengthlp)
 /*****************************************************************************/
+/* This method is call extremely often, we want to minimize at much as       */
+/* possible the instructions in it:                                          */
+/* - rcip            must be != NULL                                         */
+/* - matchedLengthlp must be != NULL                                         */
+/*****************************************************************************/
 {
   static const char                 *funcs = "_marpaESLIFRecognizer_terminal_matcherb";
   marpaESLIF_matcher_value_t         rci;
@@ -5688,8 +5694,6 @@ static inline short _marpaESLIFRecognizer_terminal_matcherb(marpaESLIFRecognizer
   short                              binmodeb;
   short                              needUtf8Validationb;
   short                              rcb;
-  char                              *bytes;
-  size_t                             bytel;
   short                              rcMatcherb;
 
   MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_INC(marpaESLIFRecognizerp);
@@ -5701,94 +5705,32 @@ static inline short _marpaESLIFRecognizer_terminal_matcherb(marpaESLIFRecognizer
   /* The method return value itself is 0 on error, 1 on success, -1 on fatal error */
   /*********************************************************************************/
 
-  if (terminalp->pseudob) {
-    switch (terminalp->type) {
-    case MARPAESLIF_TERMINAL_TYPE__EOF:
-      /* Eof is reached when eofb is set and there is nothing in the internal buffer */
-      if (eofb && (inputl <= 0)) {
-        MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, ":eof match");
-        rci            = MARPAESLIF_MATCH_OK;
-        matchedp       = (char *) MARPAESLIF_EMPTY_STRING;
-        matchedLengthl = 0;
-      } else {
-        rci            = MARPAESLIF_MATCH_FAILURE;
-      }
-      break;
+  /* Most common cases first */
+  if (inputl > 0) {
 
-    case MARPAESLIF_TERMINAL_TYPE__EOL:
-      /* Eof implies eol */
-      if (eofb && (inputl <= 0)) {
-        MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, ":eol implicit match because of :eof");
-        rci            = MARPAESLIF_MATCH_OK;
-        matchedp       = (char *) MARPAESLIF_EMPTY_STRING;
-        matchedLengthl = 0;
-      } else {
-        /* Eol is hitted if the next character(s) matches newline */
-        rcMatcherb = _marpaESLIFRecognizer_symbol_matcherb(marpaESLIFRecognizerp,
-                                                           marpaESLIF_streamp,
-                                                           marpaESLIFRecognizerp->marpaESLIFp->newlineSymbolp,
-                                                           &rci,
-                                                           NULL, /* marpaESLIFValueResultArrayp */
-                                                           0, /* maxStartCompletionsi */
-                                                           NULL, /* lastSizeBeforeCompletionlp */
-                                                           NULL /* numberOfStartCompletionsip */);
-        if (MARPAESLIF_UNLIKELY(rcMatcherb < 0)) {
-          goto err;
-        }
-        if (rci == MARPAESLIF_MATCH_OK) { /* C.f. rci default value that is MARPAESLIF_MATCH_FAILURE */
-          MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, ":eol match");
-          matchedp       = (char *) MARPAESLIF_EMPTY_STRING;
-          matchedLengthl = 0;
-        }
-      }
-      break;
+    if (terminalp->memcmpb && ((! terminalp->regex.utfb) /* No need for character validation : binary test */
+                               ||
+                               marpaESLIF_streamp->utfb /* Characters validated */)) {
+      /* -------------------------------------------------------------------------------------------------------------------------------------------- */
+      MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Doing memcmp on %ld bytes, inputl=%ld", (unsigned long) terminalp->bytel, (unsigned long) inputl);
+      /* -------------------------------------------------------------------------------------------------------------------------------------------- */
 
-    case MARPAESLIF_TERMINAL_TYPE__SOL:
-      /* Remember that :sol enforced newlineb option - therefore columnl is always accurate */
-      /* even in the presence of :discard.                                                  */
-      if (marpaESLIF_streamp->columnl == 1) {
-        MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, ":sol match");
-        rci            = MARPAESLIF_MATCH_OK;
-        matchedp       = (char *) MARPAESLIF_EMPTY_STRING;
-        matchedLengthl = 0;
-      }
-      break;
-
-    default:
-      MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "Unsupported terminal type %d", terminalp->type);
-      goto fatal;
-    }
-
-  } else if (inputl > 0) { /* terminalp->pseudob */
-
-    if (terminalp->memcmpb && (marpaESLIF_streamp->utfb || (! terminalp->regex.utfb))) {
-      /* --------------------------------------------------------- */
-      /* Is is a true string and UTF-8 validation is not needed ?  */
-      /* Then do a direct memcmp -;                                */
-      /* --------------------------------------------------------- */
-      bytes = terminalp->bytes;
-      bytel = terminalp->bytel;
-
-      MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Doing memcmp on %ld bytes, inputl=%ld", (unsigned long) bytel, (unsigned long) inputl);
-      if (bytel <= 0) {
-        /* Empty string is allowed and never matches */
-        rci = MARPAESLIF_MATCH_FAILURE;
-      } else {
+      if (terminalp->bytel > 0) {
         /* No need to call memcmp() if the first byte is not the same - appears to (always ?) be faster */
-        if (inputs[0] == bytes[0]) {
-          if (inputl >= bytel) {
+        if (inputs[0] == terminalp->bytes[0]) {
+          if (inputl >= terminalp->bytel) {
             /* No need to call memcmp() if the length to check if == 1 */
-            if ((bytel == 1) || (memcmp(inputs, bytes, bytel) == 0)) {
+            if ((terminalp->bytel == 1) || (memcmp(inputs, terminalp->bytes, terminalp->bytel) == 0)) {
               rci = MARPAESLIF_MATCH_OK;
               matchedp       = inputs;
-              matchedLengthl = bytel;
+              matchedLengthl = terminalp->bytel;
             } else {
               rci = MARPAESLIF_MATCH_FAILURE;
               MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "%s for %s", "MARPAESLIF_MATCH_FAILURE", terminalp->descp->asciis);
             }
           } else {
             /* No need to call memcmp() if the length to check if == 1 */
-            if ((inputl == 1) || (memcmp(inputs, bytes, inputl) == 0)) {
+            if ((inputl == 1) || (memcmp(inputs, terminalp->bytes, inputl) == 0)) {
               /* Partial match */
               if (eofb) {
                 rci = MARPAESLIF_MATCH_FAILURE;
@@ -5802,16 +5744,25 @@ static inline short _marpaESLIFRecognizer_terminal_matcherb(marpaESLIFRecognizer
         } else {
           rci = MARPAESLIF_MATCH_FAILURE;
         }
+      } else {
+        /* Empty string is allowed and never matches */
+        rci = MARPAESLIF_MATCH_FAILURE;
       }
-    } else {
-      /* --------------------------------------------------------- */
-      /* It is not a string.                                       */
-      /* --------------------------------------------------------- */
+
+      /* We are done in any case */
+      goto fast_done;
+
+    } else if (! terminalp->pseudob) {
+      /* -------------------------------------------------------------------------------------------------------------------------------------------- */
+      MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Doing regex, inputl=%ld", (unsigned long) inputl);
+      /* -------------------------------------------------------------------------------------------------------------------------------------------- */
+
       marpaESLIF_regexp = &(terminalp->regex);
 
       /* If the regexp is working in UTF mode then we check that character conversion   */
       /* was done. This is how we are sure that calling regexp with PCRE2_NO_UTF_CHECK  */
       /* is ok: we have done ourself the UTF-8 validation on the subject.               */
+
       if (marpaESLIF_regexp->utfb) {                   /* UTF-8 correctness is required */
         if (marpaESLIF_streamp->utfb) {
           pcre2_optioni = PCRE2_NOTEMPTY|PCRE2_NOTEMPTY_ATSTART|PCRE2_NO_UTF_CHECK; /* We made sure this is ok */
@@ -5905,23 +5856,28 @@ static inline short _marpaESLIFRecognizer_terminal_matcherb(marpaESLIFRecognizer
         /* -------------------------------------------------- */
 
         /* Set UTF buffer correctness if needed - this makes a further call to pcre2_match having the option PCRE2_NO_UTF_CHECK */
-        if (binmodeb && marpaESLIF_regexp->utfb) {
+        if (needUtf8Validationb /* Usually it is false, so it has precedence over testing binmode */ && binmodeb) {
           /* Either regex is successful, either it failed with the accepted failure code PCRE2_ERROR_NOMATCH */
           MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "%s: UTF-8 correctness successful and remembered", terminalp->descp->asciis);
           marpaESLIF_streamp->utfb = 1;
         }
 
-        /* Check the length of matched data */
+#ifndef MARPAESLIF_NTRACE
+        /* Paranoid test: check the length of matched data */
         if (MARPAESLIF_UNLIKELY(pcre2_get_ovector_count(marpaESLIF_regexp->match_datap) <= 0)) {
           MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "%s: pcre2_get_ovector_count returned no number of pairs of values", terminalp->descp->asciis);
           goto err;
         }
+#endif
 
         pcre2_ovectorp = pcre2_get_ovector_pointer(marpaESLIF_regexp->match_datap);
+#ifndef MARPAESLIF_NTRACE
+        /* Paranoid test, we assume that PCRE2 cannot fail at this point */
         if (MARPAESLIF_UNLIKELY(pcre2_ovectorp == NULL)) {
           MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "%s: pcre2_get_ovector_pointer returned NULL", terminalp->descp->asciis);
           goto err;
         }
+#endif
 
         matchedLengthl = pcre2_ovectorp[1] - pcre2_ovectorp[0];
 #ifndef MARPAESLIF_NTRACE
@@ -5935,11 +5891,84 @@ static inline short _marpaESLIFRecognizer_terminal_matcherb(marpaESLIFRecognizer
 
         rci = MARPAESLIF_MATCH_OK;
       }
+
+      /* We are done in any case */
+      goto fast_done;
     }
+  }
+
+  if (terminalp->pseudob) {
+    /* -------------------------------------------------------------------------------------------------------------------------------------------- */
+    MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Doing pseudo terminal, inputl=%ld", (unsigned long) inputl);
+    /* -------------------------------------------------------------------------------------------------------------------------------------------- */
+
+    /* Pseudo terminal: having inputl <= 0 is legal */
+    switch (terminalp->type) {
+    case MARPAESLIF_TERMINAL_TYPE__EOF:
+      /* Eof is reached when eofb is set and there is nothing in the internal buffer */
+      if (eofb && (inputl <= 0)) {
+        MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, ":eof match");
+        rci            = MARPAESLIF_MATCH_OK;
+        matchedp       = (char *) MARPAESLIF_EMPTY_STRING;
+        matchedLengthl = 0;
+      } else {
+        rci            = MARPAESLIF_MATCH_FAILURE;
+      }
+      break;
+
+    case MARPAESLIF_TERMINAL_TYPE__EOL:
+      /* Eof implies eol */
+      if (eofb && (inputl <= 0)) {
+        MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, ":eol implicit match because of :eof");
+        rci            = MARPAESLIF_MATCH_OK;
+        matchedp       = (char *) MARPAESLIF_EMPTY_STRING;
+        matchedLengthl = 0;
+      } else {
+        /* Eol is hitted if the next character(s) matches newline */
+        rcMatcherb = _marpaESLIFRecognizer_symbol_matcherb(marpaESLIFRecognizerp,
+                                                           marpaESLIF_streamp,
+                                                           marpaESLIFRecognizerp->marpaESLIFp->newlineSymbolp,
+                                                           &rci,
+                                                           NULL, /* marpaESLIFValueResultArrayp */
+                                                           0, /* maxStartCompletionsi */
+                                                           NULL, /* lastSizeBeforeCompletionlp */
+                                                           NULL /* numberOfStartCompletionsip */);
+        if (MARPAESLIF_UNLIKELY(rcMatcherb < 0)) {
+          goto err;
+        }
+        if (rci == MARPAESLIF_MATCH_OK) { /* C.f. rci default value that is MARPAESLIF_MATCH_FAILURE */
+          MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, ":eol match");
+          matchedp       = (char *) MARPAESLIF_EMPTY_STRING;
+          matchedLengthl = 0;
+        }
+      }
+      break;
+
+    case MARPAESLIF_TERMINAL_TYPE__SOL:
+      /* Remember that :sol enforced newlineb option - therefore columnl is always accurate */
+      /* even in the presence of :discard.                                                  */
+      if (marpaESLIF_streamp->columnl == 1) {
+        MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, ":sol match");
+        rci            = MARPAESLIF_MATCH_OK;
+        matchedp       = (char *) MARPAESLIF_EMPTY_STRING;
+        matchedLengthl = 0;
+      }
+      break;
+
+    default:
+      MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "Unsupported terminal type %d", terminalp->type);
+      goto fatal;
+    }
+
   } else {
-    /* No data: ok only if we are eof */
+    /* -------------------------------------------------------------------------------------------------------------------------------------------- */
+    MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Doing nothing, inputl=%ld", (unsigned long) inputl);
+    /* -------------------------------------------------------------------------------------------------------------------------------------------- */
+    /* No data, not a pseudo terminal, no fast path match, no regex match : ok only if we are eof */
     rci = eofb ? MARPAESLIF_MATCH_FAILURE : MARPAESLIF_MATCH_AGAIN;
   }
+
+ fast_done:
 
   if ((rci == MARPAESLIF_MATCH_OK) && (marpaESLIFValueResultp != NULL)) {
     marpaESLIFValueResultp->contextp        = NULL;
@@ -5970,12 +5999,9 @@ static inline short _marpaESLIFRecognizer_terminal_matcherb(marpaESLIFRecognizer
     }
   }
 
-  if (rcip != NULL) {
-    *rcip = rci;
-  }
-  if (matchedLengthlp != NULL) {
-    *matchedLengthlp = matchedLengthl;
-  }
+  *rcip            = rci;
+  *matchedLengthlp = matchedLengthl;
+
   rcb = 1;
   goto done;
 
@@ -6218,6 +6244,7 @@ static inline short _marpaESLIFRecognizer_symbol_matcherb(marpaESLIFRecognizer_t
   marpaESLIFValueResultBool_t              marpaESLIFValueResultBool;
   short                                    rcMatcherb;
   short                                    lookaheadMatchb;
+  size_t                                   matchedLengthl;
 
   MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_INC(marpaESLIFRecognizerp);
   MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "start");
@@ -6257,7 +6284,7 @@ static inline short _marpaESLIFRecognizer_symbol_matcherb(marpaESLIFRecognizer_t
                                                          marpaESLIF_streamp->eofb,
                                                          &rci,
                                                          marpaESLIFValueResultp,
-                                                         NULL /* matchedLengthl */);
+                                                         &matchedLengthl);
     if (MARPAESLIF_UNLIKELY(rcMatcherb < 0)) {
       goto fatal;
     }

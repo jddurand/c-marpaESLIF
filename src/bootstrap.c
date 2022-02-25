@@ -5154,6 +5154,7 @@ static short _marpaESLIF_bootstrap_G1_action_terminal_3b(void *userDatavp, marpa
   size_t                            sizel;
   marpaESLIF_matcher_value_t        rci;
   short                             rcb;
+  size_t                            matchedLengthl;
 
   /* Cannot be nullable */
   if (MARPAESLIF_UNLIKELY(nullableb)) {
@@ -5204,7 +5205,7 @@ static short _marpaESLIF_bootstrap_G1_action_terminal_3b(void *userDatavp, marpa
                                                                     1, /* eofb */
                                                                     &rci,
                                                                     &marpaESLIFValueResult,
-                                                                    NULL /* matchedLengthlp */))) {
+                                                                    &matchedLengthl))) {
     goto err;
   }
   if (rci == MARPAESLIF_MATCH_OK) {
@@ -7825,6 +7826,7 @@ static inline marpaESLIF_bootstrap_utf_string_t *_marpaESLIF_bootstrap_regex_to_
   marpaESLIFValueResult_t            marpaESLIFValueResult;
   size_t                             sizel;
   marpaESLIF_matcher_value_t         rci;
+  size_t                             matchedLengthl;
 
   /* It is a non-sense to have a null lexeme */
   if (MARPAESLIF_UNLIKELY((bytep == NULL) || (bytel <= 0))) {
@@ -7862,7 +7864,7 @@ static inline marpaESLIF_bootstrap_utf_string_t *_marpaESLIF_bootstrap_regex_to_
                                                                     1, /* eofb */
                                                                     &rci,
                                                                     &marpaESLIFValueResult,
-                                                                    NULL /* matchedLengthlp */))) {
+                                                                    &matchedLengthl))) {
     goto err;
   }
   if (rci == MARPAESLIF_MATCH_OK) {
@@ -7958,6 +7960,7 @@ static inline marpaESLIF_bootstrap_utf_string_t *_marpaESLIF_bootstrap_character
   size_t                             sizel;
   marpaESLIF_matcher_value_t         rci;
   char                              *tmps;
+  size_t                             matchedLengthl;
 
   /* It is a non-sense to have a null lexeme */
   if (MARPAESLIF_UNLIKELY((bytep == NULL) || (bytel <= 0))) {
@@ -8006,7 +8009,7 @@ static inline marpaESLIF_bootstrap_utf_string_t *_marpaESLIF_bootstrap_character
                                                                     1, /* eofb */
                                                                     &rci,
                                                                     &marpaESLIFValueResult,
-                                                                    NULL /* matchedLengthlp */))) {
+                                                                    &matchedLengthl))) {
     goto err;
   }
   if (rci == MARPAESLIF_MATCH_OK) {
