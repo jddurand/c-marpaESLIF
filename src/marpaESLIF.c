@@ -15651,8 +15651,8 @@ static inline short _marpaESLIFValue_stack_getb(marpaESLIFValue_t *marpaESLIFVal
   marpaESLIFRecognizer_t  *marpaESLIFRecognizerp = marpaESLIFValuep->marpaESLIFRecognizerp;
   short                    rcb;
 
-  MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_INC(marpaESLIFRecognizerp);
-  MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "start indicei=%d", indicei);
+  MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_INC(marpaESLIFValuep->marpaESLIFRecognizerp);
+  MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFValuep->marpaESLIFRecognizerp, funcs, "start indicei=%d", indicei);
 
 #ifndef MARPAESLIF_NTRACE
   /* Should never happen */
@@ -15672,8 +15672,8 @@ static inline short _marpaESLIFValue_stack_getb(marpaESLIFValue_t *marpaESLIFVal
     rcb = 0;
  done:
 #endif
-    MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "return %d", (int) rcb);
-    MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_DEC(marpaESLIFRecognizerp);
+    MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFValuep->marpaESLIFRecognizerp, funcs, "return %d", (int) rcb);
+    MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_DEC(marpaESLIFValuep->marpaESLIFRecognizerp);
     return rcb;
 }
 
@@ -15681,12 +15681,11 @@ static inline short _marpaESLIFValue_stack_getb(marpaESLIFValue_t *marpaESLIFVal
 static inline short _marpaESLIFValue_stack_getAndForgetb(marpaESLIFValue_t *marpaESLIFValuep, int indicei, marpaESLIFValueResult_t *marpaESLIFValueResultp)
 /*****************************************************************************/
 {
-  static const char       *funcs = "_marpaESLIFValue_stack_getAndForgetb";
-  marpaESLIFRecognizer_t  *marpaESLIFRecognizerp = marpaESLIFValuep->marpaESLIFRecognizerp;
-  short                    rcb;
+  static const char *funcs = "_marpaESLIFValue_stack_getAndForgetb";
+  short              rcb;
 
-  MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_INC(marpaESLIFRecognizerp);
-  MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "start indicei=%d", indicei);
+  MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_INC(marpaESLIFValuep->marpaESLIFRecognizerp);
+  MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFValuep->marpaESLIFRecognizerp, funcs, "start indicei=%d", indicei);
 
   if (MARPAESLIF_UNLIKELY(! _marpaESLIFValue_stack_getb(marpaESLIFValuep, indicei, marpaESLIFValueResultp))) {
     goto err;
@@ -15701,8 +15700,8 @@ static inline short _marpaESLIFValue_stack_getAndForgetb(marpaESLIFValue_t *marp
  err:
     rcb = 0;
  done:
-    MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "return %d", (int) rcb);
-    MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_DEC(marpaESLIFRecognizerp);
+    MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFValuep->marpaESLIFRecognizerp, funcs, "return %d", (int) rcb);
+    MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_DEC(marpaESLIFValuep->marpaESLIFRecognizerp);
     return rcb;
 }
 
