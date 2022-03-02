@@ -938,7 +938,7 @@ static inline marpaESLIF_symbol_t   *_marpaESLIFSymbol_string_newp(marpaESLIF_t 
 static inline marpaESLIF_symbol_t   *_marpaESLIFSymbol_regex_newp(marpaESLIF_t *marpaESLIFp, marpaESLIFString_t *stringp, char *modifiers, marpaESLIFSymbolOption_t *marpaESLIFSymbolOptionp);
 static inline short                  _marpaESLIFSymbol_tryb(marpaESLIFSymbol_t *marpaESLIFSymbolp, char *inputs, size_t inputl, short *matchbp);
 static inline short                  _marpaESLIFRecognizer_symbol_tryb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFSymbol_t *marpaESLIFSymbolp, short *matchbp);
-static inline short                 __marpaESLIFRecognizer_symbol_tryb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFSymbol_t *marpaESLIFSymbolp, short *matchbp, short recognizerImportb);
+static inline short                 __marpaESLIFRecognizer_symbol_tryb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFSymbol_t *marpaESLIFSymbolp, short *matchbp);
 static        short                  _marpaESLIFRecognizerSymbolProxyImportb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, void *userDatavp, marpaESLIFValueResult_t *marpaESLIFValueResultp, short haveUndefb);
 
 /*****************************************************************************/
@@ -21767,7 +21767,7 @@ static inline short _marpaESLIFSymbol_tryb(marpaESLIFSymbol_t *marpaESLIFSymbolp
   marpaESLIF_streamp->inputl = inputl;
   marpaESLIF_streamp->eofb   = 1;
 
-  rcb = __marpaESLIFRecognizer_symbol_tryb(marpaESLIFRecognizerp, marpaESLIFSymbolp, matchbp, 0 /* recognizerImportb */);
+  rcb = __marpaESLIFRecognizer_symbol_tryb(marpaESLIFRecognizerp, marpaESLIFSymbolp, matchbp);
   goto done;
 
  err:
@@ -21810,7 +21810,7 @@ short marpaESLIFRecognizer_symbol_tryb(marpaESLIFRecognizer_t *marpaESLIFRecogni
 static inline short _marpaESLIFRecognizer_symbol_tryb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFSymbol_t *marpaESLIFSymbolp, short *matchbp)
 /*****************************************************************************/
 {
-  return __marpaESLIFRecognizer_symbol_tryb(marpaESLIFRecognizerp, marpaESLIFSymbolp, matchbp, 1 /* recognizerImportb */);
+  return __marpaESLIFRecognizer_symbol_tryb(marpaESLIFRecognizerp, marpaESLIFSymbolp, matchbp);
 }
 
 /*****************************************************************************/
@@ -22522,7 +22522,7 @@ static inline short _marpaESLIFRecognizer_alternativeb(marpaESLIFRecognizer_t *m
 }
 
 /*****************************************************************************/
-static inline short __marpaESLIFRecognizer_symbol_tryb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFSymbol_t *marpaESLIFSymbolp, short *matchbp, short recognizerImportb)
+static inline short __marpaESLIFRecognizer_symbol_tryb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFSymbol_t *marpaESLIFSymbolp, short *matchbp)
 /*****************************************************************************/
 {
   static const char          *funcs = "__marpaESLIFRecognizer_symbol_tryb";
@@ -22587,14 +22587,8 @@ static inline short __marpaESLIFRecognizer_symbol_tryb(marpaESLIFRecognizer_t *m
         *matchbp = 1;
       }
       /* Import, eventually */
-      if (recognizerImportb) {
-	if (! _marpaESLIFRecognizer_eslif2hostb(marpaESLIFRecognizerp, &marpaESLIFValueResultArray, NULL /* forcedUserDatavp */, NULL /* forcedImporterp */)) {
-	  goto err;
-	}
-      } else {
-	if (! _marpaESLIFRecognizer_eslif2hostb(marpaESLIFRecognizerp, &marpaESLIFValueResultArray, marpaESLIFSymbolp /* forcedUserDatavp */, _marpaESLIFRecognizerSymbolProxyImportb /* forcedImporterp */)) {
-	  goto err;
-	}
+      if (! _marpaESLIFRecognizer_eslif2hostb(marpaESLIFRecognizerp, &marpaESLIFValueResultArray, marpaESLIFSymbolp /* forcedUserDatavp */, _marpaESLIFRecognizerSymbolProxyImportb /* forcedImporterp */)) {
+        goto err;
       }
       break;
     default:
@@ -22612,9 +22606,7 @@ static inline short __marpaESLIFRecognizer_symbol_tryb(marpaESLIFRecognizer_t *m
  done:
   MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "return %d", (int) rcb);
   MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_DEC(marpaESLIFRecognizerp);
-  if (MARPAESLIF_LIKELY(marpaESLIFRecognizerp != NULL)) {
-    _marpaESLIFRecognizer_valueResultFreev(marpaESLIFRecognizerp, &marpaESLIFValueResultArray);
-  }
+  _marpaESLIFRecognizer_valueResultFreev(marpaESLIFRecognizerp, &marpaESLIFValueResultArray);
   return rcb;
 }
 

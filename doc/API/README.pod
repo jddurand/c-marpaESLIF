@@ -2670,19 +2670,7 @@ For strings and regular expressions, the C<stringp> argument is without the deli
 
 =back
 
-Please note this difference about import:
-
-=over
-
-=item C<marpaESLIFRecognizer_symbol_tryb()>
-
-The I<recognizer>'s importer, if any, is used.
-
-=item C<marpaESLIFSymbol_tryb()>
-
-The I<symbol>'s importer, if any, is used.
-
-=back
+Please note that C<marpaESLIFRecognizer_symbol_tryb()> will use the symbol's importer, if any, not the recognizer's importer.
 
 =head1 NOTES
 

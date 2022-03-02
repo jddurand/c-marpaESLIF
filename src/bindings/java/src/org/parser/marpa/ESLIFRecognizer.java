@@ -78,7 +78,7 @@ public class ESLIFRecognizer {
 	private native void              jniUnshare() throws ESLIFException;
 	private native void              jniPeek(ESLIFRecognizer eslifRecognizerPeeked) throws ESLIFException;
 	private native void              jniUnpeek() throws ESLIFException;
-	private native Object            jniSymbolTry(ESLIFSymbol eslifSymbol) throws ESLIFException;
+	private native byte[]            jniSymbolTry(ESLIFSymbol eslifSymbol) throws ESLIFException;
 
 	/**
 	 * Creates an ESLIFRecognizer instance
@@ -597,7 +597,7 @@ public class ESLIFRecognizer {
 	 * 
 	 * @return null if no match, else the matched bytes
 	 */
-	public synchronized Object symbolTry(ESLIFSymbol eslifSymbol) throws ESLIFException {
+	public synchronized byte[] symbolTry(ESLIFSymbol eslifSymbol) throws ESLIFException {
 		if (eslifSymbol == null) {
 			throw new IllegalArgumentException("eslifSymbol must not be null");
 		}
