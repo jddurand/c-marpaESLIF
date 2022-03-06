@@ -511,7 +511,7 @@ Returns callout number or undef
 
 =cut
 
-sub getCalloutNumber { return shift->{callout_number} }
+sub getCalloutNumber { return $_[0]->{callout_number} }
 
 
 =head2 $self->getCalloutString
@@ -520,7 +520,7 @@ Returns callout string or undef
 
 =cut
 
-sub getCalloutString { return shift->{callout_string} }
+sub getCalloutString { return $_[0]->{callout_string} }
 
 =head2 $self->getSubject
 
@@ -528,7 +528,7 @@ Returns current subject. Always undef unless ESLIF is compiled in trace mode.
 
 =cut
 
-sub getSubject { return shift->{subject} }
+sub getSubject { return $_[0]->{subject} }
 
 =head2 $self->getPattern
 
@@ -536,7 +536,7 @@ Returns pattern. Always undef unless ESLIF is compiled in trace mode.
 
 =cut
 
-sub getPattern { return shift->{pattern} }
+sub getPattern { return $_[0]->{pattern} }
 
 =head2 $self->getCaptureTop
 
@@ -544,7 +544,7 @@ Returns the max recent capture
 
 =cut
 
-sub getCaptureTop { return shift->{capture_top} }
+sub getCaptureTop { return $_[0]->{capture_top} }
 
 =head2 $self->getCaptureLast
 
@@ -552,7 +552,7 @@ Returns the most recently closed capture
 
 =cut
 
-sub getCaptureLast { return shift->{capture_last} }
+sub getCaptureLast { return $_[0]->{capture_last} }
 
 =head2 $self->getOffsetVector
 
@@ -560,7 +560,7 @@ Returns a reference to an array containing offsets
 
 =cut
 
-sub getOffsetVector { return shift->{offset_vector} }
+sub getOffsetVector { return $_[0]->{offset_vector} }
 
 =head2 $self->getMark
 
@@ -568,7 +568,7 @@ Returns the most recently passed C<NAME> of a C<(*MARK:NAME)>, C<(*PRUNE:NAME)> 
 
 =cut
 
-sub getMark { return shift->{mark} }
+sub getMark { return $_[0]->{mark} }
 
 =head2 $self->getStartMatch
 
@@ -576,7 +576,7 @@ Returns the current mark start attempt offset
 
 =cut
 
-sub getStartMatch { return shift->{start_match} }
+sub getStartMatch { return $_[0]->{start_match} }
 
 =head2 $self->getCurrentPosition
 
@@ -584,7 +584,7 @@ Returns the current subject offset
 
 =cut
 
-sub getCurrentPosition { return shift->{current_position} }
+sub getCurrentPosition { return $_[0]->{current_position} }
 
 =head2 $self->getNextItem
 
@@ -592,7 +592,7 @@ Returns the next item in the pattern
 
 =cut
 
-sub getNextItem { return shift->{next_item} }
+sub getNextItem { return $_[0]->{next_item} }
 
 =head2 $self->getGrammarLevel
 
@@ -600,7 +600,7 @@ Returns the current grammar level
 
 =cut
 
-sub getGrammarLevel { return shift->{grammar_level} }
+sub getGrammarLevel { return $_[0]->{grammar_level} }
 
 =head2 $self->getSymbolId
 
@@ -608,7 +608,7 @@ Returns the current symbol id
 
 =cut
 
-sub getSymbolId { return shift->{symbol_id} }
+sub getSymbolId { return $_[0]->{symbol_id} }
 
 =head1 SEE ALSO
 
