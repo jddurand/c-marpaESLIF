@@ -17862,7 +17862,7 @@ static short _marpaESLIF_rule_action___rowb(void *userDatavp, marpaESLIFValue_t 
   marpaESLIFValueResult.u.r.p              = NULL;
   marpaESLIFValueResult.u.r.shallowb       = 0;
   /* Eventual trailing separator in case of proper => 0 is automatically off with the division */
-  marpaESLIFValueResult.u.r.sizel          = nullableb ? 0 : (marpaESLIFValuep->hideSeparatorb ? (argni - arg0i + 1) / 2: (argni - arg0i + 1));
+  marpaESLIFValueResult.u.r.sizel          = nullableb ? 0 : (marpaESLIFValuep->hideSeparatorb ? ((argni - arg0i) / 2) + 1: (argni - arg0i + 1));
   marpaESLIFValueResult.u.r.freeUserDatavp = marpaESLIFValuep->marpaESLIFp;
   marpaESLIFValueResult.u.r.freeCallbackp  = _marpaESLIF_generic_freeCallbackv;
 
@@ -17942,7 +17942,7 @@ static short _marpaESLIF_rule_action___tableb(void *userDatavp, marpaESLIFValue_
   marpaESLIFValueResult.u.t.p              = NULL;
   marpaESLIFValueResult.u.t.shallowb       = 0;
   /* Eventual trailing separator in case of proper => 0 is automatically off with the division */
-  argsl                                    = nullableb ? 0 : (marpaESLIFValuep->hideSeparatorb ? (argni - arg0i + 1) / 2: (argni - arg0i + 1));
+  argsl                                    = nullableb ? 0 : (marpaESLIFValuep->hideSeparatorb ? ((argni - arg0i) / 2) + 1: (argni - arg0i + 1));
   marpaESLIFValueResult.u.t.freeUserDatavp = marpaESLIFValuep->marpaESLIFp;
   marpaESLIFValueResult.u.t.freeCallbackp  = _marpaESLIF_generic_freeCallbackv;
 
