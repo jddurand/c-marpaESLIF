@@ -324,6 +324,7 @@ struct marpaESLIF_rule {
 
 /* A grammar */
 struct marpaESLIF_grammar {
+  marpaESLIF_symbol_t   *symbolArrayp;                       /* For fast access to symbols, they are all flatened here */
   marpaESLIFGrammar_t   *marpaESLIFGrammarp;                 /* Shallow pointer to parent structure marpaESLIFGrammarp */
   marpaESLIFGrammar_Lshare_t *Lsharep;                       /* Shallow pointer to parent structure's Lsharep - can never be NULL */
   int                    leveli;                             /* Grammar level */
@@ -479,6 +480,7 @@ struct marpaESLIF_meta {
   int                           *symbolArrayStartp;               /* Lexemes at the very beginning of marpaWrapperGrammarStartp */
   short                          lazyb;                           /* Meta symbol is lazy - for internal usage only at bootstrap */
   int                            eventSeti;                       /* Remember eventSeti */
+  marpaESLIF_grammar_t          *subGrammarp;
 };
 
 struct marpaESLIF_stringGenerator {

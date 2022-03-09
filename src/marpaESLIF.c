@@ -1,4 +1,4 @@
-/* #undef MARPAESLIF_NTRACE */
+#undef MARPAESLIF_NTRACE
 /* For stack manipulation debug: */
 /* #define MARPAESLIF_NOTICE_ACTION */
 
@@ -256,6 +256,23 @@ static marpaESLIFValueResult_t marpaESLIFValueResultLazyWithUndef = {
 #else
 #define MARPAESLIF_INTERNAL_GET_SYMBOL_FROM_STACK(marpaESLIFp, symbolp, symbolStackp, symboli) \
   symbolp = (marpaESLIF_symbol_t *) GENERICSTACK_GET_PTR(symbolStackp, symboli)
+#endif
+
+/* -------------------------------------------------------------------------------------------- */
+/* Fast access to a symbol from the grammar                                                     */
+/* -------------------------------------------------------------------------------------------- */
+#ifndef MARPAESLIF_NTRACE
+#define MARPAESLIF_GRAMMAR_INTERNAL_GET_SYMBOL(marpaESLIFp, symbolp, grammarp, symbolStackp, symboli) do { \
+    if (MARPAESLIF_UNLIKELY((symboli < 0) || (! GENERICSTACK_IS_PTR(symbolStackp, symboli)))) { \
+      MARPAESLIF_ERRORF(marpaESLIFp, "Symbol no %d is unknown from symbolStackp", symboli); \
+      errno = EINVAL;                                                   \
+      goto err;                                                         \
+    }                                                                   \
+    symbolp = grammarp->symbolArrayp + symboli;                         \
+  } while (0)
+#else
+#define MARPAESLIF_GRAMMAR_INTERNAL_GET_SYMBOL(marpaESLIFp, symbolp, grammarp, symbolStackp, symboli) \
+  symbolp = grammarp->symbolArrayp + symboli
 #endif
 
 /* -------------------------------------------------------------------------------------------- */
@@ -2084,6 +2101,7 @@ static inline marpaESLIF_meta_t *_marpaESLIF_meta_newp(marpaESLIF_t *marpaESLIFp
   metap->terminalArrayShallowp           = NULL; /* Marpa terminals */
   metap->lazyb                           = lazyb;
   metap->eventSeti                       = eventSeti;
+  metap->subGrammarp                     = NULL;
 
   marpaWrapperGrammarSymbolOption.terminalb = 0;
   marpaWrapperGrammarSymbolOption.startb    = 0;
@@ -3660,6 +3678,7 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
       /* whereas the final recognizers comes from a hash or a malloc, there is a marpaESLIFGrammarp in it that have */
       /* a big cost if it is on the stack and not in fake mode. */
       /* So we arrange for this grammar to be on the heap instead: */
+      metap->subGrammarp                               = subGrammarp; /* A way to know that this is a meta that we hooked */
       metap->_grammar                                  = *subGrammarp;
       metap->_grammar.marpaWrapperGrammarStartNoEventp = marpaWrapperGrammarClonep;
       metap->_grammar.starti                           = metap->lexemeIdi;
@@ -3667,6 +3686,7 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
       metap->_grammar.symbolArrayStartp                = metap->symbolArrayStartp;
       metap->_grammar.nTerminall                       = metap->nTerminall;
       metap->_grammar.terminalArrayp                   = metap->terminalArrayShallowp;
+      metap->_grammar.symbolArrayp                     = NULL; /* Filled at the end */
       /* This is a safe measure, although this will NEVER be used: when trying to match a meta symbol, discard never happens */
       /*
       metap->_grammar.nSymbolDiscardl                  = 0;
@@ -4095,6 +4115,56 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
     }
   }
 
+  /* Do the flattened list of symbols for fast access */
+  for (grammari = 0; grammari < GENERICSTACK_USED(grammarStackp); grammari++) {
+    if (! GENERICSTACK_IS_PTR(grammarStackp, grammari)) {
+      /* Sparse item in grammarStackp -; */
+      continue;
+    }
+    grammarp = (marpaESLIF_grammar_t *) GENERICSTACK_GET_PTR(grammarStackp, grammari);
+    if (grammarp->symbolArrayp != NULL) {
+      free(grammarp->symbolArrayp);
+      grammarp->symbolArrayp = NULL;
+    }
+
+    symbolStackp = grammarp->symbolStackp;
+    if (GENERICSTACK_USED(symbolStackp) > 0) {
+      grammarp->symbolArrayp = (marpaESLIF_symbol_t *) malloc(sizeof(marpaESLIF_symbol_t) * GENERICSTACK_USED(symbolStackp));
+      if (MARPAESLIF_UNLIKELY(grammarp->symbolArrayp == NULL)) {
+        MARPAESLIF_ERRORF(marpaESLIFp, "malloc failure, %s", strerror(errno));
+        goto err;
+      }
+      for (symboli = 0; symboli < GENERICSTACK_USED(symbolStackp); symboli++) {
+        MARPAESLIF_INTERNAL_GET_SYMBOL_FROM_STACK(marpaESLIFp, symbolp, symbolStackp, symboli);
+        grammarp->symbolArrayp[symboli] = *symbolp;
+      }
+    }
+  }
+
+  /* Revisit the meta symbols that contain a copy of grammar */
+  for (grammari = 0; grammari < GENERICSTACK_USED(grammarStackp); grammari++) {
+    if (! GENERICSTACK_IS_PTR(grammarStackp, grammari)) {
+      continue;
+    }
+    grammarp = (marpaESLIF_grammar_t *) GENERICSTACK_GET_PTR(grammarStackp, grammari);
+    symbolStackp = grammarp->symbolStackp;
+    for (symboli = 0; symboli < GENERICSTACK_USED(symbolStackp); symboli++) {
+      MARPAESLIF_GRAMMAR_INTERNAL_GET_SYMBOL(marpaESLIFp, symbolp, grammarp, symbolStackp, symboli);
+
+      if (symbolp->type != MARPAESLIF_SYMBOL_TYPE_META) {
+        continue;
+      }
+
+      metap = symbolp->u.metap;
+      if (metap->subGrammarp == NULL) {
+        continue;
+      }
+
+      /* This is a meta symbol that we hooked */
+      metap->_grammar.symbolArrayp = subGrammarp->symbolArrayp;
+    }
+  }
+  
   rcb = 1;
   goto done;
   
@@ -4275,6 +4345,7 @@ static inline marpaESLIF_grammar_t *_marpaESLIF_grammar_newp(marpaESLIFGrammar_t
     goto err;
   }
 
+  grammarp->symbolArrayp                       = NULL;
   grammarp->marpaESLIFGrammarp                 = marpaESLIFGrammarp;
   grammarp->Lsharep                            = marpaESLIFGrammarp->Lsharep;
   grammarp->leveli                             = leveli;
@@ -4436,6 +4507,9 @@ static inline void _marpaESLIF_grammar_freev(marpaESLIF_grammar_t *grammarp)
 /*****************************************************************************/
 {
   if (grammarp != NULL) {
+    if (grammarp->symbolArrayp != NULL) {
+      free(grammarp->symbolArrayp);
+    }
     _marpaESLIF_string_freev(grammarp->descp, 0 /* onStackb */);
     if (grammarp->marpaWrapperGrammarStartp != NULL) {
       marpaWrapperGrammar_freev(grammarp->marpaWrapperGrammarStartp);
@@ -5783,7 +5857,6 @@ static inline short _marpaESLIFRecognizer_terminal_matcherb(marpaESLIFRecognizer
               matchedLengthl = terminalp->bytel;
             } else {
               rci = MARPAESLIF_MATCH_FAILURE;
-              MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "%s for %s", "MARPAESLIF_MATCH_FAILURE", terminalp->descp->asciis);
             }
           } else {
             /* No need to call memcmp() if the length to check if == 1 */
@@ -6339,7 +6412,7 @@ static inline short _marpaESLIFRecognizer_symbol_matcherb(marpaESLIFRecognizer_t
     if (symbolp->u.terminalp->byte2failureb && (marpaESLIF_streamp->inputl > 0)) {
       uc = (unsigned char) marpaESLIF_streamp->inputs[0];
       if (symbolp->u.terminalp->willfailb[uc]) {
-        MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "%s: Predicted failure for byte 0x%2x (%c)", symbolp->descp->asciis, (int) uc, isprint(uc) ? (char) uc : ' ');
+        MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "%s: Predicted failure for byte 0x%02x (%c)", symbolp->descp->asciis, (int) uc, isprint(uc) ? (char) uc : ' ');
         rci = MARPAESLIF_MATCH_FAILURE;
         rcb = 1;
         goto fast_done;
@@ -8709,7 +8782,7 @@ static inline short _marpaESLIFRecognizer_resume_oneb(marpaESLIFRecognizer_t *ma
 #ifndef MARPAESLIF_NTRACE
   for (symboll = 0; symboll < nSymboll; symboll++) {
     symboli = symbolArrayp[symboll];
-    MARPAESLIF_INTERNAL_GET_SYMBOL_FROM_STACK(marpaESLIFRecognizerp->marpaESLIFp, symbolp, symbolStackp, symboli);
+    MARPAESLIF_GRAMMAR_INTERNAL_GET_SYMBOL(marpaESLIFRecognizerp->marpaESLIFp, symbolp, grammarp, symbolStackp, symboli);
     MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Expected terminal: %s", symbolp->descp->asciis);
   }
 #endif
@@ -8750,7 +8823,7 @@ static inline short _marpaESLIFRecognizer_resume_oneb(marpaESLIFRecognizer_t *ma
 
   for (symboll = 0; symboll < nSymboll; symboll++) {
     symboli = symbolArrayp[symboll];
-    MARPAESLIF_INTERNAL_GET_SYMBOL_FROM_STACK(marpaESLIFRecognizerp->marpaESLIFp, symbolp, symbolStackp, symboli);
+    MARPAESLIF_GRAMMAR_INTERNAL_GET_SYMBOL(marpaESLIFRecognizerp->marpaESLIFp, symbolp, grammarp, symbolStackp, symboli);
 
     if (onlyPredictedLexemesb) {
       /* Skip this symbol if it is not a predicted lexeme... */
