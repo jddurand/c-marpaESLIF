@@ -335,7 +335,7 @@ static int                                marpaESLIFLua_xstring_subi(lua_State *
 static inline short                       marpaESLIFLua_xstring_check_from_and_tob(lua_State *L, lua_Integer sizei, lua_Integer *fromip, lua_Integer *toip);
 static int                                marpaESLIFLua_xstring_stringi(lua_State *L);
 static int                                marpaESLIFLua_xstring_bytei(lua_State *L);
-static inline short                       marpaESLIFLua_push_objectb(lua_State *L, const char *contexts, void *contextp, const char *modes, const marpaESLIFLua_method_t *metap, const int metai, const marpaESLIFLua_method_t *indexp, const int indexi);
+static inline short                       marpaESLIFLua_push_objectb(lua_State *L, const char *contexts, void *contextp, const char *modes, const marpaESLIFLua_method_t *metap, int metai, const marpaESLIFLua_method_t *indexp, int indexi);
 
 static const marpaESLIFLua_method_t marpaESLIFLua_marpaESLIFRecognizer_meta[] = {
   { "__gc",                            marpaESLIFLua_marpaESLIFRecognizer_freei }
