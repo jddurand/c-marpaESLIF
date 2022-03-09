@@ -12372,7 +12372,7 @@ static short _marpaESLIFValue_ruleCallbackWrapperb(void *userDatavp, int rulei, 
         /* We have internal hook in ::row and ::table that takes into account the hide-separator adverb */
         for (i = arg0i, j = arg0i; i <= argni; i += 2) {
           if (i == j) {
-            /* First occurence always exit */
+            /* First occurence always exist */
             continue;
           }
           /* We are processing the (j+1)'th argument hosted at indice i, by definition indice j+1 is a separator: */
