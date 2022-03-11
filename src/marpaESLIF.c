@@ -276,6 +276,23 @@ static marpaESLIFValueResult_t marpaESLIFValueResultLazyWithUndef = {
 #endif
 
 /* -------------------------------------------------------------------------------------------- */
+/* Fast access to a rule from the grammar                                                       */
+/* -------------------------------------------------------------------------------------------- */
+#ifndef MARPAESLIF_NTRACE
+#define MARPAESLIF_GRAMMAR_INTERNAL_GET_RULE(marpaESLIFp, rulep, grammarp, rulei) do { \
+    if (MARPAESLIF_UNLIKELY((rulei < 0) || (! GENERICSTACK_IS_PTR(grammarp->ruleStackp, rulei)))) { \
+      MARPAESLIF_ERRORF(marpaESLIFp, "Rule no %d is unknown from ruleStackp", rulei); \
+      errno = EINVAL;                                                   \
+      goto err;                                                         \
+    }                                                                   \
+    rulep = grammarp->allRulesArraypp[rulei];                           \
+  } while (0)
+#else
+#define MARPAESLIF_GRAMMAR_INTERNAL_GET_RULE(marpaESLIFp, rulep, grammarp, rulei) \
+  rulep = grammarp->allRulesArraypp[rulei]
+#endif
+
+/* -------------------------------------------------------------------------------------------- */
 /* Get a rule from stack - with an extra check when not in production mode                      */
 /* -------------------------------------------------------------------------------------------- */
 #ifndef MARPAESLIF_NTRACE
@@ -3397,6 +3414,22 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
       }
     }
 
+    MARPAESLIF_TRACEF(marpaESLIFp, funcs, "Flattening all rules in grammar level %d (%s)", grammari, grammarp->descp->asciis);
+    if (GENERICSTACK_USED(ruleStackp) > 0) {
+      if (grammarp->allRulesArraypp != NULL) {
+        free(grammarp->allRulesArraypp);
+      }
+      grammarp->allRulesArraypp = (marpaESLIF_rule_t **) malloc(sizeof(marpaESLIF_rule_t *) * GENERICSTACK_USED(ruleStackp));
+      if (MARPAESLIF_UNLIKELY(grammarp->allRulesArraypp == NULL)) {
+        MARPAESLIF_ERRORF(marpaESLIFp, "malloc failure, %s", strerror(errno));
+        goto err;
+      }
+      for (rulei = 0; rulei < GENERICSTACK_USED(ruleStackp); rulei++) {
+        MARPAESLIF_INTERNAL_GET_RULE_FROM_STACK(marpaESLIFp, rulep, ruleStackp, rulei);
+        grammarp->allRulesArraypp[rulei] = rulep;
+      }
+    }
+
     discardp = NULL;
     for (symboli = 0; symboli < GENERICSTACK_USED(symbolStackp); symboli++) {
       MARPAESLIF_INTERNAL_GET_SYMBOL_FROM_STACK(marpaESLIFp, symbolp, symbolStackp, symboli);
@@ -4328,6 +4361,7 @@ static inline marpaESLIF_grammar_t *_marpaESLIF_grammar_newp(marpaESLIFGrammar_t
   grammarp->fallbackEncodings                  = NULL;
   grammarp->fastDiscardb                       = 0;    /* Filled by grammar validation */
   grammarp->allSymbolsArraypp                  = NULL;
+  grammarp->allRulesArraypp                    = NULL;
 
   grammarp->marpaWrapperGrammarStartp = marpaWrapperGrammar_newp(marpaWrapperGrammarOptionp);
   if (MARPAESLIF_UNLIKELY(grammarp->marpaWrapperGrammarStartp == NULL)) {
@@ -4496,6 +4530,9 @@ static inline void _marpaESLIF_grammar_freev(marpaESLIF_grammar_t *grammarp)
     }
     if (grammarp->allSymbolsArraypp != NULL) {
       free(grammarp->allSymbolsArraypp);
+    }
+    if (grammarp->allRulesArraypp != NULL) {
+      free(grammarp->allRulesArraypp);
     }
     free(grammarp);
   }
@@ -12288,11 +12325,8 @@ static short _marpaESLIFValue_ruleCallbackWrapperb(void *userDatavp, int rulei, 
   MARPAESLIF_NOTICEF(marpaESLIFRecognizerp->marpaESLIFp, "%s: start [%d] <- [%d-%d]", funcs, resulti, arg0i, argni);
 #endif
 
-  rulep = _marpaESLIF_rule_findp(marpaESLIFValuep->marpaESLIFp, grammarp, rulei);
-  if (MARPAESLIF_UNLIKELY(rulep == NULL)) {
-    MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "No such rule No %d", rulei);
-    goto err;
-  }
+  /* This is an internal method, we know that rulei is correct. */
+  MARPAESLIF_GRAMMAR_INTERNAL_GET_RULE(marpaESLIFValuep->marpaESLIFp, rulep, grammarp, rulei);
 
   marpaESLIFValuep->inValuationb   =  1;
   marpaESLIFValuep->symbolp        = NULL;
@@ -12493,11 +12527,8 @@ static inline short _marpaESLIFValue_anySymbolCallbackWrapperb(void *userDatavp,
   }
 #endif
 
-  symbolp = _marpaESLIF_symbol_findp(marpaESLIFValuep->marpaESLIFp, grammarp, NULL /* asciis */, symboli, NULL /* symbolip */, 0 /* silentb */, 0 /* onlyLhsb - NOT USED */, 0 /* onlyRhsb - NOT USED */, MARPAESLIF_SYMBOL_TYPE_NA /* NOT USED */);
-  if (MARPAESLIF_UNLIKELY(symbolp == NULL)) {
-    MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "No such symbol No %d", symboli);
-    goto err;
-  }
+  /* This is an internal method, we know that symboli is correct. */
+  MARPAESLIF_GRAMMAR_INTERNAL_GET_SYMBOL(marpaESLIFValuep->marpaESLIFp, symbolp, grammarp, symboli);
 
   marpaESLIFValuep->inValuationb   =  1;
   marpaESLIFValuep->symbolp        = symbolp;

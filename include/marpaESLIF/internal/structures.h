@@ -365,6 +365,7 @@ struct marpaESLIF_grammar {
   char                  *fallbackEncodings;                  /* Fallback encoding is reader returns NULL and tconv fails to detect encoding */
   short                  fastDiscardb;                       /* True when :discard can be done in the context of the current recognizer */
   marpaESLIF_symbol_t  **allSymbolsArraypp;                  /* For fast access to symbols, they are all flatened here */
+  marpaESLIF_rule_t    **allRulesArraypp;                    /* For fast access to rules, they are all flatened here */
 };
 
 enum marpaESLIF_json_type {
