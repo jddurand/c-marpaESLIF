@@ -324,7 +324,6 @@ struct marpaESLIF_rule {
 
 /* A grammar */
 struct marpaESLIF_grammar {
-  marpaESLIF_symbol_t   *symbolArrayp;                       /* For fast access to symbols, they are all flatened here */
   marpaESLIFGrammar_t   *marpaESLIFGrammarp;                 /* Shallow pointer to parent structure marpaESLIFGrammarp */
   marpaESLIFGrammar_Lshare_t *Lsharep;                       /* Shallow pointer to parent structure's Lsharep - can never be NULL */
   int                    leveli;                             /* Grammar level */
@@ -365,6 +364,7 @@ struct marpaESLIF_grammar {
   char                  *defaultEncodings;                   /* Default encoding is reader returns NULL */
   char                  *fallbackEncodings;                  /* Fallback encoding is reader returns NULL and tconv fails to detect encoding */
   short                  fastDiscardb;                       /* True when :discard can be done in the context of the current recognizer */
+  marpaESLIF_symbol_t  **allSymbolsArraypp;                  /* For fast access to symbols, they are all flatened here */
 };
 
 enum marpaESLIF_json_type {
@@ -474,13 +474,10 @@ struct marpaESLIF_meta {
   marpaESLIFGrammar_t           _marpaESLIFGrammarLexemeClone;    /* Cloned ESLIF grammar in lexeme search mode (no event): allocated when meta is allocated */
   marpaESLIF_grammar_t          _grammar;
   marpaESLIFGrammar_t           *marpaESLIFGrammarLexemeClonep;   /* Cloned ESLIF grammar in lexeme search mode (no event) */
-  size_t                         nTerminall;                      /* Total number of grammar terminals */
-  int                           *terminalArrayShallowp;           /* Total grammar terminals */
   size_t                         nSymbolStartl;                   /* Number of lexemes at the very beginning of marpaWrapperGrammarStartp */
   int                           *symbolArrayStartp;               /* Lexemes at the very beginning of marpaWrapperGrammarStartp */
   short                          lazyb;                           /* Meta symbol is lazy - for internal usage only at bootstrap */
   int                            eventSeti;                       /* Remember eventSeti */
-  marpaESLIF_grammar_t          *subGrammarp;
 };
 
 struct marpaESLIF_stringGenerator {
