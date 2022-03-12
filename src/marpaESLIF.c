@@ -18273,30 +18273,10 @@ static short _marpaESLIF_symbol_action___transferb(void *userDatavp, marpaESLIFV
   /* It is easy to distinguish the two cases using the context:     */
   /* - Internal lexemes have a NULL context, are always of type ARRAY */
   /* - External lexemes have a non-NULL context */
-  if (marpaESLIFValueResultp->contextp == NULL) {
-    /* Duplicate data */
-    marpaESLIFValueResult.type               = MARPAESLIF_VALUE_TYPE_ARRAY;
-    marpaESLIFValueResult.contextp           = NULL;
-    marpaESLIFValueResult.representationp    = NULL;
-    marpaESLIFValueResult.u.a.p              = malloc(marpaESLIFValueResultp->u.a.sizel + 1); /* Hiden NUL byte for convenience */
-    if (MARPAESLIF_UNLIKELY(marpaESLIFValueResult.u.a.p == NULL)) {
-      MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "malloc failure, %s", strerror(errno));
-      goto err;
-    }
-    memcpy(marpaESLIFValueResult.u.a.p, marpaESLIFValueResultp->u.a.p, marpaESLIFValueResultp->u.a.sizel);
-    marpaESLIFValueResult.u.a.p[marpaESLIFValueResultp->u.a.sizel] = '\0';
-    marpaESLIFValueResult.u.a.shallowb       = 0;
-    marpaESLIFValueResult.u.a.sizel          = marpaESLIFValueResultp->u.a.sizel;
-    marpaESLIFValueResult.u.a.freeUserDatavp = marpaESLIFRecognizerp->marpaESLIFp;
-    marpaESLIFValueResult.u.a.freeCallbackp  = _marpaESLIF_generic_freeCallbackv;
-
-    rcb = _marpaESLIFValue_stack_setb(marpaESLIFValuep, resulti, &marpaESLIFValueResult);
-  } else {
-    /* It is in lexemeStack : If the transfer is successful, make the original shallow */
-    rcb = _marpaESLIFValue_stack_setb(marpaESLIFValuep, resulti, marpaESLIFValueResultp);
-    if (rcb) {
-      MARPAESLIF_MAKE_MARPAESLIFVALUERESULTP_SHALLOW(marpaESLIFValueResultp);
-    }
+  /* Whatever the case, the original can be shallowed. */
+  rcb = _marpaESLIFValue_stack_setb(marpaESLIFValuep, resulti, marpaESLIFValueResultp);
+  if (rcb) {
+    MARPAESLIF_MAKE_MARPAESLIFVALUERESULTP_SHALLOW(marpaESLIFValueResultp);
   }
 
   goto done;
