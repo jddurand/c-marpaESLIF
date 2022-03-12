@@ -16512,8 +16512,6 @@ static inline marpaESLIFValue_t *_marpaESLIFValue_newp(marpaESLIFRecognizer_t *m
   marpaESLIFValuep->marpaESLIFRecognizerp                 = marpaESLIFRecognizerp;
   marpaESLIFValuep->marpaESLIFValueOption                 = *marpaESLIFValueOptionp;
   marpaESLIFValuep->marpaWrapperValuep                    = NULL;
-  marpaESLIFValuep->previousArg0i                         = 0;
-  marpaESLIFValuep->previousArgni                         = 0;
   marpaESLIFValuep->valueResultStackp                     = NULL;
   marpaESLIFValuep->inValuationb                          = 0;
   marpaESLIFValuep->symbolp                               = NULL;

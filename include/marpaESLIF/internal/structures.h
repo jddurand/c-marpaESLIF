@@ -494,8 +494,6 @@ struct marpaESLIFValue {
   marpaESLIFRecognizer_t      *marpaESLIFRecognizerp;
   marpaESLIFValueOption_t      marpaESLIFValueOption;
   marpaWrapperValue_t         *marpaWrapperValuep;
-  int                          previousArg0i;
-  int                          previousArgni;
   genericStack_t              _valueResultStack;
   genericStack_t              *valueResultStackp;
   short                        inValuationb;
