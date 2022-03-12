@@ -704,7 +704,7 @@ static inline marpaESLIFValueResult_t *_marpaESLIFRecognizer_lexemeStack_i_getp(
 static inline const char            *_marpaESLIF_genericStack_i_types(genericStack_t *stackp, int i);
 static inline const char            *_marpaESLIF_value_types(int typei);
 
-static inline marpaESLIF_rule_t     *_marpaESLIF_rule_newp(marpaESLIF_t *marpaESLIFp, marpaESLIF_grammar_t *grammarp, char *descEncodings, char *descs, size_t descl, int lhsi, size_t nrhsl, int *rhsip, int exceptioni, int ranki, short nullRanksHighb, short sequenceb, int minimumi, int separatori, short properb, marpaESLIF_action_t *actionp, short passthroughb, short hideseparatorb, short *skipbp, marpaESLIF_lua_functiondecl_t *declp, marpaESLIF_lua_functioncall_t **callpp, marpaESLIF_lua_functioncall_t *separatorcallp);
+static inline marpaESLIF_rule_t     *_marpaESLIF_rule_newp(marpaESLIF_t *marpaESLIFp, marpaESLIF_grammar_t *grammarp, char *descEncodings, char *descs, size_t descl, int lhsi, size_t nrhsl, int *rhsip, int exceptioni, int ranki, short nullRanksHighb, short sequenceb, int minimumi, int separatori, short properb, marpaESLIF_action_t *actionp, short hideseparatorb, short *skipbp, marpaESLIF_lua_functiondecl_t *declp, marpaESLIF_lua_functioncall_t **callpp, marpaESLIF_lua_functioncall_t *separatorcallp);
 static inline void                   _marpaESLIF_rule_freev(marpaESLIF_rule_t *rulep);
 
 static inline marpaESLIF_symbol_t   *_marpaESLIF_symbol_newp(marpaESLIF_t *marpaESLIFp, marpaESLIFSymbolOption_t *marpaESLIFSymbolOptionp);
@@ -2502,7 +2502,6 @@ static inline marpaESLIF_grammar_t *_marpaESLIF_bootstrap_grammarp(marpaESLIFGra
 				  bootstrap_grammar_rulep[i].separatori,
 				  bootstrap_grammar_rulep[i].properb,
                                   (ruleAction.u.names != NULL) ? &ruleAction : NULL,
-                                  0, /* passthroughb */
                                   bootstrap_grammar_rulep[i].hideseparatorb,
                                   NULL, /* skipbp */
                                   NULL, /* declp */
@@ -2539,7 +2538,6 @@ static inline marpaESLIF_grammar_t *_marpaESLIF_bootstrap_grammarp(marpaESLIFGra
 				  bootstrap_grammar_lazy_rulep[i].separatori,
 				  bootstrap_grammar_lazy_rulep[i].properb,
                                   (ruleAction.u.names != NULL) ? &ruleAction : NULL,
-                                  0, /* passthroughb */
                                   bootstrap_grammar_lazy_rulep[i].hideseparatorb,
                                   NULL, /* skipbp */
                                   NULL, /* declp */
@@ -3822,36 +3820,6 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
   }
 
   /*
-   5. For every rule that is a passthrough, then it is illegal to have its lhs appearing as an lhs is any other rule
-  */
-  for (grammari = 0; grammari < GENERICSTACK_USED(grammarStackp); grammari++) {
-    if (! GENERICSTACK_IS_PTR(grammarStackp, grammari)) {
-      /* Sparse item in grammarStackp -; */
-      continue;
-    }
-    grammarp = (marpaESLIF_grammar_t *) GENERICSTACK_GET_PTR(grammarStackp, grammari);
-    MARPAESLIF_TRACEF(marpaESLIFp, funcs, "Looking at passthroughs in grammar level %d (%s)", grammari, grammarp->descp->asciis);
-
-    /* Loop on rules */
-    ruleStackp = grammarp->ruleStackp;
-    for (rulei = 0; rulei < GENERICSTACK_USED(ruleStackp); rulei++) {
-      MARPAESLIF_INTERNAL_GET_RULE_FROM_STACK(marpaESLIFp, rulep, ruleStackp, rulei);
-      if (rulep->passthroughb) {
-        for (rulej = 0; rulej < GENERICSTACK_USED(ruleStackp); rulej++) {
-          if (rulei == rulej) {
-            continue;
-          }
-          MARPAESLIF_INTERNAL_GET_RULE_FROM_STACK(marpaESLIFp, ruletmpp, ruleStackp, rulej);
-          if (MARPAESLIF_UNLIKELY(rulep->lhsp == ruletmpp->lhsp)) {
-            MARPAESLIF_ERRORF(marpaESLIFp, "Looking at rules in grammar level %d (%s): symbol %d (%s) is an LHS of a prioritized rule and cannot be appear as an LHS is any other rule", grammari, grammarp->descp->asciis, rulep->lhsp->idi, rulep->lhsp->descp->asciis);
-            goto err;
-          }
-        }
-      }
-    }
-  }
-
-  /*
    6. The semantic of a nullable LHS must be unique
   */
   for (grammari = 0; grammari < GENERICSTACK_USED(grammarStackp); grammari++) {
@@ -4636,7 +4604,7 @@ static inline short _marpaESLIFRecognizer_lexemeStack_i_setb(marpaESLIFRecognize
 }
 
 /*****************************************************************************/
-static inline marpaESLIF_rule_t *_marpaESLIF_rule_newp(marpaESLIF_t *marpaESLIFp, marpaESLIF_grammar_t *grammarp, char *descEncodings, char *descs, size_t descl, int lhsi, size_t nrhsl, int *rhsip, int exceptioni, int ranki, short nullRanksHighb, short sequenceb, int minimumi, int separatori, short properb, marpaESLIF_action_t *actionp, short passthroughb, short hideseparatorb, short *skipbp, marpaESLIF_lua_functiondecl_t *declp, marpaESLIF_lua_functioncall_t **callpp, marpaESLIF_lua_functioncall_t *separatorcallp)
+static inline marpaESLIF_rule_t *_marpaESLIF_rule_newp(marpaESLIF_t *marpaESLIFp, marpaESLIF_grammar_t *grammarp, char *descEncodings, char *descs, size_t descl, int lhsi, size_t nrhsl, int *rhsip, int exceptioni, int ranki, short nullRanksHighb, short sequenceb, int minimumi, int separatori, short properb, marpaESLIF_action_t *actionp, short hideseparatorb, short *skipbp, marpaESLIF_lua_functiondecl_t *declp, marpaESLIF_lua_functioncall_t **callpp, marpaESLIF_lua_functioncall_t *separatorcallp)
 /*****************************************************************************/
 {
   static const char               *funcs          = "_marpaESLIF_rule_newp";
@@ -4688,7 +4656,6 @@ static inline marpaESLIF_rule_t *_marpaESLIF_rule_newp(marpaESLIF_t *marpaESLIFp
   rulep->sequenceb          = sequenceb;
   rulep->properb            = properb;
   rulep->minimumi           = minimumi;
-  rulep->passthroughb       = passthroughb;
   rulep->propertyBitSet     = 0; /* Filled by grammar validation */
   rulep->hideseparatorb     = hideseparatorb;
   rulep->declp              = NULL;
@@ -12307,153 +12274,79 @@ static short _marpaESLIFValue_ruleCallbackWrapperb(void *userDatavp, int rulei, 
 
   MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Grammar %d Rule %d %s", grammarp->leveli, rulep->idi, rulep->asciishows);
 
-  /* Passthrough mode:
+  if (MARPAESLIF_UNLIKELY(! _marpaESLIFValue_ruleActionCallbackb(marpaESLIFValuep, &ruleCallbackp, rulep->asciishows, rulep->effectiveRuleActionp, rulep->effectiveRuleActione))) {
+    goto err;
+  }
 
-     This is a vicious case: we have created a rule that is passthough. This can happen only in
-     prioritized rules and our internal rules made sure that this situation is unique in the whole grammar.
-     That is, for example:
-
-       <Expression> ::=
-         Number
-          | '(' Expression ')' assoc => group
-         || Expression '**' Expression assoc => right
-         || Expression '*' Expression 
-          | Expression '/' Expression
-         || Expression '+' Expression
-          | Expression '-' Expression
-
-     is internally converted to:
-
-          Expression    ::= Expression[0]
-          Expression[3] ::= '(' Expression[0] ')'
-          Expression[2] ::= Expression[3] '**' Expression[2]
-          Expression[1] ::= Expression[1] '*'  Expression[2]
-                          | Expression[1] '/'  Expression[2]
-          Expression[0] ::= Expression[0] '+'  Expression[1]
-                          | Expression[0] '+'  Expression[1]
-
-     i.e. the rule
-
-          Expression    ::= Expression[0]
-
-     is a passtrough. Now, again, we made sure that this rule that we call a "passthrough" can happen only
-     once in the grammar. This mean that when we evaluate Expression[0] we are sure that the next rule to
-     evaluate will be Expression.
-
-     In Marpa native valuation methods, from stack point of view, we know that if the stack numbers for
-     Expression[0] and Expression will be the same. In the ASF valuation mode, this will not be true.
-
-     In Marpa, for instance, Expression[0] evaluates in stack number resulti, then Expression will also
-     evaluate to the same numberi.
-
-     In ASF mode, Expression[0] is likely to be one plus the stack number for Expression.
-
-     A general implementation can just say the following:
-
-     Expression[0] will evaluate stack [arg0i[0]..argni[0]] to resulti[0]
-     Expression    will evaluate stack resulti[0] to resulti
-
-     i.e. both are equivalent to: stack [arg0i[0]..argni[0]] evaluating to resulti.
-
-     This mean that we can skip the passthrough valuation if we remember its stack input: [arg0i[0]..argn[0]].
-
-     Implementation is:
-     * If current rule is a passthrough, remember arg0i and argni, action and remember we have done a passthrough
-     * Next pass will check if previous call was a passthrough, and if true, will reuse these remembered arg0i and argni.
-  */
-  if (rulep->passthroughb) {
-    if (MARPAESLIF_UNLIKELY(marpaESLIFValuep->previousPassWasPassthroughb)) {
-      /* Extra protection - this should never happen */
-      MARPAESLIF_ERROR(marpaESLIFValuep->marpaESLIFp, "Passthrough rule but previous rule was already a passthrough");
-      goto err;
-    }
-    marpaESLIFValuep->previousPassWasPassthroughb = 1;
-    marpaESLIFValuep->previousArg0i               = arg0i;
-    marpaESLIFValuep->previousArgni               = argni;
-
-  } else {
-    
-    if (marpaESLIFValuep->previousPassWasPassthroughb) {
-      /* Previous rule was a passthrough */
-      arg0i   = marpaESLIFValuep->previousArg0i;
-      argni   = marpaESLIFValuep->previousArgni;
-      marpaESLIFValuep->previousPassWasPassthroughb = 0;
-    }
-
-    if (MARPAESLIF_UNLIKELY(! _marpaESLIFValue_ruleActionCallbackb(marpaESLIFValuep, &ruleCallbackp, rulep->asciishows, rulep->effectiveRuleActionp, rulep->effectiveRuleActione))) {
-      goto err;
-    }
-
-    /* If the rule have a separator, eventually remove it */
-    if ((rulep->separatorp != NULL) && rulep->hideseparatorb
-        /* && (argni > arg0i) */             /* test not necessary in theory because we are not nullable */
-        ) {
-      marpaESLIFValuep->hideSeparatorb = 1;
-      if ((rulep->effectiveRuleActione != MARPAESLIF_INTERNAL_RULE_ACTION___ROW) && (rulep->effectiveRuleActione != MARPAESLIF_INTERNAL_RULE_ACTION___TABLE)) {
-        /* We have internal hook in ::row and ::table that takes into account the hide-separator adverb */
-        for (i = arg0i, j = arg0i; i <= argni; i += 2) {
-          if (i == j) {
-            /* First occurence always exist */
-            continue;
-          }
-          /* We are processing the (j+1)'th argument hosted at indice i, by definition indice j+1 is a separator: */
-          /* 0 ...  j  j+1  ...    i ... argni                                                                    */
-          /* We switch i and j+1 contents:                                                                        */
-          /* 0 ...  j *i   ... *(j+1) ... argni                                                                   */
-          MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Hide separator: Switching [%d] and [%d] contents", i, j + 1);
+  /* If the rule have a separator, eventually remove it */
+  if ((rulep->separatorp != NULL) && rulep->hideseparatorb
+      /* && (argni > arg0i) */             /* test not necessary in theory because we are not nullable */
+      ) {
+    marpaESLIFValuep->hideSeparatorb = 1;
+    if ((rulep->effectiveRuleActione != MARPAESLIF_INTERNAL_RULE_ACTION___ROW) && (rulep->effectiveRuleActione != MARPAESLIF_INTERNAL_RULE_ACTION___TABLE)) {
+      /* We have internal hook in ::row and ::table that takes into account the hide-separator adverb */
+      for (i = arg0i, j = arg0i; i <= argni; i += 2) {
+        if (i == j) {
+          /* First occurence always exist */
+          continue;
+        }
+        /* We are processing the (j+1)'th argument hosted at indice i, by definition indice j+1 is a separator: */
+        /* 0 ...  j  j+1  ...    i ... argni                                                                    */
+        /* We switch i and j+1 contents:                                                                        */
+        /* 0 ...  j *i   ... *(j+1) ... argni                                                                   */
+        MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Hide separator: Switching [%d] and [%d] contents", i, j + 1);
 #ifdef MARPAESLIF_NOTICE_ACTION
-          MARPAESLIF_NOTICEF(marpaESLIFRecognizerp->marpaESLIFp, "%s: Hide separator: Switching [%d] and [%d] contents", funcs, i, j + 1);
+        MARPAESLIF_NOTICEF(marpaESLIFRecognizerp->marpaESLIFp, "%s: Hide separator: Switching [%d] and [%d] contents", funcs, i, j + 1);
 #endif
-          if (MARPAESLIF_UNLIKELY(! _marpaESLIFValue_stack_switchb(marpaESLIFValuep, i, ++j))) {
-            goto err;
+        if (MARPAESLIF_UNLIKELY(! _marpaESLIFValue_stack_switchb(marpaESLIFValuep, i, ++j))) {
+          goto err;
+        }
+      }
+#ifdef MARPAESLIF_NOTICE_ACTION
+      MARPAESLIF_NOTICEF(marpaESLIFRecognizerp->marpaESLIFp, "%s: Hide value changed stack indices: [%d] <- [%d-%d]", funcs, resulti, arg0i, argni);
+#endif
+      argni = j;
+    }
+  }
+    
+  /* If the rule have skipped elements, eventually remove them (starting at the latest indice) */
+  if (rulep->skipbp != NULL) {
+    k = 0; /* k is the number of arguments to shift */
+    for (i = argni; i >= arg0i; i--) {
+      if (rulep->skipbp[i - arg0i]) {
+        /* Shift remaining values - last element is naturally skipped with argni-- */
+        if (k > 0) {
+          /* There are k unhiden values scanned and we want to shift them. Current argument being skipped is at indice i. */
+          for (j = i; j < i + k; j++) {
+            MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Hide value: Switching [%d] and [%d] contents", j + 1, j);
+#ifdef MARPAESLIF_NOTICE_ACTION
+            MARPAESLIF_NOTICEF(marpaESLIFRecognizerp->marpaESLIFp, "%s: Hide value: Switching [%d] and [%d] contents", funcs, j + 1, j);
+#endif
+            if (MARPAESLIF_UNLIKELY(! _marpaESLIFValue_stack_switchb(marpaESLIFValuep, j + 1, j))) {
+              goto err;
+            }
           }
         }
-#ifdef MARPAESLIF_NOTICE_ACTION
-        MARPAESLIF_NOTICEF(marpaESLIFRecognizerp->marpaESLIFp, "%s: Hide value changed stack indices: [%d] <- [%d-%d]", funcs, resulti, arg0i, argni);
-#endif
-        argni = j;
+        /* Number of arguments to the callback decreases (note that the first part of the for (i = argni; ...) loop is NOT reevaluated) */
+        argni--;
+      } else {
+        k++; /* This element is not skipped */
       }
     }
-    
-    /* If the rule have skipped elements, eventually remove them (starting at the latest indice) */
-    if (rulep->skipbp != NULL) {
-      k = 0; /* k is the number of arguments to shift */
-      for (i = argni; i >= arg0i; i--) {
-        if (rulep->skipbp[i - arg0i]) {
-          /* Shift remaining values - last element is naturally skipped with argni-- */
-          if (k > 0) {
-	    /* There are k unhiden values scanned and we want to shift them. Current argument being skipped is at indice i. */
-            for (j = i; j < i + k; j++) {
-              MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Hide value: Switching [%d] and [%d] contents", j + 1, j);
+    MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Hide value changed stack indices: [%d] <- [%d-%d]", resulti, arg0i, argni);
 #ifdef MARPAESLIF_NOTICE_ACTION
-              MARPAESLIF_NOTICEF(marpaESLIFRecognizerp->marpaESLIFp, "%s: Hide value: Switching [%d] and [%d] contents", funcs, j + 1, j);
+    MARPAESLIF_TRACEF(marpaESLIFRecognizerp->marpaESLIFp, funcs, "Hide value changed stack indices: [%d] <- [%d-%d]", resulti, arg0i, argni);
 #endif
-              if (MARPAESLIF_UNLIKELY(! _marpaESLIFValue_stack_switchb(marpaESLIFValuep, j + 1, j))) {
-                goto err;
-              }
-            }
-	  }
-	  /* Number of arguments to the callback decreases (note that the first part of the for (i = argni; ...) loop is NOT reevaluated) */
-          argni--;
-        } else {
-	  k++; /* This element is not skipped */
-	}
-      }
-      MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Hide value changed stack indices: [%d] <- [%d-%d]", resulti, arg0i, argni);
-#ifdef MARPAESLIF_NOTICE_ACTION
-      MARPAESLIF_TRACEF(marpaESLIFRecognizerp->marpaESLIFp, funcs, "Hide value changed stack indices: [%d] <- [%d-%d]", resulti, arg0i, argni);
-#endif
-    }
+  }
 
 #ifdef MARPAESLIF_NOTICE_ACTION
-    MARPAESLIF_NOTICEF(marpaESLIFRecognizerp->marpaESLIFp, "%s: Action %s: Symbol <%s>: [%d] <- [%d-%d]", funcs, marpaESLIFValuep->actions, rulep->lhsp->descp->asciis, resulti, arg0i, argni);
+  MARPAESLIF_NOTICEF(marpaESLIFRecognizerp->marpaESLIFp, "%s: Action %s: Symbol <%s>: [%d] <- [%d-%d]", funcs, marpaESLIFValuep->actions, rulep->lhsp->descp->asciis, resulti, arg0i, argni);
 #endif
 
-    if (MARPAESLIF_UNLIKELY(! ruleCallbackp(marpaESLIFValuep->marpaESLIFValueOption.userDatavp, marpaESLIFValuep, arg0i, argni, resulti, 0 /* nullableb */))) {
-      /* marpaWrapper logging will not give rule description, so do we */
-      MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "Action %s failed for rule: %s", marpaESLIFValuep->actions, rulep->asciishows);
-      goto err;
-    }
+  if (MARPAESLIF_UNLIKELY(! ruleCallbackp(marpaESLIFValuep->marpaESLIFValueOption.userDatavp, marpaESLIFValuep, arg0i, argni, resulti, 0 /* nullableb */))) {
+    /* marpaWrapper logging will not give rule description, so do we */
+    MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "Action %s failed for rule: %s", marpaESLIFValuep->actions, rulep->asciishows);
+    goto err;
   }
 
   rcb = 1;
@@ -16619,7 +16512,6 @@ static inline marpaESLIFValue_t *_marpaESLIFValue_newp(marpaESLIFRecognizer_t *m
   marpaESLIFValuep->marpaESLIFRecognizerp                 = marpaESLIFRecognizerp;
   marpaESLIFValuep->marpaESLIFValueOption                 = *marpaESLIFValueOptionp;
   marpaESLIFValuep->marpaWrapperValuep                    = NULL;
-  marpaESLIFValuep->previousPassWasPassthroughb           = 0;
   marpaESLIFValuep->previousArg0i                         = 0;
   marpaESLIFValuep->previousArgni                         = 0;
   marpaESLIFValuep->valueResultStackp                     = NULL;

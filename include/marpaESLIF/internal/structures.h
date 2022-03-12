@@ -312,7 +312,6 @@ struct marpaESLIF_rule {
   short                           sequenceb;
   short                           properb;
   int                             minimumi;
-  short                           passthroughb;                 /* This rule is a passthrough */
   int                             propertyBitSet;
   short                           hideseparatorb;
   marpaESLIF_lua_functiondecl_t  *declp;
@@ -495,7 +494,6 @@ struct marpaESLIFValue {
   marpaESLIFRecognizer_t      *marpaESLIFRecognizerp;
   marpaESLIFValueOption_t      marpaESLIFValueOption;
   marpaWrapperValue_t         *marpaWrapperValuep;
-  short                        previousPassWasPassthroughb;
   int                          previousArg0i;
   int                          previousArgni;
   genericStack_t              _valueResultStack;
