@@ -641,6 +641,7 @@ struct marpaESLIFRecognizer {
   /* At every recognizer pass, we use this array whose size is equal to the total number of marpa grammar terminals */
   /* and we set here the number of expected grammar terminals */
   int                         *expectedTerminalArrayp;   /* Total list of expected terminals */
+  marpaESLIF_symbol_t        **expectedSymbolArraypp;   /* Total list of expected symbols */
 
   /* Storage for latest call to marpaWrapperRecognizer_progressb */
   size_t                          progressallocl;
