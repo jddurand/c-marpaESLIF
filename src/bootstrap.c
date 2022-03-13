@@ -890,7 +890,7 @@ static inline marpaESLIF_grammar_t *_marpaESLIF_bootstrap_check_grammarp(marpaES
     }
     GENERICSTACK_SET_PTR(marpaESLIFGrammarp->grammarStackp, grammarp, leveli);
     if (MARPAESLIF_UNLIKELY(GENERICSTACK_ERROR(marpaESLIFGrammarp->grammarStackp))) {
-      _marpaESLIF_grammar_freev(grammarp);
+      _marpaESLIF_grammar_freev(marpaESLIFp, grammarp);
       goto err;
     }
   }

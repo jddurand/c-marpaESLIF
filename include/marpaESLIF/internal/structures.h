@@ -59,6 +59,8 @@ typedef struct  marpaESLIF_lua_functiondecl      marpaESLIF_lua_functiondecl_t;
 typedef enum    marpaESLIF_json_type             marpaESLIF_json_type_t;
 typedef struct  marpaESLIF_pcre2_callout_context marpaESLIF_pcre2_callout_context_t;
 typedef struct  marpaESLIFGrammar_Lshare         marpaESLIFGrammar_Lshare_t;
+typedef struct  marpaESLIF_grammar_progress      marpaESLIF_grammar_progress_t;
+typedef struct  marpaESLIF_grammar_expected      marpaESLIF_grammar_expected_t;
 
 #include "marpaESLIF/internal/lua.h" /* For lua_State* */
 
@@ -321,6 +323,17 @@ struct marpaESLIF_rule {
   marpaESLIFAction_t             *contextActionp;              /* Get current rule context */
 };
 
+/* Structure helper for progress hash */
+struct marpaESLIF_grammar_progress {
+  size_t                            nProgressl;
+  marpaWrapperRecognizerProgress_t *progressp;
+};
+
+struct marpaESLIF_grammar_expected {
+  size_t                            nSymboll;
+  marpaESLIF_symbol_t             **symbolpp;
+};
+
 /* A grammar */
 struct marpaESLIF_grammar {
   marpaESLIFGrammar_t   *marpaESLIFGrammarp;                 /* Shallow pointer to parent structure marpaESLIFGrammarp */
@@ -365,6 +378,11 @@ struct marpaESLIF_grammar {
   short                  fastDiscardb;                       /* True when :discard can be done in the context of the current recognizer */
   marpaESLIF_symbol_t  **allSymbolsArraypp;                  /* For fast access to symbols, they are all flatened here */
   marpaESLIF_rule_t    **allRulesArraypp;                    /* For fast access to rules, they are all flatened here */
+  genericHash_t         _progressToExpectedTerminalsHash;    /* Cache of progress <=> expected terminals */
+  genericHash_t         *progressToExpectedTerminalsHashp;
+  /* At every recognizer pass, we use this array whose size is equal to the total number of marpa grammar terminals */
+  /* and we set here the number of expected grammar terminals */
+  int                   *expectedTerminalArrayp;             /* Total list of expected terminals */
 };
 
 enum marpaESLIF_json_type {
@@ -637,10 +655,6 @@ struct marpaESLIFRecognizer {
   /* We always maintain a shallow pointer to the top-level recognizer, to ease access to lua state */
   /* This variable should be used ONLY IN src/lua.c (modulo initialization and propagation that are in src/marpaESLIF.c) */
   marpaESLIFRecognizer_t      *marpaESLIFRecognizerTopp;
-
-  /* At every recognizer pass, we use this array whose size is equal to the total number of marpa grammar terminals */
-  /* and we set here the number of expected grammar terminals */
-  int                         *expectedTerminalArrayp;   /* Total list of expected terminals */
 
   /* Storage for latest call to marpaWrapperRecognizer_progressb */
   size_t                          progressallocl;
