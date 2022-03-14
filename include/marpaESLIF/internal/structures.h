@@ -335,7 +335,7 @@ struct marpaESLIF_grammar {
   size_t                 nTerminall;                         /* Total number of grammar terminals */
   int                   *terminalArrayp;                     /* Total grammar terminals */
   size_t                 nSymbolStartl;                      /* Number of lexemes at the very beginning of marpaWrapperGrammarStartp */
-  int                   *symbolIdArrayStartp;                /* Lexemes at the very beginning of marpaWrapperGrammarStartp (Ids) */
+  int                   *symbolIdArrayStartp;                /* Lexemes at the very beginning of marpaWrapperGrammarStartp (Ids sorted by priority) */
   marpaESLIF_symbol_t  **symbolArrayStartpp;                 /* Lexemes at the very beginning of marpaWrapperGrammarStartp (Symbols sorted by priority) */
   marpaWrapperGrammar_t *marpaWrapperGrammarDiscardp;        /* Grammar implementation at :discard */
   marpaWrapperGrammar_t *marpaWrapperGrammarDiscardNoEventp; /* Grammar implementation at :discard forcing no event */
@@ -367,7 +367,7 @@ struct marpaESLIF_grammar {
   short                  fastDiscardb;                       /* True when :discard can be done in the context of the current recognizer */
   marpaESLIF_symbol_t  **allSymbolsArraypp;                  /* For fast access to symbols, they are all flatened here */
   marpaESLIF_rule_t    **allRulesArraypp;                    /* For fast access to rules, they are all flatened here */
-  int                   *expectedSymbolIdArrayp;             /* Total list of expected symbol ids */
+  int                   *expectedSymbolIdArrayp;             /* Total list of expected symbol ids sorted by priority */
   marpaESLIF_symbol_t  **expectedSymbolArraypp;              /* Total list of expected symbols sorted by priority */
 };
 
@@ -479,7 +479,7 @@ struct marpaESLIF_meta {
   marpaESLIF_grammar_t          _grammar;
   marpaESLIFGrammar_t           *marpaESLIFGrammarLexemeClonep;   /* Cloned ESLIF grammar in lexeme search mode (no event) */
   size_t                         nSymbolStartl;                   /* Number of lexemes at the very beginning of marpaWrapperGrammarStartp */
-  int                           *symbolIdArrayStartp;             /* Lexemes at the very beginning of marpaWrapperGrammarStartp (Ids) */
+  int                           *symbolIdArrayStartp;             /* Lexemes at the very beginning of marpaWrapperGrammarStartp (Ids sorted by priority) */
   marpaESLIF_symbol_t          **symbolArrayStartpp;              /* Lexemes at the very beginning of marpaWrapperGrammarStartp (Symbols sorted by priority) */
   short                          lazyb;                           /* Meta symbol is lazy - for internal usage only at bootstrap */
   int                            eventSeti;                       /* Remember eventSeti */
