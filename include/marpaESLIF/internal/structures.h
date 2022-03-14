@@ -335,11 +335,13 @@ struct marpaESLIF_grammar {
   size_t                 nTerminall;                         /* Total number of grammar terminals */
   int                   *terminalArrayp;                     /* Total grammar terminals */
   size_t                 nSymbolStartl;                      /* Number of lexemes at the very beginning of marpaWrapperGrammarStartp */
-  int                   *symbolArrayStartp;                  /* Lexemes at the very beginning of marpaWrapperGrammarStartp */
+  int                   *symbolIdArrayStartp;                /* Lexemes at the very beginning of marpaWrapperGrammarStartp (Ids) */
+  marpaESLIF_symbol_t  **symbolArrayStartpp;                 /* Lexemes at the very beginning of marpaWrapperGrammarStartp (Symbols sorted by priority) */
   marpaWrapperGrammar_t *marpaWrapperGrammarDiscardp;        /* Grammar implementation at :discard */
   marpaWrapperGrammar_t *marpaWrapperGrammarDiscardNoEventp; /* Grammar implementation at :discard forcing no event */
   size_t                 nSymbolDiscardl;                    /* Number of lexemes at the very beginning of marpaWrapperGrammarDiscardp */
-  int                   *symbolArrayDiscardp;                /* Lexemes at the very beginning of marpaWrapperGrammarStartp */
+  int                   *symbolIdArrayDiscardp;              /* Lexemes at the very beginning of marpaWrapperGrammarStartp (Ids) */
+  marpaESLIF_symbol_t  **symbolArrayDiscardpp;               /* Lexemes at the very beginning of marpaWrapperGrammarStartp (Symbols ordered by priority) */
   marpaESLIF_symbol_t   *discardp;                           /* Discard symbol, used at grammar validation */
   genericStack_t         _symbolStack;                       /* Stack of symbols */
   genericStack_t        *symbolStackp;                       /* Pointer to stack of symbols */
@@ -365,6 +367,8 @@ struct marpaESLIF_grammar {
   short                  fastDiscardb;                       /* True when :discard can be done in the context of the current recognizer */
   marpaESLIF_symbol_t  **allSymbolsArraypp;                  /* For fast access to symbols, they are all flatened here */
   marpaESLIF_rule_t    **allRulesArraypp;                    /* For fast access to rules, they are all flatened here */
+  int                   *expectedSymbolIdArrayp;             /* Total list of expected symbol ids */
+  marpaESLIF_symbol_t  **expectedSymbolArraypp;              /* Total list of expected symbols sorted by priority */
 };
 
 enum marpaESLIF_json_type {
@@ -475,7 +479,8 @@ struct marpaESLIF_meta {
   marpaESLIF_grammar_t          _grammar;
   marpaESLIFGrammar_t           *marpaESLIFGrammarLexemeClonep;   /* Cloned ESLIF grammar in lexeme search mode (no event) */
   size_t                         nSymbolStartl;                   /* Number of lexemes at the very beginning of marpaWrapperGrammarStartp */
-  int                           *symbolArrayStartp;               /* Lexemes at the very beginning of marpaWrapperGrammarStartp */
+  int                           *symbolIdArrayStartp;             /* Lexemes at the very beginning of marpaWrapperGrammarStartp (Ids) */
+  marpaESLIF_symbol_t          **symbolArrayStartpp;              /* Lexemes at the very beginning of marpaWrapperGrammarStartp (Symbols sorted by priority) */
   short                          lazyb;                           /* Meta symbol is lazy - for internal usage only at bootstrap */
   int                            eventSeti;                       /* Remember eventSeti */
 };
@@ -607,7 +612,8 @@ struct marpaESLIFRecognizer {
 
   /* For pristine recognizers, expected terminals are always known in advance */
   size_t                       nSymbolPristinel;
-  int                          *symbolArrayPristinep; /* This is shallow pointer! */
+  int                         *symbolIdArrayPristinep; /* This is shallow pointer! */
+  marpaESLIF_symbol_t        **symbolArrayPristinepp; /* This is shallow pointer! */
 
   /* Last discard information is NOT available via last_complete because it is not */
   /* associated with any particular grammar. So, when trackb is on */
@@ -640,7 +646,7 @@ struct marpaESLIFRecognizer {
 
   /* At every recognizer pass, we use this array whose size is equal to the total number of marpa grammar terminals */
   /* and we set here the number of expected grammar terminals */
-  int                         *expectedTerminalArrayp;   /* Total list of expected terminals */
+  int                         *expectedSymbolIdArrayp;   /* Total list of expected terminals */
   marpaESLIF_symbol_t        **expectedSymbolArraypp;   /* Total list of expected symbols */
 
   /* Storage for latest call to marpaWrapperRecognizer_progressb */
