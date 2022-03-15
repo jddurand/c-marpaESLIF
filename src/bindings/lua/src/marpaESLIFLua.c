@@ -3104,20 +3104,21 @@ static int  marpaESLIFLua_marpaESLIFGrammar_currentPropertiesi(lua_State *L)
   }
 
   if (! marpaESLIFLua_lua_createtable(L, 0, 14)) goto err;                                                /* stack; {} */
-  MARPAESLIFLUA_STORE_INTEGER      (L, "level",               grammarProperty.leveli);
-  MARPAESLIFLUA_STORE_INTEGER      (L, "maxlevel",            grammarProperty.maxLeveli);
-  MARPAESLIFLUA_STORE_STRING       (L, "description",         grammarProperty.descp);
-  MARPAESLIFLUA_STORE_BOOLEAN      (L, "latm",                grammarProperty.latmb);
-  MARPAESLIFLUA_STORE_BOOLEAN      (L, "discardIsFallback",   grammarProperty.discardIsFallbackb);
-  MARPAESLIFLUA_STORE_ACTION       (L, "defaultSymbolAction", grammarProperty.defaultSymbolActionp);
-  MARPAESLIFLUA_STORE_ACTION       (L, "defaultRuleAction",   grammarProperty.defaultRuleActionp);
-  MARPAESLIFLUA_STORE_ACTION       (L, "defaultEventAction",  grammarProperty.defaultEventActionp);
-  MARPAESLIFLUA_STORE_INTEGER      (L, "startId",             grammarProperty.starti);
-  MARPAESLIFLUA_STORE_INTEGER      (L, "discardId",           grammarProperty.discardi);
-  MARPAESLIFLUA_STORE_INTEGER_ARRAY(L, "symbolIds",           grammarProperty.nsymboll, grammarProperty.symbolip);
-  MARPAESLIFLUA_STORE_INTEGER_ARRAY(L, "ruleIds",             grammarProperty.nrulel, grammarProperty.ruleip);
-  MARPAESLIFLUA_STORE_ASCIISTRING  (L, "defaultEncoding",     grammarProperty.defaultEncodings);
-  MARPAESLIFLUA_STORE_ASCIISTRING  (L, "fallbackEncoding",    grammarProperty.fallbackEncodings);
+  MARPAESLIFLUA_STORE_INTEGER      (L, "level",                 grammarProperty.leveli);
+  MARPAESLIFLUA_STORE_INTEGER      (L, "maxlevel",              grammarProperty.maxLeveli);
+  MARPAESLIFLUA_STORE_STRING       (L, "description",           grammarProperty.descp);
+  MARPAESLIFLUA_STORE_BOOLEAN      (L, "latm",                  grammarProperty.latmb);
+  MARPAESLIFLUA_STORE_BOOLEAN      (L, "discardIsFallback",     grammarProperty.discardIsFallbackb);
+  MARPAESLIFLUA_STORE_BOOLEAN      (L, "terminalsAreExclusive", grammarProperty.terminalsAreExclusiveb);
+  MARPAESLIFLUA_STORE_ACTION       (L, "defaultSymbolAction",   grammarProperty.defaultSymbolActionp);
+  MARPAESLIFLUA_STORE_ACTION       (L, "defaultRuleAction",     grammarProperty.defaultRuleActionp);
+  MARPAESLIFLUA_STORE_ACTION       (L, "defaultEventAction",    grammarProperty.defaultEventActionp);
+  MARPAESLIFLUA_STORE_INTEGER      (L, "startId",               grammarProperty.starti);
+  MARPAESLIFLUA_STORE_INTEGER      (L, "discardId",             grammarProperty.discardi);
+  MARPAESLIFLUA_STORE_INTEGER_ARRAY(L, "symbolIds",             grammarProperty.nsymboll, grammarProperty.symbolip);
+  MARPAESLIFLUA_STORE_INTEGER_ARRAY(L, "ruleIds",               grammarProperty.nrulel, grammarProperty.ruleip);
+  MARPAESLIFLUA_STORE_ASCIISTRING  (L, "defaultEncoding",       grammarProperty.defaultEncodings);
+  MARPAESLIFLUA_STORE_ASCIISTRING  (L, "fallbackEncoding",      grammarProperty.fallbackEncodings);
 
   rci = 1;
   goto done;
@@ -3164,19 +3165,20 @@ static int  marpaESLIFLua_marpaESLIFGrammar_propertiesByLeveli(lua_State *L)
   }
 
   if (! marpaESLIFLua_lua_createtable(L, 0, 13)) goto err;                                                /* stack; {} */
-  MARPAESLIFLUA_STORE_INTEGER      (L, "level",               grammarProperty.leveli);
-  MARPAESLIFLUA_STORE_INTEGER      (L, "maxlevel",            grammarProperty.maxLeveli);
-  MARPAESLIFLUA_STORE_STRING       (L, "description",         grammarProperty.descp);
-  MARPAESLIFLUA_STORE_BOOLEAN      (L, "discardIsFallback",   grammarProperty.discardIsFallbackb);
-  MARPAESLIFLUA_STORE_ACTION       (L, "defaultSymbolAction", grammarProperty.defaultSymbolActionp);
-  MARPAESLIFLUA_STORE_ACTION       (L, "defaultRuleAction",   grammarProperty.defaultRuleActionp);
-  MARPAESLIFLUA_STORE_ACTION       (L, "defaultEventAction",  grammarProperty.defaultEventActionp);
-  MARPAESLIFLUA_STORE_INTEGER      (L, "startId",             grammarProperty.starti);
-  MARPAESLIFLUA_STORE_INTEGER      (L, "discardId",           grammarProperty.discardi);
-  MARPAESLIFLUA_STORE_INTEGER_ARRAY(L, "symbolIds",           grammarProperty.nsymboll, grammarProperty.symbolip);
-  MARPAESLIFLUA_STORE_INTEGER_ARRAY(L, "ruleIds",             grammarProperty.nrulel, grammarProperty.ruleip);
-  MARPAESLIFLUA_STORE_ASCIISTRING  (L, "defaultEncoding",     grammarProperty.defaultEncodings);
-  MARPAESLIFLUA_STORE_ASCIISTRING  (L, "fallbackEncoding",    grammarProperty.fallbackEncodings);
+  MARPAESLIFLUA_STORE_INTEGER      (L, "level",                 grammarProperty.leveli);
+  MARPAESLIFLUA_STORE_INTEGER      (L, "maxlevel",              grammarProperty.maxLeveli);
+  MARPAESLIFLUA_STORE_STRING       (L, "description",           grammarProperty.descp);
+  MARPAESLIFLUA_STORE_BOOLEAN      (L, "discardIsFallback",     grammarProperty.discardIsFallbackb);
+  MARPAESLIFLUA_STORE_BOOLEAN      (L, "terminalsAreExclusive", grammarProperty.terminalsAreExclusiveb);
+  MARPAESLIFLUA_STORE_ACTION       (L, "defaultSymbolAction",   grammarProperty.defaultSymbolActionp);
+  MARPAESLIFLUA_STORE_ACTION       (L, "defaultRuleAction",     grammarProperty.defaultRuleActionp);
+  MARPAESLIFLUA_STORE_ACTION       (L, "defaultEventAction",    grammarProperty.defaultEventActionp);
+  MARPAESLIFLUA_STORE_INTEGER      (L, "startId",               grammarProperty.starti);
+  MARPAESLIFLUA_STORE_INTEGER      (L, "discardId",             grammarProperty.discardi);
+  MARPAESLIFLUA_STORE_INTEGER_ARRAY(L, "symbolIds",             grammarProperty.nsymboll, grammarProperty.symbolip);
+  MARPAESLIFLUA_STORE_INTEGER_ARRAY(L, "ruleIds",               grammarProperty.nrulel, grammarProperty.ruleip);
+  MARPAESLIFLUA_STORE_ASCIISTRING  (L, "defaultEncoding",       grammarProperty.defaultEncodings);
+  MARPAESLIFLUA_STORE_ASCIISTRING  (L, "fallbackEncoding",      grammarProperty.fallbackEncodings);
 
   rci = 1;
   goto done;

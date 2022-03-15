@@ -7,7 +7,7 @@ static const char *marpaESLIFJSON_decode_extended_grammars =
   "# Meta settings\n"
   "# --------------------------------------------------\n"
   ":desc              ::= 'Extended JSON Grammar'\n"
-  ":default           ::= regex-action => marpaESLIFJsonRegexAction fallback-encoding => UTF-8 discard-is-fallback => 1\n"
+  ":default           ::= regex-action => marpaESLIFJsonRegexAction fallback-encoding => UTF-8 discard-is-fallback => 1 terminals-are-exclusive => 1\n"
   "\n"
   "# -----------------------------------------------------------\n"
   "# Discard unsignificant whitespaces, Perl comment C++ comment\n"

@@ -96,6 +96,10 @@ Grammar is in LATM (Longest Accepted Token Mode) ?
 
 Grammar's :discard is a fallback
 
+=item terminalsAreExclusive
+
+Grammar's terminals are exclusive
+
 =item defaultSymbolAction
 
 Grammar default symbol action
@@ -145,21 +149,22 @@ sub new {
     #
     # This should be called ONLY by the XS, and we know what we do
     #
-    return bless { level               => $args{level},
-                   maxLevel            => $args{maxLevel},
-                   description         => $args{description},
-                   latm                => $args{latm},
-                   discardIsFallback   => $args{discardIsFallback},
-                   defaultSymbolAction => $args{defaultSymbolAction},
-                   defaultRuleAction   => $args{defaultRuleAction},
-                   defaultEventAction  => $args{defaultEventAction},
-                   defaultRegexAction  => $args{defaultRegexAction},
-                   startId             => $args{startId},
-                   discardId           => $args{discardId},
-                   symbolIds           => $args{symbolIds},
-                   ruleIds             => $args{ruleIds},
-                   defaultEncoding     => $args{defaultEncoding},
-                   fallbackEncoding    => $args{fallbackEncoding}
+    return bless { level                 => $args{level},
+                   maxLevel              => $args{maxLevel},
+                   description           => $args{description},
+                   latm                  => $args{latm},
+                   discardIsFallback     => $args{discardIsFallback},
+                   terminalsAreExclusive => $args{terminalsAreExclusive},
+                   defaultSymbolAction   => $args{defaultSymbolAction},
+                   defaultRuleAction     => $args{defaultRuleAction},
+                   defaultEventAction    => $args{defaultEventAction},
+                   defaultRegexAction    => $args{defaultRegexAction},
+                   startId               => $args{startId},
+                   discardId             => $args{discardId},
+                   symbolIds             => $args{symbolIds},
+                   ruleIds               => $args{ruleIds},
+                   defaultEncoding       => $args{defaultEncoding},
+                   fallbackEncoding      => $args{fallbackEncoding}
                    }, $pkg
 }
 
@@ -245,6 +250,28 @@ Alias to isDiscardIsFallback()
 
 sub getDiscardIsFallback {
   goto &isDiscardIsFallback
+}
+
+=head2 $self->isTerminalsAreExclusive
+
+Returns a boolean that returns the grammar's terminals-are-exclusive setting
+
+=cut
+
+sub isTerminalsAreExclusive {
+  my ($self) = @_;
+
+  return $self->{terminalsAreExclusive}
+}
+
+=head2 $self->getTerminalsAreExclusive
+
+Alias to isTerminalsAreExclusive()
+
+=cut
+
+sub getTerminalsAreExclusive {
+  goto &isTerminalsAreExclusive
 }
 
 =head2 $self->getDefaultSymbolAction

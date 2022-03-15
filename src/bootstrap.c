@@ -68,6 +68,7 @@ static inline short _marpaESLIF_bootstrap_unpack_adverbListItemStackb(marpaESLIF
                                                                       marpaESLIF_bootstrap_pause_type_t            *pauseip,
                                                                       short                                        *latmbp,
                                                                       short                                        *discardIsFallbackbp,
+                                                                      short                                        *terminalsAreExclusivebp,
                                                                       marpaESLIF_bootstrap_utf_string_t           **namingpp,
                                                                       marpaESLIF_action_t                         **symbolactionpp,
                                                                       marpaESLIF_bootstrap_event_initialization_t **eventInitializationpp,
@@ -159,6 +160,8 @@ static        short _marpaESLIF_bootstrap_G1_action_latm_specification_1b(void *
 static        short _marpaESLIF_bootstrap_G1_action_latm_specification_2b(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
 static        short _marpaESLIF_bootstrap_G1_action_discard_is_fallback_specification_1b(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
 static        short _marpaESLIF_bootstrap_G1_action_discard_is_fallback_specification_2b(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
+static        short _marpaESLIF_bootstrap_G1_action_terminals_are_exclusive_specification_1b(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
+static        short _marpaESLIF_bootstrap_G1_action_terminals_are_exclusive_specification_2b(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
 static        short _marpaESLIF_bootstrap_G1_action_proper_specification_1b(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
 static        short _marpaESLIF_bootstrap_G1_action_proper_specification_2b(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
 static        short _marpaESLIF_bootstrap_G1_action_verbose_specification_1b(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
@@ -1483,6 +1486,7 @@ static inline marpaESLIF_symbol_t  *_marpaESLIF_bootstrap_check_rhsAlternativep(
                                                                                 NULL, /* pauseip */
                                                                                 NULL, /* latmbp */
                                                                                 NULL, /* discardIsFallbackbp */
+                                                                                NULL, /* terminalsAreExclusivebp */
                                                                                 &namingp,
                                                                                 NULL, /* symbolactionpp */
                                                                                 NULL, /* eventInitializationpp */
@@ -1579,6 +1583,7 @@ static inline marpaESLIF_symbol_t  *_marpaESLIF_bootstrap_check_rhsAlternativep(
                                                                                 NULL, /* pauseip */
                                                                                 NULL, /* latmbp */
                                                                                 NULL, /* discardIsFallbackbp */
+                                                                                NULL, /* terminalsAreExclusivebp */
                                                                                 &namingp,
                                                                                 NULL, /* symbolactionsp */
                                                                                 NULL, /* eventInitializationpp */
@@ -1811,6 +1816,7 @@ static inline short _marpaESLIF_bootstrap_unpack_adverbListItemStackb(marpaESLIF
                                                                       marpaESLIF_bootstrap_pause_type_t            *pauseip,
                                                                       short                                        *latmbp,
                                                                       short                                        *discardIsFallbackbp,
+                                                                      short                                        *terminalsAreExclusivebp,
                                                                       marpaESLIF_bootstrap_utf_string_t           **namingpp,
                                                                       marpaESLIF_action_t                         **symbolactionpp,
                                                                       marpaESLIF_bootstrap_event_initialization_t **eventInitializationpp,
@@ -1868,6 +1874,9 @@ static inline short _marpaESLIF_bootstrap_unpack_adverbListItemStackb(marpaESLIF
   }
   if (discardIsFallbackbp != NULL) {
     *discardIsFallbackbp = 0;
+  }
+  if (terminalsAreExclusivebp != NULL) {
+    *terminalsAreExclusivebp = 0;
   }
   if (namingpp != NULL) {
     *namingpp = NULL;
@@ -2003,6 +2012,13 @@ static inline short _marpaESLIF_bootstrap_unpack_adverbListItemStackb(marpaESLIF
         }
         *discardIsFallbackbp = adverbListItemp->u.discardIsFallbackb;
         break;
+      case MARPAESLIF_BOOTSTRAP_ADVERB_LIST_ITEM_TYPE_TERMINALS_ARE_EXCLUSIVE:
+        if (MARPAESLIF_UNLIKELY(terminalsAreExclusivebp == NULL)) {
+          MARPAESLIF_ERRORF(marpaESLIFp, "terminals-are-exclusive adverb is not allowed in %s context", contexts);
+          goto err;
+        }
+        *terminalsAreExclusivebp = adverbListItemp->u.terminalsAreExclusiveb;
+        break;
       case MARPAESLIF_BOOTSTRAP_ADVERB_LIST_ITEM_TYPE_NAMING:
         if (MARPAESLIF_UNLIKELY(namingpp == NULL)) {
           MARPAESLIF_ERRORF(marpaESLIFp, "name adverb is not allowed in %s context", contexts);
@@ -2109,6 +2125,8 @@ static inline void _marpaESLIF_bootstrap_adverb_list_item_freev(marpaESLIF_boots
       break;
     case MARPAESLIF_BOOTSTRAP_ADVERB_LIST_ITEM_TYPE_DISCARD_IS_FALLBACK:
       break;
+    case MARPAESLIF_BOOTSTRAP_ADVERB_LIST_ITEM_TYPE_TERMINALS_ARE_EXCLUSIVE:
+      break;
     case MARPAESLIF_BOOTSTRAP_ADVERB_LIST_ITEM_TYPE_NAMING:
       _marpaESLIF_bootstrap_utf_string_freev(adverbListItemp->u.namingp, 0 /* onStackb */);
       break;
@@ -2168,6 +2186,7 @@ static void _marpaESLIF_bootstrap_freeDefaultActionv(void *userDatavNotUsedp, ma
   else if (marpaESLIFValueResultp->contextp == MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_ITEM_PAUSE               ) { }
   else if (marpaESLIFValueResultp->contextp == MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_ITEM_LATM                ) { }
   else if (marpaESLIFValueResultp->contextp == MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_ITEM_DISCARD_IS_FALLBACK ) { }
+  else if (marpaESLIFValueResultp->contextp == MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_ITEM_TERMINALS_ARE_EXCLUSIVE) { }
   else if (marpaESLIFValueResultp->contextp == MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_ITEM_NAMING              ) { _marpaESLIF_bootstrap_utf_string_freev((marpaESLIF_bootstrap_utf_string_t *) marpaESLIFValueResultp->u.p.p, 0 /* onStackb */); }
   else if (marpaESLIFValueResultp->contextp == MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_ITEM_SYMBOLACTION        ) { free(marpaESLIFValueResultp->u.p.p); }
   else if (marpaESLIFValueResultp->contextp == MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_ITEM_EVENT_INITIALIZATION) { _marpaESLIF_bootstrap_event_initialization_freev((marpaESLIF_bootstrap_event_initialization_t *) marpaESLIFValueResultp->u.p.p); }
@@ -2411,6 +2430,8 @@ static marpaESLIFValueRuleCallback_t _marpaESLIF_bootstrap_ruleActionResolver(vo
   case 113: marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_action_lhs_2b; break;
   case 114: marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_action_start_symbol_1b; break;
   case 115: marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_action_start_symbol_2b; break;
+  case 116: marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_action_terminals_are_exclusive_specification_1b; break;
+  case 117: marpaESLIFValueRuleCallbackp = _marpaESLIF_bootstrap_G1_action_terminals_are_exclusive_specification_2b; break;
   default:
     MARPAESLIF_ERRORF(marpaESLIFp, "Unsupported action \"%s\"", actions);
     goto err;
@@ -2679,6 +2700,7 @@ static short _marpaESLIF_bootstrap_G1_action_adverb_list_itemsb(void *userDatavp
   int                                          pausei                 = 0;
   short                                        latmb                  = 0;
   short                                        discardIsFallbackb     = 0;
+  short                                        terminalsAreExclusiveb = 0;
   marpaESLIF_bootstrap_utf_string_t           *namingp                = NULL;
   marpaESLIF_action_t                         *symbolactionp          = NULL;
   marpaESLIF_action_t                         *ifactionp              = NULL;
@@ -2783,6 +2805,10 @@ static short _marpaESLIF_bootstrap_G1_action_adverb_list_itemsb(void *userDatavp
         MARPAESLIF_BOOTSTRAP_GET_BOOL(marpaESLIFValuep, i, discardIsFallbackb);
         adverbListItemp->type    = MARPAESLIF_BOOTSTRAP_ADVERB_LIST_ITEM_TYPE_DISCARD_IS_FALLBACK;
         adverbListItemp->u.discardIsFallbackb = discardIsFallbackb;
+      } else if (contextp == MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_ITEM_TERMINALS_ARE_EXCLUSIVE) {
+        MARPAESLIF_BOOTSTRAP_GET_BOOL(marpaESLIFValuep, i, terminalsAreExclusiveb);
+        adverbListItemp->type    = MARPAESLIF_BOOTSTRAP_ADVERB_LIST_ITEM_TYPE_TERMINALS_ARE_EXCLUSIVE;
+        adverbListItemp->u.terminalsAreExclusiveb = terminalsAreExclusiveb;
       } else if (contextp == MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_ITEM_NAMING) {
         MARPAESLIF_BOOTSTRAP_GETANDFORGET_PTR(marpaESLIFValuep, i, namingp);
         if (MARPAESLIF_UNLIKELY(namingp == NULL)) { /* Not possible */
@@ -4458,6 +4484,7 @@ static inline short _marpaESLIF_bootstrap_G1_action_priority_loosen_ruleb(marpaE
                                                                                   NULL, /* pauseip */
                                                                                   NULL, /* latmbp */
                                                                                   NULL, /* discardIsFallbackbp */
+                                                                                  NULL, /* terminalsAreExclusivebp */
                                                                                   &namingp,
                                                                                   NULL, /* symbolactionpp */
                                                                                   NULL, /* eventInitializationpp */
@@ -4794,6 +4821,7 @@ static inline short _marpaESLIF_bootstrap_G1_action_priority_flat_ruleb(marpaESL
                                                                                   NULL, /* pauseip */
                                                                                   NULL, /* latmbp */
                                                                                   NULL, /* discardIsFallbackbp */
+                                                                                  NULL, /* terminalsAreExclusivebp */
                                                                                   &namingp,
                                                                                   NULL, /* symbolactionpp */
                                                                                   NULL, /* eventInitializationpp */
@@ -5805,6 +5833,7 @@ static short _marpaESLIF_bootstrap_G1_action_quantified_ruleb(void *userDatavp, 
                                                                               NULL, /* pauseip */
                                                                               NULL, /* latmbp */
                                                                               NULL, /* discardIsFallbackbp */
+                                                                              NULL, /* terminalsAreExclusivebp */
                                                                               &namingp,
                                                                               NULL, /* symbolactionpp */
                                                                               NULL, /* eventInitializationpp */
@@ -6112,6 +6141,7 @@ static short _marpaESLIF_bootstrap_G1_action_empty_ruleb(void *userDatavp, marpa
                                                                               NULL, /* pauseip */
                                                                               NULL, /* latmbp */
                                                                               NULL, /* discardIsFallbackbp */
+                                                                              NULL, /* terminalsAreExclusivebp */
                                                                               &namingp,
                                                                               NULL, /* symbolactionpp */
                                                                               NULL, /* eventInitializationpp */
@@ -6191,6 +6221,7 @@ static short _marpaESLIF_bootstrap_G1_action_default_ruleb(void *userDatavp, mar
   marpaESLIF_action_t               *symbolactionp;
   short                              latmb;
   short                              discardIsFallbackb;
+  short                              terminalsAreExclusiveb;
   marpaESLIF_action_t               *eventactionp;
   marpaESLIF_action_t               *regexactionp;
   char                              *defaultEncodings;
@@ -6243,6 +6274,7 @@ static short _marpaESLIF_bootstrap_G1_action_default_ruleb(void *userDatavp, mar
                                                                               NULL, /* pauseip */
                                                                               &latmb,
                                                                               &discardIsFallbackb,
+                                                                              &terminalsAreExclusiveb,
                                                                               NULL, /* namingpp */
                                                                               &symbolactionp,
                                                                               NULL, /* eventInitializationpp */
@@ -6267,8 +6299,9 @@ static short _marpaESLIF_bootstrap_G1_action_default_ruleb(void *userDatavp, mar
     }
   }
 
-  grammarp->latmb              = latmb;
-  grammarp->discardIsFallbackb = discardIsFallbackb;
+  grammarp->latmb                  = latmb;
+  grammarp->discardIsFallbackb     = discardIsFallbackb;
+  grammarp->terminalsAreExclusiveb = terminalsAreExclusiveb;
 
   _marpaESLIF_action_freev(grammarp->defaultSymbolActionp);
   grammarp->defaultSymbolActionp = NULL;
@@ -6397,6 +6430,44 @@ static short _marpaESLIF_bootstrap_G1_action_discard_is_fallback_specification_2
   short rcb;
 
   MARPAESLIF_BOOTSTRAP_SET_BOOL(marpaESLIFValuep, resulti, MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_ITEM_DISCARD_IS_FALLBACK, 1);
+
+  rcb = 1;
+  goto done;
+
+ err:
+  rcb = 0;
+
+ done:
+  return rcb;
+}
+
+/*****************************************************************************/
+static short _marpaESLIF_bootstrap_G1_action_terminals_are_exclusive_specification_1b(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb)
+/*****************************************************************************/
+{
+  /* <terminals are exclusive specification> ::= 'terminals-are-exclusive' '=>' false */
+  short rcb;
+
+  MARPAESLIF_BOOTSTRAP_SET_BOOL(marpaESLIFValuep, resulti, MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_ITEM_TERMINALS_ARE_EXCLUSIVE, 0);
+
+  rcb = 1;
+  goto done;
+
+ err:
+  rcb = 0;
+
+ done:
+  return rcb;
+}
+
+/*****************************************************************************/
+static short _marpaESLIF_bootstrap_G1_action_terminals_are_exclusive_specification_2b(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb)
+/*****************************************************************************/
+{
+  /* <terminals are exclusive specification> ::= 'terminals-are-exclusive' '=>' true */
+  short rcb;
+
+  MARPAESLIF_BOOTSTRAP_SET_BOOL(marpaESLIFValuep, resulti, MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_ITEM_TERMINALS_ARE_EXCLUSIVE, 1);
 
   rcb = 1;
   goto done;
@@ -7034,6 +7105,7 @@ static short __marpaESLIF_bootstrap_G1_action_symbol_ruleb(void *userDatavp, mar
                                                                               &pausei,
                                                                               NULL, /* latmbp */
                                                                               NULL, /* discardIsFallbackbp */
+                                                                              NULL, /* terminalsAreExclusivebp */
                                                                               MARPAESLIF_IS_TERMINAL(symbolp) ? &namingp : NULL,
                                                                               &symbolactionp,
                                                                               &eventInitializationp,
@@ -7274,6 +7346,7 @@ static short _marpaESLIF_bootstrap_G1_action_discard_ruleb(void *userDatavp, mar
                                                                               NULL, /* pauseip */
                                                                               NULL, /* latmbp */
                                                                               NULL, /* discardIsFallbackbp */
+                                                                              NULL, /* terminalsAreExclusivebp */
                                                                               NULL, /* namingpp */
                                                                               NULL, /* symbolactionpp */
                                                                               &eventInitializationp,
@@ -7747,6 +7820,7 @@ static short _marpaESLIF_bootstrap_G1_action_exception_statementb(void *userData
                                                                               NULL, /* pauseip */
                                                                               NULL, /* latmbp */
                                                                               NULL, /* discardIsFallbackbp */
+                                                                              NULL, /* terminalsAreExclusivebp */
                                                                               &namingp,
                                                                               NULL, /* symbolactionpp */
                                                                               NULL, /* eventInitializationpp */

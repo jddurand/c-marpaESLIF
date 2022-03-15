@@ -3991,21 +3991,22 @@ CODE:
   }
 
   avp = newAV();
-  MARPAESLIFPERL_XV_STORE_IV         (avp, "level",               grammarProperty.leveli);
-  MARPAESLIFPERL_XV_STORE_IV         (avp, "maxLevel",            grammarProperty.maxLeveli);
-  MARPAESLIFPERL_XV_STORE_STRING     (avp, "description",         grammarProperty.descp);
-  MARPAESLIFPERL_XV_STORE_IV         (avp, "latm",                grammarProperty.latmb);
-  MARPAESLIFPERL_XV_STORE_IV         (avp, "discardIsFallback",   grammarProperty.discardIsFallbackb);
-  MARPAESLIFPERL_XV_STORE_ACTION     (avp, "defaultSymbolAction", grammarProperty.defaultSymbolActionp);
-  MARPAESLIFPERL_XV_STORE_ACTION     (avp, "defaultRuleAction",   grammarProperty.defaultRuleActionp);
-  MARPAESLIFPERL_XV_STORE_ACTION     (avp, "defaultEventAction",  grammarProperty.defaultEventActionp);
-  MARPAESLIFPERL_XV_STORE_ACTION     (avp, "defaultRegexAction",  grammarProperty.defaultRegexActionp);
-  MARPAESLIFPERL_XV_STORE_IV         (avp, "startId",             grammarProperty.starti);
-  MARPAESLIFPERL_XV_STORE_IV         (avp, "discardId",           grammarProperty.discardi);
-  MARPAESLIFPERL_XV_STORE_IVARRAY    (avp, "symbolIds",           grammarProperty.nsymboll, grammarProperty.symbolip);
-  MARPAESLIFPERL_XV_STORE_IVARRAY    (avp, "ruleIds",             grammarProperty.nrulel, grammarProperty.ruleip);
-  MARPAESLIFPERL_XV_STORE_ASCIISTRING(avp, "defaultEncoding",     grammarProperty.defaultEncodings);
-  MARPAESLIFPERL_XV_STORE_ASCIISTRING(avp, "fallbackEncoding",    grammarProperty.fallbackEncodings);
+  MARPAESLIFPERL_XV_STORE_IV         (avp, "level",                 grammarProperty.leveli);
+  MARPAESLIFPERL_XV_STORE_IV         (avp, "maxLevel",              grammarProperty.maxLeveli);
+  MARPAESLIFPERL_XV_STORE_STRING     (avp, "description",           grammarProperty.descp);
+  MARPAESLIFPERL_XV_STORE_IV         (avp, "latm",                  grammarProperty.latmb);
+  MARPAESLIFPERL_XV_STORE_IV         (avp, "discardIsFallback",     grammarProperty.discardIsFallbackb);
+  MARPAESLIFPERL_XV_STORE_IV         (avp, "terminalsAreExclusive", grammarProperty.terminalsAreExclusiveb);
+  MARPAESLIFPERL_XV_STORE_ACTION     (avp, "defaultSymbolAction",   grammarProperty.defaultSymbolActionp);
+  MARPAESLIFPERL_XV_STORE_ACTION     (avp, "defaultRuleAction",     grammarProperty.defaultRuleActionp);
+  MARPAESLIFPERL_XV_STORE_ACTION     (avp, "defaultEventAction",    grammarProperty.defaultEventActionp);
+  MARPAESLIFPERL_XV_STORE_ACTION     (avp, "defaultRegexAction",    grammarProperty.defaultRegexActionp);
+  MARPAESLIFPERL_XV_STORE_IV         (avp, "startId",               grammarProperty.starti);
+  MARPAESLIFPERL_XV_STORE_IV         (avp, "discardId",             grammarProperty.discardi);
+  MARPAESLIFPERL_XV_STORE_IVARRAY    (avp, "symbolIds",             grammarProperty.nsymboll, grammarProperty.symbolip);
+  MARPAESLIFPERL_XV_STORE_IVARRAY    (avp, "ruleIds",               grammarProperty.nrulel, grammarProperty.ruleip);
+  MARPAESLIFPERL_XV_STORE_ASCIISTRING(avp, "defaultEncoding",       grammarProperty.defaultEncodings);
+  MARPAESLIFPERL_XV_STORE_ASCIISTRING(avp, "fallbackEncoding",      grammarProperty.fallbackEncodings);
 
   RETVAL = marpaESLIFPerl_call_actionp(aTHX_ constantsp->MarpaX__ESLIF__Grammar__Properties_svp, "new", avp, NULL /* MarpaX_ESLIF_Valuep */, 0 /* evalb */, 0 /* evalSilentb */, NULL /* subSvp */);
   av_undef(avp);
@@ -4035,21 +4036,22 @@ CODE:
   }
 
   avp = newAV();
-  MARPAESLIFPERL_XV_STORE_IV         (avp, "level",               grammarProperty.leveli);
-  MARPAESLIFPERL_XV_STORE_IV         (avp, "maxLevel",            grammarProperty.maxLeveli);
-  MARPAESLIFPERL_XV_STORE_STRING     (avp, "description",         grammarProperty.descp);
-  MARPAESLIFPERL_XV_STORE_IV         (avp, "latm",                grammarProperty.latmb);
-  MARPAESLIFPERL_XV_STORE_IV         (avp, "discardIsFallback",   grammarProperty.discardIsFallbackb);
-  MARPAESLIFPERL_XV_STORE_ACTION     (avp, "defaultSymbolAction", grammarProperty.defaultSymbolActionp);
-  MARPAESLIFPERL_XV_STORE_ACTION     (avp, "defaultRuleAction",   grammarProperty.defaultRuleActionp);
-  MARPAESLIFPERL_XV_STORE_ACTION     (avp, "defaultEventAction",  grammarProperty.defaultEventActionp);
-  MARPAESLIFPERL_XV_STORE_ACTION     (avp, "defaultRegexAction",  grammarProperty.defaultRegexActionp);
-  MARPAESLIFPERL_XV_STORE_IV         (avp, "startId",             grammarProperty.starti);
-  MARPAESLIFPERL_XV_STORE_IV         (avp, "discardId",           grammarProperty.discardi);
-  MARPAESLIFPERL_XV_STORE_IVARRAY    (avp, "symbolIds",           grammarProperty.nsymboll, grammarProperty.symbolip);
-  MARPAESLIFPERL_XV_STORE_IVARRAY    (avp, "ruleIds",             grammarProperty.nrulel, grammarProperty.ruleip);
-  MARPAESLIFPERL_XV_STORE_ASCIISTRING(avp, "defaultEncoding",     grammarProperty.defaultEncodings);
-  MARPAESLIFPERL_XV_STORE_ASCIISTRING(avp, "fallbackEncoding",    grammarProperty.fallbackEncodings);
+  MARPAESLIFPERL_XV_STORE_IV         (avp, "level",                 grammarProperty.leveli);
+  MARPAESLIFPERL_XV_STORE_IV         (avp, "maxLevel",              grammarProperty.maxLeveli);
+  MARPAESLIFPERL_XV_STORE_STRING     (avp, "description",           grammarProperty.descp);
+  MARPAESLIFPERL_XV_STORE_IV         (avp, "latm",                  grammarProperty.latmb);
+  MARPAESLIFPERL_XV_STORE_IV         (avp, "discardIsFallback",     grammarProperty.discardIsFallbackb);
+  MARPAESLIFPERL_XV_STORE_IV         (avp, "terminalsAreExclusive", grammarProperty.terminalsAreExclusiveb);
+  MARPAESLIFPERL_XV_STORE_ACTION     (avp, "defaultSymbolAction",   grammarProperty.defaultSymbolActionp);
+  MARPAESLIFPERL_XV_STORE_ACTION     (avp, "defaultRuleAction",     grammarProperty.defaultRuleActionp);
+  MARPAESLIFPERL_XV_STORE_ACTION     (avp, "defaultEventAction",    grammarProperty.defaultEventActionp);
+  MARPAESLIFPERL_XV_STORE_ACTION     (avp, "defaultRegexAction",    grammarProperty.defaultRegexActionp);
+  MARPAESLIFPERL_XV_STORE_IV         (avp, "startId",               grammarProperty.starti);
+  MARPAESLIFPERL_XV_STORE_IV         (avp, "discardId",             grammarProperty.discardi);
+  MARPAESLIFPERL_XV_STORE_IVARRAY    (avp, "symbolIds",             grammarProperty.nsymboll, grammarProperty.symbolip);
+  MARPAESLIFPERL_XV_STORE_IVARRAY    (avp, "ruleIds",               grammarProperty.nrulel, grammarProperty.ruleip);
+  MARPAESLIFPERL_XV_STORE_ASCIISTRING(avp, "defaultEncoding",       grammarProperty.defaultEncodings);
+  MARPAESLIFPERL_XV_STORE_ASCIISTRING(avp, "fallbackEncoding",      grammarProperty.fallbackEncodings);
 
   RETVAL = marpaESLIFPerl_call_actionp(aTHX_ constantsp->MarpaX__ESLIF__Grammar__Properties_svp, "new", avp, NULL /* MarpaX_ESLIF_Valuep */, 0 /* evalb */, 0 /* evalSilentb */, NULL /* subSvp */);
   av_undef(avp);

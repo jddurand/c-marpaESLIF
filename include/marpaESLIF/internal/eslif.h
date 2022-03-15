@@ -81,6 +81,7 @@
 #define G1_RULE_ADVERB_ITEM_22                   "G1_rule_adverb_item_22"
 #define G1_RULE_ADVERB_ITEM_23                   "G1_rule_adverb_item_23"
 #define G1_RULE_ADVERB_ITEM_24                   "G1_rule_adverb_item_24"
+#define G1_RULE_ADVERB_ITEM_25                   "G1_rule_adverb_item_25"
 #define G1_RULE_ACTION_1                         "G1_rule_action_1"
 #define G1_RULE_ACTION_2                         "G1_rule_action_2"
 #define G1_RULE_ACTION_3                         "G1_rule_action_3"
@@ -113,6 +114,8 @@
 #define G1_RULE_LATM_SPECIFICATION_2             "G1_rule_latm_specification_2"
 #define G1_RULE_DISCARD_IS_FALLBACK_SPECIFICATION_1 "G1_rule_discard_is_fallback_specification_1"
 #define G1_RULE_DISCARD_IS_FALLBACK_SPECIFICATION_2 "G1_rule_discard_is_fallback_specification_2"
+#define G1_RULE_TERMINALS_ARE_EXCLUSIVE_SPECIFICATION_1 "G1_rule_terminals_are_exclusive_specification_1"
+#define G1_RULE_TERMINALS_ARE_EXCLUSIVE_SPECIFICATION_2 "G1_rule_terminals_are_exclusive_specification_2"
 #define G1_RULE_VERBOSE_SPECIFICATION_1          "G1_rule_verbose_specification_1"
 #define G1_RULE_VERBOSE_SPECIFICATION_2          "G1_rule_verbose_specification_2"
 #define G1_RULE_NAMING                           "G1_rule_naming"
@@ -309,6 +312,7 @@
 #define G1_ACTION_ADVERB_ITEM_22                   "::shift" /* <adverb item> ::= <regex action> */
 #define G1_ACTION_ADVERB_ITEM_23                   "::shift" /* <adverb item> ::= <verbose specification> */
 #define G1_ACTION_ADVERB_ITEM_24                   "::shift" /* <adverb item> ::= <discard is fallback specification> */
+#define G1_ACTION_ADVERB_ITEM_25                   "::shift" /* <adverb item> ::= <terminals are exclusive specification> */
 #define G1_ACTION_ACTION_1                         "005_G1_action_action_1"                         /* done */
 #define G1_ACTION_ACTION_2                         "006_G1_action_action_2"                         /* done */
 #define G1_ACTION_ACTION_3                         "007_G1_action_action_3"                         /* done */
@@ -341,6 +345,8 @@
 #define G1_ACTION_LATM_SPECIFICATION_2             "068_G1_action_latm_specification_2"             /* done */
 #define G1_ACTION_DISCARD_IS_FALLBACK_SPECIFICATION_1 "069_G1_action_discard_is_fallback_specification_1" /* done */
 #define G1_ACTION_DISCARD_IS_FALLBACK_SPECIFICATION_2 "070_G1_action_discard_is_fallback_specification_2" /* done */
+#define G1_ACTION_TERMINALS_ARE_EXCLUSIVE_SPECIFICATION_1 "116_G1_terminals_are_exclusive_specification_1" /* done */
+#define G1_ACTION_TERMINALS_ARE_EXCLUSIVE_SPECIFICATION_2 "117_G1_terminals_are_exclusive_specification_2" /* done */
 #define G1_ACTION_VERBOSE_SPECIFICATION_1          "073_G1_action_verbose_specification_1"           /* done */
 #define G1_ACTION_VERBOSE_SPECIFICATION_2          "074_G1_action_verbose_specification_2"           /* done */
 #define G1_ACTION_NAMING                           "100_G1_action_naming"                            /* done */

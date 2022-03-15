@@ -459,6 +459,7 @@ typedef struct marpaESLIFGrammarProperty {
   marpaESLIFString_t    *descp;                   /* Grammar description (auto-generated if none) */
   short                  latmb;                   /* LATM ? */
   short                  discardIsFallbackb;      /* Discard is fallback ? */
+  short                  terminalsAreExclusiveb;  /* Terminals are exclusive ? */
   marpaESLIFAction_t    *defaultSymbolActionp;    /* Default action for symbols - never NULL */
   marpaESLIFAction_t    *defaultRuleActionp;      /* Default action for rules - never NULL */
   marpaESLIFAction_t    *defaultEventActionp;     /* Default action for event - can be NULL */

@@ -6119,6 +6119,7 @@ static jobject marpaESLIFJava_grammarPropertiesp(JNIEnv *envp, marpaESLIFGrammar
   jstring                      description;
   jboolean                     latm;
   jboolean                     discardIsFallback;
+  jboolean                     terminalsAreExclusive;
   jstring                      defaultSymbolAction;
   jstring                      defaultRuleAction;
   jstring                      defaultEventAction;
@@ -6133,19 +6134,20 @@ static jobject marpaESLIFJava_grammarPropertiesp(JNIEnv *envp, marpaESLIFGrammar
   jstring                      fallbackEncoding;
   size_t                       i;
 
-  level               = (jint) grammarPropertyp->leveli;
-  maxLevel            = (jint) grammarPropertyp->maxLeveli;
-  description         = marpaESLIFJava_marpaESLIFStringToJavap(envp, grammarPropertyp->descp);
-  latm                = grammarPropertyp->latmb ? JNI_TRUE : JNI_FALSE;
-  discardIsFallback   = grammarPropertyp->discardIsFallbackb ? JNI_TRUE : JNI_FALSE;
-  defaultSymbolAction = marpaESLIFJava_marpaESLIFActionToJavap(envp, grammarPropertyp->defaultSymbolActionp);
-  defaultRuleAction   = marpaESLIFJava_marpaESLIFActionToJavap(envp, grammarPropertyp->defaultRuleActionp);
-  defaultEventAction  = marpaESLIFJava_marpaESLIFActionToJavap(envp, grammarPropertyp->defaultEventActionp);
-  defaultRegexAction  = marpaESLIFJava_marpaESLIFActionToJavap(envp, grammarPropertyp->defaultRegexActionp);
-  startId             = (jint) grammarPropertyp->starti;
-  discardId           = (jint) grammarPropertyp->discardi;
-  defaultEncoding     = marpaESLIFJava_marpaESLIFASCIIToJavap(envp, grammarPropertyp->defaultEncodings);
-  fallbackEncoding    = marpaESLIFJava_marpaESLIFASCIIToJavap(envp, grammarPropertyp->fallbackEncodings);
+  level                 = (jint) grammarPropertyp->leveli;
+  maxLevel              = (jint) grammarPropertyp->maxLeveli;
+  description           = marpaESLIFJava_marpaESLIFStringToJavap(envp, grammarPropertyp->descp);
+  latm                  = grammarPropertyp->latmb ? JNI_TRUE : JNI_FALSE;
+  discardIsFallback     = grammarPropertyp->discardIsFallbackb ? JNI_TRUE : JNI_FALSE;
+  terminalsAreExclusive = grammarPropertyp->terminalsAreExclusiveb ? JNI_TRUE : JNI_FALSE;
+  defaultSymbolAction   = marpaESLIFJava_marpaESLIFActionToJavap(envp, grammarPropertyp->defaultSymbolActionp);
+  defaultRuleAction     = marpaESLIFJava_marpaESLIFActionToJavap(envp, grammarPropertyp->defaultRuleActionp);
+  defaultEventAction    = marpaESLIFJava_marpaESLIFActionToJavap(envp, grammarPropertyp->defaultEventActionp);
+  defaultRegexAction    = marpaESLIFJava_marpaESLIFActionToJavap(envp, grammarPropertyp->defaultRegexActionp);
+  startId               = (jint) grammarPropertyp->starti;
+  discardId             = (jint) grammarPropertyp->discardi;
+  defaultEncoding       = marpaESLIFJava_marpaESLIFASCIIToJavap(envp, grammarPropertyp->defaultEncodings);
+  fallbackEncoding      = marpaESLIFJava_marpaESLIFASCIIToJavap(envp, grammarPropertyp->fallbackEncodings);
 
   if (grammarPropertyp->nsymboll <= 0) {
     RAISEEXCEPTION(envp, "marpaESLIFGrammar_grammarproperty_currentb returned no symbol");
@@ -6197,6 +6199,7 @@ static jobject marpaESLIFJava_grammarPropertiesp(JNIEnv *envp, marpaESLIFGrammar
                                    description,
                                    latm,
                                    discardIsFallback,
+                                   terminalsAreExclusive,
                                    defaultSymbolAction,
                                    defaultRuleAction,
                                    defaultEventAction,

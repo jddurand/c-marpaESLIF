@@ -23,6 +23,7 @@ public class ESLIFGrammarProperties {
     private String  description;
     private boolean latm;
     private boolean discardIsFallback;
+    private boolean terminalsAreExclusive;
     private String  defaultSymbolAction;
     private String  defaultRuleAction;
     private String  defaultEventAction;
@@ -47,6 +48,7 @@ public class ESLIFGrammarProperties {
 	 * @param description Grammar description
 	 * @param latm Grammar is in LATM (Longest Accepted Token Mode) ?
 	 * @param discardIsFallback Grammar's discard-is-fallback setting
+	 * @param terminalsAreExclusive Grammar's terminals-are-exclusive setting
 	 * @param defaultSymbolAction Grammar default symbol action
 	 * @param defaultRuleAction Grammar default rule action
 	 * @param defaultEventAction Grammar default event action
@@ -58,22 +60,23 @@ public class ESLIFGrammarProperties {
 	 * @param defaultEncoding Grammar default encoding
 	 * @param fallbackEncoding Grammar fallback encoding
 	 */
-	public ESLIFGrammarProperties(int level, int maxLevel, String description, boolean latm, boolean discardIsFallback, String defaultSymbolAction, String defaultRuleAction, String defaultEventAction, String defaultRegexAction, int startId, int discardId, int[] symbolIds, int[] ruleIds, String defaultEncoding, String fallbackEncoding) {
-		this.level               = level;
-		this.maxLevel            = maxLevel;
-		this.description         = description;
-		this.latm                = latm;
-		this.discardIsFallback   = discardIsFallback;
-		this.defaultSymbolAction = defaultSymbolAction;
-		this.defaultRuleAction   = defaultRuleAction;
-		this.defaultEventAction  = defaultEventAction;
-		this.defaultRegexAction  = defaultRegexAction;
-		this.startId             = startId;
-		this.discardId           = discardId;
-		this.symbolIds           = symbolIds;
-		this.ruleIds             = ruleIds;
-		this.defaultEncoding     = defaultEncoding;
-		this.fallbackEncoding    = fallbackEncoding;
+	public ESLIFGrammarProperties(int level, int maxLevel, String description, boolean latm, boolean discardIsFallback, boolean terminalsAreExclusive, String defaultSymbolAction, String defaultRuleAction, String defaultEventAction, String defaultRegexAction, int startId, int discardId, int[] symbolIds, int[] ruleIds, String defaultEncoding, String fallbackEncoding) {
+		this.level                 = level;
+		this.maxLevel              = maxLevel;
+		this.description           = description;
+		this.latm                  = latm;
+		this.discardIsFallback     = discardIsFallback;
+		this.terminalsAreExclusive = terminalsAreExclusive;
+		this.defaultSymbolAction   = defaultSymbolAction;
+		this.defaultRuleAction     = defaultRuleAction;
+		this.defaultEventAction    = defaultEventAction;
+		this.defaultRegexAction    = defaultRegexAction;
+		this.startId               = startId;
+		this.discardId             = discardId;
+		this.symbolIds             = symbolIds;
+		this.ruleIds               = ruleIds;
+		this.defaultEncoding       = defaultEncoding;
+		this.fallbackEncoding      = fallbackEncoding;
 	}
 
 	/* (non-Javadoc)
@@ -93,6 +96,7 @@ public class ESLIFGrammarProperties {
 		result = prime * result + ((fallbackEncoding == null) ? 0 : fallbackEncoding.hashCode());
 		result = prime * result + (latm ? 1231 : 1237);
 		result = prime * result + (discardIsFallback ? 1231 : 1237);
+		result = prime * result + (terminalsAreExclusive ? 1231 : 1237);
 		result = prime * result + level;
 		result = prime * result + maxLevel;
 		result = prime * result + Arrays.hashCode(ruleIds);
@@ -174,6 +178,9 @@ public class ESLIFGrammarProperties {
 		if (discardIsFallback != other.discardIsFallback) {
 			return false;
 		}
+		if (terminalsAreExclusive != other.terminalsAreExclusive) {
+			return false;
+		}
 		if (level != other.level) {
 			return false;
 		}
@@ -198,7 +205,7 @@ public class ESLIFGrammarProperties {
 	@Override
 	public String toString() {
 		return "ESLIFGrammarProperties [level=" + level + ", maxLevel=" + maxLevel + ", description=" + description
-				+ ", latm=" + latm + ", discardIsFallback=" + discardIsFallback + ", defaultSymbolAction=" + defaultSymbolAction + ", defaultRuleAction="
+				+ ", latm=" + latm + ", discardIsFallback=" + discardIsFallback + ", terminalsAreExclusive=" + terminalsAreExclusive + ", defaultSymbolAction=" + defaultSymbolAction + ", defaultRuleAction="
 				+ defaultRuleAction + ", defaultEventAction=" + defaultEventAction + ", defaultRegexAction=" + defaultRegexAction + ", startId=" + startId
 				+ ", discardId=" + discardId + ", symbolIds=" + Arrays.toString(symbolIds) + ", ruleIds="
 				+ Arrays.toString(ruleIds) + ", defaultEncoding=" + defaultEncoding + ", fallbackEncoding="
@@ -256,6 +263,22 @@ public class ESLIFGrammarProperties {
 	 */
 	public boolean getDiscardIsFallback() {
 		return isDiscardIsFallback();
+	}
+
+	/**
+	 * @return A boolean that returns the grammar's terminals-are-exclusive setting
+	 */
+	public boolean isTerminalsAreExclusive() {
+		return terminalsAreExclusive;
+	}
+
+	/**
+	 * Alias to isTerminalsAreExclusive().
+	 * 
+	 * @return A boolean that returns the grammar's terminals-are-exclusive setting
+	 */
+	public boolean getTerminalsAreExclusive() {
+		return isTerminalsAreExclusive();
 	}
 
 	/**

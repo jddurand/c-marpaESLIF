@@ -4375,6 +4375,7 @@ static inline marpaESLIF_grammar_t *_marpaESLIF_grammar_newp(marpaESLIFGrammar_t
   grammarp->descautob                          = 0;
   grammarp->latmb                              = 1;    /* latmb true is the default */
   grammarp->discardIsFallbackb                 = 0;
+  grammarp->terminalsAreExclusiveb             = 0;
   grammarp->marpaWrapperGrammarStartp          = NULL;
   grammarp->marpaWrapperGrammarStartNoEventp   = NULL;
   grammarp->nTerminall                         = 0;
@@ -7525,6 +7526,7 @@ short marpaESLIFGrammar_grammarproperty_by_levelb(marpaESLIFGrammar_t *marpaESLI
     grammarPropertyp->descp                   = grammarp->descp;
     grammarPropertyp->latmb                   = grammarp->latmb;
     grammarPropertyp->discardIsFallbackb      = grammarp->discardIsFallbackb;
+    grammarPropertyp->terminalsAreExclusiveb  = grammarp->terminalsAreExclusiveb;
     grammarPropertyp->defaultSymbolActionp    = grammarp->defaultSymbolActionp;
     grammarPropertyp->defaultRuleActionp      = grammarp->defaultRuleActionp;
     grammarPropertyp->defaultEventActionp     = grammarp->defaultEventActionp;
@@ -8664,12 +8666,20 @@ static inline short _marpaESLIFRecognizer_isDiscardExpectedb(marpaESLIFRecognize
 
   for (symboll = 0; symboll < nSymbolPristinel; symboll++) {
     symbolp = symbolArrayPristinepp[symboll];
-    if (lastMatchedPriorityInitializedb && symbolp->priorityi < lastMatchedMinPriorityi) {
-      MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp,
-                                  funcs,
-                                  "Skipping other alternatives that all have priority < min priority %d",
-                                  lastMatchedMinPriorityi);
-      break;
+    if (lastMatchedPriorityInitializedb) {
+      if (symbolp->priorityi < lastMatchedMinPriorityi) {
+        MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp,
+                                    funcs,
+                                    "Skipping other alternatives that all have priority < min priority %d",
+                                    lastMatchedMinPriorityi);
+        break;
+      }
+      if (grammarp->terminalsAreExclusiveb) {
+        MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp,
+                                   funcs,
+                                   "Skipping other alternatives because of terminals-are-exclusive setting");
+        break;
+      }
     }
 
     MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Trying discard terminal: %s", symbolp->descp->asciis);
@@ -8840,12 +8850,21 @@ static inline short _marpaESLIFRecognizer_resume_oneb(marpaESLIFRecognizer_t *ma
 
   for (symboll = 0; symboll < nSymboll; symboll++) {
     symbolp = symbolArraypp[symboll];
-    if (lastMatchedPriorityInitializedb && symbolp->priorityi < lastMatchedMinPriorityi) {
-      MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp,
-                                  funcs,
-                                  "Skipping other alternatives that all have priority < min priority %d",
-                                  lastMatchedMinPriorityi);
-      break;
+    if (lastMatchedPriorityInitializedb) {
+      if (symbolp->priorityi < lastMatchedMinPriorityi) {
+        MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp,
+                                    funcs,
+                                    "Skipping other alternatives that all have priority < min priority %d",
+                                    lastMatchedMinPriorityi);
+        break;
+      }
+      if (grammarp->terminalsAreExclusiveb) {
+        /* There is at least one match and user says there cannot be other */
+        MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp,
+                                   funcs,
+                                   "Skipping other alternatives because of terminals-are-exclusive setting");
+        break;
+      }
     }
 
     if (onlyPredictedLexemesb) {
@@ -13502,6 +13521,8 @@ static inline void _marpaESLIF_grammar_createshowv(marpaESLIFGrammar_t *marpaESL
       ||
       (grammarp->discardIsFallbackb)
       ||
+      (grammarp->terminalsAreExclusiveb)
+      ||
       (grammarp->defaultEncodings != NULL)
       ||
       (grammarp->fallbackEncodings != NULL)
@@ -13601,6 +13622,9 @@ static inline void _marpaESLIF_grammar_createshowv(marpaESLIFGrammar_t *marpaESL
     }
     if (grammarp->discardIsFallbackb) {
       MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, " discard-is-fallback => 1");
+    }
+    if (grammarp->terminalsAreExclusiveb) {
+      MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, " terminals-are-exclusive => 1");
     }
     if (grammarp->defaultEncodings != NULL) {
       MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, " default-encoding => ");
