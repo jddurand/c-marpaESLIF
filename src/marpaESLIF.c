@@ -824,7 +824,8 @@ static inline short                  _marpaESLIFRecognizer_recognizerGeneratorAc
 static inline short                  _marpaESLIFValue_eslif2hostb(marpaESLIFValue_t *marpaESLIFValuep, marpaESLIFValueResult_t *marpaESLIFValueResultp, void *forcedUserDatavp, marpaESLIFValueImport_t forcedImporterp);
 static inline short                  _marpaESLIFRecognizer_eslif2hostb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFValueResult_t *marpaESLIFValueResultp, void *forcedUserDatavp, marpaESLIFRecognizerImport_t forcedImporterp);
 static inline short                  _marpaESLIFSymbol_eslif2hostb(marpaESLIFSymbol_t *marpaESLIFSymbolp, marpaESLIFValueResult_t *marpaESLIFValueResultp, void *forcedUserDatavp, marpaESLIFSymbolImport_t forcedImporterp);
-static inline short                  _marpaESLIFRecognizer_expectedTerminalsb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, size_t *nSymbollp, int **symbolArraypp, short withSortedSymbolArrayb);
+static inline short                  _marpaESLIFRecognizer_expectedTerminalsb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, size_t *nSymbollp, int **symbolIdArraypp, marpaESLIF_symbol_t ***symbolArrayppp);
+static inline short                  _marpaESLIFRecognizer_expectedTerminals_oneb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, size_t *nSymbollp, marpaESLIF_symbol_t ***symbolArrayppp);
 static inline short                  _marpaESLIF_eslif2hostb(marpaESLIF_t *marpaESLIFp, void *namespacep, marpaESLIFValueResult_t *marpaESLIFValueResultp, void *userDatavp, marpaESLIFGenericImport_t importerp);
 
 static inline short                  _marpaESLIFValue_valueb(marpaESLIFValue_t *marpaESLIFValuep, marpaESLIFValueResult_t *marpaESLIFValueResultp);
@@ -3187,7 +3188,7 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
   marpaWrapperRecognizer_t         *marpaWrapperRecognizerp;
   size_t                            nSymboll;
   size_t                            symboll;
-  int                              *symbolArrayp;
+  int                              *symbolIdArrayp;
   short                             fastDiscardb;
 
   marpaESLIF_cloneContext.marpaESLIFp = marpaESLIFp;
@@ -3353,11 +3354,11 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
     if (MARPAESLIF_UNLIKELY(marpaWrapperRecognizerp == NULL)) {
       goto err;
     }
-    if (MARPAESLIF_UNLIKELY(! marpaWrapperRecognizer_expectedb(marpaWrapperRecognizerp, &nSymboll, &symbolArrayp))) {
+    if (MARPAESLIF_UNLIKELY(! marpaWrapperRecognizer_expectedb(marpaWrapperRecognizerp, &nSymboll, &symbolIdArrayp))) {
       marpaWrapperRecognizer_freev(marpaWrapperRecognizerp);
       goto err;
     }
-    if ((nSymboll > 0) && (symbolArrayp != NULL)) {
+    if ((nSymboll > 0) && (symbolIdArrayp != NULL)) {
       grammarp->nSymbolStartl = nSymboll;
 
       if (grammarp->symbolArrayStartpp == NULL) {
@@ -3368,7 +3369,7 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
           goto err;
         }
         for (symboll = 0; symboll < nSymboll; symboll++) {
-          MARPAESLIF_INTERNAL_GET_SYMBOL_FROM_STACK(marpaESLIFp, grammarp->symbolArrayStartpp[symboll], symbolStackp, symbolArrayp[symboll]);
+          MARPAESLIF_INTERNAL_GET_SYMBOL_FROM_STACK(marpaESLIFp, grammarp->symbolArrayStartpp[symboll], symbolStackp, symbolIdArrayp[symboll]);
         }
         qsort(grammarp->symbolArrayStartpp, nSymboll, sizeof(marpaESLIF_symbol_t *), _marpaESLIF_symbol_priority_sorti);
       }
@@ -3401,9 +3402,16 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
       }
     }
     if (grammarp->nTerminall > 0) {
-      if (grammarp->terminalArrayp == NULL) {
-        grammarp->terminalArrayp = (int *) malloc(sizeof(int) * grammarp->nTerminall);
-        if (MARPAESLIF_UNLIKELY(grammarp->terminalArrayp == NULL)) {
+      if (grammarp->terminalIdArrayp == NULL) {
+        grammarp->terminalIdArrayp = (int *) malloc(sizeof(int) * grammarp->nTerminall);
+        if (MARPAESLIF_UNLIKELY(grammarp->terminalIdArrayp == NULL)) {
+          MARPAESLIF_ERRORF(marpaESLIFp, "malloc failure, %s", strerror(errno));
+          goto err;
+        }
+      }
+      if (grammarp->terminalArraypp == NULL) {
+        grammarp->terminalArraypp = (marpaESLIF_symbol_t **) malloc(sizeof(marpaESLIF_symbol_t *) * grammarp->nTerminall);
+        if (MARPAESLIF_UNLIKELY(grammarp->terminalArraypp == NULL)) {
           MARPAESLIF_ERRORF(marpaESLIFp, "malloc failure, %s", strerror(errno));
           goto err;
         }
@@ -3427,7 +3435,14 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
     for (symboli = 0; symboli < GENERICSTACK_USED(symbolStackp); symboli++) {
       MARPAESLIF_INTERNAL_GET_SYMBOL_FROM_STACK(marpaESLIFp, symbolp, symbolStackp, symboli);
       if ((symbolp->propertyBitSet & MARPAWRAPPER_SYMBOL_IS_TERMINAL) == MARPAWRAPPER_SYMBOL_IS_TERMINAL) {
-        grammarp->terminalArrayp[grammarp->nTerminall++] = symbolp->idi;
+        grammarp->terminalArraypp[grammarp->nTerminall++] = symbolp;
+      }
+    }
+    if (grammarp->nTerminall > 0) {
+      qsort(grammarp->terminalArraypp, grammarp->nTerminall, sizeof(marpaESLIF_symbol_t *), _marpaESLIF_symbol_priority_sorti);
+      /* Recuperate symbol Ids sorted by priority */
+      for (symboll = 0; symboll < grammarp->nTerminall; symboll++) {
+        grammarp->terminalIdArrayp[symboll] = grammarp->terminalArraypp[symboll]->idi;
       }
     }
 
@@ -3558,11 +3573,11 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
       if (MARPAESLIF_UNLIKELY(marpaWrapperRecognizerp == NULL)) {
 	goto err;
       }
-      if (MARPAESLIF_UNLIKELY(! marpaWrapperRecognizer_expectedb(marpaWrapperRecognizerp, &nSymboll, &symbolArrayp))) {
+      if (MARPAESLIF_UNLIKELY(! marpaWrapperRecognizer_expectedb(marpaWrapperRecognizerp, &nSymboll, &symbolIdArrayp))) {
 	marpaWrapperRecognizer_freev(marpaWrapperRecognizerp);
 	goto err;
       }
-      if ((nSymboll > 0) && (symbolArrayp != NULL)) {
+      if ((nSymboll > 0) && (symbolIdArrayp != NULL)) {
 	grammarp->nSymbolDiscardl = nSymboll;
 
         if (grammarp->symbolArrayDiscardpp == NULL) {
@@ -3573,7 +3588,7 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
             goto err;
           }
           for (symboll = 0; symboll < nSymboll; symboll++) {
-            MARPAESLIF_INTERNAL_GET_SYMBOL_FROM_STACK(marpaESLIFp, grammarp->symbolArrayDiscardpp[symboll], symbolStackp, symbolArrayp[symboll]);
+            MARPAESLIF_INTERNAL_GET_SYMBOL_FROM_STACK(marpaESLIFp, grammarp->symbolArrayDiscardpp[symboll], symbolStackp, symbolIdArrayp[symboll]);
           }
           qsort(grammarp->symbolArrayDiscardpp, nSymboll, sizeof(marpaESLIF_symbol_t *), _marpaESLIF_symbol_priority_sorti);
         }
@@ -3730,11 +3745,11 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
         if (MARPAESLIF_UNLIKELY(marpaWrapperRecognizerp == NULL)) {
           goto err;
         }
-        if (MARPAESLIF_UNLIKELY(! marpaWrapperRecognizer_expectedb(marpaWrapperRecognizerp, &nSymboll, &symbolArrayp))) {
+        if (MARPAESLIF_UNLIKELY(! marpaWrapperRecognizer_expectedb(marpaWrapperRecognizerp, &nSymboll, &symbolIdArrayp))) {
           marpaWrapperRecognizer_freev(marpaWrapperRecognizerp);
           goto err;
         }
-        if ((nSymboll > 0) && (symbolArrayp != NULL)) {
+        if ((nSymboll > 0) && (symbolIdArrayp != NULL)) {
           metap->nSymbolStartl = nSymboll;
 
           if (metap->symbolArrayStartpp == NULL) {
@@ -3745,7 +3760,7 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
               goto err;
             }
             for (symboll = 0; symboll < nSymboll; symboll++) {
-              MARPAESLIF_INTERNAL_GET_SYMBOL_FROM_STACK(marpaESLIFp, metap->symbolArrayStartpp[symboll], symbolStackp, symbolArrayp[symboll]);
+              MARPAESLIF_INTERNAL_GET_SYMBOL_FROM_STACK(marpaESLIFp, metap->symbolArrayStartpp[symboll], subGrammarp->symbolStackp, symbolIdArrayp[symboll]);
             }
             qsort(metap->symbolArrayStartpp, nSymboll, sizeof(marpaESLIF_symbol_t *), _marpaESLIF_symbol_priority_sorti);
           }
@@ -4363,7 +4378,8 @@ static inline marpaESLIF_grammar_t *_marpaESLIF_grammar_newp(marpaESLIFGrammar_t
   grammarp->marpaWrapperGrammarStartp          = NULL;
   grammarp->marpaWrapperGrammarStartNoEventp   = NULL;
   grammarp->nTerminall                         = 0;
-  grammarp->terminalArrayp                     = NULL;
+  grammarp->terminalIdArrayp                   = NULL;
+  grammarp->terminalArraypp                    = NULL;
   grammarp->nSymbolStartl                      = 0;
   grammarp->symbolIdArrayStartp                = NULL;
   grammarp->symbolArrayStartpp                 = NULL;
@@ -4566,8 +4582,11 @@ static inline void _marpaESLIF_grammar_freev(marpaESLIF_grammar_t *grammarp)
     if (grammarp->asciishows != NULL) {
       free(grammarp->asciishows);
     }
-    if (grammarp->terminalArrayp != NULL) {
-      free(grammarp->terminalArrayp);
+    if (grammarp->terminalIdArrayp != NULL) {
+      free(grammarp->terminalIdArrayp);
+    }
+    if (grammarp->terminalArraypp != NULL) {
+      free(grammarp->terminalArraypp);
     }
     if (grammarp->allSymbolsArraypp != NULL) {
       free(grammarp->allSymbolsArraypp);
@@ -8468,15 +8487,12 @@ static inline short __marpaESLIFRecognizer_isZeroLengthLexemeExpectedb(marpaESLI
 {
   static const char        *funcs                        = "__marpaESLIFRecognizer_isZeroLengthLexemeExpectedb";
   marpaESLIF_t             *marpaESLIFp                  = marpaESLIFRecognizerp->marpaESLIFp;
-  marpaESLIF_grammar_t     *grammarp                     = marpaESLIFRecognizerp->grammarp;
-  genericStack_t           *symbolStackp                 = grammarp->symbolStackp;
-  marpaWrapperRecognizer_t *marpaWrapperRecognizerp      = marpaESLIFRecognizerp->marpaWrapperRecognizerp;
   short                     isZeroLengthLexemeExpectedb  = 0;
   marpaESLIFRecognizer_t   *marpaESLIFRecognizerMetap    = NULL;
   size_t                    nSymboll;
-  int                      *symbolArrayp;
+  int                      *symbolIdArrayp;
+  marpaESLIF_symbol_t     **symbolArraypp;
   size_t                    symboll;
-  int                       symboli;
   marpaESLIF_symbol_t      *symbolp;
   short                     rcb;
 
@@ -8484,13 +8500,12 @@ static inline short __marpaESLIFRecognizer_isZeroLengthLexemeExpectedb(marpaESLI
   MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "start");
 
   /* Ask for expected TERMINALS */
-  if (MARPAESLIF_UNLIKELY(! _marpaESLIFRecognizer_expectedTerminalsb(marpaESLIFRecognizerp, &nSymboll, &symbolArrayp, 0 /* withSortedSymbolArrayb */))) {
+  if (MARPAESLIF_UNLIKELY(! _marpaESLIFRecognizer_expectedTerminalsb(marpaESLIFRecognizerp, &nSymboll, &symbolIdArrayp, &symbolArraypp))) {
     goto err;
   }
 
   for (symboll = 0; symboll < nSymboll; symboll++) {
-    symboli = symbolArrayp[symboll];
-    MARPAESLIF_GRAMMAR_INTERNAL_GET_SYMBOL(marpaESLIFp, symbolp, grammarp, symboli);
+    symbolp = symbolArraypp[symboll];
 
     switch (symbolp->type) {
     case MARPAESLIF_SYMBOL_TYPE_TERMINAL:
@@ -8604,9 +8619,8 @@ static inline short _marpaESLIFRecognizer_isDiscardExpectedb(marpaESLIFRecognize
   marpaESLIFRecognizer_t     *marpaESLIFRecognizerParentPreviousp = marpaESLIFRecognizerp->marpaESLIFRecognizerParentp;
   marpaESLIF_stream_t        *marpaESLIF_streamp;
   marpaESLIF_grammar_t       *grammarp;
-  genericStack_t             *symbolStackp;
   size_t                      nSymbolPristinel;
-  int                        *symbolIdArrayPristinep;
+  marpaESLIF_symbol_t       **symbolArrayPristinepp;
   size_t                      symboll;
   int                         symboli;
   marpaESLIF_symbol_t        *symbolp;
@@ -8614,6 +8628,8 @@ static inline short _marpaESLIFRecognizer_isDiscardExpectedb(marpaESLIFRecognize
   marpaESLIFValueResult_t     marpaESLIFValueResultArray;
   size_t                      discardl;
   short                       rcMatcherb;
+  short                       lastMatchedPriorityInitializedb;
+  int                         lastMatchedMinPriorityi;
   short                       rcb;
 
   MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_INC(marpaESLIFRecognizerp);
@@ -8640,17 +8656,23 @@ static inline short _marpaESLIFRecognizer_isDiscardExpectedb(marpaESLIFRecognize
   /* We now simulate what would do _marpaESLIFRecognizer_resume_oneb() at the very beginning. */
   /* We do not forget to also simulate that we should be a child recognizer.                  */
   marpaESLIF_streamp = marpaESLIFRecognizerp->marpaESLIF_streamp;
-  symbolStackp       = grammarp->symbolStackp;
-
   marpaESLIFRecognizerp->marpaESLIFRecognizerParentp = &invalidFakeMarpaESLIFRecognizer;
 
-  nSymbolPristinel       = grammarp->nSymbolDiscardl;
-  symbolIdArrayPristinep = grammarp->symbolIdArrayDiscardp;
+  nSymbolPristinel                = grammarp->nSymbolDiscardl;
+  symbolArrayPristinepp           = grammarp->symbolArrayDiscardpp;
+  lastMatchedPriorityInitializedb = 0;
 
   for (symboll = 0; symboll < nSymbolPristinel; symboll++) {
-    symboli = symbolIdArrayPristinep[symboll];
-    MARPAESLIF_GRAMMAR_INTERNAL_GET_SYMBOL(marpaESLIFRecognizerp->marpaESLIFp, symbolp, grammarp, symboli);
-    MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Expected discard terminal: %s", symbolp->descp->asciis);
+    symbolp = symbolArrayPristinepp[symboll];
+    if (lastMatchedPriorityInitializedb && symbolp->priorityi < lastMatchedMinPriorityi) {
+      MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp,
+                                  funcs,
+                                  "Skipping other alternatives that all have priority < min priority %d",
+                                  lastMatchedMinPriorityi);
+      break;
+    }
+
+    MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Trying discard terminal: %s", symbolp->descp->asciis);
     rcMatcherb = _marpaESLIFRecognizer_symbol_matcherb(marpaESLIFRecognizerp,
                                                        marpaESLIF_streamp,
                                                        symbolp,
@@ -8674,6 +8696,11 @@ static inline short _marpaESLIFRecognizer_isDiscardExpectedb(marpaESLIFRecognize
         if ((! marpaESLIFValueResultArray.u.a.shallowb) && (marpaESLIFValueResultArray.u.a.p != NULL)) {
           free(marpaESLIFValueResultArray.u.a.p);
         }
+      }
+
+      if (! lastMatchedPriorityInitializedb) {
+        lastMatchedMinPriorityi = symbolp->priorityi;
+        lastMatchedPriorityInitializedb = 1;
       }
 
       isDiscardExpectedb = 1;
@@ -8722,9 +8749,8 @@ static inline short _marpaESLIFRecognizer_resume_oneb(marpaESLIFRecognizer_t *ma
   int                              lastMatchedMinPriorityi;
   size_t                           maxMatchedl;
   int                              alternativeStackSymboli;
-  int                             *symbolArrayp;
+  marpaESLIF_symbol_t            **symbolArraypp;
   size_t                           symboll;
-  int                              symboli;
   int                              alternativei;
   marpaESLIF_symbol_t             *symbolp;
   marpaESLIF_symbol_t             *exceptionp;
@@ -8775,16 +8801,9 @@ static inline short _marpaESLIFRecognizer_resume_oneb(marpaESLIFRecognizer_t *ma
   }
   
   /* Ask for expected grammar terminals */
-  if (MARPAESLIF_UNLIKELY(! _marpaESLIFRecognizer_expectedTerminalsb(marpaESLIFRecognizerp, &nSymboll, &symbolArrayp, 1 /* withSortedSymbolArrayb */))) {
+  if (MARPAESLIF_UNLIKELY(! _marpaESLIFRecognizer_expectedTerminals_oneb(marpaESLIFRecognizerp, &nSymboll, &symbolArraypp))) {
     goto err;
   }
-
-#ifndef MARPAESLIF_NTRACE
-  for (symboll = 0; symboll < nSymboll; symboll++) {
-    symbolp = marpaESLIFRecognizerp->expectedSymbolArraypp[symboll];
-    MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Expected terminal: %s, priority: %d", symbolp->descp->asciis, symbolp->priorityi);
-  }
-#endif
 
   if (nSymboll <= 0) {
     /* No symbol expected: this is an error unless:
@@ -8820,7 +8839,7 @@ static inline short _marpaESLIFRecognizer_resume_oneb(marpaESLIFRecognizer_t *ma
   lastMatchedPriorityInitializedb = 0;
 
   for (symboll = 0; symboll < nSymboll; symboll++) {
-    symbolp = marpaESLIFRecognizerp->expectedSymbolArraypp[symboll];
+    symbolp = symbolArraypp[symboll];
     if (lastMatchedPriorityInitializedb && symbolp->priorityi < lastMatchedMinPriorityi) {
       MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp,
                                   funcs,
@@ -11110,8 +11129,6 @@ static inline marpaESLIFRecognizer_t *__marpaESLIFRecognizer_newp(marpaESLIF_t *
   marpaESLIFRecognizerp->marpaESLIFValueResultStackOrigp    = NULL;
   marpaESLIFRecognizerp->marpaESLIFValueResultStackNewp     = NULL;
   marpaESLIFRecognizerp->marpaESLIFCalloutBlockp            = NULL;
-  marpaESLIFRecognizerp->expectedSymbolIdArrayp             = NULL;
-  marpaESLIFRecognizerp->expectedSymbolArraypp              = NULL;
   marpaESLIFRecognizerp->progressallocl                     = 0;
   marpaESLIFRecognizerp->progressp                          = NULL;
   marpaESLIFRecognizerp->luaprecompiledp                    = NULL;    /* Lua script source precompiled */
@@ -11236,20 +11253,6 @@ static inline marpaESLIFRecognizer_t *__marpaESLIFRecognizer_newp(marpaESLIF_t *
         }
       }
     }
-
-    if (grammarp->nTerminall > 0) {
-      marpaESLIFRecognizerp->expectedSymbolIdArrayp = (int *) malloc(sizeof(int) * grammarp->nTerminall);
-      if (MARPAESLIF_UNLIKELY(marpaESLIFRecognizerp->expectedSymbolIdArrayp == NULL)) {
-        MARPAESLIF_ERRORF(marpaESLIFp, "malloc failure, %s", strerror(errno));
-        goto err;
-      }
-      marpaESLIFRecognizerp->expectedSymbolArraypp = (marpaESLIF_symbol_t **) malloc(sizeof(marpaESLIF_symbol_t *) * grammarp->nTerminall);
-      if (MARPAESLIF_UNLIKELY(marpaESLIFRecognizerp->expectedSymbolArraypp == NULL)) {
-        MARPAESLIF_ERRORF(marpaESLIFp, "malloc failure, %s", strerror(errno));
-        goto err;
-      }
-    }
-
   } else {
     marpaESLIFRecognizerp->marpaWrapperGrammarp         = NULL;
     marpaESLIFRecognizerp->marpaWrapperRecognizerp      = NULL;
@@ -15836,73 +15839,118 @@ static inline short _marpaESLIFSymbol_eslif2hostb(marpaESLIFSymbol_t *marpaESLIF
 }
 
 /*****************************************************************************/
-static inline short _marpaESLIFRecognizer_expectedTerminalsb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, size_t *nSymbollp, int **symbolArraypp, short withSortedSymbolArrayb)
+static inline short _marpaESLIFRecognizer_expectedTerminalsb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, size_t *nSymbollp, int **symbolIdArraypp, marpaESLIF_symbol_t ***symbolArrayppp)
 /*****************************************************************************/
-/* This method requires that nSymbollp and symbolArraypp are always set.     */
+/* This method requires that all pointers are set.                           */
 /*****************************************************************************/
 {
   static const char        *funcs = "_marpaESLIFRecognizer_expectedTerminalsb";
   marpaWrapperRecognizer_t *marpaWrapperRecognizerp;
   marpaESLIF_grammar_t     *grammarp;
   size_t                    nSymboll;
-  int                      *symbolArrayp;
+  int                      *symbolIdArrayp;
+  marpaESLIF_symbol_t     **symbolArraypp;
   size_t                    symboll;
-  int                       symboli;
   short                     isExpectedb;
-  short                     minPriorityi;
   marpaESLIF_symbol_t      *symbolp;
-  marpaESLIF_symbol_t     **expectedSymbolArraypp;
-  short                     havePriorityb;
   short                     rcb;
 
   /* Ask for expected grammar terminals */
   if (! marpaESLIFRecognizerp->pristineb) {
-#ifdef MARPAESLIF_USE_MARPAWRAPPERRECOGNIZER_EXPECTEDB
-    marpaWrapperRecognizerp = marpaESLIFRecognizerp->marpaWrapperRecognizerp;
-    if (MARPAESLIF_UNLIKELY(! marpaWrapperRecognizer_expectedb(marpaWrapperRecognizerp, &nSymboll, &symbolArrayp))) {
-      goto err;
-    }
-#else
     marpaWrapperRecognizerp = marpaESLIFRecognizerp->marpaWrapperRecognizerp;
     grammarp                = marpaESLIFRecognizerp->grammarp;
     nSymboll                = 0;
-    symbolArrayp            = marpaESLIFRecognizerp->expectedSymbolIdArrayp;
+    symbolIdArrayp          = grammarp->expectedSymbolIdArrayp;
+    symbolArraypp           = grammarp->expectedSymbolArraypp;
 
     for (symboll = 0; symboll < grammarp->nTerminall; symboll++) {
-      symboli = grammarp->terminalArrayp[symboll];
-      if (MARPAESLIF_UNLIKELY(! marpaWrapperRecognizer_isExpectedb(marpaWrapperRecognizerp, symboli, &isExpectedb))) {
+      symbolp = grammarp->terminalArraypp[symboll];
+      if (MARPAESLIF_UNLIKELY(! marpaWrapperRecognizer_isExpectedb(marpaWrapperRecognizerp, symbolp->idi, &isExpectedb))) {
         goto err;
       }
       if (isExpectedb) {
-        symbolArrayp[nSymboll++] = symboli;
+        symbolArraypp[nSymboll] = symbolp;
+        symbolIdArrayp[nSymboll] = symbolp->idi;
+        nSymboll++;
       }
     }
-#endif
   } else {
-    nSymboll     = marpaESLIFRecognizerp->nSymbolPristinel;
-    symbolArrayp = marpaESLIFRecognizerp->symbolIdArrayPristinep;
+    nSymboll       = marpaESLIFRecognizerp->nSymbolPristinel;
+    symbolIdArrayp = marpaESLIFRecognizerp->symbolIdArrayPristinep;
+    symbolArraypp  = marpaESLIFRecognizerp->symbolArrayPristinepp;
   }
 
-  *nSymbollp     = nSymboll;
-  *symbolArraypp = symbolArrayp;
+  /* By definition, symbol Ids and pointers are already sorted by priority */
+  *nSymbollp       = nSymboll;
+  *symbolIdArraypp = symbolIdArrayp;
+  *symbolArrayppp  = symbolArraypp;
 
-  if (withSortedSymbolArrayb) {
-    grammarp              = marpaESLIFRecognizerp->grammarp;
-    expectedSymbolArraypp = marpaESLIFRecognizerp->expectedSymbolArraypp;
-    havePriorityb         = 0;
+#ifndef MARPAESLIF_NTRACE
+  for (symboll = 0; symboll < nSymboll; symboll++) {
+    symbolp = symbolArraypp[symboll];
+    MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Expected terminal: %s, priority: %d", symbolp->descp->asciis, symbolp->priorityi);
+  }
+#endif
 
-    for (symboll = 0; symboll < nSymboll; symboll++) {
-      symboli = symbolArrayp[symboll];
-      MARPAESLIF_GRAMMAR_INTERNAL_GET_SYMBOL(marpaESLIFRecognizerp->marpaESLIFp, symbolp, grammarp, symboli);
-      expectedSymbolArraypp[symboll] = symbolp;
-      if (symbolp->priorityi != 0) {
-        havePriorityb = 1;
+  rcb = 1;
+  goto done;
+
+ err:
+  rcb = 0;
+
+ done:
+  return rcb;
+}
+
+/*****************************************************************************/
+static inline short _marpaESLIFRecognizer_expectedTerminals_oneb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, size_t *nSymbollp, marpaESLIF_symbol_t ***symbolArrayppp)
+/*****************************************************************************/
+/* Same as _marpaESLIFRecognizer_expectedTerminals_oneb but with less        */
+/* instructions.                                                             */
+/*****************************************************************************/
+{
+  static const char        *funcs = "_marpaESLIFRecognizer_expectedTerminalsb";
+  marpaWrapperRecognizer_t *marpaWrapperRecognizerp;
+  marpaESLIF_grammar_t     *grammarp;
+  size_t                    nSymboll;
+  marpaESLIF_symbol_t     **symbolArraypp;
+  size_t                    symboll;
+  short                     isExpectedb;
+  marpaESLIF_symbol_t      *symbolp;
+  short                     rcb;
+
+  /* Ask for expected grammar terminals */
+  if (! marpaESLIFRecognizerp->pristineb) {
+    marpaWrapperRecognizerp = marpaESLIFRecognizerp->marpaWrapperRecognizerp;
+    grammarp                = marpaESLIFRecognizerp->grammarp;
+    nSymboll                = 0;
+    symbolArraypp           = grammarp->expectedSymbolArraypp;
+
+    for (symboll = 0; symboll < grammarp->nTerminall; symboll++) {
+      symbolp = grammarp->terminalArraypp[symboll];
+      if (MARPAESLIF_UNLIKELY(! marpaWrapperRecognizer_isExpectedb(marpaWrapperRecognizerp, symbolp->idi, &isExpectedb))) {
+        goto err;
+      }
+      if (isExpectedb) {
+        symbolArraypp[nSymboll] = symbolp;
+        nSymboll++;
       }
     }
-    if (havePriorityb) {
-      qsort(expectedSymbolArraypp, nSymboll, sizeof(marpaESLIF_symbol_t *), _marpaESLIF_symbol_priority_sorti);
-    }
+  } else {
+    nSymboll       = marpaESLIFRecognizerp->nSymbolPristinel;
+    symbolArraypp  = marpaESLIFRecognizerp->symbolArrayPristinepp;
   }
+
+  /* By definition, symbol pointers are already sorted by priority */
+  *nSymbollp       = nSymboll;
+  *symbolArrayppp  = symbolArraypp;
+
+#ifndef MARPAESLIF_NTRACE
+  for (symboll = 0; symboll < nSymboll; symboll++) {
+    symbolp = symbolArraypp[symboll];
+    MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Expected terminal: %s, priority: %d", symbolp->descp->asciis, symbolp->priorityi);
+  }
+#endif
 
   rcb = 1;
   goto done;
@@ -19606,13 +19654,6 @@ static inline void _marpaESLIFRecognizer_freev(marpaESLIFRecognizer_t *marpaESLI
   }
   _marpaESLIFCalloutBlock_disposev(marpaESLIFRecognizerp);
 
-  if (marpaESLIFRecognizerp->expectedSymbolIdArrayp != NULL) {
-    free(marpaESLIFRecognizerp->expectedSymbolIdArrayp);
-  }
-  if (marpaESLIFRecognizerp->expectedSymbolArraypp != NULL) {
-    free(marpaESLIFRecognizerp->expectedSymbolArraypp);
-  }
-
   if (marpaESLIFRecognizerp->progressp != NULL) {
     free(marpaESLIFRecognizerp->progressp);
   }
@@ -21941,9 +21982,9 @@ static inline void _marpaESLIFRecognizer_errorv(marpaESLIFRecognizer_t *marpaESL
   marpaESLIF_grammar_t *grammarp           = marpaESLIFRecognizerp->grammarp;
   marpaESLIF_stream_t  *marpaESLIF_streamp = marpaESLIFRecognizerp->marpaESLIF_streamp;
   size_t                nSymboll;
-  int                  *symbolArrayp;
+  int                  *symbolIdArrayp;
+  marpaESLIF_symbol_t **symbolArraypp;
   size_t                symboll;
-  int                   symboli;
   marpaESLIF_symbol_t  *symbolp;
   char                 *dumps;
   size_t                dumpl;
@@ -21953,12 +21994,11 @@ static inline void _marpaESLIFRecognizer_errorv(marpaESLIFRecognizer_t *marpaESL
   MARPAESLIF_ERRORF(marpaESLIFp, "Recognizer progress (grammar level %d (%s)):", grammarp->leveli, grammarp->descp->asciis);
   marpaESLIFRecognizer_progressLogb(marpaESLIFRecognizerp, -1, -1, GENERICLOGGER_LOGLEVEL_ERROR);
   /* Ask for expected grammar terminals */
-  if (MARPAESLIF_LIKELY(_marpaESLIFRecognizer_expectedTerminalsb(marpaESLIFRecognizerp, &nSymboll, &symbolArrayp, 0 /* withSortedSymbolArrayb */))) {
+  if (MARPAESLIF_LIKELY(_marpaESLIFRecognizer_expectedTerminalsb(marpaESLIFRecognizerp, &nSymboll, &symbolIdArrayp, &symbolArraypp))) {
     if (nSymboll > 0) {
       MARPAESLIF_ERROR(marpaESLIFp, "");
       for (symboll = 0; symboll < nSymboll; symboll++) {
-        symboli = symbolArrayp[symboll];
-        MARPAESLIF_GRAMMAR_INTERNAL_GET_SYMBOL(marpaESLIFp, symbolp, grammarp, symboli);
+        symbolp = symbolArraypp[symboll];
         MARPAESLIF_ERRORF(marpaESLIFp, "Expected symbol: %s (symbol No %d)", _marpaESLIFGrammar_symbolDescriptionCallbacks(grammarp, symbolp->idi), symbolp->idi);
       }
     }
@@ -22340,11 +22380,11 @@ static inline short _marpaESLIFRecognizer_name_expectedb(marpaESLIFRecognizer_t 
 {
   static const char    *funcs = "marpaESLIFRecognizer_name_expectedb";
   size_t                nSymboll;
-  int                  *symbolArrayp;
+  int                  *symbolIdArrayp;
+  marpaESLIF_symbol_t **symbolArraypp;
   short                 rcb;
   marpaESLIF_t         *marpaESLIFp;
   marpaESLIF_grammar_t *grammarp;
-  int                   symboli;
   size_t                symboll;
   marpaESLIF_symbol_t  *symbolp;
   size_t                nNamel;
@@ -22353,7 +22393,7 @@ static inline short _marpaESLIFRecognizer_name_expectedb(marpaESLIFRecognizer_t 
   char                **tmpsp;
   size_t                namesArrayAllocl; /* Current allocated size -; */
 
-  if (MARPAESLIF_UNLIKELY(! _marpaESLIFRecognizer_expectedTerminalsb(marpaESLIFRecognizerp, &nSymboll, &symbolArrayp, 0 /* withSortedSymbolArrayb */))) {
+  if (MARPAESLIF_UNLIKELY(! _marpaESLIFRecognizer_expectedTerminalsb(marpaESLIFRecognizerp, &nSymboll, &symbolIdArrayp, &symbolArraypp))) {
     goto err;
   }
 
@@ -22364,12 +22404,7 @@ static inline short _marpaESLIFRecognizer_name_expectedb(marpaESLIFRecognizer_t 
 
   nNamel = 0;
   for (symboll = 0; symboll < nSymboll; symboll++) {
-    symboli = symbolArrayp[symboll];
-    symbolp = _marpaESLIF_symbol_findp(marpaESLIFp, grammarp, NULL /* asciis */, symboli, NULL /* symbolip */, 0 /* silentb */, 0 /* onlyLhsb - NOT USED */, 1 /* onlyRhsb - NOT USED */, MARPAESLIF_SYMBOL_TYPE_NA /* NOT USED */);
-    if (MARPAESLIF_UNLIKELY(symbolp == NULL)) {
-      goto err;
-    }
-
+    symbolp = symbolArraypp[symboll];
     nNamel++;
 
     /* Prepare/use internal buffer */

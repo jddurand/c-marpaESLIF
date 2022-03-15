@@ -333,7 +333,8 @@ struct marpaESLIF_grammar {
   marpaWrapperGrammar_t *marpaWrapperGrammarStartp;          /* Grammar implementation at :start */
   marpaWrapperGrammar_t *marpaWrapperGrammarStartNoEventp;   /* Grammar implementation at :start forcing no event */
   size_t                 nTerminall;                         /* Total number of grammar terminals */
-  int                   *terminalArrayp;                     /* Total grammar terminals */
+  int                   *terminalIdArrayp;                   /* Total grammar terminal (Ids sorted by priority) */
+  marpaESLIF_symbol_t  **terminalArraypp;                    /* Total grammar terminal (Symbols sorted by priority) */
   size_t                 nSymbolStartl;                      /* Number of lexemes at the very beginning of marpaWrapperGrammarStartp */
   int                   *symbolIdArrayStartp;                /* Lexemes at the very beginning of marpaWrapperGrammarStartp (Ids sorted by priority) */
   marpaESLIF_symbol_t  **symbolArrayStartpp;                 /* Lexemes at the very beginning of marpaWrapperGrammarStartp (Symbols sorted by priority) */
@@ -643,11 +644,6 @@ struct marpaESLIFRecognizer {
   /* We always maintain a shallow pointer to the top-level recognizer, to ease access to lua state */
   /* This variable should be used ONLY IN src/lua.c (modulo initialization and propagation that are in src/marpaESLIF.c) */
   marpaESLIFRecognizer_t      *marpaESLIFRecognizerTopp;
-
-  /* At every recognizer pass, we use this array whose size is equal to the total number of marpa grammar terminals */
-  /* and we set here the number of expected grammar terminals */
-  int                         *expectedSymbolIdArrayp;   /* Total list of expected terminals */
-  marpaESLIF_symbol_t        **expectedSymbolArraypp;   /* Total list of expected symbols */
 
   /* Storage for latest call to marpaWrapperRecognizer_progressb */
   size_t                          progressallocl;
