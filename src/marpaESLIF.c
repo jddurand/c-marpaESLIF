@@ -8743,7 +8743,7 @@ static inline size_t _marpaESLIFRecognizer_expectedTerminals_notpristine_oneb(ma
 /* instructions.                                                             */
 /*****************************************************************************/
 {
-  static const char        *funcs                   = "_marpaESLIFRecognizer_expectedTerminalsb";
+  static const char        *funcs                   = "_marpaESLIFRecognizer_expectedTerminals_notpristine_oneb";
   marpaWrapperRecognizer_t *marpaWrapperRecognizerp = marpaESLIFRecognizerp->marpaWrapperRecognizerp;
   marpaESLIF_grammar_t     *grammarp                = marpaESLIFRecognizerp->grammarp;
   size_t                    nTerminall              = grammarp->nTerminall;
