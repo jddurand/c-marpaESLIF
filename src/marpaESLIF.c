@@ -6424,6 +6424,7 @@ static inline short _marpaESLIFRecognizer_symbol_matcherb(marpaESLIFRecognizer_t
   short                             lookaheadMatchb;
   size_t                            matchedLengthl;
   unsigned char                     uc;
+  marpaESLIF_terminal_t            *terminalp;
 
   MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_INC(marpaESLIFRecognizerp);
   MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "start");
@@ -6432,6 +6433,7 @@ static inline short _marpaESLIFRecognizer_symbol_matcherb(marpaESLIFRecognizer_t
   MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Trying to match %s, eofb=%d, inputl=%ld", symbolp->descp->asciis, (int) marpaESLIF_streamp->eofb, marpaESLIF_streamp->inputl);
   switch (symbolp->type) {
   case MARPAESLIF_SYMBOL_TYPE_TERMINAL:
+    terminalp = symbolp->u.terminalp;
     lastSizeBeforeCompletionl = 0;
 #ifndef MARPAESLIF_NTRACE
     /* Paranoid test: a terminal can match only once and have consumed nothing before completion */
@@ -6443,9 +6445,9 @@ static inline short _marpaESLIFRecognizer_symbol_matcherb(marpaESLIFRecognizer_t
     }
 #endif
     /* Support of predicted failure ? */
-    if (symbolp->u.terminalp->byte2failureb && (marpaESLIF_streamp->inputl > 0)) {
+    if (terminalp->byte2failureb && (marpaESLIF_streamp->inputl > 0)) {
       uc = (unsigned char) marpaESLIF_streamp->inputs[0];
-      if (symbolp->u.terminalp->willfailb[uc]) {
+      if (terminalp->willfailb[uc]) {
         MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "%s: Predicted failure for byte 0x%02x (%c)", symbolp->descp->asciis, (int) uc, isprint(uc) ? (char) uc : ' ');
         rci = MARPAESLIF_MATCH_FAILURE;
         rcb = 1;
@@ -6455,7 +6457,7 @@ static inline short _marpaESLIFRecognizer_symbol_matcherb(marpaESLIFRecognizer_t
     /* A terminal matcher NEVER updates the stream : inputs, inputl and eof can be passed as is. */
     rcMatcherb = _marpaESLIFRecognizer_terminal_matcherb(marpaESLIFRecognizerp,
                                                          marpaESLIF_streamp,
-                                                         symbolp->u.terminalp,
+                                                         terminalp,
                                                          marpaESLIF_streamp->inputs,
                                                          marpaESLIF_streamp->inputl,
                                                          marpaESLIF_streamp->eofb,
