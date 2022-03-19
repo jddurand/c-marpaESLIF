@@ -266,7 +266,7 @@ static inline short      _marpaESLIF_lua_recognizer_function_precompileb(marpaES
 
 #define LUA_INSERT(marpaESLIFp, L, idx) do {                            \
     LUA_GC(marpaESLIFp, L, LUA_GCCOLLECT, 0)                            \
-    if (MARPAESLIF_UNLIKELY(! marpaESLIFLua_lua_insert(L, idx))) {      \
+    if (MARPAESLIF_UNLIKELY(! marpaESLIFLua_lua_insert(1 /* checkstackb */, L, idx))) { \
       MARPAESLIFLUA_LOG_ERROR_STRING(marpaESLIFp, L, lua_insert);       \
       errno = ENOSYS;                                                   \
       goto err;                                                         \
@@ -348,7 +348,7 @@ static inline short      _marpaESLIF_lua_recognizer_function_precompileb(marpaES
 
 #define LUA_PUSHNIL(marpaESLIFp, L) do {                                \
     LUA_GC(marpaESLIFp, L, LUA_GCCOLLECT, 0)                            \
-    if (MARPAESLIF_UNLIKELY(! marpaESLIFLua_lua_pushnil(L))) {          \
+      if (MARPAESLIF_UNLIKELY(! marpaESLIFLua_lua_pushnil(1 /* checkstackb */, L))) { \
       MARPAESLIFLUA_LOG_ERROR_STRING(marpaESLIFp, L, lua_pushnil);      \
       errno = ENOSYS;                                                   \
       goto err;                                                         \
@@ -1082,10 +1082,10 @@ static inline short marpaESLIFLua_lua_newtable(lua_State *L)
 
 #ifndef MARPAESLIFLUA_EMBEDDED_NATIVECALL_LUA_PUSHCFUNCTION
 /****************************************************************************/
-static inline short marpaESLIFLua_lua_pushcfunction(lua_State *L, lua_CFunction f)
+static inline short marpaESLIFLua_lua_pushcfunction(short checkstackb, lua_State *L, lua_CFunction f)
 /****************************************************************************/
 {
-  return marpaESLIFLua_lua_assertstack(L, 1 /* extra */) && (! luaunpanic_pushcfunction(L, f));
+  return ((! checkstackb) || marpaESLIFLua_lua_assertstack(L, 1 /* extra */)) && (! luaunpanic_pushcfunction(L, f));
 }
 #endif
 
@@ -1109,10 +1109,10 @@ static inline short marpaESLIFLua_lua_setmetatable(lua_State *L, int index)
 
 #ifndef MARPAESLIFLUA_EMBEDDED_NATIVECALL_LUA_INSERT
 /****************************************************************************/
-static inline short marpaESLIFLua_lua_insert(lua_State *L, int index)
+static inline short marpaESLIFLua_lua_insert(short checkstackb, lua_State *L, int index)
 /****************************************************************************/
 {
-  return ((index <= 0) || marpaESLIFLua_lua_assertstack(L, index /* extra */)) && (! luaunpanic_insert(L, index));
+  return ((index <= 0) || (! checkstackb) || marpaESLIFLua_lua_assertstack(L, index /* extra */)) && (! luaunpanic_insert(L, index));
 }
 #endif
 
@@ -1199,10 +1199,10 @@ static inline short marpaESLIFLua_lua_pushlstring(const char **luasp, lua_State 
 
 #ifndef MARPAESLIFLUA_EMBEDDED_NATIVECALL_LUA_PUSHNIL
 /****************************************************************************/
-static inline short marpaESLIFLua_lua_pushnil(lua_State *L)
+static inline short marpaESLIFLua_lua_pushnil(short checkstackb, lua_State *L)
 /****************************************************************************/
 {
-  return marpaESLIFLua_lua_assertstack(L, 1 /* extra */) && (! luaunpanic_pushnil(L));
+  return ((! checkstackb) || marpaESLIFLua_lua_assertstack(L, 1 /* extra */)) && (! luaunpanic_pushnil(L));
 }
 #endif
 
@@ -1302,10 +1302,10 @@ static inline short marpaESLIFLua_lua_newuserdata(void **rcpp, lua_State *L, siz
 
 #ifndef MARPAESLIFLUA_EMBEDDED_NATIVECALL_LUA_PUSHVALUE
 /****************************************************************************/
-static inline short marpaESLIFLua_lua_pushvalue(lua_State *L, int index)
+static inline short marpaESLIFLua_lua_pushvalue(short checkstackb, lua_State *L, int index)
 /****************************************************************************/
 {
-  return marpaESLIFLua_lua_assertstack(L, 1 /* extra */) && (! luaunpanic_pushvalue(L, index));
+  return ((! checkstackb) || marpaESLIFLua_lua_assertstack(L, 1 /* extra */)) && (! luaunpanic_pushvalue(L, index));
 }
 #endif
 
@@ -1529,7 +1529,7 @@ static inline short marpaESLIFLua_luaL_callmeta(int *rcip, lua_State *L, int obj
 
 #ifndef MARPAESLIFLUA_EMBEDDED_NATIVECALL_LUAL_GETMETAFIELD
 /****************************************************************************/
-static inline short marpaESLIFLua_luaL_getmetafield(int *rcip, lua_State *L, int obj, const char *e)
+static inline short marpaESLIFLua_luaL_getmetafield(short getstackb, int *rcip, lua_State *L, int obj, const char *e)
 /****************************************************************************/
 {
   return ! luaunpanicL_getmetafield(rcip, L, obj, e);
