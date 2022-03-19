@@ -1601,10 +1601,10 @@ static inline short marpaESLIFLua_lua_settable(lua_State *L, int idx)
 
 #ifndef MARPAESLIFLUA_EMBEDDED_NATIVECALL_LUA_GETTABLE
 /****************************************************************************/
-static inline short marpaESLIFLua_lua_gettable(short checkstackb, int *rcip, lua_State *L, int idx)
+static inline short marpaESLIFLua_lua_gettable(int *rcip, lua_State *L, int idx)
 /****************************************************************************/
 {
-  return ((! checkstackb) || marpaESLIFLua_lua_assertstack(L, 1 /* extra */)) && (! luaunpanic_gettable(rcip, L, idx));
+  return ! luaunpanic_gettable(rcip, L, idx);
 }
 #endif
 
