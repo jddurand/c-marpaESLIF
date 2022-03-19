@@ -4923,7 +4923,7 @@ static short marpaESLIFLua_representationb(void *userDatavp, marpaESLIFValueResu
   int                          absindicei;
   short                        rcb;
 
-  absindicei = lua_absindex(L, -1);
+  if (! marpaESLIFLua_lua_absindex(&absindicei, L, -1)) goto err;
 
   /* We always push a PTR */
   if (marpaESLIFValueResultp->type != MARPAESLIF_VALUE_TYPE_PTR) {
@@ -7885,12 +7885,15 @@ static inline short marpaESLIFLua_lua_seti(lua_State *L, int index, lua_Integer 
 /****************************************************************************/
 {
 #if LUA_VERSION_NUM < 503
-  /* C.f. https://github.com/keplerproject/lua-compat-5.3/blob/master/c-api/compat-5.3c */
-  index = lua_absindex(L, index);
+  int indexi;
+
   if (! marpaESLIFLua_lua_assertstack(L, 1 /* extra */)) goto err;
+
+  /* C.f. https://github.com/keplerproject/lua-compat-5.3/blob/master/c-api/compat-5.3c */
+  indexi = lua_absindex(L, index);
   lua_pushinteger(L, i);                  /* Stack: ..., value at top of the stack, i */
   lua_insert(L, -2);                      /* Stack: ..., i, value at top of the stack */
-  lua_settable(L, index);                 /* Stack: ... */
+  lua_settable(L, indexi);                /* Stack: ... */
 #else
   lua_seti(L, index, i);                  /* Native lua call */
 #endif
@@ -9811,18 +9814,22 @@ static inline short marpaESLIFLua_metatypeb(int *rcip, lua_State *L, int index)
   int                getmetai;
   int                metatypei;
   int                metavaluetypei;
+  int                indexi;
   const char        *types;
 
   if (! marpaESLIFLua_lua_type(&rci, L, index)) goto err;
   if ((rci == LUA_TTABLE) || (rci == LUA_TUSERDATA)) {
+    /* We may require up to 2 more placeholders on the stack */
+    if (! marpaESLIFLua_lua_assertstack(L, 2 /* extra */)) goto err;
+
     /* Check if there is a __type meta field */
-    if (! marpaESLIFLua_luaL_getmetafield(1 /* checkstackb */, &getmetai, L, -1, "__type")) goto err; /* Stack: ..., __type metafield */
-    if (getmetai != LUA_TNIL) {
+    if (! marpaESLIFLua_lua_absindex(&indexi, L, index)) goto err;
+    if (! marpaESLIFLua_luaL_getmetafield(0 /* checkstackb */, &getmetai, L, -1, "__type")) goto err; /* Stack: ..., [+1] __type? */
+    if (getmetai != LUA_TNIL) {                                                                       /* Stack: ..., [+1] __type */
       if (! marpaESLIFLua_lua_type(&metatypei, L, -1)) goto err;
       if (metatypei == LUA_TFUNCTION) {
-        if (! marpaESLIFLua_lua_pushnil(1 /* checkstackb */, L)) goto err;                            /* Stack: ..., __type(), nil */
-        if (! marpaESLIFLua_lua_copy(L, index, -1)) goto err;                                         /* Stack: ..., __type(), value */
-        if (! marpaESLIFLua_lua_call(L, 1, 1)) goto err;                                              /* Stack: ..., __type(value) */
+        if (! marpaESLIFLua_lua_pushvalue(0 /* checkstackb */, L, indexi)) goto err;                  /* Stack: ..., [+1] __type, [+2] value */
+        if (! marpaESLIFLua_lua_call(L, 1, 1)) goto err;                                              /* Stack: ..., [+1] __type(value) */
         if (! marpaESLIFLua_lua_type(&metavaluetypei, L, -1)) goto err;
         if (metavaluetypei != LUA_TNIL) {
         tostring:
@@ -9848,7 +9855,7 @@ static inline short marpaESLIFLua_metatypeb(int *rcip, lua_State *L, int index)
             } else if (strcmp(types, "thread") == 0) {
               rci = LUA_TTHREAD;
             } else {
-              marpaESLIFLua_luaL_errorf(L, "Unsupported type %s", types);
+              marpaESLIFLua_luaL_errorf(L, "Unsupported type %s", types);                             /* Stack: ... */
               goto err;
             }
           }
