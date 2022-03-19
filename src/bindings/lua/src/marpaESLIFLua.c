@@ -40,6 +40,7 @@ typedef struct marpaESLIFLua_method {
 
 /* Special "canarray" metatable flag name */
 #define MARPAESLIF_CANARRAY "canarray"
+#define MARPAESLIF_CANARRAY_LENGTH 8
 
 /* Special "opaque" metatable flag name */
 #define MARPAESLIF_OPAQUE "opaque"
@@ -968,10 +969,14 @@ static inline short marpaESLIFLua_luaL_loadbuffer(short checkstackb, int *rcp, l
 /* Push of canarray aware general table */
 /* ------------------------------------ */
 #define MARPAESLIFLUA_PUSH_CANARRAY_AWARE_TABLE(L, narr, nrec, canarrayb) do { \
-    if (! marpaESLIFLua_lua_createtable(1 /* checkstackb */, L, narr, nrec)) goto err;                  /* Stack: ..., {} */ \
-    if (! marpaESLIFLua_lua_createtable(1 /* checkstackb */, L, 0 /* narr */, 1 /* nrec */)) goto err;  /* Stack: ..., {}, {} */ \
-    MARPAESLIFLUA_STORE_BOOLEAN(L, MARPAESLIF_CANARRAY, canarrayb);                                     /* Stack: ..., {}, { "canarray" = canarrayb } */ \
-    if (! marpaESLIFLua_lua_setmetatable(L, -2)) goto err;                                              /* Stack: ..., {} meta = { "canarray" = canarrayb } */ \
+    /* We require 4 placeholders on the stack */                        \
+    if (! marpaESLIFLua_lua_assertstack(L, 4 /* extra */)) goto err;    \
+    if (! marpaESLIFLua_lua_createtable(0 /* checkstackb */, L, narr, nrec)) goto err;                                            /* Stack: ..., [+1] {} */ \
+    if (! marpaESLIFLua_lua_createtable(0 /* checkstackb */, L, 0 /* narr */, 1 /* nrec */)) goto err;                            /* Stack: ..., [+1] {}, [+2] {} */ \
+    if (! marpaESLIFLua_lua_pushlstring(0 /* checkstackb */, NULL, L, MARPAESLIF_CANARRAY, MARPAESLIF_CANARRAY_LENGTH)) goto err; /* Stack: ..., [+1] {}, [+2] {}, [+3] "canarray" */ \
+    if (! marpaESLIFLua_lua_pushboolean(0 /* checkstackb */, L, (int) canarrayb)) goto err;                                       /* Stack: ..., [+1] {}, [+2] {}, [+3] "canarray", [+4] canarrayb */ \
+    if (! marpaESLIFLua_lua_rawset(L, -3)) goto err;                                                                              /* Stack: ..., [+1] {}, [+2] { "canarray" = canarrayb } */ \
+    if (! marpaESLIFLua_lua_setmetatable(L, -2)) goto err;                                                                        /* Stack: ..., [+1] { __meta = { "canarray" = canarrayb } } */ \
   } while (0)
 
 /* ---------------------- */
@@ -4634,21 +4639,23 @@ static inline short marpaESLIFLua_importb(lua_State *L, int stringtoencoding_r, 
     if (haveUndefb) {
       /* We need the __index metamethod of niled tables */
       if (! marpaESLIFLua_createniledtableb(1 /* checkstackb */, L, (int) marpaESLIFValueResultp->u.r.sizel, 1 /* arrayb */)) goto err; /* Stack: val1, ..., valn, niledtable */
-    } else {
-      MARPAESLIFLUA_PUSH_CANARRAY_AWARE_TABLE(L, (int) marpaESLIFValueResultp->u.r.sizel, 0 /* nrec */, 1 /* canarrayb */);             /* Stack: val1, ..., valn, niledtable */
-    }
-
-    if (marpaESLIFValueResultp->u.r.sizel > 0) {
-      for (i = marpaESLIFValueResultp->u.r.sizel; i > 0 ; i--) {
-        if (! marpaESLIFLua_lua_insert(1 /* checkstackb */, L, -2)) goto err;                                                           /* Stack: val1, ..., table, valn */
-        if (haveUndefb) {
-          /* Use __index metamethod of niled tables */
+      if (marpaESLIFValueResultp->u.r.sizel > 0) {
+        for (i = marpaESLIFValueResultp->u.r.sizel; i > 0 ; i--) {
+          if (! marpaESLIFLua_lua_insert(1 /* checkstackb */, L, -2)) goto err;                                                         /* Stack: val1, ..., table, valn */
           if (! marpaESLIFLua_lua_seti(L, -2, (int) i)) goto err;                                                                       /* Stack: val1, ..., table */
-        } else {
+        }
+      }
+    } else {
+      /* raw assignments */
+      MARPAESLIFLUA_PUSH_CANARRAY_AWARE_TABLE(L, (int) marpaESLIFValueResultp->u.r.sizel, 0 /* nrec */, 1 /* canarrayb */);             /* Stack: val1, ..., valn, niledtable */
+      if (marpaESLIFValueResultp->u.r.sizel > 0) {
+        for (i = marpaESLIFValueResultp->u.r.sizel; i > 0 ; i--) {
+          if (! marpaESLIFLua_lua_insert(1 /* checkstackb */, L, -2)) goto err;                                                         /* Stack: val1, ..., table, valn */
           if (! marpaESLIFLua_lua_rawseti(L, -2, (int) i)) goto err;                                                                    /* Stack: val1, ..., table */
         }
       }
     }
+
     break;
   case MARPAESLIF_VALUE_TYPE_TABLE:
     /* fprintf(stdout, "import table\n"); fflush(stdout); fflush(stderr); */
@@ -4661,15 +4668,21 @@ static inline short marpaESLIFLua_importb(lua_State *L, int stringtoencoding_r, 
     if (haveUndefb) {
       /* We need the __index metamethod of niled tables */
       if (! marpaESLIFLua_createniledtableb(1 /* checkstackb */, L, (int) marpaESLIFValueResultp->u.t.sizel, 0 /* arrayb */)) goto err;  /* Stack: keyn, valn, ..., key1, val1, table */
+      /* By definition the stack contains t.sizel even elements that are {key,value} tuples */
+      for (i = 0; i < marpaESLIFValueResultp->u.t.sizel; i++) {
+        if (! marpaESLIFLua_lua_insert(1 /* checkstackb */, L, -3)) goto err;                                                   /* Stack: keyn, valn, ..., table, keyx, valx */
+        if (! marpaESLIFLua_lua_settable(L, -3)) goto err;                                                                      /* Stack: keyn, valn, ..., table */
+      }
     } else {
+      /* raw assignments */
       MARPAESLIFLUA_PUSH_CANARRAY_AWARE_TABLE(L, 0 /* narr */, (int) marpaESLIFValueResultp->u.t.sizel /* nrec */, 0 /* canarrayb */);   /* Stack: keyn, valn, ..., key1, val1, table */
+      /* By definition the stack contains t.sizel even elements that are {key,value} tuples */
+      for (i = 0; i < marpaESLIFValueResultp->u.t.sizel; i++) {
+        if (! marpaESLIFLua_lua_insert(1 /* checkstackb */, L, -3)) goto err;                                                   /* Stack: keyn, valn, ..., table, keyx, valx */
+        if (! marpaESLIFLua_lua_rawset(L, -3)) goto err;                                                                        /* Stack: keyn, valn, ..., table */
+      }
     }
 
-    /* By definition the stack contains t.sizel even elements that are {key,value} tuples */
-    for (i = 0; i < marpaESLIFValueResultp->u.t.sizel; i++) {
-      if (! marpaESLIFLua_lua_insert(1 /* checkstackb */, L, -3)) goto err;                                                   /* Stack: keyn, valn, ..., table, keyx, valx */
-      if (! marpaESLIFLua_lua_settable(L, -3)) goto err;                                                                      /* Stack: keyn, valn, ..., table */
-    }
     break;
   case MARPAESLIF_VALUE_TYPE_LONG_DOUBLE:
     /* fprintf(stdout, "import long double\n"); fflush(stdout); fflush(stderr); */
@@ -9124,9 +9137,9 @@ static inline short marpaESLIFLua_stack_setb(lua_State *L, int stringtoencoding_
       if (! marpaESLIFLua_lua_assertstack(L, 2 /* extra */)) goto err;
 
       /* Note that the key is weak, i.e. we do not maintain a reference to the string */
-      MARPAESLIFLUA_DEREF(1 /* checkstackb */, L, stringtoencoding_r);                                     /* Stack: ..., [+1] MARPAESLIFSTRINGTOENCODINGTABLE */
+      MARPAESLIFLUA_DEREF(0 /* checkstackb */, L, stringtoencoding_r);                                     /* Stack: ..., [+1] MARPAESLIFSTRINGTOENCODINGTABLE */
       if (! marpaESLIFLua_lua_pushvalue(0 /* checkstackb */, L, currenti)) goto err;                       /* Stack: ..., [+1] MARPAESLIFSTRINGTOENCODINGTABLE, [+2] string */
-      if (! marpaESLIFLua_lua_gettable(NULL, L, -2)) goto err;                                             /* Stack: ..., [+1] MARPAESLIFSTRINGTOENCODINGTABLE, [+2] encoding */
+      if (! marpaESLIFLua_lua_rawget(0 /* checkstackb */, NULL, L, -2)) goto err;                          /* Stack: ..., [+1] MARPAESLIFSTRINGTOENCODINGTABLE, [+2] encoding */
       if (! marpaESLIFLua_lua_type(&encodingtypei, L, -1)) goto err;
       if (encodingtypei == LUA_TSTRING) {
         if (! marpaESLIFLua_lua_tostring(&encodings, L, -1)) goto err;
