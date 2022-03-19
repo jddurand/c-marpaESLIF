@@ -8581,6 +8581,8 @@ static inline short marpaESLIFLua_luaL_getmetafield(int *rcip, lua_State *L, int
   int   rci;
   short rcb;
 
+  if (! marpaESLIFLua_lua_assertstack(L, 1 /* extra */)) goto err;
+
   rci = luaL_getmetafield(L, obj, e);
   if (rcip != NULL) {
     *rcip = rci;
