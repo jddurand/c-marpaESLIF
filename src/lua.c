@@ -1121,7 +1121,7 @@ static inline short marpaESLIFLua_lua_insert(lua_State *L, int index)
 static inline short marpaESLIFLua_lua_rawgeti(int *luaip, lua_State *L, int index, lua_Integer n)
 /****************************************************************************/
 {
-  return ! luaunpanic_rawgeti(luaip, L, index, n);
+  return marpaESLIFLua_lua_assertstack(L, 1 /* extra */) && (! luaunpanic_rawgeti(luaip, L, index, n));
 }
 #endif
 
@@ -1130,7 +1130,7 @@ static inline short marpaESLIFLua_lua_rawgeti(int *luaip, lua_State *L, int inde
 static inline short marpaESLIFLua_lua_rawget(int *luaip, lua_State *L, int index)
 /****************************************************************************/
 {
-  return ! luaunpanic_rawget(luaip, L, index);
+  return marpaESLIFLua_lua_assertstack(L, 1 /* extra */) && (! luaunpanic_rawget(luaip, L, index));
 }
 #endif
 
@@ -1139,7 +1139,7 @@ static inline short marpaESLIFLua_lua_rawget(int *luaip, lua_State *L, int index
 static inline short marpaESLIFLua_lua_rawgetp(int *luaip, lua_State *L, int index, const void *p)
 /****************************************************************************/
 {
-  return ! luaunpanic_rawgetp(luaip, L, index, p);
+  return marpaESLIFLua_lua_assertstack(L, 1 /* extra */) && (! luaunpanic_rawgetp(luaip, L, index, p));
 }
 #endif
 
