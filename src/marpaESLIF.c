@@ -8862,31 +8862,6 @@ static inline short _marpaESLIFRecognizer_resume_oneb(marpaESLIFRecognizer_t *ma
     }
   }
 
-  if (nSymboll == 0) {
-    /* No symbol expected: this is an error unless:
-       - discard mode and completion is reached, or
-       - grammar is exhausted and exhaustion support is on
-       (Note that exception mode setted support of exhaustion mode)
-       These two cases cannot happen when initialEventsb is true:
-       - discard mode cannot be set
-       - grammar cannot be exhausted (we at the very early start)
-    */
-    if (MARPAESLIF_UNLIKELY(! _marpaESLIFRecognizer_isExhaustedb(marpaESLIFRecognizerp, &isExhaustedb))) {
-      goto err;
-    }
-#ifndef MARPAESLIF_NTRACE
-    MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "marpaESLIFRecognizerp->discardb=%d, marpaESLIFRecognizerp->completedb=%d, marpaESLIFRecognizerOption.exhaustedb=%d, isExhaustedb=%d", marpaESLIFRecognizerp->discardb, marpaESLIFRecognizerp->completedb, marpaESLIFRecognizerp->marpaESLIFRecognizerOption.exhaustedb, isExhaustedb);
-#endif
-    if (MARPAESLIF_LIKELY((marpaESLIFRecognizerp->discardb && marpaESLIFRecognizerp->completedb)
-                          ||
-                          (marpaESLIFRecognizerp->marpaESLIFRecognizerOption.exhaustedb && isExhaustedb))) {
-      rcb = 1;
-      goto done;
-    } else {
-      goto err;
-    }
-  }
-
   /* Try to match */
   retry:
   isPseudoTerminalMatchb          = 0;
@@ -9115,16 +9090,43 @@ static inline short _marpaESLIFRecognizer_resume_oneb(marpaESLIFRecognizer_t *ma
   }
 
   if (alternativeStackSymboli <= 0) {
-    if (! __marpaESLIFRecognizer_discardb(marpaESLIFRecognizerp, 0 /* minl */, &discardl, 0 /* appendEventb */)) {
-      goto err;
-    }
-    if (discardl > 0) {
-      /* If there is an event, get out of this method */
-      if (marpaESLIFRecognizerp->eventArrayl > 0) {
+    /* Either there was truely no symbol, either no symbol matched. */
+    if (nSymboll > 0) {
+      /* There was at least one symbol candidate, but nothing matched */
+      if (! __marpaESLIFRecognizer_discardb(marpaESLIFRecognizerp, 0 /* minl */, &discardl, 0 /* appendEventb */)) {
+        goto err;
+      }
+      if (discardl > 0) {
+        /* If there is an event, get out of this method */
+        if (marpaESLIFRecognizerp->eventArrayl > 0) {
+          rcb = 1;
+          goto done;
+        } else {
+          goto retry;
+        }
+      }
+    } else {
+      /* No symbol expected: this is an error unless:
+         - discard mode and completion is reached, or
+         - grammar is exhausted and exhaustion support is on
+         (Note that exception mode setted support of exhaustion mode)
+         These two cases cannot happen when initialEventsb is true:
+         - discard mode cannot be set
+         - grammar cannot be exhausted (we at the very early start)
+      */
+      if (MARPAESLIF_UNLIKELY(! _marpaESLIFRecognizer_isExhaustedb(marpaESLIFRecognizerp, &isExhaustedb))) {
+        goto err;
+      }
+#ifndef MARPAESLIF_NTRACE
+      MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "marpaESLIFRecognizerp->discardb=%d, marpaESLIFRecognizerp->completedb=%d, marpaESLIFRecognizerOption.exhaustedb=%d, isExhaustedb=%d", marpaESLIFRecognizerp->discardb, marpaESLIFRecognizerp->completedb, marpaESLIFRecognizerp->marpaESLIFRecognizerOption.exhaustedb, isExhaustedb);
+#endif
+      if (MARPAESLIF_LIKELY((marpaESLIFRecognizerp->discardb && marpaESLIFRecognizerp->completedb)
+                            ||
+                            (marpaESLIFRecognizerp->marpaESLIFRecognizerOption.exhaustedb && isExhaustedb))) {
         rcb = 1;
         goto done;
       } else {
-        goto retry;
+        goto err;
       }
     }
 
