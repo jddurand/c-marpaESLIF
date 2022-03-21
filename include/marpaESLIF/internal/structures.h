@@ -334,14 +334,14 @@ struct marpaESLIF_grammar {
   marpaWrapperGrammar_t *marpaWrapperGrammarStartNoEventp;   /* Grammar implementation at :start forcing no event */
   size_t                 nTerminall;                         /* Total number of grammar terminals */
   marpaESLIF_symbol_t  **terminalArraypp;                    /* Total grammar terminal (Symbols sorted by priority) */
-  size_t                 nSymbolStartl;                      /* Number of lexemes at the very beginning of marpaWrapperGrammarStartp */
-  int                   *symbolIdArrayStartp;                /* Lexemes at the very beginning of marpaWrapperGrammarStartp (Ids sorted by priority) */
-  marpaESLIF_symbol_t  **symbolArrayStartpp;                 /* Lexemes at the very beginning of marpaWrapperGrammarStartp (Symbols sorted by priority) */
+  size_t                 nSymbolPristinel;                   /* Number of lexemes at the very beginning of marpaWrapperGrammarStartp */
+  int                   *symbolIdArrayPristinep;             /* Lexemes at the very beginning of marpaWrapperGrammarStartp (Ids sorted by priority) */
+  marpaESLIF_symbol_t  **symbolArrayPristinepp;              /* Lexemes at the very beginning of marpaWrapperGrammarStartp (Symbols sorted by priority) */
   marpaWrapperGrammar_t *marpaWrapperGrammarDiscardp;        /* Grammar implementation at :discard */
   marpaWrapperGrammar_t *marpaWrapperGrammarDiscardNoEventp; /* Grammar implementation at :discard forcing no event */
-  size_t                 nSymbolDiscardl;                    /* Number of lexemes at the very beginning of marpaWrapperGrammarDiscardp */
-  int                   *symbolIdArrayDiscardp;              /* Lexemes at the very beginning of marpaWrapperGrammarStartp (Ids) */
-  marpaESLIF_symbol_t  **symbolArrayDiscardpp;               /* Lexemes at the very beginning of marpaWrapperGrammarStartp (Symbols ordered by priority) */
+  size_t                 nSymbolDiscardPristinel;            /* Number of lexemes at the very beginning of marpaWrapperGrammarDiscardp */
+  int                   *symbolIdArrayDiscardPristinep;      /* Lexemes at the very beginning of marpaWrapperGrammarStartp (Ids) */
+  marpaESLIF_symbol_t  **symbolArrayDiscardPristinepp;       /* Lexemes at the very beginning of marpaWrapperGrammarStartp (Symbols ordered by priority) */
   marpaESLIF_symbol_t   *discardp;                           /* Discard symbol, used at grammar validation */
   genericStack_t         _symbolStack;                       /* Stack of symbols */
   genericStack_t        *symbolStackp;                       /* Pointer to stack of symbols */
@@ -478,9 +478,9 @@ struct marpaESLIF_meta {
   marpaESLIFGrammar_t           _marpaESLIFGrammarLexemeClone;    /* Cloned ESLIF grammar in lexeme search mode (no event): allocated when meta is allocated */
   marpaESLIF_grammar_t          _grammar;
   marpaESLIFGrammar_t           *marpaESLIFGrammarLexemeClonep;   /* Cloned ESLIF grammar in lexeme search mode (no event) */
-  size_t                         nSymbolStartl;                   /* Number of lexemes at the very beginning of marpaWrapperGrammarStartp */
-  int                           *symbolIdArrayStartp;             /* Lexemes at the very beginning of marpaWrapperGrammarStartp (Ids sorted by priority) */
-  marpaESLIF_symbol_t          **symbolArrayStartpp;              /* Lexemes at the very beginning of marpaWrapperGrammarStartp (Symbols sorted by priority) */
+  size_t                         nSymbolPristinel;                /* Number of lexemes at the very beginning of marpaWrapperGrammarStartp */
+  int                           *symbolIdArrayPristinep;          /* Lexemes at the very beginning of marpaWrapperGrammarStartp (Ids sorted by priority) */
+  marpaESLIF_symbol_t          **symbolArrayPristinepp;           /* Lexemes at the very beginning of marpaWrapperGrammarStartp (Symbols sorted by priority) */
   short                          lazyb;                           /* Meta symbol is lazy - for internal usage only at bootstrap */
   int                            eventSeti;                       /* Remember eventSeti */
 };
