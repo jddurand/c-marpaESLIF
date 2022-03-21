@@ -1,4 +1,4 @@
-/* #undef MARPAESLIF_NTRACE */
+/* #undef MARPAESLIF_NTRACE *:
 /* For stack manipulation debug: */
 /* #define MARPAESLIF_NOTICE_ACTION */
 
@@ -3402,13 +3402,6 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
       }
     }
     if (grammarp->nTerminall > 0) {
-      if (grammarp->terminalIdArrayp == NULL) {
-        grammarp->terminalIdArrayp = (int *) malloc(sizeof(int) * grammarp->nTerminall);
-        if (MARPAESLIF_UNLIKELY(grammarp->terminalIdArrayp == NULL)) {
-          MARPAESLIF_ERRORF(marpaESLIFp, "malloc failure, %s", strerror(errno));
-          goto err;
-        }
-      }
       if (grammarp->terminalArraypp == NULL) {
         grammarp->terminalArraypp = (marpaESLIF_symbol_t **) malloc(sizeof(marpaESLIF_symbol_t *) * grammarp->nTerminall);
         if (MARPAESLIF_UNLIKELY(grammarp->terminalArraypp == NULL)) {
@@ -3440,10 +3433,6 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
     }
     if (grammarp->nTerminall > 0) {
       qsort(grammarp->terminalArraypp, grammarp->nTerminall, sizeof(marpaESLIF_symbol_t *), _marpaESLIF_symbol_priority_sorti);
-      /* Recuperate symbol Ids sorted by priority */
-      for (symboll = 0; symboll < grammarp->nTerminall; symboll++) {
-        grammarp->terminalIdArrayp[symboll] = grammarp->terminalArraypp[symboll]->idi;
-      }
     }
 
     if (GENERICSTACK_USED(symbolStackp) > 0) {
@@ -4378,7 +4367,6 @@ static inline marpaESLIF_grammar_t *_marpaESLIF_grammar_newp(marpaESLIFGrammar_t
   grammarp->marpaWrapperGrammarStartp          = NULL;
   grammarp->marpaWrapperGrammarStartNoEventp   = NULL;
   grammarp->nTerminall                         = 0;
-  grammarp->terminalIdArrayp                   = NULL;
   grammarp->terminalArraypp                    = NULL;
   grammarp->nSymbolStartl                      = 0;
   grammarp->symbolIdArrayStartp                = NULL;
@@ -4581,9 +4569,6 @@ static inline void _marpaESLIF_grammar_freev(marpaESLIF_grammar_t *grammarp)
     }
     if (grammarp->asciishows != NULL) {
       free(grammarp->asciishows);
-    }
-    if (grammarp->terminalIdArrayp != NULL) {
-      free(grammarp->terminalIdArrayp);
     }
     if (grammarp->terminalArraypp != NULL) {
       free(grammarp->terminalArraypp);

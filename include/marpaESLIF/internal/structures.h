@@ -333,7 +333,6 @@ struct marpaESLIF_grammar {
   marpaWrapperGrammar_t *marpaWrapperGrammarStartp;          /* Grammar implementation at :start */
   marpaWrapperGrammar_t *marpaWrapperGrammarStartNoEventp;   /* Grammar implementation at :start forcing no event */
   size_t                 nTerminall;                         /* Total number of grammar terminals */
-  int                   *terminalIdArrayp;                   /* Total grammar terminal (Ids sorted by priority) */
   marpaESLIF_symbol_t  **terminalArraypp;                    /* Total grammar terminal (Symbols sorted by priority) */
   size_t                 nSymbolStartl;                      /* Number of lexemes at the very beginning of marpaWrapperGrammarStartp */
   int                   *symbolIdArrayStartp;                /* Lexemes at the very beginning of marpaWrapperGrammarStartp (Ids sorted by priority) */
