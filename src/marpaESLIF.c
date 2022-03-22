@@ -8908,14 +8908,9 @@ static inline short _marpaESLIFRecognizer_resume_oneb(marpaESLIFRecognizer_t *ma
     nSymboll      = marpaESLIFRecognizerp->nSymbolPristinel;
     symbolArraypp = marpaESLIFRecognizerp->symbolArrayPristinepp;
   } else {
-    nSymboll              = grammarp->nSymboll;
-    symbolArraypp         = grammarp->symbolArraypp;
+    nSymboll      = grammarp->nSymboll;
+    symbolArraypp = grammarp->symbolArraypp;
   }
-
-  if (nSymboll <= 0) {
-    abort();
-  }
-  
 
   /* Try to match */
  retry:
