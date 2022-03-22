@@ -1,4 +1,4 @@
-#ifndef MARPAESLIF_INTERNAL_STRUCTURES_H
+#ifndef MARPAESLIF_NAL_STRUCTURES_H
 #define MARPAESLIF_INTERNAL_STRUCTURES_H
 
 #include "marpaESLIF.h"
@@ -332,8 +332,10 @@ struct marpaESLIF_grammar {
   short                  discardIsFallbackb;                 /* discard is fallback mode */
   marpaWrapperGrammar_t *marpaWrapperGrammarStartp;          /* Grammar implementation at :start */
   marpaWrapperGrammar_t *marpaWrapperGrammarStartNoEventp;   /* Grammar implementation at :start forcing no event */
-  size_t                 nTerminall;                         /* Total number of grammar terminals */
-  marpaESLIF_symbol_t  **terminalArraypp;                    /* Total grammar terminal (Symbols sorted by priority) */
+  size_t                 nSymboll;                           /* Total number of accessible terminals */
+  marpaESLIF_symbol_t  **symbolArraypp;                      /* Total accessible grammar terminal (Symbols sorted by priority) */
+  size_t                 nSymbolDiscardl;                    /* Total number of discard accessible terminals */
+  marpaESLIF_symbol_t  **symbolArrayDiscardpp;               /* Total accessible grammar terminal (Symbols sorted by priority) */
   size_t                 nSymbolPristinel;                   /* Number of lexemes at the very beginning of marpaWrapperGrammarStartp */
   int                   *symbolIdArrayPristinep;             /* Lexemes at the very beginning of marpaWrapperGrammarStartp (Ids sorted by priority) */
   marpaESLIF_symbol_t  **symbolArrayPristinepp;              /* Lexemes at the very beginning of marpaWrapperGrammarStartp (Symbols sorted by priority) */
@@ -479,8 +481,10 @@ struct marpaESLIF_meta {
   marpaESLIF_grammar_t          _grammar;
   marpaESLIFGrammar_t           *marpaESLIFGrammarLexemeClonep;   /* Cloned ESLIF grammar in lexeme search mode (no event) */
   size_t                         nSymbolPristinel;                /* Number of lexemes at the very beginning of marpaWrapperGrammarStartp */
-  int                           *symbolIdArrayPristinep;          /* Lexemes at the very beginning of marpaWrapperGrammarStartp (Ids sorted by priority) */
-  marpaESLIF_symbol_t          **symbolArrayPristinepp;           /* Lexemes at the very beginning of marpaWrapperGrammarStartp (Symbols sorted by priority) */
+  int                           *symbolIdArrayPristinep;          /* Grammar terminals at the very beginning of marpaWrapperGrammarStartp (Ids sorted by priority) */
+  marpaESLIF_symbol_t          **symbolArrayPristinepp;           /* Grammar terminals at the very beginning of marpaWrapperGrammarStartp (Symbols sorted by priority) */
+  size_t                         nSymboll;                        /* Number of grammar terminals of marpaWrapperGrammarp */
+  marpaESLIF_symbol_t          **symbolArraypp;                   /* Grammar terminals of marpaWrapperGrammarp (Symbols sorted by priority) */
   short                          lazyb;                           /* Meta symbol is lazy - for internal usage only at bootstrap */
   int                            eventSeti;                       /* Remember eventSeti */
 };
@@ -612,8 +616,12 @@ struct marpaESLIFRecognizer {
 
   /* For pristine recognizers, expected terminals are always known in advance */
   size_t                       nSymbolPristinel;
-  int                         *symbolIdArrayPristinep; /* This is shallow pointer! */
-  marpaESLIF_symbol_t        **symbolArrayPristinepp; /* This is shallow pointer! */
+  int                         *symbolIdArrayPristinep; /* This is a shallow pointer! */
+  marpaESLIF_symbol_t        **symbolArrayPristinepp; /* This is a shallow pointer! */
+
+  /* Accessible terminals */
+  size_t                       nSymboll;
+  int                         *symbolIdArrayp; /* This is a shallow pointer! */
 
   /* Last discard information is NOT available via last_complete because it is not */
   /* associated with any particular grammar. So, when trackb is on */
