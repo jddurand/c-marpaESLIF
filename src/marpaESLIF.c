@@ -8845,7 +8845,7 @@ static inline short _marpaESLIFRecognizer_resume_oneb(marpaESLIFRecognizer_t *ma
   static const char               *funcs = "_marpaESLIFRecognizer_resume_oneb";
   short                            onlyPredictedLexemesb;
   size_t                           nSymboll;
-  marpaESLIF_symbol_t            **symbolArraypp;
+  marpaESLIF_symbol_t            **symbolpp;
   short                            lastMatchedPriorityInitializedb;
   int                              lastMatchedMinPriorityi;
   size_t                           maxMatchedl;
@@ -8902,15 +8902,9 @@ static inline short _marpaESLIFRecognizer_resume_oneb(marpaESLIFRecognizer_t *ma
     /* Ask for predicted lexemes */
     onlyPredictedLexemesb = 1;
   }
-  
-  /* Ask for expected grammar terminals */
-  if (marpaESLIFRecognizerp->pristineb) {
-    nSymboll      = marpaESLIFRecognizerp->nSymbolPristinel;
-    symbolArraypp = marpaESLIFRecognizerp->symbolArrayPristinepp;
-  } else {
-    nSymboll      = grammarp->nSymboll;
-    symbolArraypp = grammarp->symbolArraypp;
-  }
+
+  /* nSymboll is constant */
+  nSymboll = marpaESLIFRecognizerp->pristineb ? marpaESLIFRecognizerp->nSymbolPristinel : grammarp->nSymboll;
 
   /* Try to match */
  retry:
@@ -8921,20 +8915,21 @@ static inline short _marpaESLIFRecognizer_resume_oneb(marpaESLIFRecognizer_t *ma
   alternativeStackSymboli         = 0;
   maxMatchedl                     = 0;
   lastMatchedPriorityInitializedb = 0;
+  symbolpp                        = marpaESLIFRecognizerp->pristineb ? marpaESLIFRecognizerp->symbolArrayPristinepp : grammarp->symbolArraypp;
 
   while (1) {
     symbolp = NULL;
     while (iteratorl < nSymboll) {
       if (marpaESLIFRecognizerp->pristineb) {
         /* Pristine: candidates were already filtered with marpaWrapperRecognizer_isExpectedb */
-        symbolp = symbolArraypp[iteratorl];
+        symbolp = *symbolpp++;
         MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Candidate symbol No %d <%s> at indice %ld, priority=%d, is expected (pristine case)", symbolp->idi, symbolp->descp->asciis, (unsigned long) iteratorl, symbolp->priorityi);
 	iteratorl++;
 	break;
       }
 
       /* Not pristine: candidates has to pass marpaWrapperRecognizer_isExpectedb */
-      candidatep = symbolArraypp[iteratorl];
+      candidatep = *symbolpp++;
       if (MARPAESLIF_UNLIKELY(! marpaWrapperRecognizer_isExpectedb(marpaESLIFRecognizerp->marpaWrapperRecognizerp, candidatep->idi, &isExpectedb))) {
 	goto err;
       }
