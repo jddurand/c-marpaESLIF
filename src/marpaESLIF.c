@@ -3162,7 +3162,9 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
   int                               grammarj;
   marpaESLIF_symbol_t              *symbolp;
   marpaESLIF_symbol_t              *subSymbolp;
+  marpaESLIF_rule_t                *subRulep;
   int                               symboli;
+  int                               symbolj;
   marpaESLIF_rule_t                *rulep;
   marpaESLIF_rule_t                *ruletmpp;
   int                               rulei;
@@ -4103,6 +4105,7 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
   /* - total number of marpa terminals */
   /* - Internal event types */
   /* - Effective actions */
+  /* - Check if a lookahead is composed only of a terminal */
   for (grammari = 0; grammari < GENERICSTACK_USED(grammarStackp); grammari++) {
     if (! GENERICSTACK_IS_PTR(grammarStackp, grammari)) {
       continue;
@@ -4173,6 +4176,15 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
           symbolp->effectiveNullableActione = (symbolp->nullableActionp != NULL) ? symbolp->nullableActione : grammarp->defaultRuleActione;
           symbolp->effectiveSymbolActionp   = (symbolp->symbolActionp   != NULL) ? symbolp->symbolActionp   : grammarp->defaultSymbolActionp;
           symbolp->effectiveSymbolActione   = (symbolp->symbolActionp   != NULL) ? symbolp->symbolActione   : grammarp->defaultSymbolActione;
+
+          /* Look if the lookahead meta is composed only a single terminal */
+          if (MARPAESLIF_IS_META_LOOKAHEAD(symbolp)) {
+            /* A lookahead symbol is mapped to a symbol in the same grammar that is the LHS of a single rule (c.f. bootstrap.c) */
+            subRulep = (marpaESLIF_rule_t *) GENERICSTACK_GET_PTR(symbolp->lookupSymbolp->lhsRuleStackp, 0);
+	    symbolp->lookaheadSymbolp = subRulep->rhspp[0];
+            symbolp->lookaheadIsTerminalb = MARPAESLIF_IS_TERMINAL(symbolp->lookaheadSymbolp);
+	    MARPAESLIF_TRACEF(marpaESLIFp, funcs, "At grammar level %d (%s), symbol %d <%s> lookahead %s a terminal", grammari, grammarp->descp->asciis, symbolp->idi, symbolp->descp->asciis, symbolp->lookaheadIsTerminalb ? "is" : "is not");
+          }
         }
       }
     }
@@ -5018,6 +5030,8 @@ static inline marpaESLIF_symbol_t *_marpaESLIF_symbol_newp(marpaESLIF_t *marpaES
   symbolp->callp                    = NULL;
   symbolp->pushContextActionp       = NULL;
   symbolp->lookaheadb               = 0;
+  symbolp->lookaheadIsTerminalb     = 0;
+  symbolp->lookaheadSymbolp         = NULL;
 
   symbolp->nullableRuleStackp = &(symbolp->_nullableRuleStack);
   GENERICSTACK_INIT(symbolp->nullableRuleStackp);
@@ -6232,6 +6246,9 @@ static inline short _marpaESLIFRecognizer_meta_matcherb(marpaESLIFRecognizer_t *
   marpaESLIFGrammarOption_t                generatedGrammarOption;
   marpaESLIFValueResult_t                 *contextp;
   short                                    rcb;
+  short                                    rcMatcherb;
+  marpaESLIF_matcher_value_t               rci;
+  marpaESLIFValueResult_t                  marpaESLIFValueResultArray;
 
   MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_INC(marpaESLIFRecognizerp);
   MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "start");
@@ -6340,30 +6357,54 @@ static inline short _marpaESLIFRecognizer_meta_matcherb(marpaESLIFRecognizer_t *
     lexemeGrammarp = symbolp->u.metap->marpaESLIFGrammarLexemeClonep;
   }
 
+  /* If it is a lookahead is a single terminal, do the test immediately for performance */
+  if (symbolp->lookaheadIsTerminalb) {
+    rcMatcherb = _marpaESLIFRecognizer_symbol_matcherb(marpaESLIFRecognizerp,
+						       marpaESLIFRecognizerp->marpaESLIF_streamp,
+						       symbolp->lookaheadSymbolp,
+						       &rci,
+						       &marpaESLIFValueResultArray,
+						       maxStartCompletionsi,
+						       lastSizeBeforeCompletionlp,
+						       numberOfStartCompletionsip);
+    if (MARPAESLIF_UNLIKELY(rcMatcherb <= 0)) {
+      goto err;
+    }
+    if (rci != MARPAESLIF_MATCH_OK) {
+      goto err;
+    }
+    if (marpaESLIFValueResultp == NULL) {
+      /* We do not mind about the result */
+      _marpaESLIFRecognizer_valueResultFreev(marpaESLIFRecognizerp, &marpaESLIFValueResultArray);
+    } else {
+      *marpaESLIFValueResultp = marpaESLIFValueResultArray;
+    }
+  } else {
   /* We want to run an internal recognizer */
-  marpaESLIFRecognizerOption = marpaESLIFRecognizerp->marpaESLIFRecognizerOption;
+    marpaESLIFRecognizerOption = marpaESLIFRecognizerp->marpaESLIFRecognizerOption;
 
-  /* In any case we are in a lexeme mode: disable threshold warning and allow remaining data after completion */
-  marpaESLIFRecognizerOption.disableThresholdb = 1;
-  marpaESLIFRecognizerOption.exhaustedb        = 1;
+    /* In any case we are in a lexeme mode: disable threshold warning and allow remaining data after completion */
+    marpaESLIFRecognizerOption.disableThresholdb = 1;
+    marpaESLIFRecognizerOption.exhaustedb        = 1;
 
-  /* We want the child recognizer to take ownership of the context */
-  if (! _marpaESLIFGrammar_parseb(marpaESLIFRecognizerp->marpaESLIFp,
-                                  lexemeGrammarp->grammarp, /* grammarp of lexeme grammarp always points to the correct subgrammar - c.f. marpaESLIFGrammar_validateb() */
-                                  &marpaESLIFRecognizerOption,
-                                  &marpaESLIFValueOption,
-                                  0 /* discardb */,
-                                  1, /* noEventb */
-                                  1, /* silentb */
-                                  marpaESLIFRecognizerp /* marpaESLIFRecognizerParentp */,
-                                  isExhaustedbp,
-                                  marpaESLIFValueResultp,
-                                  maxStartCompletionsi,
-                                  lastSizeBeforeCompletionlp,
-                                  numberOfStartCompletionsip,
-                                  0, /* grammarIsOnStackb */
-                                  symbolp->verboseb)) {
-    goto err;
+    /* We want the child recognizer to take ownership of the context */
+    if (! _marpaESLIFGrammar_parseb(marpaESLIFRecognizerp->marpaESLIFp,
+				    lexemeGrammarp->grammarp, /* grammarp of lexeme grammarp always points to the correct subgrammar - c.f. marpaESLIFGrammar_validateb() */
+				    &marpaESLIFRecognizerOption,
+				    &marpaESLIFValueOption,
+				    0 /* discardb */,
+				    1, /* noEventb */
+				    1, /* silentb */
+				    marpaESLIFRecognizerp /* marpaESLIFRecognizerParentp */,
+				    isExhaustedbp,
+				    marpaESLIFValueResultp,
+				    maxStartCompletionsi,
+				    lastSizeBeforeCompletionlp,
+				    numberOfStartCompletionsip,
+				    0, /* grammarIsOnStackb */
+				    symbolp->verboseb)) {
+      goto err;
+    }
   }
 
   if (rcip != NULL) {

@@ -282,6 +282,8 @@ struct marpaESLIFSymbol {
   marpaESLIF_lua_functioncall_t *callp;                  /* For parameterized symbols, shallow pointer to callp */
   marpaESLIFAction_t            *pushContextActionp;     /* For parameterized symbols, context push action */
   short                          lookaheadb;             /* Lookahead symbol ? */
+  short                          lookaheadIsTerminalb;   /* Lookahead is a single terminal ? */
+  marpaESLIF_symbol_t           *lookaheadSymbolp;       /* Lookahead symbol */
 };
 
 /* A rule */
