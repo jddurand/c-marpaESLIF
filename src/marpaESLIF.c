@@ -8872,6 +8872,9 @@ static inline short _marpaESLIFRecognizer_resume_oneb(marpaESLIFRecognizer_t *ma
   /* nSymboll is constant */
   nSymboll = marpaESLIFRecognizerp->pristineb ? marpaESLIFRecognizerp->nSymbolPristinel : grammarp->nSymboll;
 
+  /* willFailsymbolArraypp is constant: by definition pristine is a subject of grammarp->symbolArraypp */
+  willFailsymbolArraypp = grammarp->willFailsymbolArraypp;
+
   /* Try to match */
  retry:
   iteratorl                       = 0;
@@ -8882,13 +8885,8 @@ static inline short _marpaESLIFRecognizer_resume_oneb(marpaESLIFRecognizer_t *ma
   alternativeStackSymboli         = 0;
   maxMatchedl                     = 0;
   lastMatchedPriorityInitializedb = 0;
-  if (marpaESLIFRecognizerp->pristineb) {
-    symbolpp              = marpaESLIFRecognizerp->symbolArrayPristinepp;
-    willFailsymbolArraypp = NULL; /* Not used */
-  } else {
-    symbolpp              = grammarp->symbolArraypp;
-    willFailsymbolArraypp = grammarp->willFailsymbolArraypp;
-  }
+  symbolpp                        = marpaESLIFRecognizerp->pristineb ? marpaESLIFRecognizerp->symbolArrayPristinepp : grammarp->symbolArraypp;
+
   if (marpaESLIF_streamp->inputl > 0) {
     ucb = 1;
     uc = (unsigned char) marpaESLIF_streamp->inputs[0];
@@ -8898,28 +8896,10 @@ static inline short _marpaESLIFRecognizer_resume_oneb(marpaESLIFRecognizer_t *ma
 
   while (1) {
     symbolp = NULL;
-    while (iteratorl < nSymboll) {
-      if (marpaESLIFRecognizerp->pristineb) {
-        /* Pristine: candidates were already filtered with marpaWrapperRecognizer_isExpectedb */
-        symbolp = *symbolpp++;
-
-	if (lastMatchedPriorityInitializedb && symbolp->priorityi < lastMatchedMinPriorityi) {
-	  MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp,
-				      funcs,
-				      "Skipping other alternatives that all have priority < min priority %d",
-				      lastMatchedMinPriorityi);
-	  symbolp = NULL;
-	  break;
-	}
-
-        MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Candidate symbol No %d <%s> at indice %ld, priority=%d, is expected (pristine case)", symbolp->idi, symbolp->descp->asciis, (unsigned long) iteratorl, symbolp->priorityi);
-	iteratorl++;
-	break;
-      }
-
-      /* Not pristine: candidates has to pass marpaWrapperRecognizer_isExpectedb */
+    while (iteratorl++ < nSymboll) {
       candidatep = *symbolpp++;
 
+      /* Out prioritized ? Exit the loop on candidates, because the list of candidates is sorted by priority descending */
       if (lastMatchedPriorityInitializedb && candidatep->priorityi < lastMatchedMinPriorityi) {
 	MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp,
 				    funcs,
@@ -8929,25 +8909,29 @@ static inline short _marpaESLIFRecognizer_resume_oneb(marpaESLIFRecognizer_t *ma
 	break;
       }
 
-      /* We want to minimize the calls to marpaWrapperRecognizer_isExpectedb */
+      /* Predicted failure ? */
       if (candidatep->type == MARPAESLIF_SYMBOL_TYPE_TERMINAL && ucb && candidatep->u.terminalp->byte2failureb && candidatep->u.terminalp->willfailb[uc]) {
-        MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Candidate symbol No %d <%s> at indice %ld, priority=%d is predicted to fail", candidatep->idi, candidatep->descp->asciis, (unsigned long) iteratorl, candidatep->priorityi);
-        willFailsymbolArraypp[willFailsymboll++] = candidatep;
-        iteratorl++;
-        continue;
+	MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Symbol No %d <%s> is predicted to fail", candidatep->idi, candidatep->descp->asciis);
+	willFailsymbolArraypp[willFailsymboll++] = candidatep;
+	continue;
       }
 
-      if (MARPAESLIF_UNLIKELY(! marpaWrapperRecognizer_isExpectedb(marpaESLIFRecognizerp->marpaWrapperRecognizerp, candidatep->idi, &isExpectedb))) {
-	goto err;
-      }
-      MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Candidate symbol No %d <%s> at indice %ld, priority=%d, %s expected", candidatep->idi, candidatep->descp->asciis, (unsigned long) iteratorl, candidatep->priorityi, isExpectedb ? "is" : "is not");
-      if (isExpectedb) {
+      if (marpaESLIFRecognizerp->pristineb) {
+	/* In the pristine case, candidates were already filtered with marpaWrapperRecognizer_isExpectedb */
+	MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Symbol No %d <%s> is expected", candidatep->idi, candidatep->descp->asciis);
 	symbolp = candidatep;
-	iteratorl++;
 	break;
       }
 
-      iteratorl++;
+      /* Expected ? */
+      if (MARPAESLIF_UNLIKELY(! marpaWrapperRecognizer_isExpectedb(marpaESLIFRecognizerp->marpaWrapperRecognizerp, candidatep->idi, &isExpectedb))) {
+	goto err;
+      }
+      MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Symbol No %d <%s> %s expected", candidatep->idi, candidatep->descp->asciis, isExpectedb ? "is" : "is not");
+      if (isExpectedb) {
+	symbolp = candidatep;
+	break;
+      }
     }
 
     if (symbolp == NULL) {
@@ -9227,7 +9211,7 @@ static inline short _marpaESLIFRecognizer_resume_oneb(marpaESLIFRecognizer_t *ma
           if (MARPAESLIF_UNLIKELY(! marpaWrapperRecognizer_isExpectedb(marpaESLIFRecognizerp->marpaWrapperRecognizerp, candidatep->idi, &isExpectedb))) {
             goto err;
           }
-          MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Candidate symbol No %d <%s> at indice %ld, priority=%d, was skipped in advance and %s expected", candidatep->idi, candidatep->descp->asciis, candidatep->priorityi, (unsigned long) iteratorl, isExpectedb ? "was" : "was not");
+          MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Candidate symbol No %d <%s> at indice %ld, priority=%d, was skipped in advance and %s expected", candidatep->idi, candidatep->descp->asciis, candidatep->priorityi, (unsigned long) (iteratorl - 1), isExpectedb ? "was" : "was not");
           if (isExpectedb) {
             /* Yes, move immedately to the nCandidatel > 0 case */
             goto discard_try;
