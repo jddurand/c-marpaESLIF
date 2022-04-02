@@ -6120,6 +6120,9 @@ static inline short _marpaESLIFRecognizer_terminal_matcherb(marpaESLIFRecognizer
                                                            NULL, /* lastSizeBeforeCompletionlp */
                                                            NULL /* numberOfStartCompletionsip */);
         if (MARPAESLIF_UNLIKELY(rcMatcherb < 0)) {
+          goto fatal;
+        }
+        if (! rcMatcherb) {
           goto err;
         }
         if (rci == MARPAESLIF_MATCH_OK) { /* C.f. rci default value that is MARPAESLIF_MATCH_FAILURE */
@@ -6141,6 +6144,8 @@ static inline short _marpaESLIFRecognizer_terminal_matcherb(marpaESLIFRecognizer
         rci            = MARPAESLIF_MATCH_OK;
         matchedp       = (char *) MARPAESLIF_EMPTY_STRING;
         matchedLengthl = 0;
+      } else {
+        rci            = MARPAESLIF_MATCH_FAILURE;
       }
       break;
 
