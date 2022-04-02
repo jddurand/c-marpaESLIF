@@ -224,10 +224,13 @@ static void                               marpaESLIFLua_recognizerFreeCallbackv(
 static void                               marpaESLIFLua_genericFreeCallbackv(void *userDatavp, marpaESLIFValueResult_t *marpaESLIFValueResultp);
 static short                              marpaESLIFLua_valueImporterb(marpaESLIFValue_t *marpaESLIFValuep, void *userDatavp, marpaESLIFValueResult_t *marpaESLIFValueResultp, short haveUndefb);
 static short                              marpaESLIFLua_recognizerImporterb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, void *userDatavp, marpaESLIFValueResult_t *marpaESLIFValueResultp, short haveUndefb);
+static short                              marpaESLIFLua_recognizerImporter_forceArraycopyb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, void *userDatavp, marpaESLIFValueResult_t *marpaESLIFValueResultp, short haveUndefb);
 static short                              marpaESLIFLua_symbolImporterb(marpaESLIFSymbol_t *marpaESLIFSymbolp, void *userDatavp, marpaESLIFValueResult_t *marpaESLIFValueResultp, short haveUndefb);
 static inline short                       marpaESLIFLua_importb(lua_State *L, int stringtoencoding_r, int opaque_r, marpaESLIFValueResult_t *marpaESLIFValueResultp, short arraycopyb, short haveUndefb);
 static inline short                       marpaESLIFLua_pushValueb(marpaESLIFLuaValueContext_t *marpaESLIFLuaValueContextp, marpaESLIFValue_t *marpaESLIFValuep, int stackindicei, marpaESLIFValueResult_t *marpaESLIFValueResultSymbolp);
 static inline short                       marpaESLIFLua_pushRecognizerb(marpaESLIFLuaRecognizerContext_t *marpaESLIFLuaRecognizerContextp, marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFValueResult_t *marpaESLIFValueResultp);
+static inline short                       marpaESLIFLua_pushRecognizer_forceArraycopyb(marpaESLIFLuaRecognizerContext_t *marpaESLIFLuaRecognizerContextp, marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFValueResult_t *marpaESLIFValueResultp);
+static inline short                       _marpaESLIFLua_pushRecognizerb(marpaESLIFLuaRecognizerContext_t *marpaESLIFLuaRecognizerContextp, marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFValueResult_t *marpaESLIFValueResultp, short arraycopyb);
 static void                               marpaESLIFLua_representationDisposev(void *userDatavp, char *inputcp, size_t inputl, char *encodings);
 static short                              marpaESLIFLua_representationb(void *userDatavp, marpaESLIFValueResult_t *marpaESLIFValueResultp, char **inputcpp, size_t *inputlp, char **encodingsp, marpaESLIFRepresentationDispose_t *disposeCallbackpp, short *stringbp);
 static int                                marpaESLIFLua_marpaESLIFRecognizer_newi(lua_State *L);
@@ -4354,12 +4357,13 @@ static short marpaESLIFLua_generatorCallbackb(void *userDatavp, marpaESLIFRecogn
   /* We set a unmanaged recognizer object in recognizer interface */
   if (! marpaESLIFLua_setRecognizerEngineForCallbackv(L, marpaESLIFLuaRecognizerContextp, marpaESLIFRecognizerp)) goto err;
 
+  /* Take care, here contextp is the equivalent of a table.pack */
   MARPAESLIFLUA_CALLBACKS(L,
                           marpaESLIFLuaRecognizerContextp->recognizerInterface_r,
                           actions,
                           nargs,
                           for (i = 0; i < nargs; i++) {
-                            if (! marpaESLIFLua_pushRecognizerb(marpaESLIFLuaRecognizerContextp, marpaESLIFRecognizerp, &(contextp->u.r.p[i]))) goto err;
+                            if (! marpaESLIFLua_pushRecognizer_forceArraycopyb(marpaESLIFLuaRecognizerContextp, marpaESLIFRecognizerp, &(contextp->u.r.p[i]))) goto err;
                           }
                           ,
                           &strings,
@@ -4746,6 +4750,24 @@ static short marpaESLIFLua_recognizerImporterb(marpaESLIFRecognizer_t *marpaESLI
 }
 
 /*****************************************************************************/
+static short marpaESLIFLua_recognizerImporter_forceArraycopyb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, void *userDatavp, marpaESLIFValueResult_t *marpaESLIFValueResultp, short haveUndefb)
+/*****************************************************************************/
+{
+  static const char           *funcs                      = "marpaESLIFLua_recognizerImporter_forceArraycopyb";
+#ifdef MARPAESLIFLUA_EMBEDDED
+  marpaESLIFLuaRecognizerContext_t *marpaESLIFLuaRecognizerContextp = (marpaESLIFLuaRecognizerContext_t *) marpaESLIFRecognizerp->marpaESLIFLuaRecognizerContextp;
+  /* When running embedded, the context can be injected by ESLIF or directly created inside Lua */
+  if (marpaESLIFLuaRecognizerContextp == NULL) {
+    marpaESLIFLuaRecognizerContextp = (marpaESLIFLuaRecognizerContext_t *) userDatavp;
+  }
+#else
+  marpaESLIFLuaRecognizerContext_t *marpaESLIFLuaRecognizerContextp = (marpaESLIFLuaRecognizerContext_t *) userDatavp;
+#endif
+
+  return marpaESLIFLua_importb(marpaESLIFLuaRecognizerContextp->L, marpaESLIFLuaRecognizerContextp->stringtoencoding_r, marpaESLIFLuaRecognizerContextp->opaque_r, marpaESLIFValueResultp, 1 /* arraycopyb */, haveUndefb);
+}
+
+/*****************************************************************************/
 static short marpaESLIFLua_symbolImporterb(marpaESLIFSymbol_t *marpaESLIFSymbolp, void *userDatavp, marpaESLIFValueResult_t *marpaESLIFValueResultp, short haveUndefb)
 /*****************************************************************************/
 {
@@ -4797,13 +4819,33 @@ static inline short marpaESLIFLua_pushValueb(marpaESLIFLuaValueContext_t *marpaE
 /*****************************************************************************/
 static inline short marpaESLIFLua_pushRecognizerb(marpaESLIFLuaRecognizerContext_t *marpaESLIFLuaRecognizerContextp, marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFValueResult_t *marpaESLIFValueResultp)
 /*****************************************************************************/
+/* Standard recognizer push that will not force an array copy.               */
+/*****************************************************************************/
+{
+  return _marpaESLIFLua_pushRecognizerb(marpaESLIFLuaRecognizerContextp, marpaESLIFRecognizerp, marpaESLIFValueResultp, 0 /* arraycopyb */);
+}
+
+/*****************************************************************************/
+static inline short marpaESLIFLua_pushRecognizer_forceArraycopyb(marpaESLIFLuaRecognizerContext_t *marpaESLIFLuaRecognizerContextp, marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFValueResult_t *marpaESLIFValueResultp)
+/*****************************************************************************/
+/* A recognizer push that forces array copy (generator action case only)     */
+/*****************************************************************************/
+{
+  return _marpaESLIFLua_pushRecognizerb(marpaESLIFLuaRecognizerContextp, marpaESLIFRecognizerp, marpaESLIFValueResultp, 1 /* arraycopyb */);
+}
+
+/*****************************************************************************/
+static inline short _marpaESLIFLua_pushRecognizerb(marpaESLIFLuaRecognizerContext_t *marpaESLIFLuaRecognizerContextp, marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFValueResult_t *marpaESLIFValueResultp, short arraycopyb)
+/*****************************************************************************/
+/* Note that arraycopyb can be true only with the embedded Lua.              */
+/*****************************************************************************/
 {
   static const char       *funcs = "marpaESLIFLua_pushRecognizerb";
   lua_State               *L     = marpaESLIFLuaRecognizerContextp->L;
 
 #ifdef MARPAESLIFLUA_EMBEDDED
   /* In embedded mode we must never trust userDatavp */
-  if (! _marpaESLIFRecognizer_eslif2hostb(marpaESLIFRecognizerp, marpaESLIFValueResultp, marpaESLIFLuaRecognizerContextp /* forcedUserDatavp */, marpaESLIFLua_recognizerImporterb /* forcedImporterp */)) {
+  if (! _marpaESLIFRecognizer_eslif2hostb(marpaESLIFRecognizerp, marpaESLIFValueResultp, marpaESLIFLuaRecognizerContextp /* forcedUserDatavp */, arraycopyb ? marpaESLIFLua_recognizerImporter_forceArraycopyb : marpaESLIFLua_recognizerImporterb /* forcedImporterp */)) {
     marpaESLIFLua_luaL_errorf(L, "_marpaESLIFRecognizer_eslif2hostb failure, %s", strerror(errno));
     goto err;
   }

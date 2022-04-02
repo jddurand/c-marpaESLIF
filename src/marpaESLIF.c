@@ -11663,7 +11663,6 @@ marpaESLIFRecognizer_t *marpaESLIFRecognizer_newFromp(marpaESLIFGrammar_t *marpa
   marpaESLIFRecognizer_t  *marpaESLIFRecognizerp = NULL;
   marpaESLIFRecognizer_t  *marpaESLIFRecognizerUnsharedTopp;
   marpaESLIFValueResult_t *contextp;
-  marpaESLIFValueResult_t  context;
 
   if (marpaESLIFRecognizerSharedp == NULL) {
     errno = EINVAL;
@@ -11683,12 +11682,12 @@ marpaESLIFRecognizer_t *marpaESLIFRecognizer_newFromp(marpaESLIFGrammar_t *marpa
       goto err;
     }
 
-    /* Get a copy of it */
-    context = *contextp;
-
-    /* Make it shallow - lifetime of our context depend on general shared recognizer's lifetime: */
-    /* Behaviour is undefined if the shared recognizer would leave short than us. */
-    MARPAESLIF_MAKE_MARPAESLIFVALUERESULT_SHALLOW(context);
+    /* Context is set at indice 0 of marpaESLIFRecognizerUnsharedTopp's lexemeStack */
+    /* and we want to make it shallow: it may contain pointers that are still alive */
+    /* in the Lua context stack.                                                    */
+    /* Lifetime of our context depend on general shared recognizer's lifetime.      */
+    /* Behaviour is undefined if the shared recognizer would leave short than us.   */
+    MARPAESLIF_MAKE_MARPAESLIFVALUERESULTP_SHALLOW(contextp);
   }
   
   if (! marpaESLIFRecognizer_shareb(marpaESLIFRecognizerp, marpaESLIFRecognizerSharedp)) {
