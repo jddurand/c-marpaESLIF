@@ -1238,7 +1238,7 @@ marpaESLIF BNF can be expressed in itself:
   <bare name>                    ~ <word character>+ proper => 1
   <standard name>                ~ /[a-zA-Z]/ <zero or more word characters>
   <bracketed name>               ~ '<' <bracketed name string> '>'
-  <bracketed name string>        ~ /[^<>]+/
+  <bracketed name string>        ~ /[\\s\\w\\[\\]]+/
   <quoted string>                ~ /'(?:[^\\']*(?:\\.[^\\']*)*)'|"(?:[^\\"]*(?:\\.[^\\"]*)*)"|\x{201C}(?:[^\\\x{201D}]*(?:\\.[^\\\x{201D}]*)*)\x{201D}/su
                                  | /'(?:[^\\']*(?:\\.[^\\']*)*)'|"(?:[^\\"]*(?:\\.[^\\"]*)*)"|\x{201C}(?:[^\\\x{201D}]*(?:\\.[^\\\x{201D}]*)*)\x{201D}/su ':' /ic?/
   <quoted string literal>        ~ /'(?:[^\\']*(?:\\.[^\\']*)*)'|"(?:[^\\"]*(?:\\.[^\\"]*)*)"|\x{201C}(?:[^\\\x{201D}]*(?:\\.[^\\\x{201D}]*)*)\x{201D}/su
