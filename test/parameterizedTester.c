@@ -235,16 +235,16 @@ static short rhsb(void *userDatavp, marpaESLIFRecognizer_t *marpaESLIFRecognizer
     /* To avoid ambiguity in the marpaESLIFGrammar_parse test case, we generate only once the rhs that will match */
     if (marpaESLIF_contextp->parsemodeb) {
       if (marpaESLIF_contextp->parsemodei++ == 0) {
-        sprintf(outputs, "start ::= '%d'", parameteri);
+        sprintf(outputs, "'%d'", parameteri);
       } else {
-        sprintf(outputs, "start ::= '%d'", -1);
+        sprintf(outputs, "'%d'", -1);
       }
     } else {
       /* Ambiguity is ok when we use the scan mode */
-      sprintf(outputs, "start ::= '%d'", parameteri);
+      sprintf(outputs, "'%d'", parameteri);
     }
   } else {
-    sprintf(outputs, "start ::= . => rhs->(5, { x = 'Value of x', y = 'Value of y' }, String('Input should be 5'))");
+    sprintf(outputs, ". => rhs->(5, { x = 'Value of x', y = 'Value of y' }, String('Input should be 5'))");
   }
 
   marpaESLIFValueResultOutp->p              = (unsigned char *) outputs;

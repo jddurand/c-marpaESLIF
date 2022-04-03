@@ -471,6 +471,12 @@ struct marpaESLIFGrammar {
   /* By definition a grammar is the owner of the singleton if *Lsharep == &_Lshare.               */
   marpaESLIFGrammar_Lshare_t _Lshare;
   marpaESLIFGrammar_Lshare_t *Lsharep;
+
+  /* When the grammar comes from the external, we want to remember its UTF-8 translation: if it   */
+  /* contains generated RHSs our trick is to extend it with the generated UTF-8 bytes.            */
+  char                       *grammarUtf8s;
+  size_t                      grammarUtf8l;
+  marpaESLIFGrammar_t        *marpaESLIFGrammarTopp; /* Shallow pointer */
 };
 
 struct marpaESLIF_meta {
