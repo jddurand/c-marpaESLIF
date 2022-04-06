@@ -53,7 +53,7 @@ int main() {
   marpaESLIFValueOption_t      marpaESLIFValueOption;
   int                          i;
 
-  genericLoggerp = GENERICLOGGER_NEW(GENERICLOGGER_LOGLEVEL_INFO);
+  genericLoggerp = GENERICLOGGER_NEW(GENERICLOGGER_LOGLEVEL_TRACE);
 
   marpaESLIFOption.genericLoggerp = genericLoggerp;
   marpaESLIFp = marpaESLIF_newp(&marpaESLIFOption);
@@ -96,6 +96,8 @@ int main() {
   GENERICLOGGER_INFO (marpaESLIFOption.genericLoggerp, "--------------------");
   GENERICLOGGER_INFO (marpaESLIFOption.genericLoggerp, "YAML grammar script:");
   GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "--------------------\n%s", grammarscripts);
+
+  GENERICLOGGER_LEVEL_SET(genericLoggerp, GENERICLOGGER_LOGLEVEL_TRACE);
 
   for (i = 0; i < (sizeof(inputsp)/sizeof(inputsp[0])); i++) {
     yamlTester_context.inputs = inputsp[i];
