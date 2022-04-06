@@ -779,7 +779,7 @@ struct marpaESLIF_lua_functiondecl {
 };
 
 typedef struct marpaESLIF_grammar_bootstrap {
-  marpaESLIFGrammar_bootstrap_t *marpaESLIFGrammarp;
+  marpaESLIFGrammar_bootstrap_t *marpaESLIFGrammarBootstrapp;
   marpaWrapperGrammar_t         *marpaWrapperGrammarStartp;          /* Grammar implementation at :start */
   unsigned int                   nbupdatei;                          /* Number of updates - used in grammar ESLIF actions */
   int                            leveli;                             /* Grammar level */
@@ -800,19 +800,19 @@ typedef struct marpaESLIF_grammar_bootstrap {
 } marpaESLIF_grammar_bootstrap_t;
 
 typedef struct marpaESLIFGrammar_bootstrap {
-  genericStack_t             _grammarStack;      /* Stack of grammars */
-  genericStack_t            *grammarStackp;      /* Pointer to stack of grammars: contains only symbols and rules */
-  short                      warningIsErrorb;    /* Current warningIsErrorb setting (used when parsing grammars ) */
-  short                      warningIsIgnoredb;  /* Current warningIsErrorb setting (used when parsing grammars ) */
-  short                      autorankb;          /* Current autorank setting */
-  char                      *luabytep;           /* Lua script source */
-  size_t                     luabytel;           /* Lua script source length in byte */
-  int                        internalRuleCounti; /* Internal counter when creating internal rules (groups '(-...-)' and '(...)' */
-  short                      hasPseudoTerminalb; /* Any pseudo terminal in the grammar ? */
-  short                      hasEofPseudoTerminalb; /* Any :eof terminal in the grammar ? */
-  short                      hasEolPseudoTerminalb; /* Any :eol terminal in the grammar ? */
-  short                      hasSolPseudoTerminalb; /* Any :sol terminal in the grammar ? */
-  short                      hasLookaheadMetab;  /* Any lookahead meta in the grammar ? */
+  genericStack_t             _grammarBootstrapStack; /* Stack of marpaESLIF_grammar_bootstrap_t */
+  genericStack_t            *grammarBootstrapStackp; /* Pointer to stack of marpaESLIF_grammar_bootstrap_t */
+  short                      warningIsErrorb;        /* Current warningIsErrorb setting (used when parsing grammars ) */
+  short                      warningIsIgnoredb;      /* Current warningIsErrorb setting (used when parsing grammars ) */
+  short                      autorankb;              /* Current autorank setting */
+  char                      *luabytep;               /* Lua script source */
+  size_t                     luabytel;               /* Lua script source length in byte */
+  int                        internalRuleCounti;     /* Internal counter when creating internal rules (groups '(-...-)' and '(...)' */
+  short                      hasPseudoTerminalb;     /* Any pseudo terminal in the grammar ? */
+  short                      hasEofPseudoTerminalb;  /* Any :eof terminal in the grammar ? */
+  short                      hasEolPseudoTerminalb;  /* Any :eol terminal in the grammar ? */
+  short                      hasSolPseudoTerminalb;  /* Any :sol terminal in the grammar ? */
+  short                      hasLookaheadMetab;      /* Any lookahead meta in the grammar ? */
 } marpaESLIFGrammar_bootstrap_t;
 
 #include "marpaESLIF/internal/eslif.h"
