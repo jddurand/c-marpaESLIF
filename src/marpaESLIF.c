@@ -741,7 +741,8 @@ static inline void                   _marpaESLIF_terminal_freev(marpaESLIF_termi
 static inline marpaESLIF_meta_t     *_marpaESLIF_meta_newp(marpaESLIF_t *marpaESLIFp, marpaWrapperGrammar_t *marpaWrapperGrammarp, int eventSeti, char *asciinames, char *descEncodings, char *descs, size_t descl, short lazyb);
 static inline void                   _marpaESLIF_meta_freev(marpaESLIF_meta_t *metap);
 
-static inline marpaESLIF_grammar_bootstrap_t *_marpaESLIF_grammar_bootstrap_newp(marpaESLIFValue_t *marpaESLIFValuep, marpaESLIFGrammar_bootstrap_t *marpaESLIFGrammarBootstrapp, marpaWrapperGrammarOption_t *marpaWrapperGrammarOptionp, int leveli);
+static inline marpaESLIF_grammar_bootstrap_t *_marpaESLIF_grammar_bootstrap_clonep(marpaESLIF_t *marpaESLIFp, marpaESLIFGrammar_bootstrap_t *marpaESLIFGrammarBootstrapp, marpaESLIF_grammar_bootstrap_t *marpaESLIF_grammar_bootstrapp);
+static inline marpaESLIF_grammar_bootstrap_t *_marpaESLIF_grammar_bootstrap_newp(marpaESLIF_t *marpaESLIFp, marpaESLIFGrammar_bootstrap_t *marpaESLIFGrammarBootstrapp, marpaWrapperGrammarOption_t *marpaWrapperGrammarOptionp, int leveli, int symbolStackSizei, int ruleStackSizei);
 static inline marpaESLIF_grammar_t  *_marpaESLIF_grammar_newp(marpaESLIFGrammar_t *marpaESLIFGrammarp, marpaWrapperGrammarOption_t *marpaWrapperGrammarOptionp, int leveli, char *descEncodings, char *descs, size_t descl, marpaESLIF_action_t *defaultSymbolActionp, marpaESLIF_action_t *defaultRuleActionp, marpaESLIF_action_t *defaultEventActionp, marpaESLIF_action_t *defaultRegexActionp, char *defaultEncodings, char *fallbackEncodings);
 static inline void                   _marpaESLIF_grammar_bootstrap_freev(marpaESLIF_grammar_bootstrap_t *grammarp);
 static inline void                   _marpaESLIF_grammar_freev(marpaESLIF_grammar_t *grammarp);
@@ -790,6 +791,7 @@ static inline marpaESLIF_internal_event_action_t _eventActionsToActione(char *ac
 static inline marpaESLIF_internal_rule_action_t _ruleActionpToActione(marpaESLIFAction_t *actionp);
 static inline marpaESLIF_internal_symbol_action_t _symbolActionpToActione(marpaESLIFAction_t *actionp);
 static inline short                  _marpaESLIFGrammar_haveLexemeb(marpaESLIFGrammar_t *marpaESLIFGrammarp, int grammari, marpaWrapperGrammar_t *marpaWrapperGrammarp, short *haveLexemebp);
+static inline marpaESLIFGrammar_bootstrap_t   *_marpaESLIFGrammar_bootstrap_clonep(marpaESLIF_t *marpaESLIFp, marpaESLIFGrammar_bootstrap_t *marpaESLIFGrammar_bootstrapp);
 static inline marpaESLIFGrammar_bootstrap_t   *_marpaESLIFGrammar_bootstrap_newp(marpaESLIF_t *marpaESLIFp);
 static inline marpaESLIFGrammar_t   *_marpaESLIFGrammar_newp(marpaESLIF_t *marpaESLIFp, marpaESLIFGrammarOption_t *marpaESLIFGrammarOptionp, short startGrammarIsLexemeb, marpaESLIFGrammar_Lshare_t *Lsharep, short bootstrapb, short rememberGrammarUtf8b, char *forcedStartSymbols, int forcedStartSymbolLeveli, marpaESLIFGrammar_t *marpaESLIFGrammarTopp);
 
@@ -4382,7 +4384,122 @@ static inline short _marpaESLIFGrammar_haveLexemeb(marpaESLIFGrammar_t *marpaESL
 }
 
 /*****************************************************************************/
-static inline marpaESLIF_grammar_bootstrap_t *_marpaESLIF_grammar_bootstrap_newp(marpaESLIFValue_t *marpaESLIFValuep, marpaESLIFGrammar_bootstrap_t *marpaESLIFGrammarBootstrapp, marpaWrapperGrammarOption_t *marpaWrapperGrammarOptionp, int leveli)
+static inline marpaESLIF_grammar_bootstrap_t *_marpaESLIF_grammar_bootstrap_clonep(marpaESLIF_t *marpaESLIFp, marpaESLIFGrammar_bootstrap_t *marpaESLIFGrammarBootstrapp, marpaESLIF_grammar_bootstrap_t *marpaESLIF_grammar_bootstrapp)
+/*****************************************************************************/
+{
+  static const char              *funcs     = "_marpaESLIF_grammar_bootstrap_clonep";
+  marpaESLIF_grammar_bootstrap_t *grammarp  = NULL;
+  marpaESLIF_meta_t              *metap     = NULL;
+  marpaESLIF_symbol_t            *symbolp   = NULL;
+  marpaESLIF_terminal_t          *terminalp = NULL;
+  int                             symboli;
+  marpaESLIF_symbol_t            *symbolOrigp;
+  int                             rulei;
+  marpaESLIF_rule_t              *rulep;
+  marpaWrapperGrammarOption_t     marpaWrapperGrammarOption;
+
+  marpaWrapperGrammarOption.genericLoggerp    = marpaESLIFp->marpaESLIFOption.genericLoggerp;
+  marpaWrapperGrammarOption.warningIsErrorb   = marpaESLIFGrammarBootstrapp->warningIsErrorb;
+  marpaWrapperGrammarOption.warningIsIgnoredb = marpaESLIFGrammarBootstrapp->warningIsIgnoredb;
+  marpaWrapperGrammarOption.autorankb         = marpaESLIFGrammarBootstrapp->autorankb;
+
+  grammarp = _marpaESLIF_grammar_bootstrap_newp(marpaESLIFp,
+                                                marpaESLIFGrammarBootstrapp,
+                                                &marpaWrapperGrammarOption,
+                                                marpaESLIF_grammar_bootstrapp->leveli,
+                                                GENERICSTACK_USED(marpaESLIF_grammar_bootstrapp->symbolStackp),
+                                                GENERICSTACK_USED(marpaESLIF_grammar_bootstrapp->ruleStackp));
+  if (grammarp == NULL) {
+    goto err;
+  }
+
+  /* We replay symbols */
+  for (symboli = 0; symboli < GENERICSTACK_USED(marpaESLIF_grammar_bootstrapp->symbolStackp); symboli++) {
+    MARPAESLIF_INTERNAL_GET_SYMBOL_FROM_STACK(marpaESLIFp, symbolOrigp, marpaESLIF_grammar_bootstrapp->symbolStackp, symboli);
+    switch (symbolOrigp->type) {
+    case MARPAESLIF_SYMBOL_TYPE_META:
+      metap = _marpaESLIF_meta_newp(marpaESLIFp,
+                                    grammarp->marpaWrapperGrammarStartp,
+                                    MARPAWRAPPERGRAMMAR_EVENTTYPE_NONE,
+                                    symbolOrigp->u.metap->asciinames,
+                                    NULL /* descEncodings */,
+                                    NULL /* descs */,
+                                    0 /* descl */,
+                                    0 /* lazyb */);
+      if (MARPAESLIF_UNLIKELY(metap == NULL)) {
+        goto err;
+      }
+      symbolp = _marpaESLIF_symbol_newp(marpaESLIFp, NULL /* marpaESLIFSymbolOptionp */);
+      if (MARPAESLIF_UNLIKELY(symbolp == NULL)) {
+        goto err;
+      }
+      symbolp->type              = MARPAESLIF_SYMBOL_TYPE_META;
+      symbolp->parami            = symbolOrigp->parami;
+      symbolp->u.metap           = metap;
+      symbolp->idi               = metap->idi;
+      symbolp->descp             = metap->descp;
+      symbolp->parameterizedRhsb = symbolOrigp->parameterizedRhsb;
+      metap = NULL; /* metap is now in symbolp */
+      break;
+    case MARPAESLIF_SYMBOL_TYPE_TERMINAL:
+      terminalp = _marpaESLIF_terminal_newp(marpaESLIFp,
+                                            grammarp->marpaWrapperGrammarStartp,
+                                            MARPAWRAPPERGRAMMAR_EVENTTYPE_NONE,
+                                            symbolOrigp->u.terminalp->descp->encodingasciis,
+                                            symbolOrigp->u.terminalp->descp->bytep,
+                                            symbolOrigp->u.terminalp->descp->bytel,
+                                            symbolOrigp->u.terminalp->type,
+                                            symbolOrigp->u.terminalp->modifiers,
+                                            symbolOrigp->u.terminalp->patterns,
+                                            symbolOrigp->u.terminalp->patternl,
+                                            NULL, /* testFullMatchs */
+                                            NULL, /* testPartialMatchs */
+                                            symbolOrigp->u.terminalp->pseudob,
+                                            symbolOrigp->u.terminalp->regex.characterClassb);
+      if (MARPAESLIF_UNLIKELY(terminalp == NULL)) {
+        goto err;
+      }
+      symbolp->type        = MARPAESLIF_SYMBOL_TYPE_TERMINAL;
+      symbolp->u.terminalp = terminalp;
+      symbolp->idi         = terminalp->idi;
+      symbolp->descp       = terminalp->descp;
+      terminalp = NULL; /* terminalp is now in symbolp */
+      break;
+    default:
+      MARPAESLIF_ERRORF(marpaESLIFp, "Unknown symbol type %d", symbolp->type);
+      goto err;
+    }
+    /* It is a non-sense to not have the same idi */
+    if (MARPAESLIF_UNLIKELY(symbolp->idi != symbolOrigp->idi)) {
+      MARPAESLIF_ERRORF(marpaESLIFp, "symbolp->idi (%d) != symbolOrigp->idi (%d)", symbolp->idi, symbolOrigp->idi);
+      goto err;
+    }
+
+    GENERICSTACK_SET_PTR(grammarp->symbolStackp, symbolp, symbolp->idi);
+    if (MARPAESLIF_UNLIKELY(GENERICSTACK_ERROR(grammarp->symbolStackp))) {
+      MARPAESLIF_ERRORF(marpaESLIFp, "symbolStackp push failure, %s", strerror(errno));
+      goto err;
+    }
+    symbolp = NULL; /* symbolp is now in grammarp->symbolStackp */
+  }
+
+  /* We replay rules */
+
+  goto done;
+
+ err:
+  _marpaESLIF_terminal_freev(terminalp);
+  _marpaESLIF_meta_freev(metap);
+  _marpaESLIF_symbol_freev(symbolp);
+  _marpaESLIF_grammar_bootstrap_freev(grammarp);
+  grammarp = NULL;
+
+ done:
+  return grammarp;
+}
+
+/*****************************************************************************/
+static inline marpaESLIF_grammar_bootstrap_t *_marpaESLIF_grammar_bootstrap_newp(marpaESLIF_t *marpaESLIFp, marpaESLIFGrammar_bootstrap_t *marpaESLIFGrammarBootstrapp, marpaWrapperGrammarOption_t *marpaWrapperGrammarOptionp, int leveli, int symbolStackSizei, int ruleStackSizei)
 /*****************************************************************************/
 {
   static const char              *funcs             = "_marpaESLIF_grammar_bootstrap_newp";
@@ -4390,16 +4507,14 @@ static inline marpaESLIF_grammar_bootstrap_t *_marpaESLIF_grammar_bootstrap_newp
   marpaESLIF_grammar_bootstrap_t *grammarBootstrapp = NULL;
   marpaESLIF_stringGenerator_t    marpaESLIF_stringGenerator;
 
-  /* MARPAESLIF_TRACE(marpaESLIFValuep->marpaESLIFp, funcs, "Building ESLIF grammar"); */
-
   if (MARPAESLIF_UNLIKELY(leveli < 0)) {
-    MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "Grammar level must be >= 0, current value is %d", leveli);
+    MARPAESLIF_ERRORF(marpaESLIFp, "Grammar level must be >= 0, current value is %d", leveli);
     goto err;
   }
   
   grammarBootstrapp = (marpaESLIF_grammar_bootstrap_t *) malloc(sizeof(marpaESLIF_grammar_bootstrap_t));
   if (MARPAESLIF_UNLIKELY(grammarBootstrapp == NULL)) {
-    MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "malloc failure, %s", strerror(errno));
+    MARPAESLIF_ERRORF(marpaESLIFp, "malloc failure, %s", strerror(errno));
     goto err;
   }
 
@@ -4426,7 +4541,7 @@ static inline marpaESLIF_grammar_bootstrap_t *_marpaESLIF_grammar_bootstrap_newp
   }
 
   /* Generate a default description */
-  marpaESLIF_stringGenerator.marpaESLIFp = marpaESLIFValuep->marpaESLIFp;
+  marpaESLIF_stringGenerator.marpaESLIFp = marpaESLIFp;
   marpaESLIF_stringGenerator.s           = NULL;
   marpaESLIF_stringGenerator.l           = 0;
   marpaESLIF_stringGenerator.okb         = 0;
@@ -4440,7 +4555,7 @@ static inline marpaESLIF_grammar_bootstrap_t *_marpaESLIF_grammar_bootstrap_newp
   if (MARPAESLIF_UNLIKELY(! marpaESLIF_stringGenerator.okb)) {
     goto err;
   }
-  grammarBootstrapp->descp = _marpaESLIF_string_newp(marpaESLIFValuep->marpaESLIFp, "ASCII" /* We KNOW we generated an ASCII stringy */, marpaESLIF_stringGenerator.s, strlen(marpaESLIF_stringGenerator.s));
+  grammarBootstrapp->descp = _marpaESLIF_string_newp(marpaESLIFp, "ASCII" /* We KNOW we generated an ASCII stringy */, marpaESLIF_stringGenerator.s, strlen(marpaESLIF_stringGenerator.s));
   free(marpaESLIF_stringGenerator.s);
   grammarBootstrapp->descautob = 1;
 
@@ -4449,17 +4564,25 @@ static inline marpaESLIF_grammar_bootstrap_t *_marpaESLIF_grammar_bootstrap_newp
   }
 
   grammarBootstrapp->symbolStackp = &(grammarBootstrapp->_symbolStack);
-  GENERICSTACK_INIT(grammarBootstrapp->symbolStackp);
+  if (symbolStackSizei > 0) {
+    GENERICSTACK_INIT_SIZED(grammarBootstrapp->symbolStackp, symbolStackSizei);
+  } else {
+    GENERICSTACK_INIT(grammarBootstrapp->symbolStackp);
+  }
   if (MARPAESLIF_UNLIKELY(GENERICSTACK_ERROR(grammarBootstrapp->symbolStackp))) {
-    MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "symbolStackp initialization failure, %s", strerror(errno));
+    MARPAESLIF_ERRORF(marpaESLIFp, "symbolStackp initialization failure, %s", strerror(errno));
     grammarBootstrapp->symbolStackp = NULL;
     goto err;
   }
 
   grammarBootstrapp->ruleStackp = &(grammarBootstrapp->_ruleStack);
-  GENERICSTACK_INIT(grammarBootstrapp->ruleStackp);
+  if (ruleStackSizei > 0) {
+    GENERICSTACK_INIT_SIZED(grammarBootstrapp->ruleStackp, ruleStackSizei);
+  } else {
+    GENERICSTACK_INIT(grammarBootstrapp->ruleStackp);
+  }
   if (MARPAESLIF_UNLIKELY(GENERICSTACK_ERROR(grammarBootstrapp->ruleStackp))) {
-    MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "ruleStackp initialization failure, %s", strerror(errno));
+    MARPAESLIF_ERRORF(marpaESLIFp, "ruleStackp initialization failure, %s", strerror(errno));
     grammarBootstrapp->ruleStackp = NULL;
     goto err;
   }
@@ -4471,7 +4594,6 @@ static inline marpaESLIF_grammar_bootstrap_t *_marpaESLIF_grammar_bootstrap_newp
   grammarBootstrapp = NULL;
 
  done:
-  /* MARPAESLIF_TRACEF(marpaESLIFValuep->marpaESLIFp, funcs, "return %p", grammarBootstrapp); */
   GENERICLOGGER_FREE(genericLoggerp);
   return grammarBootstrapp;
 }
@@ -7544,6 +7666,71 @@ marpaESLIFGrammar_t *marpaESLIFGrammar_newp(marpaESLIF_t *marpaESLIFp, marpaESLI
   goto done;
 
  err:
+  marpaESLIFGrammarp = NULL;
+
+ done:
+  return marpaESLIFGrammarp;
+}
+
+/*****************************************************************************/
+static inline marpaESLIFGrammar_bootstrap_t *_marpaESLIFGrammar_bootstrap_clonep(marpaESLIF_t *marpaESLIFp, marpaESLIFGrammar_bootstrap_t *marpaESLIFGrammar_bootstrapp)
+/*****************************************************************************/
+{
+  static const char                *funcs                      = "_marpaESLIFGrammar_bootstrap_clonep";
+  marpaESLIFGrammar_bootstrap_t    *marpaESLIFGrammarp         = NULL;
+  genericStack_t                   *grammarBootstrapStackp;
+  int                               grammari;
+  marpaESLIF_grammar_bootstrap_t   *grammarBootstrapp;
+
+  marpaESLIFGrammarp = (marpaESLIFGrammar_bootstrap_t *) malloc(sizeof(marpaESLIFGrammar_bootstrap_t));
+  if (MARPAESLIF_UNLIKELY(marpaESLIFGrammarp == NULL)) {
+    MARPAESLIF_ERRORF(marpaESLIFp, "malloc failure, %s", strerror(errno));
+    goto err;
+  }
+
+  marpaESLIFGrammarp->grammarBootstrapStackp                    = NULL;
+  marpaESLIFGrammarp->warningIsErrorb                           = marpaESLIFGrammar_bootstrapp->warningIsErrorb;
+  marpaESLIFGrammarp->warningIsIgnoredb                         = marpaESLIFGrammar_bootstrapp->warningIsIgnoredb;
+  marpaESLIFGrammarp->autorankb                                 = marpaESLIFGrammar_bootstrapp->autorankb;
+  marpaESLIFGrammarp->luabytep                                  = NULL;
+  marpaESLIFGrammarp->luabytel                                  = marpaESLIFGrammar_bootstrapp->luabytel;
+  marpaESLIFGrammarp->internalRuleCounti                        = marpaESLIFGrammar_bootstrapp->internalRuleCounti;
+  marpaESLIFGrammarp->hasPseudoTerminalb                        = marpaESLIFGrammar_bootstrapp->hasPseudoTerminalb;
+  marpaESLIFGrammarp->hasEofPseudoTerminalb                     = marpaESLIFGrammar_bootstrapp->hasEofPseudoTerminalb;
+  marpaESLIFGrammarp->hasEolPseudoTerminalb                     = marpaESLIFGrammar_bootstrapp->hasEolPseudoTerminalb;
+  marpaESLIFGrammarp->hasSolPseudoTerminalb                     = marpaESLIFGrammar_bootstrapp->hasSolPseudoTerminalb;
+  marpaESLIFGrammarp->hasLookaheadMetab                         = marpaESLIFGrammar_bootstrapp->hasLookaheadMetab;
+
+  grammarBootstrapStackp = marpaESLIFGrammar_bootstrapp->grammarBootstrapStackp;
+  if (grammarBootstrapStackp != NULL) {
+    marpaESLIFGrammarp->grammarBootstrapStackp = &(marpaESLIFGrammarp->_grammarBootstrapStack);
+    GENERICSTACK_INIT(marpaESLIFGrammarp->grammarBootstrapStackp);
+    if (MARPAESLIF_UNLIKELY(GENERICSTACK_ERROR(marpaESLIFGrammarp->grammarBootstrapStackp))) {
+      MARPAESLIF_ERRORF(marpaESLIFp, "marpaESLIFGrammarp->grammarBootstrapStackp initialization failure, %s", strerror(errno));
+      marpaESLIFGrammarp->grammarBootstrapStackp = NULL;
+      goto err;
+    }
+    for (grammari = 0; grammari < GENERICSTACK_USED(grammarBootstrapStackp); grammari++) {
+      if (GENERICSTACK_IS_PTR(grammarBootstrapStackp, grammari)) {
+        grammarBootstrapp = (marpaESLIF_grammar_bootstrap_t *) GENERICSTACK_GET_PTR(grammarBootstrapStackp, grammari);
+        grammarBootstrapp = _marpaESLIF_grammar_bootstrap_clonep(marpaESLIFp, marpaESLIFGrammarp, grammarBootstrapp);
+        if (grammarBootstrapp == NULL) {
+          goto err;
+        }
+        GENERICSTACK_SET_PTR(marpaESLIFGrammarp->grammarBootstrapStackp, grammarBootstrapp, grammari);
+        if (MARPAESLIF_UNLIKELY(GENERICSTACK_ERROR(marpaESLIFGrammarp->grammarBootstrapStackp))) {
+          MARPAESLIF_ERRORF(marpaESLIFp, "marpaESLIFGrammarp->grammarBootstrapStackp set failure, %s", strerror(errno));
+          goto err;
+        }
+      }
+    }
+  }
+
+  goto done;
+
+ err:
+  /* We do not want to free it, if it was injected: parent should take care of that */
+  _marpaESLIFGrammar_bootstrap_freev(marpaESLIFGrammarp, 0 /* onStackb */);
   marpaESLIFGrammarp = NULL;
 
  done:
@@ -13390,10 +13577,12 @@ static inline void _marpaESLIFGrammar_freev(marpaESLIFGrammar_t *marpaESLIFGramm
 static inline void _marpaESLIF_grammarBootstrapStack_freev(genericStack_t *grammarStackp)
 /*****************************************************************************/
 {
+  marpaESLIF_grammar_bootstrap_t *grammarp;
+
   if (grammarStackp != NULL) {
     while (GENERICSTACK_USED(grammarStackp) > 0) {
       if (GENERICSTACK_IS_PTR(grammarStackp, GENERICSTACK_USED(grammarStackp) - 1)) {
-        marpaESLIF_grammar_bootstrap_t *grammarp = (marpaESLIF_grammar_bootstrap_t *) GENERICSTACK_POP_PTR(grammarStackp);
+        grammarp = (marpaESLIF_grammar_bootstrap_t *) GENERICSTACK_POP_PTR(grammarStackp);
         _marpaESLIF_grammar_bootstrap_freev(grammarp);
       } else {
         GENERICSTACK_USED(grammarStackp)--;

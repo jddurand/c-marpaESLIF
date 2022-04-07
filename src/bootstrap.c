@@ -873,7 +873,12 @@ static inline marpaESLIF_grammar_bootstrap_t *_marpaESLIF_bootstrap_check_gramma
     marpaWrapperGrammarOption.warningIsIgnoredb = marpaESLIFGrammarBootstrapp->warningIsIgnoredb;
     marpaWrapperGrammarOption.autorankb         = marpaESLIFGrammarBootstrapp->autorankb;
 
-    grammarBootstrapp = _marpaESLIF_grammar_bootstrap_newp(marpaESLIFValuep, marpaESLIFGrammarBootstrapp, &marpaWrapperGrammarOption, leveli);
+    grammarBootstrapp = _marpaESLIF_grammar_bootstrap_newp(marpaESLIFValuep->marpaESLIFp,
+                                                           marpaESLIFGrammarBootstrapp,
+                                                           &marpaWrapperGrammarOption,
+                                                           leveli,
+                                                           0, /* symbolStackSizei */
+                                                           0 /* ruleStackSizei */);
     if (MARPAESLIF_UNLIKELY(grammarBootstrapp == NULL)) {
       goto err;
     }
