@@ -743,6 +743,7 @@ static inline void                   _marpaESLIF_meta_freev(marpaESLIF_meta_t *m
 
 static inline marpaESLIF_grammar_bootstrap_t *_marpaESLIF_grammar_bootstrap_clonep(marpaESLIF_t *marpaESLIFp, marpaESLIFGrammar_bootstrap_t *marpaESLIFGrammarBootstrapp, marpaESLIF_grammar_bootstrap_t *grammarOrigp);
 static inline marpaESLIF_grammar_bootstrap_t *_marpaESLIF_grammar_bootstrap_newp(marpaESLIF_t *marpaESLIFp, marpaESLIFGrammar_bootstrap_t *marpaESLIFGrammarBootstrapp, marpaWrapperGrammarOption_t *marpaWrapperGrammarOptionp, int leveli, int symbolStackSizei, int ruleStackSizei);
+static void                          _marpaESLIF_grammar_initv(marpaESLIF_grammar_t *grammarp, int leveli, marpaESLIFGrammar_t *marpaESLIFGrammarp);
 static inline marpaESLIF_grammar_t  *_marpaESLIF_grammar_newp(marpaESLIFGrammar_t *marpaESLIFGrammarp, marpaWrapperGrammarOption_t *marpaWrapperGrammarOptionp, int leveli, char *descEncodings, char *descs, size_t descl, marpaESLIF_action_t *defaultSymbolActionp, marpaESLIF_action_t *defaultRuleActionp, marpaESLIF_action_t *defaultEventActionp, marpaESLIF_action_t *defaultRegexActionp, char *defaultEncodings, char *fallbackEncodings);
 static inline void                   _marpaESLIF_grammar_bootstrap_freev(marpaESLIF_grammar_bootstrap_t *grammarp);
 static inline void                   _marpaESLIF_grammar_freev(marpaESLIF_grammar_t *grammarp);
@@ -791,9 +792,10 @@ static inline marpaESLIF_internal_event_action_t _eventActionsToActione(char *ac
 static inline marpaESLIF_internal_rule_action_t _ruleActionpToActione(marpaESLIFAction_t *actionp);
 static inline marpaESLIF_internal_symbol_action_t _symbolActionpToActione(marpaESLIFAction_t *actionp);
 static inline short                  _marpaESLIFGrammar_haveLexemeb(marpaESLIFGrammar_t *marpaESLIFGrammarp, int grammari, marpaWrapperGrammar_t *marpaWrapperGrammarp, short *haveLexemebp);
+static inline short                  _marpaESLIFGrammar_bootstrap_transferb(marpaESLIF_t *marpaESLIFp, marpaESLIFGrammar_t *marpaESLIFGrammarp);
 static inline marpaESLIFGrammar_bootstrap_t   *_marpaESLIFGrammar_bootstrap_clonep(marpaESLIF_t *marpaESLIFp, marpaESLIFGrammar_bootstrap_t *marpaESLIFGrammarOrigp);
 static inline marpaESLIFGrammar_bootstrap_t   *_marpaESLIFGrammar_bootstrap_newp(marpaESLIF_t *marpaESLIFp);
-static inline marpaESLIFGrammar_t   *_marpaESLIFGrammar_newp(marpaESLIF_t *marpaESLIFp, marpaESLIFGrammarOption_t *marpaESLIFGrammarOptionp, short startGrammarIsLexemeb, marpaESLIFGrammar_Lshare_t *Lsharep, short bootstrapb, short rememberGrammarUtf8b, char *forcedStartSymbols, int forcedStartSymbolLeveli, marpaESLIFGrammar_bootstrap_t *marpaESLIFGrammar_bootstrapp);
+static inline marpaESLIFGrammar_t   *_marpaESLIFGrammar_newp(marpaESLIF_t *marpaESLIFp, marpaESLIFGrammarOption_t *marpaESLIFGrammarOptionp, short startGrammarIsLexemeb, marpaESLIFGrammar_Lshare_t *Lsharep, short bootstrapb, short rememberGrammarUtf8b, char *forcedStartSymbols, int forcedStartSymbolLeveli, marpaESLIFGrammar_bootstrap_t *marpaESLIFGrammar_bootstrapOrigp);
 
 static inline short                  _marpaESLIFRecognizer_terminal_matcherb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIF_stream_t *marpaESLIF_streamp, marpaESLIF_terminal_t *terminalp, char *inputs, size_t inputl, short eofb, marpaESLIF_matcher_value_t *rcip, marpaESLIFValueResult_t *marpaESLIFValueResultp, size_t *matchedLengthlp);
 static inline short                  _marpaESLIFRecognizer_meta_matcherb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIF_symbol_t *symbolp, marpaESLIF_matcher_value_t *rcip, marpaESLIFValueResult_t *marpaESLIFValueResultp, short *isExhaustedbp, int maxStartCompletionsi, size_t *lastSizeBeforeCompletionlp, int *numberOfStartCompletionsip);
@@ -4650,30 +4652,11 @@ static inline marpaESLIF_grammar_bootstrap_t *_marpaESLIF_grammar_bootstrap_newp
 }
 
 /*****************************************************************************/
-static inline marpaESLIF_grammar_t *_marpaESLIF_grammar_newp(marpaESLIFGrammar_t *marpaESLIFGrammarp, marpaWrapperGrammarOption_t *marpaWrapperGrammarOptionp, int leveli, char *descEncodings, char *descs, size_t descl, marpaESLIF_action_t *defaultSymbolActionp, marpaESLIF_action_t *defaultRuleActionp, marpaESLIF_action_t *defaultEventActionp, marpaESLIF_action_t *defaultRegexActionp, char *defaultEncodings, char *fallbackEncodings)
+static void _marpaESLIF_grammar_initv(marpaESLIF_grammar_t *grammarp, int leveli, marpaESLIFGrammar_t *marpaESLIFGrammarp)
 /*****************************************************************************/
 {
-  static const char             *funcs          = "_marpaESLIF_grammar_newp";
-  marpaESLIF_t                  *marpaESLIFp    = marpaESLIFGrammarp->marpaESLIFp;
-  genericLogger_t               *genericLoggerp = NULL;
-  marpaESLIF_grammar_t          *grammarp       = NULL;
-  marpaESLIF_stringGenerator_t   marpaESLIF_stringGenerator;
-
-  /* MARPAESLIF_TRACE(marpaESLIFp, funcs, "Building ESLIF grammar"); */
-
-  if (MARPAESLIF_UNLIKELY(leveli < 0)) {
-    MARPAESLIF_ERRORF(marpaESLIFp, "Grammar level must be >= 0, current value is %d", leveli);
-    goto err;
-  }
-  
-  grammarp = (marpaESLIF_grammar_t *) malloc(sizeof(marpaESLIF_grammar_t));
-  if (MARPAESLIF_UNLIKELY(grammarp == NULL)) {
-    MARPAESLIF_ERRORF(marpaESLIFp, "malloc failure, %s", strerror(errno));
-    goto err;
-  }
-
   grammarp->marpaESLIFGrammarp                 = marpaESLIFGrammarp;
-  grammarp->Lsharep                            = marpaESLIFGrammarp->Lsharep;
+  grammarp->Lsharep                            = (marpaESLIFGrammarp != NULL) ? marpaESLIFGrammarp->Lsharep : NULL;
   grammarp->leveli                             = leveli;
   grammarp->descp                              = NULL;
   grammarp->descautob                          = 0;
@@ -4719,10 +4702,39 @@ static inline marpaESLIF_grammar_t *_marpaESLIF_grammar_newp(marpaESLIFGrammar_t
   grammarp->allRulesArraypp                    = NULL;
   grammarp->expectedSymbolIdArrayp             = NULL;
   grammarp->expectedSymbolArraypp              = NULL;
+}
 
-  grammarp->marpaWrapperGrammarStartp = marpaWrapperGrammar_newp(marpaWrapperGrammarOptionp);
-  if (MARPAESLIF_UNLIKELY(grammarp->marpaWrapperGrammarStartp == NULL)) {
+/*****************************************************************************/
+static inline marpaESLIF_grammar_t *_marpaESLIF_grammar_newp(marpaESLIFGrammar_t *marpaESLIFGrammarp, marpaWrapperGrammarOption_t *marpaWrapperGrammarOptionp, int leveli, char *descEncodings, char *descs, size_t descl, marpaESLIF_action_t *defaultSymbolActionp, marpaESLIF_action_t *defaultRuleActionp, marpaESLIF_action_t *defaultEventActionp, marpaESLIF_action_t *defaultRegexActionp, char *defaultEncodings, char *fallbackEncodings)
+/*****************************************************************************/
+{
+  static const char             *funcs          = "_marpaESLIF_grammar_newp";
+  marpaESLIF_t                  *marpaESLIFp    = marpaESLIFGrammarp->marpaESLIFp;
+  genericLogger_t               *genericLoggerp = NULL;
+  marpaESLIF_grammar_t          *grammarp       = NULL;
+  marpaESLIF_stringGenerator_t   marpaESLIF_stringGenerator;
+
+  /* MARPAESLIF_TRACE(marpaESLIFp, funcs, "Building ESLIF grammar"); */
+
+  if (MARPAESLIF_UNLIKELY(leveli < 0)) {
+    MARPAESLIF_ERRORF(marpaESLIFp, "Grammar level must be >= 0, current value is %d", leveli);
     goto err;
+  }
+  
+  grammarp = (marpaESLIF_grammar_t *) malloc(sizeof(marpaESLIF_grammar_t));
+  if (MARPAESLIF_UNLIKELY(grammarp == NULL)) {
+    MARPAESLIF_ERRORF(marpaESLIFp, "malloc failure, %s", strerror(errno));
+    goto err;
+  }
+
+  _marpaESLIF_grammar_initv(grammarp, leveli, marpaESLIFGrammarp);
+
+  /* marpaWrapperGrammarOptionp should be NULL ONLY when we are transfering a bootstrap grammar to a non bootstrap grammar */
+  if (marpaWrapperGrammarOptionp != NULL) {
+    grammarp->marpaWrapperGrammarStartp = marpaWrapperGrammar_newp(marpaWrapperGrammarOptionp);
+    if (MARPAESLIF_UNLIKELY(grammarp->marpaWrapperGrammarStartp == NULL)) {
+      goto err;
+    }
   }
 
   /* ----------- Grammar description ------------- */
@@ -6793,7 +6805,7 @@ static inline marpaESLIF_grammar_t *_marpaESLIFRecognizer_meta_subGrammarp(marpa
       generatedGrammarOption.encodings = (char *) MARPAESLIF_UTF8_STRING;
       generatedGrammarOption.encodingl = strlen(MARPAESLIF_UTF8_STRING);
 
-      generatedGrammarp = _marpaESLIFGrammar_newp(marpaESLIFRecognizerp->marpaESLIFp, &generatedGrammarOption, 1 /* startGrammarIsLexemeb */, marpaESLIFGrammarp->Lsharep, 0 /* bootstrapb */, 1 /* rememberGrammarUtf8b */, startSymbols, grammarp->leveli, marpaESLIFGrammarp->marpaESLIFGrammar_bootstrapp);
+      generatedGrammarp = _marpaESLIFGrammar_newp(marpaESLIFRecognizerp->marpaESLIFp, &generatedGrammarOption, 1 /* startGrammarIsLexemeb */, marpaESLIFGrammarp->Lsharep, 0 /* bootstrapb */, 1 /* rememberGrammarUtf8b */, startSymbols, grammarp->leveli, marpaESLIFGrammarp->marpaESLIFGrammar_bootstrapp /* marpaESLIFGrammar_bootstrapOrigp */);
 
       /* Whatever happens we can free generatedGrammarOption.bytep */
       free(generatedGrammarOption.bytep);
@@ -7706,6 +7718,118 @@ marpaESLIFGrammar_t *marpaESLIFGrammar_newp(marpaESLIF_t *marpaESLIFp, marpaESLI
 }
 
 /*****************************************************************************/
+static inline short _marpaESLIFGrammar_bootstrap_transferb(marpaESLIF_t *marpaESLIFp, marpaESLIFGrammar_t *marpaESLIFGrammarp)
+/*****************************************************************************/
+/* Transfer the bootstrap part into the non-bootstrap section.               */
+/*****************************************************************************/
+{
+  static const char              *funcs                             = "_marpaESLIFGrammar_bootstrap_transferb";
+  marpaESLIFGrammar_bootstrap_t  *marpaESLIFGrammar_bootstrapp      = marpaESLIFGrammarp->marpaESLIFGrammar_bootstrapp;
+  marpaESLIFGrammar_bootstrap_t  *marpaESLIFGrammar_bootstrapClonep = NULL;
+  genericStack_t                 *grammarBootstrapCloneStackp;
+  genericStack_t                 *grammarStackp;
+  int                             grammari;
+  marpaESLIF_grammar_bootstrap_t *grammarBootstrapClonep;
+  marpaESLIF_grammar_t           *grammarp;
+  int                             symboli;
+  marpaESLIF_symbol_t            *symbolp;
+  int                             rulei;
+  marpaESLIF_rule_t              *rulep;
+  short                           rcb;
+
+  /* There is not a big difference between a marpaESLIFGrammar_bootstrap_t and marpaESLIFGrammar_t. What really changes */
+  /* the inner stacks that are of types marpaESLIF_grammar_bootstrap_t and marpaESLIF_grammar_t, respectively.          */
+  /* These inner stacks, though, contain also stacks that are of the common types marpaESLIF_symbol_t and               */
+  /* marpaESLIF_rule_t. So it is enough to clone the bootstrap version and transfer what it needed ;)                   */
+  marpaESLIFGrammar_bootstrapClonep = _marpaESLIFGrammar_bootstrap_clonep(marpaESLIFp, marpaESLIFGrammar_bootstrapp);
+  if (marpaESLIFGrammar_bootstrapClonep == NULL) {
+    goto err;
+  }
+
+  /* Transfer data - we must take care what is on the heap. */
+  marpaESLIFGrammarp->warningIsErrorb                           = marpaESLIFGrammar_bootstrapClonep->warningIsErrorb;
+  marpaESLIFGrammarp->warningIsIgnoredb                         = marpaESLIFGrammar_bootstrapClonep->warningIsIgnoredb;
+  marpaESLIFGrammarp->autorankb                                 = marpaESLIFGrammar_bootstrapClonep->autorankb;
+  marpaESLIFGrammarp->luabytep                                  = marpaESLIFGrammar_bootstrapClonep->luabytep;
+  marpaESLIFGrammar_bootstrapClonep->luabytep = NULL; /* has been transfered */
+  marpaESLIFGrammarp->internalRuleCounti                        = marpaESLIFGrammar_bootstrapClonep->internalRuleCounti;
+  marpaESLIFGrammarp->hasPseudoTerminalb                        = marpaESLIFGrammar_bootstrapClonep->hasPseudoTerminalb;
+  marpaESLIFGrammarp->hasEofPseudoTerminalb                     = marpaESLIFGrammar_bootstrapClonep->hasEofPseudoTerminalb;
+  marpaESLIFGrammarp->hasEolPseudoTerminalb                     = marpaESLIFGrammar_bootstrapClonep->hasEolPseudoTerminalb;
+  marpaESLIFGrammarp->hasSolPseudoTerminalb                     = marpaESLIFGrammar_bootstrapClonep->hasSolPseudoTerminalb;
+  marpaESLIFGrammarp->hasLookaheadMetab                         = marpaESLIFGrammar_bootstrapClonep->hasLookaheadMetab;
+
+  grammarBootstrapCloneStackp = marpaESLIFGrammar_bootstrapClonep->grammarBootstrapStackp;
+  if (grammarBootstrapCloneStackp != NULL) {
+
+    marpaESLIFGrammarp->grammarStackp = &(marpaESLIFGrammarp->_grammarStack);
+    GENERICSTACK_INIT(marpaESLIFGrammarp->grammarStackp);
+    if (MARPAESLIF_UNLIKELY(GENERICSTACK_ERROR(marpaESLIFGrammarp->grammarStackp))) {
+      MARPAESLIF_ERRORF(marpaESLIFp, "marpaESLIFGrammarp->grammarStackp initialization failure, %s", strerror(errno));
+      marpaESLIFGrammarp->grammarStackp = NULL;
+      goto err;
+    }
+
+    grammarStackp = marpaESLIFGrammarp->grammarStackp;
+
+    for (grammari = 0; grammari < GENERICSTACK_USED(grammarBootstrapCloneStackp); grammari++) {
+      if (GENERICSTACK_IS_PTR(grammarBootstrapCloneStackp, grammari)) {
+        /* There is no fundamental difference between marpaESLIF_grammar_bootstrap_t and marpaESLIF_grammar_t. */
+        /* In particular inner symbol and rule stacks are of the normal types marpaESLIF_symbol_t and          */
+        /* marpaESLIF_rule_t types, respectively. So we just call for bootstrap clone and transfer the stacks. */
+        grammarBootstrapClonep = (marpaESLIF_grammar_bootstrap_t *) GENERICSTACK_GET_PTR(grammarBootstrapCloneStackp, grammari);
+        grammarp = (marpaESLIF_grammar_t *) malloc(sizeof(marpaESLIF_grammar_t));
+        if (MARPAESLIF_UNLIKELY(grammarp == NULL)) {
+          MARPAESLIF_ERRORF(marpaESLIFp, "malloc failure, %s", strerror(errno));
+          goto err;
+        }
+        _marpaESLIF_grammar_initv(grammarp, -1 /* leveli */, NULL /* marpaESLIFGrammarp */);
+
+        /* At this point, it if fails we will have memory leaks */
+        grammarp->marpaESLIFGrammarp        = marpaESLIFGrammarp;
+        grammarp->marpaWrapperGrammarStartp = grammarBootstrapClonep->marpaWrapperGrammarStartp; grammarBootstrapClonep->marpaWrapperGrammarStartp = NULL;
+        grammarp->nbupdatei                 = grammarBootstrapClonep->nbupdatei;
+        grammarp->leveli                    = grammarBootstrapClonep->leveli;
+        grammarp->latmb                     = grammarBootstrapClonep->latmb;
+        grammarp->descp                     = grammarBootstrapClonep->descp;                     grammarBootstrapClonep->descp = NULL;
+        grammarp->descautob                 = grammarBootstrapClonep->descautob;
+        grammarp->discardIsFallbackb        = grammarBootstrapClonep->discardIsFallbackb;
+        grammarp->defaultRuleActionp        = grammarBootstrapClonep->defaultRuleActionp;        grammarBootstrapClonep->defaultRuleActionp = NULL;
+        grammarp->defaultSymbolActionp      = grammarBootstrapClonep->defaultSymbolActionp;      grammarBootstrapClonep->defaultSymbolActionp = NULL;
+        grammarp->defaultEventActionp       = grammarBootstrapClonep->defaultEventActionp;       grammarBootstrapClonep->defaultEventActionp = NULL;
+        grammarp->defaultRegexActionp       = grammarBootstrapClonep->defaultRegexActionp;       grammarBootstrapClonep->defaultRegexActionp = NULL;
+        grammarp->defaultEncodings          = grammarBootstrapClonep->defaultEncodings;          grammarBootstrapClonep->defaultEncodings = NULL;
+        grammarp->fallbackEncodings         = grammarBootstrapClonep->fallbackEncodings;         grammarBootstrapClonep->fallbackEncodings = NULL;
+        /* Symbols transfer */
+        for (symboli = 0; symboli < GENERICSTACK_USED(grammarBootstrapClonep->symbolStackp); symboli++) {
+          MARPAESLIF_INTERNAL_GET_SYMBOL_FROM_STACK(marpaESLIFp, symbolp, grammarBootstrapClonep->symbolStackp, symboli);
+          GENERICSTACK_SET_PTR(grammarBootstrapClonep->symbolStackp, NULL /* symbolp */, symboli);
+          GENERICSTACK_SET_PTR(grammarp->symbolStackp, symbolp, symboli);
+        }
+        GENERICSTACK_USED(grammarBootstrapClonep->symbolStackp) = 0; /* No need to scan this stack when freeing it */
+
+        /* Rules transfer */
+        for (rulei = 0; rulei < GENERICSTACK_USED(grammarBootstrapClonep->ruleStackp); rulei++) {
+          MARPAESLIF_INTERNAL_GET_RULE_FROM_STACK(marpaESLIFp, rulep, grammarBootstrapClonep->ruleStackp, rulei);
+          GENERICSTACK_SET_PTR(grammarBootstrapClonep->ruleStackp, NULL /* rulep */, rulei);
+          GENERICSTACK_SET_PTR(grammarp->ruleStackp, rulep, rulei);
+        }
+        GENERICSTACK_USED(grammarBootstrapClonep->ruleStackp) = 0; /* No need to scan this stack when freeing it */
+      }
+    }
+  }
+
+  rcb = 1;
+  goto done;
+
+ err:
+  rcb = 0;
+
+ done:
+  return rcb;
+}
+
+/*****************************************************************************/
 static inline marpaESLIFGrammar_bootstrap_t *_marpaESLIFGrammar_bootstrap_clonep(marpaESLIF_t *marpaESLIFp, marpaESLIFGrammar_bootstrap_t *marpaESLIFGrammarOrigp)
 /*****************************************************************************/
 {
@@ -7734,13 +7858,24 @@ static inline marpaESLIFGrammar_bootstrap_t *_marpaESLIFGrammar_bootstrap_clonep
   marpaESLIFGrammarp->warningIsIgnoredb                         = marpaESLIFGrammarOrigp->warningIsIgnoredb;
   marpaESLIFGrammarp->autorankb                                 = marpaESLIFGrammarOrigp->autorankb;
   marpaESLIFGrammarp->luabytep                                  = NULL;
-  marpaESLIFGrammarp->luabytel                                  = marpaESLIFGrammarOrigp->luabytel;
+  marpaESLIFGrammarp->luabytel                                  = 0;
   marpaESLIFGrammarp->internalRuleCounti                        = marpaESLIFGrammarOrigp->internalRuleCounti;
   marpaESLIFGrammarp->hasPseudoTerminalb                        = marpaESLIFGrammarOrigp->hasPseudoTerminalb;
   marpaESLIFGrammarp->hasEofPseudoTerminalb                     = marpaESLIFGrammarOrigp->hasEofPseudoTerminalb;
   marpaESLIFGrammarp->hasEolPseudoTerminalb                     = marpaESLIFGrammarOrigp->hasEolPseudoTerminalb;
   marpaESLIFGrammarp->hasSolPseudoTerminalb                     = marpaESLIFGrammarOrigp->hasSolPseudoTerminalb;
   marpaESLIFGrammarp->hasLookaheadMetab                         = marpaESLIFGrammarOrigp->hasLookaheadMetab;
+
+  if ((marpaESLIFGrammarOrigp->luabytep != NULL) && (marpaESLIFGrammarOrigp->luabytel > 0)) {
+    marpaESLIFGrammarp->luabytel = marpaESLIFGrammarOrigp->luabytel;
+    marpaESLIFGrammarp->luabytep = (char *) malloc(marpaESLIFGrammarp->luabytel + 1);
+    if (marpaESLIFGrammarp->luabytep == NULL) {
+      MARPAESLIF_ERRORF(marpaESLIFp, "malloc failure, %s", strerror(errno));
+      goto err;
+    }
+    memcpy(marpaESLIFGrammarp->luabytep, marpaESLIFGrammarOrigp->luabytep, marpaESLIFGrammarp->luabytel);
+    marpaESLIFGrammarp->luabytep[marpaESLIFGrammarp->luabytel] = '\0';
+  }
 
   grammarBootstrapStackOrigp = marpaESLIFGrammarOrigp->grammarBootstrapStackp;
   if (grammarBootstrapStackOrigp != NULL) {
@@ -7847,13 +7982,14 @@ static inline marpaESLIFGrammar_bootstrap_t *_marpaESLIFGrammar_bootstrap_newp(m
 }
 
 /*****************************************************************************/
-static inline marpaESLIFGrammar_t *_marpaESLIFGrammar_newp(marpaESLIF_t *marpaESLIFp, marpaESLIFGrammarOption_t *marpaESLIFGrammarOptionp, short startGrammarIsLexemeb, marpaESLIFGrammar_Lshare_t *Lsharep, short bootstrapb, short rememberGrammarUtf8b, char *forcedStartSymbols, int forcedStartSymbolLeveli, marpaESLIFGrammar_bootstrap_t *marpaESLIFGrammar_bootstrapp)
+static inline marpaESLIFGrammar_t *_marpaESLIFGrammar_newp(marpaESLIF_t *marpaESLIFp, marpaESLIFGrammarOption_t *marpaESLIFGrammarOptionp, short startGrammarIsLexemeb, marpaESLIFGrammar_Lshare_t *Lsharep, short bootstrapb, short rememberGrammarUtf8b, char *forcedStartSymbols, int forcedStartSymbolLeveli, marpaESLIFGrammar_bootstrap_t *marpaESLIFGrammar_bootstrapOrigp)
 /*****************************************************************************/
 {
   static const char                *funcs                       = "_marpaESLIFGrammar_newp";
   marpaESLIFRecognizerOption_t      marpaESLIFRecognizerOption  = marpaESLIFRecognizerOption_default_template;
   marpaESLIFValueOption_t           marpaESLIFValueOption       = marpaESLIFValueOption_default_template;
   marpaESLIFGrammar_t              *marpaESLIFGrammarp          = NULL;
+  marpaESLIFGrammar_bootstrap_t    *marpaESLIFGrammar_bootstrapp;
   marpaESLIF_readerContext_t        marpaESLIF_readerContext;
   int                               grammari;
   marpaESLIF_grammar_t             *grammarp;
@@ -7915,10 +8051,10 @@ static inline marpaESLIFGrammar_t *_marpaESLIFGrammar_newp(marpaESLIF_t *marpaES
   }
 
   /* Do we have a parent bootstrap ? This can happen only when we process a generator action */
-  marpaESLIFGrammarp->marpaESLIFGrammar_bootstrapp =
-    (marpaESLIFGrammar_bootstrapp == NULL)
+  marpaESLIFGrammar_bootstrapp = marpaESLIFGrammarp->marpaESLIFGrammar_bootstrapp =
+    (marpaESLIFGrammar_bootstrapOrigp == NULL)
     ? _marpaESLIFGrammar_bootstrap_newp(marpaESLIFp)
-    : _marpaESLIFGrammar_bootstrap_clonep(marpaESLIFp, marpaESLIFGrammar_bootstrapp);
+    : _marpaESLIFGrammar_bootstrap_clonep(marpaESLIFp, marpaESLIFGrammar_bootstrapOrigp);
   if (marpaESLIFGrammarp->marpaESLIFGrammar_bootstrapp == NULL) {
     goto err;
   }
@@ -7934,7 +8070,7 @@ static inline marpaESLIFGrammar_t *_marpaESLIFGrammar_newp(marpaESLIF_t *marpaES
   marpaESLIFRecognizerOption.newlineb          = 1; /* Grammars are short - we can count line/columns numbers */
   marpaESLIFRecognizerOption.trackb            = 0; /* Track absolute position - recognizer is never accessible at this stage */
 
-  marpaESLIFValueOption.userDatavp            = (void *) marpaESLIFGrammarp->marpaESLIFGrammar_bootstrapp; /* Result bootstrap grammar is here */
+  marpaESLIFValueOption.userDatavp            = (void *) marpaESLIFGrammar_bootstrapp; /* Result bootstrap grammar is here */
   marpaESLIFValueOption.ruleActionResolverp   = _marpaESLIF_bootstrap_ruleActionResolver;
   marpaESLIFValueOption.symbolActionResolverp = NULL; /* We use ::transfer */
 
@@ -7964,7 +8100,12 @@ static inline marpaESLIFGrammar_t *_marpaESLIFGrammar_newp(marpaESLIF_t *marpaES
     goto err;
   }
 
-  /* The result is directly stored in the context - validate it */
+  /* The result is directly stored in the context - convert it to non-bootstrap structures */
+  if (MARPAESLIF_UNLIKELY(! _marpaESLIFGrammar_bootstrap_transferb(marpaESLIFp, marpaESLIFGrammarp))) {
+    goto err;
+  }
+
+  /* Validate the grammar */
   if (MARPAESLIF_UNLIKELY(! _marpaESLIFGrammar_validateb(marpaESLIFGrammarp, 0 /* ignoreLazyb */, startGrammarIsLexemeb, forcedStartSymbols, forcedStartSymbolLeveli))) {
     goto err;
   }

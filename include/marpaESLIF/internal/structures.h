@@ -774,7 +774,7 @@ struct marpaESLIF_lua_functiondecl {
   int     sizei;   /* Number of parameters */
 };
 
-typedef struct marpaESLIF_grammar_bootstrap {
+struct marpaESLIF_grammar_bootstrap {
   marpaESLIFGrammar_bootstrap_t *marpaESLIFGrammarBootstrapp;
   marpaWrapperGrammar_t         *marpaWrapperGrammarStartp;          /* Grammar implementation at :start */
   unsigned int                   nbupdatei;                          /* Number of updates - used in grammar ESLIF actions */
@@ -793,9 +793,9 @@ typedef struct marpaESLIF_grammar_bootstrap {
   genericStack_t                *symbolStackp;                       /* Pointer to stack of symbols */
   genericStack_t                 _ruleStack;                         /* Stack of rules */
   genericStack_t                *ruleStackp;                         /* Pointer to stack of rules */
-} marpaESLIF_grammar_bootstrap_t;
+};
 
-typedef struct marpaESLIFGrammar_bootstrap {
+struct marpaESLIFGrammar_bootstrap {
   genericStack_t             _grammarBootstrapStack; /* Stack of marpaESLIF_grammar_bootstrap_t */
   genericStack_t            *grammarBootstrapStackp; /* Pointer to stack of marpaESLIF_grammar_bootstrap_t */
   short                      warningIsErrorb;        /* Current warningIsErrorb setting (used when parsing grammars ) */
@@ -809,7 +809,7 @@ typedef struct marpaESLIFGrammar_bootstrap {
   short                      hasEolPseudoTerminalb;  /* Any :eol terminal in the grammar ? */
   short                      hasSolPseudoTerminalb;  /* Any :sol terminal in the grammar ? */
   short                      hasLookaheadMetab;      /* Any lookahead meta in the grammar ? */
-} marpaESLIFGrammar_bootstrap_t;
+};
 
 #include "marpaESLIF/internal/eslif.h"
 
