@@ -182,6 +182,8 @@ struct marpaESLIF_regex {
 };
 
 struct marpaESLIF_terminal {
+  char                          *utf8s;               /* Original UTF-8 input to _marpaESLIF_terminal_new() */
+  size_t                         utf8l;               /* Original UTF-8 input length to _marpaESLIF_terminal_new() */
   int                            idi;                 /* Terminal Id */
   marpaESLIF_string_t           *descp;               /* Terminal description */
   char                          *modifiers;           /* Modifiers */
