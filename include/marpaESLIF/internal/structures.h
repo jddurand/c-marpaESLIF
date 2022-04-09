@@ -581,6 +581,7 @@ struct marpaESLIFRecognizer {
   marpaESLIF_symbol_t         *discardSymbolp;    /* Ditto */
   int                          resumeCounteri;    /* Internal counter for tracing - no functional impact */
   int                          callstackCounteri; /* Internal counter for tracing - no functional impact */
+  int                          callstackCounterGlobali; /* Internal counter for tracing - no functional impact */
 
   int                          leveli;         /* Recognizer level (!= grammar level) */
   size_t                       parentDeltal;   /* Parent original delta - used to recovert parent current pointer at our free */

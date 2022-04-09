@@ -8051,14 +8051,14 @@ static inline marpaESLIFGrammar_bootstrap_t *_marpaESLIFGrammar_bootstrap_clonep
         }
       }
     }
-    /* There is a diffulty with lookahead symbols: they can be resolved in the clone only at the price of a second stage */
+    /* There is a diffulty with forced lookup symbols: they can be resolved in the clone only at the price of a second stage */
     for (grammari = 0; grammari < GENERICSTACK_USED(grammarBootstrapStackp); grammari++) {
       if (GENERICSTACK_IS_PTR(grammarBootstrapStackp, grammari)) {
 
         grammarOrigp = (marpaESLIF_grammar_bootstrap_t *) GENERICSTACK_GET_PTR(grammarBootstrapStackOrigp, grammari);
         grammarp = (marpaESLIF_grammar_bootstrap_t *) GENERICSTACK_GET_PTR(grammarBootstrapStackp, grammari);
 
-	symbolStackOrigp = grammarp->symbolStackp;
+	symbolStackOrigp = grammarOrigp->symbolStackp;
 	symbolStackp = grammarp->symbolStackp;
 
 	for (symboli = 0; symboli < GENERICSTACK_USED(symbolStackOrigp); symboli++) {
@@ -8066,11 +8066,11 @@ static inline marpaESLIFGrammar_bootstrap_t *_marpaESLIFGrammar_bootstrap_clonep
 	  if (symbolOrigp->lookupSymbolp != NULL) {
 	    MARPAESLIF_INTERNAL_GET_SYMBOL_FROM_STACK(marpaESLIFp, symbolp, symbolStackp, symboli);
 
-	    if (! GENERICSTACK_IS_PTR(grammarBootstrapStackp, grammari + symbolp->lookupLevelDeltai)) {
-	      MARPAESLIF_ERRORF(marpaESLIFp, "No bootstrap grammar at level %d+%d=%d", grammari, symbolp->lookupLevelDeltai, grammari + symbolp->lookupLevelDeltai);
+	    if (! GENERICSTACK_IS_PTR(grammarBootstrapStackp, grammari + symbolOrigp->lookupLevelDeltai)) {
+	      MARPAESLIF_ERRORF(marpaESLIFp, "No bootstrap grammar at level %d+%d=%d", grammari, symbolOrigp->lookupLevelDeltai, grammari + symbolOrigp->lookupLevelDeltai);
 	      goto err;
 	    }
-	    grammarDeltap = (marpaESLIF_grammar_bootstrap_t *) GENERICSTACK_GET_PTR(grammarBootstrapStackp, grammari + symbolp->lookupLevelDeltai);
+	    grammarDeltap = (marpaESLIF_grammar_bootstrap_t *) GENERICSTACK_GET_PTR(grammarBootstrapStackp, grammari + symbolOrigp->lookupLevelDeltai);
 
 	    symbolp->lookupLevelDeltai = symbolOrigp->lookupLevelDeltai;
 	    MARPAESLIF_INTERNAL_GET_SYMBOL_FROM_STACK(marpaESLIFp, symbolp->lookupSymbolp, grammarDeltap->symbolStackp, symbolOrigp->lookupSymbolp->idi);
@@ -12409,6 +12409,7 @@ static inline marpaESLIFRecognizer_t *__marpaESLIFRecognizer_newp(marpaESLIF_t *
   marpaESLIFRecognizerp->discardEvente                   = MARPAESLIF_INTERNAL_EVENT_ACTION_NA;
   marpaESLIFRecognizerp->resumeCounteri                  = 0;
   marpaESLIFRecognizerp->callstackCounteri               = 0;
+  marpaESLIFRecognizerp->callstackCounterGlobali         = 0;
   /* If there is a parent recognizer, we share quite a lot of information */
   if (marpaESLIFRecognizerParentp != NULL) {
     marpaESLIFRecognizerp->leveli                           = marpaESLIFRecognizerParentp->leveli + 1;
@@ -21055,6 +21056,7 @@ static inline short _marpaESLIFRecognizer_getPristineFromCachep(marpaESLIF_t *ma
         /* marpaESLIFRecognizerp->discardEvente                = MARPAESLIF_INTERNAL_EVENT_ACTION_NA; */
         marpaESLIFRecognizerp->resumeCounteri               = 0;
         /* marpaESLIFRecognizerp->callstackCounteri            = 0; */
+        /* marpaESLIFRecognizerp->callstackCounterGlobali      = 0; */
         marpaESLIFRecognizerp->leveli                       = marpaESLIFRecognizerParentp->leveli + 1;
         marpaESLIFRecognizerp->marpaESLIFRecognizerHashp    = marpaESLIFRecognizerParentp->marpaESLIFRecognizerHashp;
         marpaESLIFRecognizerp->marpaESLIF_streamp           = marpaESLIFRecognizerParentp->marpaESLIF_streamp;
