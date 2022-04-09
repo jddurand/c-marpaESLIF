@@ -890,7 +890,7 @@ static inline short                  _marpaESLIF_eslif2hostb(marpaESLIF_t *marpa
 static inline short                  _marpaESLIFValue_valueb(marpaESLIFValue_t *marpaESLIFValuep, marpaESLIFValueResult_t *marpaESLIFValueResultp);
 static inline short                  __marpaESLIFValue_valueb(marpaESLIFValue_t *marpaESLIFValuep, marpaESLIFValueResult_t *marpaESLIFValueResultp);
 
-static inline void                   _marpaESLIFGrammar_bootstrap_freev(marpaESLIFGrammar_bootstrap_t *marpaESLIFGrammarp, short onStackb);
+static inline void                   _marpaESLIFGrammar_bootstrap_freev(marpaESLIFGrammar_bootstrap_t *marpaESLIFGrammarp);
 static inline void                   _marpaESLIF_grammarBootstrapStack_freev(genericStack_t *grammarStackp);
 static inline void                   _marpaESLIF_grammarStack_freev(genericStack_t *grammarStackp);
 static inline void                   _marpaESLIFGrammar_freev(marpaESLIFGrammar_t *marpaESLIFGrammarp, short onStackb);
@@ -7972,7 +7972,7 @@ static inline short _marpaESLIFGrammar_bootstrap_transferb(marpaESLIF_t *marpaES
   rcb = 0;
 
  done:
-  _marpaESLIFGrammar_bootstrap_freev(marpaESLIFGrammar_bootstrapClonep, 0 /* onStackb */);
+  _marpaESLIFGrammar_bootstrap_freev(marpaESLIFGrammar_bootstrapClonep);
   return rcb;
 }
 
@@ -8084,7 +8084,7 @@ static inline marpaESLIFGrammar_bootstrap_t *_marpaESLIFGrammar_bootstrap_clonep
 
  err:
   /* We do not want to free it, if it was injected: parent should take care of that */
-  _marpaESLIFGrammar_bootstrap_freev(marpaESLIFGrammarp, 0 /* onStackb */);
+  _marpaESLIFGrammar_bootstrap_freev(marpaESLIFGrammarp);
   marpaESLIFGrammarp = NULL;
 
  done:
@@ -8121,7 +8121,7 @@ static inline marpaESLIFGrammar_bootstrap_t *_marpaESLIFGrammar_bootstrap_newp(m
 
  err:
   /* We do not want to free it, if it was injected: parent should take care of that */
-  _marpaESLIFGrammar_bootstrap_freev(marpaESLIFGrammarp, 0 /* onStackb */);
+  _marpaESLIFGrammar_bootstrap_freev(marpaESLIFGrammarp);
   marpaESLIFGrammarp = NULL;
 
  done:
@@ -13866,16 +13866,13 @@ static short _marpaESLIFValue_nullingCallbackWrapperb(void *userDatavp, int symb
 }
 
 /*****************************************************************************/
-static inline void _marpaESLIFGrammar_bootstrap_freev(marpaESLIFGrammar_bootstrap_t *marpaESLIFGrammarp, short onStackb)
+static inline void _marpaESLIFGrammar_bootstrap_freev(marpaESLIFGrammar_bootstrap_t *marpaESLIFGrammarp)
 /*****************************************************************************/
 {
   if (marpaESLIFGrammarp != NULL) {
     _marpaESLIF_grammarBootstrapStack_freev(marpaESLIFGrammarp->grammarBootstrapStackp);
     if (marpaESLIFGrammarp->luabytep != NULL) {
       free(marpaESLIFGrammarp->luabytep);
-    }
-    if (! onStackb) {
-      free(marpaESLIFGrammarp);
     }
   }
 }
@@ -13898,7 +13895,7 @@ static inline void _marpaESLIFGrammar_freev(marpaESLIFGrammar_t *marpaESLIFGramm
       GENERICHASH_RESET(marpaESLIFGrammarp->lexemeGrammarHashp, marpaESLIFGrammarp->marpaESLIFp);
     }
     _marpaESLIF_lua_grammar_freev(marpaESLIFGrammarp);
-    _marpaESLIFGrammar_bootstrap_freev(marpaESLIFGrammarp->marpaESLIFGrammar_bootstrapp, 0 /* onStackb */);
+    _marpaESLIFGrammar_bootstrap_freev(marpaESLIFGrammarp->marpaESLIFGrammar_bootstrapp);
     if (! onStackb) {
       free(marpaESLIFGrammarp);
     }
