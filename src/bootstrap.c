@@ -9152,61 +9152,29 @@ static short _marpaESLIF_bootstrap_G1_action_start_symbol_2b(void *userDatavp, m
 /*****************************************************************************/
 static inline marpaESLIF_rule_t *_marpaESLIF_bootstrap_check_rulep(marpaESLIFValue_t *marpaESLIFValuep, marpaESLIFGrammar_bootstrap_t *marpaESLIFGrammarBootstrapp, marpaESLIF_grammar_bootstrap_t *grammarBootstrapp, char *descEncodings, char *descs, size_t descl, int lhsi, size_t nrhsl, int *rhsip, int exceptioni, int ranki, short nullRanksHighb, short sequenceb, int minimumi, int separatori, short properb, marpaESLIF_action_t *actionp, short hideseparatorb, short *skipbp, marpaESLIF_lua_functiondecl_t *declp, marpaESLIF_lua_functioncall_t **callpp, marpaESLIF_lua_functioncall_t *separatorcallp)
 {
-  size_t               rhsl;
-  marpaESLIF_symbol_t *rhsp;
-  marpaESLIF_rule_t   *rulep;
-
-  rulep = _marpaESLIF_rule_newp(marpaESLIFValuep->marpaESLIFp,
-                                grammarBootstrapp->symbolStackp,
-                                grammarBootstrapp->leveli,
-                                grammarBootstrapp->marpaWrapperGrammarStartp,
-                                descEncodings,
-                                descs,
-                                descl,
-                                lhsi,
-                                nrhsl,
-                                rhsip,
-                                exceptioni,
-                                ranki,
-                                nullRanksHighb,
-                                sequenceb,
-                                minimumi,
-                                separatori,
-                                properb,
-                                actionp,
-                                hideseparatorb,
-                                skipbp,
-                                declp,
-                                callpp,
-                                separatorcallp);
-
-  if (rulep == NULL) {
-    goto err;
-  }
-
-  /* For every parameterized symbol, that is unique in the grammar, associate shallow pointers to decl and call */
-  for (rhsl = 0; rhsl < nrhsl; rhsl++) {
-    MARPAESLIF_INTERNAL_GET_SYMBOL_FROM_STACK(marpaESLIFValuep->marpaESLIFp, rhsp, grammarBootstrapp->symbolStackp, rhsip[rhsl]);
-    if (rhsp->parameterizedRhsb) {
-      rhsp->declp = rulep->declp;        /* May be NULL */
-      rhsp->callp = rulep->callpp[rhsl]; /* Never null by definition when it is a parameterized symbol */
-    }
-  }
-  if (rulep->separatorp != NULL) {
-    rhsp = rulep->separatorp;
-    if (rhsp->parameterizedRhsb) {
-      rhsp->declp = rulep->declp;          /* May be NULL */
-      rhsp->callp = rulep->separatorcallp; /* Never null by definition when it is a parameterized symbol */
-    }
-  }
-
-  goto done;
-
- err:
-  rulep = NULL;
-
- done:
-  return rulep;
+  return _marpaESLIF_rule_newp(marpaESLIFValuep->marpaESLIFp,
+                               grammarBootstrapp->symbolStackp,
+                               grammarBootstrapp->leveli,
+                               grammarBootstrapp->marpaWrapperGrammarStartp,
+                               descEncodings,
+                               descs,
+                               descl,
+                               lhsi,
+                               nrhsl,
+                               rhsip,
+                               exceptioni,
+                               ranki,
+                               nullRanksHighb,
+                               sequenceb,
+                               minimumi,
+                               separatori,
+                               properb,
+                               actionp,
+                               hideseparatorb,
+                               skipbp,
+                               declp,
+                               callpp,
+                               separatorcallp);
 }
 
 /*****************************************************************************/

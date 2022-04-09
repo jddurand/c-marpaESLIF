@@ -4455,7 +4455,7 @@ static inline marpaESLIF_grammar_bootstrap_t *_marpaESLIF_grammar_bootstrap_clon
       if (MARPAESLIF_UNLIKELY(metap == NULL)) {
         goto err;
       }
-      symbolp = _marpaESLIF_symbol_newp(marpaESLIFp, NULL /* marpaESLIFSymbolOptionp */);
+      symbolp = _marpaESLIF_symbol_newp(marpaESLIFp, &(symbolOrigp->marpaESLIFSymbolOption));
       if (MARPAESLIF_UNLIKELY(symbolp == NULL)) {
         goto err;
       }
@@ -4485,7 +4485,7 @@ static inline marpaESLIF_grammar_bootstrap_t *_marpaESLIF_grammar_bootstrap_clon
       if (MARPAESLIF_UNLIKELY(terminalp == NULL)) {
         goto err;
       }
-      symbolp = _marpaESLIF_symbol_newp(marpaESLIFp, NULL /* marpaESLIFSymbolOptionp */);
+      symbolp = _marpaESLIF_symbol_newp(marpaESLIFp, &(symbolOrigp->marpaESLIFSymbolOption));
       if (MARPAESLIF_UNLIKELY(symbolp == NULL)) {
         goto err;
       }
@@ -4499,6 +4499,55 @@ static inline marpaESLIF_grammar_bootstrap_t *_marpaESLIF_grammar_bootstrap_clon
       MARPAESLIF_ERRORF(marpaESLIFp, "Unknown symbol type %d", symbolp->type);
       goto err;
     }
+    /* Common flags that are set by grammar parse */
+    symbolp->startb    = symbolOrigp->startb;
+    symbolp->discardb  = symbolOrigp->discardb;
+
+    if (symbolOrigp->eventBefores != NULL) {
+      symbolp->eventBefores = strdup(symbolOrigp->eventBefores);
+      if (symbolp->eventBefores == NULL) {
+        MARPAESLIF_ERRORF(marpaESLIFp, "strdup failure, %s", strerror(errno));
+        goto err;
+      }
+    }
+    symbolp->eventBeforeb = symbolOrigp->eventBeforeb;
+
+    if (symbolOrigp->eventAfters != NULL) {
+      symbolp->eventAfters = strdup(symbolOrigp->eventAfters);
+      if (symbolp->eventAfters == NULL) {
+        MARPAESLIF_ERRORF(marpaESLIFp, "strdup failure, %s", strerror(errno));
+        goto err;
+      }
+    }
+    symbolp->eventAfterb = symbolOrigp->eventAfterb;
+
+    if (symbolOrigp->eventPredicteds != NULL) {
+      symbolp->eventPredicteds = strdup(symbolOrigp->eventPredicteds);
+      if (symbolp->eventPredicteds == NULL) {
+        MARPAESLIF_ERRORF(marpaESLIFp, "strdup failure, %s", strerror(errno));
+        goto err;
+      }
+    }
+    symbolp->eventPredictedb = symbolOrigp->eventPredictedb;
+
+    if (symbolOrigp->eventNulleds != NULL) {
+      symbolp->eventNulleds = strdup(symbolOrigp->eventNulleds);
+      if (symbolp->eventNulleds == NULL) {
+        MARPAESLIF_ERRORF(marpaESLIFp, "strdup failure, %s", strerror(errno));
+        goto err;
+      }
+    }
+    symbolp->eventNulledb = symbolOrigp->eventNulledb;
+
+    if (symbolOrigp->eventCompleteds != NULL) {
+      symbolp->eventCompleteds = strdup(symbolOrigp->eventCompleteds);
+      if (symbolp->eventCompleteds == NULL) {
+        MARPAESLIF_ERRORF(marpaESLIFp, "strdup failure, %s", strerror(errno));
+        goto err;
+      }
+    }
+    symbolp->eventCompletedb = symbolOrigp->eventCompletedb;
+
     /* It is a non-sense to not have the same idi */
     if (MARPAESLIF_UNLIKELY(symbolp->idi != symbolOrigp->idi)) {
       MARPAESLIF_ERRORF(marpaESLIFp, "symbolp->idi (%d) != symbolOrigp->idi (%d)", symbolp->idi, symbolOrigp->idi);
@@ -4506,13 +4555,31 @@ static inline marpaESLIF_grammar_bootstrap_t *_marpaESLIF_grammar_bootstrap_clon
     }
 
     /* Some symbol members are set elsewhere in the bootstrap */
-    symbolp->lookaheadb        = symbolOrigp->lookaheadb;
     if (symbolOrigp->generatorActionp != NULL) {
       symbolp->generatorActionp = _marpaESLIF_action_clonep(marpaESLIFp, symbolOrigp->generatorActionp);
       if (symbolp->generatorActionp == NULL) {
 	goto err;
       }
     }
+
+    symbolp->priorityi = symbolOrigp->priorityi;
+
+    if (symbolOrigp->ifActionp != NULL) {
+      symbolp->ifActionp = _marpaESLIF_action_clonep(marpaESLIFp, symbolOrigp->ifActionp);
+      if (symbolp->ifActionp == NULL) {
+        goto err;
+      }
+    }
+
+    if (symbolOrigp->generatorActionp != NULL) {
+      symbolp->generatorActionp = _marpaESLIF_action_clonep(marpaESLIFp, symbolOrigp->generatorActionp);
+      if (symbolp->generatorActionp == NULL) {
+        goto err;
+      }
+    }
+
+    symbolp->verboseb   = symbolOrigp->verboseb;
+    symbolp->lookaheadb = symbolOrigp->lookaheadb;
 
     /* Note that lookupSymbolp requires a second pass - must be done by the caller */
 
@@ -4554,6 +4621,19 @@ static inline marpaESLIF_grammar_bootstrap_t *_marpaESLIF_grammar_bootstrap_clon
     if (rulep == NULL) {
       goto err;
     }
+
+    /* Some other rule members are set at runtime */
+    rulep->internalb = ruleOrigp->internalb;
+
+    if (ruleOrigp->discardEvents != NULL) {
+      rulep->discardEvents = strdup(ruleOrigp->discardEvents);
+      if (rulep->discardEvents == NULL) {
+        MARPAESLIF_ERRORF(marpaESLIFp, "strdup failure, %s", strerror(errno));
+        goto err;
+      }
+    }
+    rulep->discardEventb = ruleOrigp->discardEventb;
+  
     GENERICSTACK_SET_PTR(ruleStackp, rulep, rulei);
     if (MARPAESLIF_UNLIKELY(GENERICSTACK_ERROR(ruleStackp))) {
       MARPAESLIF_ERRORF(marpaESLIFp, "ruleStackp push failure, %s", strerror(errno));
@@ -5095,8 +5175,10 @@ static inline marpaESLIF_rule_t *_marpaESLIF_rule_newp(marpaESLIF_t *marpaESLIFp
   genericLogger_t                 *genericLoggerp = NULL;
   marpaESLIF_stringGenerator_t     marpaESLIF_stringGenerator;
   marpaESLIF_symbol_t             *symbolp;
+  marpaESLIF_symbol_t             *rhsp;
   marpaWrapperGrammarRuleOption_t  marpaWrapperGrammarRuleOption;
   size_t                           i;
+  size_t                           rhsl;
 
   /* MARPAESLIF_TRACE(marpaESLIFp, funcs, "Building rule"); */
 
@@ -5283,6 +5365,24 @@ static inline marpaESLIF_rule_t *_marpaESLIF_rule_newp(marpaESLIF_t *marpaESLIFp
     goto err;
   }
 
+  if (symbolStackp != NULL) {
+    /* For every parameterized symbol, that is unique in the grammar, associate shallow pointers to decl and call */
+    for (rhsl = 0; rhsl < nrhsl; rhsl++) {
+      MARPAESLIF_INTERNAL_GET_SYMBOL_FROM_STACK(marpaESLIFValuep->marpaESLIFp, rhsp, symbolStackp, rhsip[rhsl]);
+      if (rhsp->parameterizedRhsb) {
+        rhsp->declp = rulep->declp;        /* May be NULL */
+        rhsp->callp = rulep->callpp[rhsl]; /* Never null by definition when it is a parameterized symbol */
+      }
+    }
+    if (rulep->separatorp != NULL) {
+      rhsp = rulep->separatorp;
+      if (rhsp->parameterizedRhsb) {
+        rhsp->declp = rulep->declp;          /* May be NULL */
+        rhsp->callp = rulep->separatorcallp; /* Never null by definition when it is a parameterized symbol */
+      }
+    }
+  }
+
   goto done;
 
  err:
@@ -5402,8 +5502,8 @@ static inline marpaESLIF_symbol_t *_marpaESLIF_symbol_newp(marpaESLIF_t *marpaES
   symbolp->verboseb                 = 0; /* Default verbose is 0 */
   symbolp->parami                   = -1;
   symbolp->parameterizedRhsb        = 0;
-  symbolp->declp                    = NULL;
-  symbolp->callp                    = NULL;
+  symbolp->declp                    = NULL; /* Shallow pointer to rule (a parameterized symbol is always unique) */
+  symbolp->callp                    = NULL; /* Shallow pointer to rule (a parameterized symbol is always unique) */
   symbolp->pushContextActionp       = NULL;
   symbolp->lookaheadb               = 0;
   symbolp->lookaheadIsTerminalb     = 0;
@@ -7871,6 +7971,7 @@ static inline short _marpaESLIFGrammar_bootstrap_transferb(marpaESLIF_t *marpaES
   rcb = 0;
 
  done:
+  _marpaESLIFGrammar_bootstrap_freev(marpaESLIFGrammar_bootstrapClonep, 0 /* onStackb */);
   return rcb;
 }
 
