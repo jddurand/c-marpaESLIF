@@ -6867,6 +6867,7 @@ static inline marpaESLIF_grammar_t *_marpaESLIFRecognizer_meta_subGrammarp(marpa
     }
 
     if (lexemeGrammarp == NULL) {
+      MARPAESLIF_NOTICEF(marpaESLIFRecognizerp->marpaESLIFp, "%s Generating grammar for generated RHS:\n%s\n", funcs, utf8WithLevelp->bytep);
       /* Try to get a grammar from it. */
 
       /* Remember the marpaESLIFGrammarp->internalRuleCounti that is in bootstrap.c?   */
@@ -6969,14 +6970,7 @@ static inline marpaESLIF_grammar_t *_marpaESLIFRecognizer_meta_subGrammarp(marpa
       utf8WithLevelp = NULL;
       generatedGrammarp = NULL;
     } else {
-#ifndef MARPAESLIF_NTRACE
-      {
-        if (! marpaESLIFGrammar_grammarshowform_currentb(generatedGrammarp, &grammarshows)) {
-          goto err;
-        }
-        MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Cached lexeme grammar:\n%s\n", grammarshows);
-      }
-#endif
+      MARPAESLIF_NOTICEF(marpaESLIFRecognizerp->marpaESLIFp, "%s Got cached grammar for generated RHS:\n%s\n", funcs, utf8WithLevelp->bytep);
     }
 
     /* We recuperate the exact sub grammar from the generated grammar */
