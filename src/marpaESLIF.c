@@ -4411,11 +4411,11 @@ static inline marpaESLIF_grammar_bootstrap_t *_marpaESLIF_grammar_bootstrap_clon
   marpaESLIF_meta_t              *metap            = NULL;
   marpaESLIF_symbol_t            *symbolp          = NULL;
   marpaESLIF_terminal_t          *terminalp        = NULL;
+  marpaESLIF_rule_t              *rulep            = NULL;
   int                             symboli;
   marpaESLIF_symbol_t            *symbolOrigp;
   int                             rulei;
   marpaESLIF_rule_t              *ruleOrigp;
-  marpaESLIF_rule_t              *rulep;
   marpaWrapperGrammarOption_t     marpaWrapperGrammarOption;
   marpaWrapperGrammar_t          *marpaWrapperGrammarStartp;
   genericStack_t                 *symbolStackp;
@@ -4476,8 +4476,8 @@ static inline marpaESLIF_grammar_bootstrap_t *_marpaESLIF_grammar_bootstrap_clon
                                             (symbolOrigp->u.terminalp->descp != NULL) ? symbolOrigp->u.terminalp->descp->bytel : 0,
                                             symbolOrigp->u.terminalp->type,
                                             symbolOrigp->u.terminalp->modifiers,
-                                            symbolOrigp->u.terminalp->utf8s,
-                                            symbolOrigp->u.terminalp->utf8l,
+                                            symbolOrigp->u.terminalp->pseudob ? NULL : symbolOrigp->u.terminalp->utf8s,
+                                            symbolOrigp->u.terminalp->pseudob ? 0 : symbolOrigp->u.terminalp->utf8l,
                                             NULL, /* testFullMatchs */
                                             NULL, /* testPartialMatchs */
                                             symbolOrigp->u.terminalp->pseudob,
@@ -7893,6 +7893,7 @@ static inline short _marpaESLIFGrammar_bootstrap_transferb(marpaESLIF_t *marpaES
   marpaESLIFGrammarp->autorankb                                 = marpaESLIFGrammar_bootstrapClonep->autorankb;
   marpaESLIFGrammarp->luabytep                                  = marpaESLIFGrammar_bootstrapClonep->luabytep;
   marpaESLIFGrammar_bootstrapClonep->luabytep = NULL; /* has been transfered */
+  marpaESLIFGrammarp->luabytel                                  = marpaESLIFGrammar_bootstrapClonep->luabytel;
   marpaESLIFGrammarp->internalRuleCounti                        = marpaESLIFGrammar_bootstrapClonep->internalRuleCounti;
   marpaESLIFGrammarp->hasPseudoTerminalb                        = marpaESLIFGrammar_bootstrapClonep->hasPseudoTerminalb;
   marpaESLIFGrammarp->hasEofPseudoTerminalb                     = marpaESLIFGrammar_bootstrapClonep->hasEofPseudoTerminalb;
