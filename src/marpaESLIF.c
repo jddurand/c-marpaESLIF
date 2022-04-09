@@ -4555,13 +4555,6 @@ static inline marpaESLIF_grammar_bootstrap_t *_marpaESLIF_grammar_bootstrap_clon
     }
 
     /* Some symbol members are set elsewhere in the bootstrap */
-    if (symbolOrigp->generatorActionp != NULL) {
-      symbolp->generatorActionp = _marpaESLIF_action_clonep(marpaESLIFp, symbolOrigp->generatorActionp);
-      if (symbolp->generatorActionp == NULL) {
-	goto err;
-      }
-    }
-
     symbolp->priorityi = symbolOrigp->priorityi;
 
     if (symbolOrigp->ifActionp != NULL) {
@@ -13875,6 +13868,7 @@ static inline void _marpaESLIFGrammar_bootstrap_freev(marpaESLIFGrammar_bootstra
     if (marpaESLIFGrammarp->luabytep != NULL) {
       free(marpaESLIFGrammarp->luabytep);
     }
+    free(marpaESLIFGrammarp);
   }
 }
 
