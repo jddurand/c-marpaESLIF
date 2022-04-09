@@ -5368,7 +5368,7 @@ static inline marpaESLIF_rule_t *_marpaESLIF_rule_newp(marpaESLIF_t *marpaESLIFp
   if (symbolStackp != NULL) {
     /* For every parameterized symbol, that is unique in the grammar, associate shallow pointers to decl and call */
     for (rhsl = 0; rhsl < nrhsl; rhsl++) {
-      MARPAESLIF_INTERNAL_GET_SYMBOL_FROM_STACK(marpaESLIFValuep->marpaESLIFp, rhsp, symbolStackp, rhsip[rhsl]);
+      MARPAESLIF_INTERNAL_GET_SYMBOL_FROM_STACK(marpaESLIFp, rhsp, symbolStackp, rhsip[rhsl]);
       if (rhsp->parameterizedRhsb) {
         rhsp->declp = rulep->declp;        /* May be NULL */
         rhsp->callp = rulep->callpp[rhsl]; /* Never null by definition when it is a parameterized symbol */
