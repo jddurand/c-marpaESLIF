@@ -4365,6 +4365,7 @@ static short marpaESLIFLua_generatorCallbackb(void *userDatavp, marpaESLIFRecogn
                           for (i = 0; i < nargs; i++) {
                             if (! marpaESLIFLua_pushRecognizer_forceArraycopyb(marpaESLIFLuaRecognizerContextp, marpaESLIFRecognizerp, &(contextp->u.r.p[i]))) goto err;
                           }
+                          marpaESLIFLua_stackdumpv(L, 0);
                           ,
                           &strings,
                           &stringl
