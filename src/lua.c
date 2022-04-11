@@ -2487,6 +2487,10 @@ static inline short _marpaESLIF_lua_recognizer_push_contextb(marpaESLIFRecognize
     if (MARPAESLIF_UNLIKELY(! marpaESLIF_stringGenerator.okb)) {
       goto err;
     }
+    GENERICLOGGER_TRACEF(genericLoggerp, "  print(tableDump(marpaESLIFContextStackp:get()))\n", symbolp->callp->luaexplists);
+    if (MARPAESLIF_UNLIKELY(! marpaESLIF_stringGenerator.okb)) {
+      goto err;
+    }
     GENERICLOGGER_TRACE(genericLoggerp, "end\n");
     if (MARPAESLIF_UNLIKELY(! marpaESLIF_stringGenerator.okb)) {
       goto err;
@@ -2503,6 +2507,7 @@ static inline short _marpaESLIF_lua_recognizer_push_contextb(marpaESLIFRecognize
     marpaESLIF_stringGenerator.s = NULL;
 
     MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Generated action:\n%s", symbolp->pushContextActionp->u.luaFunction.actions);
+    MARPAESLIF_NOTICEF(marpaESLIFRecognizerp->marpaESLIFp, "Generated action:\n%s", symbolp->pushContextActionp->u.luaFunction.actions);
   }
 
   /* Call the context action */
@@ -2588,6 +2593,7 @@ static inline short _marpaESLIF_lua_recognizer_pop_contextb(marpaESLIFRecognizer
     }
 
     MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Generated action:\n%s", marpaESLIFRecognizerp->popContextActionp->u.luaFunction.actions);
+    MARPAESLIF_NOTICEF(marpaESLIFRecognizerp->marpaESLIFp, "Generated action:\n%s", marpaESLIFRecognizerp->popContextActionp->u.luaFunction.actions);
   }
 
   marpaESLIFRecognizerp->actionp = marpaESLIFRecognizerp->popContextActionp;
@@ -2668,6 +2674,7 @@ static inline short _marpaESLIF_lua_recognizer_get_contextp(marpaESLIFRecognizer
     }
 
     MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Generated action:\n%s", marpaESLIFRecognizerp->getContextActionp->u.luaFunction.actions);
+    MARPAESLIF_NOTICEF(marpaESLIFRecognizerp->marpaESLIFp, "Generated action:\n%s", marpaESLIFRecognizerp->getContextActionp->u.luaFunction.actions);
   }
 
   marpaESLIFRecognizerp->actionp = marpaESLIFRecognizerp->getContextActionp;
@@ -2745,6 +2752,7 @@ static inline short _marpaESLIF_lua_recognizer_set_contextb(marpaESLIFRecognizer
     }
 
     MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Generated action:\n%s", marpaESLIFRecognizerp->setContextActionp->u.luaFunction.actions);
+    MARPAESLIF_NOTICEF(marpaESLIFRecognizerp->marpaESLIFp, "Generated action:\n%s", marpaESLIFRecognizerp->setContextActionp->u.luaFunction.actions);
   }
 
   marpaESLIFRecognizerp->actionp = marpaESLIFRecognizerp->setContextActionp;
