@@ -6877,7 +6877,7 @@ static inline marpaESLIF_grammar_t *_marpaESLIFRecognizer_meta_subGrammarp(marpa
     }
 
     if (lexemeGrammarp == NULL) {
-      MARPAESLIF_NOTICEF(marpaESLIFRecognizerp->marpaESLIFp, "%s Generating grammar for generated RHS:\n%s\n", funcs, utf8WithLevelp->bytep);
+      MARPAESLIF_NOTICEF(marpaESLIFRecognizerp->marpaESLIFp, "%s Generating new grammar using:\n%s\n", funcs, utf8WithLevelp->bytep);
       /* Try to get a grammar from it. */
 
       /* Remember the marpaESLIFGrammarp->internalRuleCounti that is in bootstrap.c?   */
@@ -6967,14 +6967,6 @@ static inline marpaESLIF_grammar_t *_marpaESLIFRecognizer_meta_subGrammarp(marpa
       }
 
       lexemeGrammarp = generatedGrammarp;
-#ifndef MARPAESLIF_NTRACE
-      {
-        if (! marpaESLIFGrammar_grammarshowform_currentb(generatedGrammarp, &grammarshows)) {
-          goto err;
-        }
-        MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Generated lexeme grammar:\n%s\n", grammarshows);
-      }
-#endif
 
       /* utf8WithLevelp and generatedGrammarp are now in the hash */
       utf8WithLevelp = NULL;
@@ -7106,8 +7098,8 @@ static inline short _marpaESLIFRecognizer_meta_matcherb(marpaESLIFRecognizer_t *
         if (! _marpaESLIF_lua_recognizer_push_contextb(marpaESLIFRecognizerp, symbolp)) {
           goto err;
         }
+	contextb = 1;
       }
-      contextb = 1;
     }
 
     subGrammarp = _marpaESLIFRecognizer_meta_subGrammarp(marpaESLIFRecognizerp, symbolp, &(marpaESLIFValueOption.nullb));
