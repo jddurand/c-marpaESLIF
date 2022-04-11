@@ -2487,10 +2487,6 @@ static inline short _marpaESLIF_lua_recognizer_push_contextb(marpaESLIFRecognize
     if (MARPAESLIF_UNLIKELY(! marpaESLIF_stringGenerator.okb)) {
       goto err;
     }
-    GENERICLOGGER_TRACEF(genericLoggerp, "  print(tableDump(marpaESLIFContextStackp:get()))\n", symbolp->callp->luaexplists);
-    if (MARPAESLIF_UNLIKELY(! marpaESLIF_stringGenerator.okb)) {
-      goto err;
-    }
     GENERICLOGGER_TRACE(genericLoggerp, "end\n");
     if (MARPAESLIF_UNLIKELY(! marpaESLIF_stringGenerator.okb)) {
       goto err;
