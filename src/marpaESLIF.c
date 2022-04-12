@@ -6820,11 +6820,10 @@ static inline marpaESLIF_grammar_t *_marpaESLIFRecognizer_meta_subGrammarp(marpa
     /* We want to recuperate the original grammar */
 
     /* We have:                                                                                 */
-    /* LHS(parlists) ::= . => <lua function>->(explists)                                        */
+    /* LHS<-(parlists) ::= . => <lua function>->(explists)                                      */
     /*                                                                                          */
     /* <lua function>->(explists) will generate a grammar that is injected like this:           */
-    /* LHS(parlists) ::= <Internal[]>                                                           */
-    /* <Internal[]>  ::= <generated grammar>                                                    */
+    /* <Internal[]><-(parlists)  ::= <generated grammar>                                        */
     /*                                                                                          */
     /* Where explists is injected on-the-fly.                                                   */
 
@@ -6849,31 +6848,31 @@ static inline marpaESLIF_grammar_t *_marpaESLIFRecognizer_meta_subGrammarp(marpa
       goto err;
     }
     p = utf8WithLevelp->bytep;
-    *p++ = '<';                                    /* < */
-    memcpy(p, startSymbols, strlen(startSymbols)); /* "Internal[counti]" */
+    *p++ = '<';                                                                      /* < */
+    memcpy(p, startSymbols, strlen(startSymbols));                                   /* "Internal[counti]" */
     p += strlen(startSymbols);
-    *p++ = '>';                                    /* > */
+    *p++ = '>';                                                                      /* > */
     if (symbolp->parameterizedRhsb) {
       if (symbolp->callp->luaexplistcb) {
-        memcpy(p, "<--", 3);
+        memcpy(p, "<--", 3);                                                         /* <-- */
         p += 3;
       } else {
-        memcpy(p, "<-", 2);
+        memcpy(p, "<-", 2);                                                          /* <- */
         p += 2;
       }
       if (symbolp->declp != NULL) {
-        memcpy(p, symbolp->declp->luaparlists, strlen(symbolp->declp->luaparlists));
+        memcpy(p, symbolp->declp->luaparlists, strlen(symbolp->declp->luaparlists)); /* parlists */
         p += strlen(symbolp->declp->luaparlists);
       } else {
-        memcpy(p, "()", 2);
+        memcpy(p, "()", 2);                                                          /* () */
         p += 2;
       }
     }
-    memcpy(p, levels, strlen(levels));             /*  :[leveli]:=  */
+    memcpy(p, levels, strlen(levels));                                               /*  :[leveli]:=  */
     p += strlen(levels);
-    memcpy(p, utf8p->bytep, utf8p->bytel);         /* generated grammar */
+    memcpy(p, utf8p->bytep, utf8p->bytel);                                           /* generated grammar */
     p += utf8p->bytel;
-    *p = '\0';                                     /* NUL byte */
+    *p = '\0';                                                                       /* NUL byte */
     MARPAESLIF_NOTICEF(marpaESLIFRecognizerp->marpaESLIFp, "%s Checking generated RHS:\n%s\n", funcs, utf8WithLevelp->bytep);
 
     /* Check if the top recognizer already cached a lexeme grammar corresponding this string */
