@@ -3407,7 +3407,6 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
     startp->topb = 1;
     grammarp->starti = startp->idi;
     grammarp->starts = startp->descp->asciis;
-    grammarp->startp = startp;
 
     MARPAESLIFGRAMMAR_GET_TERMINALS(marpaESLIFp, funcs, ":start", grammarp, 1 /* accessibleOnlyb */, grammarp->marpaWrapperGrammarStartp, grammarp->nSymboll, grammarp->symbolArraypp);
 
@@ -6710,6 +6709,8 @@ static inline short _marpaESLIFRecognizer_terminal_matcherb(marpaESLIFRecognizer
 /*****************************************************************************/
 static inline marpaESLIF_grammar_t *_marpaESLIFRecognizer_meta_subGrammarp(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIF_symbol_t *symbolp, short *nullbp)
 /*****************************************************************************/
+/* Caller MUST have pushed the context if there is one.                      */
+/*****************************************************************************/
 {
   static const char                       *funcs                       = "_marpaESLIFRecognizer_meta_subGrammarp";
   marpaESLIF_grammar_t                    *grammarp                    = marpaESLIFRecognizerp->grammarp;
@@ -6718,7 +6719,6 @@ static inline marpaESLIF_grammar_t *_marpaESLIFRecognizer_meta_subGrammarp(marpa
   marpaESLIF_string_t                     *utf8p                       = NULL;
   marpaESLIF_string_t                     *utf8WithLevelp              = NULL;
   marpaESLIFGrammar_t                     *generatedGrammarp           = NULL;
-  short                                    contextb                    = 0;
   marpaESLIFGrammarOption_t                generatedGrammarOption;
   marpaESLIFGrammar_t                     *lexemeGrammarp;
   marpaESLIFValueResult_t                 *contextp;
@@ -6745,31 +6745,10 @@ static inline marpaESLIF_grammar_t *_marpaESLIFRecognizer_meta_subGrammarp(marpa
 #endif
 
   if (symbolp->generatorActionp != NULL) {
-    /* Push generator context, if any */
-    if (symbolp->parameterizedRhsb) {
-      MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp,
-                                  funcs,
-                                  "Pushing generator context for symbol %s%s%s: %s<->%s",
-                                  symbolp->descp->asciis,
-                                  symbolp->callp->luaexplistcb ? "-->" : "->",
-                                  symbolp->callp->luaexplists,
-                                  symbolp->declp != NULL ? symbolp->declp->luaparlists : "nil",
-                                  symbolp->callp->luaexplists);
-      MARPAESLIF_NOTICEF(marpaESLIFRecognizerp->marpaESLIFp,
-                         "%s: Pushing generator context for symbol %s%s%s: %s<->%s",
-                         funcs,
-                         symbolp->descp->asciis,
-                         symbolp->callp->luaexplistcb ? "-->" : "->",
-                         symbolp->callp->luaexplists,
-                         symbolp->declp != NULL ? symbolp->declp->luaparlists : "nil",
-                         symbolp->callp->luaexplists);
-      if (! _marpaESLIF_lua_recognizer_push_contextb(marpaESLIFRecognizerp, symbolp)) {
-        goto err;
-      }
-      contextb = 1;
-    }
+    /* Note that we do not re-inject the context: by definition a generator action is parameterized: called */
+    /* should have made sure it already injected the context.                                               */
 
-    /* Recuperate the context - it is a marpaESLIFValueResult that we own, stored in lexeme input stack at indice 0 */
+    /* Recuperate the context,  a marpaESLIFValueResult that we own and store in lexeme stack indice 0 */
     contextp = _marpaESLIFRecognizer_context_getp(marpaESLIFRecognizerp);
     if (contextp == NULL) {
       goto err;
@@ -6995,28 +6974,6 @@ static inline marpaESLIF_grammar_t *_marpaESLIFRecognizer_meta_subGrammarp(marpa
   rcp = NULL;
 
  done:
-  /* Pop generator context if we pushed one */
-  if (contextb) {
-    MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp,
-                                funcs,
-                                "Popping generator context for symbol %s%s%s: %s<->%s",
-                                symbolp->descp->asciis,
-                                symbolp->callp->luaexplistcb ? "-->" : "->",
-                                symbolp->callp->luaexplists,
-                                symbolp->declp != NULL ? symbolp->declp->luaparlists : "nil",
-                                symbolp->callp->luaexplists);
-    MARPAESLIF_NOTICEF(marpaESLIFRecognizerp->marpaESLIFp,
-                       "%s: Popping generator context for symbol %s%s%s: %s<->%s",
-                       funcs,
-                       symbolp->descp->asciis,
-                       symbolp->callp->luaexplistcb ? "-->" : "->",
-                       symbolp->callp->luaexplists,
-                       symbolp->declp != NULL ? symbolp->declp->luaparlists : "nil",
-                       symbolp->callp->luaexplists);
-    if (! _marpaESLIF_lua_recognizer_pop_contextb(marpaESLIFRecognizerp)) {
-      rcp = NULL;
-    }
-  }
   _marpaESLIFRecognizer_valueResultFreev(marpaESLIFRecognizerp, &generatedValueResult);
   if ((utf8p != NULL) && (utf8p != &generatedString)) {
     /* We remain paranoid even if this can never happen: this is a string that comes from outside */
@@ -7081,30 +7038,29 @@ static inline short _marpaESLIFRecognizer_meta_matcherb(marpaESLIFRecognizer_t *
     }
   } else {
 
-    /* Push context, if any, unless this is a generator */
+    /* Push context, if any */
     if (symbolp->parameterizedRhsb) {
-      if (! symbolp->generatorActionp) {
-        MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp,
-                                    funcs,
-                                    "Pushing context for symbol %s%s%s: %s<->%s",
-                                    symbolp->descp->asciis,
-                                    symbolp->callp->luaexplistcb ? "-->" : "->",
-                                    symbolp->callp->luaexplists,
-                                    symbolp->declp != NULL ? symbolp->declp->luaparlists : "nil",
-                                    symbolp->callp->luaexplists);
-        MARPAESLIF_NOTICEF(marpaESLIFRecognizerp->marpaESLIFp,
-                           "%s: Pushing context for symbol %s%s%s: %s<->%s",
-                           funcs,
-                           symbolp->descp->asciis,
-                           symbolp->callp->luaexplistcb ? "-->" : "->",
-                           symbolp->callp->luaexplists,
-                           symbolp->declp != NULL ? symbolp->declp->luaparlists : "nil",
-                           symbolp->callp->luaexplists);
-        if (! _marpaESLIF_lua_recognizer_push_contextb(marpaESLIFRecognizerp, symbolp)) {
-          goto err;
-        }
-	contextb = 1;
+      MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp,
+                                  funcs,
+                                  "Pushing context for symbol %s%s%s: %s<->%s",
+                                  symbolp->descp->asciis,
+                                  symbolp->callp->luaexplistcb ? "-->" : "->",
+                                  symbolp->callp->luaexplists,
+                                  symbolp->declp != NULL ? symbolp->declp->luaparlists : "nil",
+                                  symbolp->callp->luaexplists);
+      MARPAESLIF_NOTICEF(marpaESLIFRecognizerp->marpaESLIFp,
+                         "%s[%d]: Pushing context for symbol %s%s%s: %s<->%s",
+                         funcs,
+                         marpaESLIFRecognizerp->leveli,
+                         symbolp->descp->asciis,
+                         symbolp->callp->luaexplistcb ? "-->" : "->",
+                         symbolp->callp->luaexplists,
+                         symbolp->declp != NULL ? symbolp->declp->luaparlists : "nil",
+                         symbolp->callp->luaexplists);
+      if (! _marpaESLIF_lua_recognizer_push_contextb(marpaESLIFRecognizerp, symbolp)) {
+        goto err;
       }
+      contextb = 1;
     }
 
     subGrammarp = _marpaESLIFRecognizer_meta_subGrammarp(marpaESLIFRecognizerp, symbolp, &(marpaESLIFValueOption.nullb));
@@ -7166,8 +7122,9 @@ static inline short _marpaESLIFRecognizer_meta_matcherb(marpaESLIFRecognizer_t *
                                 symbolp->declp != NULL ? symbolp->declp->luaparlists : "nil",
                                 symbolp->callp->luaexplists);
     MARPAESLIF_NOTICEF(marpaESLIFRecognizerp->marpaESLIFp,
-                       "%s: Popping context for symbol %s%s%s: %s<->%s",
+                       "%s[%d]: Popping context for symbol %s%s%s: %s<->%s",
                        funcs,
+                       marpaESLIFRecognizerp->leveli,
                        symbolp->descp->asciis,
                        symbolp->callp->luaexplistcb ? "-->" : "->",
                        symbolp->callp->luaexplists,
@@ -9570,6 +9527,7 @@ static inline short __marpaESLIFRecognizer_isZeroLengthLexemeExpectedb(marpaESLI
   marpaESLIF_t             *marpaESLIFp                  = marpaESLIFRecognizerp->marpaESLIFp;
   short                     isZeroLengthLexemeExpectedb  = 0;
   marpaESLIFRecognizer_t   *marpaESLIFRecognizerMetap    = NULL;
+  short                     contextb                     = 0;
   marpaESLIF_grammar_t     *subGrammarp;
   size_t                    nSymboll;
   int                      *symbolIdArrayp;
@@ -9600,10 +9558,35 @@ static inline short __marpaESLIFRecognizer_isZeroLengthLexemeExpectedb(marpaESLI
       if (MARPAESLIF_IS_META_LOOKAHEAD(symbolp)) {
         isZeroLengthLexemeExpectedb = 1;
       } else {
+        if (symbolp->parameterizedRhsb) {
+          MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp,
+                                      funcs,
+                                      "Pushing generator context for symbol %s%s%s: %s<->%s",
+                                      symbolp->descp->asciis,
+                                      symbolp->callp->luaexplistcb ? "-->" : "->",
+                                      symbolp->callp->luaexplists,
+                                      symbolp->declp != NULL ? symbolp->declp->luaparlists : "nil",
+                                      symbolp->callp->luaexplists);
+          MARPAESLIF_NOTICEF(marpaESLIFRecognizerp->marpaESLIFp,
+                             "%s[%d]: Pushing generator context for symbol %s%s%s: %s<->%s",
+                             funcs,
+                             marpaESLIFRecognizerp->leveli,
+                             symbolp->descp->asciis,
+                             symbolp->callp->luaexplistcb ? "-->" : "->",
+                             symbolp->callp->luaexplists,
+                             symbolp->declp != NULL ? symbolp->declp->luaparlists : "nil",
+                             symbolp->callp->luaexplists);
+          if (! _marpaESLIF_lua_recognizer_push_contextb(marpaESLIFRecognizerp, symbolp)) {
+            goto err;
+          }
+          contextb = 1;
+        }
+
         subGrammarp = _marpaESLIFRecognizer_meta_subGrammarp(marpaESLIFRecognizerp, symbolp, &nullb);
         if (subGrammarp == NULL) {
           goto err;
         }
+
         marpaESLIFRecognizerMetap = __marpaESLIFRecognizer_newp(marpaESLIFp,
                                                                 subGrammarp,
                                                                 NULL, /* marpaESLIFRecognizerOptionp */
@@ -9622,6 +9605,31 @@ static inline short __marpaESLIFRecognizer_isZeroLengthLexemeExpectedb(marpaESLI
         /* Call ourself recursively - this should be changed to a stack free thingy... */
         if (MARPAESLIF_UNLIKELY(! __marpaESLIFRecognizer_isZeroLengthLexemeExpectedb(marpaESLIFRecognizerMetap, &isZeroLengthLexemeExpectedb))) {
           goto err;
+        }
+
+        /* Pop context if we pushed one */
+        if (contextb) {
+          contextb = 0;
+          MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp,
+                                      funcs,
+                                      "Popping context for symbol %s%s%s: %s<->%s",
+                                      symbolp->descp->asciis,
+                                      symbolp->callp->luaexplistcb ? "-->" : "->",
+                                      symbolp->callp->luaexplists,
+                                      symbolp->declp != NULL ? symbolp->declp->luaparlists : "nil",
+                                      symbolp->callp->luaexplists);
+          MARPAESLIF_NOTICEF(marpaESLIFRecognizerp->marpaESLIFp,
+                             "%s[%d]: Popping context for symbol %s%s%s: %s<->%s",
+                             funcs,
+                             marpaESLIFRecognizerp->leveli,
+                             symbolp->descp->asciis,
+                             symbolp->callp->luaexplistcb ? "-->" : "->",
+                             symbolp->callp->luaexplists,
+                             symbolp->declp != NULL ? symbolp->declp->luaparlists : "nil",
+                             symbolp->callp->luaexplists);
+          if (! _marpaESLIF_lua_recognizer_pop_contextb(marpaESLIFRecognizerp)) {
+            goto err;
+          }
         }
 
         _marpaESLIFRecognizer_freev(marpaESLIFRecognizerMetap, 1 /* forceb */);
@@ -9652,6 +9660,28 @@ static inline short __marpaESLIFRecognizer_isZeroLengthLexemeExpectedb(marpaESLI
  done:
   if (marpaESLIFRecognizerMetap != NULL) {
     _marpaESLIFRecognizer_freev(marpaESLIFRecognizerMetap, 1 /* forceb */);
+  }
+  if (contextb) {
+    MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp,
+                                funcs,
+                                "Popping context for symbol %s%s%s: %s<->%s",
+                                symbolp->descp->asciis,
+                                symbolp->callp->luaexplistcb ? "-->" : "->",
+                                symbolp->callp->luaexplists,
+                                symbolp->declp != NULL ? symbolp->declp->luaparlists : "nil",
+                                symbolp->callp->luaexplists);
+    MARPAESLIF_NOTICEF(marpaESLIFRecognizerp->marpaESLIFp,
+                       "%s[%d]: Popping context for symbol %s%s%s: %s<->%s",
+                       funcs,
+                       marpaESLIFRecognizerp->leveli,
+                       symbolp->descp->asciis,
+                       symbolp->callp->luaexplistcb ? "-->" : "->",
+                       symbolp->callp->luaexplists,
+                       symbolp->declp != NULL ? symbolp->declp->luaparlists : "nil",
+                       symbolp->callp->luaexplists);
+    if (! _marpaESLIF_lua_recognizer_pop_contextb(marpaESLIFRecognizerp)) {
+      rcb = 0;
+    }
   }
 
   MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "return %d", (int) rcb);

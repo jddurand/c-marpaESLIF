@@ -364,7 +364,6 @@ struct marpaESLIF_grammar {
   marpaESLIFAction_t    *defaultRegexActionp;                /* Default regex action, applies to all regexes of a grammar - can be NULL */
   int                    starti;                             /* Default start symbol ID - filled during grammar validation */
   char                  *starts;                             /* Default start symbol name - filled during grammar validation - shallow pointer */
-  marpaESLIF_symbol_t   *startp;                             /* Default start symbol - filled during grammar validation - shallow pointer */
   int                   *ruleip;                             /* Array of rule IDs - filled by grammar validation */
   size_t                 nrulel;                             /* Size of the rule IDs array - filled by grammar validation */
   int                   *symbolip;                           /* Array of symbol IDs - filled by grammar validation */
