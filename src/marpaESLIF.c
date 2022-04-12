@@ -3375,6 +3375,9 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
         MARPAESLIF_ERRORF(marpaESLIFp, "Precomputing grammar level %d (%s) is impossible: no rule", grammari, grammarp->descp->asciis);
         goto err;
       }
+
+      startp = rulep->lhsp;
+
       MARPAESLIF_TRACEF(marpaESLIFp, funcs, "Precomputing grammar level %d (%s) at start symbol %d <%s>", grammari, grammarp->descp->asciis, rulep->lhsp->idi, rulep->lhsp->descp->asciis);
       if (MARPAESLIF_UNLIKELY(! marpaWrapperGrammar_precompute_startb(grammarp->marpaWrapperGrammarStartp, rulep->lhsp->idi))) {
         MARPAESLIF_ERRORF(marpaESLIFp, "Precomputing grammar level %d (%s) at start symbol %d <%s> failure", grammari, grammarp->descp->asciis, rulep->lhsp->idi, rulep->lhsp->descp->asciis);
@@ -3385,10 +3388,9 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
         MARPAESLIF_ERRORF(marpaESLIFp, "Precomputing \"no event\" grammar level %d (%s) at start symbol %d <%s> failure", grammari, grammarp->descp->asciis, rulep->lhsp->idi, rulep->lhsp->descp->asciis);
         goto err;
       }
-      rulep->lhsp->topb = 1;
-      grammarp->starti = rulep->lhsp->idi;
-      grammarp->starts = rulep->lhsp->descp->asciis;
+
     } else {
+
       MARPAESLIF_TRACEF(marpaESLIFp, funcs, "Precomputing grammar level %d (%s) at start symbol %d <%s>", grammari, grammarp->descp->asciis, startp->idi, startp->descp->asciis);
       if (MARPAESLIF_UNLIKELY(! marpaWrapperGrammar_precompute_startb(grammarp->marpaWrapperGrammarStartp, startp->idi))) {
         MARPAESLIF_ERRORF(marpaESLIFp, "Precomputing grammar level %d (%s) at start symbol %d <%s> failure", grammari, grammarp->descp->asciis, startp->idi, startp->descp->asciis);
@@ -3399,10 +3401,13 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
         MARPAESLIF_ERRORF(marpaESLIFp, "Precomputing \"no event\" grammar level %d (%s) at start symbol %d <%s> failure", grammari, grammarp->descp->asciis, startp->idi, startp->descp->asciis);
         goto err;
       }
-      startp->topb = 1;
-      grammarp->starti = startp->idi;
-      grammarp->starts = startp->descp->asciis;
+
     }
+
+    startp->topb = 1;
+    grammarp->starti = startp->idi;
+    grammarp->starts = startp->descp->asciis;
+    grammarp->startp = startp;
 
     MARPAESLIFGRAMMAR_GET_TERMINALS(marpaESLIFp, funcs, ":start", grammarp, 1 /* accessibleOnlyb */, grammarp->marpaWrapperGrammarStartp, grammarp->nSymboll, grammarp->symbolArraypp);
 
@@ -7076,6 +7081,7 @@ static inline short _marpaESLIFRecognizer_meta_matcherb(marpaESLIFRecognizer_t *
       *marpaESLIFValueResultp = marpaESLIFValueResultArray;
     }
   } else {
+
     /* Push context, if any, unless this is a generator */
     if (symbolp->parameterizedRhsb) {
       if (! symbolp->generatorActionp) {
