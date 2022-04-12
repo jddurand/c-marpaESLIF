@@ -7047,6 +7047,29 @@ static inline short _marpaESLIFRecognizer_meta_matcherb(marpaESLIFRecognizer_t *
         goto err;
       }
       contextb = 1;
+      {
+        char                 *dumps;
+        size_t                dumpl;
+
+        /* If there is some information before, show it */
+        if ((marpaESLIFRecognizerp->marpaESLIF_streamp->inputs != NULL) && (marpaESLIFRecognizerp->marpaESLIF_streamp->buffers != NULL) && (marpaESLIFRecognizerp->marpaESLIF_streamp->inputs > marpaESLIFRecognizerp->marpaESLIF_streamp->buffers)) {
+          if ((marpaESLIFRecognizerp->marpaESLIF_streamp->inputs - marpaESLIFRecognizerp->marpaESLIF_streamp->buffers) > 128) {
+            dumps = marpaESLIFRecognizerp->marpaESLIF_streamp->inputs - 128;
+            dumpl = 128;
+          } else {
+            dumps = marpaESLIFRecognizerp->marpaESLIF_streamp->buffers;
+            dumpl = marpaESLIFRecognizerp->marpaESLIF_streamp->inputs - marpaESLIFRecognizerp->marpaESLIF_streamp->buffers;
+          }
+          MARPAESLIFRECOGNIZER_HEXDUMPV(funcs,
+                                        marpaESLIFRecognizerp,
+                                        "",
+                                        marpaESLIFRecognizerp->marpaESLIF_streamp->utfb ? "UTF-8 converted data before meta try" : "Raw data before meta try",
+                                        dumps,
+                                        dumpl,
+                                        0, /* traceb */
+                                        1 /* noticeb */);
+        }
+      }
     }
 
     subGrammarp = _marpaESLIFRecognizer_meta_subGrammarp(marpaESLIFRecognizerp, symbolp, &(marpaESLIFValueOption.nullb));
