@@ -547,8 +547,6 @@ struct marpaESLIF_stream {
   short                  noAnchorIsOkb;        /* Flag to say if the "A" flag in regexp modifiers is allowed: removing PCRE2_ANCHOR is allowed ONLY is the whole stream was read once */
   char                  *encodings;            /* Current encoding. Always != NULL when charconvb is true. Always NULL when charconvb is false. */
   tconv_t                tconvp;               /* current converter. Always != NULL when charconvb is true. Always NULL when charconvb is false. */
-  size_t                 linel;                /* Line number */
-  size_t                 columnl;              /* Column number */
   short                  bomdoneb;             /* In char mode, flag indicating if BOM was processed successfully (BOM existence or not) */
   unsigned int           peeki;                /* Number of peeked sharing */
 };
@@ -672,6 +670,10 @@ struct marpaESLIFRecognizer {
   marpaESLIFAction_t             *popContextActionp;  /* Getting the context is a common function that is stored at recognizer level */
 
   marpaESLIFRecognizer_t         *marpaESLIFRecognizerSharedp;
+
+  /* Every recognizer has its own notion of line and column */
+  size_t                          linel;                /* Line number */
+  size_t                          columnl;              /* Column number */
 };
 
 struct marpaESLIF_symbol_data {
