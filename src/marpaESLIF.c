@@ -576,6 +576,45 @@ static marpaESLIFValueResult_t marpaESLIFValueResultLazyWithUndef = {
     }                                                                   \
   } while (0)
 
+#define MARPAESLIFRECOGNIZER_DUMP_NOTICE_BEFORE(funcs, marpaESLIFRecognizerp, nbytel) do { \
+  char   *_dumps;                                                       \
+  size_t _dumpl;                                                        \
+                                                                        \
+  /* If there is some information before, show it */                    \
+  if ((marpaESLIFRecognizerp->marpaESLIF_streamp->inputs != NULL) && (marpaESLIFRecognizerp->marpaESLIF_streamp->buffers != NULL) && (marpaESLIFRecognizerp->marpaESLIF_streamp->inputs > marpaESLIFRecognizerp->marpaESLIF_streamp->buffers)) { \
+    if ((marpaESLIFRecognizerp->marpaESLIF_streamp->inputs - marpaESLIFRecognizerp->marpaESLIF_streamp->buffers) > nbytel) { \
+      _dumps = marpaESLIFRecognizerp->marpaESLIF_streamp->inputs - nbytel; \
+      _dumpl = nbytel;                                                     \
+    } else {                                                            \
+      _dumps = marpaESLIFRecognizerp->marpaESLIF_streamp->buffers;      \
+      _dumpl = marpaESLIFRecognizerp->marpaESLIF_streamp->inputs - marpaESLIFRecognizerp->marpaESLIF_streamp->buffers; \
+    }                                                                   \
+    MARPAESLIFRECOGNIZER_HEXDUMPV(funcs,                                \
+                                  marpaESLIFRecognizerp,                \
+                                  "",                                   \
+                                  marpaESLIFRecognizerp->marpaESLIF_streamp->utfb ? "UTF-8 converted data before" : "Raw data before", \
+                                  _dumps,                               \
+                                  _dumpl,                               \
+                                  0, /* traceb */                       \
+                                  1, /* noticeb */                      \
+                                  marpaESLIFRecognizerp->linel,         \
+                                  marpaESLIFRecognizerp->columnl);      \
+    }                                                                   \
+  } while (0)
+
+#define MARPAESLIFRECOGNIZER_DUMP_NOTICE_AFTER(funcs, marpaESLIFRecognizerp, symbolp, marpaESLIFValueResultArray) do { \
+    MARPAESLIFRECOGNIZER_HEXDUMPV(funcs,                                \
+                                  marpaESLIFRecognizerp,                \
+                                  "Match dump for ",                    \
+                                  symbolp->descp->asciis,               \
+                                  marpaESLIFValueResultArray.u.a.p,     \
+                                  marpaESLIFValueResultArray.u.a.sizel, \
+                                  0, /* traceb */                       \
+                                  1, /* noticeb */                      \
+                                  marpaESLIFRecognizerp->linel,         \
+                                  marpaESLIFRecognizerp->columnl);      \
+    } while (0)
+
 typedef short (*_marpaESLIFRecognizer_valueResultCallback_t)(void *userDatavp, marpaESLIFValueResult_t *marpaESLIFValueResultp);
 typedef struct marpaESLIF_concat_valueResultContext {
   void                         *userDatavp;
@@ -7057,31 +7096,6 @@ static inline short _marpaESLIFRecognizer_meta_matcherb(marpaESLIFRecognizer_t *
         goto err;
       }
       contextb = 1;
-      {
-        char                 *dumps;
-        size_t                dumpl;
-
-        /* If there is some information before, show it */
-        if ((marpaESLIFRecognizerp->marpaESLIF_streamp->inputs != NULL) && (marpaESLIFRecognizerp->marpaESLIF_streamp->buffers != NULL) && (marpaESLIFRecognizerp->marpaESLIF_streamp->inputs > marpaESLIFRecognizerp->marpaESLIF_streamp->buffers)) {
-          if ((marpaESLIFRecognizerp->marpaESLIF_streamp->inputs - marpaESLIFRecognizerp->marpaESLIF_streamp->buffers) > 128) {
-            dumps = marpaESLIFRecognizerp->marpaESLIF_streamp->inputs - 128;
-            dumpl = 128;
-          } else {
-            dumps = marpaESLIFRecognizerp->marpaESLIF_streamp->buffers;
-            dumpl = marpaESLIFRecognizerp->marpaESLIF_streamp->inputs - marpaESLIFRecognizerp->marpaESLIF_streamp->buffers;
-          }
-          MARPAESLIFRECOGNIZER_HEXDUMPV(funcs,
-                                        marpaESLIFRecognizerp,
-                                        "",
-                                        marpaESLIFRecognizerp->marpaESLIF_streamp->utfb ? "UTF-8 converted data before meta try" : "Raw data before meta try",
-                                        dumps,
-                                        dumpl,
-                                        0, /* traceb */
-                                        1, /* noticeb */
-                                        marpaESLIFRecognizerp->linel,
-                                        marpaESLIFRecognizerp->columnl);
-        }
-      }
     }
 
     subGrammarp = _marpaESLIFRecognizer_meta_subGrammarp(marpaESLIFRecognizerp, symbolp, &(marpaESLIFValueOption.nullb));
@@ -10039,6 +10053,7 @@ static inline short _marpaESLIFRecognizer_resume_oneb(marpaESLIFRecognizer_t *ma
     ucb = 0;
   }
 
+  MARPAESLIFRECOGNIZER_DUMP_NOTICE_BEFORE(funcs, marpaESLIFRecognizerp, 16);
   while (1) {
     symbolp = NULL;
     while (iteratorl++ < nTerminall) {
@@ -10233,6 +10248,11 @@ static inline short _marpaESLIFRecognizer_resume_oneb(marpaESLIFRecognizer_t *ma
                                   "Symbol No %d <%s> has MARPAESLIF_MATCH_FAILURE",
                                   symbolp->idi,
                                   symbolp->descp->asciis);
+      MARPAESLIF_NOTICEF(marpaESLIFRecognizerp->marpaESLIFp,
+                         "%s: Symbol No %d <%s> has MARPAESLIF_MATCH_FAILURE",
+                         funcs,
+                         symbolp->idi,
+                         symbolp->generatorActionp != NULL ? symbolp->generatorActionp->u.luaFunction.actions : symbolp->descp->asciis);
       break;
     case MARPAESLIF_MATCH_OK:
       MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp,
@@ -10246,6 +10266,7 @@ static inline short _marpaESLIFRecognizer_resume_oneb(marpaESLIFRecognizer_t *ma
                          symbolp->idi,
                          symbolp->generatorActionp != NULL ? symbolp->generatorActionp->u.luaFunction.actions : symbolp->descp->asciis,
                          (unsigned long) marpaESLIFValueResultArray.u.a.sizel);
+      MARPAESLIFRECOGNIZER_DUMP_NOTICE_AFTER(funcs, marpaESLIFRecognizerp, symbolp, marpaESLIFValueResultArray);
       if (! lastMatchedPriorityInitializedb) {
         lastMatchedMinPriorityi = symbolp->priorityi;
         lastMatchedPriorityInitializedb = 1;
