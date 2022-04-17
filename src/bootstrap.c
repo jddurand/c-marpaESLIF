@@ -843,7 +843,7 @@ static inline marpaESLIF_grammar_bootstrap_t *_marpaESLIF_bootstrap_check_gramma
 {
   marpaESLIF_grammar_bootstrap_t *grammarBootstrapp = NULL;
   marpaESLIF_string_t             desc;
-  marpaESLIF_string_t            *descp = NULL;
+  marpaESLIF_string_t            *descp;
   marpaWrapperGrammarOption_t     marpaWrapperGrammarOption;
 
   if (marpaESLIFGrammarBootstrapp->grammarBootstrapStackp == NULL) {
@@ -860,11 +860,15 @@ static inline marpaESLIF_grammar_bootstrap_t *_marpaESLIF_bootstrap_check_gramma
   if (stringp != NULL) {
     desc.bytep          = stringp->bytep;
     desc.bytel          = stringp->bytel;
-    desc.encodingasciis = NULL;
+    desc.encodingasciis = "UTF-8";
     desc.asciis         = NULL;
     descp = &desc;
+    grammarBootstrapp = _marpaESLIF_grammar_bootstrap_findp(marpaESLIFValuep->marpaESLIFp, marpaESLIFGrammarBootstrapp->grammarBootstrapStackp, leveli, descp);
+  } else {
+    descp = NULL;
+    grammarBootstrapp = _marpaESLIF_grammar_bootstrap_findp(marpaESLIFValuep->marpaESLIFp, marpaESLIFGrammarBootstrapp->grammarBootstrapStackp, leveli, NULL);
   }
-  grammarBootstrapp = _marpaESLIF_grammar_bootstrap_findp(marpaESLIFValuep->marpaESLIFp, marpaESLIFGrammarBootstrapp->grammarBootstrapStackp, leveli, descp);
+
   if (grammarBootstrapp == NULL) {
     /* Create it */
 
@@ -878,7 +882,8 @@ static inline marpaESLIF_grammar_bootstrap_t *_marpaESLIF_bootstrap_check_gramma
                                                            &marpaWrapperGrammarOption,
                                                            leveli,
                                                            0, /* symbolStackSizei */
-                                                           0 /* ruleStackSizei */);
+                                                           0, /* ruleStackSizei */
+                                                           descp);
     if (MARPAESLIF_UNLIKELY(grammarBootstrapp == NULL)) {
       goto err;
     }

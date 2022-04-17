@@ -15,7 +15,7 @@ typedef struct yamlTester_context {
 } yamlTester_context_t;
 
 static char *inputsp[] = {
-  "doe: \"a deer, a female deer\"\n"
+  " doe: \"a deer, a female deer\"\n"
   " ray: \"a drop of golden sun\"\n"
   " pi: 3.14159\n"
   " xmas: true\n"
