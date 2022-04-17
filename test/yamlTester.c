@@ -36,8 +36,10 @@ static char *inputsp[] = {
     };
 
 int main() {
-  marpaESLIF_t                *marpaESLIFp        = NULL;
-  marpaESLIFGrammar_t         *marpaESLIFGrammarp = NULL;
+  marpaESLIF_t                *marpaESLIFp           = NULL;
+  marpaESLIFGrammar_t         *marpaESLIFGrammarp    = NULL;
+  marpaESLIFRecognizer_t      *marpaESLIFRecognizerp = NULL;
+  marpaESLIFValue_t           *marpaESLIFValuep      = NULL;
   marpaESLIFOption_t           marpaESLIFOption;
   marpaESLIFOption_t          *marpaESLIFOptionp;
   marpaESLIFGrammarOption_t    marpaESLIFGrammarOption;
@@ -51,6 +53,8 @@ int main() {
   marpaESLIFRecognizerOption_t marpaESLIFRecognizerOption;
   marpaESLIFValueOption_t      marpaESLIFValueOption;
   int                          i;
+  short                        continueb;
+  short                        exhaustedb;
 
   genericLoggerp = GENERICLOGGER_NEW(GENERICLOGGER_LOGLEVEL_INFO);
 
@@ -116,6 +120,22 @@ int main() {
     marpaESLIFRecognizerOption.regexActionResolverp     = NULL;
     marpaESLIFRecognizerOption.generatorActionResolverp = NULL;
 
+    if (marpaESLIFRecognizerp != NULL) {
+      marpaESLIFRecognizer_freev(marpaESLIFRecognizerp);
+    }
+    marpaESLIFRecognizerp = marpaESLIFRecognizer_newp(marpaESLIFGrammarp, &marpaESLIFRecognizerOption);
+    if (marpaESLIFRecognizerp == NULL) {
+      goto err;
+    }
+    if (! marpaESLIFRecognizer_scanb(marpaESLIFRecognizerp, 1 /* initialEventsb */, &continueb, &exhaustedb)) {
+      goto err;
+    }
+    while (continueb) {
+      if (! marpaESLIFRecognizer_resumeb(marpaESLIFRecognizerp, 0, &continueb, &exhaustedb)) {
+        goto err;
+      }
+    }
+
     marpaESLIFValueOption.userDatavp            = NULL; /* User specific context */
     marpaESLIFValueOption.ruleActionResolverp   = NULL; /* Will return the function doing the wanted rule action */
     marpaESLIFValueOption.symbolActionResolverp = NULL; /* Will return the function doing the wanted symbol action */
@@ -126,7 +146,16 @@ int main() {
     marpaESLIFValueOption.nullb                 = 0;    /* Default: 0 */
     marpaESLIFValueOption.maxParsesi            = 0;    /* Default: 0 */
 
-    marpaESLIFGrammar_parseb(marpaESLIFGrammarp, &marpaESLIFRecognizerOption, &marpaESLIFValueOption, NULL /* exhaustedbp */);
+    if (marpaESLIFValuep != NULL) {
+      marpaESLIFValue_freev(marpaESLIFValuep);
+    }
+    marpaESLIFValuep = marpaESLIFValue_newp(marpaESLIFRecognizerp, &marpaESLIFValueOption);
+    if (marpaESLIFValuep == NULL) {
+      goto err;
+    }
+    marpaESLIFValue_valueb(marpaESLIFValuep);
+
+    /* marpaESLIFGrammar_parseb(marpaESLIFGrammarp, &marpaESLIFRecognizerOption, &marpaESLIFValueOption, NULL); */
   }
 
   exiti = 0;
@@ -136,6 +165,8 @@ int main() {
   exiti = 1;
 
  done:
+  marpaESLIFValue_freev(marpaESLIFValuep);
+  marpaESLIFRecognizer_freev(marpaESLIFRecognizerp);
   marpaESLIFGrammar_freev(marpaESLIFGrammarp);
   marpaESLIF_freev(marpaESLIFp);
   GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "Exiting with status %d", exiti);

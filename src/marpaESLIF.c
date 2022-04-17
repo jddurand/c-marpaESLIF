@@ -4533,6 +4533,42 @@ static inline marpaESLIF_grammar_bootstrap_t *_marpaESLIF_grammar_bootstrap_clon
     goto err;
   }
 
+  grammarp->nbupdatei          = grammarOrigp->nbupdatei;
+  grammarp->latmb              = grammarOrigp->latmb;
+  grammarp->discardIsFallbackb = grammarOrigp->discardIsFallbackb;
+  if (grammarOrigp->defaultRuleActionp != NULL) {
+    grammarp->defaultRuleActionp = _marpaESLIF_action_clonep(marpaESLIFp, grammarOrigp->defaultRuleActionp);
+    if (grammarp->defaultRuleActionp == NULL) {
+      goto err;
+    }
+  }
+  if (grammarOrigp->defaultEventActionp != NULL) {
+    grammarp->defaultEventActionp = _marpaESLIF_action_clonep(marpaESLIFp, grammarOrigp->defaultEventActionp);
+    if (grammarp->defaultEventActionp == NULL) {
+      goto err;
+    }
+  }
+  if (grammarOrigp->defaultRegexActionp != NULL) {
+    grammarp->defaultRegexActionp = _marpaESLIF_action_clonep(marpaESLIFp, grammarOrigp->defaultRegexActionp);
+    if (grammarp->defaultRegexActionp == NULL) {
+      goto err;
+    }
+  }
+  if (grammarOrigp->defaultEncodings != NULL) {
+    grammarp->defaultEncodings = strdup(grammarOrigp->defaultEncodings);
+    if (grammarp->defaultEncodings == NULL) {
+      MARPAESLIF_ERRORF(marpaESLIFp, "strdup failure, %s", strerror(errno));
+      goto err;
+    }
+  }
+  if (grammarOrigp->fallbackEncodings != NULL) {
+    grammarp->fallbackEncodings = strdup(grammarOrigp->fallbackEncodings);
+    if (grammarp->fallbackEncodings == NULL) {
+      MARPAESLIF_ERRORF(marpaESLIFp, "strdup failure, %s", strerror(errno));
+      goto err;
+    }
+  }
+
   marpaWrapperGrammarStartp = grammarp->marpaWrapperGrammarStartp;
 
   /* We replay symbols */

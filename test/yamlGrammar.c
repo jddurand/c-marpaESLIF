@@ -2,10 +2,16 @@
 #define YAML_GRAMMAR_C
 
 const static char *yamls = "\n"
+  "event ^ns_plain_char = predicted <ns plain char><--(c)\n"
+  "event ^s_separate = predicted <s separate><--(n,c)\n"
+  "event ^l_yaml_stream = predicted <l yaml stream>\n"
   "#\n"
   "# Reference: https://yaml.org/spec/1.2.2/\n"
   "#\n"
-  ":default ::= fallback-encoding => UTF-8\n"
+  ":default ::= fallback-encoding => UTF-8 event-action => ::luac->function(events)\n"
+  "                                                                  print(tableDump(events))\n"
+  "                                                                  return true\n"
+  "                                                                end\n"
   ":start   ::= <l yaml stream>\n"
   ":desc    ::= 'YAML'\n"
   "\n"
