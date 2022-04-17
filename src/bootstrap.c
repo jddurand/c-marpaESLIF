@@ -5150,8 +5150,7 @@ static short _marpaESLIF_bootstrap_G1_action_terminal_3b(void *userDatavp, marpa
                                                       NULL, /* marpaESLIFRecognizerParentp */
                                                       1, /* fakeb */
                                                       0, /* wantedStartCompletionsi */
-                                                      1, /* A grammar is always transformed to valid UTF-8 before being parsed */
-                                                      1 /* grammmarIsOnStackb */);
+                                                      1 /* A grammar is always transformed to valid UTF-8 before being parsed */);
   if (MARPAESLIF_UNLIKELY(marpaESLIFRecognizerp == NULL)) {
     goto err;
   }
@@ -7786,8 +7785,7 @@ static inline marpaESLIF_bootstrap_utf_string_t *_marpaESLIF_bootstrap_regex_to_
                                                       NULL, /* marpaESLIFRecognizerParentp */
                                                       1, /* fakeb */
                                                       0, /* wantedStartCompletionsi */
-                                                      1, /* A grammar is always transformed to valid UTF-8 before being parsed */
-                                                      1 /* grammmarIsOnStackb */);
+                                                      1 /* A grammar is always transformed to valid UTF-8 before being parsed */);
   if (MARPAESLIF_UNLIKELY(marpaESLIFRecognizerp == NULL)) {
     goto err;
   }
@@ -7931,8 +7929,7 @@ static inline marpaESLIF_bootstrap_utf_string_t *_marpaESLIF_bootstrap_character
                                                       NULL, /* marpaESLIFRecognizerParentp */
                                                       1, /* fakeb */
                                                       0, /* wantedStartCompletionsi */
-                                                      1, /* A grammar is always transformed to valid UTF-8 before being parsed */
-                                                      1 /* grammmarIsOnStackb */);
+                                                      1 /* A grammar is always transformed to valid UTF-8 before being parsed */);
   if (MARPAESLIF_UNLIKELY(marpaESLIFRecognizerp == NULL)) {
     goto err;
   }

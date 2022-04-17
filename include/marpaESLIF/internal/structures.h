@@ -483,7 +483,8 @@ struct marpaESLIF_meta {
   int                            idi;                             /* Non-terminal Id */
   char                          *asciinames;
   marpaESLIF_string_t           *descp;                           /* Meta description */
-  marpaWrapperGrammar_t         *marpaWrapperGrammarLexemeClonep; /* Cloned low-level grammar in lexeme search mode (no event) */
+  marpaWrapperGrammar_t         *marpaWrapperGrammarStartp;       /* Cloned low-level grammar starting at idi */
+  marpaWrapperGrammar_t         *marpaWrapperGrammarStartNoEventp; /* Cloned low-level grammar starting at idi (no event) */
   int                            lexemeIdi;                       /* Lexeme Id in this cloned grammar */
   short                         *prioritizedb;                    /* Internal flag to prevent a prioritized symbol to appear more than once as an LHS */
   marpaESLIFGrammar_t           _marpaESLIFGrammarLexemeClone;    /* Cloned ESLIF grammar in lexeme search mode (no event): allocated when meta is allocated */

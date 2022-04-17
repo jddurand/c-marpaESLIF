@@ -379,7 +379,7 @@ short marpaESLIFJSON_decodeb(marpaESLIFGrammar_t *marpaESLIFGrammarJSONp, marpaE
   marpaESLIFRecognizerOption.regexActionResolverp = _marpaESLIFJSONDecodeRegexActionResolverp;
   marpaESLIFRecognizerOption.importerp            = _marpaESLIFJSONDecodeValueResultInternalImportb;
 
-  marpaESLIFRecognizerp = _marpaESLIFRecognizer_newp(marpaESLIFGrammarJSONp->marpaESLIFp, marpaESLIFGrammarJSONp->grammarp, &marpaESLIFRecognizerOption);
+  marpaESLIFRecognizerp = _marpaESLIFRecognizer_newp(marpaESLIFGrammarJSONp->marpaESLIFp, marpaESLIFGrammarJSONp->grammarp, &marpaESLIFRecognizerOption, 0 /* discardb */, 0 /* noEventb */, 0 /* silentb */);
   if (MARPAESLIF_UNLIKELY(marpaESLIFRecognizerp == NULL)) {
     goto err;
   }
