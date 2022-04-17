@@ -65,6 +65,10 @@ A zero-length terminal that matches only before a newline.
 
 A zero-length terminal that matches only after a newline.
 
+=item :empty
+
+A zero-length terminal that always match the empty string.
+
 Note that the newline is hardcoded to be any unicode newline, i.e. C<(*BSR_UNICODE)\R> in PCRE2 terminology.
 
 The presence of :eol or :sol pseudo-terminal anywhere in the grammar enforces the C<newlineb> flag in recognizers. On the contrary C<:eof> and C<:eol> work regardless of recognizer's C<newlineb> flag.
@@ -1149,6 +1153,7 @@ marpaESLIF BNF can be expressed in itself:
                                    | ':eof'
                                    | ':eol'
                                    | ':sol'
+                                   | ':empty'
   <symbol>                       ::= <symbol name>
   <symbol name>                  ::= <bare name>
                                    | <bracketed name>

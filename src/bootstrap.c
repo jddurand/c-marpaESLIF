@@ -137,6 +137,7 @@ static        short _marpaESLIF_bootstrap_G1_action_terminal_3b(void *userDatavp
 static        short _marpaESLIF_bootstrap_G1_action_terminal_4b(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
 static        short _marpaESLIF_bootstrap_G1_action_terminal_5b(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
 static        short _marpaESLIF_bootstrap_G1_action_terminal_6b(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
+static        short _marpaESLIF_bootstrap_G1_action_terminal_7b(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
 static        short _marpaESLIF_bootstrap_G1_action_symbolb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
 static        short _marpaESLIF_bootstrap_G1_action_grammar_reference_1b(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
 static        short _marpaESLIF_bootstrap_G1_action_grammar_reference_2b(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb);
@@ -802,6 +803,9 @@ static inline void _marpaESLIF_bootstrap_terminal_freev(marpaESLIF_bootstrap_ter
     case MARPAESLIF_BOOTSTRAP_TERMINAL_TYPE__SOL:
       /* No op - here for clarity */
       break;
+    case MARPAESLIF_BOOTSTRAP_TERMINAL_TYPE__EMPTY:
+      /* No op - here for clarity */
+      break;
     default:
       break;
     }
@@ -1265,6 +1269,15 @@ static inline marpaESLIF_symbol_t  *_marpaESLIF_bootstrap_check_builtinp(marpaES
     }
     break;
 
+  case MARPAESLIF_BOOTSTRAP_TERMINAL_TYPE__EMPTY:
+    symbolp = _marpaESLIF_bootstrap_check_terminal_by_typep(marpaESLIFValuep, marpaESLIFGrammarBootstrapp, grammarBootstrapp, MARPAESLIF_TERMINAL_TYPE__EMPTY, NULL, createb, 1 /* pseudob */, forcecreateb, NULL /* descEncodings */, NULL /* descs */, 0 /* descl */, 0 /* characterClassb */);
+    if (symbolp != NULL) {
+      /* Remember that the grammar has :sol somewhere */
+      grammarBootstrapp->marpaESLIFGrammarBootstrapp->hasPseudoTerminalb = 1;
+      grammarBootstrapp->marpaESLIFGrammarBootstrapp->hasEmptyPseudoTerminalb = 1;
+    }
+    break;
+
   default:
     MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "Unsupported terminal builtin type %d", type);
     symbolp = NULL;
@@ -1343,6 +1356,9 @@ static inline marpaESLIF_symbol_t *_marpaESLIF_bootstrap_check_terminalp(marpaES
     symbolp = _marpaESLIF_bootstrap_check_builtinp(marpaESLIFValuep, marpaESLIFGrammarBootstrapp, grammarBootstrapp, terminalp->type, createb, forcecreateb);
     break;
   case MARPAESLIF_BOOTSTRAP_TERMINAL_TYPE__SOL:
+    symbolp = _marpaESLIF_bootstrap_check_builtinp(marpaESLIFValuep, marpaESLIFGrammarBootstrapp, grammarBootstrapp, terminalp->type, createb, forcecreateb);
+    break;
+  case MARPAESLIF_BOOTSTRAP_TERMINAL_TYPE__EMPTY:
     symbolp = _marpaESLIF_bootstrap_check_builtinp(marpaESLIFValuep, marpaESLIFGrammarBootstrapp, grammarBootstrapp, terminalp->type, createb, forcecreateb);
     break;
   default:
@@ -2395,6 +2411,7 @@ static marpaESLIFValueRuleCallback_t _marpaESLIF_bootstrap_ruleActionResolver(vo
   case 113: return _marpaESLIF_bootstrap_G1_action_lhs_2b;
   case 114: return _marpaESLIF_bootstrap_G1_action_start_symbol_1b;
   case 115: return _marpaESLIF_bootstrap_G1_action_start_symbol_2b;
+  case 116: return _marpaESLIF_bootstrap_G1_action_terminal_7b;
   default:
     MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "Unsupported action \"%s\"", actions);
     return NULL;
@@ -5242,6 +5259,13 @@ static short _marpaESLIF_bootstrap_G1_action_terminal_6b(void *userDatavp, marpa
 /*****************************************************************************/
 {
   return _marpaESLIF_bootstrap_G1_action_terminal_pseudob(userDatavp, marpaESLIFValuep, MARPAESLIF_BOOTSTRAP_TERMINAL_TYPE__SOL, resulti);
+}
+
+/*****************************************************************************/
+static short _marpaESLIF_bootstrap_G1_action_terminal_7b(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb)
+/*****************************************************************************/
+{
+  return _marpaESLIF_bootstrap_G1_action_terminal_pseudob(userDatavp, marpaESLIFValuep, MARPAESLIF_BOOTSTRAP_TERMINAL_TYPE__EMPTY, resulti);
 }
 
 /*****************************************************************************/

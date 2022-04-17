@@ -667,9 +667,10 @@ static const char *MARPAESLIF_VALUE_TYPE_UNKNOWN_STRING     = "UNKNOWN";
 static const size_t copyl    = 6; /* strlen("::copy"); */
 static const size_t convertl = 9; /* strlen("::convert"); */
 
-static const char *MARPAESLIF_TERMINAL__EOF = ":eof";
-static const char *MARPAESLIF_TERMINAL__EOL = ":eol";
-static const char *MARPAESLIF_TERMINAL__SOL = ":sol";
+static const char *MARPAESLIF_TERMINAL__EOF   = ":eof";
+static const char *MARPAESLIF_TERMINAL__EOL   = ":eol";
+static const char *MARPAESLIF_TERMINAL__SOL   = ":sol";
+static const char *MARPAESLIF_TERMINAL__EMPTY = ":empty";
 
 static marpaESLIFRecognizer_t invalidFakeMarpaESLIFRecognizer;
 
@@ -1346,6 +1347,10 @@ static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *mar
       utf8s = (char *) MARPAESLIF_TERMINAL__SOL;
       utf8l = strlen(MARPAESLIF_TERMINAL__SOL);
       break;
+    case MARPAESLIF_TERMINAL_TYPE__EMPTY:
+      utf8s = (char *) MARPAESLIF_TERMINAL__EMPTY;
+      utf8l = strlen(MARPAESLIF_TERMINAL__EMPTY);
+      break;
     default:
       MARPAESLIF_ERRORF(marpaESLIFp, "Invalid builtin terminal type %d", type);
       errno = EINVAL;
@@ -1469,6 +1474,12 @@ static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *mar
         MARPAESLIF_ERRORF(marpaESLIFp, "strdup failure, %s", strerror(errno));
         goto err;
       }
+    } else if (type == MARPAESLIF_TERMINAL_TYPE__EMPTY) {
+      generatedasciis = strdup(content2descp->asciis);
+      if (MARPAESLIF_UNLIKELY(generatedasciis == NULL)) {
+        MARPAESLIF_ERRORF(marpaESLIFp, "strdup failure, %s", strerror(errno));
+        goto err;
+      }
     } else {
       /* "/" + XXX + "/" (escaping slashes - this is not perfect, it assumes that regexp was writen only in ASCII) */
       p = content2descp->asciis;
@@ -1531,6 +1542,10 @@ static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *mar
     break;
 
   case MARPAESLIF_TERMINAL_TYPE__SOL:
+    /* No op */
+    break;
+
+  case MARPAESLIF_TERMINAL_TYPE__EMPTY:
     /* No op */
     break;
 
@@ -6674,6 +6689,14 @@ static inline short _marpaESLIFRecognizer_terminal_matcherb(marpaESLIFRecognizer
       }
       break;
 
+    case MARPAESLIF_TERMINAL_TYPE__EMPTY:
+      /* :empty always matches */
+      MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, ":empty match");
+      rci            = MARPAESLIF_MATCH_OK;
+      matchedp       = (char *) MARPAESLIF_EMPTY_STRING;
+      matchedLengthl = 0;
+      break;
+
     default:
       MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "Unsupported terminal type %d", terminalp->type);
       goto fatal;
@@ -7891,6 +7914,7 @@ static inline short _marpaESLIFGrammar_bootstrap_transferb(marpaESLIF_t *marpaES
   marpaESLIFGrammarp->hasEofPseudoTerminalb                     = marpaESLIFGrammar_bootstrapClonep->hasEofPseudoTerminalb;
   marpaESLIFGrammarp->hasEolPseudoTerminalb                     = marpaESLIFGrammar_bootstrapClonep->hasEolPseudoTerminalb;
   marpaESLIFGrammarp->hasSolPseudoTerminalb                     = marpaESLIFGrammar_bootstrapClonep->hasSolPseudoTerminalb;
+  marpaESLIFGrammarp->hasEmptyPseudoTerminalb                   = marpaESLIFGrammar_bootstrapClonep->hasEmptyPseudoTerminalb;
   marpaESLIFGrammarp->hasLookaheadMetab                         = marpaESLIFGrammar_bootstrapClonep->hasLookaheadMetab;
 
   grammarBootstrapCloneStackp = marpaESLIFGrammar_bootstrapClonep->grammarBootstrapStackp;
@@ -8003,6 +8027,7 @@ static inline marpaESLIFGrammar_bootstrap_t *_marpaESLIFGrammar_bootstrap_clonep
   marpaESLIFGrammarp->hasEofPseudoTerminalb                     = marpaESLIFGrammarOrigp->hasEofPseudoTerminalb;
   marpaESLIFGrammarp->hasEolPseudoTerminalb                     = marpaESLIFGrammarOrigp->hasEolPseudoTerminalb;
   marpaESLIFGrammarp->hasSolPseudoTerminalb                     = marpaESLIFGrammarOrigp->hasSolPseudoTerminalb;
+  marpaESLIFGrammarp->hasEmptyPseudoTerminalb                   = marpaESLIFGrammarOrigp->hasEmptyPseudoTerminalb;
   marpaESLIFGrammarp->hasLookaheadMetab                         = marpaESLIFGrammarOrigp->hasLookaheadMetab;
 
   if ((marpaESLIFGrammarOrigp->luabytep != NULL) && (marpaESLIFGrammarOrigp->luabytel > 0)) {
@@ -8107,6 +8132,7 @@ static inline marpaESLIFGrammar_bootstrap_t *_marpaESLIFGrammar_bootstrap_newp(m
   marpaESLIFGrammarp->hasEofPseudoTerminalb                     = 0;
   marpaESLIFGrammarp->hasEolPseudoTerminalb                     = 0;
   marpaESLIFGrammarp->hasSolPseudoTerminalb                     = 0;
+  marpaESLIFGrammarp->hasEmptyPseudoTerminalb                   = 0;
   marpaESLIFGrammarp->hasLookaheadMetab                         = 0;
 
   goto done;
@@ -8173,6 +8199,7 @@ static inline marpaESLIFGrammar_t *_marpaESLIFGrammar_newp(marpaESLIF_t *marpaES
   marpaESLIFGrammarp->hasEofPseudoTerminalb                     = 0;
   marpaESLIFGrammarp->hasEolPseudoTerminalb                     = 0;
   marpaESLIFGrammarp->hasSolPseudoTerminalb                     = 0;
+  marpaESLIFGrammarp->hasEmptyPseudoTerminalb                   = 0;
   marpaESLIFGrammarp->lexemeGrammarHashp                        = NULL;
   marpaESLIFGrammarp->hasLookaheadMetab                         = 0;
   marpaESLIFGrammarp->jsonStringp                               = NULL;
@@ -15507,7 +15534,8 @@ static inline void _marpaESLIF_grammar_createshowv(marpaESLIFGrammar_t *marpaESL
         case MARPAESLIF_TERMINAL_TYPE__EOF:
         case MARPAESLIF_TERMINAL_TYPE__EOL:
         case MARPAESLIF_TERMINAL_TYPE__SOL:
-          /* We know we made a 100% ASCII compatible pattern that is the builtin lexeme itself when the original type is _EOF, _EOL or _SOL */
+        case MARPAESLIF_TERMINAL_TYPE__EMPTY:
+          /* We know we made a 100% ASCII compatible pattern that is the builtin lexeme itself when the original type is _EOF, _EOL, _SOL or _EMPTY */
           MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, " ");
           MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, symbolp->u.terminalp->patterns);
           MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "\n");
@@ -20142,8 +20170,8 @@ static int _marpaESLIF_event_sorti(const void *p1, const void *p2)
 
   switch (event1p->type) {
   case MARPAESLIF_EVENTTYPE_NONE: /* Happen when we clear grammar events and repush them */
-    /* Not absolutely, this should be rci == 0 when event2p->type is NONE, but this has */
-    /* no consequence: NONE is at the very end - by doing this we avoid a sub-switch -; */
+    /* This should be rci == 0 when event2p->type is NONE, but this has no consequence:  */
+    /* NONE is at the very end - by doing this we avoid a sub-switch -; */
     rci = 1;
     /*
     switch (event2p->type) {
