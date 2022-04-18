@@ -7231,7 +7231,7 @@ static inline short _marpaESLIFRecognizer_meta_matcherb(marpaESLIFRecognizer_t *
       /* This is done using a shared recognizer that peeks the stream.                         */
       discardb                    = marpaESLIFRecognizerp->discardb;
       noEventb                    = marpaESLIFRecognizerp->noEventb;
-      silentb                     = 1; /* marpaESLIFRecognizerp->silentb */
+      silentb                     = marpaESLIFRecognizerp->silentb;
 
       marpaESLIFRecognizerSharep = _marpaESLIFRecognizer_newFromp(subGrammarp, marpaESLIFRecognizerp, discardb, noEventb, silentb, &marpaESLIFRecognizerOption);
       if (MARPAESLIF_UNLIKELY(marpaESLIFRecognizerSharep == NULL)) {
@@ -7248,11 +7248,6 @@ static inline short _marpaESLIFRecognizer_meta_matcherb(marpaESLIFRecognizer_t *
       noEventb                    = 1;
       silentb                     = 1;
       marpaESLIFRecognizerParentp = marpaESLIFRecognizerp;
-    }
-
-    /* Parse the meta symbol */
-    if (strcmp(symbolp->descp->asciis, "s l block node") == 0) {
-      short jdd = 0;
     }
 
     if (! _marpaESLIFGrammar_parseb(marpaESLIFRecognizerp->marpaESLIFp,
