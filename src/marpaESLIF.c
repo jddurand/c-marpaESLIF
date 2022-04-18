@@ -957,7 +957,7 @@ static inline void                   _marpaESLIFRecognizer_lastPause_freev(marpa
 static inline short                  _marpaESLIFRecognizer_createLastTryb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp);
 static inline void                   _marpaESLIFRecognizer_lastTry_freev(marpaESLIFRecognizer_t *marpaESLIFRecognizerp);
 static inline short                  _marpaESLIFRecognizer_isExhaustedb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, short *isExhaustedbp);
-static inline marpaESLIFRecognizer_t *_marpaESLIFRecognizer_newFromp(marpaESLIF_grammar_t *grammarp, marpaESLIFRecognizer_t *marpaESLIFRecognizerSharedp, short discardb, short noEventb, short silentb);
+static inline marpaESLIFRecognizer_t *_marpaESLIFRecognizer_newFromp(marpaESLIF_grammar_t *grammarp, marpaESLIFRecognizer_t *marpaESLIFRecognizerSharedp, short discardb, short noEventb, short silentb, marpaESLIFRecognizerOption_t *marpaESLIFRecognizerOptionForcedp);
 static inline short                  _marpaESLIFRecognizer_isCanContinueb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, short *isCanContinuebp, short *eofbp, short *isExhaustedbp);
 static inline short                  _marpaESLIFRecognizer_isEofb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, short *eofbp);
 static inline short                  _marpaESLIFRecognizer_inputb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, char **inputsp, size_t *inputlp);
@@ -6928,6 +6928,10 @@ static inline marpaESLIF_grammar_t *_marpaESLIFRecognizer_meta_subGrammarp(marpa
       goto err;
     }
 
+    if (strcmp(generatedValueResult.u.s.p, "<empty>") == 0) {
+      short jdd = 0;
+    }
+
     /* Convert it to UTF-8 */
     generatedString.bytep          = (char *) generatedValueResult.u.s.p;
     generatedString.bytel          = generatedValueResult.u.s.sizel;
@@ -7212,6 +7216,13 @@ static inline short _marpaESLIFRecognizer_meta_matcherb(marpaESLIFRecognizer_t *
       goto fatal;
     }
 
+    /* We want to run an internal recognizer */
+    marpaESLIFRecognizerOption = marpaESLIFRecognizerp->marpaESLIFRecognizerOption;
+
+    /* In any case we want to disable threshold warning and allow remaining data after completion */
+    marpaESLIFRecognizerOption.disableThresholdb = 1;
+    marpaESLIFRecognizerOption.exhaustedb        = 1;
+
     /* Is that a true lexeme ? There are two other cases that look like a lexeme but are NOT: */
     /* - contextual RHS                                                                       */
     /* - generator RHS                                                                        */
@@ -7222,7 +7233,7 @@ static inline short _marpaESLIFRecognizer_meta_matcherb(marpaESLIFRecognizer_t *
       noEventb                    = marpaESLIFRecognizerp->noEventb;
       silentb                     = 1; /* marpaESLIFRecognizerp->silentb */
 
-      marpaESLIFRecognizerSharep = _marpaESLIFRecognizer_newFromp(subGrammarp, marpaESLIFRecognizerp, discardb, noEventb, silentb);
+      marpaESLIFRecognizerSharep = _marpaESLIFRecognizer_newFromp(subGrammarp, marpaESLIFRecognizerp, discardb, noEventb, silentb, &marpaESLIFRecognizerOption);
       if (MARPAESLIF_UNLIKELY(marpaESLIFRecognizerSharep == NULL)) {
         goto err;
       }
@@ -7238,13 +7249,6 @@ static inline short _marpaESLIFRecognizer_meta_matcherb(marpaESLIFRecognizer_t *
       silentb                     = 1;
       marpaESLIFRecognizerParentp = marpaESLIFRecognizerp;
     }
-
-    /* We want to run an internal recognizer */
-    marpaESLIFRecognizerOption = marpaESLIFRecognizerp->marpaESLIFRecognizerOption;
-
-    /* In any case we want to disable threshold warning and allow remaining data after completion */
-    marpaESLIFRecognizerOption.disableThresholdb = 1;
-    marpaESLIFRecognizerOption.exhaustedb        = 1;
 
     /* Parse the meta symbol */
     if (strcmp(symbolp->descp->asciis, "s l block node") == 0) {
@@ -10392,7 +10396,10 @@ static inline short _marpaESLIFRecognizer_resume_oneb(marpaESLIFRecognizer_t *ma
             MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "malloc failure, %s", strerror(errno));
             goto err;
           }
-          memcpy(alternative.marpaESLIFValueResult.u.a.p, marpaESLIFValueResultArray.u.a.p, marpaESLIFValueResultArray.u.a.sizel);
+          if (marpaESLIFValueResultArray.u.a.sizel > 0) {
+            /* A zero-length lexeme is possible */
+            memcpy(alternative.marpaESLIFValueResult.u.a.p, marpaESLIFValueResultArray.u.a.p, marpaESLIFValueResultArray.u.a.sizel);
+          }
           alternative.marpaESLIFValueResult.u.a.p[marpaESLIFValueResultArray.u.a.sizel] = '\0';
           alternative.marpaESLIFValueResult.u.a.shallowb       = 0;
           alternative.marpaESLIFValueResult.u.a.sizel          = marpaESLIFValueResultArray.u.a.sizel;
@@ -12981,7 +12988,7 @@ static inline short _marpaESLIFRecognizer_peekb(marpaESLIFRecognizer_t *marpaESL
 }
 
 /*****************************************************************************/
-static inline marpaESLIFRecognizer_t *_marpaESLIFRecognizer_newFromp(marpaESLIF_grammar_t *grammarp, marpaESLIFRecognizer_t *marpaESLIFRecognizerSharedp, short discardb, short noEventb, short silentb)
+static inline marpaESLIFRecognizer_t *_marpaESLIFRecognizer_newFromp(marpaESLIF_grammar_t *grammarp, marpaESLIFRecognizer_t *marpaESLIFRecognizerSharedp, short discardb, short noEventb, short silentb, marpaESLIFRecognizerOption_t *marpaESLIFRecognizerOptionForcedp)
 /*****************************************************************************/
 {
   marpaESLIFRecognizer_t  *marpaESLIFRecognizerp = NULL;
@@ -12990,7 +12997,7 @@ static inline marpaESLIFRecognizer_t *_marpaESLIFRecognizer_newFromp(marpaESLIF_
 
   marpaESLIFRecognizerp = _marpaESLIFRecognizer_newp(marpaESLIFRecognizerSharedp->marpaESLIFp,
                                                      grammarp,
-                                                     &(marpaESLIFRecognizerSharedp->marpaESLIFRecognizerOption),
+                                                     (marpaESLIFRecognizerOptionForcedp != NULL) ? marpaESLIFRecognizerOptionForcedp : &(marpaESLIFRecognizerSharedp->marpaESLIFRecognizerOption),
                                                      discardb,
                                                      noEventb,
                                                      silentb);
@@ -13033,7 +13040,7 @@ marpaESLIFRecognizer_t *marpaESLIFRecognizer_newFromp(marpaESLIFGrammar_t *marpa
     goto err;
   }
 
-  marpaESLIFRecognizerp = _marpaESLIFRecognizer_newFromp(marpaESLIFGrammarp->grammarp, marpaESLIFRecognizerSharedp, 0 /* discardb */, 0 /* noEventb */, 0 /* silentb */);
+  marpaESLIFRecognizerp = _marpaESLIFRecognizer_newFromp(marpaESLIFGrammarp->grammarp, marpaESLIFRecognizerSharedp, 0 /* discardb */, 0 /* noEventb */, 0 /* silentb */, NULL /* marpaESLIFRecognizerOptionForcedp */);
   goto done;
 
  err:
