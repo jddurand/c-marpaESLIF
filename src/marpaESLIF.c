@@ -7219,9 +7219,9 @@ static inline short _marpaESLIFRecognizer_meta_matcherb(marpaESLIFRecognizer_t *
     /* We want to run an internal recognizer */
     marpaESLIFRecognizerOption = marpaESLIFRecognizerp->marpaESLIFRecognizerOption;
 
-    /* In any case we want to disable threshold warning and allow remaining data after completion */
-    marpaESLIFRecognizerOption.disableThresholdb = 1;
-    marpaESLIFRecognizerOption.exhaustedb        = 1;
+    /* In any case we want to disable threshold warning and allow remaining data after completion, though not beeing polluted by exhaustion event */
+    marpaESLIFRecognizerOption.disableThresholdb =  1;
+    marpaESLIFRecognizerOption.exhaustedb        = -1;
 
     /* Is that a true lexeme ? There are two other cases that look like a lexeme but are NOT: */
     /* - contextual RHS                                                                       */
@@ -12249,6 +12249,7 @@ static inline short _marpaESLIFRecognizer_push_grammar_eventsb(marpaESLIFRecogni
   marpaESLIF_stream_t                *marpaESLIF_streamp = marpaESLIFRecognizerp->marpaESLIF_streamp;
   short                               last_discard_loopb = 0;
   short                               isExhaustedb       = 0;
+  short                               skipb;
   marpaESLIF_symbol_t                *symbolp;
   int                                 symboli;
   size_t                              grammarEventl;
@@ -12284,6 +12285,8 @@ static inline short _marpaESLIFRecognizer_push_grammar_eventsb(marpaESLIFRecogni
       symboli = grammarEventp[i].symboli;
       type    = MARPAESLIF_EVENTTYPE_NONE;
       events  = NULL;
+      skipb   = 0;
+
       if (symboli >= 0) {
         /* Look for the symbol */
         MARPAESLIF_GRAMMAR_INTERNAL_GET_SYMBOL(marpaESLIFRecognizerp->marpaESLIFp, symbolp, grammarp, symboli);
@@ -12328,6 +12331,8 @@ static inline short _marpaESLIFRecognizer_push_grammar_eventsb(marpaESLIFRecogni
         event_actione = MARPAESLIF_INTERNAL_EVENT_ACTION_NA;
         isExhaustedb = 1;
         MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "Exhausted event");
+        /* Eventually skip this event */
+        skipb = (marpaESLIFRecognizerp->marpaESLIFRecognizerOption.exhaustedb < 0) ? 1 : 0;
         /* Force discard of remaining data */
         last_discard_loopb = 1;
         /* symboli will be -1 as per marpaWrapper spec */
@@ -12336,8 +12341,10 @@ static inline short _marpaESLIFRecognizer_push_grammar_eventsb(marpaESLIFRecogni
         MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "%s: unsupported event type %d", (symbolp != NULL) ? symbolp->descp->asciis : "??", grammarEventp[i].eventType);
         break;
       }
-      if (MARPAESLIF_UNLIKELY(! _marpaESLIFRecognizer_push_eventb(marpaESLIFRecognizerp, type, symbolp, events, NULL /* discardArrayp */, event_actione))) {
-        goto err;
+      if (! skipb) {
+        if (MARPAESLIF_UNLIKELY(! _marpaESLIFRecognizer_push_eventb(marpaESLIFRecognizerp, type, symbolp, events, NULL /* discardArrayp */, event_actione))) {
+          goto err;
+        }
       }
     }
   }
@@ -12350,7 +12357,7 @@ static inline short _marpaESLIFRecognizer_push_grammar_eventsb(marpaESLIFRecogni
     }
     if (isExhaustedb) {
       /* Push exhaustion event if recognizer interface has set the option */
-      if (MARPAESLIF_UNLIKELY(marpaESLIFRecognizerp->marpaESLIFRecognizerOption.exhaustedb && (! _marpaESLIFRecognizer_push_eventb(marpaESLIFRecognizerp, MARPAESLIF_EVENTTYPE_EXHAUSTED, NULL /* symbolp */, MARPAESLIF_EVENTTYPE_EXHAUSTED_NAME, NULL /* discardArrayp */, MARPAESLIF_INTERNAL_EVENT_ACTION_NA)))) {
+      if (MARPAESLIF_UNLIKELY((marpaESLIFRecognizerp->marpaESLIFRecognizerOption.exhaustedb > 0) && (! _marpaESLIFRecognizer_push_eventb(marpaESLIFRecognizerp, MARPAESLIF_EVENTTYPE_EXHAUSTED, NULL /* symbolp */, MARPAESLIF_EVENTTYPE_EXHAUSTED_NAME, NULL /* discardArrayp */, MARPAESLIF_INTERNAL_EVENT_ACTION_NA)))) {
         goto err;
       }
       /* Force discard of remaining data */
