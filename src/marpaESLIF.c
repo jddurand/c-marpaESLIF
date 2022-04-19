@@ -3827,6 +3827,39 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
           goto err;
         }
 
+        {
+          int eventBitSet;
+          marpaESLIF_symbol_t *startOfLineOriginp;
+          marpaESLIF_symbol_t *startOfLineClonep;
+
+          startOfLineOriginp = _marpaESLIF_symbol_findp(marpaESLIFp, subGrammarp, "start of line", -1 /* symboli */, NULL /* symbolip */, 1 /* silentb */, 0 /* onlyLhsb */, 0 /* onlyRhsb */, MARPAESLIF_SYMBOL_TYPE_META);
+
+          if (startOfLineOriginp != NULL) {
+            if (marpaWrapperGrammar_symbolEventb(subGrammarp->marpaWrapperGrammarStartp, startOfLineOriginp->idi, &eventBitSet)) {
+              fflush(stdout);
+              fflush(stderr);
+              fprintf(stdout, "%s: origin event prediction is %s\n", startOfLineOriginp->descp->asciis, ((eventBitSet & MARPAWRAPPERGRAMMAR_EVENTTYPE_PREDICTION) == MARPAWRAPPERGRAMMAR_EVENTTYPE_PREDICTION) ? "on" : "off");
+              fflush(stdout);
+              fflush(stderr);
+            }
+            if ((eventBitSet & MARPAWRAPPERGRAMMAR_EVENTTYPE_PREDICTION) != MARPAWRAPPERGRAMMAR_EVENTTYPE_PREDICTION) {
+              short jdd = 0;
+            }
+          }
+
+          startOfLineClonep = _marpaESLIF_symbol_findp(marpaESLIFp, subGrammarp, "start of line", -1 /* symboli */, NULL /* symbolip */, 1 /* silentb */, 0 /* onlyLhsb */, 0 /* onlyRhsb */, MARPAESLIF_SYMBOL_TYPE_META);
+
+          if (startOfLineClonep != NULL) {
+            if (marpaWrapperGrammar_symbolEventb(marpaWrapperGrammarStartClonep, startOfLineClonep->idi, &eventBitSet)) {
+              fflush(stdout);
+              fflush(stderr);
+              fprintf(stdout, "%s: cloned event prediction is %s\n", startOfLineClonep->descp->asciis, ((eventBitSet & MARPAWRAPPERGRAMMAR_EVENTTYPE_PREDICTION) == MARPAWRAPPERGRAMMAR_EVENTTYPE_PREDICTION) ? "on" : "off");
+              fflush(stdout);
+              fflush(stderr);
+            }
+          }
+        }
+
         /* The total list of terminals of a meta grammar is always the same as the destination grammar */
         metap->nTerminall    = subGrammarp->nTerminall;
         if (metap->nTerminall > 0) {
@@ -6926,10 +6959,6 @@ static inline marpaESLIF_grammar_t *_marpaESLIFRecognizer_meta_subGrammarp(marpa
     if (MARPAESLIF_UNLIKELY(generatedValueResult.u.s.sizel <= 0)) {
       MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "%s callback success but it is empty", _marpaESLIF_action2asciis(symbolp->generatorActionp));
       goto err;
-    }
-
-    if (strcmp(generatedValueResult.u.s.p, "<empty>") == 0) {
-      short jdd = 0;
     }
 
     /* Convert it to UTF-8 */
