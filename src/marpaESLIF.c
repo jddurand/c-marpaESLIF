@@ -7153,6 +7153,9 @@ static inline short _marpaESLIFRecognizer_meta_matcherb(marpaESLIFRecognizer_t *
   short                                    silentb;
   marpaESLIFRecognizer_t                  *marpaESLIFRecognizerParentp;
   size_t                                   matchedLengthl;
+  size_t                                   parentDeltal;
+  size_t                                   parentLinel;
+  size_t                                   parentColumnl;
 
   MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_INC(marpaESLIFRecognizerp);
   MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "start");
@@ -7221,7 +7224,7 @@ static inline short _marpaESLIFRecognizer_meta_matcherb(marpaESLIFRecognizer_t *
       /* This is done using a shared recognizer that peeks the stream.                         */
       discardb                    = marpaESLIFRecognizerp->discardb;
       noEventb                    = marpaESLIFRecognizerp->noEventb;
-      silentb                     = marpaESLIFRecognizerp->silentb;
+      silentb                     = 1; /* marpaESLIFRecognizerp->silentb; */
 
       marpaESLIFRecognizerSharep = _marpaESLIFRecognizer_newFromp(subGrammarp, marpaESLIFRecognizerp, discardb, noEventb, silentb, &marpaESLIFRecognizerOption);
       if (MARPAESLIF_UNLIKELY(marpaESLIFRecognizerSharep == NULL)) {
@@ -7230,6 +7233,9 @@ static inline short _marpaESLIFRecognizer_meta_matcherb(marpaESLIFRecognizer_t *
       if (MARPAESLIF_UNLIKELY(! _marpaESLIFRecognizer_peekb(marpaESLIFRecognizerSharep, marpaESLIFRecognizerp))) {
         goto err;
       }
+      parentDeltal                = marpaESLIFRecognizerp->marpaESLIF_streamp->inputs - marpaESLIFRecognizerp->marpaESLIF_streamp->buffers;
+      parentLinel                 = marpaESLIFRecognizerp->linel;
+      parentColumnl               = marpaESLIFRecognizerp->columnl;
       peekb                       = 1;
       marpaESLIFRecognizerParentp = NULL;
     } else {
@@ -7294,6 +7300,13 @@ static inline short _marpaESLIFRecognizer_meta_matcherb(marpaESLIFRecognizer_t *
     if (! _marpaESLIFRecognizer_peekb(marpaESLIFRecognizerSharep, NULL)) {
       rcb = 0;
     }
+    /* As for normal lexemes, restore parent stream position */
+    /* Restore parent stream position */
+    marpaESLIFRecognizerp->marpaESLIF_streamp->inputs = marpaESLIFRecognizerp->marpaESLIF_streamp->buffers + parentDeltal;
+    marpaESLIFRecognizerp->marpaESLIF_streamp->inputl = marpaESLIFRecognizerp->marpaESLIF_streamp->bufferl - parentDeltal;
+    marpaESLIFRecognizerp->linel                = parentLinel;
+    marpaESLIFRecognizerp->columnl              = parentColumnl;
+
   }
   if (marpaESLIFRecognizerSharep != NULL) {
     _marpaESLIFRecognizer_freev(marpaESLIFRecognizerSharep, 1 /* forceb */);
