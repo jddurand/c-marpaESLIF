@@ -13340,7 +13340,6 @@ static inline short _marpaESLIFGrammar_parseb(marpaESLIF_t *marpaESLIFp, marpaES
   marpaESLIFRecognizer_t *marpaESLIFRecognizerp = NULL;
   marpaESLIFValueOption_t marpaESLIFValueOption = (marpaESLIFValueOptionp != NULL) ? *marpaESLIFValueOptionp : marpaESLIFValueOption_default_template;
   marpaESLIFValue_t      *marpaESLIFValuep      = NULL;
-  short                   utfb                  = (marpaESLIFRecognizerParentp != NULL) ? marpaESLIFRecognizerParentp->marpaESLIF_streamp->utfb : 0;
   size_t                  origDeltal;
   size_t                  newDeltal;
   short                   isExhaustedb;
@@ -13360,7 +13359,7 @@ static inline short _marpaESLIFGrammar_parseb(marpaESLIF_t *marpaESLIFp, marpaES
                                                         marpaESLIFRecognizerParentp,
                                                         0, /* fakeb */
                                                         maxStartCompletionsi,
-                                                        utfb /* May be inherited from parent*/);
+                                                        (marpaESLIFRecognizerParentp != NULL) ? marpaESLIFRecognizerParentp->marpaESLIF_streamp->utfb : 0 /* utfb */);
     if (MARPAESLIF_UNLIKELY(marpaESLIFRecognizerp == NULL)) {
       rcb = 0;
       goto fast_done;
