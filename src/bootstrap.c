@@ -2446,7 +2446,7 @@ static short _marpaESLIF_bootstrap_G1_action_symbol_name_1b(void *userDatavp, ma
     MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "malloc failure, %s", strerror(errno));
     goto err;
   }
-  strcpy(barenames, asciis);
+  memcpy(barenames, asciis, asciil);
   barenames[asciil] = '\0';
 
   MARPAESLIF_BOOTSTRAP_SET_PTR(marpaESLIFValuep, resulti, MARPAESLIF_BOOTSTRAP_STACK_TYPE_SYMBOL_NAME, barenames);

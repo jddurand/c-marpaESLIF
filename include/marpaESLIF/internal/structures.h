@@ -692,10 +692,11 @@ struct marpaESLIF_symbol_data {
    - when this is a top-level recognizer, everything is allocated on the heap.
 */
 struct marpaESLIF_alternative {
-  marpaESLIF_symbol_t *symbolp;                  /* Associated symbol - shallow pointer */
-  marpaESLIFValueResult_t marpaESLIFValueResult; /* Associated value */
-  int                     grammarLengthi;        /* Length within the grammar (1 in the token-stream model) */
-  short                   usedb;                 /* Is this structure in use ? */
+  marpaESLIF_symbol_t     *symbolp;               /* Associated symbol - shallow pointer */
+  marpaESLIFValueResult_t  marpaESLIFValueResult; /* Associated value */
+  int                      grammarLengthi;        /* Length within the grammar (1 in the token-stream model) */
+  short                    usedb;                 /* Is this structure in use ? */
+  size_t                   matchedLengthl;        /* Number of bytes that matched */
 };
 
 /* ------------------------------- */

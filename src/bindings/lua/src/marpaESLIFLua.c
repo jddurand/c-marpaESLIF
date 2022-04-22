@@ -4231,7 +4231,7 @@ static short marpaESLIFLua_valueCallbackb(void *userDatavp, marpaESLIFValue_t *m
 }
 
 /*****************************************************************************/
-static short marpaESLIFLua_ifCallbackb(void *userDatavp, marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFValueResult_t *marpaESLIFValueResultSymbolp, marpaESLIFValueResultBool_t *marpaESLIFValueResultBoolp, short precompiledb)
+static short marpaESLIFLua_ifCallbackb(void *userDatavp, marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFValueResult_t *marpaESLIFValueResultp, marpaESLIFValueResultBool_t *marpaESLIFValueResultBoolp, short precompiledb)
 /*****************************************************************************/
 {
   static const char           *funcs                      = "marpaESLIFLua_ifCallbackb";
@@ -4259,7 +4259,7 @@ static short marpaESLIFLua_ifCallbackb(void *userDatavp, marpaESLIFRecognizer_t 
                           actions,
                           1 /* nargs */,
                           {
-                            if (! marpaESLIFLua_pushRecognizerb(marpaESLIFLuaRecognizerContextp, marpaESLIFRecognizerp, marpaESLIFValueResultSymbolp)) goto err;
+                            if (! marpaESLIFLua_pushRecognizerb(marpaESLIFLuaRecognizerContextp, marpaESLIFRecognizerp, marpaESLIFValueResultp)) goto err;
                           },
                           &tmpi
                           );

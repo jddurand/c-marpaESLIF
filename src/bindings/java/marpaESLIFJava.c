@@ -236,7 +236,7 @@ static char _MARPAESLIF_JNI_CONTEXT;
 
 #define MARPAESLIF_ESLIFVALUEINTERFACE_SYMBOLACTION_SIGNATURE "(Ljava/lang/Object;)Ljava/lang/Object;"
 #define MARPAESLIF_ESLIFVALUEINTERFACE_RULEACTION_SIGNATURE   "([Ljava/lang/Object;)Ljava/lang/Object;"
-#define MARPAESLIF_ESLIFRECOGNIZERINTERFACE_IFACTION_SIGNATURE "([B)Z"
+#define MARPAESLIF_ESLIFRECOGNIZERINTERFACE_IFACTION_SIGNATURE "(Ljava/lang/Object;)Z"
 #define MARPAESLIF_ESLIFRECOGNIZERINTERFACE_EVENTACTION_SIGNATURE "([Lorg/parser/marpa/ESLIFEvent;)Z"
 #define MARPAESLIF_ESLIFRECOGNIZERINTERFACE_REGEXACTION_SIGNATURE "(Lorg/parser/marpa/ESLIFRegexCallout;)I"
 #define MARPAESLIF_ESLIFRECOGNIZERINTERFACE_GENERATORACTION_SIGNATURE "([Ljava/lang/Object;)Ljava/lang/String;"
@@ -4942,7 +4942,7 @@ static short marpaESLIFJava_valueSymbolCallbackb(void *userDatavp, marpaESLIFVal
 }
 
 /*****************************************************************************/
-static short marpaESLIFJava_recognizerIfCallbackb(void *userDatavp, marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFValueResult_t *marpaESLIFValueResultSymbolp, marpaESLIFValueResultBool_t *marpaESLIFValueResultBoolp)
+static short marpaESLIFJava_recognizerIfCallbackb(void *userDatavp, marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFValueResult_t *marpaESLIFValueResultp, marpaESLIFValueResultBool_t *marpaESLIFValueResultBoolp)
 /*****************************************************************************/
 {
   /* Almost exactly like marpaESLIFValueSymbolCallback except that we construct a list of one element containing a jbyteArray that we do ourself */
@@ -4951,23 +4951,16 @@ static short marpaESLIFJava_recognizerIfCallbackb(void *userDatavp, marpaESLIFRe
   JNIEnv                            *envp;
   jboolean                           boolean;
   short                              rcb;
-  jbyteArray                         byteArrayp;
+  jobject                            objectp;
 
   /* If callback is never running in another thread - no need to attach */
   if (((*marpaESLIF_vmp)->GetEnv(marpaESLIF_vmp, (void **) &envp, MARPAESLIF_JNI_VERSION) != JNI_OK) || (envp == NULL)) {
     goto err;
   }
 
-  byteArrayp = (*envp)->NewByteArray(envp, (jsize) marpaESLIFValueResultSymbolp->u.a.sizel);
-  if (byteArrayp == NULL) {
+  /* Get an object from marpaESLIFValueResultp */
+  if (! marpaESLIFJava_recognizerGetObjectp(envp, marpaESLIFJavaRecognizerContextp, marpaESLIFRecognizerp, marpaESLIFValueResultp, &objectp)) {
     goto err;
-  }
-  if (marpaESLIFValueResultSymbolp->u.a.sizel > 0) {
-    /* Don't know if it is legal to call SetByteArrayRegion with a zero size -; */
-    (*envp)->SetByteArrayRegion(envp, byteArrayp, 0, (jsize) marpaESLIFValueResultSymbolp->u.a.sizel, (jbyte *) marpaESLIFValueResultSymbolp->u.a.p);
-    if (HAVEEXCEPTION(envp)) {
-      goto err;
-    }
   }
 
   /* Update recognizer in the recognizer interface */
@@ -4976,7 +4969,7 @@ static short marpaESLIFJava_recognizerIfCallbackb(void *userDatavp, marpaESLIFRe
   }
 
   /* Call the if action */
-  boolean = (*envp)->CallBooleanMethod(envp, marpaESLIFJavaRecognizerContextp->eslifRecognizerInterfacep, marpaESLIFJavaRecognizerContextp->methodp, byteArrayp);
+  boolean = (*envp)->CallBooleanMethod(envp, marpaESLIFJavaRecognizerContextp->eslifRecognizerInterfacep, marpaESLIFJavaRecognizerContextp->methodp, objectp);
   if (HAVEEXCEPTION(envp)) {
     goto err;
   }
