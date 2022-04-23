@@ -8336,6 +8336,7 @@ static short _marpaESLIF_bootstrap_G1_action_luascript_statementb(void *userData
       }
       memcpy(marpaESLIFGrammarBootstrapp->luabytep, luabytep, luabytel);
       marpaESLIFGrammarBootstrapp->luabytep[luabytel] = '\0';
+      marpaESLIFGrammarBootstrapp->luabytel = luabytel;
       MARPAESLIF_TRACEF(marpaESLIFValuep->marpaESLIFp, funcs, "Setted lua script of size %ld luabytes", (unsigned long) luabytel);
     } else {
       /* Append bytes - they are guaranteed to be full character bytes, i.e. a raw concat of the buffer is ok */
