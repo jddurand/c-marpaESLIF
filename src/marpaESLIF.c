@@ -206,35 +206,30 @@ static marpaESLIFValueResult_t marpaESLIFValueResultLazyWithUndef = {
 /* -------------------------------------------------------------------------------------------- */
 /* In theory, when rci is MARPAESLIF_MATCH_OK, marpaESLIFValueResult type must be a valid ARRAY */
 /* -------------------------------------------------------------------------------------------- */
-#define _MARPAESLIF_CHECK_MATCH_RESULT(funcs, marpaESLIFRecognizerp, symbolp, rci, marpaESLIFValueResultp) do { \
-  if (rci == MARPAESLIF_MATCH_OK) {                                     \
-    if (MARPAESLIF_UNLIKELY(marpaESLIFValueResultp->type != MARPAESLIF_VALUE_TYPE_ARRAY)) { \
-      MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Match result type for %s is %d (%s)", symbolp->descp->asciis, marpaESLIFValueResultp->type, _marpaESLIF_value_types(marpaESLIFValueResultp->type)); \
-    } else {                                                            \
-      if (MARPAESLIF_UNLIKELY(marpaESLIFValueResultp->u.a.p == NULL)) { \
-        MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Match result for %s is {%p,%ld}", symbolp->descp->asciis, marpaESLIFValueResultp->u.a.p, (unsigned long) marpaESLIFValueResultp->u.a.sizel); \
-        goto err;                                                       \
-      } else if (marpaESLIFValueResultp->u.a.sizel <= 0) {                \
-        /* This is an error unless symbol is :eof */                    \
-        if (MARPAESLIF_UNLIKELY(! MARPAESLIF_IS_PSEUDO_TERMINAL(symbolp))) { \
-          MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Match ok for pseudo-terminal %s", symbolp->descp->asciis); \
-          goto err;                                                     \
+#define MARPAESLIF_CHECK_MATCH_RESULT(funcs, marpaESLIFRecognizerp, symbolp, rci, marpaESLIFValueResultp) do { \
+    if (rci == MARPAESLIF_MATCH_OK) {                                   \
+      if (marpaESLIFValueResultp->type != MARPAESLIF_VALUE_TYPE_ARRAY) { \
+        MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Match OK for %s: type %d (%s)", symbolp->descp->asciis, marpaESLIFValueResultp->type, _marpaESLIF_value_types(marpaESLIFValueResultp->type)); \
+      } else {                                                          \
+        if ((marpaESLIFValueResultp->u.a.p == NULL) || (marpaESLIFValueResultp->u.a.sizel <= 0)) { \
+          /* This is an error unless this is a pseudo terminal or a lookahead meta */ \
+          if (MARPAESLIF_IS_PSEUDO_TERMINAL(symbolp)) {                 \
+            MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Match OK for %s: type ARRAY {%p,%ld} : pseudo terminal case", symbolp->descp->asciis, marpaESLIFValueResultp->u.a.p, (unsigned long) marpaESLIFValueResultp->u.a.sizel); \
+          } else if (symbolp->lookaheadb) {                             \
+            MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Match OK for %s: type ARRAY {%p,%ld} : lookahead case", symbolp->descp->asciis, marpaESLIFValueResultp->u.a.p, (unsigned long) marpaESLIFValueResultp->u.a.sizel); \
+          } else {                                                      \
+            MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Match OK for %s: type ARRAY {%p,%ld} but this is not a pseudo terminal nor a lookahead", symbolp->descp->asciis, marpaESLIFValueResultp->u.a.p, (unsigned long) marpaESLIFValueResultp->u.a.sizel); \
+            goto err;                                                   \
+          }                                                             \
+        } else {                                                        \
+          MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Match OK for %s: type ARRAY {%p,%ld}", symbolp->descp->asciis, marpaESLIFValueResultp->u.a.p, (unsigned long) marpaESLIFValueResultp->u.a.sizel); \
+          MARPAESLIFRECOGNIZER_HEXDUMPV(funcs, marpaESLIFRecognizerp, "Match dump for ", symbolp->descp->asciis, marpaESLIFValueResultp->u.a.p, marpaESLIFValueResultp->u.a.sizel, 1 /* traceb */, 0 /* noticeb */, marpaESLIFRecognizerp->linel, marpaESLIFRecognizerp->columnl); \
         }                                                               \
       }                                                                 \
-      MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Match result for %s is ARRAY: {%p,%ld}", symbolp->descp->asciis, marpaESLIFValueResultp->u.a.p, (unsigned long) marpaESLIFValueResultp->u.a.sizel); \
+    } else {                                                            \
+      MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Match KO for %s", symbolp->descp->asciis); \
     }                                                                   \
   } while (0)
-
-#ifndef MARPAESLIF_NTRACE
-#define MARPAESLIF_CHECK_MATCH_RESULT(funcs, marpaESLIFRecognizerp, inputs, symbolp, rci, marpaESLIFValueResultp) do { \
-    _MARPAESLIF_CHECK_MATCH_RESULT(funcs, marpaESLIFRecognizerp, symbolp, rci, marpaESLIFValueResultp); \
-    if ((rci == MARPAESLIF_MATCH_OK) && (marpaESLIFValueResultp->type == MARPAESLIF_VALUE_TYPE_ARRAY)) { \
-      MARPAESLIFRECOGNIZER_HEXDUMPV(funcs, marpaESLIFRecognizerp, "Match dump for ", symbolp->descp->asciis, marpaESLIFValueResultp->u.a.p, marpaESLIFValueResultp->u.a.sizel, 1 /* traceb */, 0 /* noticeb */, marpaESLIFRecognizerp->linel, marpaESLIFRecognizerp->columnl); \
-    }                                                                   \
-  } while (0)
-#else
-#define MARPAESLIF_CHECK_MATCH_RESULT(funcs, marpaESLIFRecognizerp, inputs, symbolp, rci, marpaESLIFValueResultp)
-#endif
 
 /* -------------------------------------------------------------------------------------------- */
 /* This macro makes sure we return a multiple of chunk of always at least 1 BYTE more than size */
@@ -7466,7 +7461,7 @@ static inline short _marpaESLIFRecognizer_symbol_matcherb(marpaESLIFRecognizer_t
                                                        maxStartCompletionsi,
                                                        &lastSizeBeforeCompletionl,
                                                        &numberOfStartCompletionsi,
-                                                       &matchedLengthl);
+                                                       NULL /* matchedLengthlp */);
       if (MARPAESLIF_UNLIKELY(rcMatcherb < 0)) {
         goto fatal;
       }
@@ -7476,7 +7471,11 @@ static inline short _marpaESLIFRecognizer_symbol_matcherb(marpaESLIFRecognizer_t
       if (rci != MARPAESLIF_MATCH_OK) {
         goto err;
       }
+
+      /* A lookahead match is always zero byte */
       lookaheadMatchb = 1;
+      matchedLengthl = 0;
+
     } else {
       /* Negative lookahead */
       rcMatcherb = _marpaESLIFRecognizer_meta_matcherb(marpaESLIFRecognizerp,
@@ -7487,7 +7486,7 @@ static inline short _marpaESLIFRecognizer_symbol_matcherb(marpaESLIFRecognizer_t
                                                        maxStartCompletionsi,
                                                        &lastSizeBeforeCompletionl,
                                                        &numberOfStartCompletionsi,
-                                                       &matchedLengthl);
+                                                       NULL /* matchedLengthlp */);
       if (MARPAESLIF_UNLIKELY(rcMatcherb < 0)) {
         goto fatal;
       }
@@ -7497,7 +7496,10 @@ static inline short _marpaESLIFRecognizer_symbol_matcherb(marpaESLIFRecognizer_t
 
       /* Invert rci */
       rci = MARPAESLIF_MATCH_OK;
+
+      /* A lookahead match is always zero byte */
       lookaheadMatchb = 1;
+      matchedLengthl = 0;
     }
     if (lookaheadMatchb) {
       /* Do like _marpaESLIFRecognizer_terminal_matcherb() when it matches */
@@ -7518,8 +7520,9 @@ static inline short _marpaESLIFRecognizer_symbol_matcherb(marpaESLIFRecognizer_t
   }
   MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "After %s try: eofb=%d, inputl=%ld", symbolp->descp->asciis, (int) marpaESLIF_streamp->eofb, marpaESLIF_streamp->inputl);
 
-  /* If there is match, marpaESLIFValueResultp must always be valid */
-  MARPAESLIF_CHECK_MATCH_RESULT(funcs, marpaESLIFRecognizerp, marpaESLIF_streamp->inputs, symbolp, rci, marpaESLIFValueResultp);
+#ifndef MARPAESLIF_NTRACE
+  MARPAESLIF_CHECK_MATCH_RESULT(funcs, marpaESLIFRecognizerp, symbolp, rci, marpaESLIFValueResultp);
+#endif
 
   if (rci == MARPAESLIF_MATCH_OK) {
     /* If symbol has an if-action, check it if we are the top-level recognizer */
