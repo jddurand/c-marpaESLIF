@@ -7264,8 +7264,6 @@ static inline short _marpaESLIFRecognizer_meta_matcherb(marpaESLIFRecognizer_t *
                                     &matchedLengthl)) {
       goto err;
     }
-
-    fprintf(stderr, "Meta match on %ld bytes\n", (unsigned long) matchedLengthl);
   }
 
   if (matchedLengthlp != NULL) {
