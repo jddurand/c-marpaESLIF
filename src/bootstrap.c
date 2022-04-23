@@ -79,7 +79,7 @@ static inline short _marpaESLIF_bootstrap_unpack_adverbListItemStackb(marpaESLIF
                                                                       );
 static inline short _marpaESLIF_bootstrap_G1_action_event_declarationb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb, marpaESLIF_bootstrap_event_declaration_type_t type);
 static inline marpaESLIF_bootstrap_utf_string_t *_marpaESLIF_bootstrap_regex_to_stringb(marpaESLIF_t *marpaESLIFp, void *bytep, size_t bytel);
-static inline marpaESLIF_bootstrap_utf_string_t *_marpaESLIF_bootstrap_characterClass_to_stringb(marpaESLIF_t *marpaESLIFp, void *bytep, size_t bytel);
+static inline marpaESLIF_bootstrap_utf_string_t *_marpaESLIF_bootstrap_characterClass_to_stringp(marpaESLIF_t *marpaESLIFp, void *bytep, size_t bytel);
 static inline int _marpaESLIF_bootstrap_ord2utfb(marpaESLIF_uint32_t uint32, PCRE2_UCHAR *bufferp);
 static inline short _marpaESLIF_bootstrap_G1_action_rhs_alternative_prioritiesb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb, short skipb, short lookaheadb);
 static inline short _marpaESLIF_bootstrap_G1_action_rhs_alternative_exceptionb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, int arg0i, int argni, int resulti, short nullableb, short skipb, short lookaheadb);
@@ -289,23 +289,6 @@ static short marpaESLIFValueImport(marpaESLIFValue_t *marpaESLIFValuep, void *us
                                                                         \
     _p        = (char *) _marpaESLIFValueResult.u.s.p;                  \
     _shallowb = _marpaESLIFValueResult.u.s.shallowb;                    \
-  } while (0)
-
-#define MARPAESLIF_BOOTSTRAP_GETANDFORGET_ARRAY(marpaESLIFValuep, indicei, _p, _l, _shallowb) do { \
-    marpaESLIFValueResult_t _marpaESLIFValueResult;                     \
-                                                                        \
-    if (MARPAESLIF_UNLIKELY(! _marpaESLIFValue_stack_getAndForgetb(marpaESLIFValuep, indicei, &_marpaESLIFValueResult))) { \
-      goto err;                                                         \
-    }                                                                   \
-                                                                        \
-    if (MARPAESLIF_UNLIKELY(_marpaESLIFValueResult.type != MARPAESLIF_VALUE_TYPE_ARRAY)) { \
-      MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "marpaESLIFValueResult.type is not ARRAY (got %d, %s)", _marpaESLIFValueResult.type, _marpaESLIF_value_types(_marpaESLIFValueResult.type)); \
-      goto err;                                                         \
-    }                                                                   \
-                                                                        \
-    _p        = _marpaESLIFValueResult.u.a.p;                           \
-    _l        = _marpaESLIFValueResult.u.a.sizel;                       \
-    _shallowb = _marpaESLIFValueResult.u.a.shallowb;                    \
   } while (0)
 
 #define MARPAESLIF_BOOTSTRAP_IS_UNDEF(marpaESLIFValuep, indicei, rcb) do { \
@@ -2951,8 +2934,7 @@ static short _marpaESLIF_bootstrap_G1_action_action_3b(void *userDatavp, marpaES
   marpaESLIF_string_t               *stringp       = NULL;
   marpaESLIF_action_t               *actionp       = NULL;
   marpaESLIF_bootstrap_utf_string_t *quotedStringp = NULL;
-  void                              *bytep         = NULL;
-  short                              shallowb      = 0;
+  void                              *bytep;
   size_t                             bytel;
   short                              rcb;
 
@@ -2962,7 +2944,7 @@ static short _marpaESLIF_bootstrap_G1_action_action_3b(void *userDatavp, marpaES
     goto err;
   }
 
-  MARPAESLIF_BOOTSTRAP_GETANDFORGET_ARRAY(marpaESLIFValuep, argni, bytep, bytel, shallowb);
+  MARPAESLIF_BOOTSTRAP_GET_ARRAY(marpaESLIFValuep, argni, bytep, bytel);
   quotedStringp = _marpaESLIF_bootstrap_unquote_string_literalp(marpaESLIFValuep, bytep, bytel, 1 /* allowEmptyStringb */);
   if (MARPAESLIF_UNLIKELY(quotedStringp == NULL)) {
     goto err;
@@ -2993,9 +2975,6 @@ static short _marpaESLIF_bootstrap_G1_action_action_3b(void *userDatavp, marpaES
   rcb = 0;
 
  done:
-  if ((! shallowb) && (bytep != NULL)) {
-    free(bytep);
-  }
   _marpaESLIF_string_freev(stringp, 0 /* onStackb */);
   _marpaESLIF_bootstrap_utf_string_freev(quotedStringp, 0 /* onStackb */);
   return rcb;
@@ -3445,8 +3424,7 @@ static short _marpaESLIF_bootstrap_G1_action_symbolaction_3b(void *userDatavp, m
   marpaESLIF_bootstrap_utf_string_t *quotedStringp = NULL;
   marpaESLIF_string_t               *stringp       = NULL;
   marpaESLIF_action_t               *symbolactionp = NULL;
-  void                              *bytep         = NULL;
-  short                              shallowb      = 0;
+  void                              *bytep;
   size_t                             bytel;
   short                              rcb;
 
@@ -3456,7 +3434,7 @@ static short _marpaESLIF_bootstrap_G1_action_symbolaction_3b(void *userDatavp, m
     goto err;
   }
 
-  MARPAESLIF_BOOTSTRAP_GETANDFORGET_ARRAY(marpaESLIFValuep, argni, bytep, bytel, shallowb);
+  MARPAESLIF_BOOTSTRAP_GET_ARRAY(marpaESLIFValuep, argni, bytep, bytel);
   quotedStringp = _marpaESLIF_bootstrap_unquote_string_literalp(marpaESLIFValuep, bytep, bytel, 1 /* allowEmptyStringb */);
   if (MARPAESLIF_UNLIKELY(quotedStringp == NULL)) {
     goto err;
@@ -3487,9 +3465,6 @@ static short _marpaESLIF_bootstrap_G1_action_symbolaction_3b(void *userDatavp, m
   rcb = 0;
 
  done:
-  if ((! shallowb) && (bytep != NULL)) {
-    free(bytep);
-  }
   _marpaESLIF_string_freev(stringp, 0 /* onStackb */);
   _marpaESLIF_bootstrap_utf_string_freev(quotedStringp, 0 /* onStackb */);
   return rcb;
@@ -3804,9 +3779,8 @@ static short _marpaESLIF_bootstrap_G1_action_rhs_primary_no_parameter_3b(void *u
   /* <rhs primary no parameter> ::= '$' <alternative name> */
   /* <alternative name> is always an array */
   marpaESLIF_bootstrap_rhs_primary_t       *rhsPrimaryp = NULL;
-  void                                     *bytep       = NULL;
+  void                                     *bytep;
   size_t                                    bytel;
-  short                                     shallowb    = 0;
   short                                     rcb;
 
   /* Cannot be nullable */
@@ -3815,7 +3789,7 @@ static short _marpaESLIF_bootstrap_G1_action_rhs_primary_no_parameter_3b(void *u
     goto err;
   }
 
-  MARPAESLIF_BOOTSTRAP_GETANDFORGET_ARRAY(marpaESLIFValuep, argni, bytep, bytel, shallowb);
+  MARPAESLIF_BOOTSTRAP_GET_ARRAY(marpaESLIFValuep, argni, bytep, bytel);
   /* It is a non-sense to have a null information */
   if (MARPAESLIF_UNLIKELY((bytep == NULL) || (bytel <= 0))) {
     MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "_marpaESLIFValue_stack_getAndForgetb at indice %d returned {p,%ld}", argni, bytep, (unsigned long) bytel);
@@ -3830,12 +3804,21 @@ static short _marpaESLIF_bootstrap_G1_action_rhs_primary_no_parameter_3b(void *u
   }
 
   rhsPrimaryp->callp            = NULL;
-  rhsPrimaryp->type             = MARPAESLIF_BOOTSTRAP_RHS_PRIMARY_TYPE_NAME;
-  rhsPrimaryp->u.name.bytep     = bytep;
-  rhsPrimaryp->u.name.bytel     = bytel;
+  rhsPrimaryp->type             = MARPAESLIF_BOOTSTRAP_RHS_PRIMARY_TYPE_NA;
+  rhsPrimaryp->u.name.bytep     = NULL;
+  rhsPrimaryp->u.name.bytel     = 0;
   rhsPrimaryp->u.name.modifiers = NULL;
 
-  bytep = NULL; /* It is in rhsPrimaryp */
+  rhsPrimaryp->u.name.bytep = (char *) malloc(bytel + 1);
+  if (rhsPrimaryp->u.name.bytep == NULL) {
+    MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "malloc failure, %s", strerror(errno));
+    goto err;
+  }
+  memcpy(rhsPrimaryp->u.name.bytep, bytep, bytel);
+  rhsPrimaryp->u.name.bytep[bytel] = '\0';
+
+  rhsPrimaryp->type             = MARPAESLIF_BOOTSTRAP_RHS_PRIMARY_TYPE_NAME;
+  rhsPrimaryp->u.name.bytel     = bytel;
 
   MARPAESLIF_BOOTSTRAP_SET_PTR(marpaESLIFValuep, resulti, MARPAESLIF_BOOTSTRAP_STACK_TYPE_RHS_PRIMARY, rhsPrimaryp);
 
@@ -3847,9 +3830,6 @@ static short _marpaESLIF_bootstrap_G1_action_rhs_primary_no_parameter_3b(void *u
   rcb = 0;
 
  done:
-  if ((! shallowb) && (bytep != NULL)) {
-    free(bytep);
-  }
   return rcb;
 }
 
@@ -5007,8 +4987,7 @@ static short _marpaESLIF_bootstrap_G1_action_terminal_1b(void *userDatavp, marpa
   /* <terminal> ::= <character class> */
   /* <character class> is a lexeme. */
   marpaESLIF_bootstrap_terminal_t *terminalp   = NULL;
-  void                            *bytep       = NULL;
-  short                            shallowb    = 0;
+  void                            *bytep;
   size_t                           bytel;
   short                            rcb;
 
@@ -5018,7 +4997,7 @@ static short _marpaESLIF_bootstrap_G1_action_terminal_1b(void *userDatavp, marpa
     goto err;
   }
 
-  MARPAESLIF_BOOTSTRAP_GETANDFORGET_ARRAY(marpaESLIFValuep, arg0i, bytep, bytel, shallowb);
+  MARPAESLIF_BOOTSTRAP_GET_ARRAY(marpaESLIFValuep, arg0i, bytep, bytel);
 
   terminalp = (marpaESLIF_bootstrap_terminal_t *) malloc(sizeof(marpaESLIF_bootstrap_terminal_t));
   if (MARPAESLIF_UNLIKELY(terminalp == NULL)) {
@@ -5026,7 +5005,7 @@ static short _marpaESLIF_bootstrap_G1_action_terminal_1b(void *userDatavp, marpa
     goto err;
   }
   terminalp->type              = MARPAESLIF_BOOTSTRAP_TERMINAL_TYPE_NA;
-  terminalp->u.characterClassp = _marpaESLIF_bootstrap_characterClass_to_stringb(marpaESLIFValuep->marpaESLIFp, bytep, bytel);
+  terminalp->u.characterClassp = _marpaESLIF_bootstrap_characterClass_to_stringp(marpaESLIFValuep->marpaESLIFp, bytep, bytel);
   if (MARPAESLIF_UNLIKELY(terminalp->u.characterClassp == NULL)) {
     goto err;
   }
@@ -5042,9 +5021,6 @@ static short _marpaESLIF_bootstrap_G1_action_terminal_1b(void *userDatavp, marpa
   rcb = 0;
 
  done:
-  if ((! shallowb) && (bytep != NULL)) {
-    free(bytep);
-  }
  return rcb;
 }
 
@@ -5055,8 +5031,7 @@ static short _marpaESLIF_bootstrap_G1_action_terminal_2b(void *userDatavp, marpa
   /* <terminal> ::= <regular expression> */
   /* <regular expression> is a lexeme. */
   marpaESLIF_bootstrap_terminal_t *terminalp   = NULL;
-  void                            *bytep       = NULL;
-  short                            shallowb    = 0;
+  void                            *bytep;
   size_t                           bytel;
   short                            rcb;
 
@@ -5066,7 +5041,7 @@ static short _marpaESLIF_bootstrap_G1_action_terminal_2b(void *userDatavp, marpa
     goto err;
   }
 
-  MARPAESLIF_BOOTSTRAP_GETANDFORGET_ARRAY(marpaESLIFValuep, arg0i, bytep, bytel, shallowb);
+  MARPAESLIF_BOOTSTRAP_GET_ARRAY(marpaESLIFValuep, arg0i, bytep, bytel);
 
   terminalp = (marpaESLIF_bootstrap_terminal_t *) malloc(sizeof(marpaESLIF_bootstrap_terminal_t));
   if (MARPAESLIF_UNLIKELY(terminalp == NULL)) {
@@ -5090,9 +5065,6 @@ static short _marpaESLIF_bootstrap_G1_action_terminal_2b(void *userDatavp, marpa
   rcb = 0;
 
  done:
-  if ((! shallowb) && (bytep != NULL)) {
-    free(bytep);
-  }
  return rcb;
 }
 
@@ -5104,9 +5076,8 @@ static short _marpaESLIF_bootstrap_G1_action_terminal_3b(void *userDatavp, marpa
   marpaESLIF_bootstrap_terminal_t  *terminalp             = NULL;
   marpaESLIFRecognizer_t           *marpaESLIFRecognizerp = NULL; /* Fake recognizer to use the internal regex */
   char                             *modifiers             = NULL;
-  void                             *bytep                 = NULL;
+  void                             *bytep;
   size_t                            bytel;
-  short                             shallowb              = 0;
   char                             *tmps;
   marpaESLIFValueResult_t           marpaESLIFValueResult;
   size_t                            sizel;
@@ -5121,25 +5092,23 @@ static short _marpaESLIF_bootstrap_G1_action_terminal_3b(void *userDatavp, marpa
   }
 
   /* action is the result of ::transfer, i.e. a lexeme in any case  */
-  MARPAESLIF_BOOTSTRAP_GETANDFORGET_ARRAY(marpaESLIFValuep, arg0i, bytep, bytel, shallowb);
+  MARPAESLIF_BOOTSTRAP_GET_ARRAY(marpaESLIFValuep, arg0i, bytep, bytel);
   /* It is a non-sense to not have valid information */
   if (MARPAESLIF_UNLIKELY((bytep == NULL) || (bytel <= 0))) {
     MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "_marpaESLIFValue_stack_getAndForgetb at indice %d returned {%p,%ld}", arg0i, bytep, (unsigned long) bytel);
     goto err;
   }
 
-  /* Duplicate bytep if it is shallow */
-  if (shallowb) {
-    tmps = (char *) malloc(bytel + 1);
-    if (MARPAESLIF_UNLIKELY(tmps == NULL)) {
-      MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "malloc failure, %s", strerror(errno));
-      goto err;
-    }
-    memcpy(tmps, bytep, bytel);
-    tmps[bytel] = '\0';
-    bytep = tmps;
-    shallowb = 0;
+  /* Duplicate bytep */
+  tmps = (char *) malloc(bytel + 1);
+  if (MARPAESLIF_UNLIKELY(tmps == NULL)) {
+    MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "malloc failure, %s", strerror(errno));
+    goto err;
   }
+  memcpy(tmps, bytep, bytel);
+  tmps[bytel] = '\0';
+  bytep = tmps;
+
   /* Fake a recognizer. EOF flag will be set automatically in fake mode */
   marpaESLIFRecognizerp = __marpaESLIFRecognizer_newp(marpaESLIFValuep->marpaESLIFp,
                                                       NULL, /* grammarp */
@@ -5229,9 +5198,6 @@ static short _marpaESLIF_bootstrap_G1_action_terminal_3b(void *userDatavp, marpa
   rcb = 0;
 
  done:
-  if ((! shallowb) && (bytep != NULL)) {
-    free(bytep);
-  }
   if (modifiers != NULL) {
     free(modifiers);
   }
@@ -5343,9 +5309,9 @@ static short _marpaESLIF_bootstrap_G1_action_grammar_reference_1b(void *userData
 {
   /* <grammar reference> ::= <quoted string literal> */
   marpaESLIF_bootstrap_grammar_reference_t *grammarReferencep = NULL;
-  void                                     *bytep             = NULL;
+  void                                     *bytep;
   size_t                                    bytel;
-  short                                     shallowb          = 0;
+  short                                     shallowb;
   marpaESLIF_bootstrap_utf_string_t        *quotedStringp     = NULL;
   short                                     rcb;
 
@@ -5355,7 +5321,7 @@ static short _marpaESLIF_bootstrap_G1_action_grammar_reference_1b(void *userData
     goto err;
   }
 
-  MARPAESLIF_BOOTSTRAP_GETANDFORGET_ARRAY(marpaESLIFValuep, arg0i, bytep, bytel, shallowb);
+  MARPAESLIF_BOOTSTRAP_GET_ARRAY(marpaESLIFValuep, arg0i, bytep, bytel);
   quotedStringp = _marpaESLIF_bootstrap_unquote_string_literalp(marpaESLIFValuep, bytep, bytel, 0 /* allowEmptyStringb */);
   if (MARPAESLIF_UNLIKELY(quotedStringp == NULL)) {
     goto err;
@@ -5380,9 +5346,6 @@ static short _marpaESLIF_bootstrap_G1_action_grammar_reference_1b(void *userData
   rcb = 0;
 
  done:
-  if ((! shallowb) && (bytep != NULL)) {
-    free(bytep);
-  }
   _marpaESLIF_bootstrap_utf_string_freev(quotedStringp, 0 /* onStackb */);
   return rcb;
 }
@@ -5954,15 +5917,15 @@ static short _marpaESLIF_bootstrap_G1_action_desc_ruleb(void *userDatavp, marpaE
   static const char                 *funcs                       = "_marpaESLIF_bootstrap_G1_action_desc_ruleb";
   marpaESLIFGrammar_bootstrap_t     *marpaESLIFGrammarBootstrapp = (marpaESLIFGrammar_bootstrap_t *) userDatavp;
   int                                leveli;
-  void                              *bytep                       = NULL;
+  void                              *bytep;
   size_t                             bytel;
-  short                              shallowb                    = 0;
+  short                              shallowb;
   marpaESLIF_bootstrap_utf_string_t *quotedStringp               = NULL;
   short                              rcb;
   marpaESLIF_grammar_bootstrap_t    *grammarBootstrapp;
 
   MARPAESLIF_BOOTSTRAP_GET_INT(marpaESLIFValuep, arg0i+1, leveli);
-  MARPAESLIF_BOOTSTRAP_GETANDFORGET_ARRAY(marpaESLIFValuep, arg0i+2, bytep, bytel, shallowb);
+  MARPAESLIF_BOOTSTRAP_GET_ARRAY(marpaESLIFValuep, arg0i+2, bytep, bytel);
   quotedStringp = _marpaESLIF_bootstrap_unquote_string_literalp(marpaESLIFValuep, bytep, bytel, 0 /* allowEmptyStringb */);
   if (MARPAESLIF_UNLIKELY(quotedStringp == NULL)) {
     goto err;
@@ -5994,9 +5957,6 @@ static short _marpaESLIF_bootstrap_G1_action_desc_ruleb(void *userDatavp, marpaE
   rcb = 0;
 
  done:
-  if ((! shallowb) && (bytep != NULL)) {
-    free(bytep);
-  }
   _marpaESLIF_bootstrap_utf_string_freev(quotedStringp, 0 /* onStackb */);
   return rcb;
 }
@@ -7495,9 +7455,9 @@ static short _marpaESLIF_bootstrap_G1_action_alternative_name_2b(void *userDatav
 /*****************************************************************************/
 {
   /* <alternative name> ::= <quoted string literal> */
-  void                              *bytep         = NULL;
+  void                              *bytep;
   size_t                             bytel;
-  short                              shallowb      = 0;
+  short                              shallowb;
   marpaESLIF_bootstrap_utf_string_t *quotedStringp = NULL;
   short                              rcb;
 
@@ -7507,7 +7467,7 @@ static short _marpaESLIF_bootstrap_G1_action_alternative_name_2b(void *userDatav
     goto err;
   }
 
-  MARPAESLIF_BOOTSTRAP_GETANDFORGET_ARRAY(marpaESLIFValuep, arg0i, bytep, bytel, shallowb);
+  MARPAESLIF_BOOTSTRAP_GET_ARRAY(marpaESLIFValuep, arg0i, bytep, bytel);
   quotedStringp = _marpaESLIF_bootstrap_unquote_string_literalp(marpaESLIFValuep, bytep, bytel, 0 /* allowEmptyStringb */);
   if (MARPAESLIF_UNLIKELY(quotedStringp == NULL)) {
     goto err;
@@ -7523,9 +7483,6 @@ static short _marpaESLIF_bootstrap_G1_action_alternative_name_2b(void *userDatav
   rcb = 0;
 
  done:
-  if ((! shallowb) && (bytep != NULL)) {
-    free(bytep);
-  }
   _marpaESLIF_bootstrap_utf_string_freev(quotedStringp, 0 /* onStackb */);
   return rcb;
 }
@@ -7537,9 +7494,9 @@ static short _marpaESLIF_bootstrap_G1_action_namingb(void *userDatavp, marpaESLI
   /* <naming> ::= 'name' '=>' <alternative name> */
   /* <alternative name> is always an array */
   marpaESLIF_bootstrap_utf_string_t *namingp     = NULL;
-  void                              *bytep       = NULL;
+  void                              *bytep;
   size_t                             bytel;
-  short                              shallowb    = 0;
+  short                              shallowb;
   short                              rcb;
 
   /* Cannot be nullable */
@@ -7548,7 +7505,7 @@ static short _marpaESLIF_bootstrap_G1_action_namingb(void *userDatavp, marpaESLI
     goto err;
   }
 
-  MARPAESLIF_BOOTSTRAP_GETANDFORGET_ARRAY(marpaESLIFValuep, argni, bytep, bytel, shallowb);
+  MARPAESLIF_BOOTSTRAP_GET_ARRAY(marpaESLIFValuep, argni, bytep, bytel);
   /* It is a non-sense to have a null information */
   if (MARPAESLIF_UNLIKELY((bytep == NULL) || (bytel <= 0))) {
     MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "_marpaESLIFValue_stack_getAndForgetb at indice %d returned {p,%ld}", argni, bytep, (unsigned long) bytel);
@@ -7564,19 +7521,14 @@ static short _marpaESLIF_bootstrap_G1_action_namingb(void *userDatavp, marpaESLI
   namingp->bytel     = bytel;
   namingp->modifiers = NULL;
 
-  /* Duplicate bytep if it is shallow */
-  if (shallowb) {
-    namingp->bytep     = malloc(bytel + 1);
-    if (MARPAESLIF_UNLIKELY(namingp->bytep == NULL)) {
-      MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "malloc failure, %s", strerror(errno));
-      goto err;
-    }
-    memcpy(namingp->bytep, bytep, bytel);
-    namingp->bytep[bytel] = '\0';
-  } else {
-    namingp->bytep     = bytep;
-    bytep = NULL; /* Prevent free() */
+  /* Duplicate bytep */
+  namingp->bytep     = malloc(bytel + 1);
+  if (MARPAESLIF_UNLIKELY(namingp->bytep == NULL)) {
+    MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "malloc failure, %s", strerror(errno));
+    goto err;
   }
+  memcpy(namingp->bytep, bytep, bytel);
+  namingp->bytep[bytel] = '\0';
 
   MARPAESLIF_BOOTSTRAP_SET_PTR(marpaESLIFValuep, resulti, MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_ITEM_NAMING, namingp);
 
@@ -7588,9 +7540,6 @@ static short _marpaESLIF_bootstrap_G1_action_namingb(void *userDatavp, marpaESLI
   rcb = 0;
 
  done:
-  if ((! shallowb) && (bytep != NULL)) {
-    free(bytep);
-  }
   return rcb;
 }
 
@@ -7881,7 +7830,7 @@ static inline marpaESLIF_bootstrap_utf_string_t *_marpaESLIF_bootstrap_regex_to_
 }
 
 /*****************************************************************************/
-static inline marpaESLIF_bootstrap_utf_string_t *_marpaESLIF_bootstrap_characterClass_to_stringb(marpaESLIF_t *marpaESLIFp, void *bytep, size_t bytel)
+static inline marpaESLIF_bootstrap_utf_string_t *_marpaESLIF_bootstrap_characterClass_to_stringp(marpaESLIF_t *marpaESLIFp, void *bytep, size_t bytel)
 /*****************************************************************************/
 {
   marpaESLIF_bootstrap_utf_string_t *stringp               = NULL;
@@ -7897,7 +7846,7 @@ static inline marpaESLIF_bootstrap_utf_string_t *_marpaESLIF_bootstrap_character
 
   /* It is a non-sense to have a null lexeme */
   if (MARPAESLIF_UNLIKELY((bytep == NULL) || (bytel <= 0))) {
-    MARPAESLIF_ERRORF(marpaESLIFp, "_marpaESLIF_bootstrap_characterClass_to_stringb called with {bytep,bytel}={%p,%ld}", bytep, (unsigned long) bytel);
+    MARPAESLIF_ERRORF(marpaESLIFp, "_marpaESLIF_bootstrap_characterClass_to_stringp called with {bytep,bytel}={%p,%ld}", bytep, (unsigned long) bytel);
     goto err;
   }
 
@@ -8352,12 +8301,11 @@ static short _marpaESLIF_bootstrap_G1_action_luascript_statementb(void *userData
 /*****************************************************************************/
 {
   /* <external script statement> ::= <external script tag start> <discard off> <external script source> <external script tag end> <discard on>  */
-  static const char   *funcs              = "_marpaESLIF_bootstrap_G1_action_luascript_statementb";
+  static const char   *funcs                                 = "_marpaESLIF_bootstrap_G1_action_luascript_statementb";
   marpaESLIFGrammar_bootstrap_t *marpaESLIFGrammarBootstrapp = (marpaESLIFGrammar_bootstrap_t *) userDatavp;
-  char                *luabytep           = NULL;
+  char                *luabytep;
   size_t               luabytel;
-  short                shallowb           = 0;
-  short                rcb                = 0;
+  short                rcb;
   char                *tmps;
   size_t               tmpl;
   short                undefb;
@@ -8372,7 +8320,7 @@ static short _marpaESLIF_bootstrap_G1_action_luascript_statementb(void *userData
   MARPAESLIF_BOOTSTRAP_IS_UNDEF(marpaESLIFValuep, arg0i+2, undefb);
 
   if (! undefb) {
-    MARPAESLIF_BOOTSTRAP_GETANDFORGET_ARRAY(marpaESLIFValuep, arg0i+2, luabytep, luabytel, shallowb);
+    MARPAESLIF_BOOTSTRAP_GET_ARRAY(marpaESLIFValuep, arg0i+2, luabytep, luabytel);
     /* It is a non-sense to not have valid information */
     if (MARPAESLIF_UNLIKELY((luabytep == NULL) || (luabytel <= 0))) {
       MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "_marpaESLIFValue_stack_getAndForgetb at indice %d returned {%p,%ld}", arg0i+2, luabytep, (unsigned long) luabytel);
@@ -8380,20 +8328,14 @@ static short _marpaESLIF_bootstrap_G1_action_luascript_statementb(void *userData
     }
 
     if (marpaESLIFGrammarBootstrapp->luabytep == NULL) {
-      /* First time: duplicate luabytep if it is shallow */
-      if (shallowb) {
-        marpaESLIFGrammarBootstrapp->luabytep = (char *) malloc(luabytel + 1);
-        if (MARPAESLIF_UNLIKELY(marpaESLIFGrammarBootstrapp->luabytep == NULL)) {
-          MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "malloc failure, %s", strerror(errno));
-          goto err;
-        }
-        memcpy(marpaESLIFGrammarBootstrapp->luabytep, luabytep, luabytel);
-        marpaESLIFGrammarBootstrapp->luabytep[luabytel] = '\0';
-      } else {
-        marpaESLIFGrammarBootstrapp->luabytep = luabytep;
-        marpaESLIFGrammarBootstrapp->luabytel = luabytel;
-        shallowb = 1;
+      /* First time: duplicate luabytep */
+      marpaESLIFGrammarBootstrapp->luabytep = (char *) malloc(luabytel + 1);
+      if (MARPAESLIF_UNLIKELY(marpaESLIFGrammarBootstrapp->luabytep == NULL)) {
+        MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "malloc failure, %s", strerror(errno));
+        goto err;
       }
+      memcpy(marpaESLIFGrammarBootstrapp->luabytep, luabytep, luabytel);
+      marpaESLIFGrammarBootstrapp->luabytep[luabytel] = '\0';
       MARPAESLIF_TRACEF(marpaESLIFValuep->marpaESLIFp, funcs, "Setted lua script of size %ld luabytes", (unsigned long) luabytel);
     } else {
       /* Append bytes - they are guaranteed to be full character bytes, i.e. a raw concat of the buffer is ok */
@@ -8422,9 +8364,7 @@ static short _marpaESLIF_bootstrap_G1_action_luascript_statementb(void *userData
   goto done;
 
  err:
-  if ((! shallowb) && (luabytep != NULL)) {
-    free(luabytep);
-  }
+  rcb = 0;
 
  done:
   return rcb;
