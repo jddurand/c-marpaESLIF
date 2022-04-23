@@ -13262,6 +13262,9 @@ static inline short __marpaESLIFRecognizer_discardb(marpaESLIFRecognizer_t *marp
   }
 
   if (isDiscardExpectedb) {
+    /* Because of fast discard that can happen in current recognizer, we have to overwrite discardb */
+    marpaESLIFRecognizerp->discardb = 1;
+
     noEventb           = marpaESLIFRecognizerp->noEventb;
     marpaESLIF_streamp = marpaESLIFRecognizerp->marpaESLIF_streamp;
     discardl           = 0;
@@ -13312,6 +13315,11 @@ static inline short __marpaESLIFRecognizer_discardb(marpaESLIFRecognizer_t *marp
           goto err;
         }
 
+        /* Move stream */
+        MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Advancing stream internal position %p by %ld bytes", marpaESLIF_streamp->inputs, (unsigned long) discardl);
+        marpaESLIF_streamp->inputs += discardl;
+        marpaESLIF_streamp->inputl -= discardl;
+
         if (! noEventb) {
           /* We want to do as if we would have done a lexeme complete before */
           if (! appendEventb) {
@@ -13327,11 +13335,6 @@ static inline short __marpaESLIFRecognizer_discardb(marpaESLIFRecognizer_t *marp
             goto err;
           }
         }
-
-        /* Move stream */
-        MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Advancing stream internal position %p by %ld bytes", marpaESLIF_streamp->inputs, (unsigned long) discardl);
-        marpaESLIF_streamp->inputs += discardl;
-        marpaESLIF_streamp->inputl -= discardl;
 
       } else {
         MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Discard rejected: %ld bytes < %ld bytes", (unsigned long) discardl, (unsigned long) minl);
@@ -13355,6 +13358,8 @@ static inline short __marpaESLIFRecognizer_discardb(marpaESLIFRecognizer_t *marp
 
  done:
   _marpaESLIFRecognizer_marpaESLIFValueResult_freeb(marpaESLIFRecognizerp, &marpaESLIFValueResult, 1 /* deepb */);
+  /* In any case we not in discard mode anymore */
+  marpaESLIFRecognizerp->discardb = 0;
   return rcb;
 }
 
