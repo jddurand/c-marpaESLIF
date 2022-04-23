@@ -23530,7 +23530,7 @@ static inline void _marpaESLIFRecognizer_errorv(marpaESLIFRecognizer_t *marpaESL
   MARPAESLIF_ERROR(marpaESLIFp, "");
   MARPAESLIF_ERROR(marpaESLIFp, "--------------------------------------------");
   MARPAESLIF_ERRORF(marpaESLIFp, "Recognizer progress (grammar level %d (%s)):", grammarp->leveli, grammarp->descp->asciis);
-  marpaESLIFRecognizer_progressLogb(marpaESLIFRecognizerp, 0, -1, GENERICLOGGER_LOGLEVEL_ERROR);
+  marpaESLIFRecognizer_progressLogb(marpaESLIFRecognizerp, -1, -1, GENERICLOGGER_LOGLEVEL_ERROR);
   /* Ask for expected grammar terminals */
   if (MARPAESLIF_LIKELY(_marpaESLIFRecognizer_expectedTerminalsb(marpaESLIFRecognizerp, &nTerminall, &symbolIdArrayp, &symbolArraypp))) {
     if (nTerminall > 0) {
