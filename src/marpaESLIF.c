@@ -4594,7 +4594,15 @@ static inline marpaESLIF_grammar_bootstrap_t *_marpaESLIF_grammar_bootstrap_clon
       symbolp->parami            = symbolOrigp->parami;
       symbolp->u.metap           = metap;
       symbolp->idi               = metap->idi;
-      symbolp->descp             = metap->descp;
+      if (symbolOrigp->descp != symbolOrigp->u.metap->descp) {
+        /* Naming was overwriten */
+        symbolp->descp             = _marpaESLIF_string_clonep(marpaESLIFp, symbolOrigp->descp);
+        if (symbolp->descp == NULL) {
+          goto err;
+        }
+      } else {
+        symbolp->descp             = metap->descp;
+      }
       symbolp->parameterizedRhsb = symbolOrigp->parameterizedRhsb;
       metap = NULL; /* metap is now in symbolp */
       break;
@@ -4623,7 +4631,15 @@ static inline marpaESLIF_grammar_bootstrap_t *_marpaESLIF_grammar_bootstrap_clon
       symbolp->type        = MARPAESLIF_SYMBOL_TYPE_TERMINAL;
       symbolp->u.terminalp = terminalp;
       symbolp->idi         = terminalp->idi;
-      symbolp->descp       = terminalp->descp;
+      if (symbolOrigp->descp != symbolOrigp->u.terminalp->descp) {
+        /* Naming was overwriten */
+        symbolp->descp             = _marpaESLIF_string_clonep(marpaESLIFp, symbolOrigp->descp);
+        if (symbolp->descp == NULL) {
+          goto err;
+        }
+      } else {
+        symbolp->descp       = terminalp->descp;
+      }
       terminalp = NULL; /* terminalp is now in symbolp */
       break;
     default:
