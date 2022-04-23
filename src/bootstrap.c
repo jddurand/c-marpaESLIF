@@ -40,7 +40,7 @@ static inline marpaESLIF_grammar_bootstrap_t *_marpaESLIF_bootstrap_check_gramma
 static inline marpaESLIF_symbol_t  *_marpaESLIF_bootstrap_check_lhsp(marpaESLIFValue_t *marpaESLIFValuep, marpaESLIFGrammar_bootstrap_t *marpaESLIFGrammarBootstrapp, marpaESLIF_grammar_bootstrap_t *grammarBootstrapp, marpaESLIF_bootstrap_lhs_t *bootstrapLhsp);
 static inline marpaESLIF_symbol_t  *_marpaESLIF_bootstrap_check_meta_by_namep(marpaESLIFValue_t *marpaESLIFValuep, marpaESLIFGrammar_bootstrap_t *marpaESLIFGrammarBootstrapp, marpaESLIF_grammar_bootstrap_t *grammarBootstrapp, char *asciinames, short createb, short forcecreateb, short lhsb, marpaESLIF_lua_functiondecl_t *declp, short rhsb, marpaESLIF_lua_functioncall_t *callp);
 static inline short                 _marpaESLIF_bootstrap_search_terminal_by_descriptionb(marpaESLIFValue_t *marpaESLIFValuep, marpaESLIF_grammar_bootstrap_t *grammarBootstrapp, marpaESLIF_terminal_type_t terminalType, marpaESLIF_bootstrap_utf_string_t *stringp, marpaESLIF_symbol_t **symbolpp);
-static inline marpaESLIF_symbol_t  *_marpaESLIF_bootstrap_find_terminal_by_nameb(marpaESLIFValue_t *marpaESLIFValuep, marpaESLIFGrammar_bootstrap_t *marpaESLIFGrammarBootstrapp, marpaESLIF_grammar_bootstrap_t *grammarBootstrapp, marpaESLIF_bootstrap_utf_string_t *stringp);
+static inline marpaESLIF_symbol_t  *_marpaESLIF_bootstrap_find_terminal_by_namep(marpaESLIFValue_t *marpaESLIFValuep, marpaESLIFGrammar_bootstrap_t *marpaESLIFGrammarBootstrapp, marpaESLIF_grammar_bootstrap_t *grammarBootstrapp, marpaESLIF_bootstrap_utf_string_t *stringp);
 static inline short                 _marpaESLIF_bootstrap_search_terminal_pseudob(marpaESLIFValue_t *marpaESLIFValuep, marpaESLIF_grammar_bootstrap_t *grammarBootstrapp, marpaESLIF_terminal_type_t terminalType, marpaESLIF_symbol_t **symbolpp);
 static inline marpaESLIF_symbol_t  *_marpaESLIF_bootstrap_check_terminal_by_typep(marpaESLIFValue_t *marpaESLIFValuep, marpaESLIFGrammar_bootstrap_t *marpaESLIFGrammarBootstrapp, marpaESLIF_grammar_bootstrap_t *grammarBootstrapp, marpaESLIF_terminal_type_t terminalType, marpaESLIF_bootstrap_utf_string_t *stringp, short createb, short pseudob, short forcecreateb, char *descEncodings, char *descs, size_t descl, short characterClassb);
 static inline marpaESLIF_symbol_t  *_marpaESLIF_bootstrap_check_quotedStringp(marpaESLIFValue_t *marpaESLIFValuep, marpaESLIFGrammar_bootstrap_t *marpaESLIFGrammarBootstrapp, marpaESLIF_grammar_bootstrap_t *grammarBootstrapp, marpaESLIF_bootstrap_utf_string_t *quotedStringp, short createb, short forcecreateb);
@@ -1068,7 +1068,7 @@ static inline short _marpaESLIF_bootstrap_search_terminal_by_descriptionb(marpaE
 }
 
 /*****************************************************************************/
-static inline marpaESLIF_symbol_t *_marpaESLIF_bootstrap_find_terminal_by_nameb(marpaESLIFValue_t *marpaESLIFValuep, marpaESLIFGrammar_bootstrap_t *marpaESLIFGrammarBootstrapp, marpaESLIF_grammar_bootstrap_t *grammarBootstrapp, marpaESLIF_bootstrap_utf_string_t *stringp)
+static inline marpaESLIF_symbol_t *_marpaESLIF_bootstrap_find_terminal_by_namep(marpaESLIFValue_t *marpaESLIFValuep, marpaESLIFGrammar_bootstrap_t *marpaESLIFGrammarBootstrapp, marpaESLIF_grammar_bootstrap_t *grammarBootstrapp, marpaESLIF_bootstrap_utf_string_t *stringp)
 /*****************************************************************************/
 {
   genericStack_t        *symbolStackp = grammarBootstrapp->symbolStackp;
@@ -1763,7 +1763,7 @@ static inline marpaESLIF_symbol_t  *_marpaESLIF_bootstrap_check_rhsPrimaryp(marp
     generatorActionp = NULL;
     break;
   case MARPAESLIF_BOOTSTRAP_RHS_PRIMARY_TYPE_NAME:
-    symbolp = _marpaESLIF_bootstrap_find_terminal_by_nameb(marpaESLIFValuep, marpaESLIFGrammarBootstrapp, grammarBootstrapp, &(rhsPrimaryp->u.name));
+    symbolp = _marpaESLIF_bootstrap_find_terminal_by_namep(marpaESLIFValuep, marpaESLIFGrammarBootstrapp, grammarBootstrapp, &(rhsPrimaryp->u.name));
     if (MARPAESLIF_UNLIKELY(symbolp == NULL)) {
       /* Try to get an ASCII string from it */
       stringp = _marpaESLIF_string_newp(marpaESLIFValuep->marpaESLIFp, (char *) MARPAESLIF_UTF8_STRING, rhsPrimaryp->u.name.bytep, rhsPrimaryp->u.name.bytel);
@@ -6956,7 +6956,7 @@ static short __marpaESLIF_bootstrap_G1_action_symbol_ruleb(void *userDatavp, mar
   /* Update the symbol */
   if (namingp != NULL) {
     /* By definition this is a terminal - a naming must be unique */
-    if (_marpaESLIF_bootstrap_find_terminal_by_nameb(marpaESLIFValuep, marpaESLIFGrammarBootstrapp, grammarBootstrapp, namingp) != NULL) {
+    if (_marpaESLIF_bootstrap_find_terminal_by_namep(marpaESLIFValuep, marpaESLIFGrammarBootstrapp, grammarBootstrapp, namingp) != NULL) {
       stringp = _marpaESLIF_string_newp(marpaESLIFValuep->marpaESLIFp, (char *) MARPAESLIF_UTF8_STRING, namingp->bytep, namingp->bytel);
       if (stringp != NULL) {
         MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "A terminal is already defined with name %s", stringp->asciis);
