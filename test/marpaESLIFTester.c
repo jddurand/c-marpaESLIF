@@ -621,11 +621,20 @@ static short eventManagerb(int *eventCountip, marpaESLIFRecognizer_t *marpaESLIF
     GENERICLOGGER_ERRORF(genericLoggerp, "malloc error %s", strerror(errno));
     goto err;
   }
-  memcpy(tmps, inputs, inputl);
-  inputs = tmps;
-  inputs[inputl] = '\0';
+  tmps[inputl] = '\0';
+  if (inputs != NULL) {
+    memcpy(tmps, inputs, inputl);
+  }
 
-  GENERICLOGGER_INFOF(genericLoggerp, "[%3d] Events at <%s>", *eventCountip, inputs);
+  if (! marpaESLIFRecognizer_isEofb(marpaESLIFRecognizerp, &eofb)) {
+    goto err;
+  }
+
+  if (inputs != NULL) {
+    GENERICLOGGER_INFOF(genericLoggerp, "[%3d] Events at <%s>, eofb is %d", *eventCountip, tmps, (int) eofb);
+  } else {
+    GENERICLOGGER_INFOF(genericLoggerp, "[%3d] Events before reading data, eofb is %d", *eventCountip, (int) eofb);
+  }
 
   if (! marpaESLIFRecognizer_eventb(marpaESLIFRecognizerp, &eventArrayl, &eventArrayp)) {
     goto err;
@@ -636,6 +645,28 @@ static short eventManagerb(int *eventCountip, marpaESLIFRecognizer_t *marpaESLIF
     goto err;
   }
   GENERICLOGGER_INFOF(genericLoggerp, "[%3d] Discard try returned %s", *eventCountip, discardMatchb ? "true" : "false");
+
+  /* Refetch input and eofb */
+  free(tmps);
+  tmps = NULL;
+  if (! marpaESLIFRecognizer_inputb(marpaESLIFRecognizerp, &inputs, &inputl)) {
+    goto err;
+  }
+
+  /* Add a NUL byte */
+  tmps = (char *) malloc(inputl + 1);
+  if (tmps == NULL) {
+    GENERICLOGGER_ERRORF(genericLoggerp, "malloc error %s", strerror(errno));
+    goto err;
+  }
+  tmps[inputl] = '\0';
+  if (inputs != NULL) {
+    memcpy(tmps, inputs, inputl);
+  }
+
+  if (! marpaESLIFRecognizer_isEofb(marpaESLIFRecognizerp, &eofb)) {
+    goto err;
+  }
 
   for (eventArrayIteratorl = 0; eventArrayIteratorl < eventArrayl; eventArrayIteratorl++) {
     switch (eventArrayp[eventArrayIteratorl].type) {
@@ -649,11 +680,17 @@ static short eventManagerb(int *eventCountip, marpaESLIFRecognizer_t *marpaESLIF
       GENERICLOGGER_INFOF(genericLoggerp, "[%3d] Predicted Event %s for symbol %s", *eventCountip, eventArrayp[eventArrayIteratorl].events, eventArrayp[eventArrayIteratorl].symbols);
       break;
     case MARPAESLIF_EVENTTYPE_BEFORE:
-      if (! marpaESLIFRecognizer_isEofb(marpaESLIFRecognizerp, &eofb)) {
-        goto err;
+      if (inputs != NULL) {
+        GENERICLOGGER_INFOF(genericLoggerp, "[%3d] Before Event %s for symbol %s (character is %c (0x%lx), eofb is %d)", *eventCountip, eventArrayp[eventArrayIteratorl].events, eventArrayp[eventArrayIteratorl].symbols, *inputs, (unsigned long) *inputs, (int) eofb);
+      } else {
+        GENERICLOGGER_INFOF(genericLoggerp, "[%3d] Before Event %s for symbol %s (no data read yet, eofb is %d)", *eventCountip, eventArrayp[eventArrayIteratorl].events, eventArrayp[eventArrayIteratorl].symbols, (int) eofb);
       }
-      GENERICLOGGER_INFOF(genericLoggerp, "[%3d] Before Event %s for symbol %s (character is %c (0x%lx), eofb is %d)", *eventCountip, eventArrayp[eventArrayIteratorl].events, eventArrayp[eventArrayIteratorl].symbols, *inputs, (unsigned long) *inputs, (int) eofb);
       if (strcmp(eventArrayp[eventArrayIteratorl].events, "charBeforeEvent") == 0) {
+        if (inputs == NULL) {
+          /* Impossible */
+          GENERICLOGGER_ERRORF(genericLoggerp, "[%3d] ... Event %s but no data read yet", *eventCountip, eventArrayp[eventArrayIteratorl].events);
+          goto err;
+        } 
         GENERICLOGGER_INFOF(genericLoggerp, "[%3d] ... Pushing single alternative <%s>", *eventCountip, eventArrayp[eventArrayIteratorl].symbols);
         marpaESLIFAlternative.names                 = eventArrayp[eventArrayIteratorl].symbols;
         marpaESLIFAlternative.value.type            = MARPAESLIF_VALUE_TYPE_CHAR;
@@ -690,10 +727,9 @@ static short eventManagerb(int *eventCountip, marpaESLIFRecognizer_t *marpaESLIF
 
       break;
     case MARPAESLIF_EVENTTYPE_AFTER:
-      if (! marpaESLIFRecognizer_isEofb(marpaESLIFRecognizerp, &eofb)) {
-        goto err;
-      }
-      if (! marpaESLIFRecognizer_inputb(marpaESLIFRecognizerp, &inputs, &inputl)) {
+      if (inputs == NULL) {
+        /* Impossible */
+        GENERICLOGGER_ERRORF(genericLoggerp, "[%3d] After event %s for symbol %s but inputs is NULL", *eventCountip, eventArrayp[eventArrayIteratorl].events, eventArrayp[eventArrayIteratorl].symbols);
         goto err;
       }
       GENERICLOGGER_INFOF(genericLoggerp, "[%3d] After event %s for symbol %s (inputl=%ld, eofbp is %d)", *eventCountip, eventArrayp[eventArrayIteratorl].events, eventArrayp[eventArrayIteratorl].symbols, (unsigned long) inputl, (int) eofb);
