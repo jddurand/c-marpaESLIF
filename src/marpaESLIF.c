@@ -166,6 +166,7 @@ static inline int _marpaESLIF_signbit_d(double x)
 /* Internal marpaESLIFValueResult used to do lazy row transformation: we use an INVALID type */
 /* that only marpaESLIF can set because its contextp is NULL.                                */
 /* We distinguish containers that have UNDEF or not.                                         */
+/* This is likely to generate compiler warnings.                                             */
 #define MARPAESLIF_VALUE_TYPE_LAZY_NOUNDEF -1
 static marpaESLIFValueResult_t marpaESLIFValueResultLazyNoUndef = {
   NULL,                      /* contextp */
@@ -2163,7 +2164,7 @@ static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *mar
       uc = (unsigned char) i;
 
       /* Take care, we voluntarily set eofb to false */
-      if (MARPAESLIF_UNLIKELY(! _marpaESLIFRecognizer_terminal_matcherb(marpaESLIFRecognizerp, marpaESLIF_streamp, terminalp, &uc /* inputs */, 1 /* inputl */, 0 /* eofb */, &rci, &marpaESLIFValueResult, &matchedLengthl))) {
+      if (MARPAESLIF_UNLIKELY(! _marpaESLIFRecognizer_terminal_matcherb(marpaESLIFRecognizerp, marpaESLIF_streamp, terminalp, (char *) &uc /* inputs */, 1 /* inputl */, 0 /* eofb */, &rci, &marpaESLIFValueResult, &matchedLengthl))) {
         goto err;
       }
       switch (rci) {
