@@ -677,6 +677,9 @@ struct marpaESLIFRecognizer {
   /* Every recognizer has its own notion of line and column */
   size_t                          linel;                /* Line number */
   size_t                          columnl;              /* Column number */
+
+  /* A flag to remember if we are in the last_discard_loop mode */
+  short                           last_discard_loopb;
 };
 
 struct marpaESLIF_symbol_data {
