@@ -12941,10 +12941,20 @@ static inline void _marpaESLIFRecognizer_sharev(marpaESLIFRecognizer_t *marpaESL
     /* This is a reset */
     marpaESLIFRecognizerp->marpaESLIF_streamp          = &(marpaESLIFRecognizerp->_marpaESLIF_stream);
     marpaESLIFRecognizerp->marpaESLIFRecognizerSharedp = NULL;
+    marpaESLIFRecognizerp->linel                       = marpaESLIFRecognizerp->oldlinel;
+    marpaESLIFRecognizerp->columnl                     = marpaESLIFRecognizerp->oldcolumnl;
   } else {
-    /* We share the stream */
+    if (marpaESLIFRecognizerp->marpaESLIFRecognizerSharedp != NULL) {
+      /* Remove previous sharing */
+      _marpaESLIFRecognizer_sharev(marpaESLIFRecognizerp, NULL);
+    }
+    /* Share the stream */
     marpaESLIFRecognizerp->marpaESLIF_streamp          = marpaESLIFRecognizerSharedp->marpaESLIF_streamp;
     marpaESLIFRecognizerp->marpaESLIFRecognizerSharedp = marpaESLIFRecognizerSharedp;
+    marpaESLIFRecognizerp->oldlinel                    = marpaESLIFRecognizerp->linel;
+    marpaESLIFRecognizerp->oldcolumnl                  = marpaESLIFRecognizerp->columnl;
+    marpaESLIFRecognizerp->linel                       = marpaESLIFRecognizerSharedp->linel;
+    marpaESLIFRecognizerp->columnl                     = marpaESLIFRecognizerSharedp->columnl;
   }
 
   /* This function never fail */
