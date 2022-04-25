@@ -890,7 +890,8 @@ static inline short                  _marpaESLIFRecognizer_stream_initb(marpaESL
 static inline void                   _marpaESLIF_stream_disposev(marpaESLIFRecognizer_t *marpaESLIFRecognizerp);
 static inline marpaESLIFRecognizer_t *_marpaESLIFRecognizer_newp(marpaESLIF_t *marpaESLIFp, marpaESLIF_grammar_t *grammarp, marpaESLIFRecognizerOption_t *marpaESLIFRecognizerOptionp, short discardb, short noEventb, short silentb);
 static inline marpaESLIFRecognizer_t *__marpaESLIFRecognizer_newp(marpaESLIF_t *marpaESLIFp, marpaESLIF_grammar_t *grammarp, marpaESLIFRecognizerOption_t *marpaESLIFRecognizerOptionp, short discardb, short noEventb, short silentb, marpaESLIFRecognizer_t *marpaESLIFRecognizerParentp, short fakeb, int maxStartCompletionsi, short utfb);
-static inline void                   _marpaESLIFRecognizer_sharev(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFRecognizer_t *marpaESLIFRecognizerSharedp);
+static inline short                  _marpaESLIFRecognizer_shareb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFRecognizer_t *marpaESLIFRecognizerSharedp);
+static inline short                  __marpaESLIFRecognizer_shareb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFRecognizer_t *marpaESLIFRecognizerSharedp);
 static inline short                  _marpaESLIFRecognizer_peekb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFRecognizer_t *marpaESLIFRecognizerPeekedp);
 static inline short                  _marpaESLIFRecognizer_discardb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, size_t *discardlp);
 static inline short                  __marpaESLIFRecognizer_discardb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, size_t minl, size_t *discardlp, short appendEventb);
@@ -7161,7 +7162,7 @@ static inline short _marpaESLIFRecognizer_meta_matcherb(marpaESLIFRecognizer_t *
   marpaESLIFRecognizerOption_t             marpaESLIFRecognizerOption  = marpaESLIFRecognizerp->marpaESLIFRecognizerOption; /* This is an internal recognizer */
   marpaESLIFValueOption_t                  marpaESLIFValueOption       = marpaESLIFValueOption_default_template;
   short                                    contextb                    = 0; /* To remember if we have to clear context */
-  marpaESLIFRecognizer_t                  *marpaESLIFRecognizerSharep  = NULL;
+  marpaESLIFRecognizer_t                  *marpaESLIFRecognizerForcedp = NULL;
   short                                    peekb                       = 0;
   short                                    rcb;
   short                                    rcMatcherb;
@@ -7173,9 +7174,6 @@ static inline short _marpaESLIFRecognizer_meta_matcherb(marpaESLIFRecognizer_t *
   short                                    silentb;
   marpaESLIFRecognizer_t                  *marpaESLIFRecognizerParentp;
   size_t                                   matchedLengthl;
-  size_t                                   parentDeltal;
-  size_t                                   parentLinel;
-  size_t                                   parentColumnl;
 
   MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_INC(marpaESLIFRecognizerp);
   MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "start");
@@ -7229,7 +7227,7 @@ static inline short _marpaESLIFRecognizer_meta_matcherb(marpaESLIFRecognizer_t *
       goto fatal;
     }
 
-    /* We want to run an internal recognizer */
+    /* We always want to run an internal recognizer */
     marpaESLIFRecognizerOption = marpaESLIFRecognizerp->marpaESLIFRecognizerOption;
 
     /* In any case we want to disable threshold warning and allow remaining data after completion, though not beeing polluted by exhaustion event */
@@ -7246,16 +7244,13 @@ static inline short _marpaESLIFRecognizer_meta_matcherb(marpaESLIFRecognizer_t *
       noEventb                    = marpaESLIFRecognizerp->noEventb;
       silentb                     = 1; /* marpaESLIFRecognizerp->silentb; */
 
-      marpaESLIFRecognizerSharep = _marpaESLIFRecognizer_newFromp(subGrammarp, marpaESLIFRecognizerp, discardb, noEventb, silentb, &marpaESLIFRecognizerOption);
-      if (MARPAESLIF_UNLIKELY(marpaESLIFRecognizerSharep == NULL)) {
+      marpaESLIFRecognizerForcedp = _marpaESLIFRecognizer_newp(marpaESLIFRecognizerp->marpaESLIFp, subGrammarp, &marpaESLIFRecognizerOption, discardb, noEventb, silentb);
+      if (MARPAESLIF_UNLIKELY(marpaESLIFRecognizerForcedp == NULL)) {
         goto err;
       }
-      if (MARPAESLIF_UNLIKELY(! _marpaESLIFRecognizer_peekb(marpaESLIFRecognizerSharep, marpaESLIFRecognizerp))) {
+      if (MARPAESLIF_UNLIKELY(! _marpaESLIFRecognizer_peekb(marpaESLIFRecognizerForcedp, marpaESLIFRecognizerp))) {
         goto err;
       }
-      parentDeltal                = marpaESLIFRecognizerp->marpaESLIF_streamp->inputs - marpaESLIFRecognizerp->marpaESLIF_streamp->buffers;
-      parentLinel                 = marpaESLIFRecognizerp->linel;
-      parentColumnl               = marpaESLIFRecognizerp->columnl;
       peekb                       = 1;
       marpaESLIFRecognizerParentp = NULL;
     } else {
@@ -7280,7 +7275,7 @@ static inline short _marpaESLIFRecognizer_meta_matcherb(marpaESLIFRecognizer_t *
 				    lastSizeBeforeCompletionlp,
 				    numberOfStartCompletionsip,
 				    symbolp->verboseb,
-                                    marpaESLIFRecognizerSharep,
+                                    marpaESLIFRecognizerForcedp,
                                     &matchedLengthl)) {
       goto err;
     }
@@ -7315,19 +7310,12 @@ static inline short _marpaESLIFRecognizer_meta_matcherb(marpaESLIFRecognizer_t *
   /* In any case we want to unpeek */
   if (peekb) {
     /* By definition marpaESLIFRecognizerSharep is not NULL */
-    if (! _marpaESLIFRecognizer_peekb(marpaESLIFRecognizerSharep, NULL)) {
+    if (! _marpaESLIFRecognizer_peekb(marpaESLIFRecognizerForcedp, NULL)) {
       rcb = 0;
     }
-    /* As for normal lexemes, restore parent stream position */
-    /* Restore parent stream position */
-    marpaESLIFRecognizerp->marpaESLIF_streamp->inputs = marpaESLIFRecognizerp->marpaESLIF_streamp->buffers + parentDeltal;
-    marpaESLIFRecognizerp->marpaESLIF_streamp->inputl = marpaESLIFRecognizerp->marpaESLIF_streamp->bufferl - parentDeltal;
-    marpaESLIFRecognizerp->linel                = parentLinel;
-    marpaESLIFRecognizerp->columnl              = parentColumnl;
-
   }
-  if (marpaESLIFRecognizerSharep != NULL) {
-    _marpaESLIFRecognizer_freev(marpaESLIFRecognizerSharep, 1 /* forceb */);
+  if (marpaESLIFRecognizerForcedp != NULL) {
+    _marpaESLIFRecognizer_freev(marpaESLIFRecognizerForcedp, 1 /* forceb */);
   }
   /* Pop context if we pushed one */
   if (contextb) {
@@ -9394,23 +9382,24 @@ short marpaESLIFRecognizer_shareb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp,
     goto fast_done;
   }
 
+  MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_INC(marpaESLIFRecognizerp);
+  MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "start");
+
   /* Not allowed if there is a parent recognizer */
   if (MARPAESLIFRECOGNIZER_IS_CHILD(marpaESLIFRecognizerp)) {
     errno = EPERM;
-    rcb = 0;
-    goto fast_done;
+    goto err;
   }
-
-  MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_INC(marpaESLIFRecognizerp);
-  MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "start");
 
   if (MARPAESLIF_UNLIKELY(marpaESLIFRecognizerp == marpaESLIFRecognizerSharedp)) {
     errno = EINVAL;
     goto err;
   }
 
-  /* Internal implementation of sharing never fails */
-  _marpaESLIFRecognizer_sharev(marpaESLIFRecognizerp, marpaESLIFRecognizerSharedp);
+  if (! _marpaESLIFRecognizer_shareb(marpaESLIFRecognizerp, marpaESLIFRecognizerSharedp)) {
+    goto err;
+  }
+
   rcb = 1;
   goto done;
 
@@ -9437,15 +9426,14 @@ short marpaESLIFRecognizer_peekb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, 
     goto fast_done;
   }
 
+  MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_INC(marpaESLIFRecognizerp);
+  MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "start");
+
   /* Not allowed if there is a parent recognizer */
   if (MARPAESLIFRECOGNIZER_IS_CHILD(marpaESLIFRecognizerp)) {
     errno = EPERM;
-    rcb = 0;
-    goto fast_done;
+    goto err;
   }
-
-  MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_INC(marpaESLIFRecognizerp);
-  MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "start");
 
   rcb = _marpaESLIFRecognizer_peekb(marpaESLIFRecognizerp, marpaESLIFRecognizerPeekedp);
   goto done;
@@ -12929,26 +12917,31 @@ static inline marpaESLIFRecognizer_t *__marpaESLIFRecognizer_newp(marpaESLIF_t *
 }
 
 /*****************************************************************************/
-static inline void _marpaESLIFRecognizer_sharev(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFRecognizer_t *marpaESLIFRecognizerSharedp)
+static inline short _marpaESLIFRecognizer_shareb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFRecognizer_t *marpaESLIFRecognizerSharedp)
 /*****************************************************************************/
 {
-  static const char *funcs  = "_marpaESLIFRecognizer_sharev";
+  static const char *funcs  = "_marpaESLIFRecognizer_shareb";
+  short              rcb;
 
   MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_INC(marpaESLIFRecognizerp);
   MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "start");
 
   if (marpaESLIFRecognizerSharedp == NULL) {
-    /* This is a reset */
+    if (marpaESLIFRecognizerp->marpaESLIFRecognizerSharedp == NULL) {
+      MARPAESLIF_ERROR(marpaESLIFRecognizerp->marpaESLIFp, "No recognizer to unshare");
+      goto err;
+    }
+    /* Unshare */
     marpaESLIFRecognizerp->marpaESLIF_streamp          = &(marpaESLIFRecognizerp->_marpaESLIF_stream);
     marpaESLIFRecognizerp->marpaESLIFRecognizerSharedp = NULL;
     marpaESLIFRecognizerp->linel                       = marpaESLIFRecognizerp->oldlinel;
     marpaESLIFRecognizerp->columnl                     = marpaESLIFRecognizerp->oldcolumnl;
   } else {
+    /* Share */
     if (marpaESLIFRecognizerp->marpaESLIFRecognizerSharedp != NULL) {
-      /* Remove previous sharing */
-      _marpaESLIFRecognizer_sharev(marpaESLIFRecognizerp, NULL);
+      MARPAESLIF_ERROR(marpaESLIFRecognizerp->marpaESLIFp, "A recognizer is already shared");
+      goto err;
     }
-    /* Share the stream */
     marpaESLIFRecognizerp->marpaESLIF_streamp          = marpaESLIFRecognizerSharedp->marpaESLIF_streamp;
     marpaESLIFRecognizerp->marpaESLIFRecognizerSharedp = marpaESLIFRecognizerSharedp;
     marpaESLIFRecognizerp->oldlinel                    = marpaESLIFRecognizerp->linel;
@@ -12957,37 +12950,53 @@ static inline void _marpaESLIFRecognizer_sharev(marpaESLIFRecognizer_t *marpaESL
     marpaESLIFRecognizerp->columnl                     = marpaESLIFRecognizerSharedp->columnl;
   }
 
-  /* This function never fail */
-  MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "return");
+  rcb = 1;
+  goto done;
+
+ err:
+  rcb = 0;
+
+ done:
+  MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "return %d", (int) rcb);
   MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_DEC(marpaESLIFRecognizerp);
+  return rcb;
 }
 
 /*****************************************************************************/
 static inline short _marpaESLIFRecognizer_peekb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFRecognizer_t *marpaESLIFRecognizerPeekedp)
 /*****************************************************************************/
 {
-  static const char *funcs = "_marpaESLIFRecognizer_peekb";
-  unsigned int       peeki = marpaESLIFRecognizerp->marpaESLIF_streamp->peeki; /* To check for turnarounds */
-  short              rcb;
+  static const char      *funcs = "_marpaESLIFRecognizer_peekb";
+  marpaESLIFRecognizer_t *marpaESLIFRecognizerSharedp;
+  unsigned int            peeki;
+  short                   rcb;
 
   MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_INC(marpaESLIFRecognizerp);
   MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "start");
 
-  if (marpaESLIFRecognizerPeekedp == NULL) {
-    if (--peeki > marpaESLIFRecognizerp->marpaESLIF_streamp->peeki) {
-      MARPAESLIF_WARN(marpaESLIFRecognizerp->marpaESLIFp, "Too many stream unpeeks");
-      goto err;
-    }
-    marpaESLIFRecognizerp->marpaESLIF_streamp = &(marpaESLIFRecognizerp->_marpaESLIF_stream);
-  } else {
-    if (++peeki < marpaESLIFRecognizerp->marpaESLIF_streamp->peeki) {
-      MARPAESLIF_WARN(marpaESLIFRecognizerp->marpaESLIFp, "Too many stream peeks");
-      goto err;
-    }
-    marpaESLIFRecognizerp->marpaESLIF_streamp = marpaESLIFRecognizerPeekedp->marpaESLIF_streamp;
+  /* Apply share/Unshare */
+  if (! _marpaESLIFRecognizer_shareb(marpaESLIFRecognizerp, marpaESLIFRecognizerPeekedp)) {
+    goto err;
   }
 
-  marpaESLIFRecognizerp->marpaESLIF_streamp->peeki = peeki;
+  if (marpaESLIFRecognizerPeekedp == NULL) {
+    /* _marpaESLIFRecognizer_shareb made sure that marpaESLIFRecognizerp->marpaESLIFRecognizerSharedp is set */
+    marpaESLIFRecognizerSharedp = marpaESLIFRecognizerp->marpaESLIFRecognizerSharedp;
+    peeki = marpaESLIFRecognizerSharedp->marpaESLIF_streamp->peeki;
+    if (--peeki > marpaESLIFRecognizerSharedp->marpaESLIF_streamp->peeki) {
+      MARPAESLIF_WARN(marpaESLIFRecognizerp->marpaESLIFp, "Too many stream unpeeks");
+    } else {
+      marpaESLIFRecognizerSharedp->marpaESLIF_streamp->peeki = peeki;
+    }
+  } else {
+    peeki = marpaESLIFRecognizerPeekedp->marpaESLIF_streamp->peeki;
+    if (++peeki < marpaESLIFRecognizerPeekedp->marpaESLIF_streamp->peeki) {
+      MARPAESLIF_WARN(marpaESLIFRecognizerp->marpaESLIFp, "Too many stream peeks");
+    } else {
+      marpaESLIFRecognizerPeekedp->marpaESLIF_streamp->peeki = peeki;
+    }
+  }
+
   rcb = 1;
   goto done;
 
@@ -13031,7 +13040,10 @@ static inline marpaESLIFRecognizer_t *_marpaESLIFRecognizer_newFromp(marpaESLIF_
     }
   }
   
-  _marpaESLIFRecognizer_sharev(marpaESLIFRecognizerp, marpaESLIFRecognizerSharedp);
+  if (! _marpaESLIFRecognizer_shareb(marpaESLIFRecognizerp, marpaESLIFRecognizerSharedp)) {
+    goto err;
+  }
+
   goto done;
 
  err:
@@ -24140,7 +24152,9 @@ static inline short __marpaESLIFRecognizer_symbol_tryb(marpaESLIFRecognizer_t *m
                                                        NULL, /* lastSizeBeforeCompletionlp */
                                                        NULL, /* numberOfStartCompletionsip */
                                                        NULL /* matchedLengthl */);
-    _marpaESLIFRecognizer_sharev(marpaESLIFRecognizerTmpp, NULL);
+    if (MARPAESLIF_UNLIKELY(! _marpaESLIFRecognizer_shareb(marpaESLIFRecognizerTmpp, NULL))) {
+      goto err;
+    }
     marpaESLIFRecognizer_freev(marpaESLIFRecognizerTmpp); /* NULL protected */
   } else {
     rcMatcherb = _marpaESLIFRecognizer_symbol_matcherb(marpaESLIFRecognizerp,
