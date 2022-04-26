@@ -552,6 +552,8 @@ struct marpaESLIF_stream {
   tconv_t                tconvp;               /* current converter. Always != NULL when charconvb is true. Always NULL when charconvb is false. */
   short                  bomdoneb;             /* In char mode, flag indicating if BOM was processed successfully (BOM existence or not) */
   unsigned int           peeki;                /* Number of peeked sharing */
+  size_t                 linel;                /* Line number */
+  size_t                 columnl;              /* Column number */
 };
 
 struct marpaESLIFRecognizer {
@@ -673,12 +675,6 @@ struct marpaESLIFRecognizer {
   marpaESLIFAction_t             *popContextActionp;  /* Getting the context is a common function that is stored at recognizer level */
 
   marpaESLIFRecognizer_t         *marpaESLIFRecognizerSharedp;
-
-  /* Every recognizer has its own notion of line and column */
-  size_t                          linel;                /* Line number */
-  size_t                          columnl;              /* Column number */
-  size_t                          oldlinel;             /* Line number - left uninitialized in constructor: it is used only in _marpaESLIFRecognizer_sharev() */
-  size_t                          oldcolumnl;           /* Column number - left uninitialized in constructor: it is used only in _marpaESLIFRecognizer_sharev() */
 
   /* A flag to remember if we are in the last_discard_loop mode */
   short                           last_discard_loopb;

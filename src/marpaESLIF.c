@@ -223,7 +223,7 @@ static marpaESLIFValueResult_t marpaESLIFValueResultLazyWithUndef = {
           }                                                             \
         } else {                                                        \
           MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Match OK for %s: type ARRAY {%p,%ld}", symbolp->descp->asciis, marpaESLIFValueResultp->u.a.p, (unsigned long) marpaESLIFValueResultp->u.a.sizel); \
-          MARPAESLIFRECOGNIZER_HEXDUMPV(funcs, marpaESLIFRecognizerp, "Match dump for ", symbolp->descp->asciis, marpaESLIFValueResultp->u.a.p, marpaESLIFValueResultp->u.a.sizel, 1 /* traceb */, 0 /* noticeb */, marpaESLIFRecognizerp->linel, marpaESLIFRecognizerp->columnl); \
+          MARPAESLIFRECOGNIZER_HEXDUMPV(funcs, marpaESLIFRecognizerp, "Match dump for ", symbolp->descp->asciis, marpaESLIFValueResultp->u.a.p, marpaESLIFValueResultp->u.a.sizel, 1 /* traceb */, 0 /* noticeb */, marpaESLIFRecognizerp->marpaESLIF_streamp->linel, marpaESLIFRecognizerp->marpaESLIF_streamp->columnl); \
         }                                                               \
       }                                                                 \
     } else {                                                            \
@@ -592,8 +592,8 @@ static marpaESLIFValueResult_t marpaESLIFValueResultLazyWithUndef = {
                                   _dumpl,                               \
                                   0, /* traceb */                       \
                                   1, /* noticeb */                      \
-                                  marpaESLIFRecognizerp->linel,         \
-                                  marpaESLIFRecognizerp->columnl);      \
+                                  marpaESLIFRecognizerp->marpaESLIF_streamp->linel, \
+                                  marpaESLIFRecognizerp->marpaESLIF_streamp->columnl); \
     }                                                                   \
   } while (0)
 
@@ -613,8 +613,8 @@ static marpaESLIFValueResult_t marpaESLIFValueResultLazyWithUndef = {
                                   _dumpl,                               \
                                   0, /* traceb */                       \
                                   1, /* noticeb */                      \
-                                  marpaESLIFRecognizerp->linel,         \
-                                  marpaESLIFRecognizerp->columnl);      \
+                                  marpaESLIFRecognizerp->marpaESLIF_streamp->linel, \
+                                  marpaESLIFRecognizerp->marpaESLIF_streamp->columnl); \
     }                                                                   \
   } while (0)
 
@@ -6773,7 +6773,7 @@ static inline short _marpaESLIFRecognizer_terminal_matcherb(marpaESLIFRecognizer
       /* Remember that :sol enforced newlineb option. */
       /* The value 1 is the default, so it matches    */
       /* also if nothing has been read yet.           */
-      if (marpaESLIFRecognizerp->columnl == 1) {
+      if (marpaESLIF_streamp->columnl == 1) {
         MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, ":sol match");
         rci            = MARPAESLIF_MATCH_OK;
         matchedp       = (char *) MARPAESLIF_EMPTY_STRING;
@@ -12527,6 +12527,8 @@ static inline short _marpaESLIFRecognizer_stream_initb(marpaESLIFRecognizer_t *m
   marpaESLIFRecognizerp->_marpaESLIF_stream.tconvp               = NULL;
   marpaESLIFRecognizerp->_marpaESLIF_stream.bomdoneb             = 0;
   marpaESLIFRecognizerp->_marpaESLIF_stream.peeki                = 0;
+  marpaESLIFRecognizerp->_marpaESLIF_stream.linel                = 1;
+  marpaESLIFRecognizerp->_marpaESLIF_stream.columnl              = 1;
 
   return 1;
 }
@@ -12599,8 +12601,6 @@ static inline marpaESLIFRecognizer_t *__marpaESLIFRecognizer_newp(marpaESLIF_t *
     marpaESLIFRecognizerp->leveli                           = marpaESLIFRecognizerParentp->leveli + 1;
     marpaESLIFRecognizerp->marpaESLIFRecognizerHashp        = marpaESLIFRecognizerParentp->marpaESLIFRecognizerHashp;
     marpaESLIFRecognizerp->marpaESLIF_streamp               = marpaESLIFRecognizerParentp->marpaESLIF_streamp;
-    marpaESLIFRecognizerp->linel                            = marpaESLIFRecognizerParentp->linel;
-    marpaESLIFRecognizerp->columnl                          = marpaESLIFRecognizerParentp->columnl;
     marpaESLIFRecognizerp->parentDeltal                     = marpaESLIFRecognizerParentp->marpaESLIF_streamp->inputs - marpaESLIFRecognizerParentp->marpaESLIF_streamp->buffers;
     marpaESLIFRecognizerp->marpaESLIFRecognizerTopp         = marpaESLIFRecognizerParentp->marpaESLIFRecognizerTopp;
     marpaESLIFRecognizerp->marpaESLIFValueResultStackOrigp  = marpaESLIFRecognizerParentp->marpaESLIFValueResultStackOrigp;
@@ -12609,8 +12609,6 @@ static inline marpaESLIFRecognizer_t *__marpaESLIFRecognizer_newp(marpaESLIF_t *
     marpaESLIFRecognizerp->leveli                           = 0;
     marpaESLIFRecognizerp->marpaESLIFRecognizerHashp        = NULL; /* Pointer to a hash in the structure, initialized later */
     marpaESLIFRecognizerp->marpaESLIF_streamp               = NULL; /* Initialized below */
-    marpaESLIFRecognizerp->linel                            = 1;
-    marpaESLIFRecognizerp->columnl                          = 1;
     marpaESLIFRecognizerp->parentDeltal                     = 0;
     marpaESLIFRecognizerp->marpaESLIFRecognizerTopp         = marpaESLIFRecognizerp; /* We are the top-level recognizer */
     marpaESLIFRecognizerp->marpaESLIFValueResultStackOrigp  = NULL; /* Only the top-level recognizer owns this pointer */
@@ -12934,8 +12932,6 @@ static inline short _marpaESLIFRecognizer_shareb(marpaESLIFRecognizer_t *marpaES
     /* Unshare */
     marpaESLIFRecognizerp->marpaESLIF_streamp          = &(marpaESLIFRecognizerp->_marpaESLIF_stream);
     marpaESLIFRecognizerp->marpaESLIFRecognizerSharedp = NULL;
-    marpaESLIFRecognizerp->linel                       = marpaESLIFRecognizerp->oldlinel;
-    marpaESLIFRecognizerp->columnl                     = marpaESLIFRecognizerp->oldcolumnl;
   } else {
     /* Share */
     if (marpaESLIFRecognizerp->marpaESLIFRecognizerSharedp != NULL) {
@@ -12944,10 +12940,6 @@ static inline short _marpaESLIFRecognizer_shareb(marpaESLIFRecognizer_t *marpaES
     }
     marpaESLIFRecognizerp->marpaESLIF_streamp          = marpaESLIFRecognizerSharedp->marpaESLIF_streamp;
     marpaESLIFRecognizerp->marpaESLIFRecognizerSharedp = marpaESLIFRecognizerSharedp;
-    marpaESLIFRecognizerp->oldlinel                    = marpaESLIFRecognizerp->linel;
-    marpaESLIFRecognizerp->oldcolumnl                  = marpaESLIFRecognizerp->columnl;
-    marpaESLIFRecognizerp->linel                       = marpaESLIFRecognizerSharedp->linel;
-    marpaESLIFRecognizerp->columnl                     = marpaESLIFRecognizerSharedp->columnl;
   }
 
   rcb = 1;
@@ -12966,8 +12958,8 @@ static inline short _marpaESLIFRecognizer_shareb(marpaESLIFRecognizer_t *marpaES
 static inline short _marpaESLIFRecognizer_peekb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFRecognizer_t *marpaESLIFRecognizerPeekedp)
 /*****************************************************************************/
 {
-  static const char      *funcs = "_marpaESLIFRecognizer_peekb";
-  marpaESLIFRecognizer_t *marpaESLIFRecognizerSharedp;
+  static const char      *funcs                       = "_marpaESLIFRecognizer_peekb";
+  marpaESLIFRecognizer_t *marpaESLIFRecognizerSharedp = marpaESLIFRecognizerp->marpaESLIFRecognizerSharedp;
   unsigned int            peeki;
   short                   rcb;
 
@@ -12980,8 +12972,7 @@ static inline short _marpaESLIFRecognizer_peekb(marpaESLIFRecognizer_t *marpaESL
   }
 
   if (marpaESLIFRecognizerPeekedp == NULL) {
-    /* _marpaESLIFRecognizer_shareb made sure that marpaESLIFRecognizerp->marpaESLIFRecognizerSharedp is set */
-    marpaESLIFRecognizerSharedp = marpaESLIFRecognizerp->marpaESLIFRecognizerSharedp;
+    /* _marpaESLIFRecognizer_shareb made sure that marpaESLIFRecognizerSharedp is set */
     peeki = marpaESLIFRecognizerSharedp->marpaESLIF_streamp->peeki;
     if (--peeki > marpaESLIFRecognizerSharedp->marpaESLIF_streamp->peeki) {
       MARPAESLIF_WARN(marpaESLIFRecognizerp->marpaESLIFp, "Too many stream unpeeks");
@@ -12989,6 +12980,7 @@ static inline short _marpaESLIFRecognizer_peekb(marpaESLIFRecognizer_t *marpaESL
       marpaESLIFRecognizerSharedp->marpaESLIF_streamp->peeki = peeki;
     }
   } else {
+    /* marpaESLIFRecognizerPeekedp and marpaESLIFRecognizerp share the same stream */
     peeki = marpaESLIFRecognizerPeekedp->marpaESLIF_streamp->peeki;
     if (++peeki < marpaESLIFRecognizerPeekedp->marpaESLIF_streamp->peeki) {
       MARPAESLIF_WARN(marpaESLIFRecognizerp->marpaESLIFp, "Too many stream peeks");
@@ -16083,8 +16075,8 @@ static inline short _marpaESLIFRecognizer_matchPostProcessingb(marpaESLIFRecogni
       linep += matchedLengthl;
       linel -= matchedLengthl;
       /* A new line, reset column count */
-      marpaESLIFRecognizerp->linel++;
-      marpaESLIFRecognizerp->columnl = 1;
+      marpaESLIF_streamp->linel++;
+      marpaESLIF_streamp->columnl = 1;
     }
 
     if (linel > 0) {
@@ -16100,7 +16092,7 @@ static inline short _marpaESLIFRecognizer_matchPostProcessingb(marpaESLIFRecogni
         }
 
         linep += utf82ordi;
-        marpaESLIFRecognizerp->columnl++;
+        marpaESLIF_streamp->columnl++;
       }
     }
   }
@@ -20140,10 +20132,10 @@ short marpaESLIFRecognizer_locationb(marpaESLIFRecognizer_t *marpaESLIFRecognize
   marpaESLIF_streamp = marpaESLIFRecognizerp->marpaESLIF_streamp;
 
   if (linelp != NULL) {
-    *linelp = marpaESLIFRecognizerp->linel;
+    *linelp = marpaESLIF_streamp->linel;
   }
   if (columnlp != NULL) {
-    *columnlp = marpaESLIFRecognizerp->columnl;
+    *columnlp = marpaESLIF_streamp->columnl;
   }
 
   rcb = 1;
@@ -21353,8 +21345,6 @@ static inline short _marpaESLIFRecognizer_getPristineFromCachep(marpaESLIF_t *ma
         marpaESLIFRecognizerp->leveli                       = marpaESLIFRecognizerParentp->leveli + 1;
         marpaESLIFRecognizerp->marpaESLIFRecognizerHashp    = marpaESLIFRecognizerParentp->marpaESLIFRecognizerHashp;
         marpaESLIFRecognizerp->marpaESLIF_streamp           = marpaESLIFRecognizerParentp->marpaESLIF_streamp;
-        marpaESLIFRecognizerp->linel                        = marpaESLIFRecognizerParentp->linel;
-        marpaESLIFRecognizerp->columnl                      = marpaESLIFRecognizerParentp->columnl;
         marpaESLIFRecognizerp->parentDeltal                 = marpaESLIFRecognizerParentp->marpaESLIF_streamp->inputs - marpaESLIFRecognizerParentp->marpaESLIF_streamp->buffers;
         marpaESLIFRecognizerp->scanb                        = 0;
         /* marpaESLIFRecognizerp->noEventb                     = noEventb; */
@@ -23629,13 +23619,13 @@ static inline void _marpaESLIFRecognizer_errorv(marpaESLIFRecognizer_t *marpaESL
                                   dumpl,
                                   0, /* traceb */
                                   0, /* noticeb */
-                                  marpaESLIFRecognizerp->linel,
-                                  marpaESLIFRecognizerp->columnl);
+                                  marpaESLIF_streamp->linel,
+                                  marpaESLIF_streamp->columnl);
   }
 
   MARPAESLIF_ERROR(marpaESLIFp, "");
   if (marpaESLIF_streamp->utfb && marpaESLIFRecognizerp->marpaESLIFRecognizerOption.newlineb) {
-    MARPAESLIF_ERRORF(marpaESLIFp, "<<<<<< FAILURE AT LINE No %ld COLUMN No %ld, HERE: >>>>>>", (unsigned long) marpaESLIFRecognizerp->linel, (unsigned long) marpaESLIFRecognizerp->columnl);
+    MARPAESLIF_ERRORF(marpaESLIFp, "<<<<<< FAILURE AT LINE No %ld COLUMN No %ld, HERE: >>>>>>", (unsigned long) marpaESLIF_streamp->linel, (unsigned long) marpaESLIF_streamp->columnl);
   } else {
     MARPAESLIF_ERROR(marpaESLIFp, "<<<<<< FAILURE HERE: >>>>>>");
   }
@@ -23653,8 +23643,8 @@ static inline void _marpaESLIFRecognizer_errorv(marpaESLIFRecognizer_t *marpaESL
                                   dumpl,
                                   0, /* traceb */
                                   0, /* noticeb */
-                                  marpaESLIFRecognizerp->linel,
-                                  marpaESLIFRecognizerp->columnl);
+                                  marpaESLIF_streamp->linel,
+                                  marpaESLIF_streamp->columnl);
   }
 
   MARPAESLIF_ERROR(marpaESLIFp, "--------------------------------------------");
