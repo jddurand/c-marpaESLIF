@@ -895,7 +895,7 @@ static inline short                  __marpaESLIFRecognizer_shareb(marpaESLIFRec
 static inline short                  _marpaESLIFRecognizer_peekb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFRecognizer_t *marpaESLIFRecognizerPeekedp);
 static inline short                  _marpaESLIFRecognizer_discardb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, size_t *discardlp);
 static inline short                  __marpaESLIFRecognizer_discardb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, size_t minl, size_t *discardlp, short appendEventb);
-static inline short                  _marpaESLIFGrammar_parseb(marpaESLIF_t *marpaESLIFp, marpaESLIF_grammar_t *grammarp, marpaESLIFRecognizerOption_t *marpaESLIFRecognizerOptionp, marpaESLIFValueOption_t *marpaESLIFValueOptionp, short discardb, short noEventb, short silentb, marpaESLIFRecognizer_t *marpaESLIFRecognizerParentp, short *isExhaustedbp, marpaESLIFValueResult_t *marpaESLIFValueResultp, int maxStartCompletionsi, size_t *lastSizeBeforeCompletionlp, int *numberOfStartCompletionsip, short verboseb, marpaESLIFRecognizer_t *marpaESLIFRecognizerForcedp, size_t *matchedLengthlp);
+static inline short                  _marpaESLIFGrammar_parseb(marpaESLIF_t *marpaESLIFp, marpaESLIF_grammar_t *grammarp, marpaESLIFRecognizerOption_t *marpaESLIFRecognizerOptionp, marpaESLIFValueOption_t *marpaESLIFValueOptionp, short discardb, short noEventb, short silentb, marpaESLIFRecognizer_t *marpaESLIFRecognizerParentp, short *isExhaustedbp, marpaESLIFValueResult_t *marpaESLIFValueResultp, int maxStartCompletionsi, size_t *lastSizeBeforeCompletionlp, int *numberOfStartCompletionsip, short verboseb, size_t *matchedLengthlp);
 static        void                   _marpaESLIF_generateStringWithLoggerCallback(void *userDatavp, genericLoggerLevel_t logLeveli, const char *msgs);
 static        void                   _marpaESLIF_generateSeparatedStringWithLoggerCallback(void *userDatavp, genericLoggerLevel_t logLeveli, const char *msgs);
 static        void                   _marpaESLIF_traceLoggerCallbackv(void *userDatavp, genericLoggerLevel_t logLeveli, const char *msgs);
@@ -953,7 +953,7 @@ static inline void                   _marpaESLIFRecognizer_lastPause_freev(marpa
 static inline short                  _marpaESLIFRecognizer_createLastTryb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp);
 static inline void                   _marpaESLIFRecognizer_lastTry_freev(marpaESLIFRecognizer_t *marpaESLIFRecognizerp);
 static inline short                  _marpaESLIFRecognizer_isExhaustedb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, short *isExhaustedbp);
-static inline marpaESLIFRecognizer_t *_marpaESLIFRecognizer_newFromp(marpaESLIF_grammar_t *grammarp, marpaESLIFRecognizer_t *marpaESLIFRecognizerSharedp, short discardb, short noEventb, short silentb, marpaESLIFRecognizerOption_t *marpaESLIFRecognizerOptionForcedp);
+static inline marpaESLIFRecognizer_t *_marpaESLIFRecognizer_newFromp(marpaESLIF_grammar_t *grammarp, marpaESLIFRecognizer_t *marpaESLIFRecognizerSharedp, short discardb, short noEventb, short silentb);
 static inline short                  _marpaESLIFRecognizer_isCanContinueb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, short *isCanContinuebp, short *eofbp, short *isExhaustedbp);
 static inline short                  _marpaESLIFRecognizer_isEofb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, short *eofbp);
 static inline short                  _marpaESLIFRecognizer_inputb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, char **inputsp, size_t *inputlp);
@@ -7162,8 +7162,6 @@ static inline short _marpaESLIFRecognizer_meta_matcherb(marpaESLIFRecognizer_t *
   marpaESLIFRecognizerOption_t             marpaESLIFRecognizerOption  = marpaESLIFRecognizerp->marpaESLIFRecognizerOption; /* This is an internal recognizer */
   marpaESLIFValueOption_t                  marpaESLIFValueOption       = marpaESLIFValueOption_default_template;
   short                                    contextb                    = 0; /* To remember if we have to clear context */
-  marpaESLIFRecognizer_t                  *marpaESLIFRecognizerForcedp = NULL;
-  short                                    peekb                       = 0;
   short                                    rcb;
   short                                    rcMatcherb;
   marpaESLIF_matcher_value_t               rci;
@@ -7172,7 +7170,6 @@ static inline short _marpaESLIFRecognizer_meta_matcherb(marpaESLIFRecognizer_t *
   short                                    discardb;
   short                                    noEventb;
   short                                    silentb;
-  marpaESLIFRecognizer_t                  *marpaESLIFRecognizerParentp;
   size_t                                   matchedLengthl;
 
   MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_INC(marpaESLIFRecognizerp);
@@ -7242,23 +7239,12 @@ static inline short _marpaESLIFRecognizer_meta_matcherb(marpaESLIFRecognizer_t *
       /* This is done using a shared recognizer that peeks the stream.                         */
       discardb                    = marpaESLIFRecognizerp->discardb;
       noEventb                    = marpaESLIFRecognizerp->noEventb;
-      silentb                     = 1; /* marpaESLIFRecognizerp->silentb; */
-
-      marpaESLIFRecognizerForcedp = _marpaESLIFRecognizer_newp(marpaESLIFRecognizerp->marpaESLIFp, subGrammarp, &marpaESLIFRecognizerOption, discardb, noEventb, silentb);
-      if (MARPAESLIF_UNLIKELY(marpaESLIFRecognizerForcedp == NULL)) {
-        goto err;
-      }
-      if (MARPAESLIF_UNLIKELY(! _marpaESLIFRecognizer_peekb(marpaESLIFRecognizerp, marpaESLIFRecognizerForcedp))) {
-        goto err;
-      }
-      peekb                       = 1;
-      marpaESLIFRecognizerParentp = NULL;
+      silentb                     = 1;
     } else {
       /* A real lexeme */
       discardb                    = 0;
       noEventb                    = 1;
       silentb                     = 1;
-      marpaESLIFRecognizerParentp = marpaESLIFRecognizerp;
     }
 
     if (! _marpaESLIFGrammar_parseb(marpaESLIFRecognizerp->marpaESLIFp,
@@ -7268,14 +7254,13 @@ static inline short _marpaESLIFRecognizer_meta_matcherb(marpaESLIFRecognizer_t *
 				    discardb,
 				    noEventb,
 				    silentb,
-				    marpaESLIFRecognizerParentp,
+				    marpaESLIFRecognizerp,
 				    isExhaustedbp,
 				    &marpaESLIFValueResult,
 				    maxStartCompletionsi,
 				    lastSizeBeforeCompletionlp,
 				    numberOfStartCompletionsip,
 				    symbolp->verboseb,
-                                    marpaESLIFRecognizerForcedp,
                                     &matchedLengthl)) {
       goto err;
     }
@@ -7307,15 +7292,6 @@ static inline short _marpaESLIFRecognizer_meta_matcherb(marpaESLIFRecognizer_t *
   rcb = 0;
 
  done:
-  /* In any case we want to unpeek */
-  if (peekb) {
-    if (! _marpaESLIFRecognizer_peekb(marpaESLIFRecognizerp, NULL)) {
-      rcb = 0;
-    }
-  }
-  if (marpaESLIFRecognizerForcedp != NULL) {
-    _marpaESLIFRecognizer_freev(marpaESLIFRecognizerForcedp, 1 /* forceb */);
-  }
   /* Pop context if we pushed one */
   if (contextb) {
     MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp,
@@ -8434,7 +8410,6 @@ static inline marpaESLIFGrammar_t *_marpaESLIFGrammar_newp(marpaESLIF_t *marpaES
                                                       NULL, /* lastSizeBeforeCompletionlp */
                                                       NULL /* numberOfStartCompletionsip */,
                                                       0, /* verboseb */
-                                                      NULL, /* marpaESLIFRecognizerForcedp */
                                                       NULL /* matchedLengthlp */))) {
     goto err;
   }
@@ -11235,7 +11210,6 @@ static inline short _marpaESLIFRecognizer_discard_tryb(marpaESLIFRecognizer_t *m
                                      NULL, /* lastSizeBeforeCompletionlp */
                                      NULL /* numberOfStartCompletionsip */,
                                      0, /* verboseb */
-                                     NULL, /* marpaESLIFRecognizerForcedp */
                                      &matchedLengthl);
   if (matchb) {
     /* Remember the data, NULL or not - per def a lexeme coming our from the recognizer is always an array -; */
@@ -11699,7 +11673,6 @@ short marpaESLIFGrammar_parse_by_levelb(marpaESLIFGrammar_t *marpaESLIFGrammarp,
                                                       NULL, /* lastSizeBeforeCompletionlp */
                                                       NULL /* numberOfStartCompletionsip */,
                                                       0, /* verboseb */
-                                                      NULL, /* marpaESLIFRecognizerForcedp */
                                                       NULL /* matchedLengthlp */))) {
     goto err;
   }
@@ -13005,7 +12978,7 @@ static inline short _marpaESLIFRecognizer_peekb(marpaESLIFRecognizer_t *marpaESL
 }
 
 /*****************************************************************************/
-static inline marpaESLIFRecognizer_t *_marpaESLIFRecognizer_newFromp(marpaESLIF_grammar_t *grammarp, marpaESLIFRecognizer_t *marpaESLIFRecognizerSharedp, short discardb, short noEventb, short silentb, marpaESLIFRecognizerOption_t *marpaESLIFRecognizerOptionForcedp)
+static inline marpaESLIFRecognizer_t *_marpaESLIFRecognizer_newFromp(marpaESLIF_grammar_t *grammarp, marpaESLIFRecognizer_t *marpaESLIFRecognizerSharedp, short discardb, short noEventb, short silentb)
 /*****************************************************************************/
 {
   marpaESLIFRecognizer_t  *marpaESLIFRecognizerp = NULL;
@@ -13014,7 +12987,7 @@ static inline marpaESLIFRecognizer_t *_marpaESLIFRecognizer_newFromp(marpaESLIF_
 
   marpaESLIFRecognizerp = _marpaESLIFRecognizer_newp(marpaESLIFRecognizerSharedp->marpaESLIFp,
                                                      grammarp,
-                                                     (marpaESLIFRecognizerOptionForcedp != NULL) ? marpaESLIFRecognizerOptionForcedp : &(marpaESLIFRecognizerSharedp->marpaESLIFRecognizerOption),
+                                                     &(marpaESLIFRecognizerSharedp->marpaESLIFRecognizerOption),
                                                      discardb,
                                                      noEventb,
                                                      silentb);
@@ -13060,7 +13033,7 @@ marpaESLIFRecognizer_t *marpaESLIFRecognizer_newFromp(marpaESLIFGrammar_t *marpa
     goto err;
   }
 
-  marpaESLIFRecognizerp = _marpaESLIFRecognizer_newFromp(marpaESLIFGrammarp->grammarp, marpaESLIFRecognizerSharedp, 0 /* discardb */, 0 /* noEventb */, 0 /* silentb */, NULL /* marpaESLIFRecognizerOptionForcedp */);
+  marpaESLIFRecognizerp = _marpaESLIFRecognizer_newFromp(marpaESLIFGrammarp->grammarp, marpaESLIFRecognizerSharedp, 0 /* discardb */, 0 /* noEventb */, 0 /* silentb */);
   goto done;
 
  err:
@@ -13343,7 +13316,6 @@ static inline short __marpaESLIFRecognizer_discardb(marpaESLIFRecognizer_t *marp
                                          NULL, /* lastSizeBeforeCompletionlp */
                                          NULL /* numberOfStartCompletionsip */,
                                          0, /* verboseb */
-                                         NULL, /* marpaESLIFRecognizerForcedp */
                                          &discardl);
     }
 
@@ -13405,7 +13377,7 @@ static inline short __marpaESLIFRecognizer_discardb(marpaESLIFRecognizer_t *marp
 }
 
 /*****************************************************************************/
-static inline short _marpaESLIFGrammar_parseb(marpaESLIF_t *marpaESLIFp, marpaESLIF_grammar_t *grammarp, marpaESLIFRecognizerOption_t *marpaESLIFRecognizerOptionp, marpaESLIFValueOption_t *marpaESLIFValueOptionp, short discardb, short noEventb, short silentb, marpaESLIFRecognizer_t *marpaESLIFRecognizerParentp, short *isExhaustedbp, marpaESLIFValueResult_t *marpaESLIFValueResultp, int maxStartCompletionsi, size_t *lastSizeBeforeCompletionlp, int *numberOfStartCompletionsip, short verboseb, marpaESLIFRecognizer_t *marpaESLIFRecognizerForcedp, size_t *matchedLengthlp)
+static inline short _marpaESLIFGrammar_parseb(marpaESLIF_t *marpaESLIFp, marpaESLIF_grammar_t *grammarp, marpaESLIFRecognizerOption_t *marpaESLIFRecognizerOptionp, marpaESLIFValueOption_t *marpaESLIFValueOptionp, short discardb, short noEventb, short silentb, marpaESLIFRecognizer_t *marpaESLIFRecognizerParentp, short *isExhaustedbp, marpaESLIFValueResult_t *marpaESLIFValueResultp, int maxStartCompletionsi, size_t *lastSizeBeforeCompletionlp, int *numberOfStartCompletionsip, short verboseb, size_t *matchedLengthlp)
 /*****************************************************************************/
 /* Note that consumed is set only when there is parent recognizer.           */
 /*****************************************************************************/
@@ -13421,23 +13393,19 @@ static inline short _marpaESLIFGrammar_parseb(marpaESLIF_t *marpaESLIFp, marpaES
   size_t                  matchedLengthl;
   short                   rcb;
 
-  if (marpaESLIFRecognizerForcedp != NULL) {
-    marpaESLIFRecognizerp = marpaESLIFRecognizerForcedp;
-  } else {
-    marpaESLIFRecognizerp = __marpaESLIFRecognizer_newp(marpaESLIFp,
-                                                        grammarp,
-                                                        marpaESLIFRecognizerOptionp,
-                                                        discardb,
-                                                        noEventb,
-                                                        silentb,
-                                                        marpaESLIFRecognizerParentp,
-                                                        0, /* fakeb */
-                                                        maxStartCompletionsi,
-                                                        (marpaESLIFRecognizerParentp != NULL) ? marpaESLIFRecognizerParentp->marpaESLIF_streamp->utfb : 0 /* utfb */);
-    if (MARPAESLIF_UNLIKELY(marpaESLIFRecognizerp == NULL)) {
-      rcb = 0;
-      goto fast_done;
-    }
+  marpaESLIFRecognizerp = __marpaESLIFRecognizer_newp(marpaESLIFp,
+						      grammarp,
+						      marpaESLIFRecognizerOptionp,
+						      discardb,
+						      noEventb,
+						      silentb,
+						      marpaESLIFRecognizerParentp,
+						      0, /* fakeb */
+						      maxStartCompletionsi,
+						      (marpaESLIFRecognizerParentp != NULL) ? marpaESLIFRecognizerParentp->marpaESLIF_streamp->utfb : 0 /* utfb */);
+  if (MARPAESLIF_UNLIKELY(marpaESLIFRecognizerp == NULL)) {
+    rcb = 0;
+    goto fast_done;
   }
 
   MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_INC(marpaESLIFRecognizerp);
@@ -13515,11 +13483,8 @@ static inline short _marpaESLIFGrammar_parseb(marpaESLIF_t *marpaESLIFp, marpaES
     if ((! rcb) && silentb && verboseb) {
       _marpaESLIFRecognizer_errorv(marpaESLIFRecognizerp);
     }
-    if (marpaESLIFRecognizerp != marpaESLIFRecognizerForcedp) {
-      marpaESLIFRecognizer_freev(marpaESLIFRecognizerp);
-    }
+    marpaESLIFRecognizer_freev(marpaESLIFRecognizerp);
   }
-
 
   return rcb;
 }
