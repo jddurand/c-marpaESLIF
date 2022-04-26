@@ -7248,7 +7248,7 @@ static inline short _marpaESLIFRecognizer_meta_matcherb(marpaESLIFRecognizer_t *
       if (MARPAESLIF_UNLIKELY(marpaESLIFRecognizerForcedp == NULL)) {
         goto err;
       }
-      if (MARPAESLIF_UNLIKELY(! _marpaESLIFRecognizer_peekb(marpaESLIFRecognizerForcedp, marpaESLIFRecognizerp))) {
+      if (MARPAESLIF_UNLIKELY(! _marpaESLIFRecognizer_peekb(marpaESLIFRecognizerp, marpaESLIFRecognizerForcedp))) {
         goto err;
       }
       peekb                       = 1;
@@ -7309,8 +7309,7 @@ static inline short _marpaESLIFRecognizer_meta_matcherb(marpaESLIFRecognizer_t *
  done:
   /* In any case we want to unpeek */
   if (peekb) {
-    /* By definition marpaESLIFRecognizerSharep is not NULL */
-    if (! _marpaESLIFRecognizer_peekb(marpaESLIFRecognizerForcedp, NULL)) {
+    if (! _marpaESLIFRecognizer_peekb(marpaESLIFRecognizerp, NULL)) {
       rcb = 0;
     }
   }
@@ -12080,6 +12079,10 @@ static inline short _marpaESLIFRecognizer_push_eventb(marpaESLIFRecognizer_t *ma
   eventArray.symbols = (symbolp != NULL) ? symbolp->descp->asciis : NULL;
   /* Support of ":symbol" is coded here */
   eventArray.events  = (event_actione == MARPAESLIF_INTERNAL_EVENT_ACTION__SYMBOL) ? eventArray.symbols : events;
+
+  if ((eventArray.events != NULL) && (strcmp(eventArray.events, "s_separate_lines$") == 0)) {
+    short jdd = 0;
+  }
 
   /* Extend of create the array */
   /* marpaESLIFRecognizerp->eventArrayl is always in the range [0..marpaESLIFRecognizerp->eventArraySizel] */
