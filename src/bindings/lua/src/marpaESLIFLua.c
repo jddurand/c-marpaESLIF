@@ -4446,9 +4446,7 @@ static inline short marpaESLIFLua_importb(lua_State *L, int stringtoencoding_r, 
 {
   static const char           *funcs = "marpaESLIFLua_importb";
   size_t                       i;
-  size_t                       j;
   marpaESLIFValueResult_t     *marpaESLIFValueResultDupp;
-  int                          typei;
   short                        rcb;
 
   switch (marpaESLIFValueResultp->type) {
@@ -7905,18 +7903,8 @@ static inline short marpaESLIFLua_lua_copy(lua_State *L, int fromidx, int toidx)
 /* Note that caller is responsible to give valid indices.                   */
 /****************************************************************************/
 {
-  short rcb;
-
   lua_copy(L, fromidx, toidx); /* Native lua call */
-
-  rcb = 1;
-  goto done;
-
- err:
-  rcb = 0;
-
- done:
-  return rcb;
+  return 1;
 }
 #endif
 
@@ -8652,7 +8640,6 @@ static inline short marpaESLIFLua_lua_gettable(int *rcip, lua_State *L, int idx)
 /****************************************************************************/
 {
   int   rci;
-  short rcb;
 
 #if LUA_VERSION_NUM < 503
   lua_gettable(L, idx);
@@ -8662,14 +8649,7 @@ static inline short marpaESLIFLua_lua_gettable(int *rcip, lua_State *L, int idx)
 #endif
   if (rcip != NULL) *rcip = rci;
 
-  rcb = 1;
-  goto done;
-
- err:
-  rcb = 0;
-
- done:
-  return rcb;
+  return 1;
 }
 #endif
 

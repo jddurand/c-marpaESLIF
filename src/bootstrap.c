@@ -5311,7 +5311,6 @@ static short _marpaESLIF_bootstrap_G1_action_grammar_reference_1b(void *userData
   marpaESLIF_bootstrap_grammar_reference_t *grammarReferencep = NULL;
   void                                     *bytep;
   size_t                                    bytel;
-  short                                     shallowb;
   marpaESLIF_bootstrap_utf_string_t        *quotedStringp     = NULL;
   short                                     rcb;
 
@@ -5919,7 +5918,6 @@ static short _marpaESLIF_bootstrap_G1_action_desc_ruleb(void *userDatavp, marpaE
   int                                leveli;
   void                              *bytep;
   size_t                             bytel;
-  short                              shallowb;
   marpaESLIF_bootstrap_utf_string_t *quotedStringp               = NULL;
   short                              rcb;
   marpaESLIF_grammar_bootstrap_t    *grammarBootstrapp;
@@ -6764,10 +6762,6 @@ static short _marpaESLIF_bootstrap_G1_action_event_specificationb(void *userData
     goto err;
   }
 
-  /* Take care, eventInitializationp contain a pointer to an ASCII string, and it will be stored later in a marpaESLIF_bootstrap_adverb_list_item_t: */
-  /* IF we were doing stack_get() followed by stack_set(..., 1 for the shallowb) this would work if eventInitializationp would not be stored again. */
-  /* And unfortunately marpaESLIF_bootstrap_adverb_list_item_t structure has no notion of shallow pointer: it owns them totally. */
-  /* This mean that we have to make sure that eventInitializationp does not remain in the stack at arg0. */
   MARPAESLIF_BOOTSTRAP_SET_PTR(marpaESLIFValuep, resulti, MARPAESLIF_BOOTSTRAP_STACK_TYPE_ADVERB_ITEM_EVENT_INITIALIZATION, eventInitializationp);
 
   rcb = 1;
@@ -7457,7 +7451,6 @@ static short _marpaESLIF_bootstrap_G1_action_alternative_name_2b(void *userDatav
   /* <alternative name> ::= <quoted string literal> */
   void                              *bytep;
   size_t                             bytel;
-  short                              shallowb;
   marpaESLIF_bootstrap_utf_string_t *quotedStringp = NULL;
   short                              rcb;
 
@@ -7496,7 +7489,6 @@ static short _marpaESLIF_bootstrap_G1_action_namingb(void *userDatavp, marpaESLI
   marpaESLIF_bootstrap_utf_string_t *namingp     = NULL;
   void                              *bytep;
   size_t                             bytel;
-  short                              shallowb;
   short                              rcb;
 
   /* Cannot be nullable */
