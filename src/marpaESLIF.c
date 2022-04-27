@@ -3247,7 +3247,6 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
   marpaESLIF_symbol_t              *subSymbolp;
   marpaESLIF_rule_t                *subRulep;
   int                               symboli;
-  int                               symbolj;
   marpaESLIF_rule_t                *rulep;
   marpaESLIF_rule_t                *ruletmpp;
   int                               rulei;
@@ -11343,7 +11342,6 @@ short _marpaESLIFRecognizer_name_tryb(marpaESLIFRecognizer_t *marpaESLIFRecogniz
  done:
   MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "return %d", (int) rcb);
   MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_DEC(marpaESLIFRecognizerp);
- fast_done:
   return rcb;
 }
 
@@ -12627,7 +12625,7 @@ static inline marpaESLIFRecognizer_t *__marpaESLIFRecognizer_newp(marpaESLIF_t *
   marpaESLIFRecognizerp->marpaESLIFRecognizerSharedp        = NULL;
   marpaESLIFRecognizerp->last_discard_loopb                 = 0;
 
-  marpaWrapperRecognizerOption.genericLoggerp            = silentb ? NULL : marpaESLIFp->marpaESLIFOption.genericLoggerp;
+  marpaWrapperRecognizerOption.genericLoggerp            = marpaESLIFp->marpaESLIFOption.genericLoggerp;
   marpaWrapperRecognizerOption.disableThresholdb         = marpaESLIFRecognizerOptionp->disableThresholdb;
   marpaWrapperRecognizerOption.exhaustionEventb          = marpaESLIFRecognizerOptionp->exhaustedb;
 
@@ -13652,7 +13650,6 @@ static inline short __marpaESLIFValue_valueb(marpaESLIFValue_t *marpaESLIFValuep
   static const char       *funcs                 = "__marpaESLIFValue_valueb";
   static const int         indicei               = 0; /* By definition result is always at indice No 0 */
   marpaESLIFRecognizer_t  *marpaESLIFRecognizerp = marpaESLIFValuep->marpaESLIFRecognizerp;
-  marpaESLIFValueResult_t  marpaESLIFValueResult;
   short                    rcb;
 
   MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_INC(marpaESLIFRecognizerp);
@@ -18143,7 +18140,7 @@ static inline marpaESLIFValue_t *_marpaESLIFValue_newp(marpaESLIFRecognizer_t *m
   marpaESLIFValuep->isLexemeb                             = isLexemeb;
 
   if (! fakeb) {
-    marpaWrapperValueOption.genericLoggerp = silentb ? marpaESLIFp->traceLoggerp : marpaESLIFp->marpaESLIFOption.genericLoggerp;
+    marpaWrapperValueOption.genericLoggerp = marpaESLIFp->marpaESLIFOption.genericLoggerp;
     marpaWrapperValueOption.highRankOnlyb  = marpaESLIFValueOptionp->highRankOnlyb;
     marpaWrapperValueOption.orderByRankb   = marpaESLIFValueOptionp->orderByRankb;
     marpaWrapperValueOption.ambiguousb     = marpaESLIFValueOptionp->ambiguousb;
@@ -19757,7 +19754,6 @@ static short _marpaESLIF_symbol_action___transferb(void *userDatavp, marpaESLIFV
 /*****************************************************************************/
 {
   static const char      *funcs = "_marpaESLIF_symbol_action___transferb";
-  marpaESLIFValueResult_t marpaESLIFValueResult;
   short                   rcb;
 
   MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_INC(marpaESLIFValuep->marpaESLIFRecognizerp);
