@@ -529,6 +529,7 @@ struct marpaESLIFValue {
   char                        *luaprecompiledp;    /* Lua script source precompiled */
   size_t                       luaprecompiledl;    /* Lua script source precompiled length in byte */
   short                        hideSeparatorb;     /* Hook for internal ::row and ::table actions to process more efficiently hide-separator adverb */
+  short                        isLexemeb;          /* Special mode for true lexemes: caller did not mind about valuation, just the number of bytes consumed up to completion */
 };
 
 struct marpaESLIF_stream {
@@ -585,7 +586,9 @@ struct marpaESLIFRecognizer {
   int                          callstackCounterGlobali; /* Internal counter for tracing - no functional impact */
 
   int                          leveli;         /* Recognizer level (!= grammar level) */
-  size_t                       parentDeltal;   /* Parent original delta - used to recovert parent current pointer at our free */
+  size_t                       parentDeltal;   /* Parent original delta - used to recover parent current pointer at our free */
+  size_t                       parentLinel;    /* Parent original linel - used to recover parent line number our free */
+  size_t                       parentColumnl;  /* Parent original columnl - used to recover parent column number our free */
   /* Current recognizer states */
   short                        scanb;          /* Prevent resume before a call to scan */
   short                        noEventb;       /* No event mode */
