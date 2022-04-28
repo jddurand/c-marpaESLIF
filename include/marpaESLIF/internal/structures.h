@@ -681,6 +681,9 @@ struct marpaESLIFRecognizer {
 
   /* A flag to remember if we are in the last_discard_loop mode */
   short                           last_discard_loopb;
+
+  /* Proxy generic logger */
+  genericLogger_t                *genericLoggerp;
 };
 
 struct marpaESLIF_symbol_data {

@@ -899,6 +899,7 @@ static inline short                  _marpaESLIFGrammar_parseb(marpaESLIF_t *mar
 static        void                   _marpaESLIF_generateStringWithLoggerCallback(void *userDatavp, genericLoggerLevel_t logLeveli, const char *msgs);
 static        void                   _marpaESLIF_generateSeparatedStringWithLoggerCallback(void *userDatavp, genericLoggerLevel_t logLeveli, const char *msgs);
 static        void                   _marpaESLIF_traceLoggerCallbackv(void *userDatavp, genericLoggerLevel_t logLeveli, const char *msgs);
+static        void                   _marpaESLIFRecognizer_loggerCallbackv(void *userDatavp, genericLoggerLevel_t logLeveli, const char *msgs);
 static inline void                   _marpaESLIF_stringGeneratorInitv(marpaESLIF_t *marpaESLIFp, marpaESLIF_stringGenerator_t *marpaESLIF_stringGeneratorp);
 static inline void                   _marpaESLIF_stringGeneratorResetv(marpaESLIF_stringGenerator_t *marpaESLIF_stringGeneratorp);
 static inline void                   _marpaESLIF_stringGeneratorFreev(marpaESLIF_stringGenerator_t *marpaESLIF_stringGeneratorp, short onStackb);
@@ -9695,12 +9696,6 @@ static inline short _marpaESLIFRecognizer_alternativeStack_setb(marpaESLIFRecogn
 
   if (GENERICSTACK_IS_PTR(alternativeStackSymbolp, indicei)) {
     p = (marpaESLIF_alternative_t *) GENERICSTACK_GET_PTR(alternativeStackSymbolp, indicei);
-#ifndef MARPAESLIF_NTRACE
-    if (MARPAESLIF_UNLIKELY(p->marpaESLIFValueResult.type != MARPAESLIF_VALUE_TYPE_ARRAY)) {
-      MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "marpaESLIFValueResultp->type is not ARRAY (got %d, %s)", p->marpaESLIFValueResult.type, _marpaESLIF_value_types(p->marpaESLIFValueResult.type));
-      goto err;
-    }
-#endif
     _marpaESLIFRecognizer_marpaESLIFValueResult_freeb(marpaESLIFRecognizerp, &(p->marpaESLIFValueResult), 1 /* deepb */);
   } else {
     p = (marpaESLIF_alternative_t *) malloc(sizeof(marpaESLIF_alternative_t));
@@ -10549,15 +10544,11 @@ static inline short _marpaESLIFRecognizer_resume_oneb(marpaESLIFRecognizer_t *ma
 
   for (alternativei = 0; alternativei < alternativeStackSymboli; alternativei++) {
     alternativep = (marpaESLIF_alternative_t *) GENERICSTACK_GET_PTR(alternativeStackSymbolp, alternativei);
-#ifndef MARPAESLIF_NTRACE
-    /* By definition here we should handle only the internal alternatives, that are ALWAYS of type */
-    /* MARPAESLIF_VALUE_TYPE_ARRAY */
-    if (alternativep->marpaESLIFValueResult.type != MARPAESLIF_VALUE_TYPE_ARRAY) {
+    sizel        = alternativep->matchedLengthl;
+    /* We skip alternatives that are not long enough unless when symbol is a lookahead */
+    if (MARPAESLIF_IS_META_LOOKAHEAD(alternativep->symbolp)) {
       continue;
     }
-#endif
-
-    sizel = alternativep->marpaESLIFValueResult.u.a.sizel;
     if (sizel < maxMatchedl) {
       MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp,
                                   funcs,
@@ -10601,13 +10592,6 @@ static inline short _marpaESLIFRecognizer_resume_oneb(marpaESLIFRecognizer_t *ma
       /* Skipped */
       continue;
     }
-#ifndef MARPAESLIF_NTRACE
-    /* By definition here we should handle only the internal alternatives, that are ALWAYS of type */
-    /* MARPAESLIF_VALUE_TYPE_ARRAY */
-    if (alternativep->marpaESLIFValueResult.type != MARPAESLIF_VALUE_TYPE_ARRAY) {
-      continue;
-    }
-#endif
 
     symbolp = alternativep->symbolp;
     if ((symbolp->eventBefores != NULL) && marpaESLIFRecognizerp->beforeEventStatebp[symbolp->idi]) {
@@ -12624,6 +12608,12 @@ static inline marpaESLIFRecognizer_t *__marpaESLIFRecognizer_newp(marpaESLIF_t *
   marpaESLIFRecognizerp->popContextActionp                  = NULL;
   marpaESLIFRecognizerp->marpaESLIFRecognizerSharedp        = NULL;
   marpaESLIFRecognizerp->last_discard_loopb                 = 0;
+  marpaESLIFRecognizerp->genericLoggerp                     = NULL;
+
+  marpaESLIFRecognizerp->genericLoggerp = GENERICLOGGER_CUSTOM(_marpaESLIFRecognizer_loggerCallbackv, (void *) marpaESLIFRecognizerp, GENERICLOGGER_LOGLEVEL_TRACE);
+  if (marpaESLIFRecognizerp->genericLoggerp == NULL) {
+    goto err;
+  }
 
   marpaWrapperRecognizerOption.genericLoggerp            = marpaESLIFp->marpaESLIFOption.genericLoggerp;
   marpaWrapperRecognizerOption.disableThresholdb         = marpaESLIFRecognizerOptionp->disableThresholdb;
@@ -13508,6 +13498,19 @@ static void _marpaESLIF_traceLoggerCallbackv(void *userDatavp, genericLoggerLeve
     MARPAESLIF_TRACEF(marpaESLIFp, funcs, "%s", msgs);
   }
 #endif
+}
+
+/*****************************************************************************/
+static void _marpaESLIFRecognizer_loggerCallbackv(void *userDatavp, genericLoggerLevel_t logLeveli, const char *msgs)
+/*****************************************************************************/
+{
+  marpaESLIFRecognizer_t *marpaESLIFRecognizerp = (marpaESLIFRecognizer_t *) userDatavp;
+
+  if (! marpaESLIFRecognizerp->silentb) {
+    if (marpaESLIFRecognizerp->marpaESLIFp->marpaESLIFOption.genericLoggerp != NULL) {
+      GENERICLOGGER_LOG(marpaESLIFRecognizerp->marpaESLIFp->marpaESLIFOption.genericLoggerp, logLeveli, msgs);
+    }
+  }
 }
 
 /*****************************************************************************/
@@ -16034,6 +16037,7 @@ short marpaESLIFRecognizer_progressLogb(marpaESLIFRecognizer_t *marpaESLIFRecogn
 /*****************************************************************************/
 {
   static const char *funcs = "marpaESLIFRecognizer_progressLogb";
+  short              silentb;
   short              rcb;
 
   if (MARPAESLIF_UNLIKELY(marpaESLIFRecognizerp == NULL)) {
@@ -16045,12 +16049,20 @@ short marpaESLIFRecognizer_progressLogb(marpaESLIFRecognizer_t *marpaESLIFRecogn
   MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_INC(marpaESLIFRecognizerp);
   MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "start");
 
+  /* Caller has access to this recognizer per def and asked for a progress report. */
+  /* We want to unsilent the recognizer in any case.                               */
+  silentb = marpaESLIFRecognizerp->silentb;
+  marpaESLIFRecognizerp->silentb = 0;
+
   rcb = marpaWrapperRecognizer_progressLogb(marpaESLIFRecognizerp->marpaWrapperRecognizerp,
                                             starti,
                                             endi,
                                             logleveli,
                                             marpaESLIFRecognizerp->grammarp,
                                             _marpaESLIFGrammar_symbolDescriptionCallbacks);
+
+  marpaESLIFRecognizerp->silentb = silentb;
+
   goto done;
 
  done:
@@ -18140,7 +18152,7 @@ static inline marpaESLIFValue_t *_marpaESLIFValue_newp(marpaESLIFRecognizer_t *m
   marpaESLIFValuep->isLexemeb                             = isLexemeb;
 
   if (! fakeb) {
-    marpaWrapperValueOption.genericLoggerp = marpaESLIFp->marpaESLIFOption.genericLoggerp;
+    marpaWrapperValueOption.genericLoggerp = silentb ? marpaESLIFp->traceLoggerp : marpaESLIFp->marpaESLIFOption.genericLoggerp;
     marpaWrapperValueOption.highRankOnlyb  = marpaESLIFValueOptionp->highRankOnlyb;
     marpaWrapperValueOption.orderByRankb   = marpaESLIFValueOptionp->orderByRankb;
     marpaWrapperValueOption.ambiguousb     = marpaESLIFValueOptionp->ambiguousb;
@@ -21184,6 +21196,8 @@ static inline void _marpaESLIFRecognizer_freev(marpaESLIFRecognizer_t *marpaESLI
   _marpaESLIF_action_freev(marpaESLIFRecognizerp->popContextActionp);
 
   _marpaESLIF_lua_recognizer_freev(marpaESLIFRecognizerp);
+
+  GENERICLOGGER_FREE(marpaESLIFRecognizerp->genericLoggerp);
 
   MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "return");
   MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_DEC(marpaESLIFRecognizerp);
