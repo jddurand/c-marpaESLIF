@@ -202,6 +202,7 @@ static marpaESLIFValueResult_t marpaESLIFValueResultLazyWithUndef = {
 /* -------------------------------------------------------------------------------------------- */
 #define MARPAESLIFRECOGNIZER_IS_TOP(marpaESLIFRecognizerp) ((marpaESLIFRecognizerp)->marpaESLIFRecognizerParentp == NULL)
 #define MARPAESLIFRECOGNIZER_IS_CHILD(marpaESLIFRecognizerp) ((marpaESLIFRecognizerp)->marpaESLIFRecognizerParentp != NULL)
+#define MARPAESLIFRECOGNIZER_IS_INTERACTIVE(marpaESLIFRecognizerp) (MARPAESLIFRECOGNIZER_IS_TOP(marpaESLIFRecognizerp) || (! (marpaESLIFRecognizerp)->noEventb))
 
 /* -------------------------------------------------------------------------------------------- */
 /* In theory, when rci is MARPAESLIF_MATCH_OK, marpaESLIFValueResult type must be a valid ARRAY */
@@ -7236,9 +7237,6 @@ static inline short _marpaESLIFRecognizer_meta_matcherb(marpaESLIFRecognizer_t *
     /* - contextual RHS                                                                       */
     /* - generator RHS                                                                        */
     /* - lookahead RHS                                                                        */
-    if (symbolp->lookaheadb) {
-      short jdd = 0;
-    }
     if (symbolp->parameterizedRhsb || (symbolp->generatorActionp != NULL) || symbolp->lookaheadb) {
       discardb  = marpaESLIFRecognizerp->discardb;
       noEventb  = marpaESLIFRecognizerp->noEventb;
@@ -9366,8 +9364,8 @@ short marpaESLIFRecognizer_shareb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp,
   MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_INC(marpaESLIFRecognizerp);
   MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "start");
 
-  /* Not allowed if there is a parent recognizer */
-  if (MARPAESLIFRECOGNIZER_IS_CHILD(marpaESLIFRecognizerp)) {
+  /* Not allowed unless this is an interactive recognizer */
+  if (! MARPAESLIFRECOGNIZER_IS_INTERACTIVE(marpaESLIFRecognizerp)) {
     errno = EPERM;
     goto err;
   }
@@ -9410,8 +9408,8 @@ short marpaESLIFRecognizer_peekb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, 
   MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_INC(marpaESLIFRecognizerp);
   MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "start");
 
-  /* Not allowed if there is a parent recognizer */
-  if (MARPAESLIFRECOGNIZER_IS_CHILD(marpaESLIFRecognizerp)) {
+  /* Not allowed unless this is an interactive recognizer */
+  if (! MARPAESLIFRECOGNIZER_IS_INTERACTIVE(marpaESLIFRecognizerp)) {
     errno = EPERM;
     goto err;
   }
@@ -9471,8 +9469,8 @@ short marpaESLIFRecognizer_scanb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, 
     goto fast_done;
   }
 
-  /* Not allowed if there is a parent recognizer */
-  if (MARPAESLIFRECOGNIZER_IS_CHILD(marpaESLIFRecognizerp)) {
+  /* Not allowed unless this is an interactive recognizer */
+  if (! MARPAESLIFRECOGNIZER_IS_INTERACTIVE(marpaESLIFRecognizerp)) {
     errno = EPERM;
     rcb = 0;
     goto fast_done;
@@ -9514,8 +9512,8 @@ short marpaESLIFRecognizer_resumeb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp
     goto fast_done;
   }
 
-  /* Not allowed if there is a parent recognizer */
-  if (MARPAESLIFRECOGNIZER_IS_CHILD(marpaESLIFRecognizerp)) {
+  /* Not allowed unless this is an interactive recognizer */
+  if (! MARPAESLIFRECOGNIZER_IS_INTERACTIVE(marpaESLIFRecognizerp)) {
     errno = EPERM;
     rcb = 0;
     goto fast_done;
@@ -10823,9 +10821,8 @@ short marpaESLIFRecognizer_alternativeb(marpaESLIFRecognizer_t *marpaESLIFRecogn
   MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_INC(marpaESLIFRecognizerp);
   MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "start");
 
-  /* Not allowed if there is a parent recognizer */
-  if (MARPAESLIFRECOGNIZER_IS_CHILD(marpaESLIFRecognizerp)) {
-    MARPAESLIF_ERROR(marpaESLIFRecognizerp->marpaESLIFp, "Not allowed when there is a parent recognizer");
+  /* Not allowed unless this is an interactive recognizer */
+  if (! MARPAESLIFRECOGNIZER_IS_INTERACTIVE(marpaESLIFRecognizerp)) {
     errno = EPERM;
     rcb = 0;
     goto fast_done;
@@ -10972,8 +10969,8 @@ short marpaESLIFRecognizer_alternative_completeb(marpaESLIFRecognizer_t *marpaES
     goto fast_done;
   }
 
-  /* Not allowed if there is a parent recognizer */
-  if (MARPAESLIFRECOGNIZER_IS_CHILD(marpaESLIFRecognizerp)) {
+  /* Not allowed unless this is an interactive recognizer */
+  if (! MARPAESLIFRECOGNIZER_IS_INTERACTIVE(marpaESLIFRecognizerp)) {
     errno = EPERM;
     rcb = 0;
     goto fast_done;
@@ -11248,9 +11245,8 @@ short marpaESLIFRecognizer_alternative_readb(marpaESLIFRecognizer_t *marpaESLIFR
   MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_INC(marpaESLIFRecognizerp);
   MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "start");
 
-  /* Not allowed if there is a parent recognizer */
-  if (MARPAESLIFRECOGNIZER_IS_CHILD(marpaESLIFRecognizerp)) {
-    MARPAESLIF_ERROR(marpaESLIFRecognizerp->marpaESLIFp, "Not allowed when there is a parent recognizer");
+  /* Not allowed unless this is an interactive recognizer */
+  if (! MARPAESLIFRECOGNIZER_IS_INTERACTIVE(marpaESLIFRecognizerp)) {
     errno = EPERM;
     rcb = 0;
     goto fast_done;
@@ -11479,8 +11475,8 @@ short marpaESLIFRecognizer_event_onoffb(marpaESLIFRecognizer_t *marpaESLIFRecogn
     goto fast_done;
   }
 
-  /* Not allowed if there is a parent recognizer */
-  if (MARPAESLIFRECOGNIZER_IS_CHILD(marpaESLIFRecognizerp)) {
+  /* Not allowed unless this is an interactive recognizer */
+  if (! MARPAESLIFRECOGNIZER_IS_INTERACTIVE(marpaESLIFRecognizerp)) {
     errno = EPERM;
     rcb = 0;
     goto fast_done;
@@ -12024,10 +12020,6 @@ static inline short _marpaESLIFRecognizer_push_eventb(marpaESLIFRecognizer_t *ma
   eventArray.symbols = (symbolp != NULL) ? symbolp->descp->asciis : NULL;
   /* Support of ":symbol" is coded here */
   eventArray.events  = (event_actione == MARPAESLIF_INTERNAL_EVENT_ACTION__SYMBOL) ? eventArray.symbols : events;
-
-  if ((eventArray.events != NULL) && (strcmp(eventArray.events, "s_separate_lines$") == 0)) {
-    short jdd = 0;
-  }
 
   /* Extend of create the array */
   /* marpaESLIFRecognizerp->eventArrayl is always in the range [0..marpaESLIFRecognizerp->eventArraySizel] */
@@ -13030,8 +13022,8 @@ short marpaESLIFRecognizer_set_exhausted_flagb(marpaESLIFRecognizer_t *marpaESLI
     goto fast_done;
   }
 
-  /* Not allowed if there is a parent recognizer */
-  if (MARPAESLIFRECOGNIZER_IS_CHILD(marpaESLIFRecognizerp)) {
+  /* Not allowed unless this is an interactive recognizer */
+  if (! MARPAESLIFRECOGNIZER_IS_INTERACTIVE(marpaESLIFRecognizerp)) {
     errno = EPERM;
     rcb = 0;
     goto fast_done;
@@ -20634,8 +20626,8 @@ short marpaESLIFRecognizer_hook_discardb(marpaESLIFRecognizer_t *marpaESLIFRecog
     goto fast_done;
   }
 
-  /* Not allowed if there is a parent recognizer */
-  if (MARPAESLIFRECOGNIZER_IS_CHILD(marpaESLIFRecognizerp)) {
+  /* Not allowed unless this is an interactive recognizer */
+  if (! MARPAESLIFRECOGNIZER_IS_INTERACTIVE(marpaESLIFRecognizerp)) {
     errno = EPERM;
     rcb = 0;
     goto fast_done;
@@ -20680,8 +20672,8 @@ short marpaESLIFRecognizer_hook_discard_switchb(marpaESLIFRecognizer_t *marpaESL
     goto fast_done;
   }
 
-  /* Not allowed if there is a parent recognizer */
-  if (MARPAESLIFRECOGNIZER_IS_CHILD(marpaESLIFRecognizerp)) {
+  /* Not allowed unless this is an interactive recognizer */
+  if (! MARPAESLIFRECOGNIZER_IS_INTERACTIVE(marpaESLIFRecognizerp)) {
     errno = EPERM;
     rcb = 0;
     goto fast_done;
