@@ -35,7 +35,7 @@ static char *inputsp[] = {
   "   turtle-doves: two\n"
     };
 
-int main() {
+int main(int argc, char **argv) {
   marpaESLIF_t                *marpaESLIFp           = NULL;
   marpaESLIFGrammar_t         *marpaESLIFGrammarp    = NULL;
   marpaESLIFRecognizer_t      *marpaESLIFRecognizerp = NULL;
@@ -102,60 +102,124 @@ int main() {
 
   GENERICLOGGER_LEVEL_SET(genericLoggerp, GENERICLOGGER_LOGLEVEL_TRACE);
 
-  for (i = 0; i < (sizeof(inputsp)/sizeof(inputsp[0])); i++) {
-    yamlTester_context.inputs = inputsp[i];
-    yamlTester_context.inputl = strlen(inputsp[i]);
+  if (argc == 2) {
+    char ins[1024];
+    size_t inl;
+    FILE *fd;
+    
 
-    marpaESLIFRecognizerOption.userDatavp               = &yamlTester_context;
-    marpaESLIFRecognizerOption.readerCallbackp          = inputReaderb;
-    marpaESLIFRecognizerOption.disableThresholdb        = 0;
-    marpaESLIFRecognizerOption.exhaustedb               = 0;
-    marpaESLIFRecognizerOption.newlineb                 = 1;
-    marpaESLIFRecognizerOption.trackb                   = 0;
-    marpaESLIFRecognizerOption.bufsizl                  = 0;
-    marpaESLIFRecognizerOption.buftriggerperci          = 50;
-    marpaESLIFRecognizerOption.bufaddperci              = 50;
-    marpaESLIFRecognizerOption.ifActionResolverp        = NULL;
-    marpaESLIFRecognizerOption.eventActionResolverp     = NULL;
-    marpaESLIFRecognizerOption.regexActionResolverp     = NULL;
-    marpaESLIFRecognizerOption.generatorActionResolverp = NULL;
-
-    if (marpaESLIFRecognizerp != NULL) {
-      marpaESLIFRecognizer_freev(marpaESLIFRecognizerp);
-    }
-    marpaESLIFRecognizerp = marpaESLIFRecognizer_newp(marpaESLIFGrammarp, &marpaESLIFRecognizerOption);
-    if (marpaESLIFRecognizerp == NULL) {
-      goto err;
-    }
-    if (! marpaESLIFRecognizer_scanb(marpaESLIFRecognizerp, 1 /* initialEventsb */, &continueb, &exhaustedb)) {
-      goto err;
-    }
-    while (continueb) {
-      if (! marpaESLIFRecognizer_resumeb(marpaESLIFRecognizerp, 0, &continueb, &exhaustedb)) {
+    if (strcmp(argv[1], "-") == 0) {
+      /* stdin */
+      fd = stdin;
+    } else {
+      fd = fopen(argv[1], "r");
+      if (fd == NULL) {
+        fprintf(stderr, "%s: %s\n", argv[1], strerror(errno));
         goto err;
       }
     }
 
-    marpaESLIFValueOption.userDatavp            = NULL; /* User specific context */
-    marpaESLIFValueOption.ruleActionResolverp   = NULL; /* Will return the function doing the wanted rule action */
-    marpaESLIFValueOption.symbolActionResolverp = NULL; /* Will return the function doing the wanted symbol action */
-    marpaESLIFValueOption.importerp             = NULL;
-    marpaESLIFValueOption.highRankOnlyb         = 1;    /* Default: 1 */
-    marpaESLIFValueOption.orderByRankb          = 1;    /* Default: 1 */
-    marpaESLIFValueOption.ambiguousb            = 0;    /* Default: 0 */
-    marpaESLIFValueOption.nullb                 = 0;    /* Default: 0 */
-    marpaESLIFValueOption.maxParsesi            = 0;    /* Default: 0 */
-
-    if (marpaESLIFValuep != NULL) {
-      marpaESLIFValue_freev(marpaESLIFValuep);
+    yamlTester_context.inputs = NULL;
+    yamlTester_context.inputl = 0;
+    while (1) {
+      clearerr(fd);
+      inl = fread(ins, 1, sizeof(ins), fd);
+      if (inl > sizeof(ins)) {
+        fprintf(stderr, "fread returned more bytes than expected\n");
+        goto err;
+      } else {
+        if (ferror(fd)) {
+          fprintf(stderr, "read error, %s\n", strerror(errno));
+          goto err;
+        }
+        if (inl > 0) {
+          if (yamlTester_context.inputs == NULL) {
+            yamlTester_context.inputs = (char *) malloc(inl);
+            if (yamlTester_context.inputs == NULL) {
+              GENERICLOGGER_ERRORF(genericLoggerp, "malloc failure, %s", strerror(errno));
+              goto err;
+            }
+          } else {
+            /* Tant pis for the memory leak if realloc failed */
+            yamlTester_context.inputs = (char *) realloc(yamlTester_context.inputs, yamlTester_context.inputl + inl);
+            if (yamlTester_context.inputs == NULL) {
+              GENERICLOGGER_ERRORF(genericLoggerp, "realloc failure, %s", strerror(errno));
+              goto err;
+            }
+          }
+          memcpy(yamlTester_context.inputs + yamlTester_context.inputl, ins, inl);
+          yamlTester_context.inputl += inl;
+        }
+      }
+      if (feof(fd)) {
+        goto go;
+      }
     }
-    marpaESLIFValuep = marpaESLIFValue_newp(marpaESLIFRecognizerp, &marpaESLIFValueOption);
-    if (marpaESLIFValuep == NULL) {
-      goto err;
-    }
-    marpaESLIFValue_valueb(marpaESLIFValuep);
 
-    /* marpaESLIFGrammar_parseb(marpaESLIFGrammarp, &marpaESLIFRecognizerOption, &marpaESLIFValueOption, NULL); */
+    goto go;
+
+  } else {
+    for (i = 0; i < (sizeof(inputsp)/sizeof(inputsp[0])); i++) {
+      yamlTester_context.inputs = inputsp[i];
+      yamlTester_context.inputl = strlen(inputsp[i]);
+
+    go:
+      marpaESLIFRecognizerOption.userDatavp               = &yamlTester_context;
+      marpaESLIFRecognizerOption.readerCallbackp          = inputReaderb;
+      marpaESLIFRecognizerOption.disableThresholdb        = 0;
+      marpaESLIFRecognizerOption.exhaustedb               = 0;
+      marpaESLIFRecognizerOption.newlineb                 = 1;
+      marpaESLIFRecognizerOption.trackb                   = 0;
+      marpaESLIFRecognizerOption.bufsizl                  = 0;
+      marpaESLIFRecognizerOption.buftriggerperci          = 50;
+      marpaESLIFRecognizerOption.bufaddperci              = 50;
+      marpaESLIFRecognizerOption.ifActionResolverp        = NULL;
+      marpaESLIFRecognizerOption.eventActionResolverp     = NULL;
+      marpaESLIFRecognizerOption.regexActionResolverp     = NULL;
+      marpaESLIFRecognizerOption.generatorActionResolverp = NULL;
+
+      if (marpaESLIFRecognizerp != NULL) {
+        marpaESLIFRecognizer_freev(marpaESLIFRecognizerp);
+      }
+      marpaESLIFRecognizerp = marpaESLIFRecognizer_newp(marpaESLIFGrammarp, &marpaESLIFRecognizerOption);
+      if (marpaESLIFRecognizerp == NULL) {
+        goto err;
+      }
+      if (! marpaESLIFRecognizer_scanb(marpaESLIFRecognizerp, 1 /* initialEventsb */, &continueb, &exhaustedb)) {
+        goto err;
+      }
+      while (continueb) {
+        if (! marpaESLIFRecognizer_resumeb(marpaESLIFRecognizerp, 0, &continueb, &exhaustedb)) {
+          goto err;
+        }
+      }
+
+      marpaESLIFValueOption.userDatavp            = NULL; /* User specific context */
+      marpaESLIFValueOption.ruleActionResolverp   = NULL; /* Will return the function doing the wanted rule action */
+      marpaESLIFValueOption.symbolActionResolverp = NULL; /* Will return the function doing the wanted symbol action */
+      marpaESLIFValueOption.importerp             = NULL;
+      marpaESLIFValueOption.highRankOnlyb         = 1;    /* Default: 1 */
+      marpaESLIFValueOption.orderByRankb          = 1;    /* Default: 1 */
+      marpaESLIFValueOption.ambiguousb            = 0;    /* Default: 0 */
+      marpaESLIFValueOption.nullb                 = 0;    /* Default: 0 */
+      marpaESLIFValueOption.maxParsesi            = 0;    /* Default: 0 */
+
+      if (marpaESLIFValuep != NULL) {
+        marpaESLIFValue_freev(marpaESLIFValuep);
+      }
+      marpaESLIFValuep = marpaESLIFValue_newp(marpaESLIFRecognizerp, &marpaESLIFValueOption);
+      if (marpaESLIFValuep == NULL) {
+        goto err;
+      }
+      marpaESLIFValue_valueb(marpaESLIFValuep);
+
+      /* marpaESLIFGrammar_parseb(marpaESLIFGrammarp, &marpaESLIFRecognizerOption, &marpaESLIFValueOption, NULL); */
+
+      if (argc == 2) {
+        /* Because of the go ;) */
+        break;
+      }
+    }
   }
 
   exiti = 0;
