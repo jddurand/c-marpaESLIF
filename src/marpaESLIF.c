@@ -6774,13 +6774,18 @@ static inline short _marpaESLIFRecognizer_terminal_matcherb(marpaESLIFRecognizer
       /* Remember that :sol enforced newlineb option. */
       /* The value 1 is the default, so it matches    */
       /* also if nothing has been read yet.           */
-      if (marpaESLIF_streamp->columnl == 1) {
-        MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, ":sol match");
-        rci            = MARPAESLIF_MATCH_OK;
-        matchedp       = (char *) MARPAESLIF_EMPTY_STRING;
-        matchedLengthl = 0;
+      /* Note that a :sol cannot be if :eof is set.   */
+      if (eofb && (inputl <= 0)) {
+        rci              = MARPAESLIF_MATCH_FAILURE;
       } else {
-        rci            = MARPAESLIF_MATCH_FAILURE;
+        if (marpaESLIF_streamp->columnl == 1) {
+          MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, ":sol match");
+          rci            = MARPAESLIF_MATCH_OK;
+          matchedp       = (char *) MARPAESLIF_EMPTY_STRING;
+          matchedLengthl = 0;
+        } else {
+          rci            = MARPAESLIF_MATCH_FAILURE;
+        }
       }
       break;
 
