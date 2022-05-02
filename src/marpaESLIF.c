@@ -9936,13 +9936,8 @@ static inline short _marpaESLIFRecognizer_isDiscardExpectedb(marpaESLIFRecognize
   MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_INC(marpaESLIFRecognizerp);
   MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "start");
 
-  if (marpaESLIFRecognizerp->discardb) {
-    /* We are already inside :discard */
-    goto fast_done;
-  }
-
   if (! marpaESLIFRecognizerp->discardOnOffb) {
-    /* :discard is disabled anyway */
+    /* :discard is disabled */
     goto fast_done;
   }
 
@@ -10717,6 +10712,8 @@ static inline short _marpaESLIFRecognizer_isStartCompleteb(marpaESLIFRecognizer_
   marpaESLIF_grammar_t             *grammarp                = marpaESLIFRecognizerp->grammarp;
   genericStack_t                   *ruleStackp              = grammarp->ruleStackp;
   marpaWrapperRecognizer_t         *marpaWrapperRecognizerp = marpaESLIFRecognizerp->marpaWrapperRecognizerp;
+  /* If marpaESLIFRecognizerp->discardb is set and we are here, per def grammarp->discardi is set to a valid symbol number */
+  short                             starti                  = marpaESLIFRecognizerp->discardb ? grammarp->discardi : grammarp->starti;
   marpaESLIF_rule_t                *rulep;
   short                             completeb;
   short                             rcb;
@@ -10744,8 +10741,14 @@ static inline short _marpaESLIFRecognizer_isStartCompleteb(marpaESLIFRecognizer_
 
     /* Rule completion - get the LHS symbol */
     MARPAESLIF_GRAMMAR_INTERNAL_GET_RULE(marpaESLIFp, rulep, grammarp, rulei);
-    if (rulep->lhsp->idi == grammarp->starti) {
-      MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "Start symbol completion detected");
+    if (rulep->lhsp->idi == starti) {
+#ifndef MARPAESLIF_NTRACE
+      if (marpaESLIFRecognizerp->discardb) {
+        MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "Discard symbol completion detected");
+      } else {
+        MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "Start symbol completion detected");
+      }
+#endif
       completeb = 1;
       break;
     }
@@ -13244,6 +13247,13 @@ static inline short __marpaESLIFRecognizer_discardb(marpaESLIFRecognizer_t *marp
   short                    parseb;
   short                    rcb;
 
+  if (marpaESLIFRecognizerp->discardb) {
+    /* We are already inside :discard */
+    *discardlp = 0;
+    rcb = 1;
+    goto fast_done;
+  }
+
   if (MARPAESLIF_UNLIKELY(! _marpaESLIFRecognizer_isDiscardExpectedb(marpaESLIFRecognizerp, &isDiscardExpectedb, &fastDiscardl, &fastDiscardSymbolp, &marpaESLIFValueResult))) {
     goto err;
   }
@@ -13344,6 +13354,8 @@ static inline short __marpaESLIFRecognizer_discardb(marpaESLIFRecognizer_t *marp
   _marpaESLIFRecognizer_marpaESLIFValueResult_freeb(marpaESLIFRecognizerp, &marpaESLIFValueResult, 1 /* deepb */);
   /* In any case we not in discard mode anymore */
   marpaESLIFRecognizerp->discardb = 0;
+
+ fast_done:
   return rcb;
 }
 
