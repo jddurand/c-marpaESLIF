@@ -86,7 +86,26 @@ typedef struct swiftTester_context {
   size_t           inputl;
 } swiftTester_context_t;
 
-static char *inputsp[] = {  "/* */ /* x"    };
+typedef struct swiftTester_test {
+  short  valueb;
+  size_t forcedInputl;
+  char  *names;
+  char  *inputs;
+} swiftTester_test_t;
+
+static swiftTester_test_t swiftTester_testArrayp[] = {
+  { 1, 0, "Whitespace - one blank",                      " "           },
+  { 1, 0, "Whitespace - many blanks",                    "    "        },
+  { 1, 1, "Whitespace - only \\x{0000} character",       "\0"          },
+  { 0, 0, "Whitespace - // no text after",               "//"          },
+  { 0, 0, "Whitespace - // with text but no line break", "// "         },
+  { 1, 0, "Whitespace - // with text and line break",    "// \n"       },
+  { 1, 0, "Whitespace - multiline comment",              "/* /* */ */" },
+  { 1, 0, "Whitespace - nested multiline comment",       "/* /* */ */" },
+  { 0, 0, "Whitespace - badly nested multiline comment", "/* */ */"    },
+  { 0, 0, "Whitespace - Uncomplete discard",             "/* */ /*"    },
+  { 0, 0, "Incomplete multi-line comment",               "/* */ /* x"  }
+};
 
 int main(int argc, char **argv) {
   marpaESLIF_t                *marpaESLIFp           = NULL;
@@ -108,6 +127,8 @@ int main(int argc, char **argv) {
   int                          i;
   short                        continueb;
   short                        exhaustedb;
+  short                        valueb;
+  swiftTester_test_t           swiftTester_test;
 
   genericLoggerp = GENERICLOGGER_NEW(GENERICLOGGER_LOGLEVEL_INFO);
 
@@ -138,20 +159,20 @@ int main(int argc, char **argv) {
   }
   for (leveli = 0; leveli < ngrammari; leveli++) {
     if (marpaESLIFGrammar_grammarshowform_by_levelb(marpaESLIFGrammarp, &grammarshows, leveli, NULL)) {
-      GENERICLOGGER_INFO (marpaESLIFOption.genericLoggerp, "-------------------------");
-      GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "SWIFT grammar at level %d:", leveli);
-      GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "-------------------------\n%s", grammarshows);
+      GENERICLOGGER_INFO (genericLoggerp, "-------------------------");
+      GENERICLOGGER_INFOF(genericLoggerp, "SWIFT grammar at level %d:", leveli);
+      GENERICLOGGER_INFOF(genericLoggerp, "-------------------------\n%s", grammarshows);
     }
   }
 
   /* Grammar script */
   if (! marpaESLIFGrammar_grammarshowscriptb(marpaESLIFGrammarp, &grammarscripts)) {
-    GENERICLOGGER_ERRORF(marpaESLIFOption.genericLoggerp, "marpaESLIFGrammar_grammarshowscriptb failure, %s", strerror(errno));
+    GENERICLOGGER_ERRORF(genericLoggerp, "marpaESLIFGrammar_grammarshowscriptb failure, %s", strerror(errno));
     goto err;
   }
-  GENERICLOGGER_INFO (marpaESLIFOption.genericLoggerp, "--------------------");
-  GENERICLOGGER_INFO (marpaESLIFOption.genericLoggerp, "SWIFT grammar script:");
-  GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "--------------------\n%s", grammarscripts);
+  GENERICLOGGER_INFO (genericLoggerp, "--------------------");
+  GENERICLOGGER_INFO (genericLoggerp, "SWIFT grammar script:");
+  GENERICLOGGER_INFOF(genericLoggerp, "--------------------\n%s", grammarscripts);
 
   GENERICLOGGER_LEVEL_SET(genericLoggerp, GENERICLOGGER_LOGLEVEL_TRACE);
 
@@ -205,16 +226,21 @@ int main(int argc, char **argv) {
         }
       }
       if (feof(fd)) {
-        goto go;
+        break;
       }
     }
 
+    swiftTester_test.valueb = 1; /* Assuming user want success */
+    swiftTester_test.names  = argv[1];
+    swiftTester_test.inputs = swiftTester_context.inputs;
     goto go;
 
   } else {
-    for (i = 0; i < (sizeof(inputsp)/sizeof(inputsp[0])); i++) {
-      swiftTester_context.inputs = inputsp[i];
-      swiftTester_context.inputl = strlen(inputsp[i]);
+    for (i = 0; i < (sizeof(swiftTester_testArrayp)/sizeof(swiftTester_testArrayp[0])); i++) {
+      swiftTester_test = swiftTester_testArrayp[i];
+
+      swiftTester_context.inputs = swiftTester_test.inputs;
+      swiftTester_context.inputl = swiftTester_test.inputs != NULL ? (swiftTester_test.forcedInputl > 0 ? swiftTester_test.forcedInputl : strlen(swiftTester_test.inputs)) : 0;
 
     go:
       marpaESLIFRecognizerOption.userDatavp               = &swiftTester_context;
@@ -239,11 +265,13 @@ int main(int argc, char **argv) {
         goto err;
       }
       if (! marpaESLIFRecognizer_scanb(marpaESLIFRecognizerp, 1 /* initialEventsb */, &continueb, &exhaustedb)) {
-        goto err;
+        valueb = 0;
+        goto result;
       }
       while (continueb) {
         if (! marpaESLIFRecognizer_resumeb(marpaESLIFRecognizerp, 0, &continueb, &exhaustedb)) {
-          goto err;
+          valueb = 0;
+          goto result;
         }
       }
 
@@ -262,11 +290,28 @@ int main(int argc, char **argv) {
       }
       marpaESLIFValuep = marpaESLIFValue_newp(marpaESLIFRecognizerp, &marpaESLIFValueOption);
       if (marpaESLIFValuep == NULL) {
-        goto err;
+        valueb = 0;
+        goto result;
       }
-      marpaESLIFValue_valueb(marpaESLIFValuep);
 
-      /* marpaESLIFGrammar_parseb(marpaESLIFGrammarp, &marpaESLIFRecognizerOption, &marpaESLIFValueOption, NULL); */
+      valueb = marpaESLIFValue_valueb(marpaESLIFValuep);
+
+    result:
+      if (swiftTester_test.valueb) {
+        if (valueb) {
+          GENERICLOGGER_INFOF(genericLoggerp, "OK: %s: Success when success expected", swiftTester_test.names);
+        } else {
+          GENERICLOGGER_ERRORF(genericLoggerp, "KO: %s: Success when failure expected", swiftTester_test.names);
+          goto err;
+        }
+      } else {
+        if (valueb) {
+          GENERICLOGGER_ERRORF(genericLoggerp, "KO: %s: Failure when success expected", swiftTester_test.names);
+          goto err;
+        } else {
+          GENERICLOGGER_INFOF(genericLoggerp, "OK: %s: Failure when failure expected", swiftTester_test.names);
+        }
+      }
 
       if (argc == 2) {
         /* Because of the go ;) */

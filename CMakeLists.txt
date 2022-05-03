@@ -167,7 +167,7 @@ MYPACKAGECHECK(exceptionTester3)
 MYPACKAGECHECK(exceptionTester4)
 MYPACKAGECHECK(parameterizedTester)
 MYPACKAGECHECK(allluacallbacksTester)
-# MYPACKAGECHECK(swiftTester)
+MYPACKAGECHECK(swiftTester)
 
 ###########
 # Install #
