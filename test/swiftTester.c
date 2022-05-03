@@ -112,10 +112,10 @@ int main(int argc, char **argv) {
   marpaESLIFGrammar_t         *marpaESLIFGrammarp    = NULL;
   marpaESLIFRecognizer_t      *marpaESLIFRecognizerp = NULL;
   marpaESLIFValue_t           *marpaESLIFValuep      = NULL;
+  int                          exiti                 = 0;
   marpaESLIFOption_t           marpaESLIFOption;
   marpaESLIFOption_t          *marpaESLIFOptionp;
   marpaESLIFGrammarOption_t    marpaESLIFGrammarOption;
-  int                          exiti;
   int                          ngrammari;
   char                        *grammarshows;
   int                          leveli;
@@ -299,17 +299,17 @@ int main(int argc, char **argv) {
     result:
       if (swiftTester_test.valueb) {
         if (valueb) {
-          GENERICLOGGER_INFOF(genericLoggerp, "OK: %s: Success when success expected", swiftTester_test.names);
+          GENERICLOGGER_NOTICEF(genericLoggerp, "OK: %s: Success when success expected", swiftTester_test.names);
         } else {
-          GENERICLOGGER_ERRORF(genericLoggerp, "KO: %s: Success when failure expected", swiftTester_test.names);
-          goto err;
+          GENERICLOGGER_NOTICEF(genericLoggerp, "KO: %s: Success when failure expected", swiftTester_test.names);
+          exiti = 1;
         }
       } else {
         if (valueb) {
-          GENERICLOGGER_ERRORF(genericLoggerp, "KO: %s: Failure when success expected", swiftTester_test.names);
-          goto err;
+          GENERICLOGGER_NOTICEF(genericLoggerp, "KO: %s: Failure when success expected", swiftTester_test.names);
+          exiti = 1;
         } else {
-          GENERICLOGGER_INFOF(genericLoggerp, "OK: %s: Failure when failure expected", swiftTester_test.names);
+          GENERICLOGGER_NOTICEF(genericLoggerp, "OK: %s: Failure when failure expected", swiftTester_test.names);
         }
       }
 
@@ -320,7 +320,6 @@ int main(int argc, char **argv) {
     }
   }
 
-  exiti = 0;
   goto done;
 
  err:
