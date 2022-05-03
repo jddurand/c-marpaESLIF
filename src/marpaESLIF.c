@@ -945,6 +945,7 @@ static inline void                   _marpaESLIF_rule_createshowv(marpaESLIF_t *
 static inline void                   _marpaESLIF_grammar_createshowv(marpaESLIFGrammar_t *marpaESLIFGrammarp, marpaESLIF_grammar_t *grammarp, char *asciishows, size_t *asciishowlp);
 static inline int                    _marpaESLIF_utf82ordi(PCRE2_SPTR8 utf8bytes, marpaESLIF_uint32_t *uint32p, PCRE2_SPTR8 utf8maxexcludedp);
 static inline short                  _marpaESLIFRecognizer_matchPostProcessingb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, size_t matchl);
+static inline short                  _marpaESLIFRecognizer_getNextLineAndColumnb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, size_t matchl);
 static inline short                  _marpaESLIFRecognizer_appendDatab(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, char *datas, size_t datal, short eofb);
 static inline short                  _marpaESLIFRecognizer_createDiscardStateb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp);
 static inline short                  _marpaESLIFRecognizer_createBeforeStateb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp);
@@ -7482,6 +7483,7 @@ static inline short _marpaESLIFRecognizer_symbol_matcherb(marpaESLIFRecognizer_t
       lookaheadMatchb = 1;
       matchedLengthl = 0;
     }
+
     if (lookaheadMatchb) {
       /* Do like _marpaESLIFRecognizer_terminal_matcherb() when it matches */
       marpaESLIFValueResultp->contextp           = NULL;
@@ -7504,9 +7506,6 @@ static inline short _marpaESLIFRecognizer_symbol_matcherb(marpaESLIFRecognizer_t
 #ifndef MARPAESLIF_NTRACE
   MARPAESLIF_CHECK_MATCH_RESULT(funcs, marpaESLIFRecognizerp, symbolp, rci, marpaESLIFValueResultp);
 #endif
-  if (rci == MARPAESLIF_MATCH_OK && marpaESLIFValueResultp->type == MARPAESLIF_VALUE_TYPE_ARRAY && marpaESLIFValueResultp->u.a.sizel == 6634) {
-    short jdd = 0;
-  }
 
   if (rci == MARPAESLIF_MATCH_OK) {
     /* If symbol has an if-action, check it if we are the top-level recognizer */
@@ -9909,8 +9908,7 @@ static inline short _marpaESLIFRecognizer_isDiscardExpectedb(marpaESLIFRecognize
 /* If the discard is possible and can be executed in the context of the      */
 /* caller, this method will take care or that.                               */
 /*                                                                           */
-/* Note that by construction isDiscardExpectedbp and fastDiscardlp are       */
-/* never NULL.                                                               */
+/* By construction isDiscardExpectedbp and fastDiscardlp are never NULL.     */
 /*****************************************************************************/
 {
   static const char          *funcs                               = "_marpaESLIFRecognizer_isDiscardExpectedb";
@@ -16050,10 +16048,10 @@ Returns:      >  0 => the number of bytes consumed
 }
 
 /*****************************************************************************/
-static inline short _marpaESLIFRecognizer_matchPostProcessingb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, size_t matchl)
+static inline short _marpaESLIFRecognizer_getNextLineAndColumnb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, size_t matchl)
 /*****************************************************************************/
 {
-  static const char          *funcs              = "_marpaESLIFRecognizer_matchPostProcessingb";
+  static const char          *funcs              = "_marpaESLIFRecognizer_getNextLineAndColumnb";
   marpaESLIF_stream_t        *marpaESLIF_streamp = marpaESLIFRecognizerp->marpaESLIF_streamp;
   marpaESLIF_terminal_t      *newlinep;
   char                       *linep;
@@ -16115,6 +16113,34 @@ static inline short _marpaESLIFRecognizer_matchPostProcessingb(marpaESLIFRecogni
         marpaESLIF_streamp->columnl++;
       }
     }
+  }
+
+  rcb = 1;
+  goto done;
+
+ err:
+  rcb = 0;
+
+ done:
+  MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "return %d", (int) rcb);
+  MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_DEC(marpaESLIFRecognizerp);
+  return rcb;
+}
+
+/*****************************************************************************/
+static inline short _marpaESLIFRecognizer_matchPostProcessingb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, size_t matchl)
+/*****************************************************************************/
+{
+  static const char   *funcs              = "_marpaESLIFRecognizer_matchPostProcessingb";
+  marpaESLIF_stream_t *marpaESLIF_streamp = marpaESLIFRecognizerp->marpaESLIF_streamp;
+  short                rcb;
+
+  MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_INC(marpaESLIFRecognizerp);
+  MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "start");
+
+  /* Update line and column numbers */
+  if (MARPAESLIF_UNLIKELY(! _marpaESLIFRecognizer_getNextLineAndColumnb(marpaESLIFRecognizerp, matchl))) {
+    goto err;
   }
 
   /* Update internal position */
