@@ -13359,11 +13359,6 @@ static inline short __marpaESLIFRecognizer_discardb(marpaESLIFRecognizer_t *marp
       if (discardl > minl) {
         MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Discard successful on %ld bytes", (unsigned long) discardl);
 
-        /* New line processing, etc... */
-        if (MARPAESLIF_UNLIKELY(! _marpaESLIFRecognizer_matchPostProcessingb(marpaESLIFRecognizerp, discardl))) {
-          goto err;
-        }
-
         if (! noEventb) {
           /* We want to do as if we would have done a lexeme complete before */
           if (! appendEventb) {
@@ -13379,6 +13374,12 @@ static inline short __marpaESLIFRecognizer_discardb(marpaESLIFRecognizer_t *marp
             goto err;
           }
         }
+
+        /* New line processing, etc... */
+        if (MARPAESLIF_UNLIKELY(! _marpaESLIFRecognizer_matchPostProcessingb(marpaESLIFRecognizerp, discardl))) {
+          goto err;
+        }
+
       } else {
         MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Discard rejected: %ld bytes < %ld bytes", (unsigned long) discardl, (unsigned long) minl);
         discardl = 0;
@@ -18045,11 +18046,8 @@ static inline short _marpaESLIFRecognizer_internalStack_i_setb(marpaESLIFRecogni
   /* -------------------------------------------------------------------------------------------------- */
   MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "marpaESLIFValueResultOrigp->type=%d (%s), marpaESLIFValueResultp->type=%d (%s)", marpaESLIFValueResultOrigp->type, _marpaESLIF_value_types(marpaESLIFValueResultOrigp->type), marpaESLIFValueResultp->type, _marpaESLIF_value_types(marpaESLIFValueResultp->type));
 
-  /* When we are a sub-recognizer, per definition origin and destination are both shallow: no need to check */
-  /* for a free, we just copy the result. So we need to check if there is something to free only when this */
-  /* is the top recognizer and when forgetb is not set. */
-  /* We do this optimization only when we are sure, i.e. when marpaESLIFValueResultOrigp->contextp is NULL. */
-  if (((marpaESLIFValueResultOrigp->contextp != NULL) || MARPAESLIFRECOGNIZER_IS_TOP(marpaESLIFRecognizerp)) && (! forgetb)) {
+  /* Free origin unless we are told to forget about it */
+  if (! forgetb) {
     if (! _marpaESLIFRecognizer_pointers_cleanupb(marpaESLIFRecognizerp, marpaESLIFValueResultOrigp, marpaESLIFValueResultp)) {
       goto err;
     }
