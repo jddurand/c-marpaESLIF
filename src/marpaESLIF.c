@@ -17606,6 +17606,11 @@ static inline short _marpaESLIFRecognizer_expectedTerminalsb(marpaESLIFRecognize
   return rcb;
 }
 
+#if defined(__GNUC__) && __GNUC__ >= 5
+#  pragma GCC diagnostic push
+#  pragma GCC diagnostic ignored "-Wswitch"
+#endif /* __GNUC__ */
+
 /*****************************************************************************/
 static inline short _marpaESLIF_eslif2hostb(marpaESLIF_t *marpaESLIFp, void *namespacep, marpaESLIFValueResult_t *marpaESLIFValueResultp, void *userDatavp, marpaESLIFGenericImport_t importerp)
 /*****************************************************************************/
@@ -17645,11 +17650,6 @@ static inline short _marpaESLIF_eslif2hostb(marpaESLIF_t *marpaESLIFp, void *nam
   while (GENERICSTACK_USED(marpaESLIFValueResultStackp) > 0) {
     marpaESLIFValueResultWorkp = (marpaESLIFValueResult_t *) GENERICSTACK_POP_PTR(marpaESLIFValueResultStackp);
 
-#ifdef __GNUC__
-#  pragma GCC diagnostic push
-#  pragma GCC diagnostic ignored "-Wswitch"
-#endif /* __GNUC__ */
-
     switch (marpaESLIFValueResultWorkp->type) {
     case MARPAESLIF_VALUE_TYPE_LAZY_NOUNDEF:
       haveUndefb = 0;
@@ -17677,10 +17677,6 @@ static inline short _marpaESLIF_eslif2hostb(marpaESLIF_t *marpaESLIFp, void *nam
       lazyb = 0;
       break;
     }
-
-#ifdef __GNUC__
-#  pragma GCC diagnostic pop
-#endif /* __GNUC__ */
 
     switch (marpaESLIFValueResultWorkp->type) {
     case MARPAESLIF_VALUE_TYPE_UNDEF:
@@ -17841,6 +17837,10 @@ static inline short _marpaESLIF_eslif2hostb(marpaESLIF_t *marpaESLIFp, void *nam
  fast_done:
   return rcb;
 }
+
+#if defined(__GNUC__) && __GNUC__ >= 5
+#  pragma GCC diagnostic pop
+#endif /* __GNUC__ */
 
 /*****************************************************************************/
 short marpaESLIFValue_importb(marpaESLIFValue_t *marpaESLIFValuep, marpaESLIFValueResult_t *marpaESLIFValueResultp)
