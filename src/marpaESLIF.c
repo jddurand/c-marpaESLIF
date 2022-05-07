@@ -14663,6 +14663,13 @@ static inline short __marpaESLIFRecognizer_readb(marpaESLIFRecognizer_t *marpaES
 
   if (MARPAESLIF_UNLIKELY(marpaESLIFRecognizerp->marpaESLIFRecognizerOption.readerCallbackp == NULL)) {
     MARPAESLIF_ERROR(marpaESLIFp, "Null reader callback");
+    errno = EINVAL;
+    goto err;
+  }
+
+  if (MARPAESLIF_UNLIKELY(marpaESLIF_streamp->eofb)) {
+    MARPAESLIF_ERROR(marpaESLIFp, "Stream is already at eof");
+    errno = ENOSYS;
     goto err;
   }
 
