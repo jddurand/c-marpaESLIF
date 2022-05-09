@@ -7,6 +7,7 @@
 #include <marpaESLIF.h>
 
 typedef struct marpaESLIFTester_context {
+  short            firstb;
   genericLogger_t *genericLoggerp;
   char            *inputs;
   size_t           inputl;
@@ -14,6 +15,14 @@ typedef struct marpaESLIFTester_context {
 
 const static char *base_dsl = "\n"
   ":default ::= default-encoding => UTF-8\n"
+  "  action           => ::lua->function(...)\n"
+  "                               -- Lua semantics!\n"
+  "                               return concat(...)\n"
+  "                             end\n"
+  "  symbol-action    => ::luac->function(...)\n"
+  "                               -- Lua semantics!\n"
+  "                               return concat(...)\n"
+  "                             end\n"
   ":start ::= deal\n"
   "deal ::= hands\n"
   "hands ::= hand | hands ';' hand\n"
@@ -24,6 +33,19 @@ const static char *base_dsl = "\n"
   ":discard ::= /[\\s]+/\n"
   "\n"
   ":symbol ::= <card> pause => after event => card\n"
+  "<luascript>\n"
+  "function concat(...)\n"
+  "  local args = table.pack(...)\n"
+  "  rc = ''\n"
+  "  for i=1,args.n do\n"
+  "    if (args[i] ~= nil) then\n"
+  "      rc = rc..tostring(args[i])\n"
+  "    end\n"
+  "  end\n"
+  "  print('=============> In concat')\n"
+  "  return rc\n"
+  "end\n"
+  "</luascript>\n"
   ;
 
 #define BLACK_HEART_SUIT_UTF8s   "\xE2\x99\xA5"
@@ -120,6 +142,8 @@ int main() {
     goto err;
   }
 
+  GENERICLOGGER_LEVEL_SET(genericLoggerp, GENERICLOGGER_LOGLEVEL_TRACE);
+
   for (test_datai = 0; test_datai < sizeof(tests_input)/sizeof(tests_input[0]); test_datai++) {
     for (suit_linei = 0; suit_linei < sizeof(suit_line)/sizeof(suit_line[0]); suit_linei++) {
 
@@ -156,6 +180,7 @@ int main() {
         goto err;
       }
 
+      marpaESLIFTester_context.firstb         = 1;
       marpaESLIFTester_context.genericLoggerp = genericLoggerp;
       marpaESLIFTester_context.inputs         = (char *) tests_input[test_datai];
       marpaESLIFTester_context.inputl         = strlen(tests_input[test_datai]);
@@ -166,7 +191,7 @@ int main() {
       marpaESLIFRecognizerOption.exhaustedb               = 0;
       marpaESLIFRecognizerOption.newlineb                 = 1;
       marpaESLIFRecognizerOption.trackb                   = 1;
-      marpaESLIFRecognizerOption.bufsizl                  = 0;
+      marpaESLIFRecognizerOption.bufsizl                  = 1;
       marpaESLIFRecognizerOption.buftriggerperci          = 50;
       marpaESLIFRecognizerOption.bufaddperci              = 50;
       marpaESLIFRecognizerOption.ifActionResolverp        = NULL;
@@ -291,7 +316,10 @@ int main() {
         GENERICLOGGER_ERRORF(genericLoggerp, "Got test parse result %d, excepted %d", test_parse_result_type, tests_parse_result[test_datai]);
         goto err;
       }
+
+      break;
     }
+    break;
   }
 
   exiti = 0;
@@ -334,14 +362,36 @@ static short inputReaderb(void *userDatavp, char **inputsp, size_t *inputlp, sho
 /*****************************************************************************/
 {
   marpaESLIFTester_context_t *marpaESLIFTester_contextp = (marpaESLIFTester_context_t *) userDatavp;
+  size_t                      sendl;
+
+  GENERICLOGGER_INFOF(marpaESLIFTester_contextp->genericLoggerp, "inputReaderb: before: inputs=%p, inputl=%04ld", marpaESLIFTester_contextp->inputs, (unsigned long) marpaESLIFTester_contextp->inputl);
+
+  if (marpaESLIFTester_contextp->firstb) {
+    /* For a correct BOM check we always want to send at least 4 bytes at the very beginning */
+    sendl = 4;
+    marpaESLIFTester_contextp->firstb = 0;
+  } else {
+    /* Else send 10000 bytes if possible */
+    sendl = 10000;
+  }
+
+  if (sendl > marpaESLIFTester_contextp->inputl) {
+    sendl = marpaESLIFTester_contextp->inputl;
+  }
 
   *inputsp              = marpaESLIFTester_contextp->inputs;
-  *inputlp              = marpaESLIFTester_contextp->inputl;
-  *eofbp                = 1;
-  *characterStreambp    = 1; /* We say this is a stream of characters */
+  *inputlp              = sendl;
+  *characterStreambp    = 0;
   *encodingsp           = NULL;
   *encodinglp           = 0;
   *disposeCallbackpp    = NULL;
+
+  marpaESLIFTester_contextp->inputs += sendl;
+  marpaESLIFTester_contextp->inputl -= sendl;
+
+  *eofbp = marpaESLIFTester_contextp->inputl <= 0 ? 1 : 0;
+
+  GENERICLOGGER_INFOF(marpaESLIFTester_contextp->genericLoggerp, "inputReaderb: after : inputs=%p, inputl=%04ld, *eofbp=%d", marpaESLIFTester_contextp->inputs, (unsigned long) marpaESLIFTester_contextp->inputl, (int) *eofbp);
 
   return 1;
 }
