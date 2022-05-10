@@ -257,9 +257,15 @@ int main(int argc, char **argv) {
       marpaESLIFRecognizerOption.regexActionResolverp     = NULL;
       marpaESLIFRecognizerOption.generatorActionResolverp = NULL;
 
+      if (marpaESLIFValuep != NULL) {
+        marpaESLIFValue_freev(marpaESLIFValuep);
+        marpaESLIFValuep = NULL;
+      }
       if (marpaESLIFRecognizerp != NULL) {
         marpaESLIFRecognizer_freev(marpaESLIFRecognizerp);
+        marpaESLIFRecognizerp = NULL;
       }
+
       marpaESLIFRecognizerp = marpaESLIFRecognizer_newp(marpaESLIFGrammarp, &marpaESLIFRecognizerOption);
       if (marpaESLIFRecognizerp == NULL) {
         goto err;
@@ -285,9 +291,6 @@ int main(int argc, char **argv) {
       marpaESLIFValueOption.nullb                 = 0;    /* Default: 0 */
       marpaESLIFValueOption.maxParsesi            = 0;    /* Default: 0 */
 
-      if (marpaESLIFValuep != NULL) {
-        marpaESLIFValue_freev(marpaESLIFValuep);
-      }
       marpaESLIFValuep = marpaESLIFValue_newp(marpaESLIFRecognizerp, &marpaESLIFValueOption);
       if (marpaESLIFValuep == NULL) {
         valueb = 0;
