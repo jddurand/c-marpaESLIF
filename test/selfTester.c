@@ -990,8 +990,8 @@ static short inputReaderb(void *userDatavp, char **inputsp, size_t *inputlp, sho
     sendl = 4;
     marpaESLIFTester_contextp->firstb = 0;
   } else {
-    /* Else send 10000 bytes if possible */
-    sendl = 10000;
+    /* Else send 100 bytes if possible */
+    sendl = 100;
   }
 
   if (sendl > marpaESLIFTester_contextp->inputl) {
