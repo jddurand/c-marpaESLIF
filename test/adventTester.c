@@ -42,7 +42,7 @@ const static char *base_dsl = "\n"
   "      rc = rc..tostring(args[i])\n"
   "    end\n"
   "  end\n"
-  "  print('=============> In concat')\n"
+  "  print('=============> In concat:'..rc)\n"
   "  return rc\n"
   "end\n"
   "</luascript>\n"
@@ -124,7 +124,7 @@ int main() {
   char                        *handsp = NULL;
   short                        rcmanage_eventsb;
 
-  genericLoggerp = GENERICLOGGER_NEW(GENERICLOGGER_LOGLEVEL_DEBUG);
+  genericLoggerp = GENERICLOGGER_NEW(GENERICLOGGER_LOGLEVEL_TRACE);
   if (genericLoggerp == NULL) {
     perror("GENERICLOGGER_NEW");
     goto err;
