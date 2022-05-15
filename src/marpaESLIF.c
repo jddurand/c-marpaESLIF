@@ -1220,6 +1220,7 @@ static inline marpaESLIFGrammar_bootstrap_t   *_marpaESLIFGrammar_bootstrap_newp
 static inline marpaESLIFGrammar_t   *_marpaESLIFGrammar_newp(marpaESLIF_t *marpaESLIFp, marpaESLIFGrammarOption_t *marpaESLIFGrammarOptionp, marpaESLIFGrammar_Lshare_t *Lsharep, short bootstrapb, short rememberGrammarUtf8b, char *forcedStartSymbols, int forcedStartSymbolLeveli, marpaESLIFGrammar_bootstrap_t *marpaESLIFGrammar_bootstrapOrigp);
 
 static inline short                  _marpaESLIFRecognizer_terminal_matcherb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIF_stream_t *marpaESLIF_streamp, marpaESLIF_terminal_t *terminalp, char *inputs, size_t inputl, short eofb, marpaESLIF_matcher_value_t *rcip, marpaESLIFValueResult_t *marpaESLIFValueResultp, size_t *matchedLengthlp);
+static inline short                  _marpaESLIFRecognizer_terminal_matcher_set_resultb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIF_stream_t *marpaESLIF_streamp, short allocb, marpaESLIF_matcher_value_t rci, marpaESLIF_matcher_value_t *rcip, marpaESLIFValueResult_t *marpaESLIFValueResultp, char *matchedp, size_t matchedLengthl, size_t *matchedLengthlp);
 static inline short                  _marpaESLIFRecognizer_meta_matcherb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIF_symbol_t *symbolp, marpaESLIF_matcher_value_t *rcip, marpaESLIFValueResult_t *marpaESLIFValueResultp, short *isExhaustedbp, int maxStartCompletionsi, size_t *lastSizeBeforeCompletionlp, int *numberOfStartCompletionsip, size_t *matchedLengthlp);
 static inline marpaESLIF_grammar_t  *_marpaESLIFRecognizer_meta_subGrammarp(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIF_symbol_t *symbolp);
 static inline short                  _marpaESLIFRecognizer_symbol_matcherb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIF_stream_t *marpaESLIF_streamp, marpaESLIF_symbol_t *symbolp, marpaESLIF_matcher_value_t *rcip, marpaESLIFValueResult_t *marpaESLIFValueResultp, int maxStartCompletionsi, size_t *lastSizeBeforeCompletionlp, int *numberOfStartCompletionsip, size_t *matchedLengthlp);
@@ -2524,7 +2525,7 @@ static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *mar
   terminalp->patterni = pseudob ? 0 : pcre2Optioni;
   terminalp->type     = type;
 
-  /* For strings and characters classes, lookup 256 ASCII bytes for predicted failures */
+  /* For strings and characters classes, lookup the first 256 ASCII or UTF-8 characters for predicted failures */
   if (terminalp->regex.isAnchoredb && ((terminalp->type == MARPAESLIF_TERMINAL_TYPE_STRING) || characterClassb)) {
 
     /* Fake a recognizer. EOF flag will be set automatically in fake mode */
@@ -7235,6 +7236,48 @@ static inline short _marpaESLIFRecognizer_terminal_matcherb(marpaESLIFRecognizer
   }
 
  fast_done:
+  if (MARPAESLIF_UNLIKELY(! _marpaESLIFRecognizer_terminal_matcher_set_resultb(marpaESLIFRecognizerp, marpaESLIF_streamp, allocb, rci, rcip, marpaESLIFValueResultp, matchedp, matchedLengthl, matchedLengthlp))) {
+    goto err;
+  }
+
+  rcb = 1;
+  goto done;
+
+ fatal:
+  rcb = -1;
+  goto done;
+
+ err:
+  rcb = 0;
+
+ done:
+#ifndef MARPAESLIF_NTRACE
+  switch (rci) {
+  case MARPAESLIF_MATCH_OK:
+    MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "%s for %s", "MARPAESLIF_MATCH_OK", terminalp->descp->asciis);
+    break;
+  case MARPAESLIF_MATCH_FAILURE:
+    MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "%s for %s", "MARPAESLIF_MATCH_FAILURE", terminalp->descp->asciis);
+    break;
+  case MARPAESLIF_MATCH_AGAIN:
+    MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "%s for %s", "MARPAESLIF_MATCH_AGAIN", terminalp->descp->asciis);
+    break;
+  default:
+    MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "%s for %s", "???", terminalp->descp->asciis);
+    break;
+  }
+#endif
+  MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "return %d", (int) rcb);
+  MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_DEC(marpaESLIFRecognizerp);
+  return rcb;
+}
+
+/*****************************************************************************/
+static inline short _marpaESLIFRecognizer_terminal_matcher_set_resultb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIF_stream_t *marpaESLIF_streamp, short allocb, marpaESLIF_matcher_value_t rci, marpaESLIF_matcher_value_t *rcip, marpaESLIFValueResult_t *marpaESLIFValueResultp, char *matchedp, size_t matchedLengthl, size_t *matchedLengthlp)
+/*****************************************************************************/
+{
+  static const char *funcs = "_marpaESLIFRecognizer_terminal_matcher_fast_doneb";
+  short              rcb;
 
   if (rci == MARPAESLIF_MATCH_OK) {
     if (marpaESLIFValueResultp != NULL) {
@@ -7273,40 +7316,21 @@ static inline short _marpaESLIFRecognizer_terminal_matcherb(marpaESLIFRecognizer
 	}
       }
     }
-    /* By definition matchedLengthl is set */
+
+    /* By construction matchedLengthlp must always be set */
     *matchedLengthlp = matchedLengthl;
   }
 
+  /* By construction rcip must always be set */
   *rcip = rci;
-  rcb = 1;
-  goto done;
 
- fatal:
-  rcb = -1;
+  rcb = 1;
   goto done;
 
  err:
   rcb = 0;
 
  done:
-#ifndef MARPAESLIF_NTRACE
-  switch (rci) {
-  case MARPAESLIF_MATCH_OK:
-    MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "%s for %s", "MARPAESLIF_MATCH_OK", terminalp->descp->asciis);
-    break;
-  case MARPAESLIF_MATCH_FAILURE:
-    MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "%s for %s", "MARPAESLIF_MATCH_FAILURE", terminalp->descp->asciis);
-    break;
-  case MARPAESLIF_MATCH_AGAIN:
-    MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "%s for %s", "MARPAESLIF_MATCH_AGAIN", terminalp->descp->asciis);
-    break;
-  default:
-    MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "%s for %s", "???", terminalp->descp->asciis);
-    break;
-  }
-#endif
-  MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "return %d", (int) rcb);
-  MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_DEC(marpaESLIFRecognizerp);
   return rcb;
 }
 
@@ -10643,6 +10667,8 @@ static inline short _marpaESLIFRecognizer_resume_oneb(marpaESLIFRecognizer_t *ma
   size_t                           exceptionMatchedLengthl;
   int                              utf82ordi;
   marpaESLIF_uint32_t              codepointi;
+  short                            singleAsciiCharacterPredictedSuccessb;
+  short                            singleUtfCharacterPredictedSuccessb;
 
   MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_INC(marpaESLIFRecognizerp);
   MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "start, maxStartCompletionsi=%d", marpaESLIFRecognizerp->maxStartCompletionsi);
@@ -10689,7 +10715,7 @@ static inline short _marpaESLIFRecognizer_resume_oneb(marpaESLIFRecognizer_t *ma
     asciipredictionb = 1;
     uc = (unsigned char) marpaESLIF_streamp->inputs[0];
     /* For UTF-8 we want to make sure we are at eof or there are at least 4 bytes */
-    if ((marpaESLIF_streamp->inputl >= 4) && marpaESLIF_streamp->utfb) {
+    if ((marpaESLIF_streamp->eofb || (marpaESLIF_streamp->inputl >= 4)) && marpaESLIF_streamp->utfb) {
       utf82ordi = _marpaESLIF_utf82ordi((PCRE2_SPTR8) marpaESLIF_streamp->inputs, &codepointi, (PCRE2_SPTR8) (marpaESLIF_streamp->inputs + marpaESLIF_streamp->inputl));
       if (MARPAESLIF_UNLIKELY(utf82ordi > 0)) {
         /* We support predicted UTF-8 failure only for codepoints < 256 */
@@ -10706,8 +10732,8 @@ static inline short _marpaESLIFRecognizer_resume_oneb(marpaESLIFRecognizer_t *ma
       utfpredictionb = 0;
     }
   } else {
-    utfpredictionb   = 0;
     asciipredictionb = 0;
+    utfpredictionb   = 0;
   }
 
   while (1) {
@@ -10725,18 +10751,61 @@ static inline short _marpaESLIFRecognizer_resume_oneb(marpaESLIFRecognizer_t *ma
 	break;
       }
 
-      /* Predicted failure ? */
+      /* Predicted failure or success ? */
       if (candidatep->type == MARPAESLIF_SYMBOL_TYPE_TERMINAL) {
-        if (asciipredictionb && candidatep->u.terminalp->byte2failureb && candidatep->u.terminalp->willfailasciib[uc]) {
-          MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Symbol No %d <%s> is predicted to fail (ASCII character %c 0x%02x)", candidatep->idi, candidatep->descp->asciis, isprint(uc) ? (char) uc : ' ', (unsigned int) uc);
-          willFailsymbolArraypp[willFailsymboll++] = candidatep;
-          continue;
+        /* Can we do ASCII prediction ? */
+        if (asciipredictionb) {
+          /* Does the terminal support ASCII failure prediction ? If yes, by definition, this will be either an anchored string or and anchored character class. */
+          if (candidatep->u.terminalp->byte2failureb) {
+            /* Apply ASCII failure prediction */
+            if (candidatep->u.terminalp->willfailasciib[uc]) {
+              MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Symbol No %d <%s> is predicted to fail (ASCII character %c 0x%02x)", candidatep->idi, candidatep->descp->asciis, isprint(uc) ? (char) uc : ' ', (unsigned int) uc);
+              willFailsymbolArraypp[willFailsymboll++] = candidatep;
+              continue;
+            } else {
+              /* If the terminal is a character class or a string of length 1 then by definition it matches */
+              if (candidatep->u.terminalp->regex.characterClassb || ((candidatep->u.terminalp->type == MARPAESLIF_TERMINAL_TYPE_STRING) && (candidatep->u.terminalp->patternl == 1))) {
+                MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Symbol No %d <%s> is predicted to succeed (ASCII character %c 0x%02x)", candidatep->idi, candidatep->descp->asciis, isprint(uc) ? (char) uc : ' ', (unsigned int) uc);
+                singleAsciiCharacterPredictedSuccessb = 1;
+              } else {
+                singleAsciiCharacterPredictedSuccessb = 0;
+              }
+            }
+          } else {
+            singleAsciiCharacterPredictedSuccessb = 0;
+          }
+        } else {
+          singleAsciiCharacterPredictedSuccessb = 0;
         }
-        if (utfpredictionb && candidatep->u.terminalp->utf2failureb && candidatep->u.terminalp->willfailutfb[codepointi]) {
-          MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Symbol No %d <%s> is predicted to fail (UTF-8 character U+%04d)", candidatep->idi, candidatep->descp->asciis, (unsigned int) codepointi);
-          willFailsymbolArraypp[willFailsymboll++] = candidatep;
-          continue;
+
+        /* Can we do UTF-8 prediction ? */
+        if (utfpredictionb) {
+          /* Does the terminal support UTF-8 failure prediction ? */
+          if (candidatep->u.terminalp->utf2failureb) {
+            /* Apply UTF-8 failure prediction ? If yes, by definition, this will be either an anchored string or and anchored character class. */
+            if (candidatep->u.terminalp->willfailutfb[codepointi]) {
+              MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Symbol No %d <%s> is predicted to fail (UTF-8 character U+%04d)", candidatep->idi, candidatep->descp->asciis, (unsigned int) codepointi);
+              willFailsymbolArraypp[willFailsymboll++] = candidatep;
+              continue;
+            } else {
+              /* If the codepoint is < 256 and if the terminal is a character class or a string of the same number of bytes as for codepointi by definition it matches */
+              if ((codepointi < 256) &&
+                  (candidatep->u.terminalp->regex.characterClassb || ((candidatep->u.terminalp->type == MARPAESLIF_TERMINAL_TYPE_STRING) && (candidatep->u.terminalp->patternl == utf8_2_bytes_max_arrayp[codepointi].lengthl)))) {
+                MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "Symbol No %d <%s> is predicted to succeed (UTF-8 character U+%04d)", candidatep->idi, candidatep->descp->asciis, (unsigned int) codepointi);
+                singleUtfCharacterPredictedSuccessb = 1;
+              } else {
+                singleUtfCharacterPredictedSuccessb = 0;
+              }
+            }
+          } else {
+            singleUtfCharacterPredictedSuccessb = 0;
+          }
+        } else {
+          singleUtfCharacterPredictedSuccessb = 0;
         }
+      } else {
+        singleAsciiCharacterPredictedSuccessb = 0;
+        singleUtfCharacterPredictedSuccessb = 0;
       }
 
       if (marpaESLIFRecognizerp->pristineb) {
@@ -10801,13 +10870,47 @@ static inline short _marpaESLIFRecognizer_resume_oneb(marpaESLIFRecognizer_t *ma
     exceptionp = symbolp->exceptionp;
     if (exceptionp == NULL) {
       /* No need to track anything - we want to have both the result in term of matched length and the true valuation when the symbol is parameterized. */
-      rcMatcherb = _marpaESLIFRecognizer_symbol_matcherb(marpaESLIFRecognizerp, marpaESLIF_streamp, symbolp, &rci, &marpaESLIFValueResult, 0 /* maxStartCompletionsi */, NULL /* lastSizeBeforeCompletionlp */, &numberOfStartCompletionsi, &matchedLengthl);
-      if (MARPAESLIF_UNLIKELY(rcMatcherb < 0)) {
-        goto err;
+      if (singleAsciiCharacterPredictedSuccessb) {
+
+        numberOfStartCompletionsi = 1; /* A terminal match always has only one start completion */
+        if (MARPAESLIF_UNLIKELY(! _marpaESLIFRecognizer_terminal_matcher_set_resultb(marpaESLIFRecognizerp,
+                                                                                     marpaESLIF_streamp,
+                                                                                     marpaESLIF_streamp->eofb ? 0 : 1, /* allocb */
+                                                                                     MARPAESLIF_MATCH_OK, /* rci */
+                                                                                     &rci,
+                                                                                     &marpaESLIFValueResult,
+                                                                                     marpaESLIF_streamp->inputs, /* matchedp */
+                                                                                     1, /* matchedLengthl */
+                                                                                     &matchedLengthl))) {
+          goto err;
+        }
+
+      } else if (singleUtfCharacterPredictedSuccessb) {
+
+        numberOfStartCompletionsi = 1; /* A terminal match always has only one start completion */
+        if (MARPAESLIF_UNLIKELY(! _marpaESLIFRecognizer_terminal_matcher_set_resultb(marpaESLIFRecognizerp,
+                                                                                     marpaESLIF_streamp,
+                                                                                     marpaESLIF_streamp->eofb ? 0 : 1, /* allocb */
+                                                                                     MARPAESLIF_MATCH_OK, /* rci */
+                                                                                     &rci,
+                                                                                     &marpaESLIFValueResult,
+                                                                                     marpaESLIF_streamp->inputs, /* matchedp */
+                                                                                     utf8_2_bytes_max_arrayp[codepointi].lengthl, /* matchedLengthl */
+                                                                                     &matchedLengthl))) {
+          goto err;
+        }
+
+      } else {
+
+        rcMatcherb = _marpaESLIFRecognizer_symbol_matcherb(marpaESLIFRecognizerp, marpaESLIF_streamp, symbolp, &rci, &marpaESLIFValueResult, 0 /* maxStartCompletionsi */, NULL /* lastSizeBeforeCompletionlp */, &numberOfStartCompletionsi, &matchedLengthl);
+        if (MARPAESLIF_UNLIKELY(rcMatcherb < 0)) {
+          goto err;
+        }
+        if (! rcMatcherb) {
+          continue;
+        }
       }
-      if (! rcMatcherb) {
-        continue;
-      }
+
     } else {
       /* Exception rules are always true lexemes or terminals, that are not allowed to be parameterized */
       rcMatcherb = _marpaESLIFRecognizer_symbol_matcherb(marpaESLIFRecognizerp, marpaESLIF_streamp, symbolp, &rci, &marpaESLIFValueResult, -1 /* maxStartCompletionsi */, NULL /* lastSizeBeforeCompletionlp */, &numberOfStartCompletionsi, &matchedLengthl);
