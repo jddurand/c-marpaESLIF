@@ -10717,7 +10717,7 @@ static inline short _marpaESLIFRecognizer_resume_oneb(marpaESLIFRecognizer_t *ma
     /* For UTF-8 we want to make sure we are at eof or there are at least 4 bytes */
     if ((marpaESLIF_streamp->eofb || (marpaESLIF_streamp->inputl >= 4)) && marpaESLIF_streamp->utfb) {
       utf82ordi = _marpaESLIF_utf82ordi((PCRE2_SPTR8) marpaESLIF_streamp->inputs, &codepointi, (PCRE2_SPTR8) (marpaESLIF_streamp->inputs + marpaESLIF_streamp->inputl));
-      if (MARPAESLIF_UNLIKELY(utf82ordi > 0)) {
+      if (MARPAESLIF_LIKELY(utf82ordi > 0)) {
         /* We support predicted UTF-8 failure only for codepoints < 256 */
         if (codepointi < 256) {
           utfpredictionb = 1;
