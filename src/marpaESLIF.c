@@ -18665,10 +18665,12 @@ static inline short _marpaESLIFRecognizer_internalStack_i_setb(marpaESLIFRecogni
     /* Get original value */
     /* ------------------ */
     marpaESLIFValueResultOrigp = GENERICSTACK_GET_CUSTOMP(valueResultStackp, indicei);
+#ifndef MARPAESLIF_NTRACE /* We made sure indicei is a valid indice - this cannot fail unless memory corruption */
     if (MARPAESLIF_UNLIKELY(GENERICSTACK_ERROR(valueResultStackp))) {
       MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "GENERICSTACK_GET_CUSTOMP on valueResultStackp failure, %s", strerror(errno));
       goto err;
     }
+#endif
   }
 
   /* -------------------------------------------------------------------------------------------------- */
