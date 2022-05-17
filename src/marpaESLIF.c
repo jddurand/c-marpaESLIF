@@ -10742,7 +10742,7 @@ static inline short _marpaESLIFRecognizer_resume_oneb(marpaESLIFRecognizer_t *ma
       candidatep = *symbolpp++;
 
       /* Out prioritized ? Exit the loop on candidates, because the list of candidates is sorted by priority descending */
-      if (lastMatchedPriorityInitializedb && candidatep->priorityi < lastMatchedMinPriorityi) {
+      if (lastMatchedPriorityInitializedb && (candidatep->priorityi < lastMatchedMinPriorityi)) {
 	MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp,
 				    funcs,
 				    "Skipping other alternatives that all have priority < min priority %d",
@@ -10833,14 +10833,6 @@ static inline short _marpaESLIFRecognizer_resume_oneb(marpaESLIFRecognizer_t *ma
 
     /* Remember the number of candidates */
     ++nCandidatel;
-
-    if (lastMatchedPriorityInitializedb && symbolp->priorityi < lastMatchedMinPriorityi) {
-      MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp,
-                                  funcs,
-                                  "Skipping other alternatives that all have priority < min priority %d",
-                                  lastMatchedMinPriorityi);
-      break;
-    }
 
     if (onlyPredictedLexemesb) {
       /* Skip this symbol if it is not a predicted lexeme... */
