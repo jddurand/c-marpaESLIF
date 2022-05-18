@@ -16,6 +16,7 @@
 #include "marpaESLIF/internal/bootstrap.h"
 #include "marpaESLIF/internal/lua.h"
 #include "marpaESLIF/internal/json.h"
+#include "marpaESLIF/internal/iqsort.h"
 
 #ifndef offsetof
 #  define offsetof(type, member) ((size_t)((char *)&((type *)0)->member - (char *)0))
@@ -30,6 +31,9 @@
 
 #define MARPAESLIFVALUERESULT_SHALLOWB_OFFSETOF offsetof(marpaESLIFValueResult_t, u.p.shallowb)
 #define MARPAESLIFVALUERESULT_TO_SHALLOWB(marpaESLIFValueResultp) (* (short *) (((char *) (marpaESLIFValueResultp)) + MARPAESLIFVALUERESULT_SHALLOWB_OFFSETOF))
+
+/* Inlined qsort methods */
+#define MARPAESLIFVALUERESULT_P_SORT(a,b) (MARPAESLIFVALUERESULT_TO_P(((genericStackItem_t *) (a))->u.p) < MARPAESLIFVALUERESULT_TO_P(((genericStackItem_t *) (b))->u.p))
 
 #ifdef MARPAESLIF_HAVE_LONG_LONG
 #define MARPAESLIFRECOGNIZER_MARPAESLIFVALUE_TRACE(funcs, marpaESLIFRecognizerp, whats, stacki, marpaESLIFValueResultp) do { \
@@ -1397,7 +1401,7 @@ static        short                  _marpaESLIF_symbol_action___jsonb(void *use
 static        short                  _marpaESLIF_symbol_action___jsonfb(void *userDatavp, marpaESLIFValue_t *marpaESLIFValuep, marpaESLIFValueResult_t *marpaESLIFValueResultp, int resulti);
 static        int                    _marpaESLIF_event_sorti(const void *p1, const void *p2);
 static        int                    _marpaESLIF_symbol_priority_sorti(const void *p1, const void *p2);
-static        int                    _marpaESLIF_cleanup_sorti(const void *p1, const void *p2);
+static inline int                    _marpaESLIF_cleanup_sorti(const void *p1, const void *p2);
 static inline unsigned long          _marpaESLIF_djb2_s(unsigned char *str, size_t lengthl);
 static inline int                    _marpaESLIF_inlined_ptrhashi(void *p);
 int                                  _marpaESLIF_ptrhashi(void *userDatavp, genericStackItemType_t itemType, void **pp);
@@ -23421,7 +23425,8 @@ static inline short _marpaESLIFRecognizer_pointers_cleanupb(marpaESLIFRecognizer
 #ifdef MARPAESLIF_NOTICE_ACTION
     MARPAESLIF_NOTICEF(marpaESLIFRecognizerp->marpaESLIFp, "%s: Sorting %d items from the new value", funcs, newUsedi);
 #endif
-    GENERICSTACK_SORT(marpaESLIFValueResultStackNewp, _marpaESLIF_cleanup_sorti);
+    QSORT(genericStackItem_t, marpaESLIFValueResultStackNewp->items, marpaESLIFValueResultStackNewp->usedi, MARPAESLIFVALUERESULT_P_SORT);
+    /* GENERICSTACK_SORT(marpaESLIFValueResultStackNewp, _marpaESLIF_cleanup_sorti); */
 
     /* j is the indice in the sorted tracked new pointers */
     j = 0;
