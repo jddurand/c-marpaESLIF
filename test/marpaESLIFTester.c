@@ -105,7 +105,7 @@ int main() {
   size_t                        tryl;
   size_t                        discardl;
   
-  genericLoggerp = genericLogger_newp(genericLoggerCallback, NULL /* userDatavp */, GENERICLOGGER_LOGLEVEL_TRACE);
+  genericLoggerp = genericLogger_newp(genericLoggerCallback, NULL /* userDatavp */, GENERICLOGGER_LOGLEVEL_INFO);
 
   marpaESLIFOption.genericLoggerp = genericLoggerp;
   marpaESLIFp = marpaESLIF_newp(&marpaESLIFOption);
@@ -350,7 +350,7 @@ int main() {
     goto err;
   }
 
-  /* genericLogger_logLevel_seti(genericLoggerp, GENERICLOGGER_LOGLEVEL_TRACE); */
+  genericLogger_logLevel_seti(genericLoggerp, GENERICLOGGER_LOGLEVEL_TRACE);
   if (! marpaESLIFRecognizer_scanb(marpaESLIFRecognizerp, 1 /* initialEventsb */, &continueb, &exhaustedb)) {
     goto err;
   }
@@ -714,7 +714,7 @@ static short eventManagerb(int *eventCountip, marpaESLIFRecognizer_t *marpaESLIF
         marpaESLIFAlternative.value.contextp        =  (void *) &myContexts; /* Not used */
         marpaESLIFAlternative.value.representationp = NULL; /* Not used */
         marpaESLIFAlternative.grammarLengthl        = 1;
-        if (! marpaESLIFRecognizer_alternative_readb(marpaESLIFRecognizerp, &marpaESLIFAlternative, 1 /* Length in the real input */)) {
+        if (! marpaESLIFRecognizer_alternative_readb(marpaESLIFRecognizerp, &marpaESLIFAlternative, 0 /* Length in the real input */)) {
           goto err;
         }
         /* Complete can generate again events! */

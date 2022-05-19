@@ -343,7 +343,6 @@ struct marpaESLIF_grammar {
   marpaWrapperGrammar_t *marpaWrapperGrammarStartNoEventp;   /* Grammar implementation at :start forcing no event */
   size_t                 nTerminall;                         /* Total number of accessible terminals */
   marpaESLIF_symbol_t  **symbolArraypp;                      /* Total accessible grammar terminal (Symbols sorted by priority) */
-  marpaESLIF_symbol_t  **willFailsymbolArraypp;              /* Workarea for total accessible grammar terminals predicted to fail */
   size_t                 nTerminalPristinel;                 /* Number of terminals at the very beginning of marpaWrapperGrammarStartp */
   int                   *terminalIdArrayPristinep;           /* Terminals at the very beginning of marpaWrapperGrammarStartp (Ids sorted by priority) */
   marpaESLIF_symbol_t  **terminalArrayPristinepp;            /* Terminals at the very beginning of marpaWrapperGrammarStartp (Symbols sorted by priority) */
@@ -379,6 +378,8 @@ struct marpaESLIF_grammar {
   marpaESLIF_rule_t    **allRulesArraypp;                    /* For fast access to rules, they are all flatened here */
   int                   *expectedTerminalIdArrayp;           /* Total list of expected symbol ids sorted by priority */
   marpaESLIF_symbol_t  **expectedTerminalArraypp;            /* Total list of expected terminals sorted by priority */
+  int                   *isExpectedArraybp;                  /* For fast access to symbols prediction */
+  size_t                 isExpectedArraybl;                  /* total size of isExpectedArraybp, used for memset */
 };
 
 enum marpaESLIF_json_type {
@@ -497,7 +498,6 @@ struct marpaESLIF_meta {
   marpaESLIF_symbol_t          **terminalArrayPristinepp;         /* Grammar terminals at the very beginning of marpaWrapperGrammarStartp (Symbols sorted by priority) */
   size_t                         nTerminall;                      /* Number of grammar terminals of marpaWrapperGrammarp */
   marpaESLIF_symbol_t          **symbolArraypp;                   /* Grammar terminals of marpaWrapperGrammarp (Symbols sorted by priority) */
-  marpaESLIF_symbol_t          **willFailsymbolArraypp;           /* Workarea for total accessible grammar terminals predicted to fail */
   short                          lazyb;                           /* Meta symbol is lazy - for internal usage only at bootstrap */
   int                            eventSeti;                       /* Remember eventSeti */
 };
