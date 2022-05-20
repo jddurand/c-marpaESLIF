@@ -378,8 +378,6 @@ struct marpaESLIF_grammar {
   marpaESLIF_rule_t    **allRulesArraypp;                    /* For fast access to rules, they are all flatened here */
   int                   *expectedTerminalIdArrayp;           /* Total list of expected symbol ids sorted by priority */
   marpaESLIF_symbol_t  **expectedTerminalArraypp;            /* Total list of expected terminals sorted by priority */
-  int                   *isExpectedArraybp;                  /* For fast access to symbols prediction */
-  size_t                 isExpectedArraybl;                  /* total size of isExpectedArraybp, used for memset */
 };
 
 enum marpaESLIF_json_type {
@@ -565,6 +563,8 @@ struct marpaESLIFRecognizer {
   /* faking a new() method). */
   marpaESLIF_t                *marpaESLIFp;
   marpaESLIF_grammar_t        *grammarp;
+  int                        *isExpectedArraybp;             /* For fast access to symbols prediction */
+  size_t                      isExpectedArraybl;             /* total size of isExpectedArraybp, used for memset */
   marpaESLIFGrammar_Lshare_t *Lsharep;                       /* Shallow pointer to parent structure's Lsharep - TAKE CARE - can be NULL because sometimes grammarp can be NULL */
   marpaESLIFGrammar_t        *marpaESLIFGrammarp;            /* Shallow pointer to parent structure's marpaESLIFGrammarp - TAKE CARE - can be NULL because sometimes grammarp can be NULL */
   short                       isLexemeb;                     /* Lexeme mode: the position of terminal matches may change, only size is trustable */
