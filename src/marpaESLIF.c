@@ -10649,10 +10649,8 @@ static inline short _marpaESLIFRecognizer_resume_oneb(marpaESLIFRecognizer_t *ma
   short                            isPseudoTerminalMatchb;
   short                            isLookupMetaMatchb;
   size_t                           iteratorl;
-  size_t                           symboll;
   size_t                           nAcceptedCandidatel;
   marpaESLIF_symbol_t             *candidatep;
-  short                            isExpectedb;
   short                            asciipredictionb;
   short                            utfpredictionb;
   unsigned char                    uc;
@@ -11049,7 +11047,6 @@ static inline short _marpaESLIFRecognizer_resume_oneb(marpaESLIFRecognizer_t *ma
   if (alternativeStackSymboli <= 0) {
     /* Either there was truely no symbol, either no symbol matched. */
     if (nAcceptedCandidatel > 0) {
-    discard_try:
       /* There was at least one symbol candidate, but nothing matched */
       if (! __marpaESLIFRecognizer_discardb(marpaESLIFRecognizerp, 0 /* minl */, &discardl, 0 /* appendEventb */)) {
         goto err;
@@ -14096,7 +14093,6 @@ static inline short _marpaESLIFGrammar_parseb(marpaESLIF_t *marpaESLIFp, marpaES
   MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_INC(marpaESLIFRecognizerp);
   MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "start");
 
- retry:
   if (MARPAESLIF_UNLIKELY(! _marpaESLIFRecognizer_scanb(marpaESLIFRecognizerp, noEventb ? 0 : 1 /* initialEventsb */, &canContinueb, &isExhaustedb))) {
     goto err;
   }
