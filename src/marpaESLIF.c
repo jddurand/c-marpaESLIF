@@ -23392,6 +23392,19 @@ static inline short _marpaESLIFRecognizer_pointers_cleanupb(marpaESLIFRecognizer
   MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_INC(marpaESLIFRecognizerp);
   MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "start");
 
+  /* No need to track anything if marpaESLIFValueResultOrip does not contain a pointer */
+  switch (marpaESLIFValueResultOrigp->type) {
+  case MARPAESLIF_VALUE_TYPE_PTR:
+  case MARPAESLIF_VALUE_TYPE_ARRAY:
+  case MARPAESLIF_VALUE_TYPE_STRING:
+  case MARPAESLIF_VALUE_TYPE_ROW:
+  case MARPAESLIF_VALUE_TYPE_TABLE:
+    break;
+  default:
+    rcb = 1;
+    goto done;
+  }
+
   /* Track non-shallowed old marpaESLIFValueResult */
 #ifdef MARPAESLIF_NOTICE_ACTION
   MARPAESLIF_NOTICEF(marpaESLIFRecognizerp->marpaESLIFp, "%s: Tracking original non-shallowed pointers", funcs);
