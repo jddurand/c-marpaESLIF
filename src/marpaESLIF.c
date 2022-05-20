@@ -11869,7 +11869,7 @@ static inline short _marpaESLIFRecognizer_discard_tryb(marpaESLIFRecognizer_t *m
                                      NULL /* numberOfStartCompletionsip */,
                                      0, /* verboseb */
                                      &matchedLengthl,
-                                     0 /* isLexemeb */);
+                                     1 /* No need for a malloc: discard looks like a lexeme */);
   if (matchb) {
     /* Remember the data, NULL or not - per def a lexeme coming our from the recognizer is always an array -; */
     if (MARPAESLIF_UNLIKELY(! _marpaESLIFRecognizer_set_tryb(marpaESLIFRecognizerp, grammarp, symbolp, marpaESLIFRecognizerp->marpaESLIF_streamp->inputs, matchedLengthl))) {
