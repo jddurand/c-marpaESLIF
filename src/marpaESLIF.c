@@ -6905,15 +6905,15 @@ static inline short _marpaESLIFRecognizer_terminal_matcherb(marpaESLIFRecognizer
 /* - matchedLengthlp must be != NULL                                         */
 /*****************************************************************************/
 {
-  static const char                 *funcs  = "_marpaESLIFRecognizer_terminal_matcherb";
-  short                              allocb = 0;
+  static const char                 *funcs          = "_marpaESLIFRecognizer_terminal_matcherb";
+  short                              allocb         = 0;
+  size_t                             matchedLengthl = 0;
+  char                              *matchedp       = NULL;
   marpaESLIF_matcher_value_t         rci;
   marpaESLIF_regex_t                *marpaESLIF_regexp;
   int                                pcre2Errornumberi;
   PCRE2_UCHAR                        pcre2ErrorBuffer[256];
   PCRE2_SIZE                        *pcre2_ovectorp;
-  size_t                             matchedLengthl;
-  char                              *matchedp;
   marpaESLIF_uint32_t                pcre2_optioni;
   short                              binmodeb;
   short                              needUtf8Validationb;
