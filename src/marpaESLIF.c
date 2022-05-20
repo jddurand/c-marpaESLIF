@@ -32,9 +32,6 @@
 #define MARPAESLIFVALUERESULT_SHALLOWB_OFFSETOF offsetof(marpaESLIFValueResult_t, u.p.shallowb)
 #define MARPAESLIFVALUERESULT_TO_SHALLOWB(marpaESLIFValueResultp) (* (short *) (((char *) (marpaESLIFValueResultp)) + MARPAESLIFVALUERESULT_SHALLOWB_OFFSETOF))
 
-/* Inlined qsort methods */
-#define MARPAESLIFVALUERESULT_P_SORT(a,b) (MARPAESLIFVALUERESULT_TO_P(((genericStackItem_t *) (a))->u.p) < MARPAESLIFVALUERESULT_TO_P(((genericStackItem_t *) (b))->u.p))
-
 #ifdef MARPAESLIF_HAVE_LONG_LONG
 #define MARPAESLIFRECOGNIZER_MARPAESLIFVALUE_TRACE(funcs, marpaESLIFRecognizerp, whats, stacki, marpaESLIFValueResultp) do { \
     if (stacki >= 0) {                                                 \
@@ -638,7 +635,7 @@ static marpaESLIFValueResult_t marpaESLIFValueResultLazyWithUndef = {
 /* Util macros used in _marpaESLIFGrammar_validateb() */
 #define MARPAESLIFGRAMMAR_GET_TERMINALS(marpaESLIFp, funcs, starts, grammarp, marpaWrapperGrammarp, nTerminall, symbolArraypp) do { \
     int _symboli;                                                       \
-    int _candidatei;                                                    \
+    int _symbolArraypi;                                                 \
     marpaESLIF_symbol_t *_symbolp;                                      \
     int _propertyBitSet;                                                \
                                                                         \
@@ -661,7 +658,7 @@ static marpaESLIFValueResult_t marpaESLIFValueResultLazyWithUndef = {
           MARPAESLIF_ERRORF(marpaESLIFp, "malloc failure, %s", strerror(errno)); \
           goto err;                                                     \
         }                                                               \
-        _candidatei = 0;                                                \
+        _symbolArraypi = 0;                                             \
         for (_symboli = 0; _symboli < GENERICSTACK_USED(grammarp->symbolStackp); _symboli++) { \
           MARPAESLIF_INTERNAL_GET_SYMBOL_FROM_STACK(marpaESLIFp, _symbolp, grammarp->symbolStackp, _symboli); \
           if (MARPAESLIF_UNLIKELY(! marpaWrapperGrammar_symbolPropertyb(marpaWrapperGrammarp, _symbolp->idi, &_propertyBitSet))) { \
@@ -671,9 +668,9 @@ static marpaESLIFValueResult_t marpaESLIFValueResultLazyWithUndef = {
             continue;                                                   \
           }                                                             \
           MARPAESLIF_TRACEF(marpaESLIFp, funcs, "... Found symbol No %d <%s>", _symbolp->idi, _symbolp->descp->asciis); \
-          symbolArraypp[_candidatei++] = _symbolp;                      \
+          symbolArraypp[_symbolArraypi++] = _symbolp;                   \
         }                                                               \
-        qsort(symbolArraypp, nTerminall, sizeof(marpaESLIF_symbol_t *), _marpaESLIF_symbol_priority_sorti); \
+        QSORT(marpaESLIF_symbol_t *, symbolArraypp, _symbolArraypi, _marpaESLIF_symbol_priority_sorti); \
       }                                                                 \
       MARPAESLIF_TRACEF(marpaESLIFp, funcs, "Getting grammar terminals in grammar level %d (%s): %ld symbols found", grammarp->leveli, grammarp->descp->asciis, (unsigned long) nTerminall); \
     }                                                                   \
@@ -3897,7 +3894,7 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
           MARPAESLIF_INTERNAL_GET_SYMBOL_FROM_STACK(marpaESLIFp, grammarp->terminalArrayPristinepp[symboll], symbolStackp, symbolIdArrayp[symboll]);
           MARPAESLIF_TRACEF(marpaESLIFp, funcs, "... Found symbol No %d <%s>", grammarp->terminalArrayPristinepp[symboll]->idi, grammarp->terminalArrayPristinepp[symboll]->descp->asciis);
         }
-        qsort(grammarp->terminalArrayPristinepp, nTerminalPristinel, sizeof(marpaESLIF_symbol_t *), _marpaESLIF_symbol_priority_sorti);
+        QSORT(marpaESLIF_symbol_t *, grammarp->terminalArrayPristinepp, nTerminalPristinel, _marpaESLIF_symbol_priority_sorti);
       }
 
       if (grammarp->terminalIdArrayPristinep == NULL) {
@@ -4076,7 +4073,7 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
             MARPAESLIF_INTERNAL_GET_SYMBOL_FROM_STACK(marpaESLIFp, grammarp->terminalArrayDiscardPristinepp[symboll], symbolStackp, symbolIdArrayp[symboll]);
             MARPAESLIF_TRACEF(marpaESLIFp, funcs, "... Found symbol No %d (%s)", grammarp->terminalArrayDiscardPristinepp[symboll]->idi, grammarp->terminalArrayDiscardPristinepp[symboll]->descp->asciis);
           }
-          qsort(grammarp->terminalArrayDiscardPristinepp, nTerminalDiscardPristinel, sizeof(marpaESLIF_symbol_t *), _marpaESLIF_symbol_priority_sorti);
+          QSORT(marpaESLIF_symbol_t *, grammarp->terminalArrayDiscardPristinepp, nTerminalDiscardPristinel, _marpaESLIF_symbol_priority_sorti);
         }
 
         if (grammarp->terminalIdArrayDiscardPristinep == NULL) {
@@ -4259,7 +4256,7 @@ static inline short _marpaESLIFGrammar_validateb(marpaESLIFGrammar_t *marpaESLIF
               MARPAESLIF_INTERNAL_GET_SYMBOL_FROM_STACK(marpaESLIFp, metap->terminalArrayPristinepp[symboll], subGrammarp->symbolStackp, symbolIdArrayp[symboll]);
               MARPAESLIF_TRACEF(marpaESLIFp, funcs, "... Found symbol No %d <%s>", metap->terminalArrayPristinepp[symboll]->idi, metap->terminalArrayPristinepp[symboll]->descp->asciis);
             }
-            qsort(metap->terminalArrayPristinepp, nTerminalPristinel, sizeof(marpaESLIF_symbol_t *), _marpaESLIF_symbol_priority_sorti);
+            QSORT(marpaESLIF_symbol_t *, metap->terminalArrayPristinepp, nTerminalPristinel, _marpaESLIF_symbol_priority_sorti);
           }
 
           if (metap->terminalIdArrayPristinep == NULL) {
@@ -13045,7 +13042,7 @@ static inline void _marpaESLIFRecognizer_clear_all_eventsb(marpaESLIFRecognizer_
 static inline void  _marpaESLIFRecognizer_sort_eventsb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp)
 /*****************************************************************************/
 {
-  qsort(marpaESLIFRecognizerp->eventArrayp, marpaESLIFRecognizerp->eventArrayl, sizeof(marpaESLIFEvent_t), _marpaESLIF_event_sorti);
+  QSORT(marpaESLIFEvent_t, marpaESLIFRecognizerp->eventArrayp, marpaESLIFRecognizerp->eventArrayl, _marpaESLIF_event_sorti);
 }
 
 /*****************************************************************************/
@@ -23451,8 +23448,7 @@ static inline short _marpaESLIFRecognizer_pointers_cleanupb(marpaESLIFRecognizer
 #ifdef MARPAESLIF_NOTICE_ACTION
     MARPAESLIF_NOTICEF(marpaESLIFRecognizerp->marpaESLIFp, "%s: Sorting %d items from the new value", funcs, newUsedi);
 #endif
-    QSORT(genericStackItem_t, marpaESLIFValueResultStackNewp->items, marpaESLIFValueResultStackNewp->usedi, MARPAESLIFVALUERESULT_P_SORT);
-    /* GENERICSTACK_SORT(marpaESLIFValueResultStackNewp, _marpaESLIF_cleanup_sorti); */
+    QSORT(genericStackItem_t, marpaESLIFValueResultStackNewp->items, marpaESLIFValueResultStackNewp->usedi, _marpaESLIF_cleanup_sorti);
 
     /* j is the indice in the sorted tracked new pointers */
     j = 0;
