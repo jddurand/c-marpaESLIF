@@ -14000,12 +14000,11 @@ static inline short __marpaESLIFRecognizer_discardb(marpaESLIFRecognizer_t *marp
 /* exhausted grammar.                                                        */
 /*****************************************************************************/
 {
-  static const char       *funcs = "__marpaESLIFRecognizer_discardb";
+  static const char       *funcs                 = "__marpaESLIFRecognizer_discardb";
+  marpaESLIFValueResult_t  marpaESLIFValueResult = marpaESLIFValueResultUndef;
   short                    isDiscardExpectedb;
   short                    noEventb;
-  marpaESLIF_stream_t     *marpaESLIF_streamp;
   size_t                   discardl;
-  marpaESLIFValueResult_t  marpaESLIFValueResult = marpaESLIFValueResultUndef;
   size_t                   fastDiscardl;
   marpaESLIF_symbol_t     *fastDiscardSymbolp;
   short                    parseb;
@@ -14023,9 +14022,8 @@ static inline short __marpaESLIFRecognizer_discardb(marpaESLIFRecognizer_t *marp
   }
 
   if (isDiscardExpectedb) {
-    noEventb           = marpaESLIFRecognizerp->noEventb;
-    marpaESLIF_streamp = marpaESLIFRecognizerp->marpaESLIF_streamp;
-    discardl           = 0;
+    noEventb = marpaESLIFRecognizerp->noEventb;
+    discardl = 0;
 
     if (! noEventb) {
       /* Reset discardEvents and discardSymbolp */
@@ -24838,7 +24836,6 @@ static inline short _marpaESLIFRecognizer_name_expectedb(marpaESLIFRecognizer_t 
   marpaESLIF_symbol_t **symbolArraypp;
   short                 rcb;
   marpaESLIF_t         *marpaESLIFp;
-  marpaESLIF_grammar_t *grammarp;
   size_t                symboll;
   marpaESLIF_symbol_t  *symbolp;
   size_t                nNamel;
@@ -24851,10 +24848,9 @@ static inline short _marpaESLIFRecognizer_name_expectedb(marpaESLIFRecognizer_t 
     goto err;
   }
 
-  marpaESLIFp        = marpaESLIFRecognizerp->marpaESLIFp;
-  grammarp           = marpaESLIFRecognizerp->grammarp; /* Current grammar */
-  namesArrayp        = marpaESLIFRecognizerp->namesArrayp;
-  namesArrayAllocl   = marpaESLIFRecognizerp->namesArrayAllocl;
+  marpaESLIFp      = marpaESLIFRecognizerp->marpaESLIFp;
+  namesArrayp      = marpaESLIFRecognizerp->namesArrayp;
+  namesArrayAllocl = marpaESLIFRecognizerp->namesArrayAllocl;
 
   nNamel = 0;
   for (symboll = 0; symboll < nTerminall; symboll++) {
