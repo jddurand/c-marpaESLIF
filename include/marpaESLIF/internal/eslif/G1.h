@@ -126,6 +126,8 @@ typedef enum bootstrap_grammar_G1_enum {
   G1_TERMINAL_LUA_FUNCTIONCALL,
   G1_TERMINAL_LUA_FUNCTIONDECL,
   G1_TERMINAL_DOLLAR,
+  G1_TERMINAL_REGULAR_EXPRESSION_THEN,
+  G1_TERMINAL_REGULAR_EXPRESSION_MATCH_GROUP,
   /* ----- Non terminals ------ */
   G1_META_STATEMENTS,
   G1_META_STATEMENT,
@@ -1241,6 +1243,22 @@ bootstrap_grammar_terminal_t bootstrap_grammar_G1_terminals[] = {
 #else
     NULL, NULL
 #endif
+  },
+  { G1_TERMINAL_REGULAR_EXPRESSION_THEN, MARPAESLIF_TERMINAL_TYPE_STRING, 0, NULL,
+    "'->'", NULL, NULL,
+#ifndef MARPAESLIF_NTRACE
+    "->", "-"
+#else
+    NULL, NULL
+#endif
+  },
+  { G1_TERMINAL_REGULAR_EXPRESSION_MATCH_GROUP, MARPAESLIF_TERMINAL_TYPE_REGEX, 0, NULL,
+    "\\$[0-9]+", NULL, NULL,
+#ifndef MARPAESLIF_NTRACE
+    "$1", "$"
+#else
+    NULL, NULL
+#endif
   }
 };
 
@@ -1628,6 +1646,9 @@ bootstrap_grammar_rule_t bootstrap_grammar_G1_rules[] = {
   { G1_META_TERMINAL,                         G1_RULE_TERMINAL_5,                             MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_TERMINAL__EOL                             }, -1,                        -1,      -1,              0, G1_ACTION_TERMINAL_5 },
   { G1_META_TERMINAL,                         G1_RULE_TERMINAL_6,                             MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_TERMINAL__SOL                             }, -1,                        -1,      -1,              0, G1_ACTION_TERMINAL_6 },
   { G1_META_TERMINAL,                         G1_RULE_TERMINAL_7,                             MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_TERMINAL__EMPTY                           }, -1,                        -1,      -1,              0, G1_ACTION_TERMINAL_7 },
+  { G1_META_TERMINAL,                         G1_RULE_TERMINAL_8,                             MARPAESLIF_RULE_TYPE_ALTERNATIVE, 3, { G1_META_REGULAR_EXPRESSION,
+                                                                                                                                     G1_TERMINAL_REGULAR_EXPRESSION_THEN,
+                                                                                                                                     G1_TERMINAL_REGULAR_EXPRESSION_MATCH_GROUP   }, -1,                        -1,      -1,              0, G1_ACTION_TERMINAL_8 },
   { G1_META_SYMBOL,                           G1_RULE_SYMBOL,                                 MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_SYMBOL_NAME                          }, -1,                        -1,      -1,              0, G1_ACTION_SYMBOL },
   /*
     lhsi                                      descs                                           type                          nrhsl  { rhsi }                                       }  minimumi           separatori  properb hideseparatorb  actions

@@ -184,6 +184,7 @@ struct marpaESLIF_bootstrap_utf_string {
   char  *bytep;
   size_t bytel;
   char  *modifiers;
+  int    matchgroupi;
 };
 
 enum marpaESLIF_bootstrap_single_symbol_type {
