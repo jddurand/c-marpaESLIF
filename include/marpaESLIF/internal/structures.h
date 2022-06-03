@@ -180,6 +180,7 @@ struct marpaESLIF_regex {
   pcre2_match_context   *match_contextp;    /* Match context */
   marpaESLIF_pcre2_callout_context_t callout_context; /* Callout match */
   short                  characterClassb; /* Origin is a character class */
+  int                    matchgroupi;
 };
 
 struct marpaESLIF_terminal {

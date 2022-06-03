@@ -1174,7 +1174,7 @@ static inline void                   _marpaESLIF_string_freev(marpaESLIF_string_
 static inline short                  _marpaESLIF_string_utf8_eqb(marpaESLIF_string_t *string1p, marpaESLIF_string_t *string2p);
 static inline short                  _marpaESLIF_string_eqb(marpaESLIF_string_t *string1p, marpaESLIF_string_t *string2p);
 static inline marpaESLIF_string_t   *_marpaESLIF_string2utf8p(marpaESLIF_t *marpaESLIFp, marpaESLIF_string_t *stringp, short tconvsilentb);
-static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *marpaESLIFp, marpaWrapperGrammar_t *marpaWrapperGrammarp, int eventSeti, char *descEncodings, char *descs, size_t descl, marpaESLIF_terminal_type_t type, char *modifiers, char *utf8s, size_t utf8l, char *testFullMatchs, char *testPartialMatchs, short pseudob, short characterClassb);
+static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *marpaESLIFp, marpaWrapperGrammar_t *marpaWrapperGrammarp, int eventSeti, char *descEncodings, char *descs, size_t descl, marpaESLIF_terminal_type_t type, char *modifiers, char *utf8s, size_t utf8l, char *testFullMatchs, char *testPartialMatchs, short pseudob, short characterClassb, int matchgroupi);
 static inline void                   _marpaESLIF_terminal_freev(marpaESLIF_terminal_t *terminalp);
 
 static inline marpaESLIF_meta_t     *_marpaESLIF_meta_newp(marpaESLIF_t *marpaESLIFp, marpaWrapperGrammar_t *marpaWrapperGrammarp, int eventSeti, char *asciinames, char *descEncodings, char *descs, size_t descl, short lazyb);
@@ -1680,7 +1680,7 @@ static inline short _marpaESLIF_string_eqb(marpaESLIF_string_t *string1p, marpaE
 }
 
 /*****************************************************************************/
-static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *marpaESLIFp, marpaWrapperGrammar_t *marpaWrapperGrammarp, int eventSeti, char *descEncodings, char *descs, size_t descl, marpaESLIF_terminal_type_t type, char *modifiers, char *utf8s, size_t utf8l, char *testFullMatchs, char *testPartialMatchs, short pseudob, short characterClassb)
+static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *marpaESLIFp, marpaWrapperGrammar_t *marpaWrapperGrammarp, int eventSeti, char *descEncodings, char *descs, size_t descl, marpaESLIF_terminal_type_t type, char *modifiers, char *utf8s, size_t utf8l, char *testFullMatchs, char *testPartialMatchs, short pseudob, short characterClassb, int matchgroupi)
 /*****************************************************************************/
 /* This method is bootstraped at marpaESLIFp creation itself to have the internal regexps, with grammarp being NULL... */
 /* characterClassb can always be set to 0 if unsure, but it caller set it to a true value it really has to be a character class i.e. [] and only that */
@@ -1799,6 +1799,7 @@ static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *mar
   terminalp->regex.callout_context.marpaESLIFRecognizerp = NULL; /* Changed at every call, c.f. _marpaESLIFRecognizer_terminal_matcherb */
   terminalp->regex.callout_context.terminalp             = NULL;
   terminalp->regex.characterClassb                       = characterClassb;
+  terminalp->regex.matchgroupi                           = matchgroupi;
   terminalp->memcmpb                                     = 0;
   terminalp->bytes                                       = NULL;
   terminalp->bytel                                       = 0;
@@ -2890,7 +2891,8 @@ static inline marpaESLIF_grammar_t *_marpaESLIF_bootstrap_grammarp(marpaESLIFGra
 					  bootstrap_grammar_terminalp[i].testFullMatchs,
 					  bootstrap_grammar_terminalp[i].testPartialMatchs,
                                           0, /* pseudob */
-                                          bootstrap_grammar_terminalp[i].characterClassb);
+                                          bootstrap_grammar_terminalp[i].characterClassb,
+                                          0 /* matchgroupi */);
     if (MARPAESLIF_UNLIKELY(terminalp == NULL)) {
       goto err;
     }
@@ -5038,7 +5040,8 @@ static inline marpaESLIF_grammar_bootstrap_t *_marpaESLIF_grammar_bootstrap_clon
                                             NULL, /* testFullMatchs */
                                             NULL, /* testPartialMatchs */
                                             symbolOrigp->u.terminalp->pseudob,
-                                            symbolOrigp->u.terminalp->regex.characterClassb);
+                                            symbolOrigp->u.terminalp->regex.characterClassb,
+                                            symbolOrigp->u.terminalp->regex.matchgroupi);
       if (MARPAESLIF_UNLIKELY(terminalp == NULL)) {
         goto err;
       }
@@ -6492,7 +6495,8 @@ static inline marpaESLIF_t *_marpaESLIF_newp(marpaESLIFOption_t *marpaESLIFOptio
                                                     NULL, /* testFullMatchs */
                                                     NULL,  /* testPartialMatchs */
                                                     0, /* pseudob */
-                                                    0 /* characterClassb */);
+                                                    0, /* characterClassb */
+                                                    0 /* matchgroupi */);
   if (MARPAESLIF_UNLIKELY(marpaESLIFp->anycharp == NULL)) {
     goto err;
   }
@@ -6512,7 +6516,8 @@ static inline marpaESLIF_t *_marpaESLIF_newp(marpaESLIFOption_t *marpaESLIFOptio
                                                     NULL, /* testFullMatchs */
                                                     NULL,  /* testPartialMatchs */
                                                     0, /* pseudob */
-                                                    0 /* characterClassb */);
+                                                    0, /* characterClassb */
+                                                    0 /* matchgroupi */);
   if (MARPAESLIF_UNLIKELY(marpaESLIFp->newlinep == NULL)) {
     goto err;
   }
@@ -6545,7 +6550,8 @@ static inline marpaESLIF_t *_marpaESLIF_newp(marpaESLIFOption_t *marpaESLIFOptio
                                                             NULL, /* testFullMatchs */
                                                             NULL,  /* testPartialMatchs */
                                                             0, /* pseudob */
-                                                            0 /* characterClassb */);
+                                                            0, /* characterClassb */
+                                                            0 /* matchgroupi */);
   if (MARPAESLIF_UNLIKELY(marpaESLIFp->stringModifiersp == NULL)) {
     goto err;
   }
@@ -6564,7 +6570,8 @@ static inline marpaESLIF_t *_marpaESLIF_newp(marpaESLIFOption_t *marpaESLIFOptio
                                                                     NULL, /* testFullMatchs */
                                                                     NULL,  /* testPartialMatchs */
                                                                     0, /* pseudob */
-                                                                    0 /* characterClassb */);
+                                                                    0, /* characterClassb */
+                                                                    0 /* matchgroupi */);
   if (MARPAESLIF_UNLIKELY(marpaESLIFp->characterClassModifiersp == NULL)) {
     goto err;
   }
@@ -6583,7 +6590,8 @@ static inline marpaESLIF_t *_marpaESLIF_newp(marpaESLIFOption_t *marpaESLIFOptio
                                                            NULL, /* testFullMatchs */
                                                            NULL,  /* testPartialMatchs */
                                                            0, /* pseudob */
-                                                           0 /* characterClassb */);
+                                                           0, /* characterClassb */
+                                                           0 /* matchgroupi */);
   if (MARPAESLIF_UNLIKELY(marpaESLIFp->regexModifiersp == NULL)) {
     goto err;
   }
@@ -23974,7 +23982,8 @@ static inline marpaESLIFSymbol_t *_marpaESLIFSymbol_terminal_newp(marpaESLIF_t *
 					NULL, /* testFullMatchs */
 					NULL, /* testPartialMatchs */
                                         0, /* pseudob */
-                                        0 /* characterClassb */);
+                                        0, /* characterClassb */
+                                        0 /* matchgroupi */);
   if (MARPAESLIF_UNLIKELY(terminalp == NULL)) {
     goto err;
   }

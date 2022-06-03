@@ -1027,7 +1027,8 @@ static inline short _marpaESLIF_bootstrap_search_terminal_by_descriptionb(marpaE
                                         NULL, /* testFullMatchs */
                                         NULL, /* testPartialMatchs */
                                         0, /* pseudob */
-                                        0 /* characterClassb */);
+                                        0, /* characterClassb */
+                                        0 /* matchgroupi */);
   if (MARPAESLIF_UNLIKELY(terminalp == NULL)) {
     goto err;
   }
@@ -1179,7 +1180,8 @@ static inline marpaESLIF_symbol_t  *_marpaESLIF_bootstrap_check_terminal_by_type
                                           NULL, /* testFullMatchs */
                                           NULL, /* testPartialMatchs */
                                           pseudob,
-                                          characterClassb);
+                                          characterClassb,
+                                          stringp->matchgroupi);
     if (MARPAESLIF_UNLIKELY(terminalp == NULL)) {
       goto err;
     }
