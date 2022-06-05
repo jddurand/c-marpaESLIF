@@ -30,6 +30,7 @@
 #define INTERNAL_UTF8BOM_PATTERN "\\x{FEFF}"            /* FEFF Unicode code point i.e. EFBBBF in UTF-8 encoding */
 #define INTERNAL_NEWLINE_PATTERN "(*BSR_UNICODE).*?\\R" /* newline as per unicode - we do .*? because our regexps are always anchored */
 #define INTERNAL_STRINGMODIFIERS_PATTERN "i$"
+#define INTERNAL_SUBSTITUTIONMODIFIERS_PATTERN "[gx]$"
 #define INTERNAL_CHARACTERCLASSMODIFIERS_PATTERN "[eijmnsxDJUuaNubcA]+$"
 #define INTERNAL_REGEXMODIFIERS_PATTERN "[eijmnsxDJUuaNubcA]*$"
 
@@ -160,6 +161,17 @@ struct marpaESLIF_regex_option_map {
   { 'b', "PCRE2_NEVER_UTF",                          PCRE2_NEVER_UTF,                          "PCRE2_UTF",       PCRE2_UTF },
   { 'c', "PCRE2_UTF",                                PCRE2_UTF,                                "PCRE2_NEVER_UTF", PCRE2_NEVER_UTF },
   { 'A', NULL,                                       0,                                        "PCRE2_ANCHORED",  PCRE2_ANCHORED }
+};
+
+struct marpaESLIF_substitution_option_map {
+  char                       modifierc;
+  char                      *pcre2Options;
+  marpaESLIF_uint32_t        pcre2Optioni;
+  char                      *pcre2OptionNots;
+  marpaESLIF_uint32_t        pcre2OptionNoti;
+} marpaESLIF_substitution_option_map[] = {
+  { 'g', "PCRE2_SUBSTITUTE_GLOBAL",                  PCRE2_SUBSTITUTE_GLOBAL,                  NULL,              0 },
+  { 'x', "PCRE2_SUBSTITUTE_EXTENDED",                PCRE2_SUBSTITUTE_EXTENDED,                NULL,              0 }
 };
 
 struct marpaESLIF_pcre2_callout_context {
@@ -404,6 +416,7 @@ struct marpaESLIF {
   marpaESLIF_terminal_t      *newlinep;                    /* Internal regex for match newline */
   marpaESLIFSymbol_t         *newlineSymbolp;              /* Internal symbol for match newline */
   marpaESLIF_terminal_t      *stringModifiersp;            /* Internal regex for match string modifiers */
+  marpaESLIF_terminal_t      *substitutionModifiersp;      /* Internal regex for regex substitution modifiers */
   marpaESLIF_terminal_t      *characterClassModifiersp;    /* Internal regex for match character class modifiers */
   marpaESLIF_terminal_t      *regexModifiersp;             /* Internal regex for match regex modifiers */
   genericLogger_t            *traceLoggerp;                /* For cases where this is silent mode but compiled with TRACE */
