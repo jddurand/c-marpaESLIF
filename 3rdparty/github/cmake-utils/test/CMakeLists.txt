@@ -8,6 +8,12 @@ ENDIF ()
 MYPACKAGESTART (cmake_utils 1 0 0)
 
 #
+# This line checks that _GNU_SOURCE is correctly propagated
+INCLUDE(CheckSymbolExists)
+CHECK_SYMBOL_EXISTS(memfd_create  "sys/mman.h" HAVE_MEMFD_CREATE) # Needs _GNU_SOURCE
+CHECK_SYMBOL_EXISTS(secure_getenv "stdlib.h"   HAVE_SECURE_GETENV) # Needs _GNU_SOURCE
+
+#
 # Add a fake library that uses math
 #
 MYPACKAGELIBRARY(
