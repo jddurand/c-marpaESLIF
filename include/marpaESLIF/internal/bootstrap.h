@@ -181,10 +181,7 @@ enum marpaESLIF_bootstrap_pause_type {
 };
 
 struct marpaESLIF_bootstrap_utf_string {
-  char  *substitutionp;           /* Substition string. Only for regular expressions with substitutions. */
-  size_t substitutionl;
-  char  *substitutionModifiers;
-  char  *bytep;                   /* Always filled */
+  char  *bytep;
   size_t bytel;
   char  *modifiers;
 };

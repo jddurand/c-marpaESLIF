@@ -1174,7 +1174,7 @@ static inline void                   _marpaESLIF_string_freev(marpaESLIF_string_
 static inline short                  _marpaESLIF_string_utf8_eqb(marpaESLIF_string_t *string1p, marpaESLIF_string_t *string2p);
 static inline short                  _marpaESLIF_string_eqb(marpaESLIF_string_t *string1p, marpaESLIF_string_t *string2p);
 static inline marpaESLIF_string_t   *_marpaESLIF_string2utf8p(marpaESLIF_t *marpaESLIFp, marpaESLIF_string_t *stringp, short tconvsilentb);
-static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *marpaESLIFp, marpaWrapperGrammar_t *marpaWrapperGrammarp, int eventSeti, char *descEncodings, char *descs, size_t descl, marpaESLIF_terminal_type_t type, char *modifiers, char *utf8s, size_t utf8l, char *testFullMatchs, char *testPartialMatchs, short pseudob, short characterClassb, short substitutionb);
+static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *marpaESLIFp, marpaWrapperGrammar_t *marpaWrapperGrammarp, int eventSeti, char *descEncodings, char *descs, size_t descl, marpaESLIF_terminal_type_t type, char *modifiers, char *utf8s, size_t utf8l, char *testFullMatchs, char *testPartialMatchs, short pseudob, short characterClassb);
 static inline void                   _marpaESLIF_terminal_freev(marpaESLIF_terminal_t *terminalp);
 
 static inline marpaESLIF_meta_t     *_marpaESLIF_meta_newp(marpaESLIF_t *marpaESLIFp, marpaWrapperGrammar_t *marpaWrapperGrammarp, int eventSeti, char *asciinames, char *descEncodings, char *descs, size_t descl, short lazyb);
@@ -1680,7 +1680,7 @@ static inline short _marpaESLIF_string_eqb(marpaESLIF_string_t *string1p, marpaE
 }
 
 /*****************************************************************************/
-static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *marpaESLIFp, marpaWrapperGrammar_t *marpaWrapperGrammarp, int eventSeti, char *descEncodings, char *descs, size_t descl, marpaESLIF_terminal_type_t type, char *modifiers, char *utf8s, size_t utf8l, char *testFullMatchs, char *testPartialMatchs, short pseudob, short characterClassb, short substitutionb)
+static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *marpaESLIFp, marpaWrapperGrammar_t *marpaWrapperGrammarp, int eventSeti, char *descEncodings, char *descs, size_t descl, marpaESLIF_terminal_type_t type, char *modifiers, char *utf8s, size_t utf8l, char *testFullMatchs, char *testPartialMatchs, short pseudob, short characterClassb)
 /*****************************************************************************/
 /* This method is bootstraped at marpaESLIFp creation itself to have the internal regexps, with grammarp being NULL... */
 /* characterClassb can always be set to 0 if unsure, but it caller set it to a true value it really has to be a character class i.e. [] and only that */
@@ -1698,9 +1698,7 @@ static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *mar
   marpaESLIF_terminal_t            *terminalp             = NULL;
   marpaWrapperGrammarSymbolOption_t marpaWrapperGrammarSymbolOption;
   size_t                            pcre2JitOptionl = 0;
-  /* Substitutions always happen after we make sure there is match */
   marpaESLIF_uint32_t               pcre2Optioni = PCRE2_ANCHORED;
-  marpaESLIF_uint32_t               pcre2SubstitutionOptioni = 0;
   int                               pcre2Errornumberi;
   PCRE2_SIZE                        pcre2ErrorOffsetl;
   PCRE2_UCHAR                       pcre2ErrorBuffer[256];
@@ -2328,46 +2326,24 @@ static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *mar
         modifiersp = modifiers;
         while ((modifierc = *modifiersp++) != '\0') {
           modifierFoundb = 0;
-          if (substitutionb) {
-            /* Special case of substitution - it is restricted to strings */
-            if (type == MARPAESLIF_TERMINAL_TYPE_STRING) {
-              /* Checks all possible substitution modifiers and will naturelly bail if it is unknown. */
-              for (i = 0; i < (sizeof(marpaESLIF_substitution_option_map) / sizeof(marpaESLIF_substitution_option_map[0])); i++) {
-                if (modifierc == marpaESLIF_substitution_option_map[i].modifierc) {
-                  /* It is important to process pcre2OptionNoti first */
-                  if (marpaESLIF_substitution_option_map[i].pcre2OptionNoti != 0) {
-                    MARPAESLIF_TRACEF(marpaESLIFp, funcs, "%s: substitution modifier %c: removing %s", terminalp->descp->asciis, marpaESLIF_substitution_option_map[i].modifierc, marpaESLIF_substitution_option_map[i].pcre2OptionNots);
-                    pcre2Optioni &= ~marpaESLIF_substitution_option_map[i].pcre2OptionNoti;
-                  }
-                  if (marpaESLIF_substitution_option_map[i].pcre2Optioni != 0) {
-                    MARPAESLIF_TRACEF(marpaESLIFp, funcs, "%s: substitution modifier %c: adding %s", terminalp->descp->asciis, marpaESLIF_substitution_option_map[i].modifierc, marpaESLIF_substitution_option_map[i].pcre2Options);
-                    pcre2Optioni |= marpaESLIF_substitution_option_map[i].pcre2Optioni;
-                  }
-                  modifierFoundb = 1;
-                  break;
+          /* String modifiers are a subset of regex modifiers. We have to filter ourself to detect */
+          /* if the modifier is allowed. */
+          /* Regex mode checks all possible modifiers and will naturelly bail if it is unknown. */
+          if (((type == MARPAESLIF_TERMINAL_TYPE_STRING) && ((modifierc == 'i') || (modifierc == 'c'))) ||
+              (type == MARPAESLIF_TERMINAL_TYPE_REGEX)) {
+            for (i = 0; i < (sizeof(marpaESLIF_regex_option_map) / sizeof(marpaESLIF_regex_option_map[0])); i++) {
+              if (modifierc == marpaESLIF_regex_option_map[i].modifierc) {
+                /* It is important to process pcre2OptionNoti first */
+                if (marpaESLIF_regex_option_map[i].pcre2OptionNoti != 0) {
+                  MARPAESLIF_TRACEF(marpaESLIFp, funcs, "%s: regex modifier %c: removing %s", terminalp->descp->asciis, marpaESLIF_regex_option_map[i].modifierc, marpaESLIF_regex_option_map[i].pcre2OptionNots);
+                  pcre2Optioni &= ~marpaESLIF_regex_option_map[i].pcre2OptionNoti;
                 }
-              }
-            }
-          } else {
-            /* String modifiers are a subset of regex modifiers. We have to filter ourself to detect */
-            /* if the modifier is allowed. */
-            /* Regex mode checks all possible regexp modifiers and will naturelly bail if it is unknown. */
-            if (((type == MARPAESLIF_TERMINAL_TYPE_STRING) && ((modifierc == 'i') || (modifierc == 'c'))) ||
-                (type == MARPAESLIF_TERMINAL_TYPE_REGEX)) {
-              for (i = 0; i < (sizeof(marpaESLIF_regex_option_map) / sizeof(marpaESLIF_regex_option_map[0])); i++) {
-                if (modifierc == marpaESLIF_regex_option_map[i].modifierc) {
-                  /* It is important to process pcre2OptionNoti first */
-                  if (marpaESLIF_regex_option_map[i].pcre2OptionNoti != 0) {
-                    MARPAESLIF_TRACEF(marpaESLIFp, funcs, "%s: regex modifier %c: removing %s", terminalp->descp->asciis, marpaESLIF_regex_option_map[i].modifierc, marpaESLIF_regex_option_map[i].pcre2OptionNots);
-                    pcre2Optioni &= ~marpaESLIF_regex_option_map[i].pcre2OptionNoti;
-                  }
-                  if (marpaESLIF_regex_option_map[i].pcre2Optioni != 0) {
-                    MARPAESLIF_TRACEF(marpaESLIFp, funcs, "%s: regex modifier %c: adding %s", terminalp->descp->asciis, marpaESLIF_regex_option_map[i].modifierc, marpaESLIF_regex_option_map[i].pcre2Options);
-                    pcre2Optioni |= marpaESLIF_regex_option_map[i].pcre2Optioni;
-                  }
-                  modifierFoundb = 1;
-                  break;
+                if (marpaESLIF_regex_option_map[i].pcre2Optioni != 0) {
+                  MARPAESLIF_TRACEF(marpaESLIFp, funcs, "%s: regex modifier %c: adding %s", terminalp->descp->asciis, marpaESLIF_regex_option_map[i].modifierc, marpaESLIF_regex_option_map[i].pcre2Options);
+                  pcre2Optioni |= marpaESLIF_regex_option_map[i].pcre2Optioni;
                 }
+                modifierFoundb = 1;
+                break;
               }
             }
           }
@@ -2914,8 +2890,7 @@ static inline marpaESLIF_grammar_t *_marpaESLIF_bootstrap_grammarp(marpaESLIFGra
 					  bootstrap_grammar_terminalp[i].testFullMatchs,
 					  bootstrap_grammar_terminalp[i].testPartialMatchs,
                                           0, /* pseudob */
-                                          bootstrap_grammar_terminalp[i].characterClassb,
-                                          0 /* substitutionb */);
+                                          bootstrap_grammar_terminalp[i].characterClassb);
     if (MARPAESLIF_UNLIKELY(terminalp == NULL)) {
       goto err;
     }
@@ -5063,8 +5038,7 @@ static inline marpaESLIF_grammar_bootstrap_t *_marpaESLIF_grammar_bootstrap_clon
                                             NULL, /* testFullMatchs */
                                             NULL, /* testPartialMatchs */
                                             symbolOrigp->u.terminalp->pseudob,
-                                            symbolOrigp->u.terminalp->regex.characterClassb,
-                                            0 /* substitutionb */);
+                                            symbolOrigp->u.terminalp->regex.characterClassb);
       if (MARPAESLIF_UNLIKELY(terminalp == NULL)) {
         goto err;
       }
@@ -6390,7 +6364,6 @@ static inline marpaESLIF_t *_marpaESLIF_newp(marpaESLIFOption_t *marpaESLIFOptio
   marpaESLIFp->newlinep                  = NULL;
   marpaESLIFp->newlineSymbolp            = NULL;
   marpaESLIFp->stringModifiersp          = NULL;
-  marpaESLIFp->substitutionModifiersp    = NULL;
   marpaESLIFp->characterClassModifiersp  = NULL;
   marpaESLIFp->regexModifiersp           = NULL;
   marpaESLIFp->traceLoggerp              = NULL;
@@ -6519,8 +6492,7 @@ static inline marpaESLIF_t *_marpaESLIF_newp(marpaESLIFOption_t *marpaESLIFOptio
                                                     NULL, /* testFullMatchs */
                                                     NULL,  /* testPartialMatchs */
                                                     0, /* pseudob */
-                                                    0, /* characterClassb */
-                                                    0 /* substitutionb */);
+                                                    0 /* characterClassb */);
   if (MARPAESLIF_UNLIKELY(marpaESLIFp->anycharp == NULL)) {
     goto err;
   }
@@ -6540,8 +6512,7 @@ static inline marpaESLIF_t *_marpaESLIF_newp(marpaESLIFOption_t *marpaESLIFOptio
                                                     NULL, /* testFullMatchs */
                                                     NULL,  /* testPartialMatchs */
                                                     0, /* pseudob */
-                                                    0, /* characterClassb */
-                                                    0 /* substitutionb */);
+                                                    0 /* characterClassb */);
   if (MARPAESLIF_UNLIKELY(marpaESLIFp->newlinep == NULL)) {
     goto err;
   }
@@ -6574,29 +6545,8 @@ static inline marpaESLIF_t *_marpaESLIF_newp(marpaESLIFOption_t *marpaESLIFOptio
                                                             NULL, /* testFullMatchs */
                                                             NULL,  /* testPartialMatchs */
                                                             0, /* pseudob */
-                                                            0, /* characterClassb */
-                                                            0 /* substitutionb */);
+                                                            0 /* characterClassb */);
   if (MARPAESLIF_UNLIKELY(marpaESLIFp->stringModifiersp == NULL)) {
-    goto err;
-  }
-
-  /* Create internal substitution regex */
-  marpaESLIFp->substitutionModifiersp = _marpaESLIF_terminal_newp(marpaESLIFp,
-                                                                  NULL, /* marpaWrapperGrammarStartp */
-                                                                  MARPAESLIF_EVENTTYPE_NONE, /* eventSeti */
-                                                                  "ASCII", /* We KNOW this is an ASCII thingy */
-                                                                  INTERNAL_SUBSTITUTIONMODIFIERS_PATTERN, /* descs */
-                                                                  strlen(INTERNAL_SUBSTITUTIONMODIFIERS_PATTERN), /* descl */
-                                                                  MARPAESLIF_TERMINAL_TYPE_REGEX, /* type */
-                                                                  "Au", /* modifiers */
-                                                                  INTERNAL_SUBSTITUTIONMODIFIERS_PATTERN, /* utf8s */
-                                                                  strlen(INTERNAL_SUBSTITUTIONMODIFIERS_PATTERN), /* utf8l */
-                                                                  NULL, /* testFullMatchs */
-                                                                  NULL,  /* testPartialMatchs */
-                                                                  0, /* pseudob */
-                                                                  0, /* characterClassb */
-                                                                  0 /* substitutionb */);
-  if (MARPAESLIF_UNLIKELY(marpaESLIFp->substitutionModifiersp == NULL)) {
     goto err;
   }
 
@@ -6614,8 +6564,7 @@ static inline marpaESLIF_t *_marpaESLIF_newp(marpaESLIFOption_t *marpaESLIFOptio
                                                                     NULL, /* testFullMatchs */
                                                                     NULL,  /* testPartialMatchs */
                                                                     0, /* pseudob */
-                                                                    0, /* characterClassb */
-                                                                    0 /* substitutionb */);
+                                                                    0 /* characterClassb */);
   if (MARPAESLIF_UNLIKELY(marpaESLIFp->characterClassModifiersp == NULL)) {
     goto err;
   }
@@ -6634,8 +6583,7 @@ static inline marpaESLIF_t *_marpaESLIF_newp(marpaESLIFOption_t *marpaESLIFOptio
                                                            NULL, /* testFullMatchs */
                                                            NULL,  /* testPartialMatchs */
                                                            0, /* pseudob */
-                                                           0, /* characterClassb */
-                                                           0 /* substitutionb */);
+                                                           0 /* characterClassb */);
   if (MARPAESLIF_UNLIKELY(marpaESLIFp->regexModifiersp == NULL)) {
     goto err;
   }
@@ -6926,7 +6874,6 @@ void marpaESLIF_freev(marpaESLIF_t *marpaESLIFp)
     _marpaESLIF_terminal_freev(marpaESLIFp->newlinep);
     _marpaESLIF_symbol_freev(marpaESLIFp->newlineSymbolp);
     _marpaESLIF_terminal_freev(marpaESLIFp->stringModifiersp);
-    _marpaESLIF_terminal_freev(marpaESLIFp->substitutionModifiersp);
     _marpaESLIF_terminal_freev(marpaESLIFp->characterClassModifiersp);
     _marpaESLIF_terminal_freev(marpaESLIFp->regexModifiersp);
     if (marpaESLIFp->traceLoggerp != NULL) {
@@ -16607,9 +16554,6 @@ static inline void _marpaESLIF_grammar_createshowv(marpaESLIFGrammar_t *marpaESL
             if ((pcre2Optioni & PCRE2_UNGREEDY)            == PCRE2_UNGREEDY)            { GENERICLOGGER_TRACE(genericLoggerp, "PCRE2_UNGREEDY"); }
             if ((pcre2Optioni & PCRE2_USE_OFFSET_LIMIT)    == PCRE2_USE_OFFSET_LIMIT)    { GENERICLOGGER_TRACE(genericLoggerp, "PCRE2_USE_OFFSET_LIMIT"); }
             if ((pcre2Optioni & PCRE2_UTF)                 == PCRE2_UTF)                 { GENERICLOGGER_TRACE(genericLoggerp, "PCRE2_UTF"); }
-            /* We support only the options g and x for substitutions */
-            if ((pcre2Optioni & PCRE2_SUBSTITUTE_GLOBAL)   == PCRE2_SUBSTITUTE_GLOBAL)   { GENERICLOGGER_TRACE(genericLoggerp, "PCRE2_SUBSTITUTE_GLOBAL"); }
-            if ((pcre2Optioni & PCRE2_SUBSTITUTE_EXTENDED) == PCRE2_SUBSTITUTE_EXTENDED) { GENERICLOGGER_TRACE(genericLoggerp, "PCRE2_SUBSTITUTE_EXTENDED"); }
             if (marpaESLIF_stringGenerator.okb) {
               MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, "#        Flags: ");
               MARPAESLIF_STRING_CREATESHOW(asciishowl, asciishows, marpaESLIF_stringGenerator.s);
@@ -24030,8 +23974,7 @@ static inline marpaESLIFSymbol_t *_marpaESLIFSymbol_terminal_newp(marpaESLIF_t *
 					NULL, /* testFullMatchs */
 					NULL, /* testPartialMatchs */
                                         0, /* pseudob */
-                                        0, /* characterClassb */
-                                        0 /* substitutionb */);
+                                        0 /* characterClassb */);
   if (MARPAESLIF_UNLIKELY(terminalp == NULL)) {
     goto err;
   }
