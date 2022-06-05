@@ -3839,11 +3839,14 @@ static short _marpaESLIF_bootstrap_G1_action_rhs_primary_no_parameter_3b(void *u
     goto err;
   }
 
-  rhsPrimaryp->callp            = NULL;
-  rhsPrimaryp->type             = MARPAESLIF_BOOTSTRAP_RHS_PRIMARY_TYPE_NA;
-  rhsPrimaryp->u.name.bytep     = NULL;
-  rhsPrimaryp->u.name.bytel     = 0;
-  rhsPrimaryp->u.name.modifiers = NULL;
+  rhsPrimaryp->callp                        = NULL;
+  rhsPrimaryp->type                         = MARPAESLIF_BOOTSTRAP_RHS_PRIMARY_TYPE_NA;
+  rhsPrimaryp->u.name.substitutionp         = NULL;
+  rhsPrimaryp->u.name.substitutionl         = 0;
+  rhsPrimaryp->u.name.substitutionModifiers = NULL;
+  rhsPrimaryp->u.name.bytep                 = NULL;
+  rhsPrimaryp->u.name.bytel                 = 0;
+  rhsPrimaryp->u.name.modifiers             = NULL;
 
   rhsPrimaryp->u.name.bytep = (char *) malloc(bytel + 1);
   if (rhsPrimaryp->u.name.bytep == NULL) {
