@@ -7418,17 +7418,23 @@ static inline short _marpaESLIFRecognizer_terminal_matcherb(marpaESLIFRecognizer
             outputbufferp[outputbufferl] = '\0';
           }
 
-          pcre2Errornumberi = pcre2_substitute(marpaESLIF_regexp->patternp,                               /* code */
-                                               (PCRE2_SPTR) matchedp,                                     /* subject */
-                                               (PCRE2_SIZE) matchedLengthl,                               /* length */
-                                               (PCRE2_SIZE) 0,                                            /* startoffset */
-                                               pcre2_substitute_optioni|PCRE2_SUBSTITUTE_OVERFLOW_LENGTH, /* options - PCRE2_ERROR_NOMEMORY can happen */
-                                               marpaESLIF_regexp->match_datap,                            /* match data */
-                                               marpaESLIF_regexp->match_contextp,                         /* match context */
-                                               (PCRE2_SPTR) terminalp->substitutionPatterns,              /* replacement */
-                                               (PCRE2_SIZE) terminalp->substitutionPatternl,              /* rlength */
-                                               outputbufferp,
-                                               &outputbufferl);
+	  if (matchedp == inputs) {
+	    /* The most common case is anchored regex: then it is ok to reuse preexisting match data */
+	    /* It is ok to not say inputl anymore, match data cannot go beyond matchedLengthl */
+	    pcre2_substitute_optioni |= PCRE2_SUBSTITUTE_MATCHED;
+	  }
+
+	  pcre2Errornumberi = pcre2_substitute(marpaESLIF_regexp->patternp,                               /* code */
+					       (PCRE2_SPTR) matchedp,                                     /* subject */
+					       (PCRE2_SIZE) matchedLengthl,                               /* length */
+					       (PCRE2_SIZE) 0,                                            /* startoffset */
+					       pcre2_substitute_optioni|PCRE2_SUBSTITUTE_OVERFLOW_LENGTH, /* options - PCRE2_ERROR_NOMEMORY can happen */
+					       marpaESLIF_regexp->match_datap,                            /* match data */
+					       marpaESLIF_regexp->match_contextp,                         /* match context */
+					       (PCRE2_SPTR) terminalp->substitutionPatterns,              /* replacement */
+					       (PCRE2_SIZE) terminalp->substitutionPatternl,              /* rlength */
+					       outputbufferp,
+					       &outputbufferl);
 
           /* It if succeed it returns the number of substitutions, that must be > 0 */
           if (pcre2Errornumberi <= 0) {
