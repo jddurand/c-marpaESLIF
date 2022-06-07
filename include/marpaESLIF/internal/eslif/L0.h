@@ -314,7 +314,7 @@ __DATA__
   },
   /* --------------------------------------------------------------------------------------------------------------------------------- */
   { L0_TERMINAL_REGULAR_SUBSTITUTION_MODIFIERS, MARPAESLIF_TERMINAL_TYPE_REGEX, 0, NULL,
-    "[gX]+", NULL, NULL,
+    "[xgl!f]+", NULL, NULL,
     NULL, NULL
   },
   /* --------------------------------------------------------------------------------------------------------------------------------- */
@@ -393,7 +393,7 @@ bootstrap_grammar_rule_t bootstrap_grammar_L0_rules[] = {
   { L0_META_REGULAR_EXPRESSION,               "regular expression 1",                         MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { L0_TERMINAL_REGULAR_EXPRESSION               }, -1,                        -1,      -1,             0, NULL },
   { L0_META_REGULAR_EXPRESSION,               "regular expression 2",                         MARPAESLIF_RULE_TYPE_ALTERNATIVE, 2, { L0_TERMINAL_REGULAR_EXPRESSION,
                                                                                                                                      L0_TERMINAL_REGULAR_EXPRESSION_MODIFIERS     }, -1,                        -1,      -1,             0, NULL },
-  { L0_META_REGULAR_SUBSTITUTION,             "regular substitution 1",                       MARPAESLIF_RULE_TYPE_ALTERNATIVE, 2, { L0_TERMINAL_QUOTED_STRING                    }, -1,                        -1,      -1,             0, NULL },
+  { L0_META_REGULAR_SUBSTITUTION,             "regular substitution 1",                       MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { L0_TERMINAL_QUOTED_STRING                    }, -1,                        -1,      -1,             0, NULL },
   { L0_META_REGULAR_SUBSTITUTION,             "regular substitution 2",                       MARPAESLIF_RULE_TYPE_ALTERNATIVE, 3, { L0_TERMINAL_QUOTED_STRING,
                                                                                                                                      L0_TERMINAL_SEMICOLON,
                                                                                                                                      L0_TERMINAL_REGULAR_SUBSTITUTION_MODIFIERS   }, -1,                        -1,      -1,             0, NULL },

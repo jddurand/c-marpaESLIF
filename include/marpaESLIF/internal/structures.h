@@ -30,7 +30,7 @@
 #define INTERNAL_UTF8BOM_PATTERN "\\x{FEFF}"            /* FEFF Unicode code point i.e. EFBBBF in UTF-8 encoding */
 #define INTERNAL_NEWLINE_PATTERN "(*BSR_UNICODE).*?\\R" /* newline as per unicode - we do .*? because our regexps are always anchored */
 #define INTERNAL_STRINGMODIFIERS_PATTERN "i$"
-#define INTERNAL_SUBSTITUTIONMODIFIERS_PATTERN "[gx]$"
+#define INTERNAL_SUBSTITUTIONMODIFIERS_PATTERN "[xgl!f]+$"
 #define INTERNAL_CHARACTERCLASSMODIFIERS_PATTERN "[eijmnsxDJUuaNubcA]+$"
 #define INTERNAL_REGEXMODIFIERS_PATTERN "[eijmnsxDJUuaNubcA]*$"
 
@@ -170,8 +170,11 @@ struct marpaESLIF_substitution_option_map {
   char                      *pcre2OptionNots;
   marpaESLIF_uint32_t        pcre2OptionNoti;
 } marpaESLIF_substitution_option_map[] = {
+  { 'x', "PCRE2_SUBSTITUTE_EXTENDED",                PCRE2_SUBSTITUTE_EXTENDED,                NULL,              0 },
   { 'g', "PCRE2_SUBSTITUTE_GLOBAL",                  PCRE2_SUBSTITUTE_GLOBAL,                  NULL,              0 },
-  { 'x', "PCRE2_SUBSTITUTE_EXTENDED",                PCRE2_SUBSTITUTE_EXTENDED,                NULL,              0 }
+  { 'l', "PCRE2_SUBSTITUTE_LITERAL",                 PCRE2_SUBSTITUTE_LITERAL,                 NULL,              0 },
+  { '!', "PCRE2_SUBSTITUTE_UNKNOWN_UNSET",           PCRE2_SUBSTITUTE_UNKNOWN_UNSET,           NULL,              0 },
+  { 'f', "PCRE2_SUBSTITUTE_UNSET_EMPTY",             PCRE2_SUBSTITUTE_UNSET_EMPTY,             NULL,              0 }
 };
 
 struct marpaESLIF_pcre2_callout_context {
@@ -195,14 +198,20 @@ struct marpaESLIF_regex {
 };
 
 struct marpaESLIF_terminal {
-  char                          *utf8s;               /* Original UTF-8 input to _marpaESLIF_terminal_new() */
-  size_t                         utf8l;               /* Original UTF-8 input length to _marpaESLIF_terminal_new() */
+  char                          *utf8s;               /* Original UTF-8 input to _marpaESLIF_terminal_newp() */
+  size_t                         utf8l;               /* Original UTF-8 input length to _marpaESLIF_terminal_newp() */
   int                            idi;                 /* Terminal Id */
   marpaESLIF_string_t           *descp;               /* Terminal description */
   char                          *modifiers;           /* Modifiers */
   char                          *patterns;            /* This is what is sent to PCRE2 and what defines exactly the terminal */
   size_t                         patternl;
   marpaESLIF_uint32_t            patterni;            /* ... this includes pattern options */
+  char                          *substitutionUtf8s;   /* Original UTF-8 input to _marpaESLIF_terminal_newp() */
+  size_t                         substitutionUtf8l;   /* Original UTF-8 input length to _marpaESLIF_terminal_newp() */
+  char                          *substitutionModifiers;
+  char                          *substitutionPatterns;
+  size_t                         substitutionPatternl;
+  marpaESLIF_uint32_t            substitutionPatterni;
   marpaESLIF_terminal_type_t     type;                /* Original type. Used for description. When origin is STRING we know that patterns if ASCII safe */
   marpaESLIF_regex_t             regex;               /* Regex version */
   short                          memcmpb;             /* Flag saying that memcmp is possible */

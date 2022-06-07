@@ -752,7 +752,7 @@ extern "C" {
   /* Symbols not not bound to any grammar           */
   /* ---------------------------------------------- */
   marpaESLIF_EXPORT marpaESLIFSymbol_t           *marpaESLIFSymbol_string_newp(marpaESLIF_t *marpaESLIFp, marpaESLIFString_t *stringp, char *modifiers, marpaESLIFSymbolOption_t *marpaESLIFSymbolOptionp);
-  marpaESLIF_EXPORT marpaESLIFSymbol_t           *marpaESLIFSymbol_regex_newp(marpaESLIF_t *marpaESLIFp, marpaESLIFString_t *stringp, char *modifiers, marpaESLIFSymbolOption_t *marpaESLIFSymbolOptionp);
+  marpaESLIF_EXPORT marpaESLIFSymbol_t           *marpaESLIFSymbol_regex_newp(marpaESLIF_t *marpaESLIFp, marpaESLIFString_t *stringp, char *modifiers, marpaESLIFString_t *substitutionStringp, char *substitutionModifiers, marpaESLIFSymbolOption_t *marpaESLIFSymbolOptionp);
   /* For meta external symbol, the start symbol of the given grammar is duplicated */
   marpaESLIF_EXPORT marpaESLIFSymbol_t           *marpaESLIFSymbol_meta_newp(marpaESLIF_t *marpaESLIFp, marpaESLIFGrammar_t *marpaESLIFGrammarp, char *symbols, marpaESLIFSymbolOption_t *marpaESLIFSymbolOptionp);
   marpaESLIF_EXPORT marpaESLIFSymbol_t           *marpaESLIFSymbol_meta_new_by_levelp(marpaESLIF_t *marpaESLIFp, marpaESLIFGrammar_t *marpaESLIFGrammarp, char *symbols, int leveli, marpaESLIFString_t *descp, marpaESLIFSymbolOption_t *marpaESLIFSymbolOptionp);

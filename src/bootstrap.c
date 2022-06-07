@@ -648,8 +648,8 @@ static inline void  _marpaESLIF_bootstrap_utf_string_freev(marpaESLIF_bootstrap_
 /*****************************************************************************/
 {
   if (stringp != NULL) {
-    if (stringp->substitutionp != NULL) {
-      free(stringp->substitutionp);
+    if (stringp->substitutionBytep != NULL) {
+      free(stringp->substitutionBytep);
     }
     if (stringp->substitutionModifiers != NULL) {
       free(stringp->substitutionModifiers);
@@ -1015,15 +1015,16 @@ static inline marpaESLIF_symbol_t *_marpaESLIF_bootstrap_check_meta_by_namep(mar
 static inline short _marpaESLIF_bootstrap_search_terminal_by_descriptionb(marpaESLIFValue_t *marpaESLIFValuep, marpaESLIF_grammar_bootstrap_t *grammarBootstrapp, marpaESLIF_terminal_type_t terminalType, marpaESLIF_bootstrap_utf_string_t *stringp, marpaESLIF_symbol_t **symbolpp)
 /*****************************************************************************/
 {
-  genericStack_t        *symbolStackp  = grammarBootstrapp->symbolStackp;
-  marpaESLIF_symbol_t   *symbolp       = NULL;
-  marpaESLIF_terminal_t *terminalp     = NULL;
-  marpaESLIF_terminal_t *substitutionp = NULL;
+  genericStack_t        *symbolStackp          = grammarBootstrapp->symbolStackp;
+  marpaESLIF_symbol_t   *symbolp               = NULL;
+  marpaESLIF_terminal_t *terminalp             = NULL;
+  marpaESLIF_terminal_t *substitutionTerminalp = NULL;
   marpaESLIF_symbol_t   *symbol_i_p;
   int                    i;
   short                  rcb;
 
   /* Create a fake terminal (it has existence only in memory) - the description is the content itself */
+  /* If there is a substitution then the terminal must be a regex. */
   terminalp = _marpaESLIF_terminal_newp(marpaESLIFValuep->marpaESLIFp,
                                         NULL, /* marpaWrapperGrammarStartp: this is what make the terminal only in memory */
                                         MARPAWRAPPERGRAMMAR_EVENTTYPE_NONE,
@@ -1038,29 +1039,31 @@ static inline short _marpaESLIF_bootstrap_search_terminal_by_descriptionb(marpaE
                                         NULL, /* testPartialMatchs */
                                         0, /* pseudob */
                                         0, /* characterClassb */
+                                        (stringp->substitutionBytep != NULL) ? MARPAESLIF_TERMINAL_TYPE_REGEX : MARPAESLIF_TERMINAL_TYPE_NA, /* wantType */
                                         0 /* substitutionb */);
   if (MARPAESLIF_UNLIKELY(terminalp == NULL)) {
     goto err;
   }
 
   /* Idem if there is a substition - can happen only with regular expressions */
-  if (stringp->substitutionp != NULL) {
-    substitutionp = _marpaESLIF_terminal_newp(marpaESLIFValuep->marpaESLIFp,
-                                              NULL, /* marpaWrapperGrammarStartp: this is what make the terminal only in memory */
-                                              MARPAWRAPPERGRAMMAR_EVENTTYPE_NONE,
-                                              (char *) _marpaESLIF_bootstrap_descEncodingInternals,
-                                              (char *) _marpaESLIF_bootstrap_descInternals,
-                                              _marpaESLIF_bootstrap_descInternall,
-                                              MARPAESLIF_TERMINAL_TYPE_STRING, /* terminalType */
-                                              stringp->substitutionModifiers,
-                                              stringp->substitutionp,
-                                              stringp->substitutionl,
-                                              NULL, /* testFullMatchs */
-                                              NULL, /* testPartialMatchs */
-                                              0, /* pseudob */
-                                              0, /* characterClassb */
-                                              1 /* substitutionb */);
-    if (MARPAESLIF_UNLIKELY(substitutionp == NULL)) {
+  if (stringp->substitutionBytep != NULL) {
+    substitutionTerminalp = _marpaESLIF_terminal_newp(marpaESLIFValuep->marpaESLIFp,
+                                                      NULL, /* marpaWrapperGrammarStartp: this is what make the terminal only in memory */
+                                                      MARPAWRAPPERGRAMMAR_EVENTTYPE_NONE,
+                                                      (char *) _marpaESLIF_bootstrap_descEncodingInternals,
+                                                      (char *) _marpaESLIF_bootstrap_descInternals,
+                                                      _marpaESLIF_bootstrap_descInternall,
+                                                      MARPAESLIF_TERMINAL_TYPE_STRING, /* terminalType */
+                                                      stringp->substitutionModifiers,
+                                                      stringp->substitutionBytep,
+                                                      stringp->substitutionBytel,
+                                                      NULL, /* testFullMatchs */
+                                                      NULL, /* testPartialMatchs */
+                                                      0, /* pseudob */
+                                                      0, /* characterClassb */
+                                                      MARPAESLIF_TERMINAL_TYPE_NA, /* wantType */
+                                                      1 /* substitutionb */);
+    if (MARPAESLIF_UNLIKELY(substitutionTerminalp == NULL)) {
       goto err;
     }
   }
@@ -1081,6 +1084,21 @@ static inline short _marpaESLIF_bootstrap_search_terminal_by_descriptionb(marpaE
     if (memcmp(symbol_i_p->u.terminalp->patterns, terminalp->patterns, terminalp->patternl) != 0) {
       continue;
     }
+
+    if (stringp->substitutionBytep != NULL) {
+      /* Substitution pattern options */
+      if (symbol_i_p->u.terminalp->substitutionPatterni != substitutionTerminalp->patterni) {
+        continue;
+      }
+      /* Substitution pattern content */
+      if (symbol_i_p->u.terminalp->substitutionPatternl != substitutionTerminalp->patternl) {
+        continue;
+      }
+      if (memcmp(symbol_i_p->u.terminalp->substitutionPatterns, substitutionTerminalp->patterns, substitutionTerminalp->patternl) != 0) {
+        continue;
+      }
+    }
+
     /* Got it */
     symbolp = symbol_i_p;
     break;
@@ -1098,7 +1116,7 @@ static inline short _marpaESLIF_bootstrap_search_terminal_by_descriptionb(marpaE
 
  done:
   _marpaESLIF_terminal_freev(terminalp);
-  _marpaESLIF_terminal_freev(substitutionp);
+  _marpaESLIF_terminal_freev(substitutionTerminalp);
   return rcb;
 }
 
@@ -1185,9 +1203,10 @@ done:
 static inline marpaESLIF_symbol_t  *_marpaESLIF_bootstrap_check_terminal_by_typep(marpaESLIFValue_t *marpaESLIFValuep, marpaESLIFGrammar_bootstrap_t *marpaESLIFGrammarBootstrapp, marpaESLIF_grammar_bootstrap_t *grammarBootstrapp, marpaESLIF_terminal_type_t terminalType, marpaESLIF_bootstrap_utf_string_t *stringp, short createb, short pseudob, short forcecreateb, char *descEncodings, char *descs, size_t descl, short characterClassb)
 /*****************************************************************************/
 {
-  static const char     *funcs     = "_marpaESLIF_bootstrap_check_terminal_by_typep";
-  marpaESLIF_symbol_t   *symbolp   = NULL;
-  marpaESLIF_terminal_t *terminalp = NULL;
+  static const char     *funcs                 = "_marpaESLIF_bootstrap_check_terminal_by_typep";
+  marpaESLIF_symbol_t   *symbolp               = NULL;
+  marpaESLIF_terminal_t *terminalp             = NULL;
+  marpaESLIF_terminal_t *substitutionTerminalp = NULL;
 
   if (pseudob) {
     if (MARPAESLIF_UNLIKELY(! _marpaESLIF_bootstrap_search_terminal_pseudob(marpaESLIFValuep, grammarBootstrapp, terminalType, &symbolp))) {
@@ -1214,11 +1233,36 @@ static inline marpaESLIF_symbol_t  *_marpaESLIF_bootstrap_check_terminal_by_type
                                           NULL, /* testPartialMatchs */
                                           pseudob,
                                           characterClassb,
+                                          ((! pseudob) && (stringp->substitutionBytep != NULL)) ? MARPAESLIF_TERMINAL_TYPE_REGEX : MARPAESLIF_TERMINAL_TYPE_NA, /* wantType */
                                           0 /* substitutionb */);
     if (MARPAESLIF_UNLIKELY(terminalp == NULL)) {
       goto err;
     }
     MARPAESLIF_TRACEF(marpaESLIFValuep->marpaESLIFp, funcs, "Creating terminal symbol %s in grammar level %d", terminalp->descp->asciis, grammarBootstrapp->leveli);
+    
+    if ((! pseudob) && (stringp->substitutionBytep != NULL)) {
+      substitutionTerminalp = _marpaESLIF_terminal_newp(marpaESLIFValuep->marpaESLIFp,
+                                                        grammarBootstrapp->marpaWrapperGrammarStartp,
+                                                        MARPAWRAPPERGRAMMAR_EVENTTYPE_NONE,
+                                                        NULL, /* descEncodings */
+                                                        NULL, /* descs */
+                                                        0, /* descl */
+                                                        MARPAESLIF_TERMINAL_TYPE_STRING,
+                                                        stringp->substitutionModifiers,
+                                                        stringp->substitutionBytep,
+                                                        stringp->substitutionBytel,
+                                                        NULL, /* testFullMatchs */
+                                                        NULL, /* testPartialMatchs */
+                                                        0, /* pseudob */
+                                                        0, /* characterClassb */
+                                                        MARPAESLIF_TERMINAL_TYPE_NA, /* wantType */
+                                                        1 /* substitutionb */);
+      if (MARPAESLIF_UNLIKELY(substitutionTerminalp == NULL)) {
+        goto err;
+      }
+      MARPAESLIF_TRACEF(marpaESLIFValuep->marpaESLIFp, funcs, "Creating substitution terminal symbol %s in grammar level %d", substitutionTerminalp->descp->asciis, grammarBootstrapp->leveli);
+    }
+
     symbolp = _marpaESLIF_symbol_newp(marpaESLIFValuep->marpaESLIFp, NULL /* marpaESLIFSymbolOptionp */);
     if (MARPAESLIF_UNLIKELY(symbolp == NULL)) {
       goto err;
@@ -1228,7 +1272,20 @@ static inline marpaESLIF_symbol_t  *_marpaESLIF_bootstrap_check_terminal_by_type
     symbolp->idi         = terminalp->idi;
     symbolp->descp       = terminalp->descp;
     terminalp = NULL; /* terminalp is now in symbolp */
-      
+
+    if ((! pseudob) && (stringp->substitutionBytep != NULL)) {
+      symbolp->u.terminalp->substitutionUtf8s     = substitutionTerminalp->utf8s;
+      symbolp->u.terminalp->substitutionUtf8l     = substitutionTerminalp->utf8l;
+      symbolp->u.terminalp->substitutionModifiers = substitutionTerminalp->modifiers;
+      symbolp->u.terminalp->substitutionPatterns  = substitutionTerminalp->patterns;
+      symbolp->u.terminalp->substitutionPatternl  = substitutionTerminalp->patternl;
+      symbolp->u.terminalp->substitutionPatterni  = substitutionTerminalp->patterni;
+
+      substitutionTerminalp->utf8s     = NULL; /* it is now in symbolp->u.terminalp */
+      substitutionTerminalp->modifiers = NULL; /* it is now in symbolp->u.terminalp */
+      substitutionTerminalp->patterns  = NULL; /* it is now in symbolp->u.terminalp */
+    }
+
     GENERICSTACK_SET_PTR(grammarBootstrapp->symbolStackp, symbolp, symbolp->idi);
     if (MARPAESLIF_UNLIKELY(GENERICSTACK_ERROR(grammarBootstrapp->symbolStackp))) {
       MARPAESLIF_ERRORF(marpaESLIFValuep->marpaESLIFp, "symbolStackp push failure, %s", strerror(errno));
@@ -1240,6 +1297,7 @@ static inline marpaESLIF_symbol_t  *_marpaESLIF_bootstrap_check_terminal_by_type
   
  err:
   _marpaESLIF_terminal_freev(terminalp);
+  _marpaESLIF_terminal_freev(substitutionTerminalp);
   _marpaESLIF_symbol_freev(symbolp);
   symbolp = NULL;
 
@@ -3841,8 +3899,8 @@ static short _marpaESLIF_bootstrap_G1_action_rhs_primary_no_parameter_3b(void *u
 
   rhsPrimaryp->callp                        = NULL;
   rhsPrimaryp->type                         = MARPAESLIF_BOOTSTRAP_RHS_PRIMARY_TYPE_NA;
-  rhsPrimaryp->u.name.substitutionp         = NULL;
-  rhsPrimaryp->u.name.substitutionl         = 0;
+  rhsPrimaryp->u.name.substitutionBytep     = NULL;
+  rhsPrimaryp->u.name.substitutionBytel     = 0;
   rhsPrimaryp->u.name.substitutionModifiers = NULL;
   rhsPrimaryp->u.name.bytep                 = NULL;
   rhsPrimaryp->u.name.bytel                 = 0;
@@ -5201,9 +5259,9 @@ static short _marpaESLIF_bootstrap_G1_action_terminal_8b(void *userDatavp, marpa
     goto err;
   }
 
-  /* We move substitution terminal into regex terminal */
-  regexTerminalp->u.regularExpressionp->substitutionp = substitutionTerminalp->u.stringp->bytep;
-  regexTerminalp->u.regularExpressionp->substitutionl = substitutionTerminalp->u.stringp->bytel;
+  /* We move substitution terminal into regex bootstrap terminal */
+  regexTerminalp->u.regularExpressionp->substitutionBytep     = substitutionTerminalp->u.stringp->bytep;
+  regexTerminalp->u.regularExpressionp->substitutionBytel     = substitutionTerminalp->u.stringp->bytel;
   regexTerminalp->u.regularExpressionp->substitutionModifiers = substitutionTerminalp->u.stringp->modifiers;
 
   substitutionTerminalp->u.stringp->bytep     = NULL;
@@ -9339,8 +9397,8 @@ static inline marpaESLIF_bootstrap_utf_string_t *_marpaESLIF_bootstrap_utf_strin
   if (MARPAESLIF_UNLIKELY(rcp == NULL)) {
     MARPAESLIF_ERRORF(marpaESLIFp, "malloc failure, %s", strerror(errno));
   } else {
-    rcp->substitutionp         = NULL;
-    rcp->substitutionl         = 0;
+    rcp->substitutionBytep     = NULL;
+    rcp->substitutionBytel     = 0;
     rcp->substitutionModifiers = NULL;
     rcp->modifiers             = NULL;
     rcp->bytel                 = 0;
