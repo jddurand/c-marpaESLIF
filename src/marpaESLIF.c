@@ -2099,7 +2099,7 @@ static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *mar
       /* it is exactly this size. Everytime there is a backslashed character */
       /* the backslash itself is skipped. This mean that allocating bytel+1 */
       /* bytes is always guaranteed to get the raw string entirely. We overestimate */
-      /* this in other was: the {bytesl,bytel} array must contain the delimiters, that */
+      /* this in another way: the {bytesl,bytel} array must contain the delimiters, that */
       /* are also skipped when parsing it. */
       bytes = (char *) malloc(utf8l+1);
       if (MARPAESLIF_UNLIKELY(bytes == NULL)) {
@@ -2280,6 +2280,7 @@ static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *mar
 #endif
         }
       }
+
       /* The recognizerd UTF-8 character start at matchedp and is of size matchedl */
       if (memcmpb) {
         /* bytes is guaranteed to have enough room for the matched character. */
@@ -2328,37 +2329,68 @@ static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *mar
           hexdigitl += 2;
         }
       }
-      /* Append the ASCII representation */
-      stringl += (asciisafeb > 0) ? asciisafeb : hexdigitl;
-      if (strings == NULL) {
-        strings = (char *) malloc(stringl + 1);
-        if (MARPAESLIF_UNLIKELY(strings == NULL)) {
-          MARPAESLIF_ERRORF(marpaESLIFp, "malloc failure, %s", strerror(errno));
-          goto err;
-        }
-        strings[0] = '\0'; /* Start with an empty string */
-      } else {
-        tmps = (char *) realloc(strings, stringl + 1);
-        if (MARPAESLIF_UNLIKELY(tmps == NULL)) {
-          MARPAESLIF_ERRORF(marpaESLIFp, "realloc failure, %s", strerror(errno));
-          goto err;
-        }
-        strings = tmps;
-      }
-      strings[stringl] = '\0'; /* Makes sure the string always end with NUL */
-      if (asciisafeb > 0) {
-        if (asciisafeb > 1) {
-          sprintf(strings + strlen(strings), "\\%c", (unsigned char) codepointi);
+
+      if (substitutionb) {
+        /* Raw copy */
+        if (strings == NULL) {
+          strings = (char *) malloc(matchedl + 1);
+          if (MARPAESLIF_UNLIKELY(strings == NULL)) {
+            MARPAESLIF_ERRORF(marpaESLIFp, "malloc failure, %s", strerror(errno));
+            goto err;
+          }
+          memcpy(strings, matchedp, matchedl);
         } else {
-          sprintf(strings + strlen(strings), "%c", (unsigned char) codepointi);
+          tmps = (char *) realloc(strings, stringl + matchedl + 1);
+          if (MARPAESLIF_UNLIKELY(tmps == NULL)) {
+            MARPAESLIF_ERRORF(marpaESLIFp, "realloc failure, %s", strerror(errno));
+            goto err;
+          }
+          strings = tmps;
+          memcpy(strings + stringl, matchedp, matchedl);
         }
+        stringl += matchedl;
+        strings[stringl] = '\0'; /* Makes sure the string always end with NUL */
       } else {
-        hexdigitl -= 4; /* \x{} */
-        sprintf(strings + strlen(strings), "\\x{%0*lx}", (int) hexdigitl, (unsigned long) codepointi);
+        /* Append the ASCII representation */
+        stringl += (asciisafeb > 0) ? asciisafeb : hexdigitl;
+        if (strings == NULL) {
+          strings = (char *) malloc(stringl + 1);
+          if (MARPAESLIF_UNLIKELY(strings == NULL)) {
+            MARPAESLIF_ERRORF(marpaESLIFp, "malloc failure, %s", strerror(errno));
+            goto err;
+          }
+          strings[0] = '\0'; /* Start with an empty string */
+        } else {
+          tmps = (char *) realloc(strings, stringl + 1);
+          if (MARPAESLIF_UNLIKELY(tmps == NULL)) {
+            MARPAESLIF_ERRORF(marpaESLIFp, "realloc failure, %s", strerror(errno));
+            goto err;
+          }
+          strings = tmps;
+        }
+        strings[stringl] = '\0'; /* Makes sure the string always end with NUL */
+        if (asciisafeb > 0) {
+          if (asciisafeb > 1) {
+            sprintf(strings + strlen(strings), "\\%c", (unsigned char) codepointi);
+          } else {
+            sprintf(strings + strlen(strings), "%c", (unsigned char) codepointi);
+          }
+        } else {
+          hexdigitl -= 4; /* \x{} */
+          sprintf(strings + strlen(strings), "\\x{%0*lx}", (int) hexdigitl, (unsigned long) codepointi);
+        }
       }
     }
-    /* Done - now we can generate a regexp out of that UTF-8 compatible string */
-    MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "%s: content string converted to regex %s (UTF=%d)", terminalp->descp->asciis, strings, utfflagb);
+
+#ifndef MARPAESLIF_NTRACE
+    if (substitutionb) {
+      MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "%s: substitution string analysed (UTF=%d)", terminalp->descp->asciis, utfflagb);
+    } else {
+      /* Done - now we can generate a regexp out of that UTF-8 compatible string */
+      MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "%s: content string converted to regex %s (UTF=%d)", terminalp->descp->asciis, strings, utfflagb);
+    }
+#endif
+
     utf8s = strings;
     utf8l = stringl;
     /* opti for string is compatible with opti for regex - just that the lexer accept less options - in particular the UTF flag */
@@ -7391,6 +7423,10 @@ static inline short _marpaESLIFRecognizer_terminal_matcherb(marpaESLIFRecognizer
                                                &outputbufferl);
 
           /* Now it must succeed with the number of substitutions, that must be > 0 */
+          if (pcre2Errornumberi == 0) {
+            MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "%s: No substitution though there was a match", terminalp->descp->asciis);
+            goto fatal;
+          }
           if (pcre2Errornumberi < 0) {
             pcre2_get_error_message(pcre2Errornumberi, pcre2ErrorBuffer, sizeof(pcre2ErrorBuffer));
             MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "%s: Uncaught pcre2 match failure: %s", terminalp->descp->asciis, pcre2ErrorBuffer);
