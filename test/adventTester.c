@@ -12,11 +12,16 @@ typedef struct marpaESLIFTester_context {
   size_t           inputl;
 } marpaESLIFTester_context_t;
 
+#define BLACK_HEART_SUIT_UTF8s   "\xE2\x99\xA5"
+#define BLACK_DIAMOND_SUIT_UTF8s "\xE2\x99\xA6"
+#define BLACK_CLUB_SUIT_UTF8s    "\xE2\x99\xA3"
+#define BLACK_SPADE_SUIT_UTF8s   "\xE2\x99\xA0"
+
 const static char *base_dsl = "\n"
   ":default ::= default-encoding => UTF-8\n"
   ":start ::= deal\n"
   "deal ::= hands jdd\n"
-  "jdd ::= /(JDD)/ -> 'x$1'\n"
+  "jdd ::= /(JDD)/ -> '" BLACK_HEART_SUIT_UTF8s "x$1'\n"
   "hands ::= hand | hands ';' hand\n"
   "hand ::= card card card card card\n"
   "card ~ face suit\n"
@@ -27,10 +32,6 @@ const static char *base_dsl = "\n"
   ":symbol ::= <card> pause => after event => card\n"
   ;
 
-#define BLACK_HEART_SUIT_UTF8s   "\xE2\x99\xA5"
-#define BLACK_DIAMOND_SUIT_UTF8s "\xE2\x99\xA6"
-#define BLACK_CLUB_SUIT_UTF8s    "\xE2\x99\xA3"
-#define BLACK_SPADE_SUIT_UTF8s   "\xE2\x99\xA0"
 const static char *suit_line[] = {
   "suit ~ [\\x{2665}\\x{2666}\\x{2663}\\x{2660}]:u", /* Code points - the u flag is NEEDED */
   "suit ~ [" BLACK_HEART_SUIT_UTF8s BLACK_DIAMOND_SUIT_UTF8s BLACK_CLUB_SUIT_UTF8s BLACK_SPADE_SUIT_UTF8s "]", /* Character class */
