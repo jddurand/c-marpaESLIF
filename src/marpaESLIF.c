@@ -7419,8 +7419,8 @@ static inline short _marpaESLIFRecognizer_terminal_matcherb(marpaESLIFRecognizer
           }
 
           pcre2Errornumberi = pcre2_substitute(marpaESLIF_regexp->patternp,                               /* code */
-                                               (PCRE2_SPTR) inputs,                                       /* subject */
-                                               (PCRE2_SIZE) inputl,                                       /* length */
+                                               (PCRE2_SPTR) matchedp,                                     /* subject */
+                                               (PCRE2_SIZE) matchedLengthl,                               /* length */
                                                (PCRE2_SIZE) 0,                                            /* startoffset */
                                                pcre2_substitute_optioni|PCRE2_SUBSTITUTE_OVERFLOW_LENGTH, /* options - PCRE2_ERROR_NOMEMORY can happen */
                                                marpaESLIF_regexp->match_datap,                            /* match data */
@@ -7444,8 +7444,8 @@ static inline short _marpaESLIFRecognizer_terminal_matcherb(marpaESLIFRecognizer
               outputbufferp = outputbuffertmpp;
               outputbufferp[outputbufferl] = '\0';
               pcre2Errornumberi = pcre2_substitute(marpaESLIF_regexp->patternp,                               /* code */
-                                                   (PCRE2_SPTR) inputs,                                       /* subject */
-                                                   (PCRE2_SIZE) inputl,                                       /* length */
+                                                   (PCRE2_SPTR) matchedp,                                     /* subject */
+                                                   (PCRE2_SIZE) matchedLengthl,                               /* length */
                                                    (PCRE2_SIZE) 0,                                            /* startoffset */
                                                    pcre2_substitute_optioni,                                  /* options */
                                                    marpaESLIF_regexp->match_datap,                            /* match data */
