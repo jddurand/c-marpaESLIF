@@ -34,6 +34,7 @@ CHECK_SYMBOL_EXISTS(memmove       "string.h"   HAVE_MEMMOVE)
 CHECK_SYMBOL_EXISTS(secure_getenv "stdlib.h"   HAVE_SECURE_GETENV) # Needs _GNU_SOURCE
 CHECK_SYMBOL_EXISTS(strerror      "string.h"   HAVE_STRERROR)
 
+INCLUDE(CheckCSourceCompiles)
 CHECK_C_SOURCE_COMPILES(
   "#include <stdlib.h>
    #include <limits.h>
