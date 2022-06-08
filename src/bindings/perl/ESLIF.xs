@@ -4639,13 +4639,15 @@ OUTPUT:
 =cut
 
 void *
-regex_allocate(Perl_packagep, p, bytep, bytel, encodingasciisp, modifiersp)
+regex_allocate(Perl_packagep, p, bytep, bytel, encodingasciisp, modifiersp, Perl_substitutionp, substitutionModifiersp)
   SV     *Perl_packagep;
   SV     *p;
   char   *bytep;
   size_t  bytel;
   SV     *encodingasciisp;
   SV     *modifiersp;
+  SV     *Perl_substitutionp;
+  SV     *substitutionModifiersp;
 PREINIT:
   static const char *funcs = "MarpaX::ESLIF::Symbol::regex_allocate";
 CODE:
@@ -4653,11 +4655,15 @@ CODE:
   marpaESLIF_t               *marpaESLIFp   = MarpaX_ESLIFp->marpaESLIFp;
   marpaESLIFSymbol_t         *marpaESLIFSymbolp;
   marpaESLIFString_t          marpaESLIFString;
+  marpaESLIFString_t          marpaESLIFSubstitutionString;
   MarpaX_ESLIF_Symbol_t      *MarpaX_ESLIF_Symbolp;
   int                         typei;
   char                       *encodingasciis = NULL;
   char                       *modifiers = NULL;
   marpaESLIFSymbolOption_t    marpaESLIFSymbolOption;
+  char                       *substitutionPatterns = NULL;
+  STRLEN                      substitutionPatternl;
+  char                       *substitutionModifiers = NULL;
 
   typei = marpaESLIFPerl_getTypei(aTHX_ encodingasciisp);
   if ((typei & SCALAR) != SCALAR) {
@@ -4681,6 +4687,17 @@ CODE:
     modifiers = SvPV_nolen(modifiersp);
   }
 
+  typei = marpaESLIFPerl_getTypei(aTHX_ Perl_substitutionp);
+  if ((typei & SCALAR) != SCALAR) {
+    /* This is an error unless it is undef */
+    if ((typei & UNDEF) != UNDEF) {
+      MARPAESLIFPERL_CROAK("substitution must be a scalar or undef");
+    }
+  }
+  if (SvOK(Perl_substitutionp)) {
+    substitutionPatterns = SvPVbyte(Perl_substitutionp, substitutionPatternl);
+  }
+
   Newx(MarpaX_ESLIF_Symbolp, 1, MarpaX_ESLIF_Symbol_t);
   marpaESLIFPerl_symbolContextInitv(aTHX_ MarpaX_ESLIFp, p, MarpaX_ESLIF_Symbolp, &(MarpaX_ESLIFp->constants));
 
@@ -4689,10 +4706,15 @@ CODE:
   marpaESLIFString.encodingasciis = encodingasciis;
   marpaESLIFString.asciis         = NULL;
 
+  marpaESLIFSubstitutionString.bytep          = substitutionPatterns;
+  marpaESLIFSubstitutionString.bytel          = (size_t) substitutionPatternl;
+  marpaESLIFSubstitutionString.encodingasciis = encodingasciis;
+  marpaESLIFSubstitutionString.asciis         = NULL;
+
   marpaESLIFSymbolOption.userDatavp = (void *) MarpaX_ESLIF_Symbolp;
   marpaESLIFSymbolOption.importerp  = marpaESLIFPerl_symbolImportb;
 
-  marpaESLIFSymbolp = marpaESLIFSymbol_regex_newp(marpaESLIFp, &marpaESLIFString, modifiers, &marpaESLIFSymbolOption);
+  marpaESLIFSymbolp = marpaESLIFSymbol_regex_newp(marpaESLIFp, &marpaESLIFString, modifiers, (substitutionPatterns != NULL) ? &marpaESLIFSubstitutionString : NULL, (substitutionPatterns != NULL) ? substitutionModifiers : NULL, &marpaESLIFSymbolOption);
   if (MARPAESLIF_UNLIKELY(marpaESLIFSymbolp == NULL)) {
     marpaESLIFPerl_symbolContextFreev(aTHX_ MarpaX_ESLIF_Symbolp);
     MARPAESLIFPERL_CROAKF("marpaESLIFSymbol_regex_newp failure, %s", strerror(errno));
