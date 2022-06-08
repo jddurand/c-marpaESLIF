@@ -19,7 +19,7 @@ static short eventManagerb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, generi
   " *"
 #define STRING2 ":start"
 #define REGEX "(*MARK:MarkName):+(\\w+)"
-#define SUBSTITUTION "'${*MARK} match is $1'"
+#define SUBSTITUTION "'$*MARK match is $1 (the word after \\':\\')'"
 
 typedef struct marpaESLIFTester_context {
   short            firstb;
@@ -966,6 +966,11 @@ int main() {
 
   GENERICLOGGER_INFO(marpaESLIFOption.genericLoggerp, "Trying external regex symbol match on itself");
   if (! marpaESLIFSymbol_tryb(regexSymbolp, SUBJECT, strlen(SUBJECT), &matchb)) {
+    goto err;
+  }
+
+  GENERICLOGGER_INFO(marpaESLIFOption.genericLoggerp, "Trying external substitution regex symbol match on itself");
+  if (! marpaESLIFSymbol_tryb(substitutionSymbolp, SUBJECT, strlen(SUBJECT), &matchb)) {
     goto err;
   }
 

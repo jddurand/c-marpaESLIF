@@ -1801,26 +1801,26 @@ static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *mar
 /*****************************************************************************/
 /* This method is bootstraped at marpaESLIFp creation itself to have the internal regexps, with grammarp being NULL... */
 /* characterClassb can always be set to 0 if unsure, but it caller set it to a true value it really has to be a character class i.e. [] and only that */
+/* If substitutionb is set, we do almost no processing but recuperate the inner utf8 string. */
 /*****************************************************************************/
 {
-  static const char                *funcs = "_marpaESLIF_terminal_newp";
-  char                             *strings               = NULL;
-  marpaESLIFRecognizer_t           *marpaESLIFRecognizerp = NULL;
+  static const char                *funcs                     = "_marpaESLIF_terminal_newp";
+  char                             *strings                   = NULL;
+  marpaESLIFRecognizer_t           *marpaESLIFRecognizerp     = NULL;
 #ifndef MARPAESLIF_NTRACE
   marpaESLIFRecognizer_t           *marpaESLIFRecognizerTestp = NULL;
 #endif
-  marpaESLIF_string_t              *content2descp         = NULL;
-  char                             *generatedasciis       = NULL;
-  short                             memcmpb               = 0;
-  marpaESLIF_terminal_t            *terminalp             = NULL;
-  marpaWrapperGrammarSymbolOption_t marpaWrapperGrammarSymbolOption;
-  size_t                            pcre2JitOptionl = 0;
-  /* Substitutions always happen after we make sure there is match - we can reuse it */
-  marpaESLIF_uint32_t               pcre2Optioni = PCRE2_ANCHORED;
-  marpaESLIF_uint32_t               pcre2SubstitutionOptioni = 0;
+  marpaESLIF_string_t              *content2descp             = NULL;
+  char                             *generatedasciis           = NULL;
+  short                             memcmpb                   = 0;
+  marpaESLIF_terminal_t            *terminalp                 = NULL;
+  size_t                            pcre2JitOptionl           = 0;
+  marpaESLIF_uint32_t               pcre2Optioni              = PCRE2_ANCHORED;
+  marpaESLIF_uint32_t               pcre2SubstitutionOptioni  = 0;
   int                               pcre2Errornumberi;
   PCRE2_SIZE                        pcre2ErrorOffsetl;
   PCRE2_UCHAR                       pcre2ErrorBuffer[256];
+  marpaWrapperGrammarSymbolOption_t marpaWrapperGrammarSymbolOption;
   int                               i;
   char                             *inputs;
   size_t                            inputl;
@@ -1957,16 +1957,13 @@ static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *mar
   }
 
   /* ----------- Terminal Identifier ------------ */
-  if (marpaWrapperGrammarp != NULL) { /* Here is the bootstrap dependency with marpaWrapperGrammarp == NULL */
-    if (! substitutionb) {
-      /* Substitutions do not create a new symbol, they are part of a symbol */
-      marpaWrapperGrammarSymbolOption.terminalb = 1;
-      marpaWrapperGrammarSymbolOption.startb    = 0;
-      marpaWrapperGrammarSymbolOption.eventSeti = eventSeti;
-      terminalp->idi = marpaWrapperGrammar_newSymboli(marpaWrapperGrammarp, &marpaWrapperGrammarSymbolOption);
-      if (MARPAESLIF_UNLIKELY(terminalp->idi < 0)) {
-        goto err;
-      }
+  if ((! substitutionb) && (marpaWrapperGrammarp != NULL)) { /* Here is the bootstrap dependency with marpaWrapperGrammarp == NULL */
+    marpaWrapperGrammarSymbolOption.terminalb = 1;
+    marpaWrapperGrammarSymbolOption.startb    = 0;
+    marpaWrapperGrammarSymbolOption.eventSeti = eventSeti;
+    terminalp->idi = marpaWrapperGrammar_newSymboli(marpaWrapperGrammarp, &marpaWrapperGrammarSymbolOption);
+    if (MARPAESLIF_UNLIKELY(terminalp->idi < 0)) {
+      goto err;
     }
   }
 
@@ -2548,106 +2545,109 @@ static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *mar
       goto err;
     }
 
-    /* We want to support callouts, that requires a compile context */
-    terminalp->regex.compile_contextp = pcre2_compile_context_create(NULL);
-    if (MARPAESLIF_UNLIKELY(terminalp->regex.compile_contextp == NULL)) {
-      MARPAESLIF_ERRORF(marpaESLIFp, "pcre2_compile_context_create, %s", strerror(errno));
-      goto err;
-    }
-
-    /* Documentation says that the result of this function is always 0 ;) */
-    pcre2_set_character_tables(terminalp->regex.compile_contextp, marpaESLIFp->tablesp);
-
-    if (utf8s == NULL) {
-      /* Case of the empty string => empty pattern */
-      /* Note that this is different from // in the grammar: // is NOT recognized as a valid regex */
-      terminalp->regex.patternp = pcre2_compile(
-                                                (PCRE2_SPTR) "",
-                                                (PCRE2_SIZE) 0,
-                                                pcre2Optioni,
-                                                &pcre2Errornumberi, /* for error number */
-                                                &pcre2ErrorOffsetl, /* for error offset */
-                                                terminalp->regex.compile_contextp);
-    } else {
-      terminalp->regex.patternp = pcre2_compile(
-                                                (PCRE2_SPTR) utf8s,      /* An UTF-8 pattern */
-                                                (PCRE2_SIZE) utf8l,      /* In code units (!= code points) - in UTF-8 a code unit is a byte */
-                                                pcre2Optioni,
-                                                &pcre2Errornumberi, /* for error number */
-                                                &pcre2ErrorOffsetl, /* for error offset */
-                                                terminalp->regex.compile_contextp);
-    }
-    if (MARPAESLIF_UNLIKELY(terminalp->regex.patternp == NULL)) {
-      pcre2_get_error_message(pcre2Errornumberi, pcre2ErrorBuffer, sizeof(pcre2ErrorBuffer));
-      MARPAESLIF_ERRORF(marpaESLIFp, "%s: pcre2_compile failure at offset %ld: %s", terminalp->descp->asciis, (unsigned long) pcre2ErrorOffsetl, pcre2ErrorBuffer);
-      if (marpaESLIFRecognizerp != NULL) {
-        MARPAESLIFRECOGNIZER_HEXDUMPV(funcs, marpaESLIFRecognizerp, "Dump of PCRE2 pattern", " as an UTF-8 sequence of bytes", utf8s, utf8l, 0 /* traceb */, 0 /* noticeb */, 0 /* linel */, 0 /* columnl */);
+    if (! substitutionb) {
+      /* We want to support callouts, that requires a compile context */
+      terminalp->regex.compile_contextp = pcre2_compile_context_create(NULL);
+      if (MARPAESLIF_UNLIKELY(terminalp->regex.compile_contextp == NULL)) {
+        MARPAESLIF_ERRORF(marpaESLIFp, "pcre2_compile_context_create, %s", strerror(errno));
+        goto err;
       }
-      goto err;
-    }
 
-    /* Set the calloutb flag */
-    enumerate_context.marpaESLIFp = NULL; /* Setting NULL here is a hack just to have the calloutb set and nothing else */
-    enumerate_context.asciishows  = NULL;
-    enumerate_context.asciishowl  = 0;
-    enumerate_context.calloutb    = 0;
-    pcre2_callout_enumerate(terminalp->regex.patternp, _marpaESLIF_pcre2_callout_enumeratei, &enumerate_context);
-    terminalp->regex.calloutb = enumerate_context.calloutb;
+      /* Documentation says that the result of this function is always 0 ;) */
+      pcre2_set_character_tables(terminalp->regex.compile_contextp, marpaESLIFp->tablesp);
 
-    /* Set match context in any case */
-    terminalp->regex.match_contextp = pcre2_match_context_create(NULL);
-    if (MARPAESLIF_UNLIKELY(terminalp->regex.match_contextp == NULL)) {
-      MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "pcre2_match_context_create failure, %s", strerror(errno));
-      goto err;
-    }
+      if (utf8s == NULL) {
+        /* Case of the empty string => empty pattern */
+        /* Note that this is different from // in the grammar: // is NOT recognized as a valid regex */
+        terminalp->regex.patternp = pcre2_compile(
+                                                  (PCRE2_SPTR) "",
+                                                  (PCRE2_SIZE) 0,
+                                                  pcre2Optioni,
+                                                  &pcre2Errornumberi, /* for error number */
+                                                  &pcre2ErrorOffsetl, /* for error offset */
+                                                  terminalp->regex.compile_contextp);
+      } else {
+        terminalp->regex.patternp = pcre2_compile(
+                                                  (PCRE2_SPTR) utf8s,      /* An UTF-8 pattern */
+                                                  (PCRE2_SIZE) utf8l,      /* In code units (!= code points) - in UTF-8 a code unit is a byte */
+                                                  pcre2Optioni,
+                                                  &pcre2Errornumberi, /* for error number */
+                                                  &pcre2ErrorOffsetl, /* for error offset */
+                                                  terminalp->regex.compile_contextp);
+      }
+      if (MARPAESLIF_UNLIKELY(terminalp->regex.patternp == NULL)) {
+        pcre2_get_error_message(pcre2Errornumberi, pcre2ErrorBuffer, sizeof(pcre2ErrorBuffer));
+        MARPAESLIF_ERRORF(marpaESLIFp, "%s: pcre2_compile failure at offset %ld: %s", terminalp->descp->asciis, (unsigned long) pcre2ErrorOffsetl, pcre2ErrorBuffer);
+        if (marpaESLIFRecognizerp != NULL) {
+          MARPAESLIFRECOGNIZER_HEXDUMPV(funcs, marpaESLIFRecognizerp, "Dump of PCRE2 pattern", " as an UTF-8 sequence of bytes", utf8s, utf8l, 0 /* traceb */, 0 /* noticeb */, 0 /* linel */, 0 /* columnl */);
+        }
+        goto err;
+      }
 
-    /* Prepare the callout context. This is almost static, only marpaESLIFRecognizerp will change at every call */
-    /* Note that this is ok because ESLIF is always sequential in the recognizer phase.                         */
-    terminalp->regex.callout_context.terminalp = terminalp;
-    pcre2_set_callout(terminalp->regex.match_contextp, _marpaESLIF_pcre2_callouti, &(terminalp->regex.callout_context));
+      /* Set the calloutb flag */
+      enumerate_context.marpaESLIFp = NULL; /* Setting NULL here is a hack just to have the calloutb set and nothing else */
+      enumerate_context.asciishows  = NULL;
+      enumerate_context.asciishowl  = 0;
+      enumerate_context.calloutb    = 0;
+      pcre2_callout_enumerate(terminalp->regex.patternp, _marpaESLIF_pcre2_callout_enumeratei, &enumerate_context);
+      terminalp->regex.calloutb = enumerate_context.calloutb;
 
-    /* Set match data */
-    terminalp->regex.match_datap = pcre2_match_data_create_from_pattern(terminalp->regex.patternp, NULL /* Default memory allocation */);
-    if (MARPAESLIF_UNLIKELY(terminalp->regex.match_datap == NULL)) {
-      MARPAESLIF_ERRORF(marpaESLIFp, "%s: pcre2_match_data_create_from_pattern failure, %s", terminalp->descp->asciis, strerror(errno));
-      goto err;
-    }
-    /* Determine if we can do JIT */
+      /* Set match context in any case */
+      terminalp->regex.match_contextp = pcre2_match_context_create(NULL);
+      if (MARPAESLIF_UNLIKELY(terminalp->regex.match_contextp == NULL)) {
+        MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "pcre2_match_context_create failure, %s", strerror(errno));
+        goto err;
+      }
+
+      /* Prepare the callout context. This is almost static, only marpaESLIFRecognizerp will change at every call */
+      /* Note that this is ok because ESLIF is always sequential in the recognizer phase.                         */
+      terminalp->regex.callout_context.terminalp = terminalp;
+      pcre2_set_callout(terminalp->regex.match_contextp, _marpaESLIF_pcre2_callouti, &(terminalp->regex.callout_context));
+
+      /* Set match data */
+      terminalp->regex.match_datap = pcre2_match_data_create_from_pattern(terminalp->regex.patternp, NULL /* Default memory allocation */);
+      if (MARPAESLIF_UNLIKELY(terminalp->regex.match_datap == NULL)) {
+        MARPAESLIF_ERRORF(marpaESLIFp, "%s: pcre2_match_data_create_from_pattern failure, %s", terminalp->descp->asciis, strerror(errno));
+        goto err;
+      }
+
+      /* Determine if we can do JIT */
 #ifdef PCRE2_CONFIG_JIT
-    if ((pcre2_config(PCRE2_CONFIG_JIT, &pcre2Optioni) >= 0) && (pcre2Optioni == 1)) {
-      terminalp->regex.jitb = (pcre2_jit_compile(terminalp->regex.patternp, PCRE2_JIT_COMPLETE|PCRE2_JIT_PARTIAL_HARD) == 0) ? 1 : 0;
-    }
+      if ((pcre2_config(PCRE2_CONFIG_JIT, &pcre2Optioni) >= 0) && (pcre2Optioni == 1)) {
+        terminalp->regex.jitb = (pcre2_jit_compile(terminalp->regex.patternp, PCRE2_JIT_COMPLETE|PCRE2_JIT_PARTIAL_HARD) == 0) ? 1 : 0;
+      }
 #endif /*  PCRE2_CONFIG_JIT */
 
-    /* Even if JIT compiles ok, the pattern may have said (*NO_JIT) and the only way to know about that */
-    /* is to check PCRE2_INFO_JITSIZE */
-    if (terminalp->regex.jitb) {
-      pcre2Errornumberi = pcre2_pattern_info(terminalp->regex.patternp, PCRE2_INFO_JITSIZE, &pcre2JitOptionl);
+      /* Even if JIT compiles ok, the pattern may have said (*NO_JIT) and the only way to know about that */
+      /* is to check PCRE2_INFO_JITSIZE */
+      if (terminalp->regex.jitb) {
+        pcre2Errornumberi = pcre2_pattern_info(terminalp->regex.patternp, PCRE2_INFO_JITSIZE, &pcre2JitOptionl);
+        if (MARPAESLIF_UNLIKELY(pcre2Errornumberi != 0)) {
+          pcre2_get_error_message(pcre2Errornumberi, pcre2ErrorBuffer, sizeof(pcre2ErrorBuffer));
+          MARPAESLIF_ERRORF(marpaESLIFp, "%s: pcre2_pattern_info failure: %s", terminalp->descp->asciis, pcre2ErrorBuffer);
+          goto err;
+        }
+        if (pcre2JitOptionl == 0) {
+          MARPAESLIF_TRACEF(marpaESLIFp, funcs, "%s: JIT size empty in regex - disabling JIT match", terminalp->descp->asciis);
+          terminalp->regex.jitb = 0;
+        }
+      }
+
+      /* And some modes after the pattern was allocated */
+      pcre2Errornumberi = pcre2_pattern_info(terminalp->regex.patternp, PCRE2_INFO_ALLOPTIONS, &pcre2Optioni);
       if (MARPAESLIF_UNLIKELY(pcre2Errornumberi != 0)) {
         pcre2_get_error_message(pcre2Errornumberi, pcre2ErrorBuffer, sizeof(pcre2ErrorBuffer));
         MARPAESLIF_ERRORF(marpaESLIFp, "%s: pcre2_pattern_info failure: %s", terminalp->descp->asciis, pcre2ErrorBuffer);
         goto err;
       }
-      if (pcre2JitOptionl == 0) {
-        MARPAESLIF_TRACEF(marpaESLIFp, funcs, "%s: JIT size empty in regex - disabling JIT match", terminalp->descp->asciis);
-        terminalp->regex.jitb = 0;
-      }
+      terminalp->regex.utfb        = ((pcre2Optioni & PCRE2_UTF) == PCRE2_UTF);
+      terminalp->regex.isAnchoredb = ((pcre2Optioni & PCRE2_ANCHORED) == PCRE2_ANCHORED);
+      MARPAESLIF_TRACEF(marpaESLIFp, funcs, "%s: UTF mode is %s, Anchored mode is %s",
+                        terminalp->descp->asciis,
+                        terminalp->regex.utfb ? "on" : "off",
+                        terminalp->regex.isAnchoredb ? "on" : "off"
+                        );
     }
-
-    /* And some modes after the pattern was allocated */
-    pcre2Errornumberi = pcre2_pattern_info(terminalp->regex.patternp, PCRE2_INFO_ALLOPTIONS, &pcre2Optioni);
-    if (MARPAESLIF_UNLIKELY(pcre2Errornumberi != 0)) {
-      pcre2_get_error_message(pcre2Errornumberi, pcre2ErrorBuffer, sizeof(pcre2ErrorBuffer));
-      MARPAESLIF_ERRORF(marpaESLIFp, "%s: pcre2_pattern_info failure: %s", terminalp->descp->asciis, pcre2ErrorBuffer);
-      goto err;
-    }
-    terminalp->regex.utfb        = ((pcre2Optioni & PCRE2_UTF) == PCRE2_UTF);
-    terminalp->regex.isAnchoredb = ((pcre2Optioni & PCRE2_ANCHORED) == PCRE2_ANCHORED);
-    MARPAESLIF_TRACEF(marpaESLIFp, funcs, "%s: UTF mode is %s, Anchored mode is %s",
-                      terminalp->descp->asciis,
-                      terminalp->regex.utfb ? "on" : "off",
-                      terminalp->regex.isAnchoredb ? "on" : "off"
-                      );
     break;
 
   default:
@@ -2665,7 +2665,7 @@ static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *mar
   }
 
 #ifndef MARPAESLIF_NTRACE
-  {
+  if (! substitutionb) {
     /* Fake a recognizer. EOF flag will be set automatically in fake mode */
     marpaESLIFRecognizerTestp = __marpaESLIFRecognizer_newp(marpaESLIFp,
                                                             NULL, /* grammarp */
@@ -2733,7 +2733,7 @@ static inline marpaESLIF_terminal_t *_marpaESLIF_terminal_newp(marpaESLIF_t *mar
   terminalp->type     = type;
 
   /* For strings and characters classes, lookup the first 256 ASCII or UTF-8 characters for predicted failures */
-  if (terminalp->regex.isAnchoredb && ((terminalp->type == MARPAESLIF_TERMINAL_TYPE_STRING) || characterClassb)) {
+  if ((! substitutionb) && terminalp->regex.isAnchoredb && ((terminalp->type == MARPAESLIF_TERMINAL_TYPE_STRING) || characterClassb)) {
 
     /* Fake a recognizer. EOF flag will be set automatically in fake mode */
     marpaESLIFRecognizer_freev(marpaESLIFRecognizerp); /* NULL protected */
