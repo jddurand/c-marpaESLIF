@@ -24317,6 +24317,21 @@ static inline marpaESLIFSymbol_t *_marpaESLIFSymbol_terminal_newp(marpaESLIF_t *
   symbolp->idi         = terminalp->idi;
   symbolp->descp       = terminalp->descp;
 
+  terminalp = NULL; /* It is in symbolp */
+
+  if (substitutionStringp != NULL) {
+    symbolp->u.terminalp->substitutionUtf8s     = substitutionTerminalp->utf8s;
+    symbolp->u.terminalp->substitutionUtf8l     = substitutionTerminalp->utf8l;
+    symbolp->u.terminalp->substitutionModifiers = substitutionTerminalp->modifiers;
+    symbolp->u.terminalp->substitutionPatterns  = substitutionTerminalp->patterns;
+    symbolp->u.terminalp->substitutionPatternl  = substitutionTerminalp->patternl;
+    symbolp->u.terminalp->substitutionPatterni  = substitutionTerminalp->patterni;
+
+    substitutionTerminalp->utf8s     = NULL; /* it is now in symbolp->u.terminalp */
+    substitutionTerminalp->modifiers = NULL; /* it is now in symbolp->u.terminalp */
+    substitutionTerminalp->patterns  = NULL; /* it is now in symbolp->u.terminalp */
+  }
+
   goto done;
 
  err:
@@ -24330,6 +24345,9 @@ static inline marpaESLIFSymbol_t *_marpaESLIFSymbol_terminal_newp(marpaESLIF_t *
   if (utf8Substitutionp != stringp) {
     _marpaESLIF_string_freev(utf8Substitutionp, 0 /* onStackb */);
   }
+  _marpaESLIF_terminal_freev(terminalp);
+  _marpaESLIF_terminal_freev(substitutionTerminalp);
+
   return symbolp;
 }
 
