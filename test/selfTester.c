@@ -18,7 +18,8 @@ static short eventManagerb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, generi
   " * **********************\n"                 \
   " *"
 #define STRING2 ":start"
-#define REGEX "(*MARK:MarkName):+\\w+"
+#define REGEX "(*MARK:MarkName):+(\\w+)"
+#define SUBSTITUTION "'${*MARK} match is $1'"
 
 typedef struct marpaESLIFTester_context {
   short            firstb;
@@ -33,6 +34,7 @@ const static char *selfs = "# Self grammar\n"
   " * Meta-grammar settings:\n"
   " * **********************\n"
   " */\n"
+  ":start   ::= <statements>\n"
   ":desc    ::= 'G1 TEST'\n"
   ":default ::=\n"
   "  action           => ::lua->function(...)\n"
@@ -704,7 +706,9 @@ int main() {
   marpaESLIFSymbol_t          *stringSymbolp = NULL;
   marpaESLIFSymbol_t          *stringSymbol2p = NULL;
   marpaESLIFSymbol_t          *regexSymbolp = NULL;
+  marpaESLIFSymbol_t          *substitutionSymbolp = NULL;
   marpaESLIFString_t           string;
+  marpaESLIFString_t           substitution;
   marpaESLIFRecognizer_t      *marpaESLIFRecognizerp = NULL;
   short                        matchb;
   marpaESLIFSymbolOption_t     marpaESLIFSymbolOption;
@@ -899,8 +903,19 @@ int main() {
   string.asciis         = NULL;
 
   GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "Creating regex symbol for: %s, no modifier", REGEX);
-  regexSymbolp = marpaESLIFSymbol_regex_newp(marpaESLIFp, &string, NULL, &marpaESLIFSymbolOption);
+  regexSymbolp = marpaESLIFSymbol_regex_newp(marpaESLIFp, &string, NULL, NULL /* substitutionStringp */, NULL /* substitutionModifiers */, &marpaESLIFSymbolOption);
   if (regexSymbolp == NULL) {
+    goto err;
+  }
+
+  substitution.bytep          = SUBSTITUTION;
+  substitution.bytel          = strlen(SUBSTITUTION);
+  substitution.encodingasciis = "ASCII";
+  substitution.asciis         = NULL;
+
+  GENERICLOGGER_INFOF(marpaESLIFOption.genericLoggerp, "Creating substitution regex symbol for: %s -> %s, no modifier", REGEX, SUBSTITUTION);
+  substitutionSymbolp = marpaESLIFSymbol_regex_newp(marpaESLIFp, &string, NULL, &substitution, NULL /* substitutionModifiers */, &marpaESLIFSymbolOption);
+  if (substitutionSymbolp == NULL) {
     goto err;
   }
 
@@ -936,6 +951,11 @@ int main() {
 
   GENERICLOGGER_INFO(marpaESLIFOption.genericLoggerp, "Trying external regex symbol match on recognizer");
   if (! marpaESLIFRecognizer_symbol_tryb(marpaESLIFRecognizerp, regexSymbolp, &matchb)) {
+    goto err;
+  }
+
+  GENERICLOGGER_INFO(marpaESLIFOption.genericLoggerp, "Trying external substitution regex symbol match on recognizer");
+  if (! marpaESLIFRecognizer_symbol_tryb(marpaESLIFRecognizerp, substitutionSymbolp, &matchb)) {
     goto err;
   }
 
