@@ -6797,32 +6797,35 @@ for (;; pptr++)
       this name is duplicated. */
 
       groupnumber = 0;
-      for (unsigned int i = 0; i < cb->names_found; i++, ng++)
-        {
-        if (length == ng->length &&
-            PRIV(strncmp)(name, ng->name, length) == 0)
-          {
-          is_dupname = ng->isdup;
-          groupnumber = ng->number;
+      {
+	  unsigned int i;
+	  for (i = 0; i < cb->names_found; i++, ng++)
+	    {
+	    if (length == ng->length &&
+		PRIV(strncmp)(name, ng->name, length) == 0)
+	      {
+	      is_dupname = ng->isdup;
+	      groupnumber = ng->number;
 
-          /* For a recursion, that's all that is needed. We can now go to
-          the code that handles numerical recursion, applying it to the first
-          group with the given name. */
+	      /* For a recursion, that's all that is needed. We can now go to
+	      the code that handles numerical recursion, applying it to the first
+	      group with the given name. */
 
-          if (meta == META_RECURSE_BYNAME)
-            {
-            meta_arg = groupnumber;
-            goto HANDLE_NUMERICAL_RECURSION;
-            }
+	      if (meta == META_RECURSE_BYNAME)
+		{
+		meta_arg = groupnumber;
+		goto HANDLE_NUMERICAL_RECURSION;
+		}
 
-          /* For a back reference, update the back reference map and the
-          maximum back reference. */
+	      /* For a back reference, update the back reference map and the
+	      maximum back reference. */
 
-          cb->backref_map |= (groupnumber < 32)? (1u << groupnumber) : 1;
-          if (groupnumber > cb->top_backref)
-            cb->top_backref = groupnumber;
-          }
-        }
+	      cb->backref_map |= (groupnumber < 32)? (1u << groupnumber) : 1;
+	      if (groupnumber > cb->top_backref)
+		cb->top_backref = groupnumber;
+	      }
+	    }
+      }
 
       /* If the name was not found we have a bad reference. */
 
@@ -7335,16 +7338,19 @@ for (;; pptr++)
 
             else
               {
-              if (groupsetfirstcu && reqcuflags >= REQ_NONE)
-                {
-                reqcu = firstcu;
-                reqcuflags = firstcuflags;
-                }
-              for (uint32_t i = 1; i < repeat_min; i++)
-                {
-                memcpy(code, previous, CU2BYTES(len));
-                code += len;
-                }
+		if (groupsetfirstcu && reqcuflags >= REQ_NONE)
+		{
+		    reqcu = firstcu;
+		    reqcuflags = firstcuflags;
+		}
+		{
+		    uint32_t i;
+		    for (i = 1; i < repeat_min; i++)
+		    {
+			memcpy(code, previous, CU2BYTES(len));
+			code += len;
+		    }
+		}
               }
             }
 
@@ -7367,7 +7373,7 @@ for (;; pptr++)
           paranoid checks to avoid integer overflow. The INT64_OR_DOUBLE type
           is a 64-bit integer type when available, otherwise double. */
 
-          if (lengthptr != NULL && repeat_max > 0)
+          if (lengthptr != NULL && repeat_max > 0) {
             {
             PCRE2_SIZE delta = repeat_max*(length_prevgroup + 1 + 2 + 2*LINK_SIZE) -
                         2 - 2*LINK_SIZE;   /* Last one doesn't nest */
@@ -7384,25 +7390,28 @@ for (;; pptr++)
 
           /* This is compiling for real */
 
-          else for (uint32_t i = repeat_max; i >= 1; i--)
-            {
-            *code++ = OP_BRAZERO + repeat_type;
+	  } else {
+	      uint32_t i;
+	      for (i = repeat_max; i >= 1; i--)
+	      {
+		  *code++ = OP_BRAZERO + repeat_type;
 
-            /* All but the final copy start a new nesting, maintaining the
-            chain of brackets outstanding. */
+		  /* All but the final copy start a new nesting, maintaining the
+		  chain of brackets outstanding. */
 
-            if (i != 1)
-              {
-              int linkoffset;
-              *code++ = OP_BRA;
-              linkoffset = (bralink == NULL)? 0 : (int)(code - bralink);
-              bralink = code;
-              PUTINC(code, 0, linkoffset);
-              }
+		  if (i != 1)
+		  {
+		      int linkoffset;
+		      *code++ = OP_BRA;
+		      linkoffset = (bralink == NULL)? 0 : (int)(code - bralink);
+		      bralink = code;
+		      PUTINC(code, 0, linkoffset);
+		  }
 
-            memcpy(code, previous, CU2BYTES(len));
-            code += len;
+		  memcpy(code, previous, CU2BYTES(len));
+		  code += len;
             }
+	  }
 
           /* Now chain through the pending brackets, and fill in their length
           fields (which are holding the chain links pro tem). */
