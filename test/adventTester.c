@@ -20,8 +20,7 @@ typedef struct marpaESLIFTester_context {
 const static char *base_dsl = "\n"
   ":default ::= default-encoding => UTF-8\n"
   ":start ::= deal\n"
-  "deal ::= hands jdd\n"
-  "jdd ::= /(JDD)/ -> '" BLACK_HEART_SUIT_UTF8s "x$1'\n"
+  "deal ::= hands\n"
   "hands ::= hand | hands ';' hand\n"
   "hand ::= card card card card card\n"
   "card ~ face suit\n"
@@ -39,7 +38,7 @@ const static char *suit_line[] = {
 };
 
 const static char *tests_input[] = {
-  "2" BLACK_HEART_SUIT_UTF8s " 5" BLACK_HEART_SUIT_UTF8s " 7" BLACK_DIAMOND_SUIT_UTF8s " 8" BLACK_CLUB_SUIT_UTF8s " 9" BLACK_SPADE_SUIT_UTF8s "JDD",
+  "2" BLACK_HEART_SUIT_UTF8s " 5" BLACK_HEART_SUIT_UTF8s " 7" BLACK_DIAMOND_SUIT_UTF8s " 8" BLACK_CLUB_SUIT_UTF8s " 9" BLACK_SPADE_SUIT_UTF8s,
   "2" BLACK_HEART_SUIT_UTF8s " a" BLACK_HEART_SUIT_UTF8s " 7" BLACK_DIAMOND_SUIT_UTF8s " 8" BLACK_CLUB_SUIT_UTF8s " j" BLACK_HEART_SUIT_UTF8s "",
   "a" BLACK_HEART_SUIT_UTF8s " a" BLACK_HEART_SUIT_UTF8s " 7" BLACK_DIAMOND_SUIT_UTF8s " 8" BLACK_CLUB_SUIT_UTF8s " j" BLACK_HEART_SUIT_UTF8s "",
   "a" BLACK_HEART_SUIT_UTF8s " 7" BLACK_HEART_SUIT_UTF8s " 7" BLACK_DIAMOND_SUIT_UTF8s " 8" BLACK_CLUB_SUIT_UTF8s " j" BLACK_HEART_SUIT_UTF8s "; 10" BLACK_HEART_SUIT_UTF8s " j" BLACK_HEART_SUIT_UTF8s " q" BLACK_HEART_SUIT_UTF8s " k" BLACK_HEART_SUIT_UTF8s " a" BLACK_HEART_SUIT_UTF8s "",
