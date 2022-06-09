@@ -107,7 +107,7 @@ JNIEXPORT void         JNICALL Java_org_parser_marpa_ESLIFJSONDecoder_jniNew    
 JNIEXPORT jobject      JNICALL Java_org_parser_marpa_ESLIFJSONDecoder_jniDecode                (JNIEnv *envp, jobject eslifJSONDecoderp, jobject eslifRecognizerInterfacep, jobject eslifDecodeOptionp);
 JNIEXPORT void         JNICALL Java_org_parser_marpa_ESLIFJSONDecoder_jniFree                  (JNIEnv *envp, jobject eslifJSONDecoderp);
 
-JNIEXPORT void         JNICALL Java_org_parser_marpa_ESLIFSymbol_jniNew                        (JNIEnv *envp, jobject eslifSymbolp, jstring type, jbyteArray utf8byteArrayp, jstring modifiers);
+JNIEXPORT void         JNICALL Java_org_parser_marpa_ESLIFSymbol_jniNew                        (JNIEnv *envp, jobject eslifSymbolp, jstring type, jbyteArray utf8byteArrayp, jstring modifiers, jbyteArray substitutionUtf8byteArrayp, jstring substitutionModifiersp);
 JNIEXPORT void         JNICALL Java_org_parser_marpa_ESLIFSymbol_jniMetaNew                    (JNIEnv *envp, jobject eslifSymbolp, jobject eslifGrammarp, jstring symbolp);
 JNIEXPORT jbyteArray   JNICALL Java_org_parser_marpa_ESLIFSymbol_jniTest                       (JNIEnv *envp, jobject eslifSymbolp, jbyteArray byteArrayp);
 JNIEXPORT void         JNICALL Java_org_parser_marpa_ESLIFSymbol_jniFree                       (JNIEnv *envp, jobject eslifSymbolp);
@@ -7676,19 +7676,23 @@ static void marpaESLIFJava_JSONDecodeFreeCallbackv(void *userDatavp, marpaESLIFV
 }
 
 /*****************************************************************************/
-JNIEXPORT void JNICALL Java_org_parser_marpa_ESLIFSymbol_jniNew(JNIEnv *envp, jobject eslifSymbolp, jstring typep, jbyteArray utf8byteArrayp, jstring modifiersp)
+JNIEXPORT void JNICALL Java_org_parser_marpa_ESLIFSymbol_jniNew(JNIEnv *envp, jobject eslifSymbolp, jstring typep, jbyteArray utf8byteArrayp, jstring modifiersp, jbyteArray substitutionUtf8byteArrayp, jstring substitutionModifiersp)
 /*****************************************************************************/
 {
   static const char             *funcs = "Java_org_parser_marpa_ESLIFSymbol_jniNew";
   jbyte                         *utf8bytep = NULL;
+  jbyte                         *substitutionUtf8bytep = NULL;
   marpaESLIFSymbol_t            *marpaESLIFSymbolp;
   marpaESLIF_t                  *marpaESLIFp;
   marpaESLIFString_t             marpaESLIFString;
+  marpaESLIFString_t             marpaESLIFSubstitutionString;
   jobject                        BYTEBUFFER(marpaESLIFSymbol);
   jobject                        BYTEBUFFER(marpaESLIFJavaSymbolContext);
   jsize                          utf8lengthl;
+  jsize                          substitutionUtf8lengthl;
   const char                    *types;
   const char                    *modifiers = NULL;
+  const char                    *substitutionModifiers = NULL;
   jboolean                       isCopy;
   marpaESLIFSymbolOption_t       marpaESLIFSymbolOption;
   marpaESLIFJavaSymbolContext_t *marpaESLIFJavaSymbolContextp;
@@ -7736,6 +7740,30 @@ JNIEXPORT void JNICALL Java_org_parser_marpa_ESLIFSymbol_jniNew(JNIEnv *envp, jo
     }
   }
 
+  if (substitutionUtf8byteArrayp != NULL) {
+    substitutionUtf8lengthl = (*envp)->GetArrayLength(envp, substitutionUtf8byteArrayp);
+    if (substitutionUtf8lengthl <= 0) {
+      RAISEEXCEPTION(envp, "ByteArray is empty");
+    }
+    substitutionUtf8bytep = (jbyte *) malloc(substitutionUtf8lengthl * sizeof(jbyte));
+    if (substitutionUtf8bytep == NULL) {
+      RAISEEXCEPTIONF(envp, "malloc failure, %s", strerror(errno));
+    }
+    (*envp)->GetByteArrayRegion(envp, substitutionUtf8byteArrayp, 0, substitutionUtf8lengthl, substitutionUtf8bytep);
+
+    marpaESLIFSubstitutionString.bytep          = substitutionUtf8bytep;
+    marpaESLIFSubstitutionString.bytel          = substitutionUtf8lengthl;
+    marpaESLIFSubstitutionString.encodingasciis = "UTF-8";
+    marpaESLIFSubstitutionString.asciis         = NULL;
+  }
+
+  if (substitutionModifiersp != NULL) {
+    substitutionModifiers = (*envp)->GetStringUTFChars(envp, substitutionModifiersp, &isCopy);
+    if (modifiers == NULL) {
+      RAISEEXCEPTION(envp, "GetStringUTFChars failure");
+    }
+  }
+
   /* Create C object */
   marpaESLIFString.bytep          = utf8bytep;
   marpaESLIFString.bytel          = utf8lengthl;
@@ -7745,7 +7773,20 @@ JNIEXPORT void JNICALL Java_org_parser_marpa_ESLIFSymbol_jniNew(JNIEnv *envp, jo
   marpaESLIFSymbolOption.userDatavp = marpaESLIFJavaSymbolContextp;
   marpaESLIFSymbolOption.importerp  = marpaESLIFJava_symbolImportb;
 
-  marpaESLIFSymbolp = (strcmp(types, "regex") == 0) ? marpaESLIFSymbol_regex_newp(marpaESLIFp, &marpaESLIFString, (char *) modifiers, &marpaESLIFSymbolOption) : marpaESLIFSymbol_string_newp(marpaESLIFp, &marpaESLIFString, (char *) modifiers, &marpaESLIFSymbolOption);
+  marpaESLIFSymbolp =
+    (strcmp(types, "regex") == 0)
+    ?
+    marpaESLIFSymbol_regex_newp(marpaESLIFp,
+                                &marpaESLIFString,
+                                (char *) modifiers,
+                                (substitutionUtf8byteArrayp != NULL) ? &marpaESLIFSubstitutionString : NULL,
+                                (char *) substitutionModifiers,
+                                &marpaESLIFSymbolOption)
+    :
+    marpaESLIFSymbol_string_newp(marpaESLIFp,
+                                 &marpaESLIFString,
+                                 (char *) modifiers,
+                                 &marpaESLIFSymbolOption);
   if (marpaESLIFSymbolp == NULL) {
     if (strcmp(types, "regex") == 0) {
       RAISEEXCEPTIONF(envp, "marpaESLIFSymbol_regex_newp failure, %s", strerror(errno));
@@ -7770,11 +7811,17 @@ JNIEXPORT void JNICALL Java_org_parser_marpa_ESLIFSymbol_jniNew(JNIEnv *envp, jo
   if (utf8bytep != NULL) {
     free(utf8bytep);
   }
+  if (substitutionUtf8bytep != NULL) {
+    free(substitutionUtf8bytep);
+  }
   if ((typep != NULL) && (types != NULL)) {
     (*envp)->ReleaseStringUTFChars(envp, typep, types);
   }
   if ((modifiersp != NULL) && (modifiers != NULL)) {
     (*envp)->ReleaseStringUTFChars(envp, modifiersp, modifiers);
+  }
+  if ((substitutionModifiersp != NULL) && (substitutionModifiers != NULL)) {
+    (*envp)->ReleaseStringUTFChars(envp, substitutionModifiersp, substitutionModifiers);
   }
   return;
 }

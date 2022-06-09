@@ -133,6 +133,7 @@ public class AppThread implements Runnable {
 			 */
 			ESLIFSymbol eslifSymbolRegex = new ESLIFSymbol(eslif, "regex", "[\\d]+");
 			ESLIFSymbol eslifSymbolString = new ESLIFSymbol(eslif, "string", "'('");
+			ESLIFSymbol eslifSymbolSubstitutionRegex = new ESLIFSymbol(eslif, "regex", "([\\d]+)", null, "'$1 via substitution'", null);
 			ESLIFGrammar eslifGrammarForMeta = new ESLIFGrammar(eslif, "<anything up to newline> ::= <ANYTHING UP TO NEWLINE>\n<ANYTHING UP TO NEWLINE> ~ /[^\\n]*/");
 			ESLIFSymbol eslifSymbolMeta = new ESLIFSymbol(eslif, eslifGrammarForMeta, "ANYTHING UP TO NEWLINE");
 			for (int i = 0; i < strings.length; i++) {
@@ -166,6 +167,14 @@ public class AppThread implements Runnable {
 						eslifLogger.info("Direct Meta \"'('\": match: " + d.describe(new String(eslifSymbolMatch, StandardCharsets.UTF_8)));
 					} else {
 						eslifLogger.info("Direct Meta \"'('\": no match");
+					}
+
+					eslifSymbolMatch = eslifSymbolSubstitutionRegex.test(string.getBytes(StandardCharsets.UTF_8));
+					if (eslifSymbolMatch != null) {
+						Describe d = new Describe();
+						eslifLogger.info("Substitution Regex \"[\\d]+\": match: " + d.describe(new String(eslifSymbolMatch, StandardCharsets.UTF_8)));
+					} else {
+						eslifLogger.info("Substitution Regex \"[\\d]+\": no match");
 					}
 
 					if (eslifGrammar.parse(eslifAppRecognizerInterface, eslifAppValue)) {
@@ -208,6 +217,13 @@ public class AppThread implements Runnable {
 					eslifLogger.info("Indirect String \"'('\": match: " + d.describe(eslifSymbolMatch));
 				} else {
 					eslifLogger.info("Indirect String \"'('\": no match");
+				}
+				eslifSymbolMatch = eslifRecognizer.symbolTry(eslifSymbolSubstitutionRegex);
+				if (eslifSymbolMatch != null) {
+					Describe d = new Describe();
+					eslifLogger.info("Indirect Substitution Regex \"[\\d]+\": match: " + d.describe(eslifSymbolMatch));
+				} else {
+					eslifLogger.info("Indirect Substitution Regex \"[\\d]+\": no match");
 				}
 				if (doScan(eslifLogger, eslifRecognizer, true)) {
 					showLocation("After doScan", eslifLogger, eslifRecognizer);

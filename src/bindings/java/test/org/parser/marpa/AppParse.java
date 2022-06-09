@@ -15,7 +15,7 @@ public class AppParse  {
 		AppLogger eslifLogger1 = new AppLogger();
 		AppLogger eslifLogger2 = new AppLogger();
 		AppLogger eslifLogger = eslifLogger2;
-		int       nbthread = 1;
+		int       nbthread = 3;
 		int       ithread;
 		ArrayList<Thread> threadlist = new ArrayList<Thread>();
 		int       nbalive;
