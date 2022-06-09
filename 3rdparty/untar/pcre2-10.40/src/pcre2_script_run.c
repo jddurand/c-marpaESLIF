@@ -105,8 +105,10 @@ if (ptr >= endptr) return TRUE;
 every script, as opposed to the maps in ucd_script_sets, which only have bits
 for scripts less than ucp_Unknown - those that appear in script extension
 lists. */
-
-for (int i = 0; i < FULL_MAPSIZE; i++) require_map[i] = 0;
+{
+    int i;
+    for (i = 0; i < FULL_MAPSIZE; i++) require_map[i] = 0;
+}
 
 /* Scan strings of two or more characters, checking the Unicode characteristics
 of each code point. There is special code for scripts that can be combined with
@@ -244,15 +246,17 @@ for (;;)
 
       case SCRIPT_MAP:
       OK = FALSE;
-
-      for (int i = 0; i < FULL_MAPSIZE; i++)
-        {
-        if ((require_map[i] & map[i]) != 0)
-          {
-          OK = TRUE;
-          break;
-          }
-        }
+      {
+	  int i;
+	  for (i = 0; i < FULL_MAPSIZE; i++)
+	  {
+	      if ((require_map[i] & map[i]) != 0)
+	      {
+		  OK = TRUE;
+		  break;
+	      }
+	  }
+      }
 
       if (!OK) return FALSE;
 
@@ -282,7 +286,10 @@ for (;;)
         allowed scripts for this character. */
 
         default:
-        for (int i = 0; i < FULL_MAPSIZE; i++) require_map[i] &= map[i];
+	{
+	    int i;
+	    for (i = 0; i < FULL_MAPSIZE; i++) require_map[i] &= map[i];
+	}
         break;
         }
 
