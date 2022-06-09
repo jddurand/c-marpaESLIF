@@ -5853,10 +5853,13 @@ for (;; pptr++)
 
         if (taboffset >= 0)
           {
-          if (tabopt >= 0)
-            for (int i = 0; i < 32; i++) pbits[i] |= cbits[(int)i + taboffset];
-          else
-            for (int i = 0; i < 32; i++) pbits[i] &= ~cbits[(int)i + taboffset];
+	      if (tabopt >= 0) {
+		int i;
+		for (i = 0; i < 32; i++) pbits[i] |= cbits[(int)i + taboffset];
+	      } else {
+		int i;
+		for (i = 0; i < 32; i++) pbits[i] &= ~cbits[(int)i + taboffset];
+	      }
           }
 
         /* Now see if we need to remove any special characters. An option
@@ -5869,10 +5872,13 @@ for (;; pptr++)
         /* Add the POSIX table or its complement into the main table that is
         being built and we are done. */
 
-        if (local_negate)
-          for (int i = 0; i < 32; i++) classbits[i] |= (uint8_t)(~pbits[i]);
-        else
-          for (int i = 0; i < 32; i++) classbits[i] |= pbits[i];
+        if (local_negate) {
+	  int i;
+          for (i = 0; i < 32; i++) classbits[i] |= (uint8_t)(~pbits[i]);
+	} else {
+	  int i;
+          for (i = 0; i < 32; i++) classbits[i] |= pbits[i];
+	}
 
         /* Every class contains at least one < 256 character. */
 
@@ -5911,23 +5917,35 @@ for (;; pptr++)
         switch(escape)
           {
           case ESC_d:
-          for (int i = 0; i < 32; i++) classbits[i] |= cbits[i+cbit_digit];
+	  {
+	      int i;
+	      for (i = 0; i < 32; i++) classbits[i] |= cbits[i+cbit_digit];
+	  }
           break;
 
           case ESC_D:
           should_flip_negation = TRUE;
-          for (int i = 0; i < 32; i++)
-            classbits[i] |= (uint8_t)(~cbits[i+cbit_digit]);
+	  {
+	      int i;
+	      for (i = 0; i < 32; i++)
+		classbits[i] |= (uint8_t)(~cbits[i+cbit_digit]);
+	  }
           break;
 
           case ESC_w:
-          for (int i = 0; i < 32; i++) classbits[i] |= cbits[i+cbit_word];
+	  {
+	      int i;
+	      for (i = 0; i < 32; i++) classbits[i] |= cbits[i+cbit_word];
+	  }
           break;
 
           case ESC_W:
           should_flip_negation = TRUE;
-          for (int i = 0; i < 32; i++)
-            classbits[i] |= (uint8_t)(~cbits[i+cbit_word]);
+	  {
+	      int i;
+	      for (i = 0; i < 32; i++)
+		classbits[i] |= (uint8_t)(~cbits[i+cbit_word]);
+	  }
           break;
 
           /* Perl 5.004 onwards omitted VT from \s, but restored it at Perl
@@ -5938,13 +5956,19 @@ for (;; pptr++)
           longer treat \s and \S specially. */
 
           case ESC_s:
-          for (int i = 0; i < 32; i++) classbits[i] |= cbits[i+cbit_space];
+	  {
+	      int i;
+	      for (i = 0; i < 32; i++) classbits[i] |= cbits[i+cbit_space];
+	  }
           break;
 
           case ESC_S:
           should_flip_negation = TRUE;
-          for (int i = 0; i < 32; i++)
-            classbits[i] |= (uint8_t)(~cbits[i+cbit_space]);
+	  {
+	      int i;
+	      for (i = 0; i < 32; i++)
+		classbits[i] |= (uint8_t)(~cbits[i+cbit_space]);
+	  }
           break;
 
           /* When adding the horizontal or vertical space lists to a class, or
@@ -6184,8 +6208,9 @@ for (;; pptr++)
           CU2BYTES(class_uchardata - code));
         if (negate_class && !xclass_has_prop)
           {
-          /* Using 255 ^ instead of ~ avoids clang sanitize warning. */
-          for (int i = 0; i < 32; i++) classbits[i] = 255 ^ classbits[i];
+	    int i;
+            /* Using 255 ^ instead of ~ avoids clang sanitize warning. */
+            for (i = 0; i < 32; i++) classbits[i] = 255 ^ classbits[i];
           }
         memcpy(code, classbits, 32);
         code = class_uchardata + (32 / sizeof(PCRE2_UCHAR));
@@ -6210,8 +6235,9 @@ for (;; pptr++)
       {
       if (negate_class)
         {
-       /* Using 255 ^ instead of ~ avoids clang sanitize warning. */
-       for (int i = 0; i < 32; i++) classbits[i] = 255 ^ classbits[i];
+	  int i;
+	  /* Using 255 ^ instead of ~ avoids clang sanitize warning. */
+	  for (i = 0; i < 32; i++) classbits[i] = 255 ^ classbits[i];
        }
       memcpy(code, classbits, 32);
       }
@@ -6285,23 +6311,26 @@ for (;; pptr++)
     verbarglen = *(++pptr);
     verbculen = 0;
     tempcode = code++;
-    for (int i = 0; i < (int)verbarglen; i++)
-      {
-      meta = *(++pptr);
-#ifdef SUPPORT_UNICODE
-      if (utf) mclength = PRIV(ord2utf)(meta, mcbuffer); else
-#endif
-        {
-        mclength = 1;
-        mcbuffer[0] = meta;
-        }
-      if (lengthptr != NULL) *lengthptr += mclength; else
-        {
-        memcpy(code, mcbuffer, CU2BYTES(mclength));
-        code += mclength;
-        verbculen += mclength;
-        }
-      }
+    {
+	int i;
+	for (i = 0; i < (int)verbarglen; i++)
+	  {
+	  meta = *(++pptr);
+    #ifdef SUPPORT_UNICODE
+	  if (utf) mclength = PRIV(ord2utf)(meta, mcbuffer); else
+    #endif
+	    {
+	    mclength = 1;
+	    mcbuffer[0] = meta;
+	    }
+	  if (lengthptr != NULL) *lengthptr += mclength; else
+	    {
+	    memcpy(code, mcbuffer, CU2BYTES(mclength));
+	    code += mclength;
+	    verbculen += mclength;
+	    }
+	  }
+    }
 
     *tempcode = verbculen;   /* Fill in the code unit length */
     *code++ = 0;             /* Terminating zero */
@@ -7127,12 +7156,15 @@ for (;; pptr++)
           *lengthptr += delta;
           }
 
-        else for (int i = 0; i < replicate; i++)
+        else {
+	  int i;
+	  for (i = 0; i < replicate; i++)
           {
           memcpy(code, previous, CU2BYTES(1 + LINK_SIZE));
           previous = code;
           code += 1 + LINK_SIZE;
           }
+	}
 
         /* If the number of repeats is fixed, we are done. Otherwise, adjust
         the counts and fall through. */
