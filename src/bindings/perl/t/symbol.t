@@ -78,7 +78,7 @@ ok($match eq "a string\nsubject", "Regex try");
 $match = $metaSymbol->try($input) // '';
 ok($match eq "This is a string", "Meta try");
 $match = $substitutionSymbol->try($input) // '';
-ok($match eq "a string\nsubject", "Substitution try");
+ok($match eq " string", "Substitution try");
 
 my $recognizerInterface = MyRecognizerInterface->new($input);
 my $eslifGrammar = MarpaX::ESLIF::Grammar->new($eslif, $dsl);
@@ -93,6 +93,6 @@ ok($match eq "a string\nsubject", "Recognizer regex try");
 $match = $eslifRecognizer->symbolTry($metaSymbol) // '';
 ok($match eq "This is a string", "Recognizer meta try");
 $match = $eslifRecognizer->symbolTry($substitutionSymbol) // '';
-ok($match eq "a string\nsubject", "Recognizer substitution try");
+ok($match eq " string", "Recognizer substitution try");
 
 exit 0;
