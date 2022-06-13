@@ -1207,6 +1207,7 @@ static inline marpaESLIF_symbol_t  *_marpaESLIF_bootstrap_check_terminal_by_type
   marpaESLIF_symbol_t   *symbolp               = NULL;
   marpaESLIF_terminal_t *terminalp             = NULL;
   marpaESLIF_terminal_t *substitutionTerminalp = NULL;
+  marpaESLIF_string_t   *descp                 = NULL;
 
   if (pseudob) {
     if (MARPAESLIF_UNLIKELY(! _marpaESLIF_bootstrap_search_terminal_pseudob(marpaESLIFValuep, grammarBootstrapp, terminalType, &symbolp))) {
@@ -1274,16 +1275,15 @@ static inline marpaESLIF_symbol_t  *_marpaESLIF_bootstrap_check_terminal_by_type
     terminalp = NULL; /* terminalp is now in symbolp */
 
     if ((! pseudob) && (stringp->substitutionBytep != NULL)) {
-      symbolp->u.terminalp->substitutionUtf8s     = substitutionTerminalp->utf8s;
-      symbolp->u.terminalp->substitutionUtf8l     = substitutionTerminalp->utf8l;
-      symbolp->u.terminalp->substitutionModifiers = substitutionTerminalp->modifiers;
-      symbolp->u.terminalp->substitutionPatterns  = substitutionTerminalp->patterns;
-      symbolp->u.terminalp->substitutionPatternl  = substitutionTerminalp->patternl;
-      symbolp->u.terminalp->substitutionPatterni  = substitutionTerminalp->patterni;
+      descp = _marpaESLIF_terminal_add_substitution_desc_to_terminal_descp(marpaESLIFValuep->marpaESLIFp, symbolp->u.terminalp, substitutionTerminalp);
+      if (descp == NULL) {
+	goto err;
+      }
 
-      substitutionTerminalp->utf8s     = NULL; /* it is now in symbolp->u.terminalp */
-      substitutionTerminalp->modifiers = NULL; /* it is now in symbolp->u.terminalp */
-      substitutionTerminalp->patterns  = NULL; /* it is now in symbolp->u.terminalp */
+      /* Replace description */
+      _marpaESLIF_string_freev(symbolp->u.terminalp->descp, 0 /* onStackb */);
+      symbolp->descp = symbolp->u.terminalp->descp = descp;
+      descp = NULL; /* descp is now in symbolp->u.terminalp */
     }
 
     GENERICSTACK_SET_PTR(grammarBootstrapp->symbolStackp, symbolp, symbolp->idi);
@@ -1299,6 +1299,7 @@ static inline marpaESLIF_symbol_t  *_marpaESLIF_bootstrap_check_terminal_by_type
   _marpaESLIF_terminal_freev(terminalp);
   _marpaESLIF_terminal_freev(substitutionTerminalp);
   _marpaESLIF_symbol_freev(symbolp);
+  _marpaESLIF_string_freev(descp, 0 /* onStackb */);
   symbolp = NULL;
 
  done:
