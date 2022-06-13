@@ -11184,7 +11184,7 @@ static inline short _marpaESLIFRecognizer_resume_oneb(marpaESLIFRecognizer_t *ma
       }
 
       /* Predicted failure or success ? */
-      if (candidatep->type == MARPAESLIF_SYMBOL_TYPE_TERMINAL) {
+      if (MARPAESLIF_IS_TERMINAL(candidatep)) {
         /* Can we do ASCII prediction ? */
         if (asciipredictionb) {
           /* Does the terminal support ASCII failure prediction ? If yes, by definition, this will be either an anchored string or and anchored character class. */
