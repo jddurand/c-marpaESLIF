@@ -157,6 +157,30 @@ Internally this correspond to this set of options in PCRE2:
   A                 PCRE2_ANCHORED
   ----------------------------------------------------------------
 
+Substitution modifiers are:
+
+  ----------------------------------------------------------------
+  Modifiers   Explanation
+  ----------------------------------------------------------------
+  x           Extended substitution pattern
+  g           Global substitution
+  l           Literal substitution
+  !           Support of unknown set
+  f           Support of empty set
+  ----------------------------------------------------------------
+
+Internally this correspond to this set of options in PCRE2:
+
+  ----------------------------------------------------------------
+  Modifiers         PCRE2 flag unset   PCR2 flag set
+  ----------------------------------------------------------------
+  x                                    PCRE2_SUBSTITUTE_EXTENDED
+  g                                    PCRE2_SUBSTITUTE_GLOBAL
+  l                                    PCRE2_SUBSTITUTE_LITERAL
+  !                                    PCRE2_SUBSTITUTE_UNKNOWN_UNSET
+  f                                    PCRE2_SUBSTITUTE_UNSET_EMPTY
+  ----------------------------------------------------------------
+
 =item Lexemes and Terminals
 
 Lexemes are meta-symbols that does appear as the LHS symbol anywhere within the current grammar. Therefore they behave like terminals, except that their definition is not in the current grammar. By default such meta-symbol is looked up at the next level. For example:
@@ -1154,7 +1178,8 @@ marpaESLIF BNF can be expressed in itself:
                                    | ':eol'
                                    | ':sol'
                                    | ':empty'
-  <symbol>                       ::= <symbol name>
+                                   | <regular expression>
+  <symbol>                       ::= <symbol name> '->' <regular substitution>
   <symbol name>                  ::= <bare name>
                                    | <bracketed name>
   <action name>                  ::= <restricted ascii graph name>
@@ -1251,6 +1276,8 @@ marpaESLIF BNF can be expressed in itself:
                                  | /((?:\[(?:(?>[^\[\]]+)|(?-1))*\]))/ ':' /[eijmnsxDJUuaNbcA]+/
   <regular expression>           ~ /\/(?![*\/])(?:[^\\\/]*(?:\\.[^\\\/]*)*)\//su
                                  | /\/(?![*\/])(?:[^\\\/]*(?:\\.[^\\\/]*)*)\//su /[eijmnsxDJUuaNbcA]+/
+  <regular substitution>         ~ /'(?:[^\\']*(?:\\.[^\\']*)*)'|"(?:[^\\"]*(?:\\.[^\\"]*)*)"|\x{201C}(?:[^\\\x{201D}]*(?:\\.[^\\\x{201D}]*)*)\x{201D}/su
+                                 | /'(?:[^\\']*(?:\\.[^\\']*)*)'|"(?:[^\\"]*(?:\\.[^\\"]*)*)"|\x{201C}(?:[^\\\x{201D}]*(?:\\.[^\\\x{201D}]*)*)\x{201D}/su ':' /[xgl!f]+/
   <graph ascii name>             ~ /[[:graph:]]+/
   
   #######################################################
