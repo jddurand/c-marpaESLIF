@@ -1391,7 +1391,6 @@ static inline short                  _marpaESLIFRecognizer_name_last_tryb(marpaE
 static inline short                  _marpaESLIFRecognizer_discard_tryb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIF_grammar_t *grammarp, marpaESLIF_symbol_t *symbolp, short *matchbp);
 
 static inline void                   _marpaESLIFRecognizer_alternativeStack_freev(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, genericStack_t *alternativeStackSymbolp);
-static inline short                  _marpaESLIFRecognizer_alternativeStack_setb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, genericStack_t *alternativeStackSymbolp, marpaESLIF_alternative_t *alternativep, int indicei);
 static inline marpaESLIF_alternative_t *_marpaESLIFRecognizer_alternativeStack_getp(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, genericStack_t *alternativeStackSymbolp, int indicei);
 static inline short                  _marpaESLIFRecognizer_alternative_and_valueb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIF_alternative_t *alternativep, int valuei);
 static inline short                  _marpaESLIFRecognizer_push_eventb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFEventType_t type, marpaESLIF_symbol_t *symbolp, char *events, char *discardp, size_t discardl, marpaESLIF_internal_event_action_t event_actione);
@@ -10580,52 +10579,6 @@ static inline void _marpaESLIFRecognizer_alternativeStack_freev(marpaESLIFRecogn
 }
 
 /*****************************************************************************/
-static inline short _marpaESLIFRecognizer_alternativeStack_setb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, genericStack_t *alternativeStackSymbolp, marpaESLIF_alternative_t *alternativep, int indicei)
-/*****************************************************************************/
-/* This method is called ONLY by _marpaESLIFRecognizer_resume_oneb() that owns totally everything that is in it: */
-/*****************************************************************************/
-{
-  static const char        *funcs           = "_marpaESLIFRecognizer_alternativeStack_setb";
-  marpaESLIF_alternative_t *p; /* It is guaranteed that p is set whatever happens - see below */
-  short                     rcb;
-
-  MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_INC(marpaESLIFRecognizerp);
-  MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "start, indicei=%d", indicei);
-
-  if (GENERICSTACK_IS_PTR(alternativeStackSymbolp, indicei)) {
-    p = (marpaESLIF_alternative_t *) GENERICSTACK_GET_PTR(alternativeStackSymbolp, indicei);
-    _marpaESLIFRecognizer_marpaESLIFValueResult_freeb(marpaESLIFRecognizerp, &(p->marpaESLIFValueResult), 1 /* deepb */);
-  } else {
-    p = (marpaESLIF_alternative_t *) malloc(sizeof(marpaESLIF_alternative_t));
-    if (MARPAESLIF_UNLIKELY(p == NULL)) {
-      MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "malloc failure, %s", strerror(errno));
-      goto err;
-    }
-  }
-
-  *p = *alternativep;
-  GENERICSTACK_SET_PTR(alternativeStackSymbolp, p, indicei);
-  if (MARPAESLIF_UNLIKELY(GENERICSTACK_ERROR(alternativeStackSymbolp))) {
-    MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "alternativeStackSymbolp set failure, %s", strerror(errno));
-    goto err;
-  }
-
-  rcb = 1;
-  goto done;
-
- err:
-  if (p != NULL) {
-    free(p);
-  }
-  rcb = 0;
-
- done:
-  MARPAESLIFRECOGNIZER_TRACEF(marpaESLIFRecognizerp, funcs, "return %d", (int) rcb);
-  MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_DEC(marpaESLIFRecognizerp);
-  return rcb;
-}
-
-/*****************************************************************************/
 static inline marpaESLIF_alternative_t *_marpaESLIFRecognizer_alternativeStack_getp(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, genericStack_t *alternativeStackSymbolp, int indicei)
 /*****************************************************************************/
 /* This method is called ONLY by _marpaESLIFRecognizer_resume_oneb().        */
@@ -10647,6 +10600,11 @@ static inline marpaESLIF_alternative_t *_marpaESLIFRecognizer_alternativeStack_g
       MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "malloc failure, %s", strerror(errno));
       goto err;
     }
+    GENERICSTACK_SET_PTR(alternativeStackSymbolp, rcp, indicei);
+    if (MARPAESLIF_UNLIKELY(GENERICSTACK_ERROR(alternativeStackSymbolp))) {
+      MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "alternativeStackSymbolp set failure, %s", strerror(errno));
+      goto err;
+    }
   }
 
   if (marpaESLIFRecognizerp->marpaESLIFp->NULLisZeroBytesb && marpaESLIFRecognizerp->marpaESLIFp->ZeroIntegerisZeroBytesb) {
@@ -10663,6 +10621,9 @@ static inline marpaESLIF_alternative_t *_marpaESLIFRecognizer_alternativeStack_g
   goto done;
 
  err:
+  if (rcp != NULL) {
+    free(rcp);
+  }
   rcp = NULL;
 
  done:
@@ -11434,11 +11395,6 @@ static inline short _marpaESLIFRecognizer_resume_oneb(marpaESLIFRecognizer_t *ma
       alternativep->grammarLengthi        = 1; /* Scan mode is in the token-stream model */
       alternativep->usedb                 = 1;
       alternativep->matchedLengthl        = matchedLengthl;
-      GENERICSTACK_SET_PTR(alternativeStackSymbolp, alternativep, alternativeStackSymboli);
-      if (MARPAESLIF_UNLIKELY(GENERICSTACK_ERROR(alternativeStackSymbolp))) {
-        MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "alternativeStackSymbolp set failure, %s", strerror(errno));
-        goto err;
-      }
 
       /* Remember at least one alternative is ok */
       alternativeStackSymboli++;
@@ -24329,19 +24285,6 @@ static inline marpaESLIFSymbol_t *_marpaESLIFSymbol_terminal_newp(marpaESLIF_t *
   symbolp->descp       = terminalp->descp;
 
   terminalp = NULL; /* It is in symbolp */
-
-  if (substitutionStringp != NULL) {
-    symbolp->u.terminalp->substitutionUtf8s     = substitutionTerminalp->utf8s;
-    symbolp->u.terminalp->substitutionUtf8l     = substitutionTerminalp->utf8l;
-    symbolp->u.terminalp->substitutionModifiers = substitutionTerminalp->modifiers;
-    symbolp->u.terminalp->substitutionPatterns  = substitutionTerminalp->patterns;
-    symbolp->u.terminalp->substitutionPatternl  = substitutionTerminalp->patternl;
-    symbolp->u.terminalp->substitutionPatterni  = substitutionTerminalp->patterni;
-
-    substitutionTerminalp->utf8s     = NULL; /* it is now in symbolp->u.terminalp */
-    substitutionTerminalp->modifiers = NULL; /* it is now in symbolp->u.terminalp */
-    substitutionTerminalp->patterns  = NULL; /* it is now in symbolp->u.terminalp */
-  }
 
   goto done;
 
