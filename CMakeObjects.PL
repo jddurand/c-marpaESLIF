@@ -366,7 +366,7 @@ AUTOCONF
 	);
   }
 }
-push(@additional_includes, File::Spec->catdir('3rdparty', 'untar', 'pcre2-10.33'));
+push(@additional_includes, File::Spec->catdir('3rdparty', 'untar', 'pcre2-10.40'));
 
 # -------------------------------------------
 # marpaESLIF embeds my unpanic version of lua
