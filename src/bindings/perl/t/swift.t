@@ -32,6 +32,7 @@ package main;
 use strict;
 use warnings FATAL => 'all';
 use Data::Dumper qw/Dumper/;
+use FindBin qw/$Bin/;
 use Test::More;
 use Test::More::UTF8;
 use Log::Log4perl qw/:easy/;
@@ -61,8 +62,8 @@ my %inputs = (
 	[ 1, 'Many blanks',                    "    "        ],
 	[ 1, 'Only \\x{0000} character',       "\x{0000}"    ],
 	[ 0, '// no text after',               "//"          ],
-	[ 0, '// with text but no line break', "// "         ],
-	[ 1, '// with text and line break',    "// \n"       ],
+	[ 0, '// with text but no line break', "// text"     ],
+	[ 1, '// with text and line break',    "// text\n"   ],
 	[ 1, 'Multiline comment',              "/* /* */ */" ],
 	[ 1, 'Nested multiline comment',       "/* /* */ */" ],
 	[ 0, 'Badly nested multiline comment', "/* */ */"    ],
@@ -70,9 +71,11 @@ my %inputs = (
     ],
     '<integer literal>' => [
 	[ 1, 'Literal 42',                             "42"          ],
+	[ 0, 'Literal 4 2',                            "4 2"         ],
     ],
     '<floating point literal>' => [
 	[ 1, 'Literal 3.14159',                        "3.14159"     ],
+	[ 0, 'Literal 3.14 159',                       "3.14 159"    ],
     ],
     '<string literal>' => [
 	[ 1, 'Literal "Hello, World!"',                '"Hello, World!"' ],
@@ -84,6 +87,12 @@ my %inputs = (
 	[ 1, 'Literal true',                           'true' ],
     ],
     '<top level declaration>' => [
+    ],
+    '<identifier>' => [
+	[ 1, 'Identifier without backticks',           'x' ],
+	[ 1, 'Identifier with backticks',              '`x`' ],
+	[ 0, 'Reserved identifier without backticks',  'class' ],
+	[ 1, 'Reserved identifier with backticks',     '`class`' ],
     ],
     );
 
@@ -103,45 +112,87 @@ foreach my $top (@top) {
 }
 
 #
-# Tests
+# Inline tests
 #
-foreach my $top (@top) {
-    foreach my $test (@{$inputs{$top}}) {
-	my ($expected, $testName, $testData) = @{$test};
-	# diag(sprintf('%s: %s: Expecting %s', $top, $testName, $expected ? "success" : "failure"));
-	my $g = $GRAMMARS{$top};
-	my $recognizerInterface = MyRecognizerInterface->new($testData);
-	my $valueInterface = MyValueInterface->new();
-        Log::Log4perl->get_logger->level($FATAL); # This will basically shut down logger
-	my $got = $g->parse($recognizerInterface, $valueInterface) ? 1 : 0;
+if (0) {
+    foreach my $top (@top) {
+        foreach my $test (@{$inputs{$top}}) {
+            my ($expected, $testName, $testData) = @{$test};
+            do_test($top, $expected, $testName, $testData);
+        }
+    }
+}
+
+#
+# On-disk tests
+#
+my $test_dir = File::Spec->catdir($Bin, 'swift');
+if (-d $test_dir) {
+    opendir(my $d, $test_dir) || die "Failed to open $test_dir, $!";
+    my @files = sort grep { /\.swift$/ } readdir($d);
+    closedir($d) || warn "Failed to close $test_dir, $!";
+    foreach my $basename (@files) {
+        my $file_path = File::Spec->catfile($test_dir, $basename);
+
+        open(my $f, '<', $file_path) || die "Cannot open $file_path, $!";
+        binmode($f);
+        my $data = do { local $/; <$f> };
+        close($f) || warn "Failed to close $_, $!";
+
+	my ($expected, $testName, $testData) = (1, $basename, $data);
+        do_test('<top level declaration>', $expected, $testName, $testData);
+    }
+}
+
+
+sub do_test {
+    my ($top, $expected, $testName, $testData) = @_;
+
+    my $g = $GRAMMARS{$top};
+    my $recognizerInterface = MyRecognizerInterface->new($testData);
+    my $valueInterface = MyValueInterface->new();
+    Log::Log4perl->get_logger->level($FATAL); # This will basically shut down logger
+    my $got = $g->parse($recognizerInterface, $valueInterface) ? 1 : 0;
+    Log::Log4perl->get_logger->level($INFO);
+    is($got, $expected, sprintf('%s: %s: Expecting %s', $top, $testName, $expected ? "success" : "failure"));
+    if (1 || $got != $expected && $expected) {
+        #
+        # Redo the parse, but with ERROR level and looping on results in case it is ambiguous
+        #
+        $recognizerInterface = MyRecognizerInterface->new($testData);
+        Log::Log4perl->get_logger->level($TRACE);
+        my $r = MarpaX::ESLIF::Recognizer->new($g, $recognizerInterface);
+        if ($r->scan(1)) {
+            manage_events($r);
+            if ($r->isCanContinue) {
+                while ($r->isCanContinue) {
+                    last unless $r->resume;
+                    manage_events($r);
+                }
+                manage_events($r);
+            }
+        }
+        $valueInterface = MyValueInterface->new(1);
+        my $v;
+        eval { $v = MarpaX::ESLIF::Value->new($r, $valueInterface) };
+        if (defined($v)) {
+            my $i = 0;
+            while ($v->value) {
+                $log->tracef('Value No %d: %s', $i++, Dumper($valueInterface->getResult));
+            }
+        }
         Log::Log4perl->get_logger->level($INFO);
-	is($got, $expected, sprintf('%s: %s: Expecting %s', $top, $testName, $expected ? "success" : "failure"));
-	if ($got != $expected && $expected) {
-	    #
-	    # Redo the parse, but with ERROR level and looping on results in case it is ambiguous
-	    #
-	    $recognizerInterface = MyRecognizerInterface->new($testData);
-	    Log::Log4perl->get_logger->level($TRACE);
-	    my $r;
-	    eval { $r = MarpaX::ESLIF::Recognizer->new($g, $recognizerInterface) };
-	    if (defined($r)) {
-		if ($r->scan(1)) {
-		    while ($r->isCanContinue) {
-			last unless $r->resume;
-		    }
-		}
-		$valueInterface = MyValueInterface->new(1);
-		my $v;
-		eval { $v = MarpaX::ESLIF::Value->new($r, $valueInterface) };
-		if (defined($v)) {
-		    my $i = 0;
-		    while ($v->value) {
-			$log->tracef('Value No %d: %s', $i++, Dumper($valueInterface->getResult));
-		    }
-		}
-	    }
-	    Log::Log4perl->get_logger->level($INFO);
-	}
+    }
+}
+
+sub manage_events {
+    my ($r) = @_;
+
+    my $input = $r->input() // '';
+    $log->noticef('>>>%s', substr($input, 0, 30));
+
+    foreach my $event ($r->events) {
+        $log->noticef('... Event %s', $event);
     }
 }
 
@@ -150,69 +201,42 @@ done_testing();
 
 __DATA__
 :start ::= $START
-:default ::= discard-is-fallback => 1 action => ::ast
+:default ::= action => ::ast
 
 # =======
 # Discard
 # =======
-:discard ::= <discard>
-<discard> ::= <whitespace>+
+:discard ::= <discard> event => discard$
+<discard> ::= <whitespace>
+
+event :discard[on] = nulled <discard on>
+<discard on> ::=
+event :discard[off] = nulled <discard off>
+<discard off> ::=
+event :discard[switch] = nulled <discard switch>
+<discard switch> ::=
 
 # =================
 # Lexical Structure
 # =================
 
-# Grammar of whitespace
-# ---------------------
-<whitespace> ::= <whitespace item> <whitespace opt>
-<whitespace item> ::= <line break>
-<whitespace item> ::= <inline space>
-<whitespace item> ::= <comment>
-<whitespace item> ::= <multiline comment>
-<whitespace item> ::= [\x{0000}\x{000B}\x{000C}]
-<line break> ::= [\x{000A}]
-<line break> ::= [\x{000D}]
-<line break> ::= /\x{000D}\x{000A}/
-<inline spaces> ::= <inline space> <inline spaces opt>
-<inline space> ::= [\x{0009}\x{0020}]
-<comment> ::= '//' <comment text> <line break>
-<multiline comment> ::= '/*' <multiline comment text> '*/'
-<comment text> ::= <comment text item> <comment text opt>
-<comment text item> ::= [^\x{000A}\x{000D}]
-<multiline comment text> ::= <multiline comment text item> <multiline comment text opt>
-<multiline comment text item> ::= <multiline comment>
-<multiline comment text item> ::= <comment text item>
-<multiline comment text item> ::= '/' (?!'*') | '*' (?!'/')
+<whitespace> ::= <WHITESPACE>
 
 # Grammar of an identifier
 # ------------------------
-<identifier> ::= <identifier head> <identifier characters opt>
-<identifier> ::= '`' <identifier head> <identifier characters opt> '`'
-<identifier> ::= <implicit parameter name>
-<identifier> ::= <property wrapper projection>
-<identifier list> ::= <identifier> | <identifier> ',' <identifier list>
-<identifier head> ::= [a-zA-Z]
-<identifier head> ::= '_'
-<identifier head> ::= [\x{00A8}\x{00AA}\x{00AD}\x{00AF}\x{00B2}-\x{00B5}\x{00B7}-\x{00BA}]
-<identifier head> ::= [\x{00BC}-\x{00BE}\x{00C0}-\x{00D6}\x{00D8}-\x{00F6}\x{00F8}-\x{00FF}]
-<identifier head> ::= [\x{0100}-\x{02FF}\x{0370}-\x{167F}\x{1681}-\x{180D}\x{180F}-\x{1DBF}]:u
-<identifier head> ::= [\x{1E00}-\x{1FFF}]:u
-<identifier head> ::= [\x{200B}-\x{200D}\x{202A}-\x{202E}\x{203F}-\x{2040}\x{2054}\x{2060}-\x{206F}]:u
-<identifier head> ::= [\x{2070}-\x{20CF}\x{2100}-\x{218F}\x{2460}-\x{24FF}\x{2776}-\x{2793}]:u
-<identifier head> ::= [\x{2C00}-\x{2DFF}\x{2E80}-\x{2FFF}]:u
-<identifier head> ::= [\x{3004}-\x{3007}\x{3021}-\x{302F}\x{3031}-\x{303F}\x{3040}-\x{D7FF}]:u
-<identifier head> ::= [\x{F900}-\x{FD3D}\x{FD40}-\x{FDCF}\x{FDF0}-\x{FE1F}\x{FE30}-\x{FE44}]:u
-<identifier head> ::= [\x{FE47}-\x{FFFD}]:u
-<identifier head> ::= [\x{10000}-\x{1FFFD}\x{20000}-\x{2FFFD}\x{30000}-\x{3FFFD}\x{40000}-\x{4FFFD}]:u
-<identifier head> ::= [\x{50000}-\x{5FFFD}\x{60000}-\x{6FFFD}\x{70000}-\x{7FFFD}\x{80000}-\x{8FFFD}]:u
-<identifier head> ::= [\x{90000}-\x{9FFFD}\x{A0000}-\x{AFFFD}\x{B0000}-\x{BFFFD}\x{C0000}-\x{CFFFD}]:u
-<identifier head> ::= [\x{D0000}-\x{DFFFD}\x{E0000}-\x{EFFFD}]:u
-<identifier character> ::= [0-9]
-<identifier character> ::= [\x{0300}-\x{036F}\x{1DC0}-\x{1DFF}\x{20D0}-\x{20FF}\x{FE20}-\x{FE2F}]:u
-<identifier character> ::= <identifier head>
-<identifier characters> ::= <identifier character> <identifier characters opt>
-<implicit parameter name> ::= '$' <decimal digits>
-<property wrapper projection> ::= '$' <identifier characters>
+#
+# Note: writen as a single regex expression to avoid having to play with discard on/off
+#
+<direct identifier> ::= <DIRECT IDENTIFIER> - <RESERVED KEYWORD AS IDENTIFIER>
+
+<identifier> ::= <direct identifier>
+               | '`' <discard off> <ANY IDENTIFIER> '`' <discard on>
+               | <implicit parameter name>
+               | <property wrapper projection>
+<identifier list> ::= <identifier>+ separator => ','
+
+<implicit parameter name> ::= '$' <discard off> <DECIMAL DIGITS> <discard on>
+<property wrapper projection> ::= /$[a-zA-Z_\x{00A8}\x{00AA}\x{00AD}\x{00AF}\x{00B2}-\x{00B5}\x{00B7}-\x{00BA}\x{00BC}-\x{00BE}\x{00C0}-\x{00D6}\x{00D8}-\x{00F6}\x{00F8}-\x{00FF}\x{0100}-\x{02FF}\x{0370}-\x{167F}\x{1681}-\x{180D}\x{180F}-\x{1DBF}\x{1E00}-\x{1FFF}\x{200B}-\x{200D}\x{202A}-\x{202E}\x{203F}-\x{2040}\x{2054}\x{2060}-\x{206F}\x{2070}-\x{20CF}\x{2100}-\x{218F}\x{2460}-\x{24FF}\x{2776}-\x{2793}\x{2C00}-\x{2DFF}\x{2E80}-\x{2FFF}\x{3004}-\x{3007}\x{3021}-\x{302F}\x{3031}-\x{303F}\x{3040}-\x{D7FF}\x{F900}-\x{FD3D}\x{FD40}-\x{FDCF}\x{FDF0}-\x{FE1F}\x{FE30}-\x{FE44}\x{FE47}-\x{FFFD}\x{10000}-\x{1FFFD}\x{20000}-\x{2FFFD}\x{30000}-\x{3FFFD}\x{40000}-\x{4FFFD}\x{50000}-\x{5FFFD}\x{60000}-\x{6FFFD}\x{70000}-\x{7FFFD}\x{80000}-\x{8FFFD}\x{90000}-\x{9FFFD}\x{A0000}-\x{AFFFD}\x{B0000}-\x{BFFFD}\x{C0000}-\x{CFFFD}\x{D0000}-\x{DFFFD}\x{E0000}-\x{EFFFD}0-9\x{0300}-\x{036F}\x{1DC0}-\x{1DFF}\x{20D0}-\x{20FF}\x{FE20}-\x{FE2F}]+/u
 
 # Grammar of a literal
 # --------------------
@@ -227,35 +251,14 @@ __DATA__
 <integer literal> ::= <octal literal>
 <integer literal> ::= <decimal literal>
 <integer literal> ::= <hexadecimal literal>
-<binary literal> ::= '0b' <binary digit> <binary literal characters opt>
-<binary digit> ::= [0-1]
-<binary literal character> ::= <binary digit> | '_'
-<binary literal characters> ::= <binary literal character> <binary literal characters opt>
-<octal literal> ::= '0o' <octal digit> <octal literal characters opt>
-<octal digit> ::= [0-7]
-<octal literal character> ::= <octal digit> | '_'
-<octal literal characters> ::= <octal literal character> <octal literal characters opt>
-<decimal literal> ::= <decimal digit> <decimal literal characters opt>
-<decimal digit> ::= [0-9]
-<decimal digits> ::= <decimal digit> <decimal digits opt>
-<decimal literal character> ::= <decimal digit> | '_'
-<decimal literal characters> ::= <decimal literal character> <decimal literal characters opt>
-<hexadecimal literal> ::= '0x' <hexadecimal digit> <hexadecimal literal characters opt>
-<hexadecimal digit> ::= [0-9a-fA-F]
-<hexadecimal literal character> ::= <hexadecimal digit> | '_'
-<hexadecimal literal characters> ::= <hexadecimal literal character> <hexadecimal literal characters opt>
+<binary literal> ::= <BINARY LITERAL>
+<octal literal> ::= <OCTAL LITERAL>
+<decimal literal> ::= <DECIMAL LITERAL>
+<hexadecimal literal> ::= <HEXADECIMAL LITERAL>
 
 # Grammar of a floating-point literal
 # -----------------------------------
-<floating point literal> ::= <decimal literal> <decimal fraction opt> <decimal exponent opt>
-<floating point literal> ::= <hexadecimal literal> <hexadecimal fraction opt> <hexadecimal exponent>
-<decimal fraction> ::= '.' <decimal literal>
-<decimal exponent> ::= <floating point e> <sign opt> <decimal literal>
-<hexadecimal fraction> ::= '.' <hexadecimal digit> <hexadecimal literal characters opt>
-<hexadecimal exponent> ::= <floating point p> <sign opt> <decimal literal>
-<floating point e> ::= 'e' | 'E'
-<floating point p> ::= 'p' | 'P'
-<sign> ::= '+' | '-'
+<floating point literal> ::= <FLOATING POINT LITERAL>
 
 # Grammar of a string literal
 # ---------------------------
@@ -290,9 +293,9 @@ __DATA__
 <escaped character> ::= <escape sequence> '0' | <escape sequence> '\\' | <escape sequence> 't' | <escape sequence> 'n' | <escape sequence> 'r' | <escape sequence> '"' | <escape sequence> "'"
 <escaped character> ::= <escape sequence> 'u' '{' <unicode scalar digits> '}'
 <unicode scalar digits> ::= /[0-9a-fA-F]{1-8}/
-<escaped newline> ::= <escape sequence> <inline spaces opt> <line break>
+<escaped newline> ::= <escape sequence> <inline spaces opt> <LINE BREAK>
 
-# Grammar of a regular expression literal : we ESLIF regexp, which is PCRE2 plus ESLIF's regex options
+# Grammar of a regular expression literal : we use ESLIF regexp, which is PCRE2 plus ESLIF's regex options
 # ---------------------------------------
 <regular expression literal> ::= /(#?)\/(?![*\/])(?:[^\\\/]*(?:\\.[^\\\/]*)*)\/\1/su
 <regular expression literal> ::= /(#?)\/(?![*\/])(?:[^\\\/]*(?:\\.[^\\\/]*)*)\/\1/su /[eijmnsxDJUuaNbcA]+/
@@ -602,7 +605,7 @@ __DATA__
 
 # Grammar of an explicit member expression
 # ----------------------------------------
-<explicit member expression> ::= <postfix expression> '.' <decimal digits>
+<explicit member expression> ::= <postfix expression> '.' <DECIMAL DIGITS>
 <explicit member expression> ::= <postfix expression> '.' <identifier> <generic argument clause opt>
 <explicit member expression> ::= <postfix expression> '.' <identifier> '(' <argument names> ')'
 <explicit member expression> ::= <postfix expression> <conditional compilation block>
@@ -778,8 +781,8 @@ __DATA__
 <platform condition> ::= 'targetEnvironment' '(' <environment> ')'
 <operating system> ::= 'macOS' | 'iOS' | 'watchOS' | 'tvOS' | 'Linux' | 'Windows'
 <architecture> ::= 'i386' | 'x86_64' | 'arm' | 'arm64'
-<swift version> ::= <decimal digits> <swift version continuation opt>
-<swift version continuation> ::= '.' <decimal digits> <swift version continuation opt>
+<swift version> ::= <DECIMAL DIGITS> <swift version continuation opt>
+<swift version continuation> ::= '.' <DECIMAL DIGITS> <swift version continuation opt>
 <environment> ::= 'simulator' | 'macCatalyst'
 
 # Grammar of a line control statement
@@ -807,9 +810,9 @@ __DATA__
 <platform name> ::= 'macCatalyst' | 'macCatalystApplicationExtension'
 <platform name> ::= 'watchOS'
 <platform name> ::= 'tvOS'
-<platform version> ::= <decimal digits>
-<platform version> ::= <decimal digits> '.' <decimal digits>
-<platform version> ::= <decimal digits> '.' <decimal digits> '.' <decimal digits>
+<platform version> ::= <DECIMAL DIGITS>
+<platform version> ::= <DECIMAL DIGITS> '.' <DECIMAL DIGITS>
+<platform version> ::= <DECIMAL DIGITS> '.' <DECIMAL DIGITS> '.' <DECIMAL DIGITS>
 
 # ============
 # Declarations
@@ -1150,34 +1153,10 @@ __DATA__
 # =======
 <whitespace opt> ::= <whitespace>
 <whitespace opt> ::=
-<inline spaces opt> ::= <inline spaces>
+<inline spaces opt> ::= <INLINE SPACES>
 <inline spaces opt> ::=
-<comment text opt> ::= <comment text>
-<comment text opt> ::=
-<multiline comment text opt> ::= <multiline comment text>
-<multiline comment text opt> ::=
-<identifier characters opt> ::= <identifier characters>
-<identifier characters opt> ::=
 <minus character opt> ::= '-'
 <minus character opt> ::=
-<binary literal characters opt> ::= <binary literal characters>
-<binary literal characters opt> ::=
-<octal literal characters opt> ::= <octal literal characters>
-<octal literal characters opt> ::=
-<decimal literal characters opt> ::= <decimal literal characters>
-<decimal literal characters opt> ::=
-<decimal digits opt> ::= <decimal digits>
-<decimal digits opt> ::=
-<hexadecimal literal characters opt> ::= <hexadecimal literal characters>
-<hexadecimal literal characters opt> ::=
-<decimal fraction opt> ::= <decimal fraction>
-<decimal fraction opt> ::=
-<decimal exponent opt> ::= <decimal exponent>
-<decimal exponent opt> ::=
-<hexadecimal fraction opt> ::= <hexadecimal fraction>
-<hexadecimal fraction opt> ::=
-<sign opt> ::= <sign>
-<sign opt> ::=
 <extended string literal delimiter opt> ::= <extended string literal delimiter>
 <extended string literal delimiter opt> ::=
 <quoted text opt> ::= <quoted text>
@@ -1348,3 +1327,82 @@ __DATA__
 <typealias assignment opt> ::=
 <type identifier opt> ::= <type identifier>
 <type identifier opt> ::=
+
+# =======
+# Lexemes
+# =======
+
+#
+# List of reserved keywords that looks like an identifier
+#
+<_ANY IDENTIFIER>                    ~ /[a-zA-Z_\x{00A8}\x{00AA}\x{00AD}\x{00AF}\x{00B2}-\x{00B5}\x{00B7}-\x{00BA}\x{00BC}-\x{00BE}\x{00C0}-\x{00D6}\x{00D8}-\x{00F6}\x{00F8}-\x{00FF}\x{0100}-\x{02FF}\x{0370}-\x{167F}\x{1681}-\x{180D}\x{180F}-\x{1DBF}\x{1E00}-\x{1FFF}\x{200B}-\x{200D}\x{202A}-\x{202E}\x{203F}-\x{2040}\x{2054}\x{2060}-\x{206F}\x{2070}-\x{20CF}\x{2100}-\x{218F}\x{2460}-\x{24FF}\x{2776}-\x{2793}\x{2C00}-\x{2DFF}\x{2E80}-\x{2FFF}\x{3004}-\x{3007}\x{3021}-\x{302F}\x{3031}-\x{303F}\x{3040}-\x{D7FF}\x{F900}-\x{FD3D}\x{FD40}-\x{FDCF}\x{FDF0}-\x{FE1F}\x{FE30}-\x{FE44}\x{FE47}-\x{FFFD}\x{10000}-\x{1FFFD}\x{20000}-\x{2FFFD}\x{30000}-\x{3FFFD}\x{40000}-\x{4FFFD}\x{50000}-\x{5FFFD}\x{60000}-\x{6FFFD}\x{70000}-\x{7FFFD}\x{80000}-\x{8FFFD}\x{90000}-\x{9FFFD}\x{A0000}-\x{AFFFD}\x{B0000}-\x{BFFFD}\x{C0000}-\x{CFFFD}\x{D0000}-\x{DFFFD}\x{E0000}-\x{EFFFD}][a-zA-Z_\x{00A8}\x{00AA}\x{00AD}\x{00AF}\x{00B2}-\x{00B5}\x{00B7}-\x{00BA}\x{00BC}-\x{00BE}\x{00C0}-\x{00D6}\x{00D8}-\x{00F6}\x{00F8}-\x{00FF}\x{0100}-\x{02FF}\x{0370}-\x{167F}\x{1681}-\x{180D}\x{180F}-\x{1DBF}\x{1E00}-\x{1FFF}\x{200B}-\x{200D}\x{202A}-\x{202E}\x{203F}-\x{2040}\x{2054}\x{2060}-\x{206F}\x{2070}-\x{20CF}\x{2100}-\x{218F}\x{2460}-\x{24FF}\x{2776}-\x{2793}\x{2C00}-\x{2DFF}\x{2E80}-\x{2FFF}\x{3004}-\x{3007}\x{3021}-\x{302F}\x{3031}-\x{303F}\x{3040}-\x{D7FF}\x{F900}-\x{FD3D}\x{FD40}-\x{FDCF}\x{FDF0}-\x{FE1F}\x{FE30}-\x{FE44}\x{FE47}-\x{FFFD}\x{10000}-\x{1FFFD}\x{20000}-\x{2FFFD}\x{30000}-\x{3FFFD}\x{40000}-\x{4FFFD}\x{50000}-\x{5FFFD}\x{60000}-\x{6FFFD}\x{70000}-\x{7FFFD}\x{80000}-\x{8FFFD}\x{90000}-\x{9FFFD}\x{A0000}-\x{AFFFD}\x{B0000}-\x{BFFFD}\x{C0000}-\x{CFFFD}\x{D0000}-\x{DFFFD}\x{E0000}-\x{EFFFD}0-9\x{0300}-\x{036F}\x{1DC0}-\x{1DFF}\x{20D0}-\x{20FF}\x{FE20}-\x{FE2F}]*/u
+
+<RESERVED KEYWORD AS IDENTIFIER>     ~ 'associatedtype' | 'class' | 'deinit' | 'enum' | 'extension' | 'fileprivate' | 'func' | 'import' | 'init' | 'inout' | 'internal' | 'let' | 'open' | 'operator' | 'private' | 'precedencegroup' | 'protocol' | 'public' | 'rethrows' | 'static' | 'struct' | 'subscript' | 'typealias' | 'var' | 'break' | 'case' | 'catch' | 'continue' | 'default' | 'defer' | 'do' | 'else' | 'fallthrough' | 'for' | 'guard' | 'if' | 'in' | 'repeat' | 'return' | 'throw' | 'switch' | 'where' | 'while' | 'Any' | 'as' | 'false' | 'is' | 'nil' | 'self' | 'Self' | 'super' | 'throws' | 'true' | 'try' | '_' | 'associativity' | 'convenience' | 'didSet' | 'dynamic' | 'final' | 'get' | 'indirect' | 'infix' | 'lazy' | 'left' | 'mutating' | 'none' | 'nonmutating' | 'optional' | 'override' | 'postfix' | 'precedence' | 'prefix' | 'Protocol' | 'required' | 'right' | 'set' | 'some' | 'Type' | 'unowned' | 'weak' | 'willSet'
+
+<DIRECT IDENTIFIER>                  ~ <_ANY IDENTIFIER>
+<ANY IDENTIFIER>                     ~ <_ANY IDENTIFIER>
+
+<BINARY LITERAL>                     ~ '0b' <BINARY DIGIT> <BINARY LITERAL CHARACTERS OPT>
+<BINARY LITERAL CHARACTERS>          ~ <BINARY LITERAL CHARACTER> <BINARY LITERAL CHARACTERS OPT>
+<BINARY LITERAL CHARACTER>           ~ <BINARY DIGIT> | '_'
+<BINARY DIGIT>                       ~ [0-1]
+
+<OCTAL LITERAL>                      ~ '0o' <OCTAL DIGIT> <OCTAL LITERAL CHARACTERS OPT>
+<OCTAL DIGIT>                        ~ [0-7]
+<OCTAL LITERAL CHARACTER>            ~ <OCTAL DIGIT> | '_'
+<OCTAL LITERAL CHARACTERS>           ~ <OCTAL LITERAL CHARACTER> <OCTAL LITERAL CHARACTERS OPT>
+
+<DECIMAL LITERAL>                    ~ <DECIMAL DIGIT> <DECIMAL LITERAL CHARACTERS OPT>
+<DECIMAL DIGIT>                      ~ [0-9]
+<DECIMAL DIGITS>                     ~ <DECIMAL DIGIT> <DECIMAL DIGITS OPT>
+<DECIMAL LITERAL CHARACTER>          ~ <DECIMAL DIGIT> | '_'
+<DECIMAL LITERAL CHARACTERS>         ~ <DECIMAL LITERAL CHARACTER> <DECIMAL LITERAL CHARACTERS OPT>
+
+<HEXADECIMAL LITERAL>                ~ '0x' <HEXADECIMAL DIGIT> <HEXADECIMAL LITERAL CHARACTERS OPT>
+<HEXADECIMAL DIGIT>                  ~ [0-9a-fA-F]
+<HEXADECIMAL LITERAL CHARACTER>      ~ <HEXADECIMAL DIGIT> | '_'
+<HEXADECIMAL LITERAL CHARACTERS>     ~ <HEXADECIMAL LITERAL CHARACTER> <HEXADECIMAL LITERAL CHARACTERS OPT>
+
+<FLOATING POINT LITERAL>             ~ <DECIMAL LITERAL> <DECIMAL FRACTION OPT> <DECIMAL EXPONENT OPT>
+<FLOATING POINT LITERAL>             ~ <HEXADECIMAL LITERAL> <HEXADECIMAL FRACTION OPT> <HEXADECIMAL EXPONENT>
+<DECIMAL FRACTION>                   ~ '.' <DECIMAL LITERAL>
+<DECIMAL EXPONENT>                   ~ <FLOATING POINT E> <SIGN OPT> <DECIMAL LITERAL>
+<HEXADECIMAL FRACTION>               ~ '.' <HEXADECIMAL DIGIT> <HEXADECIMAL LITERAL CHARACTERS OPT>
+<HEXADECIMAL EXPONENT>               ~ <FLOATING POINT P> <SIGN OPT> <DECIMAL LITERAL>
+<FLOATING POINT E>                   ~ 'e' | 'E'
+<FLOATING POINT P>                   ~ 'p' | 'P'
+<SIGN>                               ~ '+' | '-'
+
+<BINARY LITERAL CHARACTERS OPT>      ~ <BINARY LITERAL CHARACTERS>
+<BINARY LITERAL CHARACTERS OPT>      ~
+<OCTAL LITERAL CHARACTERS OPT>       ~ <OCTAL LITERAL CHARACTERS>
+<OCTAL LITERAL CHARACTERS OPT>       ~
+<DECIMAL LITERAL CHARACTERS OPT>     ~ <DECIMAL LITERAL CHARACTERS>
+<DECIMAL LITERAL CHARACTERS OPT>     ~
+<DECIMAL DIGITS OPT>                 ~ <DECIMAL DIGITS>
+<DECIMAL DIGITS OPT>                 ~
+<HEXADECIMAL LITERAL CHARACTERS OPT> ~ <HEXADECIMAL LITERAL CHARACTERS>
+<HEXADECIMAL LITERAL CHARACTERS OPT> ~
+<DECIMAL FRACTION OPT>               ~ <DECIMAL FRACTION>
+<DECIMAL FRACTION OPT>               ~
+<DECIMAL EXPONENT OPT>               ~ <DECIMAL EXPONENT>
+<DECIMAL EXPONENT OPT>               ~
+<HEXADECIMAL FRACTION OPT>           ~ <HEXADECIMAL FRACTION>
+<HEXADECIMAL FRACTION OPT>           ~
+<SIGN OPT>                           ~ <SIGN>
+<SIGN OPT>                           ~
+
+#
+# Whitespace
+#
+<WHITESPACE>                  ~ <WHITESPACE ITEM>
+<WHITESPACE ITEM>             ~ <LINE BREAK> | <INLINE SPACE> | <COMMENT> | <MULTILINE COMMENT> | [\x{0000}\x{000B}\x{000C}]
+<LINE BREAK>                  ~ [\x{000A}] | [\x{000D}] | /\x{000D}\x{000A}/
+<INLINE SPACES>               ~ <INLINE SPACE>+
+<INLINE SPACE>                ~ [\x{0009}\x{0020}]
+<COMMENT>                     ~ '//' <COMMENT TEXT> <LINE BREAK>
+<MULTILINE COMMENT>           ~ '/*' <MULTILINE COMMENT TEXT> '*/'
+<COMMENT TEXT>                ~ <COMMENT TEXT ITEM>+
+<COMMENT TEXT ITEM>           ~ [^\x{000A}\x{000D}]
+<MULTILINE COMMENT TEXT>      ~ <MULTILINE COMMENT TEXT ITEM>+
+<MULTILINE COMMENT TEXT ITEM> ~ <MULTILINE COMMENT> | <COMMENT TEXT ITEM> | '/' (?!'*') | '*' (?!'/')
