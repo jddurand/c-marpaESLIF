@@ -5059,6 +5059,7 @@ static inline short _marpaESLIFGrammar_haveLexemeb(marpaESLIFGrammar_t *marpaESL
   }
   grammarp = (marpaESLIF_grammar_t *) GENERICSTACK_GET_PTR(grammarStackp, grammari);
 
+  /* Lookup all accessible and productive symbols - stop if one of them is a lexeme. */
   symbolStackp = grammarp->symbolStackp;
   for (symboli = 0; symboli < GENERICSTACK_USED(symbolStackp); symboli++) {
     MARPAESLIF_GRAMMAR_INTERNAL_GET_SYMBOL(marpaESLIFp, symbolp, grammarp, symboli);
@@ -5068,6 +5069,10 @@ static inline short _marpaESLIFGrammar_haveLexemeb(marpaESLIFGrammar_t *marpaESL
     }
 
     if ((marpaWrapperSymbolPropertyBitSet & MARPAWRAPPER_SYMBOL_IS_PRODUCTIVE) != MARPAWRAPPER_SYMBOL_IS_PRODUCTIVE) {
+      continue;
+    }
+
+    if ((marpaWrapperSymbolPropertyBitSet & MARPAWRAPPER_SYMBOL_IS_ACCESSIBLE) != MARPAWRAPPER_SYMBOL_IS_ACCESSIBLE) {
       continue;
     }
 
