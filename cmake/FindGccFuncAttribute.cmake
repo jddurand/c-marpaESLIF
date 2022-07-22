@@ -2,7 +2,7 @@
 MACRO (FINDGCCFUNCATTRIBUTE attribute)
   GET_PROPERTY(source_dir_set GLOBAL PROPERTY MYPACKAGE_SOURCE_DIR SET)
   IF (NOT ${source_dir_set})
-    MESSAGE (WARNING "Cannot check inline, property MYPACKAGE_SOURCE_DIR is not set")
+    MESSAGE (WARNING "Cannot check ${attribute}, property MYPACKAGE_SOURCE_DIR is not set")
   ELSE ()
     STRING (TOUPPER ${attribute} ATTRIBUTE)
     IF (NOT C_GCC_FUNC_ATTRIBUTE_${ATTRIBUTE}_SINGLETON)
