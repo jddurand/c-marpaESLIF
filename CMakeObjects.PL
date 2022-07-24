@@ -238,6 +238,52 @@ INLINE_SOURCE
         }
     }
 
+    #
+    # function __attribute__ are tested only on GCC compliant compilers.
+    #
+    # We first test that __GNUC__ macro is defined.
+    # If it is, we want to check if -Werror option is supported. This will
+    # turn warnings into errors, catching the fact that some compilers just
+    # say that an attribute is not supported instead of yelling natively.
+    #
+    my $have__GNUC__;
+    $ac->msg_checking("if __GNUC__ macro is defined:");
+    if (try_compile("#include <stdlib.h>\n#ifdef __GNUC__\nint main() {\n  exit(0);\n}\n#else\n#  error __GNUC__ is not defined\n#endif\n")) {
+        $ac->msg_result('yes');
+        $have__GNUC__ = 1;
+    } else {
+        $ac->msg_result('no');
+        $have__GNUC__ = 0;
+    }
+
+    if ($have__GNUC__) {
+        my $tmpflag = '-Werror';
+        $ac->msg_checking("if flag $tmpflag works:");
+        if (try_compile("#include <stdlib.h>\nint main() {\n  exit(0);\n}\n", $tmpflag)) {
+            $ac->msg_result('yes');
+        } else {
+            $ac->msg_result('no');
+            $tmpflag = '';
+        }
+
+        $ac->msg_checking("for __attribute__((flatten))");
+        my $__attribute_flatten = <<__ATTRIBUTE_FLATTEN;
+#include <stdlib.h>
+
+int foo( void ) __attribute__((flatten));
+int main() { exit(0); }
+__ATTRIBUTE_FLATTEN
+        #
+        # This is GCC specific, we want to yell if the attribute is not supported
+        #
+        if (try_link($__attribute_flatten, $tmpflag)) {
+            $ac->msg_result('yes');
+            $ac->define_var("C_GCC_FUNC_ATTRIBUTE_FLATTEN", "__attribute__((flatten))");
+        } else {
+          $ac->msg_result('no');
+        }
+    }
+
     $ac->check;
     write_config($MARPAESLIF_VERSION, $MARPAESLIF_VERSION_MAJOR, $MARPAESLIF_VERSION_MINOR, $MARPAESLIF_VERSION_PATCH, $config_h_in, $config_h);
 }
