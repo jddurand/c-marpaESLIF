@@ -257,30 +257,32 @@ INLINE_SOURCE
     }
 
     if ($have__GNUC__) {
-        my $tmpflag = '-Werror';
-        $ac->msg_checking("if flag $tmpflag works:");
-        if (try_compile("#include <stdlib.h>\nint main() {\n  exit(0);\n}\n", $tmpflag)) {
+        my $werrorflag = '-Werror';
+        $ac->msg_checking("if flag $werrorflag works:");
+        if (try_compile("#include <stdlib.h>\nint main() {\n  exit(0);\n}\n", $werrorflag)) {
             $ac->msg_result('yes');
         } else {
             $ac->msg_result('no');
-            $tmpflag = '';
+            $werrorflag = '';
         }
 
-        $ac->msg_checking("for __attribute__((flatten))");
-        my $__attribute_flatten = <<__ATTRIBUTE_FLATTEN;
+        if ($werrorflag) {
+            $ac->msg_checking("for __attribute__((flatten))");
+            my $__attribute_flatten = <<__ATTRIBUTE_FLATTEN;
 #include <stdlib.h>
 
 int foo( void ) __attribute__((flatten));
 int main() { exit(0); }
 __ATTRIBUTE_FLATTEN
-        #
-        # This is GCC specific, we want to yell if the attribute is not supported
-        #
-        if (try_link($__attribute_flatten, $tmpflag)) {
-            $ac->msg_result('yes');
-            $ac->define_var("C_GCC_FUNC_ATTRIBUTE_FLATTEN", "__attribute__((flatten))");
-        } else {
-          $ac->msg_result('no');
+            #
+            # This is GCC specific, we want to yell if the attribute is not supported
+            #
+            if (try_link($__attribute_flatten, $werrorflag)) {
+                $ac->msg_result('yes');
+                $ac->define_var("C_GCC_FUNC_ATTRIBUTE_FLATTEN", "__attribute__((flatten))");
+            } else {
+                $ac->msg_result('no');
+            }
         }
     }
 
