@@ -32,10 +32,12 @@ MACRO (MYPACKAGECHECKCOMMONFEATURES)
   FINDCOPYSIGN()
   FINDCOPYSIGNF()
   FINDCOPYSIGNL()
-  FIND__GNUC__()
-  IF (C___GNUC__)
+  #
+  # We reserve the next lines to clang or gcc family
+  #
+  IF (CMAKE_C_COMPILER_ID MATCHES "Clang|GNU")
     #
-    # Usually GCC compilers just give a warning, we want to turn the warnings to errors
+    # We want to turn the warnings to errors if this is supported, else we give up.
     #
     INCLUDE(CheckCCompilerFlag)
     CHECK_C_COMPILER_FLAG(-Werror C_COMPILER_HAS_WERROR_OPTION)
