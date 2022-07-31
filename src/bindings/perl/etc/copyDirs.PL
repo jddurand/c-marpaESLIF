@@ -233,6 +233,10 @@ sub _dircopy {
           next if S_ISDIR($mode) && ($_ =~ /^pcre2/) && ($_ ne 'pcre2-10.40');
         }
         #
+        # Skip historical Marpa--R2 checkout from marpaWrapper
+        #
+        next if $_ eq 'Marpa--R2';
+        #
         # Copy only the version of iconv we use
         #
         next if ($_ =~ /^libiconv/ && $_ ne 'libiconv-1.16.tar.gz');
