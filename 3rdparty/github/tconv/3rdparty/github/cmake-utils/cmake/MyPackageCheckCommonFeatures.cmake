@@ -32,10 +32,22 @@ MACRO (MYPACKAGECHECKCOMMONFEATURES)
   FINDCOPYSIGN()
   FINDCOPYSIGNF()
   FINDCOPYSIGNL()
-  FIND__GNUC__()
-  IF (C___GNUC__)
-    FOREACH (_attribute alias aligned alloc_size always_inline artificial cold const constructor_priority constructor deprecated destructor dllexport dllimport error externally_visible fallthrough flatten format gnu_format format_arg gnu_inline hot ifunc leaf malloc noclone noinline nonnull noreturn nothrow optimize pure sentinel sentinel_position returns_nonnull unused used visibility warning warn_unused_result weak weakref)
-      FINDGCCFUNCATTRIBUTE(${_attribute})
-    ENDFOREACH ()
+  #
+  # We reserve the next lines to clang or gcc family
+  #
+  IF (CMAKE_C_COMPILER_ID MATCHES "Clang|GNU")
+    #
+    # We want to turn the warnings to errors if this is supported, else we give up.
+    #
+    INCLUDE(CheckCCompilerFlag)
+    CHECK_C_COMPILER_FLAG(-Werror C_COMPILER_HAS_WERROR_OPTION)
+    IF (C_COMPILER_HAS_WERROR_OPTION)
+      SET (_CMAKE_C_FLAGS ${CMAKE_C_FLAGS})
+      SET (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Werror")
+      FOREACH (_attribute alias aligned alloc_size always_inline artificial cold const constructor_priority constructor deprecated destructor dllexport dllimport error externally_visible fallthrough flatten format gnu_format format_arg gnu_inline hot ifunc leaf malloc noclone noinline nonnull noreturn nothrow optimize pure sentinel sentinel_position returns_nonnull unused used visibility warning warn_unused_result weak weakref)
+        FINDGCCFUNCATTRIBUTE(${_attribute})
+      ENDFOREACH ()
+      SET (CMAKE_C_FLAGS ${_CMAKE_C_FLAGS})
     ENDIF ()
+  ENDIF ()
 ENDMACRO()
