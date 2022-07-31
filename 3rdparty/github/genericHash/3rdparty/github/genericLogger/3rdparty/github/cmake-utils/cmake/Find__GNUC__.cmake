@@ -1,0 +1,28 @@
+MACRO (FIND__GNUC__)
+  GET_PROPERTY(source_dir_set GLOBAL PROPERTY MYPACKAGE_SOURCE_DIR SET)
+  IF (NOT ${source_dir_set})
+    MESSAGE (WARNING "Cannot check infinity, property MYPACKAGE_SOURCE_DIR is not set")
+  ELSE ()
+    IF (NOT C___GNUC___SINGLETON)
+      GET_PROPERTY(source_dir GLOBAL PROPERTY MYPACKAGE_SOURCE_DIR)
+      SET (_C___GNUC___FOUND FALSE)
+      #
+      # Test
+      #
+      MESSAGE(STATUS "Looking for macro __GNUC__")
+      TRY_COMPILE (C_HAS___GNUC__ ${CMAKE_CURRENT_BINARY_DIR}
+        ${source_dir}/__GNUC__.c)
+      IF (C_HAS___GNUC__)
+        MESSAGE(STATUS "Looking for macro __GNUC__ - found")
+        SET (_C___GNUC__ __GNUC__)
+        SET (_C___GNUC___FOUND TRUE)
+      ENDIF ()
+    ENDIF ()
+    IF (_C___GNUC___FOUND)
+      SET (C___GNUC__ "${_C___GNUC__}" CACHE STRING "C __GNUC__ macro")
+      MARK_AS_ADVANCED (C___GNUC__)
+    ENDIF ()
+    SET (C___GNUC___SINGLETON TRUE CACHE BOOL "C __GNUC__ check singleton")
+    MARK_AS_ADVANCED (C___GNUC___SINGLETON)
+  ENDIF ()
+ENDMACRO()
