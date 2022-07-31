@@ -1,4 +1,4 @@
-# Copyright 2014 Jeffrey Kegler
+# Copyright 2022 Jeffrey Kegler
 # This file is part of Marpa::R2.  Marpa::R2 is free software: you can
 # redistribute it and/or modify it under the terms of the GNU Lesser
 # General Public License as published by the Free Software Foundation,
@@ -17,8 +17,20 @@
 
 dummy: 
 
+dev_license_check:
+	perl etc/check_license.pl ` git ls-files `
+	for d in cpan/Marpa-R2-*; \
+	     do if test -d $$d; \
+	     then perl etc/check_license.pl --dist $$d ` find $$d -type f`; \
+	     fi \
+	 done
+
+license_check:
+	perl etc/check_license.pl --dist cpan `sed -e '/^#/d' -e '/^ *$$/d' -e 's/^/cpan\//' cpan/MANIFEST`
+
 releng: install full_test
 	cd cpan && ./Build distcheck
+	$(MAKE) license_check
 	cd cpan && ./Build dist
 	git status
 

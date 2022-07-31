@@ -1,17 +1,4 @@
 MACRO (MYPACKAGETESTEXECUTABLE name)
-  #
-  # Policies - an include is resetting them, so we have to
-  # be explicit. We are doing ADD_EXECUTABLE here.
-  #
-  FOREACH (_policy CMP0063 CMP0018)
-    IF (POLICY ${_policy})
-      IF (MYPACKAGE_DEBUG)
-        MESSAGE (STATUS "[${PROJECT_NAME}-TESTEXECUTABLE-DEBUG] Setting policy ${_policy} to NEW")
-      ENDIF ()
-      CMAKE_POLICY (SET ${_policy} NEW)
-    ENDIF ()
-  ENDFOREACH ()
-
   IF (MYPACKAGE_DEBUG)
     FOREACH (_source ${ARGN})
       MESSAGE (STATUS "[${PROJECT_NAME}-TESTEXECUTABLE-DEBUG] Source: ${_source}")
@@ -73,5 +60,4 @@ MACRO (MYPACKAGETESTEXECUTABLE name)
       ENDIF ()
     ENDIF ()
   ENDFOREACH ()
-
 ENDMACRO()
