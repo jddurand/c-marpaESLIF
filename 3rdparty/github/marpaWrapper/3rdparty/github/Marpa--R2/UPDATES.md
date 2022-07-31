@@ -1,9 +1,26 @@
+<!--
+Copyright 2022 Jeffrey Kegler
+This file is part of Marpa::R2.  Marpa::R2 is free software: you can
+redistribute it and/or modify it under the terms of the GNU Lesser
+General Public License as published by the Free Software Foundation,
+either version 3 of the License, or (at your option) any later version.
+
+Marpa::R2 is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+Lesser General Public License for more details.
+
+You should have received a copy of the GNU Lesser
+General Public License along with Marpa::R2.  If not, see
+http://www.gnu.org/licenses/.
+-->
+
 # Marpa::R2 Updates
 
 ## About this page
 
 This is the updates page as of Marpa::R2,
-version 8.000000.
+version 10.000000.
 (For the updates pages for previous versions, see below.)
 It may contain descriptions of bugs for which a fix
 is in preparation.
@@ -25,8 +42,7 @@ bug is discovered.
 
 ### No known bugs
 
-As of this writing, there are no known bugs
-in Marpa::R2, version 8.000000.
+As of this writing, there are no known bugs in Marpa::R2 10.000000.
 
 ## Notices
 
@@ -46,12 +62,9 @@ the resources to support anything but standard Perl.
 A bug with a Perl variant will be rejected
 if the bug cannot be duplicated in standard Perl.
 
-### Limited support for AIX
-
-Some work has been done on supporting AIX.  See
-[the AIX.README file](https://github.com/jeffreykegler/Marpa--R2/blob/master/AIX.README).
-
 ## Updates pages for previous versions
+
+[Updates page for version 8.000000](https://github.com/jeffreykegler/Marpa--R2/blob/master/etc/old_updates/UPDATES-8.000000.md).
 
 [Updates page for version 6.000000](https://github.com/jeffreykegler/Marpa--R2/blob/master/etc/old_updates/UPDATES-6.000000.md).
 
