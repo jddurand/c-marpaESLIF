@@ -2,11 +2,10 @@ shallow_clone: true  # For GitHub abd BitBucket
 clone_depth: 100     # For other git providers
 
 # -------------------------------------------------------------------------------------------------------------------
-# The important thing is to know what AppVeyor images hosts what. As of 11-oct-2019:
 #
-#  Image              "Visual Studio 2013"     "Visual Studio 2015"         "Visual Studio 2017" "Visual Studio 2019"
-#  CMake               3.12.2                   3.15.5                       3.15.5               3.15.5
-#  Visual C++          2008/2010/2012/2013      2008/2010/2012/2013/2015     2015/2017            2019
+#  Image              "Visual Studio 2013"     "Visual Studio 2015"         "Visual Studio 2017" "Visual Studio 2019" "Visual Studio 2022"
+#  CMake               C.f. https://www.appveyor.com/docs/windows-images-software/
+#  Visual C++          2008/2010/2012/2013      2008/2010/2012/2013/2015     2015/2017            2019                 2022
 #
 # Note that 2010 x64 will not have redistributables because they are absent from AppVeyor image.
 # -------------------------------------------------------------------------------------------------------------------
@@ -15,6 +14,14 @@ environment:
   upload_token:
     secure: 
   matrix:
+   - _CC: VS2022
+     _ARCH: x86
+     _GENERATOR: "NMake Makefiles"
+     APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2022
+   - _CC: VS2022
+     _ARCH: x64
+     _GENERATOR: "NMake Makefiles"
+     APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2022
    - _CC: VS2019
      _ARCH: x86
      _GENERATOR: "NMake Makefiles"
@@ -82,6 +89,8 @@ clone_folder: C:\projects\%APPVEYOR_PROJECT_NAME%
 #   fast_finish: true # Immediately finish build once one of the jobs fails
 
 init:
+  - IF "%_CC%" == "VS2022" IF "%_GENERATOR%"=="NMake Makefiles" IF "%_ARCH%" == "x86" call "C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Auxiliary\Build\vcvars32.bat"
+  - IF "%_CC%" == "VS2022" IF "%_GENERATOR%"=="NMake Makefiles" IF "%_ARCH%" == "x64" call "C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Auxiliary\Build\vcvars64.bat"
   - IF "%_CC%" == "VS2019" IF "%_GENERATOR%"=="NMake Makefiles" IF "%_ARCH%" == "x86" call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvars32.bat"
   - IF "%_CC%" == "VS2019" IF "%_GENERATOR%"=="NMake Makefiles" IF "%_ARCH%" == "x64" call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvars64.bat"
   - IF "%_CC%" == "VS2017" IF "%_GENERATOR%"=="NMake Makefiles" IF "%_ARCH%" == "x86" call "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Auxiliary\Build\vcvars32.bat"
