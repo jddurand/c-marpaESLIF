@@ -62,6 +62,7 @@ typedef struct  marpaESLIF_pcre2_callout_context marpaESLIF_pcre2_callout_contex
 typedef struct  marpaESLIFGrammar_Lshare         marpaESLIFGrammar_Lshare_t;
 typedef struct  marpaESLIF_grammar_bootstrap     marpaESLIF_grammar_bootstrap_t;
 typedef struct  marpaESLIFGrammar_bootstrap      marpaESLIFGrammar_bootstrap_t;
+typedef struct  grammar_progress                 grammar_progress_t;
 
 #include "marpaESLIF/internal/lua.h" /* For lua_State* */
 
@@ -399,6 +400,8 @@ struct marpaESLIF_grammar {
   marpaESLIF_rule_t    **allRulesArraypp;                    /* For fast access to rules, they are all flatened here */
   int                   *expectedTerminalIdArrayp;           /* Total list of expected symbol ids sorted by priority */
   marpaESLIF_symbol_t  **expectedTerminalArraypp;            /* Total list of expected terminals sorted by priority */
+  genericHash_t         _completionToNextProgressHash;       /* Cache for prediction of an alternative completion to next grammar progress */
+  genericHash_t        *completionToNextProgressHashp;       /* Cache for prediction of an alternative completion to next grammar progress */
 };
 
 enum marpaESLIF_json_type {
@@ -712,6 +715,9 @@ struct marpaESLIFRecognizer {
 
   /* Proxy generic logger */
   genericLogger_t                *genericLoggerp;
+
+  /* Current progress */
+  grammar_progress_t             *current_grammar_progressp;
 };
 
 struct marpaESLIF_symbol_data {
@@ -852,6 +858,12 @@ struct marpaESLIFGrammar_bootstrap {
   short                      hasSolPseudoTerminalb;  /* Any :sol terminal in the grammar ? */
   short                      hasEmptyPseudoTerminalb; /* Any :empty terminal in the grammar ? */
   short                      hasLookaheadMetab;      /* Any lookahead meta in the grammar ? */
+};
+
+struct grammar_progress {
+  marpaESLIF_t                     *marpaESLIFp;
+  size_t                            nProgressl;      /* Number of elements */
+  marpaWrapperRecognizerProgress_t *progressp;       /* Elements */
 };
 
 #include "marpaESLIF/internal/eslif.h"

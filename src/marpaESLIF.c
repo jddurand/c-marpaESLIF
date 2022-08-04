@@ -1317,7 +1317,7 @@ static inline marpaESLIF_grammar_bootstrap_t *_marpaESLIF_grammar_bootstrap_newp
 static inline short                  _marpaESLIF_grammar_initb(marpaESLIF_t *marpaESLIFp, marpaESLIF_grammar_t *grammarp, int leveli, marpaESLIFGrammar_t *marpaESLIFGrammarp);
 static inline marpaESLIF_grammar_t  *_marpaESLIF_grammar_newp(marpaESLIFGrammar_t *marpaESLIFGrammarp, marpaWrapperGrammarOption_t *marpaWrapperGrammarOptionp, int leveli, char *descEncodings, char *descs, size_t descl, marpaESLIF_action_t *defaultSymbolActionp, marpaESLIF_action_t *defaultRuleActionp, marpaESLIF_action_t *defaultEventActionp, marpaESLIF_action_t *defaultRegexActionp, char *defaultEncodings, char *fallbackEncodings);
 static inline void                   _marpaESLIF_grammar_bootstrap_freev(marpaESLIF_grammar_bootstrap_t *grammarp);
-static inline void                   _marpaESLIF_grammar_freev(marpaESLIF_grammar_t *grammarp);
+static inline void                   _marpaESLIF_grammar_freev(marpaESLIF_t *marpaESLIFp, marpaESLIF_grammar_t *grammarp);
 
 static inline void                   _marpaESLIF_ruleStack_freev(genericStack_t *ruleStackp);
 static inline void                   _marpaESLIFRecognizer_lexemeStack_freev(marpaESLIFRecognizer_t *marpaESLIFRecognizerp);
@@ -1466,7 +1466,7 @@ static inline short                  __marpaESLIFValue_valueb(marpaESLIFValue_t 
 
 static inline void                   _marpaESLIFGrammar_bootstrap_freev(marpaESLIFGrammar_bootstrap_t *marpaESLIFGrammarp);
 static inline void                   _marpaESLIF_grammarBootstrapStack_freev(genericStack_t *grammarStackp);
-static inline void                   _marpaESLIF_grammarStack_freev(genericStack_t *grammarStackp);
+static inline void                   _marpaESLIF_grammarStack_freev(marpaESLIF_t *marpaESLIFp, genericStack_t *grammarStackp);
 static inline void                   _marpaESLIFGrammar_freev(marpaESLIFGrammar_t *marpaESLIFGrammarp, short onStackb);
 static        char                  *_marpaESLIFGrammar_symbolDescriptionCallbacks(void *userDatavp, int symboli);
 static        short                  _marpaESLIFGrammar_symbolOptionSetterInitb(void *userDatavp, int symboli, marpaWrapperGrammarSymbolOption_t *marpaWrapperGrammarSymbolOptionp);
@@ -1551,6 +1551,10 @@ static INLINE_QSORT int              _marpaESLIF_symbol_priority_sorti(const voi
 static inline int                    _marpaESLIF_symbol_priority_sort_inlinedi(marpaESLIF_symbol_t **p1, marpaESLIF_symbol_t **p2);
 static INLINE_QSORT int              _marpaESLIF_cleanup_sorti(const void *p1, const void *p2);
 static inline int                    _marpaESLIF_cleanup_sort_inlinedi(genericStackItem_t *p1, genericStackItem_t *p2);
+static INLINE_QSORT int              _marpaESLIF_grammar_progress_sorti(const void *p1, const void *p2);
+static inline int                    _marpaESLIF_grammar_progress_sort_inlinedi(grammar_progress_t *p1, grammar_progress_t *p2);
+static INLINE_QSORT int              _marpaESLIF_marpaWrapperRecognizerProgress_sorti(const void *p1, const void *p2);
+static inline int                    _marpaESLIF_marpaWrapperRecognizerProgress_sort_inlinedi(marpaWrapperRecognizerProgress_t *p1, marpaWrapperRecognizerProgress_t *p2);
 static inline unsigned long          _marpaESLIF_djb2_s(unsigned char *str, size_t lengthl);
 static inline int                    _marpaESLIF_inlined_ptrhashi(void *p);
 int                                  _marpaESLIF_ptrhashi(void *userDatavp, genericStackItemType_t itemType, void **pp);
@@ -1617,6 +1621,14 @@ static inline short                  _marpaESLIFSymbol_tryb(marpaESLIFSymbol_t *
 static inline short                  _marpaESLIFRecognizer_symbol_tryb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFSymbol_t *marpaESLIFSymbolp, short *matchbp);
 static inline short                 __marpaESLIFRecognizer_symbol_tryb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFSymbol_t *marpaESLIFSymbolp, short *matchbp);
 static        short                  _marpaESLIFRecognizerSymbolProxyImportb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, void *userDatavp, marpaESLIFValueResult_t *marpaESLIFValueResultp, short haveUndefb);
+static inline grammar_progress_t    *_marpaESLIF_grammar_progress_newp(marpaESLIF_t *marpaESLIFp);
+static inline grammar_progress_t    *_marpaESLIF_grammar_progress_clonep(marpaESLIF_t *marpaESLIFp, grammar_progress_t *grammar_progressp);
+static inline void                  *_marpaESLIF_grammar_progress_freev(grammar_progress_t *grammar_progressp);
+int                                  _marpaESLIF_grammar_progress_hash_callbacki(void *userDatavp, genericStackItemType_t itemType, void **pp);
+short                                _marpaESLIF_grammar_progress_cmp_callbackb(void *userDatavp, void **pp1, void **pp2);
+void                                *_marpaESLIF_grammar_progress_copy_callbackp(void *userDatavp, void **pp);
+void                                 _marpaESLIF_grammar_progress_free_callbackv(void *userDatavp, void **pp);
+static inline grammar_progress_t    *_marpaESLIF_marpaWrapperRecognizerProgress_to_grammar_progressp(marpaESLIF_t *marpaESLIFp, size_t nProgressl, marpaWrapperRecognizerProgress_t *progressp);
 
 /*****************************************************************************/
 static inline marpaESLIF_string_t *_marpaESLIF_string_newp(marpaESLIF_t *marpaESLIFp, char *encodingasciis, char *bytep, size_t bytel)
@@ -3281,7 +3293,7 @@ static inline marpaESLIF_grammar_t *_marpaESLIF_bootstrap_grammarp(marpaESLIFGra
   _marpaESLIF_meta_freev(metap);
   _marpaESLIF_rule_freev(rulep);
   _marpaESLIF_symbol_freev(symbolp);
-  _marpaESLIF_grammar_freev(grammarp);
+  _marpaESLIF_grammar_freev(marpaESLIFp, grammarp);
   grammarp = NULL;
 
  done:
@@ -5625,6 +5637,7 @@ static inline short _marpaESLIF_grammar_initb(marpaESLIF_t *marpaESLIFp, marpaES
   grammarp->allRulesArraypp                    = NULL;
   grammarp->expectedTerminalIdArrayp           = NULL;
   grammarp->expectedTerminalArraypp            = NULL;
+  grammarp->completionToNextProgressHashp      = NULL;
 
   grammarp->symbolStackp = &(grammarp->_symbolStack);
   GENERICSTACK_INIT(grammarp->symbolStackp);
@@ -5639,6 +5652,23 @@ static inline short _marpaESLIF_grammar_initb(marpaESLIF_t *marpaESLIFp, marpaES
   if (MARPAESLIF_UNLIKELY(GENERICSTACK_ERROR(grammarp->ruleStackp))) {
     MARPAESLIF_ERRORF(marpaESLIFp, "ruleStackp initialization failure, %s", strerror(errno));
     grammarp->ruleStackp = NULL;
+    goto err;
+  }
+
+  /* Initialize external lexeme hash */
+  grammarp->completionToNextProgressHashp = &(grammarp->_completionToNextProgressHash);
+  GENERICHASH_INIT_ALL(grammarp->completionToNextProgressHashp,
+                       _marpaESLIF_grammar_progress_hash_callbacki,
+                       _marpaESLIF_grammar_progress_cmp_callbackb,
+                       NULL, /* keyCopyFunctionp */
+                         NULL, /* keyFreeFunctionp */
+                       _marpaESLIF_grammar_progress_copy_callbackp,
+                       _marpaESLIF_grammar_progress_free_callbackv,
+                       MARPAESLIF_HASH_SIZE,
+                       0 /* wantedSubSize */);
+  if (MARPAESLIF_UNLIKELY(GENERICHASH_ERROR(grammarp->completionToNextProgressHashp))) {
+    MARPAESLIF_ERRORF(marpaESLIFp, "completionToNextProgressHashp init failure, %s", strerror(errno));
+    grammarp->completionToNextProgressHashp = NULL;
     goto err;
   }
 
@@ -5774,7 +5804,7 @@ static inline marpaESLIF_grammar_t *_marpaESLIF_grammar_newp(marpaESLIFGrammar_t
   goto done;
 
  err:
-  _marpaESLIF_grammar_freev(grammarp);
+  _marpaESLIF_grammar_freev(marpaESLIFp, grammarp);
   grammarp = NULL;
 
  done:
@@ -5809,7 +5839,7 @@ static inline void _marpaESLIF_grammar_bootstrap_freev(marpaESLIF_grammar_bootst
 }
 
 /*****************************************************************************/
-static inline void _marpaESLIF_grammar_freev(marpaESLIF_grammar_t *grammarp)
+static inline void _marpaESLIF_grammar_freev(marpaESLIF_t *marpaESLIFp, marpaESLIF_grammar_t *grammarp)
 /*****************************************************************************/
 {
   if (grammarp != NULL) {
@@ -5873,6 +5903,9 @@ static inline void _marpaESLIF_grammar_freev(marpaESLIF_grammar_t *grammarp)
     }
     if (grammarp->expectedTerminalArraypp != NULL) {
       free(grammarp->expectedTerminalArraypp);
+    }
+    if (grammarp->completionToNextProgressHashp != NULL) {
+      GENERICHASH_RESET(grammarp->completionToNextProgressHashp, marpaESLIFp);
     }
     free(grammarp);
   }
@@ -7051,7 +7084,7 @@ static inline marpaESLIF_t *_marpaESLIF_newp(marpaESLIFOption_t *marpaESLIFOptio
     goto err;
   }
   grammar2p = NULL;
-  _marpaESLIF_grammar_freev(grammarp);
+  _marpaESLIF_grammar_freev(marpaESLIFp, grammarp);
   grammarp = NULL;
 
   /* L0 */
@@ -7071,7 +7104,7 @@ static inline marpaESLIF_t *_marpaESLIF_newp(marpaESLIFOption_t *marpaESLIFOptio
     goto err;
   }
   grammar2p = NULL;
-  _marpaESLIF_grammar_freev(grammarp);
+  _marpaESLIF_grammar_freev(marpaESLIFp, grammarp);
   grammarp = NULL;
 
   /* Validate again the bootstrap grammar */
@@ -7109,7 +7142,7 @@ static inline marpaESLIF_t *_marpaESLIF_newp(marpaESLIFOption_t *marpaESLIFOptio
     genericLogger_logLevel_seti(marpaESLIFOptionp->genericLoggerp, genericLoggerLeveli);
   }
   
-  _marpaESLIF_grammar_freev(grammarp);
+  _marpaESLIF_grammar_freev(marpaESLIFp, grammarp);
 #ifndef MARPAESLIF_NTRACE
   if ((marpaESLIFp != NULL) && (genericLoggerp != NULL)) {
     int     ngrammari;
@@ -11766,7 +11799,7 @@ static inline short _marpaESLIFRecognizer_checkStartCompletionb(marpaESLIFRecogn
     goto err;
   }
 
-  /* We take advantage of get current progress to also get the prediction */
+  /* We take advantage of getting current progress to also get the prediction */
   atStartCompletionb = 0;
   if (marpaESLIFp->ZeroIntegerisZeroBytesb) {
     /* Use memset to reset isExpectedArraybp */
@@ -12123,6 +12156,8 @@ static inline short _marpaESLIFRecognizer_alternative_completeb(marpaESLIFRecogn
   int                               latestEarleySetIdi;
   GENERICSTACKITEMTYPE2TYPE_ARRAY   array;
   char                             *currentOffsetp;
+  marpaWrapperRecognizerProgress_t *progressp;
+  size_t                            nProgressl;
 
   MARPAESLIFRECOGNIZER_CALLSTACKCOUNTER_INC(marpaESLIFRecognizerp);
   MARPAESLIFRECOGNIZER_TRACE(marpaESLIFRecognizerp, funcs, "start");
@@ -12168,6 +12203,17 @@ static inline short _marpaESLIFRecognizer_alternative_completeb(marpaESLIFRecogn
     GENERICSTACK_SET_ARRAY(set2InputStackp, array, latestEarleySetIdi);
     if (MARPAESLIF_UNLIKELY(GENERICSTACK_ERROR(set2InputStackp))) {
       MARPAESLIF_ERRORF(marpaESLIFRecognizerp->marpaESLIFp, "set2InputStackp set failure, %s", strerror(errno));
+      goto err;
+    }
+  }
+
+  if (marpaESLIFRecognizerp->current_grammar_progressp == NULL) {
+    /* We want to get initial grammar current progress */
+    if (MARPAESLIF_UNLIKELY(! marpaWrapperRecognizer_progressb(marpaESLIFRecognizerp->marpaWrapperRecognizerp, 0, 0, &nProgressl, &progressp))) {
+      goto err;
+    }
+    marpaESLIFRecognizerp->current_grammar_progressp = _marpaESLIF_marpaWrapperRecognizerProgress_to_grammar_progressp(marpaESLIFRecognizerp->marpaESLIFp, nProgressl, progressp);
+    if (MARPAESLIF_UNLIKELY(marpaESLIFRecognizerp->current_grammar_progressp == NULL)) {
       goto err;
     }
   }
@@ -13584,13 +13630,13 @@ static inline marpaESLIFRecognizer_t *__marpaESLIFRecognizer_newp(marpaESLIF_t *
 /*****************************************************************************/
 /* For performance reasons, when fakeb is a false value, then please arrange your code to work with a false grammmarIsOnStackb value as well */
 {
-  static const char             *funcs                 = "__marpaESLIFRecognizer_newp";
-  marpaESLIFRecognizer_t        *marpaESLIFRecognizerp = NULL;
-  marpaWrapperRecognizerOption_t marpaWrapperRecognizerOption;
-  genericStack_t                *symbolStackp;
-  int                            symboli;
-  marpaESLIF_symbol_t           *symbolp;
-  short                          discardEventb;
+  static const char                *funcs                 = "__marpaESLIFRecognizer_newp";
+  marpaESLIFRecognizer_t           *marpaESLIFRecognizerp = NULL;
+  marpaWrapperRecognizerOption_t    marpaWrapperRecognizerOption;
+  genericStack_t                   *symbolStackp;
+  int                               symboli;
+  marpaESLIF_symbol_t             *symbolp;
+  short                             discardEventb;
 
   if (MARPAESLIF_UNLIKELY(grammarp == NULL)) {
     /* It is legal only in the fake mode, that is internal */
@@ -13709,7 +13755,7 @@ static inline marpaESLIFRecognizer_t *__marpaESLIFRecognizer_newp(marpaESLIF_t *
   marpaESLIFRecognizerp->marpaESLIFCalloutBlockp            = NULL;
   marpaESLIFRecognizerp->progressallocl                     = 0;
   marpaESLIFRecognizerp->progressp                          = NULL;
-  marpaESLIFRecognizerp->luaprecompiledp                    = NULL;    /* Lua script source precompiled */
+  marpaESLIFRecognizerp->luaprecompiledp                    = NULL; /* Lua script source precompiled */
   marpaESLIFRecognizerp->luaprecompiledl                    = 0;    /* Lua script source precompiled length in byte */
   marpaESLIFRecognizerp->getContextActionp                  = NULL;
   marpaESLIFRecognizerp->setContextActionp                  = NULL;
@@ -13717,6 +13763,7 @@ static inline marpaESLIFRecognizer_t *__marpaESLIFRecognizer_newp(marpaESLIF_t *
   marpaESLIFRecognizerp->marpaESLIFRecognizerSharedp        = NULL;
   marpaESLIFRecognizerp->last_discard_loopb                 = 0;
   marpaESLIFRecognizerp->genericLoggerp                     = NULL;
+  marpaESLIFRecognizerp->current_grammar_progressp          = NULL; /* Initialization is not needed unless there is a first complete, c.f. _marpaESLIFRecognizer_alternative_completeb */
 
   marpaESLIFRecognizerp->genericLoggerp = GENERICLOGGER_CUSTOM(_marpaESLIFRecognizer_loggerCallbackv, (void *) marpaESLIFRecognizerp, GENERICLOGGER_LOGLEVEL_TRACE);
   if (marpaESLIFRecognizerp->genericLoggerp == NULL) {
@@ -15221,7 +15268,7 @@ static inline void _marpaESLIFGrammar_freev(marpaESLIFGrammar_t *marpaESLIFGramm
 /*****************************************************************************/
 {
   if (marpaESLIFGrammarp != NULL) {
-    _marpaESLIF_grammarStack_freev(marpaESLIFGrammarp->grammarStackp);
+    _marpaESLIF_grammarStack_freev(marpaESLIFGrammarp->marpaESLIFp, marpaESLIFGrammarp->grammarStackp);
     _marpaESLIF_string_freev(marpaESLIFGrammarp->luadescp, 0 /* onStackb */);
     if (marpaESLIFGrammarp->luabytep != NULL) {
       free(marpaESLIFGrammarp->luabytep);
@@ -15261,14 +15308,14 @@ static inline void _marpaESLIF_grammarBootstrapStack_freev(genericStack_t *gramm
 }
 
 /*****************************************************************************/
-static inline void _marpaESLIF_grammarStack_freev(genericStack_t *grammarStackp)
+static inline void _marpaESLIF_grammarStack_freev(marpaESLIF_t *marpaESLIFp, genericStack_t *grammarStackp)
 /*****************************************************************************/
 {
   if (grammarStackp != NULL) {
     while (GENERICSTACK_USED(grammarStackp) > 0) {
       if (GENERICSTACK_IS_PTR(grammarStackp, GENERICSTACK_USED(grammarStackp) - 1)) {
         marpaESLIF_grammar_t *grammarp = (marpaESLIF_grammar_t *) GENERICSTACK_POP_PTR(grammarStackp);
-        _marpaESLIF_grammar_freev(grammarp);
+        _marpaESLIF_grammar_freev(marpaESLIFp, grammarp);
       } else {
         GENERICSTACK_USED(grammarStackp)--;
       }
@@ -21620,6 +21667,73 @@ static inline int _marpaESLIF_cleanup_sort_inlinedi(genericStackItem_t *p1, gene
 }
 
 /*****************************************************************************/
+static INLINE_QSORT int _marpaESLIF_grammar_progress_sorti(const void *p1, const void *p2)
+/*****************************************************************************/
+{
+  static const char *funcs = "_marpaESLIF_grammar_progress_sorti";
+  grammar_progress_t *grammar_progress_p1 = (grammar_progress_t *) p1;
+  grammar_progress_t *grammar_progress_p2 = (grammar_progress_t *) p2;
+  size_t progressl;
+
+  /* Note that when we generate a grammar_progress we guarantee that it is already sorted by rule and position */
+  if (grammar_progress_p1->nProgressl != grammar_progress_p2->nProgressl) {
+    return (grammar_progress_p1->nProgressl < grammar_progress_p2->nProgressl) ? -1 : 1;
+  } else {
+    for (progressl = 0; progressl < grammar_progress_p1->nProgressl; progressl++) {
+      if (grammar_progress_p1->progressp[progressl].rulei != grammar_progress_p2->progressp[progressl].rulei) {
+        return (grammar_progress_p1->progressp[progressl].rulei < grammar_progress_p2->progressp[progressl].rulei) ? -1 : 1;
+      }
+      if (grammar_progress_p1->progressp[progressl].positioni != grammar_progress_p2->progressp[progressl].positioni) {
+        return (grammar_progress_p1->progressp[progressl].positioni < grammar_progress_p2->progressp[progressl].positioni) ? -1 : 1;
+      }
+    }
+  }
+
+  return 0;
+}
+
+/*****************************************************************************/
+static inline int _marpaESLIF_grammar_progress_sort_inlinedi(grammar_progress_t *p1, grammar_progress_t *p2)
+/*****************************************************************************/
+{
+  /* The only thing of interest for inlined qsort is when one element is less than another */
+  return (_marpaESLIF_grammar_progress_sorti((const void *) p1, (const void *) p2)) < 0 ? 1 : 0;
+}
+
+/*****************************************************************************/
+static INLINE_QSORT int _marpaESLIF_marpaWrapperRecognizerProgress_sorti(const void *p1, const void *p2)
+/*****************************************************************************/
+{
+  static const char *funcs = "_marpaESLIF_marpaWrapperRecognizerProgress_sorti";
+  marpaWrapperRecognizerProgress_t *progress_p1 = (marpaWrapperRecognizerProgress_t *) p1;
+  marpaWrapperRecognizerProgress_t *progress_p2 = (marpaWrapperRecognizerProgress_t *) p2;
+
+  if (progress_p1->rulei < progress_p2->rulei) {
+    return -1;
+  }
+  if (progress_p1->rulei > progress_p2->rulei) {
+    return 1;
+  }
+
+  if (progress_p1->positioni < progress_p2->positioni) {
+    return -1;
+  }
+  if (progress_p1->positioni > progress_p2->positioni) {
+    return 1;
+  }
+
+  return 0;
+}
+
+/*****************************************************************************/
+static inline int _marpaESLIF_marpaWrapperRecognizerProgress_sort_inlinedi(marpaWrapperRecognizerProgress_t *p1, marpaWrapperRecognizerProgress_t *p2)
+/*****************************************************************************/
+{
+  /* The only thing of interest for inlined qsort is when one element is less than another */
+  return (_marpaESLIF_marpaWrapperRecognizerProgress_sorti((const void *) p1, (const void *) p2)) < 0 ? 1 : 0;
+}
+
+/*****************************************************************************/
 short marpaESLIFRecognizer_last_completedb(marpaESLIFRecognizer_t *marpaESLIFRecognizerp, char *names, char **offsetpp, size_t *lengthlp)
 /*****************************************************************************/
 {
@@ -22361,6 +22475,8 @@ static inline void _marpaESLIFRecognizer_freev(marpaESLIFRecognizer_t *marpaESLI
   _marpaESLIF_action_freev(marpaESLIFRecognizerp->popContextActionp);
 
   _marpaESLIF_lua_recognizer_freev(marpaESLIFRecognizerp);
+
+  _marpaESLIF_grammar_progress_freev(marpaESLIFRecognizerp->current_grammar_progressp);
 
   GENERICLOGGER_FREE(marpaESLIFRecognizerp->genericLoggerp);
 
@@ -25484,6 +25600,155 @@ static marpaESLIF_string_t *_marpaESLIF_terminal_add_substitution_desc_to_termin
     free(asciis);
   }
   return rcp;
+}
+
+/*****************************************************************************/
+static inline grammar_progress_t *_marpaESLIF_grammar_progress_newp(marpaESLIF_t *marpaESLIFp)
+/*****************************************************************************/
+{
+  static const char  *funcs = "_marpaESLIF_grammar_progress_newp";
+  grammar_progress_t *grammar_progressp;
+
+  grammar_progressp = (grammar_progress_t *) malloc(sizeof(grammar_progress_t));
+  if (MARPAESLIF_UNLIKELY(grammar_progressp == NULL)) {
+    MARPAESLIF_ERRORF(marpaESLIFp, "malloc failure, %s", strerror(errno));
+    goto err;
+  }
+
+  grammar_progressp->marpaESLIFp = marpaESLIFp;
+  grammar_progressp->nProgressl  = 0;
+  grammar_progressp->progressp   = NULL;
+  goto done;
+
+ err:
+  _marpaESLIF_grammar_progress_freev(grammar_progressp);
+  grammar_progressp = NULL;
+
+ done:
+  return grammar_progressp;
+}
+
+/*****************************************************************************/
+static inline grammar_progress_t *_marpaESLIF_grammar_progress_clonep(marpaESLIF_t *marpaESLIFp, grammar_progress_t *grammar_progressp)
+/*****************************************************************************/
+{
+  static const char  *funcs = "_marpaESLIF_grammar_progress_clonep";
+  grammar_progress_t *clonep;
+  size_t              grammar_progressl;
+
+  if (MARPAESLIF_UNLIKELY(grammar_progressp == NULL)) {
+    MARPAESLIF_ERROR(marpaESLIFp, "grammar_progressp is NULL");
+    goto err;
+  }
+
+  clonep = _marpaESLIF_grammar_progress_newp(marpaESLIFp);
+  if (MARPAESLIF_UNLIKELY(clonep == NULL)) {
+    goto err;
+  }
+
+  clonep->nProgressl = grammar_progressp->nProgressl;
+  if (grammar_progressp->progressp != NULL) {
+    grammar_progressl = grammar_progressp->nProgressl * sizeof(marpaWrapperRecognizerProgress_t);
+    clonep->progressp  = (marpaWrapperRecognizerProgress_t *) malloc(grammar_progressl);
+    if (MARPAESLIF_UNLIKELY(clonep->progressp == NULL)) {
+      MARPAESLIF_ERRORF(marpaESLIFp, "malloc failure, %s", strerror(errno));
+      goto err;
+    }
+    memcpy(clonep->progressp, grammar_progressp->progressp, grammar_progressl);
+  }
+
+  goto done;
+
+ err:
+  _marpaESLIF_grammar_progress_freev(clonep);
+  clonep = NULL;
+
+ done:
+  return clonep;
+}
+
+/*****************************************************************************/
+static inline void *_marpaESLIF_grammar_progress_freev(grammar_progress_t *grammar_progressp)
+/*****************************************************************************/
+{
+  if (grammar_progressp != NULL) {
+    if (grammar_progressp->progressp != NULL) {
+      free(grammar_progressp->progressp);
+    }
+    free(grammar_progressp);
+  }
+}
+
+/****************************************************************************/
+int _marpaESLIF_grammar_progress_hash_callbacki(void *userDatavp, genericStackItemType_t itemType, void **pp)
+/****************************************************************************/
+{
+  int    hashi = 0;
+  size_t progressl;
+  
+  /* We know what we are doing, i.e. that *pp is grammar_progress pointer */
+  grammar_progress_t *p = * (grammar_progress_t **) pp;
+
+  /* We do not really mind if the int overflows. */
+  for (progressl = 0; progressl < p->nProgressl; progressl++) {
+    /* We use (rulei+positioni) for every item */
+    hashi += p->progressp[progressl].rulei;
+    hashi += p->progressp[progressl].positioni;
+  }
+
+  return hashi;
+}
+
+/*****************************************************************************/
+short _marpaESLIF_grammar_progress_cmp_callbackb(void *userDatavp, void **pp1, void **pp2)
+/*****************************************************************************/
+{
+  /* We know what we are doing, i.e. that *pp is grammar_progress pointer */
+  grammar_progress_t *p1 = * (grammar_progress_t **) pp1;
+  grammar_progress_t *p2 = * (grammar_progress_t **) pp2;
+
+  return _marpaESLIF_grammar_progress_sort_inlinedi(p1, p2);
+}
+
+/*****************************************************************************/
+void *_marpaESLIF_grammar_progress_copy_callbackp(void *userDatavp, void **pp)
+/*****************************************************************************/
+{
+  /* We know what we are doing, i.e. that *pp is grammar_progress pointer */
+  grammar_progress_t *p = * (grammar_progress_t **) pp;
+
+  return _marpaESLIF_grammar_progress_clonep(p->marpaESLIFp, p);
+}
+
+/*****************************************************************************/
+void _marpaESLIF_grammar_progress_free_callbackv(void *userDatavp, void **pp)
+/*****************************************************************************/
+{
+  /* We know what we are doing, i.e. that *pp is grammar_progress pointer */
+  grammar_progress_t *p = * (grammar_progress_t **) pp;
+
+  _marpaESLIF_grammar_progress_freev(p);
+}
+
+/*****************************************************************************/
+static inline grammar_progress_t *_marpaESLIF_marpaWrapperRecognizerProgress_to_grammar_progressp(marpaESLIF_t *marpaESLIFp, size_t nProgressl, marpaWrapperRecognizerProgress_t *progressp)
+/*****************************************************************************/
+{
+  static const char  *funcs             = "_marpaESLIF_marpaWrapperRecognizerProgress_to_grammar_progressp";
+  grammar_progress_t *grammar_progressp = NULL;
+  grammar_progress_t  grammar_progress;
+
+  grammar_progress.marpaESLIFp = marpaESLIFp;
+  grammar_progress.nProgressl  = nProgressl;
+  grammar_progress.progressp   = progressp;
+
+  grammar_progressp = _marpaESLIF_grammar_progress_clonep(marpaESLIFp, &grammar_progress);
+  if (grammar_progressp != NULL) {
+    /* Note that marpaWrapper guarantee that progressp is a contiguous array */
+    MARPAESLIF_QSORT(marpaWrapperRecognizerProgress_t, grammar_progressp->progressp, grammar_progressp->nProgressl, _marpaESLIF_marpaWrapperRecognizerProgress_sort_inlinedi, _marpaESLIF_marpaWrapperRecognizerProgress_sorti);
+  }
+
+  return grammar_progressp;
 }
 
 #include "bootstrap.c"
