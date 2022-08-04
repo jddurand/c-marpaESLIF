@@ -400,8 +400,9 @@ struct marpaESLIF_grammar {
   marpaESLIF_rule_t    **allRulesArraypp;                    /* For fast access to rules, they are all flatened here */
   int                   *expectedTerminalIdArrayp;           /* Total list of expected symbol ids sorted by priority */
   marpaESLIF_symbol_t  **expectedTerminalArraypp;            /* Total list of expected terminals sorted by priority */
-  genericHash_t         _completionToNextProgressHash;       /* Cache for prediction of an alternative completion to next grammar progress */
-  genericHash_t        *completionToNextProgressHashp;       /* Cache for prediction of an alternative completion to next grammar progress */
+  genericHash_t         _progressToNextProgressHash;         /* Cache for prediction of an alternative completion to next grammar progress */
+  genericHash_t        *progressToNextProgressHashp;         /* Cache for prediction of an alternative completion to next grammar progress */
+  grammar_progress_t    *first_grammar_progressp;            /* First grammar progress */
 };
 
 enum marpaESLIF_json_type {
@@ -716,8 +717,8 @@ struct marpaESLIFRecognizer {
   /* Proxy generic logger */
   genericLogger_t                *genericLoggerp;
 
-  /* Current progress */
-  grammar_progress_t             *current_grammar_progressp;
+  grammar_progress_t             *current_grammar_progressp; /* Current grammar progress. Take care this is a shallow pointer. All grammar progress pointers in grammarp. */
+  grammar_progress_t             *next_grammar_progressp; /* Next grammar progress. Same remark. */
 };
 
 struct marpaESLIF_symbol_data {
@@ -861,7 +862,6 @@ struct marpaESLIFGrammar_bootstrap {
 };
 
 struct grammar_progress {
-  marpaESLIF_t                     *marpaESLIFp;
   size_t                            nProgressl;      /* Number of elements */
   marpaWrapperRecognizerProgress_t *progressp;       /* Elements */
 };
