@@ -25693,6 +25693,8 @@ static inline int _marpaESLIF_grammar_progress_hashi(grammar_progress_t *grammar
     hashi += grammar_progressp->progressp[progressl].positioni;
   }
 
+  hashi = hashi % MARPAESLIF_HASH_SIZE;
+
   return hashi;
 }
 						     
@@ -25712,7 +25714,7 @@ short _marpaESLIF_grammar_progress_cmp_callbackb(void *userDatavp, void **pp1, v
   grammar_progress_t *p1 = * (grammar_progress_t **) pp1;
   grammar_progress_t *p2 = * (grammar_progress_t **) pp2;
 
-  return _marpaESLIF_grammar_progress_sort_inlinedi(p1, p2);
+  return (_marpaESLIF_grammar_progress_sort_inlinedi(p1, p2) == 0) ? 1 : 0;
 }
 
 /*****************************************************************************/
@@ -25802,12 +25804,6 @@ static inline grammar_progress_t *_marpaESLIFRecognizer_next_grammar_progressp(m
 			  &next_grammar_progressp,
 			  findResultb,
 			  hashi);
-#ifndef MARPAESLIF_NTRACE
-    if (findResultb && (next_grammar_progressp == NULL)) {
-      MARPAESLIF_ERROR(marpaESLIFp, "next_grammar_progressp is NULL");
-      goto err;
-    }
-#endif
   if (! findResultb) {
     next_grammar_progressp = _marpaESLIF_current_grammar_progressp(marpaESLIFp, marpaESLIFRecognizerp->marpaWrapperRecognizerp);
     if (MARPAESLIF_UNLIKELY(next_grammar_progressp == NULL)) {
@@ -25829,6 +25825,7 @@ static inline grammar_progress_t *_marpaESLIFRecognizer_next_grammar_progressp(m
     findResultb = 0;
     _marpaESLIF_grammar_progress_freev(next_grammar_progressp);
     next_grammar_progressp = NULL;
+    _genericHash_FIND_REMOVE_BY_IND(progressToNextProgressHashp, NULL, current_grammar_progressp, &next_grammar_progressp, hashi);
     GENERICHASH_FIND_BY_IND(progressToNextProgressHashp,
 			    marpaESLIFp, /* userDatavp */
 			    PTR,
@@ -25850,8 +25847,8 @@ static inline grammar_progress_t *_marpaESLIFRecognizer_next_grammar_progressp(m
   } else {
     grammar_progress_t *verif_grammar_progressp = _marpaESLIF_current_grammar_progressp(marpaESLIFp, marpaESLIFRecognizerp->marpaWrapperRecognizerp);
     if (verif_grammar_progressp != NULL) {
-      if (! _marpaESLIF_grammar_progress_cmp_callbackb(NULL, &verif_grammar_progressp, &next_grammar_progressp)) {
-	fprintf(stderr, "OUPS\n");
+      if (_marpaESLIF_grammar_progress_sort_inlinedi(verif_grammar_progressp, next_grammar_progressp) != 0) {
+	abort(); /* JDD */
       }
     }
   }
