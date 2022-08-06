@@ -22,7 +22,7 @@ sub _EQ {
 
         my $definedData = defined($data);
         my $_definedData = defined($args_ref->[1]);
-    
+
         return
             ($eslif == $args_ref->[0])
             &&

@@ -15,7 +15,7 @@ sub _EQ {
 
         my $definedStrict = defined($strict);
         my $_definedStrict = defined($args_ref->[1]);
-    
+
         return
             ($eslif == $args_ref->[0])
             &&

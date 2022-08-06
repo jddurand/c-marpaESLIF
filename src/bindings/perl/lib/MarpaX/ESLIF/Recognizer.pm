@@ -73,7 +73,7 @@ Returns a recognizer instance that is sharing the interface of C<$eslifRecognize
 =cut
 
 sub _allocate_newFrom {
-    my ($self, $eslifGrammar) = @_;  
+    my ($self, $eslifGrammar) = @_;
 
     return $self->allocate_newFrom($eslifGrammar)
 }

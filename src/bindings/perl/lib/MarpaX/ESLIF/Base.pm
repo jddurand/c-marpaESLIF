@@ -35,7 +35,7 @@ All L<MarpaX::ESLIF> object inherits from this class, that takes care of clone a
 # - MULTITONS_FOR_GLOBAL_DESTRUCTION when in global destruction
 #
 # CLONE() is completely reaffecting the keys of both hashes.
-# - 
+# -
 #
 my %MULTITONS;
 my %MULTITONS_FOR_GLOBAL_DESTRUCTION;
