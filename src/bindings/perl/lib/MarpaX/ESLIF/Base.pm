@@ -44,7 +44,7 @@ sub _find {
     my ($class, $eq, @arguments) = @_;
 
     foreach (grep { $_->{class} eq $class } values %MULTITONS) {
-	return $_ if $_->$eq($_->{arguments}, @arguments)
+        return $_ if $_->$eq($_->{arguments}, @arguments)
     }
 
     return
