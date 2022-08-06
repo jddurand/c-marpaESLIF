@@ -17,7 +17,7 @@ marpaESLIF - Extended Marpa's Scanless Interface
    *
   */
   :discard ::= /[\s]+/
-  
+
   exp ::=
       /[\d]+/
       |    "("  exp ")"    assoc => group action => ::copy[1]
@@ -119,7 +119,7 @@ them (we say that we I<complete> the set of alternatives), and
 on to the next location.
 
 =back
-    
+
 We call this interface "scanless" because you do not have to write your own lexer.
 The grammars define what is expected, and recognizer determines all the alternatives for you,
 commits them, and moves on in the input stream.
