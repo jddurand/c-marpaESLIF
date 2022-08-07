@@ -104,6 +104,8 @@ sub _EQ {
 
 # VERSION
 
+=encoding utf8
+
 =head1 DESCRIPTION
 
 MarpaX::ESLIF::Symbol allows to create external symbols on demand
@@ -229,8 +231,6 @@ It must follow the substitution specification of the I<Terminals> section of L<M
   f                                    PCRE2_SUBSTITUTE_UNSET_EMPTY
   ----------------------------------------------------------------
 
-=back
-
 =item C<grammar>
 
 Value is an external grammar. Required for "meta" type.
@@ -238,6 +238,8 @@ Value is an external grammar. Required for "meta" type.
 =item C<symbol>
 
 Value is a lexeme in the external grammar. Required for "meta" type.
+
+=back
 
 =head2 $symbol->try($eslif, $scalar)
 
