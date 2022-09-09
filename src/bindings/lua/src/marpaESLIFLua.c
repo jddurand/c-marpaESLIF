@@ -9611,9 +9611,9 @@ static inline short marpaESLIFLua_pairsb(int *rcip, lua_State *L, int idx, int *
     MARPAESLIFLUA_REF(L, iteratori);                                                                /* Stack: ..., [+1] iterator,    [+2] statevariable, [+3] initialvalue */
     *iteratorip = iteratori;
   } else {                                                                                          /* Stack: ..., [+1] key */
-    MARPAESLIFLUA_DEREF(1 /* checkstackb */, L, *iteratorip);                                       /* Stack: ..., [+1] key,         [+2] iterator */
+    MARPAESLIFLUA_DEREF(0 /* checkstackb */, L, *iteratorip);                                       /* Stack: ..., [+1] key,         [+2] iterator */
     if (! marpaESLIFLua_lua_insert(0 /* checkstackb */, L, -2)) goto err;                           /* Stack: ..., [+1] iterator,    [+2] key */
-    MARPAESLIFLUA_DEREF(1 /* checkstackb */, L, *statevariableip);                                  /* Stack: ..., [+1] iterator,    [+2] key,           [+3] statevariable */
+    MARPAESLIFLUA_DEREF(0 /* checkstackb */, L, *statevariableip);                                  /* Stack: ..., [+1] iterator,    [+2] key,           [+3] statevariable */
     if (! marpaESLIFLua_lua_insert(0 /* checkstackb */, L, -2)) goto err;                           /* Stack: ..., [+1] iterator,    [+2] statevariable, [+3] key */
   }
 
