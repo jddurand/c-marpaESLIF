@@ -1,4 +1,4 @@
-name: Unix-like
+name: Ubuntu
 
 on:
   push:
@@ -15,10 +15,9 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macos-latest]
+        os: [ubuntu-latest]
         include:
           - os: ubuntu-latest
-          - os: macos-latest
     runs-on: ${{ matrix.os }}
 
     steps:
