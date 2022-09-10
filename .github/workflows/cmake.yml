@@ -1,5 +1,9 @@
 name: CMake
 
+defaults:
+  run:
+    shell: bash
+
 on:
   push:
     branches: [ master ]
@@ -25,7 +29,9 @@ jobs:
     steps:
     - uses: actions/checkout@v2
 
+    # Do perl stuff only on ubuntu-latest : requires apt-get
     - name: Perl pre-requesites
+      if: matrix.os == "ubuntu-latest"
       run: |
         sudo apt-get install cpanminus
         sudo apt-get install libdist-zilla-perl
