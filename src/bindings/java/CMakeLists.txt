@@ -94,7 +94,7 @@ ADD_DEPENDENCIES(marpaESLIFJavaTest_jar marpaESLIFJava_jar)
 # -----
 # Check
 # -----
-# IF (${CMAKE_COMPILER_IS_GNUCC})
+IF (${CMAKE_COMPILER_IS_GNUCC})
   #
   # Works only when compiler support rdynamic-path, I am lazy, I assume this means GNUCC compiler family
   #
@@ -114,4 +114,4 @@ ADD_DEPENDENCIES(marpaESLIFJavaTest_jar marpaESLIFJava_jar)
     COMMAND ${CMAKE_COMMAND} -E env ${Java_JAVA_EXECUTABLE} "-Djava.library.path=." "-cp" "${_absolute_marpaESLIFJava_jar_path}${SEP}${_absolute_marpaESLIFJavaTest_jar_path}" "org.parser.marpa.AppParse"
     WORKING_DIRECTORY ${_absolute_library_output_path})
   ADD_DEPENDENCIES(check marpaESLIFJavaTest_jar)
-# ENDIF ()
+ENDIF ()
