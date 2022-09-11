@@ -338,15 +338,30 @@ int main() {
       (marpaESLIFRecognizerOption.readerCallbackp          != marpaESLIFRecognizerOptionp->readerCallbackp) ||
       (marpaESLIFRecognizerOption.disableThresholdb        != marpaESLIFRecognizerOptionp->disableThresholdb) ||
       (marpaESLIFRecognizerOption.exhaustedb               != marpaESLIFRecognizerOptionp->exhaustedb) ||
-      (marpaESLIFRecognizerOption.newlineb                 != marpaESLIFRecognizerOptionp->newlineb) ||
+      ((marpaESLIFRecognizerOption.newlineb != 0)          || (marpaESLIFRecognizerOptionp->newlineb != 1)) || /* Take care to this test */
       (marpaESLIFRecognizerOption.trackb                   != marpaESLIFRecognizerOptionp->trackb) ||
       (marpaESLIFRecognizerOption.bufsizl                  != marpaESLIFRecognizerOptionp->bufsizl) ||
       (marpaESLIFRecognizerOption.buftriggerperci          != marpaESLIFRecognizerOptionp->buftriggerperci) ||
       (marpaESLIFRecognizerOption.bufaddperci              != marpaESLIFRecognizerOptionp->bufaddperci) ||
       (marpaESLIFRecognizerOption.ifActionResolverp        != marpaESLIFRecognizerOptionp->ifActionResolverp) ||
+      (marpaESLIFRecognizerOption.eventActionResolverp     != marpaESLIFRecognizerOptionp->eventActionResolverp) ||
+      (marpaESLIFRecognizerOption.regexActionResolverp     != marpaESLIFRecognizerOptionp->regexActionResolverp) ||
       (marpaESLIFRecognizerOption.generatorActionResolverp != marpaESLIFRecognizerOptionp->generatorActionResolverp)
       ) {
     GENERICLOGGER_ERROR(marpaESLIFOption.genericLoggerp, "marpaESLIFRecognizer_optionp does have the correct content");
+    GENERICLOGGER_ERRORF(marpaESLIFOption.genericLoggerp, "userDatavp               was %p, is %p", marpaESLIFRecognizerOption.userDatavp, marpaESLIFRecognizerOptionp->userDatavp);
+    GENERICLOGGER_ERRORF(marpaESLIFOption.genericLoggerp, "readerCallbackp          was %p, is %p", marpaESLIFRecognizerOption.readerCallbackp, marpaESLIFRecognizerOptionp->readerCallbackp);
+    GENERICLOGGER_ERRORF(marpaESLIFOption.genericLoggerp, "disableThresholdb        was %d, is %d", (int) marpaESLIFRecognizerOption.disableThresholdb, (int) marpaESLIFRecognizerOptionp->disableThresholdb);
+    GENERICLOGGER_ERRORF(marpaESLIFOption.genericLoggerp, "exhaustedb               was %d, is %d", (int) marpaESLIFRecognizerOption.exhaustedb, (int) marpaESLIFRecognizerOptionp->exhaustedb);
+    GENERICLOGGER_ERRORF(marpaESLIFOption.genericLoggerp, "newlineb                 was %d, is %d (take care: must be 0 initially, 1 finally and this is expected)", (int) marpaESLIFRecognizerOption.newlineb, (int) marpaESLIFRecognizerOptionp->newlineb);
+    GENERICLOGGER_ERRORF(marpaESLIFOption.genericLoggerp, "trackb                   was %d, is %d", (int) marpaESLIFRecognizerOption.trackb, (int) marpaESLIFRecognizerOptionp->trackb);
+    GENERICLOGGER_ERRORF(marpaESLIFOption.genericLoggerp, "bufsizl                  was %ld, is %ld", (unsigned long) marpaESLIFRecognizerOption.bufsizl, (unsigned long) marpaESLIFRecognizerOptionp->bufsizl);
+    GENERICLOGGER_ERRORF(marpaESLIFOption.genericLoggerp, "buftriggerperci          was %d, is %d", marpaESLIFRecognizerOption.buftriggerperci, marpaESLIFRecognizerOptionp->buftriggerperci);
+    GENERICLOGGER_ERRORF(marpaESLIFOption.genericLoggerp, "bufaddperci              was %d, is %d", marpaESLIFRecognizerOption.bufaddperci, marpaESLIFRecognizerOptionp->bufaddperci);
+    GENERICLOGGER_ERRORF(marpaESLIFOption.genericLoggerp, "ifActionResolverp        was %p, is %p", marpaESLIFRecognizerOption.ifActionResolverp, marpaESLIFRecognizerOptionp->ifActionResolverp);
+    GENERICLOGGER_ERRORF(marpaESLIFOption.genericLoggerp, "eventActionResolverp     was %p, is %p", marpaESLIFRecognizerOption.eventActionResolverp, marpaESLIFRecognizerOptionp->eventActionResolverp);
+    GENERICLOGGER_ERRORF(marpaESLIFOption.genericLoggerp, "regexActionResolverp     was %p, is %p", marpaESLIFRecognizerOption.regexActionResolverp, marpaESLIFRecognizerOptionp->regexActionResolverp);
+    GENERICLOGGER_ERRORF(marpaESLIFOption.genericLoggerp, "generatorActionResolverp was %p, is %p", marpaESLIFRecognizerOption.generatorActionResolverp, marpaESLIFRecognizerOptionp->generatorActionResolverp);
     goto err;
   }
 
