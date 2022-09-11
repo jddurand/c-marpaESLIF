@@ -23,13 +23,12 @@ jobs:
     steps:
     - name: Checkout
       uses: actions/checkout@v3
-      with:
-        fetch-depth: 2
-    - run: git checkout HEAD^
 
     # Do perl stuff only on ubuntu-latest : requires apt-get
-    - name: Perl pre-requesites
+    - name: Perl cpanm setup
       uses: perl-actions/install-with-cpanm@v1
+
+    - name: Perl pre-requesites
       run: |
         sudo cpanm --notest Dist::Zilla
         sudo cpanm --notest Path::Tiny
