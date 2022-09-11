@@ -24,49 +24,18 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v3
 
-    # Perl setup
-    - name: install cpanm and files from cpanfile
-      uses: perl-actions/install-with-cpanm@v1
-      with:
-        tests: false
-        install: |
-          Dist::Zilla
-          Path::Tiny
-          Moo
-          Moose
-          MooseX::Role::Parameterized
-          Archive::Tar
-          Class::Tiny
-          Config::AutoConf::INI
-          ExtUtils::CBuilder
-          ExtUtils::CppGuess
-          ExtUtils::MakeMaker
-          File::Basename
-          File::chdir
-          File::Copy
-          File::Copy::Recursive
-          File::Find
-          File::Path
-          File::Spec
-          File::Temp
-          IPC::Open3
-          IPC::Run Params::Validate
-          Perl::OSType
-          Role::Tiny
-          Scalar::Util
-          Test::More
-          Test::More::UTF8
-          Log::Log4perl
-          Log::Any
-          Log::Any::Adapter
-          Log::Any::Adapter::Log4perl
-          Test::EOL
-          Test::Kwalitee
-          Test::NoTabs
-          Test::Pod::Coverage
-          namespace::clean
-          JSON::MaybeXS
-          Dist::Zilla::PluginBundle::RJBS
+    - name: Set up perl
+      uses: shogo82148/actions-setup-perl@v1
+
+    # Do perl stuff only on ubuntu-latest : requires apt-get
+    - name: Perl pre-requesites
+      run: |
+        sudo cpanm --notest Dist::Zilla
+        sudo cpanm --notest Path::Tiny
+        sudo cpanm --notest Moo Moose MooseX::Role::Parameterized
+        sudo cpanm --notest Archive::Tar Class::Tiny Config::AutoConf::INI ExtUtils::CBuilder ExtUtils::CppGuess ExtUtils::MakeMaker File::Basename File::chdir File::Copy File::Copy::Recursive File::Find File::Path File::Spec File::Temp IPC::Open3 IPC::Run Params::Validate Perl::OSType Role::Tiny Scalar::Util Test::More Test::More::UTF8 Log::Log4perl Log::Any Log::Any::Adapter Log::Any::Adapter::Log4perl Test::EOL Test::Kwalitee Test::NoTabs Test::Pod::Coverage namespace::clean JSON::MaybeXS
+        sudo cpanm --notest Dist::Zilla::PluginBundle::RJBS
+        pushd src/bindings/perl && dzil authordeps --missing | xargs sudo cpanm --notest && popd
 
     - name: Configure
       run: cmake -Wno-dev -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DTCONV_USE_ICU=NO -G "Unix Makefiles" .
