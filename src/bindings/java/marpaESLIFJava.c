@@ -7142,7 +7142,7 @@ static short marpaESLIFJava_stack_setb(JNIEnv *envp, marpaESLIFValue_t *marpaESL
               if (marpaESLIFValueResultp->u.a.p == NULL) {
                 RAISEEXCEPTIONF(envp, "malloc failure, %s", strerror(errno));
               }
-              (*envp)->GetByteArrayRegion(envp, objectp, 0, bytel, marpaESLIFValueResultp->u.a.p);
+              (*envp)->GetByteArrayRegion(envp, objectp, 0, bytel, (jbyte *) marpaESLIFValueResultp->u.a.p);
             } else { /* a char is not 8 bits on this system */
               bytep = (jbyte *) malloc(bytel * sizeof(jbyte));
               if (bytep == NULL) {
@@ -7751,7 +7751,7 @@ JNIEXPORT void JNICALL Java_org_parser_marpa_ESLIFSymbol_jniNew(JNIEnv *envp, jo
     }
     (*envp)->GetByteArrayRegion(envp, substitutionUtf8byteArrayp, 0, substitutionUtf8lengthl, substitutionUtf8bytep);
 
-    marpaESLIFSubstitutionString.bytep          = substitutionUtf8bytep;
+    marpaESLIFSubstitutionString.bytep          = (char *) substitutionUtf8bytep;
     marpaESLIFSubstitutionString.bytel          = substitutionUtf8lengthl;
     marpaESLIFSubstitutionString.encodingasciis = "UTF-8";
     marpaESLIFSubstitutionString.asciis         = NULL;
@@ -7765,7 +7765,7 @@ JNIEXPORT void JNICALL Java_org_parser_marpa_ESLIFSymbol_jniNew(JNIEnv *envp, jo
   }
 
   /* Create C object */
-  marpaESLIFString.bytep          = utf8bytep;
+  marpaESLIFString.bytep          = (char *) utf8bytep;
   marpaESLIFString.bytel          = utf8lengthl;
   marpaESLIFString.encodingasciis = "UTF-8";
   marpaESLIFString.asciis         = NULL;
