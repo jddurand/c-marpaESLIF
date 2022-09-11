@@ -21,11 +21,15 @@ jobs:
     runs-on: ${{ matrix.os }}
 
     steps:
-    - uses: actions/checkout@v2
-      uses: perl-actions/install-with-cpanm@v1
+    - name: Checkout
+      uses: actions/checkout@v3
+      with:
+        fetch-depth: 2
+    - run: git checkout HEAD^
 
     # Do perl stuff only on ubuntu-latest : requires apt-get
     - name: Perl pre-requesites
+      uses: perl-actions/install-with-cpanm@v1
       run: |
         sudo cpanm --notest Dist::Zilla
         sudo cpanm --notest Path::Tiny
