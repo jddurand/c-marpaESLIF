@@ -334,17 +334,17 @@ int main() {
   if (marpaESLIFRecognizerOptionp == NULL) {
     goto err;
   }
-  if ((marpaESLIFRecognizerOption.userDatavp               != marpaESLIFRecognizerOption.userDatavp) ||
-      (marpaESLIFRecognizerOption.readerCallbackp          != marpaESLIFRecognizerOption.readerCallbackp) ||
-      (marpaESLIFRecognizerOption.disableThresholdb        != marpaESLIFRecognizerOption.disableThresholdb) ||
-      (marpaESLIFRecognizerOption.exhaustedb               != marpaESLIFRecognizerOption.exhaustedb) ||
-      (marpaESLIFRecognizerOption.newlineb                 != marpaESLIFRecognizerOption.newlineb) ||
-      (marpaESLIFRecognizerOption.trackb                   != marpaESLIFRecognizerOption.trackb) ||
-      (marpaESLIFRecognizerOption.bufsizl                  != marpaESLIFRecognizerOption.bufsizl) ||
-      (marpaESLIFRecognizerOption.buftriggerperci          != marpaESLIFRecognizerOption.buftriggerperci) ||
-      (marpaESLIFRecognizerOption.bufaddperci              != marpaESLIFRecognizerOption.bufaddperci) ||
-      (marpaESLIFRecognizerOption.ifActionResolverp        != marpaESLIFRecognizerOption.ifActionResolverp) ||
-      (marpaESLIFRecognizerOption.generatorActionResolverp != marpaESLIFRecognizerOption.generatorActionResolverp)
+  if ((marpaESLIFRecognizerOption.userDatavp               != marpaESLIFRecognizerOptionp->userDatavp) ||
+      (marpaESLIFRecognizerOption.readerCallbackp          != marpaESLIFRecognizerOptionp->readerCallbackp) ||
+      (marpaESLIFRecognizerOption.disableThresholdb        != marpaESLIFRecognizerOptionp->disableThresholdb) ||
+      (marpaESLIFRecognizerOption.exhaustedb               != marpaESLIFRecognizerOptionp->exhaustedb) ||
+      (marpaESLIFRecognizerOption.newlineb                 != marpaESLIFRecognizerOptionp->newlineb) ||
+      (marpaESLIFRecognizerOption.trackb                   != marpaESLIFRecognizerOptionp->trackb) ||
+      (marpaESLIFRecognizerOption.bufsizl                  != marpaESLIFRecognizerOptionp->bufsizl) ||
+      (marpaESLIFRecognizerOption.buftriggerperci          != marpaESLIFRecognizerOptionp->buftriggerperci) ||
+      (marpaESLIFRecognizerOption.bufaddperci              != marpaESLIFRecognizerOptionp->bufaddperci) ||
+      (marpaESLIFRecognizerOption.ifActionResolverp        != marpaESLIFRecognizerOptionp->ifActionResolverp) ||
+      (marpaESLIFRecognizerOption.generatorActionResolverp != marpaESLIFRecognizerOptionp->generatorActionResolverp)
       ) {
     GENERICLOGGER_ERROR(marpaESLIFOption.genericLoggerp, "marpaESLIFRecognizer_optionp does have the correct content");
     goto err;
