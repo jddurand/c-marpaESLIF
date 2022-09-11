@@ -27,7 +27,7 @@ jobs:
     # Do perl stuff only on ubuntu-latest : requires apt-get
     - name: Perl cpanm setup
       uses: perl-actions/install-with-cpanm@v1
-
+      
     - name: Perl pre-requesites
       run: |
         sudo cpanm --notest Dist::Zilla
