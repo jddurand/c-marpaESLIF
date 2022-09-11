@@ -94,7 +94,7 @@ ADD_DEPENDENCIES(marpaESLIFJavaTest_jar marpaESLIFJava_jar)
 # -----
 # Check
 # -----
-IF (${CMAKE_COMPILER_IS_GNUCC} OR ${CMAKE_COMPILER_IS_CLANG})
+IF (CMAKE_C_COMPILER_ID MATCHES "Clang|GNU")
   #
   # Works only when compiler support rdynamic-path, I am lazy, I assume this means GNUCC or CLANG compiler family
   #
