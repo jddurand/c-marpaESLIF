@@ -29,8 +29,8 @@ static const char *MARPAESLIFLUA_NILEDTABLE =
   "end\n"
   "-- This function is a hook to access directly inner data: if a niled table has no niled data, then __nileddata returns the raw table\n"
   "-- it allows marpaESLIFLua to call directly lua_next instead of a doing a lua_call at every iteration\n"
-  "function mt.nileddata(t)\n"
-  "  -- print('nileddata('..tostring(t)..')')\n"
+  "function mt.__nileddata(t)\n"
+  "  -- print('__nileddata('..tostring(t)..')')\n"
   "  if countnildata[t] == nil then                      -- No such table\n"
   "    print('==> Case 1 : countnildata['..tostring(t)..'] = '..tostring(countnildata[t])..' : return {}')\n"
   "    return {}\n"
@@ -195,7 +195,6 @@ static const char *MARPAESLIFLUA_NILEDTABLE =
   "mt.__next      = M.exnext\n"
   "mt.__exists    = M.exists\n"
   "mt.__delete    = M.delete\n"
-  "mt.__nileddata = M.nileddata\n"
   "\n"
   "return M\n"
   "\n";
