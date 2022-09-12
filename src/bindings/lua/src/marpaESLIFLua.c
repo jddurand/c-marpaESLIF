@@ -300,11 +300,11 @@ static inline short                       marpaESLIFLua_stack_setb(lua_State *L,
 static inline short                       marpaESLIFLua_table_canarray_getb(lua_State *L, int indicei, short *canarraybp);
 static inline short                       marpaESLIFLua_table_opaque_getb(lua_State *L, int indicei, short *opaquebp);
 static int                                marpaESLIFLua_nexti(lua_State *L);
-static inline short                       marpaESLIFLua_pairsb(int *rcip, lua_State *L, int idx, int *iteratorip, int *statevariableip);
+static inline short                       marpaESLIFLua_pairsb(int *rcip, lua_State *L, int idx, int *iteratorip, int *statevariableip, short *nextbp, int *nextrefip);
 static int                                marpaESLIFLua_marpaESLIFOpaque_freei(lua_State *L);
 static inline short                       marpaESLIFLua_metatypeb(int *luaip, lua_State *L, int index);
 static inline short                       marpaESLIFLua_createniledtableb(short checkstackb, lua_State *L, int narr, short arrayb);
-static inline short                       marpaESLIFLua_metanextb(int *rcip, lua_State *L, int idx);
+static inline short                       marpaESLIFLua_metanextb(int *rcip, lua_State *L, int idx, int *nextrefip);
 static int                                marpaESLIFLua_marpaESLIFJSONEncoder_newi(lua_State *L);
 #ifdef MARPAESLIFLUA_EMBEDDED
 static int                                marpaESLIFLua_marpaESLIFJSONEncoder_newFromUnmanagedi(lua_State *L, marpaESLIFGrammar_t *marpaESLIFJSONEncoderUnmanagedp);
@@ -1479,6 +1479,8 @@ static int marpaESLIFLua_marpaESLIF_newi(lua_State *L)
   int                                  nexti;
   int                                  iteratori;
   int                                  statevariablei;
+  short                                nextb;
+  int                                  nextrefi;
 
   if (! marpaESLIFLua_lua_gettop(&topi, L)) goto err;
 
@@ -1498,7 +1500,7 @@ static int marpaESLIFLua_marpaESLIF_newi(lua_State *L)
 
   if (! marpaESLIFLua_lua_pushnil(1 /* checkstackb */, L)) goto err;                                /* Stack: logger?, MARPAESLIFMULTITONSTABLE, nil */
   while (1) {
-    if (! marpaESLIFLua_pairsb(&nexti, L, -2, &iteratori, &statevariablei)) goto err;               /* Stack: logger?, MARPAESLIFMULTITONSTABLE, marpaESLIFLuaContextp, r */
+    if (! marpaESLIFLua_pairsb(&nexti, L, -2, &iteratori, &statevariablei, &nextb, &nextrefi)) goto err; /* Stack: logger?, MARPAESLIFMULTITONSTABLE, marpaESLIFLuaContextp, r */
     if (nexti == 0) break;
     if (! marpaESLIFLua_lua_tointeger(&tmpi, L, -1)) goto err;
     logger_r = (int) tmpi;
@@ -2000,6 +2002,8 @@ static inline void marpaESLIFLua_tabledump_usingpairsv(lua_State *L, const char 
   int         iteratori;
   int         statevariablei;
   int         getmetai;
+  short       nextb;
+  int         nextrefi;
 
   absindicei = lua_absindex(L, indicei);
 
@@ -2014,7 +2018,7 @@ static inline void marpaESLIFLua_tabledump_usingpairsv(lua_State *L, const char 
   lua_pushvalue(L, indicei);                                  /* Stack: ..., table */
   lua_pushnil(L);                                             /* Stack: ..., table, nil */
   while (1) {
-    marpaESLIFLua_pairsb(&nexti, L, -2, &iteratori, &statevariablei);
+    marpaESLIFLua_pairsb(&nexti, L, -2, &iteratori, &statevariablei, &nextb, &nextrefi);
     if (! nexti) break;
     keys = luaL_tolstring(L, -2, NULL);                       /* Stack: ..., table, key, value, keys */
     switch (lua_type(L, -2)) {
@@ -2577,11 +2581,13 @@ static int marpaESLIFLua_marpaESLIFMultitonsTable_freei(lua_State *L)
   int                                  nexti;
   int                                  iteratori;
   int                                  statevariablei;
+  short                                nextb;
+  int                                  nextrefi;
 
   /* Loop on MARPAESLIFMULTITONSTABLE */
   if (! marpaESLIFLua_lua_pushnil(1 /* checkstackb */, L)) goto err;                  /* Stack: MARPAESLIFMULTITONSTABLE, nil */
   while (1) {
-    if (! marpaESLIFLua_pairsb(&nexti, L, -2, &iteratori, &statevariablei)) goto err; /* Stack: MARPAESLIFMULTITONSTABLE, marpaESLIFLuaContextp, r */
+    if (! marpaESLIFLua_pairsb(&nexti, L, -2, &iteratori, &statevariablei, &nextb, &nextrefi)) goto err; /* Stack: MARPAESLIFMULTITONSTABLE, marpaESLIFLuaContextp, r */
     if (nexti == 0) break;
     if (! marpaESLIFLua_lua_touserdata((void **) &marpaESLIFLuaContextp, L, -2)) goto err;
     if (! marpaESLIFLua_lua_tointeger(&logger_r, L, -1)) goto err;
@@ -5713,6 +5719,8 @@ static int marpaESLIFLua_marpaESLIFRecognizer_eventOnOffi(lua_State *L)
   int                               nexti;
   int                               iteratori;
   int                               statevariablei;
+  short                             nextb;
+  int                               nextrefi;
 
   if (! marpaESLIFLua_lua_gettop(&topi, L)) goto err;
   if (topi != 4) {
@@ -5743,7 +5751,7 @@ static int marpaESLIFLua_marpaESLIFRecognizer_eventOnOffi(lua_State *L)
   }
   if (! marpaESLIFLua_lua_pushnil(1 /* checkstackb */, L)) goto err;
   while (1) {
-    if (! marpaESLIFLua_pairsb(&nexti, L, 3, &iteratori, &statevariablei)) goto err;
+    if (! marpaESLIFLua_pairsb(&nexti, L, 3, &iteratori, &statevariablei, &nextb, &nextrefi)) goto err;
     if (nexti == 0) break;
     if (! marpaESLIFLua_lua_tointegerx(&tmpi, L, -1, &isNumi)) goto err;
     if (! isNumi) {
@@ -8848,6 +8856,8 @@ static inline short marpaESLIFLua_stack_setb(lua_State *L, int stringtoencoding_
 #ifdef MARPAESLIFLUA_AUTO_ENCODING_DETECT
   short                         encodingheapb;
 #endif
+  short                         nextb;
+  int                           nextrefi;
 
   /* fprintf(stdout, "export start\n"); fflush(stdout); fflush(stderr); */
   
@@ -9182,7 +9192,7 @@ static inline short marpaESLIFLua_stack_setb(lua_State *L, int stringtoencoding_
         tableIsArrayb = canarrayb;
         tableIsRecursiveb = 0;
         while (1) {
-          if (! marpaESLIFLua_pairsb(&nexti, L, currenti, &iteratori, &statevariablei)) goto err;             /* Stack: visitedTable, ..., xxx=table, key, value */
+          if (! marpaESLIFLua_pairsb(&nexti, L, currenti, &iteratori, &statevariablei, &nextb, &nextrefi)) goto err; /* Stack: visitedTable, ..., xxx=table, key, value */
           /* fprintf(stderr, "marpaESLIFLua_pairsb return nexti=%d\n", nexti); */
           if (nexti == 0) break;
           /* Improbable turnaround */
@@ -9363,7 +9373,7 @@ static inline short marpaESLIFLua_stack_setb(lua_State *L, int stringtoencoding_
               if (! marpaESLIFLua_lua_pushnil(1 /* checkstackb */, L)) goto err;                          /* Stack: visitedTable, ..., xxx=table, nil */
               tablel = 0;
               while (1) {
-                if (! marpaESLIFLua_pairsb(&nexti, L, currenti, &iteratori, &statevariablei)) goto err;   /* Stack: visitedTable, ..., xxx=table, key, value */
+                if (! marpaESLIFLua_pairsb(&nexti, L, currenti, &iteratori, &statevariablei, &nextb, &nextrefi)) goto err; /* Stack: visitedTable, ..., xxx=table, key, value */
                 /* fprintf(stderr, "marpaESLIFLua_pairsb return nexti=%d\n", nexti); */
                 if (nexti == 0) break;                                                                    /* Stack: visitedTable, ..., xxx=table */
 
@@ -9556,7 +9566,7 @@ static int marpaESLIFLua_nexti(lua_State *L)
 
   if (! marpaESLIFLua_luaL_checktype(L, 1, LUA_TTABLE)) goto err;         /* Stack: table */
   if (! marpaESLIFLua_lua_settop(L, 2)) goto err;                         /* Stack: table, argument (create a 2nd argument if there isn't one) */
-  if (! marpaESLIFLua_metanextb(&nexti, L, 1)) goto err;
+  if (! marpaESLIFLua_metanextb(&nexti, L, 1, NULL /* nextrefip */)) goto err;
   if (nexti) {
     rci = 2;                                                              /* Stack: key, value */
   } else {
@@ -9574,64 +9584,149 @@ static int marpaESLIFLua_nexti(lua_State *L)
 }
 
 /****************************************************************************/
-static inline short marpaESLIFLua_pairsb(int *rcip, lua_State *L, int idx, int *iteratorip, int *statevariableip)
+static inline short marpaESLIFLua_pairsb(int *rcip, lua_State *L, int idx, int *iteratorip, int *statevariableip, short *nextbp, int *nextrefip)
 /****************************************************************************/
 /* This method uses pairs() if available. It must be called with non-NULL iteratorip and statevariableip variables */
+/* - If there is no __pairs metamethod, *nextbp is set to a true value at initialization, *nextrefip is set to eventual __next metamethod, iteratorip and statevariableip are untouched. */
+/* - If there is a __pairs metamethod, *nextbp is set to a false value at initialization, *nextrefip is not updated, iteratorip and statevariableip are initialized. */
+/*   A special is when iteratorip is LUA_NOREF: then statevariableip is the inner niled table data, and lua_next will be used. */
 /****************************************************************************/
 {
-  static const char *funcs = "marpaESLIFLua_pairsb";
+  static const char *funcs      = "marpaESLIFLua_pairsb";
+  static       int   lua_norefi = LUA_NOREF;
   short              rcb;
   int                isnili;
   int                getmetai;
   int                iteratori;
   int                statevariablei;
   int                rci;
+  int                nexti;
+  int                nextrefi;
+  short              nileddatab;
 
-  /* We know that we will need at most 5 placeholders in the stack */
-  if (! marpaESLIFLua_lua_assertstack(L, 5 /* extra */)) goto err;
+  /* We know that we will need at most 3 placeholders in the stack */
+  if (! marpaESLIFLua_lua_assertstack(L, 3 /* extra */)) goto err;
 
   /* First call ? */
   if (! marpaESLIFLua_lua_isnil(&isnili, L, -1)) goto err;
-  if (isnili) {                                                                                     /* Stack: ..., nil */
-    if (! marpaESLIFLua_lua_pop(L, 1)) goto err;                                                    /* Stack: ... */
-    /* Is there a __pairs() metatable entry (assumed to be a method) */
-    if (! marpaESLIFLua_luaL_getmetafield(0 /* checkstackb */, &getmetai, L, idx, "__pairs")) goto err;
-    if (getmetai == LUA_TNIL) {  /* no metamethod? */
-      if (! marpaESLIFLua_lua_pushcfunction(0 /* checkstackb */, L, marpaESLIFLua_nexti)) goto err; /* Stack: ..., [+1] lua_next() */
-      if (! marpaESLIFLua_lua_pushvalue(0 /* checkstackb */, L, idx)) goto err;                     /* Stack: ..., [+1] lua_next(),  [+2] table */
-      if (! marpaESLIFLua_lua_pushnil(0 /* checkstackb */, L)) goto err;                            /* Stack: ..., [+1] lua_next(),  [+2] table, [+3] nil */
-    } else {
-      if (! marpaESLIFLua_lua_pushvalue(0 /* checkstackb */, L, idx)) goto err;                     /* Stack: ..., [+1] __pairs(),   [+2] table */
-      if (! marpaESLIFLua_lua_call(L, 1, 3)) goto err;                                              /* Stack: ..., [+1] iterator,    [+2] statevariable, [+3] initialvalue */
+  if (isnili) {                                                                                          /* Stack: ..., [+1] key=nil */
+
+    /* Is there a __nileddata() metatable entry (assumed to be a method) */
+    nileddatab = 0;
+    if (! marpaESLIFLua_luaL_getmetafield(0 /* checkstackb */, &getmetai, L, idx, "__nileddata")) goto err;  /* Stack: ..., [+1] key=nil,  [+2] __nileddata? */
+    if (getmetai != LUA_TNIL) {                                                                          /* Stack: ..., [+1] key=nil,      [+2] __nileddata() */
+      if (! marpaESLIFLua_lua_pushvalue(0 /* checkstackb */, L, idx)) goto err;                          /* Stack: ..., [+1] key=nil,      [+2] __nileddata(), [+3] table */
+      /* Get niled table inner data: this is a niled table with no niled value */
+      if (! marpaESLIFLua_lua_call(L, 1, 1)) goto err;                                                   /* Stack: ..., [+1] key=nil,      [+2] data */
+      if (! marpaESLIFLua_lua_isnil(&isnili, L, -1)) goto err;
+      if (! isnili) {
+        nileddatab = 1;
+        /* By definition this is a table hosting the inner data: we switch to a fake pairs mode where: */
+        /* - the iterator will be native lua_next */
+        /* - the state variable will inner data */
+        /* - the initial value is nil */
+        MARPAESLIFLUA_REF(L, statevariablei);                                                            /* Stack: ..., [+1] key=nil */
+        *statevariableip = statevariablei;
+        *iteratorip = LUA_NOREF;
+        /* fprintf(stderr, "=============> niled table with no niled value case\n"); */
+      } else {
+        if (! marpaESLIFLua_lua_pop(L, 1)) goto err;                                                     /* Stack: ..., [+1] key=nil */
+      }
     }
-    if (! marpaESLIFLua_lua_pushvalue(0 /* checkstackb */, L, -3)) goto err;                        /* Stack: ..., [+1] iterator,    [+2] statevariable, [+3] initialvalue, [+4] iterator */
-    if (! marpaESLIFLua_lua_pushvalue(0 /* checkstackb */, L, -3)) goto err;                        /* Stack: ..., [+1] iterator,    [+2] statevariable, [+3] initialvalue, [+4] iterator, [+5] statevariable */
-    MARPAESLIFLUA_REF(L, statevariablei);                                                           /* Stack: ..., [+1] iterator,    [+2] statevariable, [+3] initialvalue, [+4] iterator */
-    *statevariableip = statevariablei;
-    MARPAESLIFLUA_REF(L, iteratori);                                                                /* Stack: ..., [+1] iterator,    [+2] statevariable, [+3] initialvalue */
-    *iteratorip = iteratori;
-  } else {                                                                                          /* Stack: ..., [+1] key */
-    MARPAESLIFLUA_DEREF(0 /* checkstackb */, L, *iteratorip);                                       /* Stack: ..., [+1] key,         [+2] iterator */
-    if (! marpaESLIFLua_lua_insert(0 /* checkstackb */, L, -2)) goto err;                           /* Stack: ..., [+1] iterator,    [+2] key */
-    MARPAESLIFLUA_DEREF(0 /* checkstackb */, L, *statevariableip);                                  /* Stack: ..., [+1] iterator,    [+2] key,           [+3] statevariable */
-    if (! marpaESLIFLua_lua_insert(0 /* checkstackb */, L, -2)) goto err;                           /* Stack: ..., [+1] iterator,    [+2] statevariable, [+3] key */
+
+    if (! nileddatab) {
+      /* Is there a __pairs() metatable entry (assumed to be a method) */
+      if (! marpaESLIFLua_luaL_getmetafield(0 /* checkstackb */, &getmetai, L, idx, "__pairs")) goto err;  /* Stack: ..., [+1] key=nil,    [+2] __pairs? */
+      if (getmetai == LUA_TNIL) {  /* no metamethod? */                                                  /* Stack: ..., [+1] key=nil */
+        /* Remember we are going to do __next or lua_next to avoid an unnecessary lua_call */
+        *nextbp = 1;
+        /* Is there a __next() metatable entry (assumed to be a method) */
+        if (! marpaESLIFLua_luaL_getmetafield(0 /* checkstackb */, &getmetai, L, idx, "__next")) goto err; /* Stack: ..., [+1] key=nil,    [+2] __next? */
+        if (getmetai == LUA_TNIL) {                                                                      /* Stack: ..., [+1] key=nil */
+          /* We will use native lua_next */
+          *nextrefip = LUA_NOREF;
+          /* fprintf(stderr, "=============> next case, no __next metamethod\n"); */
+        } else {                                                                                         /* Stack: ..., [+1] key=nil,      [+2] __next() */
+          /* We will use __next() metamethod */
+          MARPAESLIFLUA_REF(L, nextrefi);                                                                /* Stack: ..., [+1] key=nil */
+          *nextrefip = nextrefi;
+          /* fprintf(stderr, "=============> next case, existing __next metamethod\n"); */
+        }
+      } else {                                                                                           /* Stack: ..., [+1] key=nil,      [+2] __pairs() */
+        /* We don't know if this is our builtin */
+        *nextbp = 0;
+
+        /* Call __pairs() */
+        if (! marpaESLIFLua_lua_insert(0 /* checkstackb */, L, -2)) goto err;                            /* Stack: ..., [+1] __pairs(),    [+2] key=nil */
+        if (! marpaESLIFLua_lua_pushvalue(0 /* checkstackb */, L, idx)) goto err;                        /* Stack: ..., [+1] __pairs(),    [+2] key=nil,       [+3] table */
+        if (! marpaESLIFLua_lua_insert(0 /* checkstackb */, L, -2)) goto err;                            /* Stack: ..., [+1] __pairs(),    [+2] table,         [+3] key=nil */
+        /* Get iterator, statevariable and initial value */
+        if (! marpaESLIFLua_lua_call(L, 2, 3)) goto err;                                                 /* Stack: ..., [+1] iterator,     [+2] statevariable, [+3] initialvalue */
+        /* Maintain a reference to statevariable */
+        if (! marpaESLIFLua_lua_insert(0 /* checkstackb */, L, -2)) goto err;                            /* Stack: ..., [+1] iterator,     [+2] initialvalue,  [+3] statevariable */
+        MARPAESLIFLUA_REF(L, statevariablei);                                                            /* Stack: ..., [+1] iterator,     [+2] initialvalue */
+        *statevariableip = statevariablei;
+        /* Maintain a reference to iterator */
+        if (! marpaESLIFLua_lua_insert(0 /* checkstackb */, L, -2)) goto err;                            /* Stack: ..., [+1] initialvalue, [+2] iterator */
+        MARPAESLIFLUA_REF(L, iteratori);                                                                 /* Stack: ..., [+1] initialvalue */
+        *iteratorip = iteratori;
+        /* fprintf(stderr, "=============> pairs case\n"); */
+      }
+    }
+
+    /* Here it is guaranteed that the initial value (eventually coming from _pairs() is at indice 1 */
   }
 
-  /* Get next key,value */
-  if (! marpaESLIFLua_lua_call(L, 2, 2)) goto err;                                                  /* Stack: ..., [+1] nextkey,     [+2] nextvalue */
-  if (! marpaESLIFLua_lua_isnil(&isnili, L, -2)) goto err;
-  if (isnili) {                                                                                     /* Stack: ..., [+1] nextkey=nil, [+2] nextvalue=<not considered> */
-    MARPAESLIFLUA_UNREF(L, *iteratorip);
-    MARPAESLIFLUA_UNREF(L, *statevariableip);
-    if (! marpaESLIFLua_lua_pop(L, 2)) goto err;                                                    /* Stack: ... */
-    rci = 0;
-  } else {
-    rci = 1;                                                                                        /* Stack: ..., [+1] nextkey,     [+2] nextvalue */
+  if (*nextbp) {                                                                                         /* Stack: ..., [+1] key */
+    /* Call __next or lua_next */
+    if (! marpaESLIFLua_metanextb(&nexti, L, idx, nextrefip)) goto err;                                  /* Stack: ..., [+1] nextkey?,    [+2] nextvalue? */
+    if (! nexti) {                                                                                       /* Stack: ... */
+      /* No more element */
+      MARPAESLIFLUA_UNREF(L, *nextrefip);
+      rci = 0;
+    } else {                                                                                             /* Stack: ..., [+1] nextkey,     [+2] nextvalue */
+      rci = 1;
+    }
+  } else {                                                                                               /* Stack: ..., [+1] key */
+    if (*iteratorip == LUA_NOREF) {
+      /* Niled table case when there is no niled data */
+      MARPAESLIFLUA_DEREF(0 /* checkstackb */, L, *statevariableip);                                     /* Stack: ..., [+1] key,         [+2] data */
+      if (! marpaESLIFLua_lua_insert(0 /* checkstackb */, L, -2)) goto err;                              /* Stack: ..., [+1] data,        [+2] key */
+      /* Call lua_next */
+      if (! marpaESLIFLua_metanextb(&nexti, L, -2, &lua_norefi)) goto err;                               /* Stack: ..., [+1] data,        [+2] nextkey?,    [+3] nextvalue? */
+      if (! nexti) {                                                                                     /* Stack: ..., [+1] data */
+        /* No more element */
+        if (! marpaESLIFLua_lua_pop(L, 1)) goto err;                                                     /* Stack: ... */
+        MARPAESLIFLUA_UNREF(L, *statevariableip);
+        rci = 0;
+      } else {                                                                                           /* Stack: ..., [+1] data,        [+2] nextkey,     [+3] nextvalue */
+        if (! marpaESLIFLua_lua_remove(L, -3)) goto err;                                                 /* Stack: ..., [+1] nextkey,     [+2] nextvalue */
+        rci = 1;
+      }
+    } else {
+      /* Call iterator */
+      MARPAESLIFLUA_DEREF(0 /* checkstackb */, L, *iteratorip);                                          /* Stack: ..., [+1] key,         [+2] iterator */
+      if (! marpaESLIFLua_lua_insert(0 /* checkstackb */, L, -2)) goto err;                              /* Stack: ..., [+1] iterator,    [+2] key */
+      MARPAESLIFLUA_DEREF(0 /* checkstackb */, L, *statevariableip);                                     /* Stack: ..., [+1] iterator,    [+2] key,           [+3] statevariable */
+      if (! marpaESLIFLua_lua_insert(0 /* checkstackb */, L, -2)) goto err;                              /* Stack: ..., [+1] iterator,    [+2] statevariable, [+3] key */
+      if (! marpaESLIFLua_lua_call(L, 2, 2)) goto err;                                                   /* Stack: ..., [+1] nextkey,     [+2] nextvalue */
+      if (! marpaESLIFLua_lua_isnil(&isnili, L, -2)) goto err;
+      if (isnili) {                                                                                      /* Stack: ..., [+1] nextkey=nil, [+2] nextvalue=<not considered> */
+        /* No more element */
+        MARPAESLIFLUA_UNREF(L, *iteratorip);
+        MARPAESLIFLUA_UNREF(L, *statevariableip);
+        if (! marpaESLIFLua_lua_pop(L, 2)) goto err;                                                     /* Stack: ... */
+        rci = 0;
+      } else {
+        rci = 1;                                                                                         /* Stack: ..., [+1] nextkey,     [+2] nextvalue */
+      }
+    }
   }
 
   if (rcip != NULL) {
     *rcip = rci;
   }
+
   rcb = 1;
   goto done;
 
@@ -9652,11 +9747,13 @@ static int marpaESLIFLua_marpaESLIFOpaque_freei(lua_State *L)
   int                statevariablei;
   void              *p;
   void              *marpaESLIFValueResultDupp;
+  short              nextb;
+  int                nextrefi;
 
   /* Loop on MARPAESLIFOPAQUETABLE */
   if (! marpaESLIFLua_lua_pushnil(1 /* checkstackb */, L)) goto err;                       /* Stack: MARPAESLIFOPAQUETABLE, nil */
   while (1) {
-    if (! marpaESLIFLua_pairsb(&nexti, L, -2, &iteratori, &statevariablei)) goto err;      /* Stack: MARPAESLIFOPAQUETABLE, p, marpaESLIFValueResultDupp */
+    if (! marpaESLIFLua_pairsb(&nexti, L, -2, &iteratori, &statevariablei, &nextb, &nextrefi)) goto err; /* Stack: MARPAESLIFOPAQUETABLE, p, marpaESLIFValueResultDupp */
     if (nexti == 0) break;
     if (! marpaESLIFLua_lua_touserdata(&p, L, -2)) goto err;
     if (! marpaESLIFLua_lua_touserdata((void **) &marpaESLIFValueResultDupp, L, -1)) goto err;
@@ -9774,10 +9871,11 @@ static inline short marpaESLIFLua_createniledtableb(short checkstackb, lua_State
 }
 
 /****************************************************************************/
-static inline short marpaESLIFLua_metanextb(int *rcip, lua_State *L, int idx)
+static inline short marpaESLIFLua_metanextb(int *rcip, lua_State *L, int idx, int *nextrefip)
 /****************************************************************************/
 /* This function does quite the same thing as the _G.next override          */
 /* Note: it is ASSUMED that there is a key in the stack                     */
+/*       If __next exist it ias ASSUMED to be a method                      */
 /****************************************************************************/
 {
   static const char *funcs = "marpaESLIFLua_metanextb";
@@ -9786,33 +9884,40 @@ static inline short marpaESLIFLua_metanextb(int *rcip, lua_State *L, int idx)
   int                getmetai;
   int                metatypei;
   int                metakeytypei;
+  int                absidx;
 
-  /* Check if there is a __next meta field */
-  if (! marpaESLIFLua_luaL_getmetafield(1 /* checkstackb */, &getmetai, L, idx, "__next")) goto err; /* Stack: ..., <key>, __next metafield */
-  if (getmetai != LUA_TNIL) {                                                                        /* Stack: ..., <key>, __next metafield */
-    if (! marpaESLIFLua_lua_type(&metatypei, L, -1)) goto err;
-    if (metatypei == LUA_TFUNCTION) {
-      if (! marpaESLIFLua_lua_insert(1 /* checkstackb */, L, -2)) goto err;                          /* Stack: ..., __next(), <key> */
-      if (! marpaESLIFLua_lua_pushnil(1 /* checkstackb */, L)) goto err;                             /* Stack: ..., __next(), <key>, nil */
-      if (! marpaESLIFLua_lua_copy(L, idx, -1)) goto err;                                            /* Stack: ..., __next(), <key>, table */
-      if (! marpaESLIFLua_lua_insert(1 /* checkstackb */, L, -2)) goto err;                          /* Stack: ..., __next(), table, <key> */
-      if (! marpaESLIFLua_lua_call(L, 2, 2)) goto err;                                               /* Stack: ..., nextkey, nextvalue */
-      if (! marpaESLIFLua_metatypeb(&metakeytypei, L, -2)) goto err;
-      if (metakeytypei == LUA_TNIL) {
-        /* next key is nil: end of iteration */
-        if (! marpaESLIFLua_lua_pop(L, 2)) goto err;                                                 /* Stack: ... (previous key was popped) */
-        rci = 0;
-      } else {
-        rci = 1;
-      }
+  if (! marpaESLIFLua_lua_absindex(&absidx, L, idx)) goto err;
+  if (! marpaESLIFLua_lua_assertstack(L, 3 /* extra */)) goto err;
+
+  /* Check if caller already informed about the __next metamethod */
+  if (nextrefip != NULL) {
+    if (*nextrefip == LUA_NOREF) {
+      goto native_next;
+    }
+    MARPAESLIFLUA_DEREF(0 /* checkstackb */, L, *nextrefip);                                         /* Stack: ..., <key>, __next() */
+    goto meta_next;
+  }
+
+  if (! marpaESLIFLua_luaL_getmetafield(1 /* checkstackb */, &getmetai, L, absidx, "__next")) goto err; /* Stack: ..., <key>, __next()? */
+  if (getmetai != LUA_TNIL) {                                                                        /* Stack: ..., <key>, __next() */
+  meta_next:
+    if (! marpaESLIFLua_lua_insert(1 /* checkstackb */, L, -2)) goto err;                            /* Stack: ..., __next(), <key> */
+    if (! marpaESLIFLua_lua_pushnil(1 /* checkstackb */, L)) goto err;                               /* Stack: ..., __next(), <key>, nil */
+    if (! marpaESLIFLua_lua_copy(L, absidx, -1)) goto err;                                           /* Stack: ..., __next(), <key>, table */
+    if (! marpaESLIFLua_lua_insert(1 /* checkstackb */, L, -2)) goto err;                            /* Stack: ..., __next(), table, <key> */
+    if (! marpaESLIFLua_lua_call(L, 2, 2)) goto err;                                                 /* Stack: ..., nextkey, nextvalue */
+    if (! marpaESLIFLua_metatypeb(&metakeytypei, L, -2)) goto err;
+    if (metakeytypei == LUA_TNIL) {
+      /* next key is nil: end of iteration */
+      if (! marpaESLIFLua_lua_pop(L, 2)) goto err;                                                   /* Stack: ... (previous key was popped) */
+      rci = 0;
     } else {
-      if (! marpaESLIFLua_lua_insert(1 /* checkstackb */, L, -2)) goto err;                          /* Stack: ..., __next, <key> */
-      if (! marpaESLIFLua_lua_pop(L, 1)) goto err;                                                   /* Stack: ..., __next */
       rci = 1;
     }
   } else {
+  native_next:
     /* Call native next */
-    if (! marpaESLIFLua_lua_next(1 /* checkstackb */, &rci, L, idx)) goto err;
+    if (! marpaESLIFLua_lua_next(1 /* checkstackb */, &rci, L, absidx)) goto err;
   }
 
   if (rcip != NULL) {
