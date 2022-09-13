@@ -9027,8 +9027,8 @@ static inline short marpaESLIFLua_stack_setb(lua_State *L, int stringtoencoding_
       }
       break;
     case LUA_TBOOLEAN:
-      /* fprintf(stderr, "BOOL %s\n", (tmpb != 0) ? "true" : "false"); */
       if (! marpaESLIFLua_lua_toboolean(&tmpb, L, currenti)) goto err;
+      /* fprintf(stderr, "BOOL %s\n", (tmpb != 0) ? "true" : "false"); */
       marpaESLIFValueResultp->contextp        = MARPAESLIFLUA_CONTEXT;
       marpaESLIFValueResultp->representationp = NULL;
       marpaESLIFValueResultp->type            = MARPAESLIF_VALUE_TYPE_BOOL;
