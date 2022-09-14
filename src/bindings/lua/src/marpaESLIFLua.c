@@ -8834,7 +8834,6 @@ static inline short marpaESLIFLua_stack_setb(lua_State *L, int stringtoencoding_
   short                         tableIsArrayb;
   short                         tableIsRecursiveb;
   size_t                        i;
-  size_t                        j;
   int                           keyTypei;
   lua_Integer                   keyi;
   int                           keyIsNumi;
@@ -8857,6 +8856,8 @@ static inline short marpaESLIFLua_stack_setb(lua_State *L, int stringtoencoding_
 #endif
   short                         nextb;
   int                           nextrefi;
+  marpaESLIFValueResult_t      *marpaESLIFValueTmpp;
+  marpaESLIFValueResultPair_t  *marpaESLIFValueResultPairTmpp;
 
   /*
     fprintf(stdout, "export start\n"); fflush(stdout); fflush(stderr);
@@ -8896,6 +8897,11 @@ static inline short marpaESLIFLua_stack_setb(lua_State *L, int stringtoencoding_
       marpaESLIFLua_stackdumpv(L, 0);
     */
     marpaESLIFValueResultp = (marpaESLIFValueResult_t *) GENERICSTACK_POP_PTR(marpaESLIFValueResultStackp);
+    if (marpaESLIFValueResultp == NULL) {
+      /* Ignored: case of flattened array and we point to the indice */
+      if (! marpaESLIFLua_lua_pop(L, 1)) goto err;
+      continue;
+    }
 
     if (! marpaESLIFLua_lua_absindex(&currenti, L, -1)) goto err;
     if (! marpaESLIFLua_metatypeb(&typei, L, currenti)) goto err;
@@ -9324,16 +9330,16 @@ static inline short marpaESLIFLua_stack_setb(lua_State *L, int stringtoencoding_
               }
 #endif
 
-              /* Process the table content - and set items in an order synchronized with marpaESLIFValueResult allocated array */
-	      /* Stack here is:                                                                                   visitedTable, ..., xxx=table, 1, value[1], ..., tablel, value[tablel] */
-	      /* We remove all keys so that it becomes:                                                           visitedTable, ..., xxx=table,    value[1], ...,         value[tablel] */
-
-              for (i = 0, j = currenti+1; i < tablel; i++, j++) {
-		/* Key is at indice currenti+(i*2)+1, computed as beeing j - but take care because of the lua_remove that follows, j must be incremented using j++ and not j += 2 */
-		if (! marpaESLIFLua_lua_remove(L, j)) goto err;
-
-                /* fprintf(stderr, "GENERICSTACK_SET_PTR(marpaESLIFValueResultStackp, %p)\n", &(marpaESLIFValueResultp->u.r.p[i])); */
-                GENERICSTACK_PUSH_PTR(marpaESLIFValueResultStackp, &(marpaESLIFValueResultp->u.r.p[i]));
+              /* Push placeholders synchronized with the stack after table                                 Stack: visitedTable, ..., xxx=table, 1, value[1], ..., tablel, value[tablel] */
+              for (i = 0, marpaESLIFValueTmpp = marpaESLIFValueResultp->u.r.p; i < tablel; i++, marpaESLIFValueTmpp++) {
+                /* Placeholder for the key that is an indice: ignored */
+                GENERICSTACK_PUSH_PTR(marpaESLIFValueResultStackp, NULL);
+                if (GENERICSTACK_ERROR(marpaESLIFValueResultStackp)) {
+                  marpaESLIFLua_luaL_errorf(L, "marpaESLIFValueResultStackp push failure, %s", strerror(errno));
+                  goto err;
+                }
+                /* Placeholder for the value */
+                GENERICSTACK_PUSH_PTR(marpaESLIFValueResultStackp, marpaESLIFValueTmpp);
                 if (GENERICSTACK_ERROR(marpaESLIFValueResultStackp)) {
                   marpaESLIFLua_luaL_errorf(L, "marpaESLIFValueResultStackp push failure, %s", strerror(errno));
                   goto err;
@@ -9379,24 +9385,21 @@ static inline short marpaESLIFLua_stack_setb(lua_State *L, int stringtoencoding_
               }
 #endif
 
-              /* Process the table content */
-	      /* Stack here is:                                                                                   visitedTable, ..., xxx=table, 1, value[1], ..., tablel, value[tablel] */
-              for (i = 0; i < tablel; i++) {
-                /* Push room for key */
-                /* fprintf(stderr, "GENERICSTACK_PUSH_PTR(marpaESLIFValueResultStackp, %p)\n", &(marpaESLIFValueResultp->u.t.p[tablel].key)); */
-                GENERICSTACK_PUSH_PTR(marpaESLIFValueResultStackp, &(marpaESLIFValueResultp->u.t.p[i].key));
+              /* Push placeholders synchronized with the stack after table                                 Stack: visitedTable, ..., xxx=table, 1, value[1], ..., tablel, value[tablel] */
+              for (i = 0, marpaESLIFValueResultPairTmpp = marpaESLIFValueResultp->u.t.p; i < tablel; i++, marpaESLIFValueResultPairTmpp++) {
+                /* Placeholder for the key */
+                GENERICSTACK_PUSH_PTR(marpaESLIFValueResultStackp, &(marpaESLIFValueResultPairTmpp->key));
                 if (GENERICSTACK_ERROR(marpaESLIFValueResultStackp)) {
                   marpaESLIFLua_luaL_errorf(L, "marpaESLIFValueResultStackp push failure, %s", strerror(errno));
                   goto err;
                 }
-                /* Push room for value */
-                /* fprintf(stderr, "GENERICSTACK_PUSH_PTR(marpaESLIFValueResultStackp, %p)\n", &(marpaESLIFValueResultp->u.t.p[tablel].value)); */
-                GENERICSTACK_PUSH_PTR(marpaESLIFValueResultStackp, &(marpaESLIFValueResultp->u.t.p[i].value));
+                /* Placeholder for the value */
+                GENERICSTACK_PUSH_PTR(marpaESLIFValueResultStackp, &(marpaESLIFValueResultPairTmpp->value));
                 if (GENERICSTACK_ERROR(marpaESLIFValueResultStackp)) {
                   marpaESLIFLua_luaL_errorf(L, "marpaESLIFValueResultStackp push failure, %s", strerror(errno));
                   goto err;
                 }
-              }                                                                                             /* Stack: visitedTable, ..., xxx=table, 1, value[1], ..., tablel, value[tablel] */
+              }
             } else {
               marpaESLIFValueResultp->u.t.p = NULL;
             }
