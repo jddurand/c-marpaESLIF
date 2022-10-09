@@ -1179,7 +1179,8 @@ marpaESLIF BNF can be expressed in itself:
                                    | ':sol'
                                    | ':empty'
                                    | <regular expression>
-  <symbol>                       ::= <symbol name> '->' <regular substitution>
+                                   | <regular expression> '->' <regular substitution>
+  <symbol>                       ::= <symbol name>
   <symbol name>                  ::= <bare name>
                                    | <bracketed name>
   <action name>                  ::= <restricted ascii graph name>
