@@ -1642,6 +1642,7 @@ bootstrap_grammar_rule_t bootstrap_grammar_G1_rules[] = {
   { G1_META_TERMINAL,                         G1_RULE_TERMINAL_8,                             MARPAESLIF_RULE_TYPE_ALTERNATIVE, 3, { G1_META_REGULAR_EXPRESSION,
                                                                                                                                      G1_TERMINAL_REGULAR_EXPRESSION_THEN,
                                                                                                                                      G1_META_REGULAR_SUBSTITUTION                 }, -1,                        -1,      -1,              0, G1_ACTION_TERMINAL_8 },
+  { G1_META_TERMINAL,                         G1_RULE_TERMINAL_9,                             MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_STRING_LITERAL                       }, -1,                        -1,      -1,              0, G1_ACTION_TERMINAL_9 },
   { G1_META_SYMBOL,                           G1_RULE_SYMBOL,                                 MARPAESLIF_RULE_TYPE_ALTERNATIVE, 1, { G1_META_SYMBOL_NAME                          }, -1,                        -1,      -1,              0, G1_ACTION_SYMBOL },
   /*
     lhsi                                      descs                                           type                          nrhsl  { rhsi }                                       }  minimumi           separatori  properb hideseparatorb  actions

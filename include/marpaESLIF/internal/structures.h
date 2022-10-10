@@ -262,7 +262,7 @@ struct marpaESLIFSymbol {
   short                          lhsb;                   /* Is an LHS somewhere in its grammar ? */
   short                          topb;                   /* Is a top-level symbol in its grammar - implies lhsb */
   int                            idi;                    /* Marpa ID */
-  marpaESLIF_string_t           *descp;                  /* Symbol description */
+  marpaESLIF_string_t           *descp;                  /* Symbol description - usually a shallow pointer - must be compared to terminal or meta description when freeing. */
   char                          *eventBefores;           /* Pause before */
   short                          eventBeforeb;           /* Pause before initial state: 0: off, 1: on */
   marpaESLIF_internal_event_action_t eventBeforee;       /* For faster lookup if it requires an action */
