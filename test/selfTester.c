@@ -993,6 +993,9 @@ int main() {
   if (regexSymbolp != NULL) {
     marpaESLIFSymbol_freev(regexSymbolp);
   }
+  if (substitutionSymbolp != NULL) {
+    marpaESLIFSymbol_freev(substitutionSymbolp);
+  }
   GENERICLOGGER_LEVEL_SET(marpaESLIFOption.genericLoggerp, GENERICLOGGER_LOGLEVEL_INFO);
   marpaESLIFGrammar_freev(marpaESLIFGrammarp);
   marpaESLIF_freev(marpaESLIFp);
