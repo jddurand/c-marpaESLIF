@@ -3604,13 +3604,13 @@ CODE:
 
   /* maxDepth option verification */
   typei = marpaESLIFPerl_getTypei(aTHX_ Perl_maxDepthp);
-  if ((typei != SCALAR) || (!SvIOK(svp))) {
+  if ((typei != SCALAR) || (!SvIOK(Perl_maxDepthp))) {
     /* This is an error unless it is undef */
     if (! marpaESLIFPerl_is_undef(aTHX_ Perl_maxDepthp, typei)) {
       MARPAESLIFPERL_CROAK("maxDepth option must be an integer scalar or undef");
     }
   } else {
-    maxDepthl = (size_t) SvIVX(svp);
+    maxDepthl = (size_t) SvIVX(Perl_maxDepthp);
   }
   marpaESLIFJSONDecodeOption.disallowDupkeysb                = SvTRUE(Perl_disallowDupkeysp) ? 1 : 0;
   marpaESLIFJSONDecodeOption.maxDepthl                       = maxDepthl;
