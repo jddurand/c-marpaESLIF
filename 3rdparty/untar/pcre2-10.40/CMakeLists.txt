@@ -293,6 +293,11 @@ FOREACH (_target ${PROJECT_NAME} ${PROJECT_NAME}_static)
   ENDIF(PCRE2_BUILD_PCRE2_32)
 ENDFOREACH ()
 
+################################################################################
+# Static target is special and requires a public PCRE2_STATIC compile definition
+################################################################################
+TARGET_COMPILE_DEFINITIONS(${PROJECT_NAME}_static PUBLIC -DPCRE2_STATIC)
+
 #############
 # Packaging #
 #############
