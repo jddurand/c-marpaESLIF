@@ -231,7 +231,7 @@ MYPACKAGELIBRARY(
   ${CMAKE_CURRENT_SOURCE_DIR}/config-cmake.h.in
   ${INCLUDE_OUTPUT_PATH}/config.h
   src/pcre2_auto_possess.c
-  ${CMAKE_CURRENT_SOURCE_DIR}/pcre2_chartables.c
+  ${CMAKE_CURRENT_BINARY_DIR}/pcre2_chartables.c
   src/pcre2_compile.c
   src/pcre2_config.c
   src/pcre2_context.c
