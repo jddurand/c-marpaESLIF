@@ -1,4 +1,5 @@
 CMAKE_MINIMUM_REQUIRED (VERSION 3.0.0 FATAL_ERROR)
+PROJECT(marpaESLIF VERSION 6.0.27 LANGUAGES C CXX)
 IF (NOT MYPACKAGEBOOTSTRAP_DONE)
   INCLUDE ("3rdparty/github/cmake-utils/cmake/MyPackageBootstrap.cmake")
 ENDIF ()
@@ -7,7 +8,7 @@ ENDIF ()
 # when we do make marpaESLIFPerlRelease or marpaESLIFPerlReleaseTrial
 #
 # SET (MYPACKAGE_DEBUG TRUE)
-MYPACKAGESTART (marpaESLIF 6 0 27)
+MYPACKAGESTART ()
 
 ###########
 # Library #
