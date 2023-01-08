@@ -1,9 +1,8 @@
-MACRO (MYPACKAGESTART packageName versionMajor versionMinor versionPatch)
+MACRO (MYPACKAGESTART)
   #
   # Start
   #
-  PROJECT (${packageName} VERSION ${versionMajor}.${versionMinor}.${versionPatch} LANGUAGES C CXX)  # This is setting PROJECT_NAME -;
-  MESSAGE (STATUS "[${PROJECT_NAME}-START-STATUS] Starting version ${versionMajor}.${versionMinor}.${versionPatch}")
+  MESSAGE (STATUS "[${PROJECT_NAME}-START-STATUS] Starting version ${PROJECT_VERSION}")
   #
   # Options
   #
