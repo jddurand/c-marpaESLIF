@@ -22,7 +22,7 @@ public class AppValueInterface implements ESLIFValueInterface {
 	 */
 	@SuppressWarnings("deprecation")
 	private Double toDouble(Object object) {
-		return (object instanceof Integer) ? new Double(((Integer) object).doubleValue()) : (Double) object;
+		return (object instanceof Integer) ? Double.valueOf((Integer) object) : (Double) object;
 	}
 
 	private Integer toInteger(Object object) {
@@ -44,7 +44,7 @@ public class AppValueInterface implements ESLIFValueInterface {
 		
 		if (list[0] instanceof byte[]) {
 			String input = toString(list[0]);
-			result = new Integer(input);
+			result = Integer.valueOf(input);
 		} else {
 			result = list[0];
 		}
@@ -69,7 +69,7 @@ public class AppValueInterface implements ESLIFValueInterface {
 		boolean rightIsInteger = (right instanceof Integer);
 		
 		if ("**".equals(op)) {
-			result = new Double(Math.pow(toDouble(left), toDouble(right)));
+			result = Double.valueOf(Math.pow(toDouble(left), toDouble(right)));
 		} else if ("*".equals(op)) {
 			if (leftIsInteger && rightIsInteger) {
 				result = toInteger(left) * toInteger(right);

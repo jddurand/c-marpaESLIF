@@ -388,7 +388,7 @@ public class AppThread implements Runnable {
 		String old = new String(bytes, "UTF-8");
 		
 		eslifLogger.debug("... Forcing Integer object for \"" + value + "\" spanned on " + bytes.length + " bytes" + " instead of \"" + old + "\"");
-		if (! eslifRecognizer.alternativeRead(symbol, new Integer(value), bytes.length, 1 /* grammarLength */)) {
+		if (! eslifRecognizer.alternativeRead(symbol, Integer.valueOf(value), bytes.length, 1 /* grammarLength */)) {
 			return false;
 		}
 
