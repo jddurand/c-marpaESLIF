@@ -183,7 +183,7 @@ ENDIF(PCRE2_SUPPORT_VALGRIND)
 
 # Parse version numbers and date out of configure.ac
 
-file(STRINGS ${PROJECT_SOURCE_DIR}/configure.ac
+file(STRINGS ${CMAKE_CURRENT_SOURCE_DIR}/configure.ac
   configure_lines
   LIMIT_COUNT 50 # Read only the first 50 lines of the file
 )
