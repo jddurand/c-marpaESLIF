@@ -1,9 +1,10 @@
 CMAKE_MINIMUM_REQUIRED (VERSION 3.0.0 FATAL_ERROR)
+# marpaESLIFJava version is synced with marpaESLIF
+PROJECT(marpaESLIFJava VERSION ${marpaESLIF_VERSION} LANGUAGES C)
 IF (NOT MYPACKAGEBOOTSTRAP_DONE)
   INCLUDE ("../../../3rdparty/github/cmake-utils/cmake/MyPackageBootstrap.cmake")
 ENDIF ()
-# marpaESLIFJava version is synced with marpaESLIF
-MYPACKAGESTART (marpaESLIFJava ${marpaESLIF_VERSION_MAJOR} ${marpaESLIF_VERSION_MINOR} ${marpaESLIF_VERSION_PATCH})
+MYPACKAGESTART ()
 
 INCLUDE (UseJava)
 INCLUDE_DIRECTORIES (${JAVA_INCLUDE_PATH} ${JAVA_INCLUDE_PATH2})
