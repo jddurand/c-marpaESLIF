@@ -97,15 +97,15 @@ Returns a value containing decoded C<$string>. In relax mode, special floating p
 
 =item C<+Infinity>
 
-Positive infinity, either as a native floating point number if the underlying system supports that, or as a C<Math::BigInt->binf()> instance.
+Positive infinity, either as a native floating point number if the underlying system supports that, or as a C<< Math::BigInt->binf() >> instance.
 
 =item C<-Infinity>
 
-Negative infinity, either as a native floating point number if the underlying system supports that, or as a C<Math::BigInt->binf('-')> instance.
+Negative infinity, either as a native floating point number if the underlying system supports that, or as a C<< Math::BigInt->binf('-') >> instance.
 
 =item C<NaN>
 
-Not-a-Number, either as a native floating point number if the underlying system supports that, or as a C<Math::BigInt->bnan()> instance.
+Not-a-Number, either as a native floating point number if the underlying system supports that, or as a C<< Math::BigInt->bnan() >> instance.
 
 =back
 
