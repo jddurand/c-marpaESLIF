@@ -1,11 +1,9 @@
 CMAKE_MINIMUM_REQUIRED (VERSION 3.0.0 FATAL_ERROR)
+PROJECT(cmake_utils VERSION 1.0.10 LANGUAGES C CXX)
 IF (NOT MYPACKAGEBOOTSTRAP_DONE)
   INCLUDE ("../cmake/MyPackageBootstrap.cmake")
 ENDIF ()
-#
-# SET (MYPACKAGE_DEBUG TRUE)
-#
-MYPACKAGESTART (cmake_utils 1 0 0)
+MYPACKAGESTART ()
 
 #
 # This line checks that _GNU_SOURCE is correctly propagated
