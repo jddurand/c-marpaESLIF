@@ -4,7 +4,7 @@
 #define C_UNLIKELY(x)  C__BUILTIN_EXPECT(!!(x), 0)
 
 /* Copied from https://kernelnewbies.org/FAQ/LikelyUnlikely */
-int main(char *argv[], int argc)
+int main(int argc, char *argv[])
 {
    int a;
 
