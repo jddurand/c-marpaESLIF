@@ -1082,7 +1082,7 @@ static inline void marpaESLIFPerl_valueActionResolver(pTHX_ MarpaX_ESLIF_Value_t
   /* If there is a resolve in the interface, use it */
   if (MarpaX_ESLIF_Valuep->resolverSvp != &PL_sv_undef) {
     resolvedActionSvp = &PL_sv_undef;
-    if (marpaESLIFPerl_canb(aTHX_ MarpaX_ESLIF_Valuep->Perl_valueInterfacep, "resolver", &resolvedActionSvp, MarpaX_ESLIF_Valuep->resolverSvp)) {
+    if (marpaESLIFPerl_canb(aTHX_ MarpaX_ESLIF_Valuep->Perl_valueInterfacep, actions, &resolvedActionSvp, MarpaX_ESLIF_Valuep->resolverSvp)) {
       MarpaX_ESLIF_Valuep->resolvedActionSvp = resolvedActionSvp;
     } else {
       MarpaX_ESLIF_Valuep->resolvedActionSvp = NULL;
@@ -1127,7 +1127,7 @@ static inline void marpaESLIFPerl_recognizerActionResolver(pTHX_ MarpaX_ESLIF_Re
   /* If there is a resolve in the interface, use it */
   if (MarpaX_ESLIF_Recognizerp->resolverSvp != &PL_sv_undef) {
     resolvedActionSvp = &PL_sv_undef;
-    if (marpaESLIFPerl_canb(aTHX_ MarpaX_ESLIF_Recognizerp->Perl_recognizerInterfacep, "resolver", &resolvedActionSvp, MarpaX_ESLIF_Recognizerp->resolverSvp)) {
+    if (marpaESLIFPerl_canb(aTHX_ MarpaX_ESLIF_Recognizerp->Perl_recognizerInterfacep, actions, &resolvedActionSvp, MarpaX_ESLIF_Recognizerp->resolverSvp)) {
       MarpaX_ESLIF_Recognizerp->resolvedActionSvp = resolvedActionSvp;
     } else {
       MarpaX_ESLIF_Recognizerp->resolvedActionSvp = NULL;
@@ -1830,6 +1830,7 @@ static inline void marpaESLIFPerl_valueContextInitv(pTHX_ SV *Perl_MarpaX_ESLIF_
     if (! marpaESLIFPerl_canb(aTHX_ Perl_valueInterfacep, "getResult", &(MarpaX_ESLIF_Valuep->getResultSvp), NULL)) {
       MARPAESLIFPERL_CROAK("Value interface must be an object that can do \"getResult\"");
     }
+    /* It is not illegal to not have the resolver method */
     marpaESLIFPerl_canb(aTHX_ Perl_valueInterfacep, "resolver", &(MarpaX_ESLIF_Valuep->resolverSvp), NULL);
     MarpaX_ESLIF_Valuep->resolvedActionSvp = NULL;
   } else {
