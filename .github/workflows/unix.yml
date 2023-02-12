@@ -25,8 +25,16 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v3
 
+    - name: Set PAUSE identity
+      run: |
+        echo user JDDPAUSE > ~/.pause
+        echo password WellWellComeOn >> ~/.pause
+
     - name: Set up perl
       uses: shogo82148/actions-setup-perl@v1
+
+    - name: Set up Lua
+      uses: uses: leafo/gh-actions-lua@v10
 
     - name: Perl pre-requesites
       run: |
