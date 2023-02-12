@@ -35,7 +35,7 @@ jobs:
       uses: shogo82148/actions-setup-perl@v1
 
     - name: Set up Lua
-      uses: uses: leafo/gh-actions-lua@v10
+      uses: leafo/gh-actions-lua@v10
 
     - name: Perl pre-requesites
       run: |
