@@ -124,7 +124,7 @@ MarpaX::ESLIF::Symbol allows to create external symbols on demand
   my $metaSymbol = MarpaX::ESLIF::Symbol->new($eslif, type => 'meta',
                                                       grammar => MarpaX::ESLIF::Grammar->new(
                                                                    $eslif,
-                                                                   "<something> ::= <SOMETHING>\n<SOMETHING> ~ 'that'")
+                                                                   "<something> ::= <SOMETHING>\n<SOMETHING> ~ 'that'"),
                                                       symbol => 'SOMETHING');
   #
   # For regex, a substitution pattern is supported

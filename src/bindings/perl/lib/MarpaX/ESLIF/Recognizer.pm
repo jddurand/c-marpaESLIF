@@ -22,6 +22,9 @@ sub _EQ       { return }
 
 MarpaX::ESLIF::Recognizer is a possible step after a MarpaX::ESLIF::Grammar instance is created.
 
+=for test_synopsis
+no strict 'vars'
+
 =head1 SYNOPSIS
 
   my $eslifRecognizer = MarpaX::ESLIF::Recognizer->new($eslifGrammar, $recognizerInterface);

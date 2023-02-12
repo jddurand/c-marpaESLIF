@@ -22,6 +22,9 @@ sub _EQ       { return }
 
 MarpaX::ESLIF::Value is a possible step after a MarpaX::ESLIF::Recognizer instance is created.
 
+=for test_synopsis
+no strict 'vars'
+
 =head1 SYNOPSIS
 
   my $eslifValue = MarpaX::ESLIF::Value->new($eslifRecognizer, $valueInterface);
