@@ -30,6 +30,8 @@ jobs:
 
     - name: Perl pre-requesites
       run: |
+        cpan App::cpanminus
+        cpanm --notest Dist::Zilla
         pushd src/bindings/perl && dzil listdeps --author --develop --requires --omit-core `perl -e 'print "$]\n"'` --missing | xargs cpanm --notest && popd
 
     - name: Configure
