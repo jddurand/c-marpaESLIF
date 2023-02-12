@@ -134,7 +134,7 @@ for (my $i = 0; $i <= $#strings; $i++) {
       $log->infof('===========> %s', $valueInterface->getResult);
   } else {
       $log->info('===========> ?');
-  }   
+  }
 }
 
 done_testing();
