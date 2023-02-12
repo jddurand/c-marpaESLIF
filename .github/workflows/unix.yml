@@ -32,7 +32,8 @@ jobs:
       run: |
         cpan App::cpanminus
         cpanm --notest Dist::Zilla
-        pushd src/bindings/perl && dzil listdeps --author --develop --requires --omit-core `perl -e 'print "$]\n"'` --missing | xargs cpanm --notest && popd
+        pushd src/bindings/perl && dzil authordeps --missing | xargs cpanm --notest && popd
+        pushd src/bindings/perl && dzil listdeps --develop --requires --omit-core `perl -e 'print "$]\n"'` --missing | xargs cpanm --notest && popd
 
     - name: Configure
       run: cmake -Wno-dev -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DTCONV_USE_ICU=NO -G "Unix Makefiles" .
