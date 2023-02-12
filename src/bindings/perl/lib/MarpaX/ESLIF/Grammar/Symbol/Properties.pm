@@ -177,7 +177,7 @@ sub isDiscardRhs {
     return $self->{discardRhs}
 }
 
-=head2 $self->isDiscardRhs
+=head2 $self->getDiscardRhs
 
 Returns if this is a RHS of a discard rule
 
@@ -465,7 +465,7 @@ sub isDiscardEventInitialState {
     return $self->{discardEventInitialState}
 }
 
-=head2 $self->isDiscardEventInitialState
+=head2 $self->getDiscardEventInitialState
 
 Returns the discard event initial state, meaningless if there is no discard event
 
