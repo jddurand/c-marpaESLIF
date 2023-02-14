@@ -65,7 +65,7 @@ BEGIN {
     # VERSION
 
     require XSLoader;
-    # Modules that we depent on bootstrap
+    # Modules that we depend on bootstrap
     use Math::BigFloat qw//;
     use Math::BigInt qw//;
     use Encode qw//;
