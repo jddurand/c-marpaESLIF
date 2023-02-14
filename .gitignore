@@ -82,8 +82,7 @@ javadoc/
 *.pdb
 src/bindings/java/doc/
 src/bindings/perl/.build
-src/bindings/perl/Changes
-src/bindings/perl/META.json
-src/bindings/perl/README.pod
+src/bindings/perl/src
+src/bindings/perl/MarpaX-ESLIF-*
 LICENSE.txt
 CPackCustomProjectConfig.cmake
