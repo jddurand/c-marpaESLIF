@@ -601,4 +601,6 @@ sub getVerbose {
 
 L<MarpaX::ESLIF::Symbol::Type>, L<MarpaX::ESLIF::Symbol::PropertyBitSet>, L<MarpaX::ESLIF::Symbol::EventBitSet>
 
+=cut
+
 1;

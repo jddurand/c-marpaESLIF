@@ -374,4 +374,6 @@ sub getHideseparator {
 
 L<MarpaX::ESLIF::Rule::PropertyBitSet>
 
+=cut
+
 1;
