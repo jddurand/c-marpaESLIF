@@ -5,12 +5,12 @@ package MarpaX::ESLIF;
 use parent qw/MarpaX::ESLIF::Base/;
 use MarpaX::ESLIF::String;       # Make sure it is loaded, the XS is using it
 use MarpaX::ESLIF::RegexCallout; # Make sure it is loaded, the XS is using it
+use XSLoader ();
 
 # ABSTRACT: ESLIF is Extended ScanLess InterFace
 
 # AUTHORITY
 
-use vars qw/$VERSION/;
 use Config;
 
 #
@@ -62,14 +62,25 @@ BEGIN {
 # Bootstrap
 #
 BEGIN {
+    #
     # VERSION
-
-    require XSLoader;
+    #
+    # Note that $VERSION is always defined when you use a distributed CPAN package.
+    # With old versions of perl, only the XSLoader::load(__PACKAGE__, $version) works.
+    # E.g. with perl-5.10, doing directly:
+    # make test
+    # within the repository may yell like this:
+    # Error:  XSLoader::load('Your::Module', $Your::Module::VERSION)
+    # In this case, you can put the module version in the MARPAX_ESLIF_VERSION
+    # environment variable, e.g.:
+    # MARPAX_ESLIF_VERSION=999.999.999 make test
+    #
     # Modules that we depend on bootstrap
     use Math::BigFloat qw//;
     use Math::BigInt qw//;
     use Encode qw//;
-    XSLoader::load(__PACKAGE__, $VERSION);
+    my $version = eval q{$VERSION} // $ENV{MARPAX_ESLIF_VERSION}; ## no critic
+    defined($version) ? XSLoader::load(__PACKAGE__, $version) : XSLoader::load();
 }
 
 # Load our explicit sub-modules
