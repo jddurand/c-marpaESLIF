@@ -46,38 +46,38 @@ environment:
      _ARCH: x64
      _GENERATOR: "NMake Makefiles"
      APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
-   - _CC: VS2013
-     _ARCH: x86
-     _GENERATOR: "NMake Makefiles"
-     APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2013
-   - _CC: VS2013
-     _ARCH: x64
-     _GENERATOR: "NMake Makefiles"
-     APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2013
-   - _CC: VS2012
-     _ARCH: x86
-     _GENERATOR: "NMake Makefiles"
-     APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2013
-   - _CC: VS2012
-     _ARCH: x64
-     _GENERATOR: "NMake Makefiles"
-     APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2013
-   - _CC: VS2010
-     _ARCH: x86
-     _GENERATOR: "NMake Makefiles"
-     APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2013
-   - _CC: VS2010
-     _ARCH: x64
-     _GENERATOR: "NMake Makefiles"
-     APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2013
-   - _CC: VS2008
-     _ARCH: x86
-     _GENERATOR: "NMake Makefiles"
-     APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2013
-   - _CC: VS2008
-     _ARCH: x64
-     _GENERATOR: "NMake Makefiles"
-     APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2013
+#   - _CC: VS2013
+#     _ARCH: x86
+#     _GENERATOR: "NMake Makefiles"
+#     APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2013
+#   - _CC: VS2013
+#     _ARCH: x64
+#     _GENERATOR: "NMake Makefiles"
+#     APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2013
+#   - _CC: VS2012
+#     _ARCH: x86
+#     _GENERATOR: "NMake Makefiles"
+#     APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2013
+#   - _CC: VS2012
+#     _ARCH: x64
+#     _GENERATOR: "NMake Makefiles"
+#     APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2013
+#   - _CC: VS2010
+#     _ARCH: x86
+#     _GENERATOR: "NMake Makefiles"
+#     APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2013
+#   - _CC: VS2010
+#     _ARCH: x64
+#     _GENERATOR: "NMake Makefiles"
+#     APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2013
+#   - _CC: VS2008
+#     _ARCH: x86
+#     _GENERATOR: "NMake Makefiles"
+#     APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2013
+#   - _CC: VS2008
+#     _ARCH: x64
+#     _GENERATOR: "NMake Makefiles"
+#     APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2013
 
 build:
   verbosity: detailed
@@ -117,7 +117,7 @@ test_script:
   - cd C:\projects\%APPVEYOR_PROJECT_NAME%
   - nmake check
   - nmake install
-  - nmake pack
+  - cpack
   - for %%a in ("*.exe") do ren "%%~a" "%%~Na-%_CC%%%~Xa"
 
 on_failure:
