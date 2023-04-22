@@ -1,17 +1,73 @@
-# cmake-utils
-CMake macros customized for /my/ packages
+# cmake-utils - CMake macros customized for /my/ packages
+#
+# These macros are trying to reduce CMake scripting up to functional roles only.
+#
+# All technical CMake subtilities are hiden.
+#
+# Typical usage is:
+#
+
+CMAKE_MINIMUM_REQUIRED (VERSION 3.15.0 FATAL_ERROR)
+PROJECT(cmake_utils VERSION 1.0.11 LANGUAGES C CXX)
+IF (NOT MYPACKAGEBOOTSTRAP_DONE)
+  INCLUDE ("../cmake/MyPackageBootstrap.cmake")
+ENDIF ()
 
 #
-# All /my/ packages follow this convention:
-# - a package Xx has a FindXx's cmake, that will set XX_FOUND, XX_INCLUDE_DIRS, XX_ROOT_DIR variables if success
-#   In case of success XX_LIBRARIES is always XX_ROOT_DIR/lib
-# - there are targets Xx and Xxx_static
-# - there is always an include directory
-# - build always generate headers in output/include
-# - Tests always overwrite PATH with value of variable TEST_PATH
-# - Sourcedir of package Xx is always inside current package as 3rdparty/github/Xx
-# - There all under github at https://github.com/jddurand/c-Xx.git
-# - They are pure libraries, no window stuff
-# - They all have a -DXX_NTRACE to enable tracing at compile time
-# - They may use -DXX_VERSION, and -DXX_VERSION_[MAJOR,MINOR,PATCH}
+# Start
 #
+MYPACKAGESTART ()
+
+#
+# Standard CMake things are of course supported
+#
+INCLUDE(CheckSymbolExists)
+CHECK_SYMBOL_EXISTS(memfd_create  "sys/mman.h" HAVE_MEMFD_CREATE) # Needs _GNU_SOURCE
+CHECK_SYMBOL_EXISTS(secure_getenv "stdlib.h"   HAVE_SECURE_GETENV) # Needs _GNU_SOURCE
+
+#
+# Creation of static and shared library all-at-once
+#
+MYPACKAGELIBRARY(
+  ${CMAKE_CURRENT_SOURCE_DIR}/include/config.h.in
+  ${INCLUDE_OUTPUT_PATH}/test/internal/config.h
+  src/test.c)
+
+#
+# m dependency
+#
+IF (CMAKE_MATH_LIBS)
+  FOREACH (_target ${PROJECT_NAME} ${PROJECT_NAME}_static)
+    TARGET_LINK_LIBRARIES(${_target} PUBLIC ${CMAKE_MATH_LIBS})
+  ENDFOREACH ()
+ENDIF ()
+
+#
+# Creation of executables (statically and dynamically linked)
+#
+MYPACKAGEEXECUTABLE(executable bin/executable.c)
+
+#
+# Creation of test executables (statically and dynamically linked)
+#
+MYPACKAGETESTEXECUTABLE(test_executable bin/executable.c)
+
+#
+# *.cmake export
+#
+MYPACKAGECMAKEEXPORT()
+
+#
+# *.pc export
+#
+
+MYPACKAGEPKGCONFIGEXPORT()
+#
+# Packaging
+#
+MYPACKAGEPACK("Vendor" "Summary")
+
+#
+# Verbose print directory's CMake important variables
+#
+MYPACKAGEPRINTSETUP()

@@ -46,38 +46,38 @@ environment:
      _ARCH: x64
      _GENERATOR: "NMake Makefiles"
      APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
-   - _CC: VS2013
-     _ARCH: x86
-     _GENERATOR: "NMake Makefiles"
-     APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2013
-   - _CC: VS2013
-     _ARCH: x64
-     _GENERATOR: "NMake Makefiles"
-     APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2013
-   - _CC: VS2012
-     _ARCH: x86
-     _GENERATOR: "NMake Makefiles"
-     APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2013
-   - _CC: VS2012
-     _ARCH: x64
-     _GENERATOR: "NMake Makefiles"
-     APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2013
-   - _CC: VS2010
-     _ARCH: x86
-     _GENERATOR: "NMake Makefiles"
-     APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2013
-   - _CC: VS2010
-     _ARCH: x64
-     _GENERATOR: "NMake Makefiles"
-     APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2013
-   - _CC: VS2008
-     _ARCH: x86
-     _GENERATOR: "NMake Makefiles"
-     APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2013
-   - _CC: VS2008
-     _ARCH: x64
-     _GENERATOR: "NMake Makefiles"
-     APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2013
+#   - _CC: VS2013
+#     _ARCH: x86
+#     _GENERATOR: "NMake Makefiles"
+#     APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2013
+#   - _CC: VS2013
+#     _ARCH: x64
+#     _GENERATOR: "NMake Makefiles"
+#     APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2013
+#   - _CC: VS2012
+#     _ARCH: x86
+#     _GENERATOR: "NMake Makefiles"
+#     APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2013
+#   - _CC: VS2012
+#     _ARCH: x64
+#     _GENERATOR: "NMake Makefiles"
+#     APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2013
+#   - _CC: VS2010
+#     _ARCH: x86
+#     _GENERATOR: "NMake Makefiles"
+#     APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2013
+#   - _CC: VS2010
+#     _ARCH: x64
+#     _GENERATOR: "NMake Makefiles"
+#     APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2013
+#   - _CC: VS2008
+#     _ARCH: x86
+#     _GENERATOR: "NMake Makefiles"
+#     APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2013
+#   - _CC: VS2008
+#     _ARCH: x64
+#     _GENERATOR: "NMake Makefiles"
+#     APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2013
 
 build:
   verbosity: detailed
@@ -88,9 +88,6 @@ clone_folder: C:\projects\%APPVEYOR_PROJECT_NAME%
 # matrix:
 #   fast_finish: true # Immediately finish build once one of the jobs fails
 
-#
-# C.f. https://www.appveyor.com/docs/lang/cpp/
-#
 init:
   - IF "%_CC%" == "VS2022" IF "%_GENERATOR%"=="NMake Makefiles" IF "%_ARCH%" == "x86" call "C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Auxiliary\Build\vcvars32.bat"
   - IF "%_CC%" == "VS2022" IF "%_GENERATOR%"=="NMake Makefiles" IF "%_ARCH%" == "x64" call "C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Auxiliary\Build\vcvars64.bat"
@@ -120,7 +117,7 @@ test_script:
   - cd C:\projects\%APPVEYOR_PROJECT_NAME%
   - nmake check
   - nmake install
-  - nmake pack
+  - cpack
   - for %%a in ("*.exe") do ren "%%~a" "%%~Na-%_CC%%%~Xa"
 
 on_failure:
@@ -134,7 +131,7 @@ artifacts:
 deploy:
   provider: GitHub
   auth_token:
-    secure: "Z4xhplTHN8iqMJJQSho73tcUnKrNiP38Kh02PFom4rNxjqkHhIdQRfnrg36EqjB3"
+    secure: "fEAB3xYZ5qzMzndC986dN2rtp1tEAXP76gpp7qWpzzwVuWDDuWcLUH7fPNzDyVeb"
   artifacts: MyArtifact
   draft: false
   prerelease: false
