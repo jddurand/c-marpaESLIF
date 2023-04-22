@@ -1,48 +1,88 @@
 MACRO (MYPACKAGELIBRARY config_in config_out)
+  #
+  # Call for the configuration
+  #
+  MYPACKAGECONFIG(${config_in} ${config_out})
+  #
+  # We always have four versions:
+  # -----------------------------
+  # ${PROJECT_NAME}                   SHARED library
+  # ${PROJECT_NAME}_static            STATIC library
+  # ${PROJECT_NAME}_objs              SHARED objects
+  # ${PROJECT_NAME}_static_objs       STATIC objects
+  #
   IF (MYPACKAGE_DEBUG)
     FOREACH (_source ${ARGN})
       MESSAGE (STATUS "[${PROJECT_NAME}-LIBRARY-DEBUG] Source: ${_source}")
     ENDFOREACH ()
   ENDIF ()
   #
+  # Shared objects
+  #
+  IF (MYPACKAGE_DEBUG)
+    MESSAGE (STATUS "[${PROJECT_NAME}-LIBRARY-DEBUG] Creating SHARED objects ${PROJECT_NAME}_objs")
+  ENDIF ()
+  ADD_LIBRARY (${PROJECT_NAME}_objs OBJECT $<${build_local_interface}:${ARGN}>)
+  IF (MYPACKAGE_DEBUG)
+    MESSAGE (STATUS "[${PROJECT_NAME}-LIBRARY-DEBUG] Setting PRIVATE -D${PROJECT_NAME}_EXPORTS on ${PROJECT_NAME}_objs")
+  ENDIF ()
+  TARGET_COMPILE_DEFINITIONS(${PROJECT_NAME}_objs PRIVATE -D${PROJECT_NAME}_EXPORTS)
+  #
   # Shared library
   #
   IF (MYPACKAGE_DEBUG)
-    MESSAGE (STATUS "[${PROJECT_NAME}-LIBRARY-DEBUG] Creating target ${PROJECT_NAME}")
+    MESSAGE (STATUS "[${PROJECT_NAME}-LIBRARY-DEBUG] Creating SHARED library ${PROJECT_NAME}")
   ENDIF ()
-  ADD_LIBRARY (${PROJECT_NAME} SHARED ${ARGN})
+  ADD_LIBRARY (${PROJECT_NAME} SHARED $<TARGET_OBJECTS:${PROJECT_NAME}_objs>)
+  IF (MYPACKAGE_DEBUG)
+    MESSAGE (STATUS "[${PROJECT_NAME}-LIBRARY-DEBUG] Setting PRIVATE -D${PROJECT_NAME}_EXPORTS on ${PROJECT_NAME}")
+  ENDIF ()
   SET_TARGET_PROPERTIES(${PROJECT_NAME}
     PROPERTIES
-    COMPILE_FLAGS "-D${PROJECT_NAME}_EXPORTS"
-    VERSION       "${${PROJECT_NAME}_VERSION}"
-    SOVERSION     "${${PROJECT_NAME}_VERSION_MAJOR}"
-    )
+    VERSION       ${${PROJECT_NAME}_VERSION}
+    SOVERSION     ${${PROJECT_NAME}_VERSION_MAJOR}
+  )
   #
-  # Static library - in practice version information is not needed
+  # Static objects
   #
   IF (MYPACKAGE_DEBUG)
-    MESSAGE (STATUS "[${PROJECT_NAME}-LIBRARY-DEBUG] Creating target ${PROJECT_NAME}_static")
+    MESSAGE (STATUS "[${PROJECT_NAME}-LIBRARY-DEBUG] Creating STATIC objects ${PROJECT_NAME}_static_objs")
   ENDIF ()
-  ADD_LIBRARY (${PROJECT_NAME}_static STATIC ${ARGN})
-  SET_TARGET_PROPERTIES(${PROJECT_NAME}_static
-    PROPERTIES
-    COMPILE_FLAGS "-D${PROJECT_NAME}_STATIC"
-    VERSION       "${${PROJECT_NAME}_VERSION}"
-    SOVERSION     "${${PROJECT_NAME}_VERSION_MAJOR}"
-    )
+  ADD_LIBRARY (${PROJECT_NAME}_static_objs OBJECT $<${build_local_interface}:${ARGN}>)
+  IF (MYPACKAGE_DEBUG)
+    MESSAGE (STATUS "[${PROJECT_NAME}-LIBRARY-DEBUG] Setting PUBLIC -D${PROJECT_NAME}_STATIC on ${PROJECT_NAME}_objs")
+  ENDIF ()
+  TARGET_COMPILE_DEFINITIONS(${PROJECT_NAME}_static_objs PUBLIC -D${PROJECT_NAME}_STATIC)
+  #
+  # Static library
+  #
+  IF (MYPACKAGE_DEBUG)
+    MESSAGE (STATUS "[${PROJECT_NAME}-LIBRARY-DEBUG] Creating STATIC target ${PROJECT_NAME}_static")
+  ENDIF ()
+  ADD_LIBRARY (${PROJECT_NAME}_static STATIC $<TARGET_OBJECTS:${PROJECT_NAME}_static_objs>)
+  IF (MYPACKAGE_DEBUG)
+    MESSAGE (STATUS "[${PROJECT_NAME}-LIBRARY-DEBUG] Setting PUBLIC -D${PROJECT_NAME}_STATIC on ${PROJECT_NAME}")
+  ENDIF ()
+  TARGET_COMPILE_DEFINITIONS(${PROJECT_NAME}_static PUBLIC -D${PROJECT_NAME}_STATIC)
   #
   # ... Tracing
   #
   STRING (TOUPPER ${PROJECT_NAME} _PROJECTNAME)
-  IF (NOT CMAKE_BUILD_TYPE MATCHES Debug)
-    FOREACH (_target ${PROJECT_NAME} ${PROJECT_NAME}_static)
+  IF (NTRACE)
+    FOREACH (_target ${PROJECT_NAME}_objs ${PROJECT_NAME}_static_objs)
+      IF (MYPACKAGE_DEBUG)
+        MESSAGE (STATUS "[${PROJECT_NAME}-LIBRARY-DEBUG] Setting PRIVATE -D${_PROJECTNAME}_NTRACE on ${_target}")
+      ENDIF ()
       TARGET_COMPILE_DEFINITIONS(${_target} PRIVATE -D${_PROJECTNAME}_NTRACE)
     ENDFOREACH ()
   ENDIF ()
   #
   # ... Version information
   #
-  FOREACH (_target ${PROJECT_NAME} ${PROJECT_NAME}_static)
+  FOREACH (_target ${PROJECT_NAME}_objs ${PROJECT_NAME}_static_objs)
+    IF (MYPACKAGE_DEBUG)
+      MESSAGE (STATUS "[${PROJECT_NAME}-LIBRARY-DEBUG] Setting PRIVATE version macros on ${_target}")
+    ENDIF ()
     TARGET_COMPILE_DEFINITIONS(${_target}
       PRIVATE -D${_PROJECTNAME}_VERSION_MAJOR=${${PROJECT_NAME}_VERSION_MAJOR}
       PRIVATE -D${_PROJECTNAME}_VERSION_MINOR=${${PROJECT_NAME}_VERSION_MINOR}
@@ -53,78 +93,95 @@ MACRO (MYPACKAGELIBRARY config_in config_out)
   #
   # We always enable C99 when available
   #
-  IF (MYPACKAGE_DEBUG)
-    MESSAGE(STATUS "Enabling c99 features on the C compiler if possible")
-  ENDIF ()
-  FOREACH (_target ${PROJECT_NAME} ${PROJECT_NAME}_static)
+  FOREACH (_target ${PROJECT_NAME}_objs ${PROJECT_NAME}_static_objs)
+    IF (MYPACKAGE_DEBUG)
+      MESSAGE (STATUS "[${PROJECT_NAME}-LIBRARY-DEBUG] Setting PROPERTY C_STANDARD 99 on ${_target}")
+    ENDIF ()
     SET_PROPERTY(TARGET ${_target} PROPERTY C_STANDARD 99)
   ENDFOREACH ()
-  #
-  # Which is quite C11 in the XX world - in particular only c++11 guarantees the long long type existence
-  #
-  # IF (MYPACKAGE_DEBUG)
-  #   MESSAGE(STATUS "Enabling c++11 features on the CXX compiler, if any")
-  # ENDIF ()
-  # FOREACH (_target ${PROJECT_NAME} ${PROJECT_NAME}_static)
-  #   TARGET_COMPILE_FEATURES(${_target} PUBLIC cxx_std_11)
-  # ENDFOREACH ()
   #
   # OS Specifics
   #
   IF (CMAKE_SYSTEM_NAME MATCHES "NetBSD")
-    IF (MYPACKAGE_DEBUG)
-      MESSAGE(STATUS "NetBSD: Force -D_NETBSD_SOURCE=1 compile definition")
-    ENDIF ()
     #
     # On NetBSD, enable this platform features. This makes sure we always have "long long" btw.
     #
-    FOREACH (_target ${PROJECT_NAME} ${PROJECT_NAME}_static)
+    FOREACH (_target ${PROJECT_NAME}_objs ${PROJECT_NAME}_static_objs ${PROJECT_NAME} ${PROJECT_NAME}_static)
+      IF (MYPACKAGE_DEBUG)
+        MESSAGE (STATUS "[${PROJECT_NAME}-LIBRARY-DEBUG] Setting PUBLIC -D_NETBSD_SOURCE=1 on ${_target}")
+      ENDIF ()
       TARGET_COMPILE_DEFINITIONS (${_target} PUBLIC -D_NETBSD_SOURCE=1)
     ENDFOREACH ()
   ENDIF ()
   #
   # Project's own include directories
   #
-  SET (_project_include_directories "${PROJECT_SOURCE_DIR}/output/include" "${PROJECT_SOURCE_DIR}/include")
-  FOREACH (_target ${PROJECT_NAME} ${PROJECT_NAME}_static)
+  SET (_project_include_directories ${CMAKE_CURRENT_BINARY_DIR}/output/include ${PROJECT_SOURCE_DIR}/include)
+  FOREACH (_target ${PROJECT_NAME}_objs ${PROJECT_NAME}_static_objs ${PROJECT_NAME} ${PROJECT_NAME}_static)
     FOREACH (_include_directory ${_project_include_directories})
-      #
-      # The "internal" include directory is always internal, indeed
-      #
-      STRING (TOLOWER "${_include_directory}" _include_directory_lower )
-      IF ( _include_directory_lower MATCHES "/internal/?$" )
-	SET (_include_directory_scope "PRIVATE")
-      ELSE ()
-	SET (_include_directory_scope "PUBLIC")
-      ENDIF ()
       IF (MYPACKAGE_DEBUG)
-        MESSAGE (STATUS "[${PROJECT_NAME}-LIBRARY-DEBUG] Adding ${_include_directory_scope} ${_include_directory} include dependency to ${_target}")
+        MESSAGE (STATUS "[${PROJECT_NAME}-LIBRARY-DEBUG] Adding PUBLIC ${build_local_interface} ${_include_directory} include dependency to ${_target}")
       ENDIF ()
-      TARGET_INCLUDE_DIRECTORIES(${_target} ${_include_directory_scope} ${_include_directory})
+      TARGET_INCLUDE_DIRECTORIES(${_target} PUBLIC $<${build_local_interface}:${_include_directory}>)
     ENDFOREACH ()
+    IF (MYPACKAGE_DEBUG)
+      MESSAGE (STATUS "[${PROJECT_NAME}-LIBRARY-DEBUG] Adding PUBLIC INSTALL_INTERFACE ${_include_directory} include dependency to ${_target}")
+    ENDIF ()
+    TARGET_INCLUDE_DIRECTORIES(${_target} PUBLIC $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)
   ENDFOREACH ()
-  INSTALL (TARGETS ${PROJECT_NAME}
-    RUNTIME DESTINATION bin COMPONENT DynamicLibraryComponent
-    LIBRARY DESTINATION lib COMPONENT DynamicLibraryComponent
-    ARCHIVE DESTINATION lib COMPONENT DynamicLibraryComponent
-    )
-  INSTALL (TARGETS ${PROJECT_NAME}_static
-    RUNTIME DESTINATION bin COMPONENT StaticLibraryComponent
-    LIBRARY DESTINATION lib COMPONENT StaticLibraryComponent
-    ARCHIVE DESTINATION lib COMPONENT StaticLibraryComponent
-    )
-  SET (_HAVE_DYNAMICLIBRARYCOMPONENT TRUE CACHE INTERNAL "Have DynamicLibraryComponent" FORCE)
-  SET (_HAVE_STATICLIBRARYCOMPONENT TRUE CACHE INTERNAL "Have StaticLibraryComponent" FORCE)
-  #
-  # Call for the configuration
-  #
-  MYPACKAGECONFIG(${config_in} ${config_out})
   #
   # Call for the export headers
   #
   MYPACKAGEEXPORT()
+  FOREACH (_target ${PROJECT_NAME}_objs ${PROJECT_NAME}_static_objs)
+    IF (MYPACKAGE_DEBUG)
+      MESSAGE (STATUS "[${PROJECT_NAME}-LIBRARY-DEBUG] Adding ${PROJECT_NAME}_export ${PROJECT_NAME}_config dependencies to ${_target}")
+    ENDIF ()
+    ADD_DEPENDENCIES(${_target} ${PROJECT_NAME}_export ${PROJECT_NAME}_config)
+  ENDFOREACH ()
   #
-  # Add dependencies to config and export headers
+  # Install library targets
   #
-  ADD_DEPENDENCIES(${PROJECT_NAME} ${PROJECT_NAME}Config ${PROJECT_NAME}Export)
+  IF (NOT CMAKE_VERSION VERSION_LESS "3.26")
+    INSTALL (TARGETS ${PROJECT_NAME}
+      EXPORT ${PROJECT_NAME}-targets
+      RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT LibraryComponent
+      LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT LibraryComponent
+      ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT LibraryComponent
+    )
+    INSTALL (TARGETS ${PROJECT_NAME}_static
+      EXPORT ${PROJECT_NAME}-targets
+      RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT LibraryComponent
+      LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT LibraryComponent
+      ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT LibraryComponent
+    )
+  ELSE ()
+    INSTALL (TARGETS ${PROJECT_NAME}
+      RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT LibraryComponent
+      LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT LibraryComponent
+      ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT LibraryComponent
+    )
+    INSTALL (TARGETS ${PROJECT_NAME}_static
+      RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT LibraryComponent
+      LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT LibraryComponent
+      ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT LibraryComponent
+    )
+  ENDIF ()
+  #
+  # For static library we want to debug information within the lib
+  # For shared library we want to install the pdb file if it exists
+  #
+  IF (MSVC)
+    TARGET_COMPILE_OPTIONS(${PROJECT_NAME}_static PRIVATE /Z7)
+    INSTALL(FILES $<TARGET_PDB_FILE:${PROJECT_NAME}> DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT LibraryComponent OPTIONAL)
+  ENDIF ()
+  #
+  # We make sure that the directory where is ${config_out} is public
+  #
+  GET_FILENAME_COMPONENT(_config_out_dir ${config_out} DIRECTORY)
+  FOREACH (_target ${PROJECT_NAME}_objs ${PROJECT_NAME}_static_objs)
+    TARGET_INCLUDE_DIRECTORIES(${_target} PUBLIC $<${build_local_interface}:${_config_out_dir}>)
+  ENDFOREACH ()
+
+  SET (${PROJECT_NAME}_HAVE_LIBRARYCOMPONENT TRUE CACHE INTERNAL "Have LibraryComponent" FORCE)
 ENDMACRO()
