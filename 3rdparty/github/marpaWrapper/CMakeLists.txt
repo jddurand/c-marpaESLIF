@@ -16,7 +16,7 @@ MYPACKAGELIBRARY(
 #
 # Because of Marpa, the cmake framework does not know about it
 #
-FOREACH (_target ${PROJECT_NAME} ${PROJECT_NAME}_static)
+FOREACH (_target ${PROJECT_NAME}_objs ${PROJECT_NAME}_static_objs)
   TARGET_INCLUDE_DIRECTORIES(${_target} PRIVATE libmarpa/work/stage)
   FOREACH (_type MAJOR MICRO MINOR)
     TARGET_COMPILE_DEFINITIONS(${_target} PRIVATE -DMARPA_LIB_${_type}_VERSION=MARPA_${_type}_VERSION)
@@ -47,10 +47,16 @@ MYPACKAGECHECK(marpaWrapperAsfTester)
 MYPACKAGECHECK(marpaWrapperAsfValueTester)
 MYPACKAGECHECK(marpaWrapperAsfAmbiguousTester)
 
+##########
+# Export #
+##########
+MYPACKAGECMAKEEXPORT()
+MYPACKAGEPKGCONFIGEXPORT()
+
 #############
 # Packaging #
 #############
-MYPACKAGEPACK("" "Generic Logger")
+MYPACKAGEPACK("" "Marpa Wrapper")
 
 #########
 # Setup #

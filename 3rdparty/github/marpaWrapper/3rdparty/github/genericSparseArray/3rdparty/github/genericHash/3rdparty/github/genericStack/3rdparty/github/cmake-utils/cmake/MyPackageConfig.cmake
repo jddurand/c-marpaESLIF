@@ -6,7 +6,8 @@ MACRO (MYPACKAGECONFIG config_in config_out)
   CONFIGURE_FILE(${config_in} ${config_out})
 
   IF (MYPACKAGE_DEBUG)
-    MESSAGE (STATUS "[${PROJECT_NAME}-CONFIG-DEBUG] Creating target ${PROJECT_NAME}Config")
+    MESSAGE (STATUS "[${PROJECT_NAME}-CONFIG-DEBUG] Creating target ${PROJECT_NAME}_config")
   ENDIF ()
-  ADD_CUSTOM_TARGET(${PROJECT_NAME}Config SOURCES ${config_in})
+  ADD_CUSTOM_TARGET(${PROJECT_NAME}_config SOURCES ${config_in})
+
 ENDMACRO()

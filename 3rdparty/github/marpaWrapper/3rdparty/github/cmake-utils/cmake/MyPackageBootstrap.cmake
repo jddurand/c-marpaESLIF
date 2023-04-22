@@ -29,7 +29,7 @@ IF (NOT MYPACKAGEBOOTSTRAP_DONE)
   #
   # Policies common to all our files
   #
-  FOREACH (_policy CMP0018 CMP0063 CMP0075)
+  FOREACH (_policy CMP0018 CMP0063 CMP0075 CMP0057)
     IF (POLICY ${_policy})
       IF (MYPACKAGE_DEBUG)
         MESSAGE (STATUS "[${PROJECT_NAME}-BOOTSTRAP-DEBUG] Setting policy ${_policy} to NEW")
@@ -63,7 +63,7 @@ IF (NOT MYPACKAGEBOOTSTRAP_DONE)
   ENDIF ()
   ENABLE_TESTING()
   #
-  # Create check and man targets
+  # Create check target
   #
   IF (MYPACKAGE_DEBUG)
     MESSAGE (STATUS "[${PROJECT_NAME}-BOOTSTRAP-DEBUG] Creating target check")
@@ -75,9 +75,12 @@ IF (NOT MYPACKAGEBOOTSTRAP_DONE)
     COMMAND ${CMAKE_COMMAND} -E echo ----------------------------------
     COMMAND ${CMAKE_COMMAND} -E env CTEST_OUTPUT_ON_FAILURE=1 ${CMAKE_CTEST_COMMAND} -C $<CONFIG>
     )
-  IF (MYPACKAGE_DEBUG)
-    MESSAGE (STATUS "[${PROJECT_NAME}-BOOTSTRAP-DEBUG] Creating target man")
-  ENDIF ()
-  INSTALL (CODE "EXECUTE_PROCESS(COMMAND ${CMAKE_MAKE_PROGRAM} man)")
-  ADD_CUSTOM_TARGET (man)
+    #
+    # Local interface keyword
+    #
+    IF (CMAKE_VERSION VERSION_LESS "3.26")
+      SET (build_local_interface "BUILD_INTERFACE")
+    ELSE ()
+      SET (build_local_interface "BUILD_LOCAL_INTERFACE")
+    ENDIF ()
 ENDIF ()
