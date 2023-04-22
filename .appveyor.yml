@@ -1,12 +1,10 @@
-skip_non_tags: true
 shallow_clone: true  # For GitHub abd BitBucket
 clone_depth: 100     # For other git providers
 
 # -------------------------------------------------------------------------------------------------------------------
-# The important thing is to know what AppVeyor images hosts what. As of 11-oct-2019:
 #
-#  Image              "Visual Studio 2013"     "Visual Studio 2015"         "Visual Studio 2017" "Visual Studio 2019"  "Visual Studio 2022"
-#  CMake               3.12.2                   3.16.2                       3.16.2               3.22.5               3.22.0
+#  Image              "Visual Studio 2013"     "Visual Studio 2015"         "Visual Studio 2017" "Visual Studio 2019" "Visual Studio 2022"
+#  CMake               C.f. https://www.appveyor.com/docs/windows-images-software/
 #  Visual C++          2008/2010/2012/2013      2008/2010/2012/2013/2015     2015/2017            2019                 2022
 #
 # Note that 2010 x64 will not have redistributables because they are absent from AppVeyor image.
@@ -48,38 +46,38 @@ environment:
      _ARCH: x64
      _GENERATOR: "NMake Makefiles"
      APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
-   - _CC: VS2013
-     _ARCH: x86
-     _GENERATOR: "NMake Makefiles"
-     APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2013
-   - _CC: VS2013
-     _ARCH: x64
-     _GENERATOR: "NMake Makefiles"
-     APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2013
-   - _CC: VS2012
-     _ARCH: x86
-     _GENERATOR: "NMake Makefiles"
-     APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2013
-   - _CC: VS2012
-     _ARCH: x64
-     _GENERATOR: "NMake Makefiles"
-     APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2013
-   - _CC: VS2010
-     _ARCH: x86
-     _GENERATOR: "NMake Makefiles"
-     APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2013
-   - _CC: VS2010
-     _ARCH: x64
-     _GENERATOR: "NMake Makefiles"
-     APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2013
-   - _CC: VS2008
-     _ARCH: x86
-     _GENERATOR: "NMake Makefiles"
-     APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2013
-   - _CC: VS2008
-     _ARCH: x64
-     _GENERATOR: "NMake Makefiles"
-     APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2013
+#   - _CC: VS2013
+#     _ARCH: x86
+#     _GENERATOR: "NMake Makefiles"
+#     APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2013
+#   - _CC: VS2013
+#     _ARCH: x64
+#     _GENERATOR: "NMake Makefiles"
+#     APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2013
+#   - _CC: VS2012
+#     _ARCH: x86
+#     _GENERATOR: "NMake Makefiles"
+#     APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2013
+#   - _CC: VS2012
+#     _ARCH: x64
+#     _GENERATOR: "NMake Makefiles"
+#     APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2013
+#   - _CC: VS2010
+#     _ARCH: x86
+#     _GENERATOR: "NMake Makefiles"
+#     APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2013
+#   - _CC: VS2010
+#     _ARCH: x64
+#     _GENERATOR: "NMake Makefiles"
+#     APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2013
+#   - _CC: VS2008
+#     _ARCH: x86
+#     _GENERATOR: "NMake Makefiles"
+#     APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2013
+#   - _CC: VS2008
+#     _ARCH: x64
+#     _GENERATOR: "NMake Makefiles"
+#     APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2013
 
 build:
   verbosity: detailed
@@ -119,14 +117,12 @@ test_script:
   - cd C:\projects\%APPVEYOR_PROJECT_NAME%
   - nmake check
   - nmake install
-  - nmake pack
+  - cpack
   - for %%a in ("*.exe") do ren "%%~a" "%%~Na-%_CC%%%~Xa"
 
 on_failure:
-  - ps: if(Test-Path C:\projects\%APPVEYOR_PROJECT_NAME%\__generated_include_dir__) { dir C:\projects\%APPVEYOR_PROJECT_NAME%\__generated_include_dir__ }
-  - ps: if(Test-Path C:\projects\%APPVEYOR_PROJECT_NAME%\__generated_include_dir__\stdint.h) { type C:\projects\%APPVEYOR_PROJECT_NAME%\__generated_include_dir__\stdint.h }
-  - ps: if(Test-Path C:\projects\%APPVEYOR_PROJECT_NAME%\CMakeFiles\CMakeOutput.log) { type C:\projects\%APPVEYOR_PROJECT_NAME%\CMakeFiles\CMakeOutput.log }
-  - ps: if(Test-Path C:\projects\%APPVEYOR_PROJECT_NAME%\CMakeFiles\CMakeError.log) { type C:\projects\%APPVEYOR_PROJECT_NAME%\CMakeFiles\CMakeError.log }
+  - ps: if(Test-Path C:\projects\%APPVEYOR_PROJECT_NAME%\CMakeFiles\CMakeOutput.log) { cat C:\projects\%APPVEYOR_PROJECT_NAME%\CMakeFiles\CMakeOutput.log }
+  - ps: if(Test-Path C:\projects\%APPVEYOR_PROJECT_NAME%\CMakeFiles\CMakeError.log) { cat C:\projects\%APPVEYOR_PROJECT_NAME%\CMakeFiles\CMakeError.log }
 
 artifacts:
   - path: "*.exe"
@@ -135,7 +131,7 @@ artifacts:
 deploy:
   provider: GitHub
   auth_token:
-    secure: "QohljF0zVxoyqpqvo/q1xes4wAjFnk4cVnCQJSvY69EjT9w7mGOe+N5UyMYlaiP4"
+    secure: "fEAB3xYZ5qzMzndC986dN2rtp1tEAXP76gpp7qWpzzwVuWDDuWcLUH7fPNzDyVeb"
   artifacts: MyArtifact
   draft: false
   prerelease: false
