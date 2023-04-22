@@ -1,0 +1,36 @@
+name: Windows
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+  workflow_dispatch:
+
+env:
+  # Customize the CMake build type here (Release, Debug, RelWithDebInfo, etc.)
+  BUILD_TYPE: RelWithDebInfo
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest]
+        include:
+          - os: windows-latest
+    runs-on: ${{ matrix.os }}
+
+    steps:
+    - uses: actions/checkout@v3
+    - uses: ilammy/msvc-dev-cmd@v1
+
+    - name: Configure
+      run: cmake -Wno-dev -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -G "NMake Makefiles" .
+
+    - name: Check
+      run: nmake check VERBOSE=1
+
+    - name: Package
+      run: cpack
+
