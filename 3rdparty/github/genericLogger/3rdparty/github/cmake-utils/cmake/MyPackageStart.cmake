@@ -1,14 +1,11 @@
 MACRO (MYPACKAGESTART)
   #
-  # Start
-  #
-  MESSAGE (STATUS "[${PROJECT_NAME}-START-STATUS] Starting version ${PROJECT_VERSION}")
-  #
   # Options
   #
-  OPTION (ALL_IN_ONE "Compile non-system wide dependencies locally" OFF)
+  OPTION (NTRACE "Build without calls to trace log (if you switch this option to OFF, do NOT redistribute it)" ON)
   OPTION (MYPACKAGE_DEBUG "Debug message from MyPackage*.cmake" OFF)
   IF (MYPACKAGE_DEBUG)
+    MESSAGE (STATUS "[${PROJECT_NAME}-START-STATUS] Starting version ${PROJECT_VERSION}")
     MESSAGE (STATUS "[${PROJECT_NAME}-START-STATUS] ALL_IN_ONE option is ${ALL_IN_ONE}")
     MESSAGE (STATUS "[${PROJECT_NAME}-START-DEBUG] MYPACKAGE_DEBUG option is ${MYPACKAGE_DEBUG}")
   ENDIF ()
@@ -16,10 +13,6 @@ MACRO (MYPACKAGESTART)
   # Use GNUInstallDirs in order to enforce lib64 if needed
   #
   INCLUDE (GNUInstallDirs)
-  #
-  # Include system libraries if needed (like on Windows)
-  #
-  INCLUDE (InstallRequiredSystemLibraries)
   #
   # General module search path
   #
@@ -30,28 +23,28 @@ MACRO (MYPACKAGESTART)
   #
   # General include output path
   #
-  SET (INCLUDE_OUTPUT_PATH  "${PROJECT_SOURCE_DIR}/output/include")
+  SET (INCLUDE_OUTPUT_PATH ${CMAKE_CURRENT_BINARY_DIR}/output/include)
   IF (MYPACKAGE_DEBUG)
     MESSAGE (STATUS "[${PROJECT_NAME}-START-STATUS] Setted INCLUDE_OUTPUT_PATH to ${INCLUDE_OUTPUT_PATH}")
   ENDIF ()
   #
   # General library output path
   #
-  SET (LIBRARY_OUTPUT_PATH  "${PROJECT_SOURCE_DIR}/output/lib")
+  SET (LIBRARY_OUTPUT_PATH ${CMAKE_CURRENT_BINARY_DIR}/output/lib)
   IF (MYPACKAGE_DEBUG)
     MESSAGE (STATUS "[${PROJECT_NAME}-START-STATUS] Setted LIBRARY_OUTPUT_PATH to ${LIBRARY_OUTPUT_PATH}")
   ENDIF ()
   #
   # General binary output path
   #
-  SET (BINARY_OUTPUT_PATH   "${PROJECT_SOURCE_DIR}/output/bin")
+  SET (BINARY_OUTPUT_PATH ${CMAKE_CURRENT_BINARY_DIR}/output/bin)
   IF (MYPACKAGE_DEBUG)
     MESSAGE (STATUS "[${PROJECT_NAME}-START-STATUS] Setted BINARY_OUTPUT_PATH to ${BINARY_OUTPUT_PATH}")
   ENDIF ()
   #
   # General 3rdparty output path
   #
-  SET (3RDPARTY_OUTPUT_PATH "${PROJECT_SOURCE_DIR}/output/3rdparty")
+  SET (3RDPARTY_OUTPUT_PATH ${CMAKE_CURRENT_BINARY_DIR}/output/3rdparty)
   IF (MYPACKAGE_DEBUG)
     MESSAGE (STATUS "[${PROJECT_NAME}-START-STATUS] Setted 3RDPARTY_OUTPUT_PATH to ${3RDPARTY_OUTPUT_PATH}")
   ENDIF ()
@@ -59,14 +52,14 @@ MACRO (MYPACKAGESTART)
   # Output directories
   # C.f. http://stackoverflow.com/questions/7747857/in-cmake-how-do-i-work-around-the-debug-and-release-directories-visual-studio-2
   #
-  SET (CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${LIBRARY_OUTPUT_PATH}")
-  SET (CMAKE_LIBRARY_OUTPUT_DIRECTORY "${LIBRARY_OUTPUT_PATH}")
-  SET (CMAKE_RUNTIME_OUTPUT_DIRECTORY "${LIBRARY_OUTPUT_PATH}")
+  SET (CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${LIBRARY_OUTPUT_PATH})
+  SET (CMAKE_LIBRARY_OUTPUT_DIRECTORY ${LIBRARY_OUTPUT_PATH})
+  SET (CMAKE_RUNTIME_OUTPUT_DIRECTORY ${LIBRARY_OUTPUT_PATH})
   FOREACH (OUTPUTCONFIG ${CMAKE_CONFIGURATION_TYPES})
     STRING( TOUPPER ${OUTPUTCONFIG} OUTPUTCONFIG )
-    SET ( CMAKE_LIBRARY_OUTPUT_DIRECTORY_${OUTPUTCONFIG} "${LIBRARY_OUTPUT_PATH}")
-    SET ( CMAKE_ARCHIVE_OUTPUT_DIRECTORY_${OUTPUTCONFIG} "${LIBRARY_OUTPUT_PATH}")
-    SET ( CMAKE_RUNTIME_OUTPUT_DIRECTORY_${OUTPUTCONFIG} "${LIBRARY_OUTPUT_PATH}")
+    SET ( CMAKE_LIBRARY_OUTPUT_DIRECTORY_${OUTPUTCONFIG} ${LIBRARY_OUTPUT_PATH})
+    SET ( CMAKE_ARCHIVE_OUTPUT_DIRECTORY_${OUTPUTCONFIG} ${LIBRARY_OUTPUT_PATH})
+    SET ( CMAKE_RUNTIME_OUTPUT_DIRECTORY_${OUTPUTCONFIG} ${LIBRARY_OUTPUT_PATH})
   ENDFOREACH (OUTPUTCONFIG CMAKE_CONFIGURATION_TYPES)
   IF (MYPACKAGE_DEBUG)
     MESSAGE (STATUS "[${PROJECT_NAME}-START-STATUS] Setted all output directories to ${LIBRARY_OUTPUT_PATH}")
@@ -197,23 +190,23 @@ MACRO (MYPACKAGESTART)
     FILE (RELATIVE_PATH _relfile ${PROJECT_SOURCE_DIR} ${_file})
     GET_FILENAME_COMPONENT(_dir ${_relfile} DIRECTORY)
     INSTALL(FILES ${_file} DESTINATION ${_dir} COMPONENT HeaderComponent)
-    SET (_HAVE_HEADERCOMPONENT TRUE CACHE INTERNAL "Have HeaderComponent" FORCE)
+    SET (${PROJECT_NAME}_HAVE_HEADERCOMPONENT TRUE CACHE INTERNAL "Have HeaderComponent" FORCE)
     IF (MYPACKAGE_DEBUG)
-      MESSAGE (STATUS "[${PROJECT_NAME}-START-DEBUG] Adding install rule for ${_file}")
+      MESSAGE (STATUS "[${PROJECT_NAME}-START-DEBUG] Adding public header ${_file}")
     ENDIF ()
   ENDFOREACH()
   #
   # Make sure current project have a property associating its default directories
   #
-  SET (_project_fake_include_dirs)
-  FOREACH (_include_directory output/include include)
-    GET_FILENAME_COMPONENT(_absolute_include_directory ${_include_directory} ABSOLUTE)
+  SET (_include_dirs)
+  FOREACH (_include_dir ${CMAKE_CURRENT_BINARY_DIR}/output/include ${PROJECT_SOURCE_DIR}/include)
+    GET_FILENAME_COMPONENT(_absolute_include_dir ${_include_dir} ABSOLUTE)
     IF (MYPACKAGE_DEBUG)
-      MESSAGE (STATUS "[${PROJECT_NAME}-START-DEBUG] MYPACKAGE_DEPENDENCY_${PROJECT_NAME}_FAKE_INCLUDE_DIRS appended with ${_absolute_include_directory}")
+      MESSAGE (STATUS "[${PROJECT_NAME}-START-DEBUG] MYPACKAGE_DEPENDENCY_${PROJECT_NAME}_INCLUDE_DIRS appended with ${_absolute_include_dir}")
     ENDIF ()
-    LIST (APPEND _project_fake_include_dirs ${_absolute_include_directory})
+    LIST (APPEND _include_dirs ${_absolute_include_dir})
   ENDFOREACH ()
-  SET_PROPERTY(GLOBAL PROPERTY MYPACKAGE_DEPENDENCY_${PROJECT_NAME}_FAKE_INCLUDE_DIRS ${_project_fake_include_dirs})
+  SET_PROPERTY(GLOBAL PROPERTY MYPACKAGE_DEPENDENCY_${PROJECT_NAME}_INCLUDE_DIRS ${_include_dirs})
   #
   # We consider that if there is a README.pod, then it is a candidate for installation
   #
