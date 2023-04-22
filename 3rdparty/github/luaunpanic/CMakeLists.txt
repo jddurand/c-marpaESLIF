@@ -148,6 +148,12 @@ MYPACKAGETESTEXECUTABLE(luaunpanicwrapperTester2 test/luawrapperTester2.c)
 MYPACKAGECHECK(luaunpanicwrapperTester ${CMAKE_CURRENT_SOURCE_DIR}/test/luawrapperTester.lua)
 MYPACKAGECHECK(luaunpanicwrapperTester2 ${CMAKE_CURRENT_SOURCE_DIR}/test/luawrapperTester2.lua)
 
+##########
+# Export #
+##########
+MYPACKAGECMAKEEXPORT()
+MYPACKAGEPKGCONFIGEXPORT()
+
 #############
 # Packaging #
 #############
