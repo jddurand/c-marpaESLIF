@@ -47,25 +47,30 @@ SET (libluaunpanic_src
   src/lzio.c
   src/luaunpanic.c
   )
-#
-# OS-specifics
-#
-IF (WIN32 AND NOT CYGWIN)
-  ADD_DEFINITIONS(-DLUA_DL_DLL)
-ELSE ()
-  ADD_DEFINITIONS(-DLUA_USE_DLOPEN)
-  ADD_DEFINITIONS(-DLUA_USE_POSIX)
-ENDIF ()
-
 MYPACKAGELIBRARY(
   ${CMAKE_CURRENT_SOURCE_DIR}/include/luaunpanic/internal/luaconf.h.in
   ${INCLUDE_OUTPUT_PATH}/luaunpanic/lua/luaconf.h
   ${libluaunpanic_src})
+
+#
+# OS-specifics
+#
+FOREACH (_target ${PROJECT_NAME} ${PROJECT_NAME}_static ${PROJECT_NAME}_objs ${PROJECT_NAME}_static_objs)
+  IF (WIN32 AND NOT CYGWIN)
+    TARGET_COMPILE_DEFINITIONS(${_target} PUBLIC -DLUA_DL_DLL)
+  ELSE ()
+    TARGET_COMPILE_DEFINITIONS(${_target} PUBLIC -DLUA_USE_DLOPEN -DLUA_USE_POSIX)
+  ENDIF ()
+ENDFOREACH ()
+
 #
 # We moved lua headers to include/luaunpanic/lua
 # We generate luaconf.h in ${INCLUDE_OUTPUT_PATH}/luaunpanic/lua
 #
-INCLUDE_DIRECTORIES("${CMAKE_CURRENT_SOURCE_DIR}/include/luaunpanic/lua" "${INCLUDE_OUTPUT_PATH}/luaunpanic/lua")
+FOREACH (_target ${PROJECT_NAME} ${PROJECT_NAME}_static ${PROJECT_NAME}_objs ${PROJECT_NAME}_static_objs)
+  TARGET_INCLUDE_DIRECTORIES(${_target} PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/luaunpanic/lua>)
+  TARGET_INCLUDE_DIRECTORIES(${_target} PUBLIC $<BUILD_INTERFACE:${INCLUDE_OUTPUT_PATH}/luaunpanic/lua>)
+ENDFOREACH ()
 #
 # Add lua/luaconf.h to installed files
 #
@@ -74,7 +79,7 @@ INSTALL(FILES ${INCLUDE_OUTPUT_PATH}/luaunpanic/lua/luaconf.h DESTINATION includ
 # dl and m dependency
 #
 IF (CMAKE_DL_LIBS OR CMAKE_MATH_LIBS)
-  FOREACH (_target luaunpanic luaunpanic_static)
+  FOREACH (_target luaunpanic luaunpanic_static luaunpanic_objs luaunpanic_static_objs)
     IF (CMAKE_DL_LIBS)
       TARGET_LINK_LIBRARIES(${_target} PUBLIC ${CMAKE_DL_LIBS})
     ENDIF ()
@@ -96,7 +101,7 @@ ENDIF ()
 
 LIST(LENGTH LUA_PUBLIC_CFLAGS LUA_PUBLIC_CFLAGS_LENGTH)
 IF (LUA_PUBLIC_CFLAGS_LENGTH GREATER 0)
-  FOREACH (_target luaunpanic luaunpanic_static)
+  FOREACH (_target luaunpanic luaunpanic_static luaunpanic_objs luaunpanic_static_objs)
     TARGET_COMPILE_DEFINITIONS(${_target} PUBLIC ${LUA_PUBLIC_CFLAGS})
   ENDFOREACH ()
 ENDIF ()
