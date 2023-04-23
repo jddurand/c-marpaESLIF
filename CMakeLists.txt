@@ -70,7 +70,7 @@ MYPACKAGELIBRARY(
 # m dependency
 #
 IF (CMAKE_MATH_LIBS)
-  FOREACH (_target ${PROJECT_NAME} ${PROJECT_NAME}_static)
+  FOREACH (_target ${PROJECT_NAME} ${PROJECT_NAME}_static ${PROJECT_NAME}_objs ${PROJECT_NAME}_static_objs)
     TARGET_LINK_LIBRARIES(${_target} PUBLIC ${CMAKE_MATH_LIBS})
   ENDFOREACH ()
 ENDIF ()
@@ -79,7 +79,7 @@ ENDIF ()
 # Since we embed marpaESLIFLua with a #include directive, we have to propagate the
 # emebeded lua binding version, that are #define's usually generated with MYPACKAGELIBRARY()
 #
-FOREACH (_target ${PROJECT_NAME} ${PROJECT_NAME}_static)
+FOREACH (_target ${PROJECT_NAME} ${PROJECT_NAME}_static ${PROJECT_NAME}_objs ${PROJECT_NAME}_static_objs)
   TARGET_COMPILE_DEFINITIONS(${_target}
     PRIVATE -DMARPAESLIFLUA_VERSION_MAJOR=${${PROJECT_NAME}_VERSION_MAJOR}
     PRIVATE -DMARPAESLIFLUA_VERSION_MINOR=${${PROJECT_NAME}_VERSION_MINOR}
@@ -117,6 +117,10 @@ MYPACKAGEDEPENDENCY (pcre2         "${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/untar/p
 MYPACKAGEDEPENDENCY (genericStack  "${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/github/genericStack"  LIBS LOCAL STATIC)
 MYPACKAGEDEPENDENCY (genericHash   "${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/github/genericHash"   LIBS LOCAL STATIC)
 MYPACKAGEDEPENDENCY (marpaWrapper  "${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/github/marpaWrapper"  LIBS LOCAL STATIC)
+#
+# marpaESLIF is using the native iconv
+#
+SET(TCONV_USE_ICU NO)
 MYPACKAGEDEPENDENCY (tconv         "${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/github/tconv"         LIBS LOCAL STATIC)
 MYPACKAGEDEPENDENCY (luaunpanic    "${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/github/luaunpanic"    LIBS LOCAL STATIC)
 
@@ -130,7 +134,7 @@ ELSE ()
 ENDIF ()
 SET (LUA_FLOAT_TYPE 3)             # long double
 
-FOREACH (_luatarget luaunpanic luaunpanic_static)
+FOREACH (_luatarget luaunpanic luaunpanic_static luaunpanic_objs luaunpanic_static_objs)
   #
   # luaunpanic is used internally by marpaESLIF, and setting
   # these compile definitions will make everything that depend on
@@ -138,7 +142,7 @@ FOREACH (_luatarget luaunpanic luaunpanic_static)
   #
   TARGET_COMPILE_DEFINITIONS (${_luatarget} PUBLIC -DLUA_INT_TYPE=${LUA_INT_TYPE} -DLUA_FLOAT_TYPE=${LUA_FLOAT_TYPE})
 ENDFOREACH ()
-FOREACH (_target marpaESLIF marpaESLIF_static)
+FOREACH (_target ${PROJECT_NAME} ${PROJECT_NAME}_static ${PROJECT_NAME}_objs ${PROJECT_NAME}_static_objs)
   TARGET_INCLUDE_DIRECTORIES (${_target} PRIVATE
     "${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/github/luaunpanic/include/luaunpanic/lua"
     "${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/github/luaunpanic/output/include/luaunpanic/lua"
@@ -233,6 +237,12 @@ INCLUDE(FindLua)
 IF (LUA_FOUND)
   ADD_SUBDIRECTORY(src/bindings/lua EXCLUDE_FROM_ALL)
 ENDIF ()
+
+##########
+# Export #
+##########
+MYPACKAGECMAKEEXPORT()
+MYPACKAGEPKGCONFIGEXPORT()
 
 #############
 # Packaging #
