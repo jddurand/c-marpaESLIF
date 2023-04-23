@@ -26,9 +26,10 @@ jobs:
     - uses: ilammy/msvc-dev-cmd@v1
     - uses: leafo/gh-actions-lua@v10
 
-    - name: Lua_ROOT environment variable
+    - name: LUA_DIR environment variable
       run: |
-        echo "Lua_ROOT=.lua" >> "$GITHUB_ENV"
+        lua -v
+        echo "LUA_DIR=.lua" >> "$GITHUB_ENV"
 
     - name: Configure
       run: cmake -Wno-dev -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DTCONV_USE_ICU=NO -G "NMake Makefiles" .
