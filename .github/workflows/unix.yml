@@ -36,6 +36,8 @@ jobs:
 
     - name: Set up Lua
       uses: leafo/gh-actions-lua@v10
+
+    - name: Lua_ROOT environment variable
       run: |
         echo "Lua_ROOT=.lua" >> "$GITHUB_ENV"
 
