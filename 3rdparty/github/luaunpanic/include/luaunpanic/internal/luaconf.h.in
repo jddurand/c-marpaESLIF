@@ -237,12 +237,17 @@
 ** the libraries, you may want to use the following definition (define
 ** LUA_BUILD_AS_DLL to get it).
 */
+#ifndef LUA_API
 #define LUA_API luaunpanic_EXPORT
+#endif
 
 /* more often than not the libs go together with the core */
+#ifndef LUALIB_API
 #define LUALIB_API	LUA_API
+#endif
+#ifndef LUAMOD_API
 #define LUAMOD_API	LUALIB_API
-
+#endif
 
 /*
 @@ LUAI_FUNC is a mark for all extern functions that are not to be
@@ -258,10 +263,15 @@
 ** give a warning about it. To avoid these warnings, change to the
 ** default definition.
 */
+#ifndef LUAI_FUNC
 #define LUAI_FUNC luaunpanic_EXPORT extern
-
+#endif
+#ifndef LUAI_DDEC
 #define LUAI_DDEC	LUAI_FUNC
+#endif
+#ifndef LUAI_DDEF
 #define LUAI_DDEF	/* empty */
+#endif
 
 /* }================================================================== */
 
