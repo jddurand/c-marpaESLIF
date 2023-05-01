@@ -15,6 +15,7 @@
 #include "lua_niledtable.c"
 #include "lua_marpaESLIFJSON.c"
 #ifdef MARPAESLIFLUA_EMBEDDED
+#include "luaunpanic_amalgamation.c"
 #include "lua_marpaESLIFContextStack.c"
 #include "lua_template_engine.c"
 #endif

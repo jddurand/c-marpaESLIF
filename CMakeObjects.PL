@@ -75,6 +75,17 @@ if ($^O eq "netbsd" && ! $isc99) {
     $ENV{CFLAGS} .= " -D_NETBSD_SOURCE";
 }
 
+#
+# Lua defaults are ok in most applications
+# push(@extra_compiler_flags, "-DLUA_32BITS", "-DLUA_USE_C89");
+#
+if (is_os_type('Windows')) {
+    $ENV{CFLAGS} .= " -DLUA_DL_DLL";
+} else {
+    $ENV{CFLAGS} .= " -DLUA_DL_DLOPEN";
+    $ENV{CFLAGS} .= " -DLUA_USE_POSIX";
+}
+
 make_path(File::Spec->catdir('output', '3rdparty'));
 
 # ------------------------------------------------------------
@@ -439,6 +450,7 @@ push(@additional_includes, File::Spec->catdir('3rdparty', 'untar', 'pcre2-10.40'
 # -------------------------------------------
 push(@additional_includes, File::Spec->catdir('3rdparty', 'github', 'luaunpanic', 'include', 'luaunpanic', 'lua'));
 push(@additional_includes, File::Spec->catdir('output', '3rdparty', 'luaunpanic', 'output', 'include', 'luaunpanic', 'lua')); # for luaconf.h
+push(@additional_includes, File::Spec->catdir('3rdparty', 'github', 'luaunpanic', 'src')); # for luaunpanic_amalgamation.c
 
 # ------------------------------
 # marpaESLIF embeds lua bindings

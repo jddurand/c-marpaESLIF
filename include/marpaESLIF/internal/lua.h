@@ -1,7 +1,16 @@
 #ifndef MARPAESLIF_INTERNAL_LUA_H
 #define MARPAESLIF_INTERNAL_LUA_H
 
-#include <luaunpanic.h>
+/* Pretend luaunpanic/export.h has already been included and force all lua to be static */
+#undef luaunpanic_EXPORT_H
+#define luaunpanic_EXPORT_H
+#define luaunpanic_EXPORT static
+#define LUAUNPANIC_NO_EXPORT static
+#define LUAI_FUNC static
+#define LUAI_DDEC static
+#define LUAI_DDEF static
+
+#include "luaunpanic.h"
 
 static char _MARPAESLIF_EMBEDDED_CONTEXT_LUA;
 

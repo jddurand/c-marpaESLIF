@@ -122,8 +122,12 @@ MYPACKAGEDEPENDENCY (marpaWrapper  "${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/github/
 #
 SET(TCONV_USE_ICU NO)
 MYPACKAGEDEPENDENCY (tconv         "${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/github/tconv"         LIBS LOCAL STATIC)
-MYPACKAGEDEPENDENCY (luaunpanic    "${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/github/luaunpanic"    LIBS LOCAL STATIC)
-
+#
+# We and to embed lua, so we do not introduce a dependency explicitly, but we still add the target
+# to get luaunpanic configured
+#
+ADD_SUBDIRECTORY(${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/github/luaunpanic EXCLUDE_FROM_ALL)
+# MYPACKAGEDEPENDENCY (luaunpanic    "${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/github/luaunpanic"    LIBS LOCAL STATIC)
 #
 # - Embedded lua uses long double for the lua_Number
 #
@@ -134,22 +138,48 @@ ELSE ()
 ENDIF ()
 SET (LUA_FLOAT_TYPE 3)             # long double
 
-FOREACH (_luatarget luaunpanic luaunpanic_static luaunpanic_objs luaunpanic_static_objs)
-  #
-  # luaunpanic is used internally by marpaESLIF, and setting
-  # these compile definitions will make everything that depend on
-  # luaunpanic to have them
-  #
-  TARGET_COMPILE_DEFINITIONS (${_luatarget} PUBLIC -DLUA_INT_TYPE=${LUA_INT_TYPE} -DLUA_FLOAT_TYPE=${LUA_FLOAT_TYPE})
-ENDFOREACH ()
 FOREACH (_target ${PROJECT_NAME} ${PROJECT_NAME}_static ${PROJECT_NAME}_objs ${PROJECT_NAME}_static_objs)
+  TARGET_COMPILE_DEFINITIONS (${_target} PRIVATE
+    -DLUA_INT_TYPE=${LUA_INT_TYPE}
+    -DLUA_FLOAT_TYPE=${LUA_FLOAT_TYPE})
   TARGET_INCLUDE_DIRECTORIES (${_target} PRIVATE
-    "${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/github/luaunpanic/include/luaunpanic/lua"
-    "${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/github/luaunpanic/output/include/luaunpanic/lua"
-    "${CMAKE_CURRENT_SOURCE_DIR}/src/bindings/lua/include")
+    ${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/github/luaunpanic/src                                # For luaunpanic_amalgametion.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/github/luaunpanic/include                            # For luaunpanic.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/github/luaunpanic/include/luaunpanic/lua             # For lua.h, etc...
+    ${CMAKE_CURRENT_BINARY_DIR}/3rdparty/github/luaunpanic/output/include                     # For generated luaunpanic headers
+    ${CMAKE_CURRENT_BINARY_DIR}/3rdparty/github/luaunpanic/output/include/luaunpanic/lua
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/bindings/lua/include)
+  #
+  # luaunpanic OS settings
+  #
+  IF (WIN32 AND NOT CYGWIN)
+    TARGET_COMPILE_DEFINITIONS(${_target} PRIVATE -DLUA_DL_DLL)
+  ELSE ()
+    TARGET_COMPILE_DEFINITIONS(${_target} PRIVATE -DLUA_USE_DLOPEN -DLUA_USE_POSIX)
+  ENDIF ()
+  IF (CMAKE_DL_LIBS)
+    TARGET_LINK_LIBRARIES(${_target} PRIVATE ${CMAKE_DL_LIBS})
+  ENDIF ()
+  IF (CMAKE_MATH_LIBS)
+    TARGET_LINK_LIBRARIES(${_target} PRIVATE ${CMAKE_MATH_LIBS})
+  ENDIF ()
+  IF (LUA_32BITS)
+    TARGET_COMPILE_DEFINITIONS(${_target} PRIVATE -DLUA_32BITS)
+  ENDIF ()
+  IF (LUA_USE_C89)
+    TARGET_COMPILE_DEFINITIONS(${_target} PRIVATE -DLUA_USE_C89)
+  ENDIF ()
+  IF (CMAKE_C_COMPILER_ID STREQUAL SunPro)
+    TARGET_COMPILE_DEFINITIONS(${_target} PRIVATE -xc99)
+  ENDIF ()
+ENDFOREACH ()
+
+###############
+# Our options #
+###############
+FOREACH (_target ${PROJECT_NAME} ${PROJECT_NAME}_static ${PROJECT_NAME}_objs ${PROJECT_NAME}_static_objs)
   TARGET_COMPILE_DEFINITIONS (${_target} PRIVATE
     -DMARPAESLIF_BUFSIZ=${MARPAESLIF_BUFSIZ}
-    -DPCRE2_CODE_UNIT_WIDTH=8
     -DMARPAESLIFLUA_EMBEDDED)
 ENDFOREACH ()
 
