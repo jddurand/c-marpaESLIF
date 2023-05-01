@@ -100,8 +100,12 @@ write_config($version, $config_h_in, $config_h);
 my $export_h = File::Spec->catfile('output', 'include', 'luaunpanic', 'export.h');
 make_path(dirname($export_h));
 open(my $fh, '>', $export_h) || die "Cannot open $export_h, $!";
-print $fh "#define luaunpanic_EXPORT\n";
-print $fh "#define LUAUNPANIC_NO_EXPORT\n";
+print $fh "#ifndef luaunpanic_EXPORT\n";
+print $fh "#  define luaunpanic_EXPORT\n";
+print $fh "#endif\n";
+print $fh "#ifndef LUAUNPANIC_NO_EXPORT\n";
+print $fh "#  define LUAUNPANIC_NO_EXPORT\n";
+print $fh "#endif\n";
 close($fh) || warn "Cannot close $export_h, $!";
 
 # ----------------
