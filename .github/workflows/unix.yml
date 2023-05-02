@@ -35,7 +35,10 @@ jobs:
       uses: shogo82148/actions-setup-perl@v1
 
     - name: Set up Lua
-      uses: leafo/gh-actions-lua@v10
+      uses: leafo/gh-actions-lua@master
+      with:
+        luaVersion: 5.4
+        luaCompileFlags: LUA_CFLAGS="-fPIC"
 
     - name: LUA_DIR environment variable
       run: |
