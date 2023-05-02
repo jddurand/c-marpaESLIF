@@ -38,7 +38,7 @@ jobs:
       uses: leafo/gh-actions-lua@master
       with:
         luaVersion: 5.4
-        luaCompileFlags: LUA_CFLAGS="-fPIC"
+        luaCompileFlags: MYCFLAGS=" -fPIC " MYLDFLAGS=" -fPIC "
 
     - name: LUA_DIR environment variable
       run: |
