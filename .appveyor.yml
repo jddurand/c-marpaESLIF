@@ -17,99 +17,99 @@ environment:
    - _CC: VS2022
      _ARCH: x86
      _GENERATOR: "NMake Makefiles"
+     APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2022
 #    _LUAT: "lua"
 #    _LUAV: "5.4"
-     APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2022
    - _CC: VS2022
      _ARCH: x64
      _GENERATOR: "NMake Makefiles"
-#    _LUAT: "lua"
-#    _LUAV: "5.4"
      APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2022
+#    _LUAT: "lua"
+#    _LUAV: "5.4"
    - _CC: VS2019
      _ARCH: x86
      _GENERATOR: "NMake Makefiles"
+     APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
 #    _LUAT: "lua"
 #    _LUAV: "5.4"
-     APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
    - _CC: VS2019
      _ARCH: x64
      _GENERATOR: "NMake Makefiles"
-#    _LUAT: "lua"
-#    _LUAV: "5.4"
      APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
+#    _LUAT: "lua"
+#    _LUAV: "5.4"
    - _CC: VS2017
      _ARCH: x86
      _GENERATOR: "NMake Makefiles"
+     APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
 #    _LUAT: "lua"
 #    _LUAV: "5.4"
-     APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
    - _CC: VS2017
      _ARCH: x64
      _GENERATOR: "NMake Makefiles"
+     APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
 #    _LUAT: "lua"
 #    _LUAV: "5.4"
-     APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
    - _CC: VS2015
      _ARCH: x86
      _GENERATOR: "NMake Makefiles"
+     APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
 #    _LUAT: "lua"
 #    _LUAV: "5.4"
-     APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
    - _CC: VS2015
      _ARCH: x64
      _GENERATOR: "NMake Makefiles"
+     APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
 #    _LUAT: "lua"
 #    _LUAV: "5.4"
-     APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
     - _CC: VS2013
       _ARCH: x86
       _GENERATOR: "NMake Makefiles"
+      APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2013
 #     _LUAT: "lua"
 #     _LUAV: "5.4"
-      APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2013
     - _CC: VS2013
       _ARCH: x64
       _GENERATOR: "NMake Makefiles"
+      APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2013
 #     _LUAT: "lua"
 #     _LUAV: "5.4"
-      APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2013
     - _CC: VS2012
       _ARCH: x86
       _GENERATOR: "NMake Makefiles"
+      APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2013
 #     _LUAT: "lua"
 #     _LUAV: "5.4"
-      APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2013
     - _CC: VS2012
       _ARCH: x64
       _GENERATOR: "NMake Makefiles"
+      APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2013
 #     _LUAT: "lua"
 #     _LUAV: "5.4"
-      APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2013
     - _CC: VS2010
       _ARCH: x86
       _GENERATOR: "NMake Makefiles"
+      APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2013
 #     _LUAT: "lua"
 #     _LUAV: "5.4"
-      APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2013
     - _CC: VS2010
       _ARCH: x64
       _GENERATOR: "NMake Makefiles"
+      APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2013
 #     _LUAT: "lua"
 #     _LUAV: "5.4"
-      APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2013
     - _CC: VS2008
       _ARCH: x86
       _GENERATOR: "NMake Makefiles"
+      APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2013
 #     _LUAT: "lua"
 #     _LUAV: "5.4"
-      APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2013
     - _CC: VS2008
       _ARCH: x64
       _GENERATOR: "NMake Makefiles"
+      APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2013
 #     _LUAT: "lua"
 #     _LUAV: "5.4"
-      APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2013
 
 #before_build:
 #  - set PATH=C:\MinGW\bin;%PATH%
