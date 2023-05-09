@@ -79,7 +79,10 @@ environment:
      _GENERATOR: "NMake Makefiles"
      APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2013
 
-#before_build:
+before_build:
+# cmake
+  - choco upgrade cmake
+  - set PATH=C:\Program Files\CMake\bin;%PATH%
 #  - set _LUAT=lua
 #  - set _LUAV=5.4
 #  - set PATH=C:\MinGW\bin;%PATH%
