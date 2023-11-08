@@ -70,11 +70,9 @@ endfunction()
 # _cmake_all_in_one_output
 # ====================================================================
 function(_cmake_all_in_one_output)
-  if(_cmake_all_in_one_output)
-    _cmake_all_in_one_pretty_print(pretty_print ${ARGN})
-    file(APPEND ${_cmake_all_in_one_output} ${pretty_print})
-    # list(JOIN ARGN " " _argn)
-    # file(APPEND ${_cmake_all_in_one_output} ${_argn})
+  if(_cmake_all_in_one_cmake_output_file)
+    _cmake_all_in_one_pretty_print(_pretty_print ${ARGN})
+    file(APPEND ${_cmake_all_in_one_cmake_output_file} ${_pretty_print})
   endif()
 endfunction()
 
@@ -85,9 +83,7 @@ function(_cmake_all_in_one_command_wrapper command)
   set(_argn ${ARGN})
   _cmake_all_in_one_log("${command}(${_argn})")
   _cmake_all_in_one_output("${command}" "(" "${_argn}" ")" "\n")
-  if(NOT _cmake_all_in_one_output_only)
-    cmake_language(CALL ${command} ${_argn})
-  endif()
+  cmake_language(CALL ${command} ${_argn})
 endfunction()
 
 # ====================================================================
@@ -251,7 +247,7 @@ function(_cmake_all_in_one_pods_process)
     set(_target ${_pod_name_wle})
     string(REGEX REPLACE "[^a-zA-Z0-9_]" "_" _target ${_target})
     if(NOT TARGET ${_target})
-      set(_output ${_cmake_all_in_one_man_output_dir}/${_target}.${_section})
+      set(_output ${_cmake_all_in_one_output_dir}/${CMAKE_INSTALL_MANDIR}/${_target}.${_section})
       #
       # Pod2man
       #
@@ -306,7 +302,9 @@ function(_cmake_all_in_one_process)
   #
   # Initialize output
   #
-  file(WRITE ${_cmake_all_in_one_output} "")
+  if(_cmake_all_in_one_cmake_output_file)
+    file(WRITE ${_cmake_all_in_one_cmake_output_file} "")
+  endif()
   #
   # Initializations
   #
@@ -318,8 +316,8 @@ function(_cmake_all_in_one_process)
   _cmake_all_in_one_output("# Interface\n")
   _cmake_all_in_one_output("#\n")
   _cmake_all_in_one_command_wrapper(add_library ${_cmake_all_in_one_iface_name} INTERFACE)
-  _cmake_all_in_one_command_wrapper(target_include_directories ${_cmake_all_in_one_iface_name} INTERFACE $<BUILD_LOCAL_INTERFACE:${_cmake_all_in_one_include_output_dir}>)
-  _cmake_all_in_one_command_wrapper(target_include_directories ${_cmake_all_in_one_iface_name} INTERFACE $<BUILD_INTERFACE:${_cmake_all_in_one_include_output_dir}>)
+  _cmake_all_in_one_command_wrapper(target_include_directories ${_cmake_all_in_one_iface_name} INTERFACE $<BUILD_LOCAL_INTERFACE:${_cmake_all_in_one_output_dir}/${CMAKE_INSTALL_INCLUDEDIR}>)
+  _cmake_all_in_one_command_wrapper(target_include_directories ${_cmake_all_in_one_iface_name} INTERFACE $<BUILD_INTERFACE:${_cmake_all_in_one_output_dir}/${CMAKE_INSTALL_INCLUDEDIR}>)
   _cmake_all_in_one_command_wrapper(target_include_directories ${_cmake_all_in_one_iface_name} INTERFACE $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)
   #
   # Interface headers
@@ -386,7 +384,7 @@ function(_cmake_all_in_one_process)
         #
 	set(_args)
 	if(NOT _cmake_all_in_one_export_file_name)
-	  set(_cmake_all_in_one_export_file_name ${CMAKE_CURRENT_BINARY_DIR}/${_cmake_all_in_one_${_type}_name}) # CMake default
+	  set(_cmake_all_in_one_export_file_name ${_cmake_all_in_one_${_type}_name}_export.h) # CMake default
 	endif()
 	if(_cmake_all_in_one_export_macro_name)
 	  list(APPEND _args EXPORT_MACRO_NAME ${_cmake_all_in_one_export_macro_name})
@@ -394,18 +392,24 @@ function(_cmake_all_in_one_process)
 	if(_cmake_all_in_one_static_define)
 	  list(APPEND _args STATIC_DEFINE ${_cmake_all_in_one_static_define})
 	endif()
-        _cmake_all_in_one_command_wrapper(generate_export_header ${_cmake_all_in_one_${_type}_name} BASE_NAME ${_cmake_all_in_one_base_name} EXPORT_FILE_NAME ${_cmake_all_in_one_export_file_name} ${_args})
+	set(_export_file_name ${_cmake_all_in_one_output_dir}/${CMAKE_INSTALL_INCLUDEDIR}/${_cmake_all_in_one_export_file_name})
+        _cmake_all_in_one_command_wrapper(generate_export_header ${_cmake_all_in_one_${_type}_name} BASE_NAME ${_cmake_all_in_one_base_name} EXPORT_FILE_NAME ${_export_file_name} ${_args})
+	#
+	# Add it to the interface
+	#
+	_cmake_all_in_one_command_wrapper(target_sources ${_cmake_all_in_one_iface_name} PUBLIC FILE_SET public_headers BASE_DIRS ${_cmake_all_in_one_output_dir} TYPE HEADERS FILES ${_export_file_name})
 	#
 	# Make sure the directory where we generated it is public and is in the interface
 	#
-	get_filename_component(_dir ${_cmake_all_in_one_export_file_name} DIRECTORY)
+	get_filename_component(_dir ${_export_file_name} DIRECTORY)
+	_cmake_all_in_one_command_wrapper(target_include_directories ${_cmake_all_in_one_iface_name} INTERFACE $<BUILD_LOCAL_INTERFACE:${_dir}>)
 	_cmake_all_in_one_command_wrapper(target_include_directories ${_cmake_all_in_one_iface_name} INTERFACE $<BUILD_INTERFACE:${_dir}>)
 	#
 	# If we generated a source group for public headers, add it
 	#
 	if(_cmake_all_in_one_public_headers_auto_source_group)
-	  get_filename_component(_dir_name ${_dir} NAME)
-	  _cmake_all_in_one_command_wrapper(source_group TREE ${_dir} PREFIX ${_dir_name} FILES ${_cmake_all_in_one_export_file_name})
+	  get_filename_component(_dir_name ${_cmake_all_in_one_output_dir} NAME)
+	  _cmake_all_in_one_command_wrapper(source_group TREE ${_cmake_all_in_one_output_dir} PREFIX ${_dir_name} FILES ${_export_file_name})
 	endif()
         #
         # Special definition saying that we are building this library
@@ -470,12 +474,9 @@ function(cmake_all_in_one)
   #
   set(options)
   set(oneValueArgs
-    OUTPUT
-    OUTPUT_ONLY
-    INCLUDE_OUTPUT_DIR
-    LIBRARY_OUTPUT_DIR
-    BINARY_OUTPUT_DIR
-    MAN_OUTPUT_DIR
+    SOURCE_DIR
+    OUTPUT_DIR
+    CMAKE_OUTPUT_FILE
     SHARED_SOURCES_AUTO
     STATIC_SOURCES_AUTO
     MODULE_SOURCES_AUTO
@@ -541,12 +542,9 @@ function(cmake_all_in_one)
   #
   # oneValueArgs
   #
-  set(_cmake_all_in_one_output ${CMAKE_CURRENT_BINARY_DIR}/all_in_one.cmake)
-  set(_cmake_all_in_one_output_only FALSE)
-  set(_cmake_all_in_one_include_output_dir ${CMAKE_CURRENT_BINARY_DIR}/output/${CMAKE_INSTALL_INCLUDEDIR})
-  set(_cmake_all_in_one_library_output_dir ${CMAKE_CURRENT_BINARY_DIR}/output/${CMAKE_INSTALL_LIBDIR})
-  set(_cmake_all_in_one_binary_output_dir ${CMAKE_CURRENT_BINARY_DIR}/output/${CMAKE_INSTALL_BINDIR})
-  set(_cmake_all_in_one_man_output_dir ${CMAKE_CURRENT_BINARY_DIR}/output/${CMAKE_INSTALL_MANDIR})
+  set(_cmake_all_in_one_source_dir ${CMAKE_CURRENT_SOURCE_DIR})
+  set(_cmake_all_in_one_output_dir ${CMAKE_CURRENT_BINARY_DIR}/output)
+  set(_cmake_all_in_one_cmake_output_file ${_cmake_all_in_one_output_dir}/cmake/all_in_one.cmake)
   set(_cmake_all_in_one_shared_sources_auto TRUE)
   set(_cmake_all_in_one_static_sources_auto TRUE)
   set(_cmake_all_in_one_module_sources_auto TRUE)
@@ -585,7 +583,7 @@ function(cmake_all_in_one)
   set(_cmake_all_in_one_module_output_name ${_cmake_all_in_one_base_name}-${_cmake_all_in_one_version_major}_plugin)
 
   set(_cmake_all_in_one_export             TRUE)
-  set(_cmake_all_in_one_export_file_name   ${_cmake_all_in_one_include_output_dir}/${_cmake_all_in_one_base_name}/export.h)
+  set(_cmake_all_in_one_export_file_name   ${_cmake_all_in_one_base_name}/export.h)
   set(_cmake_all_in_one_export_macro_name  ${_cmake_all_in_one_base_name}_EXPORT)
 
   set(_cmake_all_in_one_languages C CXX)
@@ -643,9 +641,6 @@ function(cmake_all_in_one)
   #
   # Validate arguments
   #
-  if(NOT _cmake_all_in_one_output)
-    message(FATAL_ERROR "Output not set")
-  endif()
   foreach(_type shared_sources static_sources module_sources public_headers private_headers pods)
     foreach(_base_dir ${_cmake_all_in_one_${_type}_base_dirs})
       if(EXISTS ${_base_dir})
