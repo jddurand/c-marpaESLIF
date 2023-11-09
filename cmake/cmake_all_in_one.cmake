@@ -3,6 +3,7 @@ include(CTest)
 include(GNUInstallDirs)
 include(CheckSymbolExists)
 include(GenerateExportHeader)
+include(CheckIncludeFile)
 
 # ====================================================================
 # _cmake_all_in_one_pretty_print
@@ -37,9 +38,15 @@ function(_cmake_all_in_one_pretty_print output)
           #
           string(REGEX MATCH "^target_sources" _target_sources ${_first})
           string(REGEX MATCH "^install" _install ${_first})
+	  #
+	  # Special cases where we always want to have a single line
+	  #
+          string(REGEX MATCH "^check_include_file" _check_include_file ${_first})
           if(_target_sources AND (_prev STREQUAL "TYPE"))
             list(APPEND _pretty_print " ${_arg}")
           elseif(_install AND (_prev STREQUAL "INCLUDES"))
+            list(APPEND _pretty_print " ${_arg}")
+          elseif(_check_include_file)
             list(APPEND _pretty_print " ${_arg}")
           else()
             list(APPEND _pretty_print "\n  ${_arg}")
@@ -213,14 +220,61 @@ function(_cmake_all_in_one_init)
   # Compiler settings
   #
   foreach(_language ${_cmake_all_in_one_languages})
-    _cmake_all_in_one_command_wrapper(set CMAKE_${language}_VISIBILITY_PRESET hidden)
+    _cmake_all_in_one_command_wrapper(set CMAKE_${_language}_VISIBILITY_PRESET hidden)
   endforeach()
-  _cmake_all_in_one_command_wrapper(set CMAKE_POSITION_INDEPENDENT_CODE ON)
-  _cmake_all_in_one_command_wrapper(set CMAKE_VISIBILITY_INLINES_HIDDEN 1)
-  if(MSVC)
-    _cmake_all_in_one_command_wrapper(add_definitions -D_CRT_SECURE_NO_DEPRECATE -D_CRT_SECURE_NO_WARNINGS -D_CRT_NONSTDC_NO_DEPRECATE)
-    _cmake_all_in_one_command_wrapper(add_definitions -D_SCL_SECURE_NO_DEPRECATE -D_SCL_SECURE_NO_WARNINGS)
-    _cmake_all_in_one_command_wrapper(add_definitions -DWIN32_LEAN_AND_MEAN -DVC_EXTRALEAN)
+  if(_cmake_all_in_one_position_independent_code)
+    _cmake_all_in_one_command_wrapper(set CMAKE_POSITION_INDEPENDENT_CODE ON)
+  endif()
+  if(_cmake_all_in_one_visibility_inlines_hidden)
+    _cmake_all_in_one_command_wrapper(set CMAKE_VISIBILITY_INLINES_HIDDEN 1)
+  endif()
+  if(_cmake_all_in_one_default_definitions)
+    #
+    # cl compile warnings
+    #
+    if(MSVC)
+      _cmake_all_in_one_command_wrapper(add_compile_definitions _CRT_SECURE_NO_DEPRECATE _CRT_SECURE_NO_WARNINGS _CRT_NONSTDC_NO_DEPRECATE)
+      _cmake_all_in_one_command_wrapper(add_compile_definitions _SCL_SECURE_NO_DEPRECATE _SCL_SECURE_NO_WARNINGS)
+      _cmake_all_in_one_command_wrapper(add_compile_definitions WIN32_LEAN_AND_MEAN VC_EXTRALEAN)
+    endif()
+    #
+    # Safe to define _GNU_SOURCE ?
+    #
+    check_symbol_exists(__GNU_LIBRARY__ "features.h" _gnu_source)
+    if(_gnu_source)
+      _cmake_all_in_one_command_wrapper(add_compile_definitions _GNU_SOURCE)
+    endif()
+    #
+    # Thread-safety
+    #
+    _cmake_all_in_one_command_wrapper(add_compile_definitions _REENTRANT _THREAD_SAFE)
+  endif()
+  #
+  # Common -DNTRACE
+  #
+  if(_cmake_all_in_one_ntrace)
+    _cmake_all_in_one_command_wrapper(add_compile_definitions NTRACE)
+  endif()
+  #
+  # Common include files
+  #
+  foreach(_include_file ${_cmake_all_in_one_check_include_files})
+    set(_have have_${_include_file})
+    string(TOUPPER ${_have} _have)
+    string(REGEX REPLACE "[^a-zA-Z0-9_]" "_" _have ${_have})
+    _cmake_all_in_one_command_wrapper(check_include_file ${_include_file} ${_have})
+  endforeach()
+  #
+  # Create check target
+  #
+  if(_cmake_all_in_one_check_target)
+    _cmake_all_in_one_command_wrapper(add_custom_target check 
+      ${CMAKE_COMMAND} -E echo ----------------------------------
+      COMMAND ${CMAKE_COMMAND} -E echo Test command:
+      COMMAND ${CMAKE_COMMAND} -E echo ${CMAKE_CTEST_COMMAND} -C $<CONFIG>
+      COMMAND ${CMAKE_COMMAND} -E echo ----------------------------------
+      COMMAND ${CMAKE_COMMAND} -E env CTEST_OUTPUT_ON_FAILURE=1 ${CMAKE_CTEST_COMMAND} -C $<CONFIG>
+    )
   endif()
 endfunction()
 
@@ -296,6 +350,16 @@ function(_cmake_all_in_one_pods_process)
 endfunction()
 
 # ====================================================================
+# _cmake_all_in_one_add_library
+# ====================================================================
+function(_cmake_all_in_one_add_library name category)
+  _cmake_all_in_one_command_wrapper(add_library ${name} ${category} ${ARGN})
+  if(_cmake_all_in_one_visibility_inlines_hidden)
+    _cmake_all_in_one_command_wrapper(set_target_properties ${name} PROPERTIES VISIBILITY_INLINES_HIDDEN TRUE)
+  endif()
+endfunction()
+
+# ====================================================================
 # _cmake_all_in_one_process
 # ====================================================================
 function(_cmake_all_in_one_process)
@@ -304,6 +368,12 @@ function(_cmake_all_in_one_process)
   #
   if(_cmake_all_in_one_cmake_output_file)
     file(WRITE ${_cmake_all_in_one_cmake_output_file} "")
+    string(TIMESTAMP _timestamp)
+    _cmake_all_in_one_output("#\n")
+    _cmake_all_in_one_output("# Generated at ${_timestamp}\n")
+    _cmake_all_in_one_output("#\n")
+    _cmake_all_in_one_output("include(CheckIncludeFile)\n")
+    _cmake_all_in_one_output("\n")
   endif()
   #
   # Initializations
@@ -315,7 +385,7 @@ function(_cmake_all_in_one_process)
   _cmake_all_in_one_output("#\n")
   _cmake_all_in_one_output("# Interface\n")
   _cmake_all_in_one_output("#\n")
-  _cmake_all_in_one_command_wrapper(add_library ${_cmake_all_in_one_iface_name} INTERFACE)
+  _cmake_all_in_one_add_library(${_cmake_all_in_one_iface_name} INTERFACE)
   _cmake_all_in_one_command_wrapper(target_include_directories ${_cmake_all_in_one_iface_name} INTERFACE $<BUILD_LOCAL_INTERFACE:${_cmake_all_in_one_output_dir}/${CMAKE_INSTALL_INCLUDEDIR}>)
   _cmake_all_in_one_command_wrapper(target_include_directories ${_cmake_all_in_one_iface_name} INTERFACE $<BUILD_INTERFACE:${_cmake_all_in_one_output_dir}/${CMAKE_INSTALL_INCLUDEDIR}>)
   _cmake_all_in_one_command_wrapper(target_include_directories ${_cmake_all_in_one_iface_name} INTERFACE $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)
@@ -377,7 +447,7 @@ function(_cmake_all_in_one_process)
     if(_cmake_all_in_one_${_type}_sources)
       string(TOUPPER "${_type}" _category)
       set(_cmake_all_in_one_have_${_type}_component TRUE PARENT_SCOPE)
-      _cmake_all_in_one_command_wrapper(add_library ${_cmake_all_in_one_${_type}_name} ${_category} ${_cmake_all_in_one_${_type}_sources})
+      _cmake_all_in_one_add_library(${_cmake_all_in_one_${_type}_name} ${_category} ${_cmake_all_in_one_${_type}_sources})
       if(_type STREQUAL "shared" AND _cmake_all_in_one_export)
         #
         # Generate an export header
@@ -392,7 +462,8 @@ function(_cmake_all_in_one_process)
 	if(_cmake_all_in_one_static_define)
 	  list(APPEND _args STATIC_DEFINE ${_cmake_all_in_one_static_define})
 	endif()
-	set(_export_file_name ${_cmake_all_in_one_output_dir}/${CMAKE_INSTALL_INCLUDEDIR}/${_cmake_all_in_one_export_file_name})
+	set(_export_dir ${_cmake_all_in_one_output_dir}/${CMAKE_INSTALL_INCLUDEDIR})
+	set(_export_file_name ${_export_dir}/${_cmake_all_in_one_export_file_name})
         _cmake_all_in_one_command_wrapper(generate_export_header ${_cmake_all_in_one_${_type}_name} BASE_NAME ${_cmake_all_in_one_base_name} EXPORT_FILE_NAME ${_export_file_name} ${_args})
 	#
 	# Add it to the interface
@@ -401,9 +472,8 @@ function(_cmake_all_in_one_process)
 	#
 	# Make sure the directory where we generated it is public and is in the interface
 	#
-	get_filename_component(_dir ${_export_file_name} DIRECTORY)
-	_cmake_all_in_one_command_wrapper(target_include_directories ${_cmake_all_in_one_iface_name} INTERFACE $<BUILD_LOCAL_INTERFACE:${_dir}>)
-	_cmake_all_in_one_command_wrapper(target_include_directories ${_cmake_all_in_one_iface_name} INTERFACE $<BUILD_INTERFACE:${_dir}>)
+	_cmake_all_in_one_command_wrapper(target_include_directories ${_cmake_all_in_one_iface_name} INTERFACE $<BUILD_LOCAL_INTERFACE:${_export_dir}>)
+	_cmake_all_in_one_command_wrapper(target_include_directories ${_cmake_all_in_one_iface_name} INTERFACE $<BUILD_INTERFACE:${_export_dir}>)
 	#
 	# If we generated a source group for public headers, add it
 	#
@@ -414,7 +484,7 @@ function(_cmake_all_in_one_process)
         #
         # Special definition saying that we are building this library
         #
-        _cmake_all_in_one_command_wrapper(target_compile_definitions ${_cmake_all_in_one_${_type}_name} PRIVATE -D${_cmake_all_in_one_base_name}_EXPORTS)
+        _cmake_all_in_one_command_wrapper(target_compile_definitions ${_cmake_all_in_one_${_type}_name} PRIVATE ${_cmake_all_in_one_base_name}_EXPORTS)
         #
         # Some properties specific to a shared library
         #
@@ -431,6 +501,22 @@ function(_cmake_all_in_one_process)
     endif()
   endforeach()
   #
+  # For each library target, enforce output directories to be the output/lib
+  #
+  if(FALSE) # JDD
+    get_property(_targets DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY BUILDSYSTEM_TARGETS)
+    foreach(_target ${_targets})
+      get_target_property(_type ${_target} TYPE)
+      if(_type MATCHES "LIBRARY")
+	_cmake_all_in_one_command_wrapper(set_target_properties ${_target}
+	  PROPERTIES
+	  RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/output/lib/$<0:> 
+	  LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/output/lib/$<0:>
+	  ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/output/lib/$<0:>)
+      endif()
+    endforeach()
+  endif()
+  #
   # Check math library
   #
   _cmake_all_in_one_command_wrapper(find_library MATH_LIB m)
@@ -446,6 +532,21 @@ function(_cmake_all_in_one_log_config)
       string(TOLOWER "${_variable}" _variable)
       _cmake_all_in_one_log("Config: ${_variable}=${_cmake_all_in_one_${_variable}}")
     endforeach()
+  endif()
+endfunction()
+
+# ====================================================================
+# _cmake_all_in_one_test_is_dir
+# ====================================================================
+function(_cmake_all_in_one_test_is_dir dir)
+  if(EXISTS ${dir})
+    get_filename_component(_fullpath ${dir} ABSOLUTE)
+    if(NOT IS_DIRECTORY ${_fullpath})
+      #
+      # For source_group we need to make sure a base dir is really a directory
+      #
+      message(FATAL_ERROR "${dir exist and is not a directory")
+    endif()
   endif()
 endfunction()
 
@@ -474,8 +575,16 @@ function(cmake_all_in_one)
   #
   set(options)
   set(oneValueArgs
+    BASE_NAME
+    VERSION
+    VERSION_MAJOR
     SOURCE_DIR
     OUTPUT_DIR
+    NTRACE
+    POSITION_INDEPENDENT_CODE
+    VISIBILITY_INLINES_HIDDEN
+    DEFAULT_DEFINITIONS
+    CHECK_TARGET
     CMAKE_OUTPUT_FILE
     SHARED_SOURCES_AUTO
     STATIC_SOURCES_AUTO
@@ -485,9 +594,6 @@ function(cmake_all_in_one)
     POD2MAN
     GZIP
     PODS_AUTO
-    VERSION
-    VERSION_MAJOR
-    BASE_NAME
     IFACE_NAME
     STATIC_NAME
     STATIC_OUTPUT_NAME
@@ -499,9 +605,10 @@ function(cmake_all_in_one)
     EXPORT
     EXPORT_FILE_NAME
     EXPORT_MACRO_NAME
-    LANGUAGES
   )
   set(multiValueArgs
+    LANGUAGES
+    CHECK_INCLUDE_FILES
     SHARED_SOURCES
     SHARED_SOURCES_BASE_DIRS
     SHARED_SOURCES_AUTO_EXTENSIONS
@@ -542,8 +649,28 @@ function(cmake_all_in_one)
   #
   # oneValueArgs
   #
+  if(DEFINED CMAKE_PROJECT_NAME)
+    set(_cmake_all_in_one_base_name ${CMAKE_PROJECT_NAME})
+  else()
+    message(FATAL_ERROR "Missing CMAKE_PROJECT_NAME")
+  endif()
+  if(DEFINED CMAKE_PROJECT_VERSION)
+    set(_cmake_all_in_one_version ${CMAKE_PROJECT_VERSION})
+  else()
+    message(FATAL_ERROR "Missing CMAKE_PROJECT_VERSION")
+  endif()
+  if(DEFINED CMAKE_PROJECT_VERSION_MAJOR)
+    set(_cmake_all_in_one_version_major ${CMAKE_PROJECT_VERSION_MAJOR})
+  else()
+    message(FATAL_ERROR "Missing CMAKE_PROJECT_VERSION_MAJOR")
+  endif()
   set(_cmake_all_in_one_source_dir ${CMAKE_CURRENT_SOURCE_DIR})
   set(_cmake_all_in_one_output_dir ${CMAKE_CURRENT_BINARY_DIR}/output)
+  set(_cmake_all_in_one_ntrace TRUE)
+  set(_cmake_all_in_one_position_independent_code TRUE)
+  set(_cmake_all_in_one_visibility_inlines_hidden TRUE)
+  set(_cmake_all_in_one_default_definitions TRUE)
+  set(_cmake_all_in_one_check_target TRUE)
   set(_cmake_all_in_one_cmake_output_file ${_cmake_all_in_one_output_dir}/cmake/all_in_one.cmake)
   set(_cmake_all_in_one_shared_sources_auto TRUE)
   set(_cmake_all_in_one_static_sources_auto TRUE)
@@ -555,21 +682,6 @@ function(cmake_all_in_one)
   find_program(CMAKE_ALL_IN_ONE_PROGRAM_GZIP gzip)
   set(_cmake_all_in_one_gzip ${CMAKE_ALL_IN_ONE_PROGRAM_GZIP})
   set(_cmake_all_in_one_pods_auto TRUE)
-  if(DEFINED CMAKE_PROJECT_VERSION)
-    set(_cmake_all_in_one_version ${CMAKE_PROJECT_VERSION})
-  else()
-    message(FATAL_ERROR "Missing CMAKE_PROJECT_VERSION")
-  endif()
-  if(DEFINED CMAKE_PROJECT_VERSION_MAJOR)
-    set(_cmake_all_in_one_version_major ${CMAKE_PROJECT_VERSION_MAJOR})
-  else()
-    message(FATAL_ERROR "Missing CMAKE_PROJECT_VERSION_MAJOR")
-  endif()
-  if(DEFINED CMAKE_PROJECT_NAME)
-    set(_cmake_all_in_one_base_name ${CMAKE_PROJECT_NAME})
-  else()
-    message(FATAL_ERROR "Missing CMAKE_PROJECT_NAME")
-  endif()
   set(_cmake_all_in_one_iface_name         ${_cmake_all_in_one_base_name}-${_cmake_all_in_one_version_major}_iface)
 
   set(_cmake_all_in_one_shared_name        ${_cmake_all_in_one_base_name}-${_cmake_all_in_one_version_major}_shared)
@@ -586,10 +698,14 @@ function(cmake_all_in_one)
   set(_cmake_all_in_one_export_file_name   ${_cmake_all_in_one_base_name}/export.h)
   set(_cmake_all_in_one_export_macro_name  ${_cmake_all_in_one_base_name}_EXPORT)
 
-  set(_cmake_all_in_one_languages C CXX)
   #
   # multiValueArgs
   #
+  set(_cmake_all_in_one_languages C CXX)
+  set(_cmake_all_in_one_check_include_files
+    stdio.h stddef.h stdlib.h stdarg.h stdint.h inttypes.h
+    sys/stdint.h sys/inttypes.h sys/time.h sys/types.h sys/stat.h
+    errno.h string.h unistd.h io.h time.h fcntl.h math.h float.h locale.h)
   set(_cmake_all_in_one_shared_sources)
   set(_cmake_all_in_one_shared_sources_base_dirs ${CMAKE_CURRENT_SOURCE_DIR}/src)
   set(_cmake_all_in_one_shared_sources_auto_extensions *.c *.cpp *.cxx)
@@ -642,17 +758,15 @@ function(cmake_all_in_one)
   # Validate arguments
   #
   foreach(_type shared_sources static_sources module_sources public_headers private_headers pods)
-    foreach(_base_dir ${_cmake_all_in_one_${_type}_base_dirs})
-      if(EXISTS ${_base_dir})
-	get_filename_component(_fullpath ${_base_dir} ABSOLUTE)
-	if(NOT IS_DIRECTORY ${_fullpath})
-	  #
-	  # For source_group we need to make sure a base dir is really a directory
-	  #
-	  message(FATAL_ERROR "${_type} base dir ${_base_dir} is not a directory")
-	endif()
-      endif()
+    foreach(_dir ${_cmake_all_in_one_${_type}_base_dirs})
+      _cmake_all_in_one_test_is_dir(${_dir})
     endforeach()
+  endforeach()
+  #
+  # source_dir and output_dir should also be true directories if they exist
+  #
+  foreach(_type source_dir output_dir)
+    _cmake_all_in_one_test_is_dir(_cmake_all_in_one_${_dir})
   endforeach()
   #
   # Process
