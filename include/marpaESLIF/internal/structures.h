@@ -2,7 +2,7 @@
 #define MARPAESLIF_INTERNAL_STRUCTURES_H
 
 #include "marpaESLIF.h"
-#include "config.h"
+#include "marpaESLIF/internal/config.h"
 /*
  * Prior to genericStack inclusion, we want to define a custom type for performance
  * --------------------------------------------------------------------------------
