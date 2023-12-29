@@ -1,285 +1,260 @@
-CMAKE_MINIMUM_REQUIRED (VERSION 3.0.0 FATAL_ERROR)
-PROJECT(marpaESLIF VERSION 6.0.31 LANGUAGES C CXX)
-IF (NOT MYPACKAGEBOOTSTRAP_DONE)
-  INCLUDE ("3rdparty/github/cmake-utils/cmake/MyPackageBootstrap.cmake")
-ENDIF ()
 #
-# Usually the version here correspong to the NEXT version - it is git tagged
-# when we do make marpaESLIFPerlRelease or marpaESLIFPerlReleaseTrial
+# Multi-config generator, e.g. Visual Studio on Windows:
 #
-# SET (MYPACKAGE_DEBUG TRUE)
-MYPACKAGESTART ()
-
-###########
-# Library #
-###########
-IF (MSVC)
-  #
-  # Some MSVC warnings are literally polluting the output, in particular in Visual Studio 2008
-  #
-  SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} /wd4305 /wd4309")
-  SET(CMAKE_CXX_FLAGS "${CMAKE_C_FLAGS} /wd4018 /wd4067 /wd4305 /wd4309")
-ENDIF (MSVC)
+# cmake -S c-marpaESLIF -B c-marpaESLIF-build
+# cmake --build c-marpaESLIF-build --config RelWithDebInfo
+# ctest --test-dir c-marpaESLIF-build -C RelWithDebInfo
+# Windows:
+#   cmake --install c-marpaESLIF-build --config RelWithDebInfo --prefix %cd%/c-marpaESLIF-install
+# Others:
+#   cmake --install c-marpaESLIF-build --config RelWithDebInfo --prefix `pwd`/c-marpaESLIF-install
+# cmake --build c-marpaESLIF-build --config RelWithDebInfo --target package
 #
-# We have some specifics -;
+# Single-config generator, e.g. NMake Makefiles on Windows, Unix Makefiles on Linxu:
+#
+# cmake -S c-marpaESLIF -B c-marpaESLIF-build -DCMAKE_BUILD_TYPE=RelWithDebInfo
+# cmake --build c-marpaESLIF-build
+# ctest --test-dir c-marpaESLIF-build
+# Windows:
+#   cmake --install c-marpaESLIF-build --prefix %cd%/c-marpaESLIF-install
+# Others:
+#   cmake --install c-marpaESLIF-build --prefix `pwd`/c-marpaESLIF-install
+# cmake --build c-marpaESLIF-build --target package
+#
+# Local tests done with: cmake -S c-marpaESLIF -B c-marpaESLIF-build -DCMAKE_HELPERS_DEBUG=OFF -DICU_ROOT=C:\icu4c-74_2-Win64-MSVC2019
+#
+cmake_minimum_required(VERSION 3.26.0 FATAL_ERROR)
+project(marpaESLIF VERSION 6.0.31 LANGUAGES C)
+#
+# Get library helper
+#
+include(FetchContent)
+FetchContent_Declare(cmake-helpers GIT_REPOSITORY https://github.com/jddurand/cmake-helpers.git GIT_SHALLOW TRUE)
+FetchContent_MakeAvailable(cmake-helpers)
+#
+# Specific options
 #
 # ... Stream buffer size
 #
-IF (NOT MARPAESLIF_BUFSIZ)
-  SET (MARPAESLIF_BUFSIZ "1048576")
-ENDIF ()
+if(NOT MARPAESLIF_BUFSIZ)
+  set(MARPAESLIF_BUFSIZ 1048576)
+endif()
 #
 # ... Portable uint32 type
 #
-IF (NOT HAVE_MYPACKAGE_UINT32)
+if(NOT CMAKE_HELPERS_UINT32_TYPEDEF)
   MESSAGE (FATAL_ERROR "Could not detect a valid unsigned 32-bit integer type")
 ELSE ()
-  MESSAGE (STATUS ".. unsigned 32-bit integer type is ${MYPACKAGE_UINT32_TYPEDEF}")
+  MESSAGE (STATUS ".. unsigned 32-bit integer type is ${CMAKE_HELPERS_UINT32_TYPEDEF}")
 ENDIF ()
-SET (MARPAESLIF_UINT32_T ${MYPACKAGE_UINT32_TYPEDEF})
+set(MARPAESLIF_UINT32_T ${CMAKE_HELPERS_UINT32_TYPEDEF})
 #
 # ... Portable uint64 type
 #
-IF (NOT HAVE_MYPACKAGE_UINT64)
+if(NOT CMAKE_HELPERS_UINT64_TYPEDEF)
   MESSAGE (FATAL_ERROR "Could not detect a valid unsigned 64-bit integer type")
 ELSE ()
-  MESSAGE (STATUS ".. unsigned 64-bit integer type is ${MYPACKAGE_UINT64_TYPEDEF}")
+  MESSAGE (STATUS ".. unsigned 64-bit integer type is ${CMAKE_HELPERS_UINT64_TYPEDEF}")
 ENDIF ()
-SET (MARPAESLIF_UINT64_T ${MYPACKAGE_UINT64_TYPEDEF})
+set(MARPAESLIF_UINT64_T ${CMAKE_HELPERS_UINT64_TYPEDEF})
 #
 # We need to know endianness in case there is no signbit
 #
-INCLUDE (TestBigEndian)
-TEST_BIG_ENDIAN (IS_BIG_ENDIAN)
-IF (IS_BIG_ENDIAN)
-  SET (WORDS_BIGENDIAN TRUE CACHE BOOL "Big endian library")
-  MARK_AS_ADVANCED (WORDS_BIGENDIAN)
-ELSE ()
-  SET (WORDS_BIGENDIAN FALSE CACHE BOOL "Big endian library")
-  MARK_AS_ADVANCED (WORDS_BIGENDIAN)
-ENDIF ()
+include(TestBigEndian)
+test_big_endian(IS_BIG_ENDIAN)
+if(IS_BIG_ENDIAN)
+  set(WORDS_BIGENDIAN TRUE CACHE BOOL "Big endian library")
+else()
+  set(WORDS_BIGENDIAN FALSE CACHE BOOL "Big endian library")
+endif()
+mark_as_advanced(WORDS_BIGENDIAN)
 #
-# ... Ok -;
+# Dependencies
 #
-MYPACKAGELIBRARY(
-  ${CMAKE_CURRENT_SOURCE_DIR}/include/config.h.in
-  ${INCLUDE_OUTPUT_PATH}/marpaESLIF/internal/config.h
-  src/marpaESLIF.c)
-
+set(marpaESLIF_depends)
+set(marpaESLIF_depends_ext)
+set(marpaESLIF_find_dependencies)
 #
-# m dependency
+# genericLogger dependency
 #
-IF (CMAKE_MATH_LIBS)
-  FOREACH (_target ${PROJECT_NAME} ${PROJECT_NAME}_static ${PROJECT_NAME}_objs ${PROJECT_NAME}_static_objs)
-    TARGET_LINK_LIBRARIES(${_target} PUBLIC ${CMAKE_MATH_LIBS})
-  ENDFOREACH ()
-ENDIF ()
-
+set(genericLogger_url https://github.com/jddurand/c-genericLogger.git)
+cmake_helpers_depend(genericLogger
+  EXTERNALPROJECT_ADD_ARGS GIT_REPOSITORY ${genericLogger_url} GIT_SHALLOW TRUE
+  FIND_PACKAGE_ARGS REQUIRED CONFIG
+)
+list(APPEND marpaESLIF_find_dependencies "genericLogger REQUIRED CONFIG")
+list(APPEND marpaESLIF_depends PUBLIC genericLogger::genericLogger)
 #
-# Since we embed marpaESLIFLua with a #include directive, we have to propagate the
-# emebeded lua binding version, that are #define's usually generated with MYPACKAGELIBRARY()
+# genericStack dependency
 #
-FOREACH (_target ${PROJECT_NAME} ${PROJECT_NAME}_static ${PROJECT_NAME}_objs ${PROJECT_NAME}_static_objs)
-  TARGET_COMPILE_DEFINITIONS(${_target}
-    PRIVATE -DMARPAESLIFLUA_VERSION_MAJOR=${${PROJECT_NAME}_VERSION_MAJOR}
-    PRIVATE -DMARPAESLIFLUA_VERSION_MINOR=${${PROJECT_NAME}_VERSION_MINOR}
-    PRIVATE -DMARPAESLIFLUA_VERSION_PATCH=${${PROJECT_NAME}_VERSION_PATCH}
-    PRIVATE -DMARPAESLIFLUA_VERSION="${${PROJECT_NAME}_VERSION}"
-    )
-ENDFOREACH ()
-
-###############
-# Executables #
-###############
-MYPACKAGETESTEXECUTABLE(marpaESLIFTester            test/marpaESLIFTester.c)
-MYPACKAGETESTEXECUTABLE(adventTester                test/adventTester.c)
-MYPACKAGETESTEXECUTABLE(jsonTesterStrict            test/jsonTesterStrict.c)
-MYPACKAGETESTEXECUTABLE(jsonTesterNotStrict         test/jsonTesterNotStrict.c)
-MYPACKAGETESTEXECUTABLE(jsonTesterStrictExternal    test/jsonTesterStrictExternal.c)
-MYPACKAGETESTEXECUTABLE(jsonTesterNotStrictExternal test/jsonTesterNotStrictExternal.c)
-MYPACKAGETESTEXECUTABLE(jsonTesterLua               test/jsonTesterLua.c)
-MYPACKAGETESTEXECUTABLE(jsonTesterWithSharedStream  test/jsonTesterWithSharedStream.c)
-MYPACKAGETESTEXECUTABLE(selfTester                  test/selfTester.c)
-MYPACKAGETESTEXECUTABLE(exceptionTester             test/exceptionTester.c)
-MYPACKAGETESTEXECUTABLE(exceptionTester2            test/exceptionTester2.c)
-MYPACKAGETESTEXECUTABLE(exceptionTester3            test/exceptionTester3.c)
-MYPACKAGETESTEXECUTABLE(exceptionTester4            test/exceptionTester4.c)
-MYPACKAGETESTEXECUTABLE(yamlTester                  test/yamlTester.c)
-MYPACKAGETESTEXECUTABLE(parameterizedTester         test/parameterizedTester.c)
-MYPACKAGETESTEXECUTABLE(allluacallbacksTester       test/allluacallbacks.c)
-MYPACKAGETESTEXECUTABLE(swiftTester                 test/swiftTester.c)
-
-################
-# Dependencies #
-################
-MYPACKAGEDEPENDENCY (genericLogger "${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/github/genericLogger" LIBS LOCAL)
-MYPACKAGEDEPENDENCY (pcre2         "${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/untar/pcre2-10.40"    LIBS LOCAL STATIC)
-MYPACKAGEDEPENDENCY (genericStack  "${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/github/genericStack"  LIBS LOCAL STATIC)
-MYPACKAGEDEPENDENCY (genericHash   "${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/github/genericHash"   LIBS LOCAL STATIC)
-MYPACKAGEDEPENDENCY (marpaWrapper  "${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/github/marpaWrapper"  LIBS LOCAL STATIC)
+set(genericStack_url https://github.com/jddurand/c-genericStack.git)
+cmake_helpers_depend(genericStack
+  EXTERNALPROJECT_ADD_ARGS GIT_REPOSITORY ${genericStack_url} GIT_SHALLOW TRUE
+  FIND_PACKAGE_ARGS REQUIRED CONFIG
+)
+list(APPEND marpaESLIF_find_dependencies "genericStack REQUIRED CONFIG")
+list(APPEND marpaESLIF_depends PUBLIC genericStack::genericStack)
 #
-# marpaESLIF is using the native iconv
+# genericHash dependency
 #
-SET(TCONV_USE_ICU NO)
-MYPACKAGEDEPENDENCY (tconv         "${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/github/tconv"         LIBS LOCAL STATIC)
+set(genericHash_url https://github.com/jddurand/c-genericHash.git)
+cmake_helpers_depend(genericHash
+  EXTERNALPROJECT_ADD_ARGS GIT_REPOSITORY ${genericHash_url} GIT_SHALLOW TRUE
+  FIND_PACKAGE_ARGS REQUIRED CONFIG
+)
+list(APPEND marpaESLIF_find_dependencies "genericHash REQUIRED CONFIG")
+list(APPEND marpaESLIF_depends PUBLIC genericHash::genericHash)
 #
-# We and to embed lua, so we do not introduce a dependency explicitly, but we still add the target
-# to get luaunpanic configured
+# marpaWrapper dependency
 #
-ADD_SUBDIRECTORY(${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/github/luaunpanic EXCLUDE_FROM_ALL)
-# MYPACKAGEDEPENDENCY (luaunpanic    "${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/github/luaunpanic"    LIBS LOCAL STATIC)
+set(marpaWrapper_url https://github.com/jddurand/c-marpaWrapper.git)
+cmake_helpers_depend(marpaWrapper
+  EXTERNALPROJECT_ADD_ARGS GIT_REPOSITORY ${marpaWrapper_url} GIT_SHALLOW TRUE
+  FIND_PACKAGE_ARGS REQUIRED CONFIG
+)
+list(APPEND marpaESLIF_find_dependencies "marpaWrapper REQUIRED CONFIG")
+list(APPEND marpaESLIF_depends PUBLIC marpaWrapper::marpaWrapper)
 #
-# - Embedded lua uses long double for the lua_Number
+# tconv dependency: in order to have a coherent behaviour on all platforms, we require iconv and disable ICU explicitly
 #
-IF (HAVE_SIZEOF_LONG_LONG)
-  SET (LUA_INT_TYPE 3)             # long long
-ELSE ()
-  SET (LUA_INT_TYPE 2)             # long
-ENDIF ()
-SET (LUA_FLOAT_TYPE 3)             # long double
-
-FOREACH (_target ${PROJECT_NAME} ${PROJECT_NAME}_static ${PROJECT_NAME}_objs ${PROJECT_NAME}_static_objs)
-  TARGET_COMPILE_DEFINITIONS (${_target} PRIVATE
-    -DLUA_INT_TYPE=${LUA_INT_TYPE}
-    -DLUA_FLOAT_TYPE=${LUA_FLOAT_TYPE})
-  TARGET_INCLUDE_DIRECTORIES (${_target} PRIVATE
-    ${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/github/luaunpanic/src                                # For luaunpanic_amalgametion.c
-    ${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/github/luaunpanic/include                            # For luaunpanic.h
-    ${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/github/luaunpanic/include/luaunpanic/lua             # For lua.h, etc...
-    ${CMAKE_CURRENT_BINARY_DIR}/3rdparty/github/luaunpanic/output/include                     # For generated luaunpanic headers
-    ${CMAKE_CURRENT_BINARY_DIR}/3rdparty/github/luaunpanic/output/include/luaunpanic/lua
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/bindings/lua/include)
-  #
-  # luaunpanic OS settings
-  #
-  IF (WIN32 AND NOT CYGWIN)
-    TARGET_COMPILE_DEFINITIONS(${_target} PRIVATE -DLUA_DL_DLL)
-  ELSE ()
-    TARGET_COMPILE_DEFINITIONS(${_target} PRIVATE -DLUA_USE_DLOPEN -DLUA_USE_POSIX)
-  ENDIF ()
-  IF (CMAKE_DL_LIBS)
-    TARGET_LINK_LIBRARIES(${_target} PRIVATE ${CMAKE_DL_LIBS})
-  ENDIF ()
-  IF (CMAKE_MATH_LIBS)
-    TARGET_LINK_LIBRARIES(${_target} PRIVATE ${CMAKE_MATH_LIBS})
-  ENDIF ()
-  IF (LUA_32BITS)
-    TARGET_COMPILE_DEFINITIONS(${_target} PRIVATE -DLUA_32BITS)
-  ENDIF ()
-  IF (LUA_USE_C89)
-    TARGET_COMPILE_DEFINITIONS(${_target} PRIVATE -DLUA_USE_C89)
-  ENDIF ()
-  IF (CMAKE_C_COMPILER_ID STREQUAL SunPro)
-    TARGET_COMPILE_DEFINITIONS(${_target} PRIVATE -xc99)
-  ENDIF ()
-ENDFOREACH ()
-
-###############
-# Our options #
-###############
-FOREACH (_target ${PROJECT_NAME} ${PROJECT_NAME}_static ${PROJECT_NAME}_objs ${PROJECT_NAME}_static_objs)
-  TARGET_COMPILE_DEFINITIONS (${_target} PRIVATE
+set(tconv_url https://github.com/jddurand/c-tconv.git)
+cmake_helpers_depend(tconv
+  EXTERNALPROJECT_ADD_ARGS GIT_REPOSITORY ${tconv_url} GIT_SHALLOW TRUE
+  FIND_PACKAGE_ARGS REQUIRED CONFIG
+  CMAKE_ARGS -DTCONV_USE_ICU=OFF -DTCONV_USE_ICONV=ON
+)
+list(APPEND marpaESLIF_find_dependencies "tconv REQUIRED CONFIG")
+list(APPEND marpaESLIF_depends PUBLIC tconv::tconv)
+#
+# pcre2 dependency: CMake's of pcre2 are quite catastrophic, fortunately this is ok because
+# we will embed PCRE2 in our object
+#
+set(pcre2_version 10.42)
+if(pcre2_version)
+  set(pcre2_url https://github.com/PCRE2Project/pcre2/releases/download/pcre2-${pcre2_version}/pcre2-${pcre2_version}.tar.gz)
+  cmake_helpers_depend(pcre2
+    EXTERNALPROJECT_ADD_ARGS URL ${pcre2_url}
+    FIND FALSE
+    CONFIGURE FALSE
+    BUILD FALSE
+    INSTALL FALSE
+    SOURCE_DIR_OUTVAR pcre2_source_dir
+    BINARY_DIR_OUTVAR pcre2_binary_dir
+  )
+else()
+  set(pcre2_url https://github.com/PCRE2Project/pcre2.git)
+  cmake_helpers_depend(pcre2
+    EXTERNALPROJECT_ADD_ARGS GIT_REPOSITORY ${pcre2_url} GIT_SHALLOW TRUE
+    FIND FALSE
+    CONFIGURE FALSE
+    BUILD FALSE
+    INSTALL FALSE
+    SOURCE_DIR_OUTVAR pcre2_source_dir
+    BINARY_DIR_OUTVAR pcre2_binary_dir
+  )
+endif()
+set(BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)
+set(BUILD_STATIC_LIBS ON CACHE BOOL "" FORCE)
+set(PCRE2_BUILD_PCRE2_8 ON CACHE BOOL "" FORCE)
+set(PCRE2_STATIC_PIC ON CACHE BOOL "" FORCE)
+set(PCRE2_SUPPORT_JIT ON CACHE BOOL "" FORCE)
+set(PCRE2_BUILD_PCRE2GREP OFF CACHE BOOL "" FORCE)
+set(PCRE2_BUILD_TESTS OFF CACHE BOOL "" FORCE)
+add_subdirectory(${pcre2_source_dir} ${pcre2_binary_dir} EXCLUDE_FROM_ALL)
+add_library(pcre2-8-static_iface INTERFACE)
+target_link_libraries(pcre2-8-static_iface INTERFACE pcre2-8-static $<TARGET_OBJECTS:pcre2-8-static>)
+list(APPEND marpaESLIF_depends_ext PRIVATE BUILD_LOCAL_INTERFACE pcre2-8-static_iface)
+#
+# luaunpanic dependency: embedded inside marpaESLIF
+#
+set(luaunpanic_url https://github.com/jddurand/c-luaunpanic.git)
+cmake_helpers_depend(luaunpanic
+  EXTERNALPROJECT_ADD_ARGS GIT_REPOSITORY ${luaunpanic_url} GIT_SHALLOW TRUE
+  FIND FALSE
+  CONFIGURE FALSE
+  BUILD FALSE
+  INSTALL FALSE
+  SOURCE_DIR_OUTVAR luaunpanic_source_dir
+  BINARY_DIR_OUTVAR luaunpanic_binary_dir
+)
+add_subdirectory(${luaunpanic_source_dir} ${luaunpanic_binary_dir} EXCLUDE_FROM_ALL)
+#
+# Math library
+#
+if(CMAKE_MATH_LIBS)
+  list(APPEND marpaESLIF_depends PUBLIC ${CMAKE_MATH_LIBS})
+endif()
+#
+# Create library
+#
+cmake_helpers_library(marpaESLIF
+  CONFIG_ARGS                           include/marpaESLIF/internal/config.h.in include/marpaESLIF/internal/config.h
+  SOURCES                               ${CMAKE_CURRENT_SOURCE_DIR}/src/marpaESLIF.c
+  PODS_AUTO                             FALSE
+  FIND_DEPENDENCIES                     ${marpaESLIF_find_dependencies}
+  DEPENDS                               ${marpaESLIF_depends}
+  DEPENDS_EXT                           ${marpaESLIF_depends_ext}
+  TARGETS_OUTVAR                        targets
+)
+#
+# PODs
+#
+cmake_helpers_pod(INPUT ${CMAKE_CURRENT_SOURCE_DIR}/README.pod NAME marpaESLIF SECTION 3)
+cmake_helpers_pod(INPUT ${CMAKE_CURRENT_SOURCE_DIR}/doc/API/README.pod NAME marpaESLIF_API SECTION 3)
+cmake_helpers_pod(INPUT ${CMAKE_CURRENT_SOURCE_DIR}/doc/BNF/README.pod NAME marpaESLIF_BNF SECTION 3)
+#
+# Private thingies
+#
+foreach(_target IN LISTS targets)
+  target_compile_definitions(${_target} PRIVATE
+    #
+    # Embedded lua
+    #
+    -DMARPAESLIFLUA_VERSION_MAJOR=${${PROJECT_NAME}_VERSION_MAJOR}
+    -DMARPAESLIFLUA_VERSION_MINOR=${${PROJECT_NAME}_VERSION_MINOR}
+    -DMARPAESLIFLUA_VERSION_PATCH=${${PROJECT_NAME}_VERSION_PATCH}
+    -DMARPAESLIFLUA_VERSION="${${PROJECT_NAME}_VERSION}"
+    -DMARPAESLIFLUA_EMBEDDED
+    #
+    # Embedded pcre2
+    #
+    -DPCRE2_CODE_UNIT_WIDTH=8
+    -DPCRE2_STATIC
+    #
+    # Internal constant
+    #
     -DMARPAESLIF_BUFSIZ=${MARPAESLIF_BUFSIZ}
-    -DMARPAESLIFLUA_EMBEDDED)
-ENDFOREACH ()
-
-#########
-# Tests #
-#########
-MYPACKAGECHECK(marpaESLIFTester)
-MYPACKAGECHECK(adventTester)
-MYPACKAGECHECK(jsonTesterStrict)
-MYPACKAGECHECK(jsonTesterNotStrict)
-MYPACKAGECHECK(jsonTesterStrictExternal)
-MYPACKAGECHECK(jsonTesterNotStrictExternal)
-MYPACKAGECHECK(jsonTesterLua)
-MYPACKAGECHECK(jsonTesterWithSharedStream)
-MYPACKAGECHECK(selfTester)
-MYPACKAGECHECK(exceptionTester)
-MYPACKAGECHECK(exceptionTester2)
-MYPACKAGECHECK(exceptionTester3)
-MYPACKAGECHECK(exceptionTester4)
-MYPACKAGECHECK(parameterizedTester)
-MYPACKAGECHECK(allluacallbacksTester)
-MYPACKAGECHECK(swiftTester)
-
-###########
-# Install #
-###########
-MYPACKAGEMAN("doc/Tutorial/Calculator/README.pod" "MARPAESLIF_CALCULATOR" "3" "${MARPAESLIF_VERSION}")
-MYPACKAGEMAN("doc/BNF/README.pod"                 "MARPAESLIF_BNF"        "3" "${MARPAESLIF_VERSION}")
-MYPACKAGEMAN("doc/API/README.pod"                 "MARPAESLIF_API"        "3" "${MARPAESLIF_VERSION}")
-
-############
-# Bindings #
-############
-FIND_PACKAGE(Java)
-FIND_PACKAGE(JNI)
-IF (JNI_FOUND AND JAVA_FOUND)
-  MESSAGE(STATUS "")
-  MESSAGE(STATUS "JAVA Setup:")
-  MESSAGE(STATUS "----------")
-  MESSAGE(STATUS "Path to javac    : " ${Java_JAVAC_EXECUTABLE})
-  MESSAGE(STATUS "Path to javadoc  : " ${Java_JAVADOC_EXECUTABLE})
-  MESSAGE(STATUS "Path to jar      : " ${Java_JAR_EXECUTABLE})
-  MESSAGE(STATUS "")
-  MESSAGE(STATUS "JNI Setup:")
-  MESSAGE(STATUS "----------")
-  MESSAGE(STATUS "Path to jni.h    : " ${JAVA_INCLUDE_PATH})
-  MESSAGE(STATUS "Path to jni_md.h : " ${JAVA_INCLUDE_PATH2})
-  ADD_SUBDIRECTORY(src/bindings/java EXCLUDE_FROM_ALL)
-ENDIF ()
-
-INCLUDE(FindPerl)
-IF (PERL_FOUND)
-  EXECUTE_PROCESS(COMMAND ${PERL_EXECUTABLE} -MDist::Zilla::App -e "Dist::Zilla::App->run" -- version
-    OUTPUT_VARIABLE PERL_OUTPUT_VARIABLE
-    ERROR_VARIABLE PERL_ERROR_VARIABLE
-    RESULT_VARIABLE PERL_RETURN_VALUE )
-  IF (NOT PERL_RETURN_VALUE)
-    #
-    # dzil command available or not, we will NOT use the "dzil" command, because on Windows,
-    # at least, doing a FIND_EXECUTABLE on dzil would return a DZIL_EXECUTABLE that is
-    # the PERL SCRIPT version of dzil, not the one with the .bat extension...
-    # This is fatal for at least CTest.
-    #
-    # So let's remain independant on configuration, environment, etc... by using explicitly THIS
-    # perl that we have found and nothing else
-    #
-    MESSAGE(STATUS "")
-    MESSAGE(STATUS "PERL Executable located at ${PERL_EXECUTABLE}")
-    MESSAGE(STATUS "PERL Packaging will be done with Dist::Zilla::App package")
-    MESSAGE(STATUS "Asking for Dist::Zilla version said: ${PERL_OUTPUT_VARIABLE}")
-    ADD_SUBDIRECTORY(src/bindings/perl EXCLUDE_FROM_ALL)
-  ELSE ()
-    MESSAGE(STATUS "")
-    MESSAGE(STATUS "PERL Executable located at ${PERL_EXECUTABLE}")
-    MESSAGE(STATUS "PERL Packaging cannot be done without the Dist::Zilla package")
-    MESSAGE(STATUS "Asking for Dist::Zilla version said: ${PERL_ERROR_VARIABLE}")
-  ENDIF ()
-ELSE ()
-  MESSAGE(STATUS "")
-  MESSAGE(STATUS "PERL Packaging cannot be done without perl -;")
-ENDIF ()
-
-# Lua bindings is in development phase
-INCLUDE(FindLua)
-IF (LUA_FOUND)
-  ADD_SUBDIRECTORY(src/bindings/lua EXCLUDE_FROM_ALL)
-ENDIF ()
-
-##########
-# Export #
-##########
-MYPACKAGECMAKEEXPORT()
-MYPACKAGEPKGCONFIGEXPORT()
-
-#############
-# Packaging #
-#############
-MYPACKAGEPACK ("" "Marpa Extended Scanless Interface")
-
-#########
-# Setup #
-#########
-MYPACKAGEPRINTSETUP()
+  )
+  target_include_directories(${_target} PRIVATE
+    ${luaunpanic_binary_dir}/include/luaunpanic/lua      # For luaconf.h
+    ${luaunpanic_binary_dir}/include                     # For luaunpanic/export.h
+    ${luaunpanic_source_dir}/include/luaunpanic/lua      # For lauxlib.h, lua.h, lualib.h
+    ${luaunpanic_source_dir}/src                         # For luaunpanic_amalgamation.c
+    ${luaunpanic_source_dir}/include                     # For luaunpanic.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/bindings/lua/include # For marpaESLIFLua.h
+  )
+endforeach()
+#
+# Tests
+#
+include(CTest)
+cmake_helpers_exe(marpaESLIFTester            INSTALL FALSE TEST TRUE SOURCES test/marpaESLIFTester.c)
+cmake_helpers_exe(adventTester                INSTALL FALSE TEST TRUE SOURCES test/adventTester.c)
+cmake_helpers_exe(jsonTesterStrict            INSTALL FALSE TEST TRUE SOURCES test/jsonTesterStrict.c)
+cmake_helpers_exe(jsonTesterNotStrict         INSTALL FALSE TEST TRUE SOURCES test/jsonTesterNotStrict.c)
+cmake_helpers_exe(jsonTesterStrictExternal    INSTALL FALSE TEST TRUE SOURCES test/jsonTesterStrictExternal.c)
+cmake_helpers_exe(jsonTesterNotStrictExternal INSTALL FALSE TEST TRUE SOURCES test/jsonTesterNotStrictExternal.c)
+cmake_helpers_exe(jsonTesterLua               INSTALL FALSE TEST TRUE SOURCES test/jsonTesterLua.c)
+cmake_helpers_exe(jsonTesterWithSharedStream  INSTALL FALSE TEST TRUE SOURCES test/jsonTesterWithSharedStream.c)
+cmake_helpers_exe(selfTester                  INSTALL FALSE TEST TRUE SOURCES test/selfTester.c)
+cmake_helpers_exe(exceptionTester             INSTALL FALSE TEST TRUE SOURCES test/exceptionTester.c)
+cmake_helpers_exe(exceptionTester2            INSTALL FALSE TEST TRUE SOURCES test/exceptionTester2.c)
+cmake_helpers_exe(exceptionTester3            INSTALL FALSE TEST TRUE SOURCES test/exceptionTester3.c)
+cmake_helpers_exe(exceptionTester4            INSTALL FALSE TEST TRUE SOURCES test/exceptionTester4.c)
+cmake_helpers_exe(parameterizedTester         INSTALL FALSE TEST TRUE SOURCES test/parameterizedTester.c)
+cmake_helpers_exe(allluacallbacksTester       INSTALL FALSE TEST TRUE SOURCES test/allluacallbacksTester.c)
+cmake_helpers_exe(swiftTester                 INSTALL FALSE TEST TRUE SOURCES test/swiftTester.c)
+#
+# Package
+#
+cmake_helpers_package()
