@@ -206,6 +206,11 @@ cmake_helpers_pod(INPUT ${CMAKE_CURRENT_SOURCE_DIR}/doc/BNF/README.pod NAME marp
 # Private thingies
 #
 foreach(_target IN LISTS targets)
+  if(WIN32 AND NOT CYGWIN)
+    set(_lua_flags -DLUA_DL_DLL)
+  else()
+    set(_lua_flags -DLUA_USE_DLOPEN -DLUA_USE_POSIX)
+  endif()
   target_compile_definitions(${_target} PRIVATE
     #
     # Embedded lua
@@ -215,6 +220,7 @@ foreach(_target IN LISTS targets)
     -DMARPAESLIFLUA_VERSION_PATCH=${${PROJECT_NAME}_VERSION_PATCH}
     -DMARPAESLIFLUA_VERSION="${${PROJECT_NAME}_VERSION}"
     -DMARPAESLIFLUA_EMBEDDED
+    ${_lua_flags}
     #
     # Embedded pcre2
     #
