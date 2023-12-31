@@ -77,9 +77,9 @@ set(marpaESLIF_find_dependencies)
 #
 # genericLogger dependency
 #
-set(genericLogger_url https://github.com/jddurand/c-genericLogger.git)
+set(genericLogger_git https://github.com/jddurand/c-genericLogger.git)
 cmake_helpers_depend(genericLogger
-  EXTERNALPROJECT_ADD_ARGS GIT_REPOSITORY ${genericLogger_url} GIT_SHALLOW TRUE
+  EXTERNALPROJECT_ADD_ARGS GIT_REPOSITORY ${genericLogger_git} GIT_SHALLOW TRUE
   FIND_PACKAGE_ARGS REQUIRED CONFIG
 )
 list(APPEND marpaESLIF_find_dependencies "genericLogger REQUIRED CONFIG")
@@ -87,9 +87,9 @@ list(APPEND marpaESLIF_depends PUBLIC genericLogger::genericLogger)
 #
 # genericStack dependency
 #
-set(genericStack_url https://github.com/jddurand/c-genericStack.git)
+set(genericStack_git https://github.com/jddurand/c-genericStack.git)
 cmake_helpers_depend(genericStack
-  EXTERNALPROJECT_ADD_ARGS GIT_REPOSITORY ${genericStack_url} GIT_SHALLOW TRUE
+  EXTERNALPROJECT_ADD_ARGS GIT_REPOSITORY ${genericStack_git} GIT_SHALLOW TRUE
   FIND_PACKAGE_ARGS REQUIRED CONFIG
 )
 list(APPEND marpaESLIF_find_dependencies "genericStack REQUIRED CONFIG")
@@ -97,9 +97,9 @@ list(APPEND marpaESLIF_depends PUBLIC genericStack::genericStack)
 #
 # genericHash dependency
 #
-set(genericHash_url https://github.com/jddurand/c-genericHash.git)
+set(genericHash_git https://github.com/jddurand/c-genericHash.git)
 cmake_helpers_depend(genericHash
-  EXTERNALPROJECT_ADD_ARGS GIT_REPOSITORY ${genericHash_url} GIT_SHALLOW TRUE
+  EXTERNALPROJECT_ADD_ARGS GIT_REPOSITORY ${genericHash_git} GIT_SHALLOW TRUE
   FIND_PACKAGE_ARGS REQUIRED CONFIG
 )
 list(APPEND marpaESLIF_find_dependencies "genericHash REQUIRED CONFIG")
@@ -107,9 +107,9 @@ list(APPEND marpaESLIF_depends PUBLIC genericHash::genericHash)
 #
 # marpaWrapper dependency
 #
-set(marpaWrapper_url https://github.com/jddurand/c-marpaWrapper.git)
+set(marpaWrapper_git https://github.com/jddurand/c-marpaWrapper.git)
 cmake_helpers_depend(marpaWrapper
-  EXTERNALPROJECT_ADD_ARGS GIT_REPOSITORY ${marpaWrapper_url} GIT_SHALLOW TRUE
+  EXTERNALPROJECT_ADD_ARGS GIT_REPOSITORY ${marpaWrapper_git} GIT_SHALLOW TRUE
   FIND_PACKAGE_ARGS REQUIRED CONFIG
 )
 list(APPEND marpaESLIF_find_dependencies "marpaWrapper REQUIRED CONFIG")
@@ -117,9 +117,9 @@ list(APPEND marpaESLIF_depends PUBLIC marpaWrapper::marpaWrapper)
 #
 # tconv dependency: in order to have a coherent behaviour on all platforms, we require iconv and disable ICU explicitly
 #
-set(tconv_url https://github.com/jddurand/c-tconv.git)
+set(tconv_git https://github.com/jddurand/c-tconv.git)
 cmake_helpers_depend(tconv
-  EXTERNALPROJECT_ADD_ARGS GIT_REPOSITORY ${tconv_url} GIT_SHALLOW TRUE
+  EXTERNALPROJECT_ADD_ARGS GIT_REPOSITORY ${tconv_git} GIT_SHALLOW TRUE
   FIND_PACKAGE_ARGS REQUIRED CONFIG
   CMAKE_ARGS -DTCONV_USE_ICU=OFF -DTCONV_USE_ICONV=ON
 )
@@ -142,9 +142,9 @@ if(pcre2_version)
     BINARY_DIR_OUTVAR pcre2_binary_dir
   )
 else()
-  set(pcre2_url https://github.com/PCRE2Project/pcre2.git)
+  set(pcre2_git https://github.com/PCRE2Project/pcre2.git)
   cmake_helpers_depend(pcre2
-    EXTERNALPROJECT_ADD_ARGS GIT_REPOSITORY ${pcre2_url} GIT_SHALLOW TRUE
+    EXTERNALPROJECT_ADD_ARGS GIT_REPOSITORY ${pcre2_git} GIT_SHALLOW TRUE
     FIND FALSE
     CONFIGURE FALSE
     BUILD FALSE
@@ -167,9 +167,9 @@ list(APPEND marpaESLIF_depends_ext PRIVATE BUILD_LOCAL_INTERFACE pcre2-8-static_
 #
 # luaunpanic dependency: embedded inside marpaESLIF
 #
-set(luaunpanic_url https://github.com/jddurand/c-luaunpanic.git)
+set(luaunpanic_git https://github.com/jddurand/c-luaunpanic.git)
 cmake_helpers_depend(luaunpanic
-  EXTERNALPROJECT_ADD_ARGS GIT_REPOSITORY ${luaunpanic_url} GIT_SHALLOW TRUE
+  EXTERNALPROJECT_ADD_ARGS GIT_REPOSITORY ${luaunpanic_git} GIT_SHALLOW TRUE
   FIND FALSE
   CONFIGURE FALSE
   BUILD FALSE
@@ -264,3 +264,27 @@ cmake_helpers_exe(swiftTester                 INSTALL FALSE TEST TRUE SOURCES te
 # Package
 #
 cmake_helpers_package()
+#
+# Bindings
+#
+include(ExternalProject)
+#
+# Java binding
+#
+find_package(Java)
+find_package(JNI COMPONENTS JVM)
+if(JNI_FOUND AND JAVA_FOUND)
+  message(STATUS "")
+  message(STATUS "JAVA Setup:")
+  message(STATUS "----------")
+  message(STATUS "Path to javac    : " ${Java_JAVAC_EXECUTABLE})
+  message(STATUS "Path to javadoc  : " ${Java_JAVADOC_EXECUTABLE})
+  message(STATUS "Path to jar      : " ${Java_JAR_EXECUTABLE})
+  message(STATUS "")
+  message(STATUS "JNI Setup:")
+  message(STATUS "----------")
+  message(STATUS "Path to jni.h    : " ${JAVA_INCLUDE_PATH})
+  message(STATUS "Path to jni_md.h : " ${JAVA_INCLUDE_PATH2})
+  set(marpaESLIFJava_VERSION ${PROJECT_VERSION})
+  add_subdirectory(src/bindings/java)
+endif()

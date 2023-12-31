@@ -2,8 +2,6 @@ package org.parser.marpa;
 
 /**
  * ESLIFProgress is describing parsing progress from the recognizer.
- * 
- * @see ESLIFRecognizer#progress()
  */
 public class ESLIFProgress {
 	private int earleySetId;

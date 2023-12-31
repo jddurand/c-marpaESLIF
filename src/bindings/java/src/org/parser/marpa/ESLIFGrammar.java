@@ -56,8 +56,9 @@ public class ESLIFGrammar {
 	 * @param grammar the grammar to compile
 	 * @throws UnsupportedEncodingException if internal grammar cannot be converted to strict UTF-8
 	 * @throws ESLIFException if grammar parse failed
+	 * @throws IllegalArgumentException if one of eslif or grammar arguments is null
 	 */
-	public ESLIFGrammar(ESLIF eslif, String grammar) throws UnsupportedEncodingException, ESLIFException {
+	public ESLIFGrammar(ESLIF eslif, String grammar) throws UnsupportedEncodingException, ESLIFException, IllegalArgumentException {
 		if (eslif == null) {
 			throw new IllegalArgumentException("eslif must not be null");
 		}
@@ -68,8 +69,13 @@ public class ESLIFGrammar {
 		jniNew(grammar.getBytes("UTF-8"));
 	}
 
-	/* For subclasses that need only eslif parameter */
-	protected ESLIFGrammar(ESLIF eslif) throws ESLIFException {
+	/**
+	 * Creation of an ESLIFGrammar instance
+	 * 
+	 * @param eslif an instance of ESLIF
+	 * @throws IllegalArgumentException if eslif argument is null
+	 */
+	protected ESLIFGrammar(ESLIF eslif) throws IllegalArgumentException {
 		if (eslif == null) {
 			throw new IllegalArgumentException("eslif must not be null");
 		}
@@ -316,18 +322,43 @@ public class ESLIFGrammar {
 	 * Private methods - used by the JNI
 	 * ********************************************
 	 */
+	/**
+	 * Get logger interface
+	 * 
+	 * @return logger interface
+	 */
 	protected ESLIFLoggerInterface getLoggerInterface() {
 		return (eslif != null) ? eslif.getLoggerInterface() : null;
 	}
+	/**
+	 * Get eslif
+	 * 
+	 * @return ESLIF variable
+	 */
 	protected ESLIF getEslif() {
 		return eslif;
 	}
+	/**
+	 * Set eslif
+	 * 
+	 * @param eslif the ESLIF variable
+	 */
 	protected void setEslif(ESLIF eslif) {
 		this.eslif = eslif;
 	}
+	/**
+	 * Get eslif internal grammar pointer
+	 * 
+	 * @return ESLIF internal grammar pointer
+	 */
 	protected ByteBuffer getMarpaESLIFGrammarp() {
 		return marpaESLIFGrammarp;
 	}
+	/**
+	 * Set eslif internal grammar pointer
+	 * 
+	 * @param marpaESLIFGrammarp the ESLIF internal grammar pointer
+	 */
 	protected void setMarpaESLIFGrammarp(ByteBuffer marpaESLIFGrammarp) {
 		this.marpaESLIFGrammarp = marpaESLIFGrammarp;
 	}

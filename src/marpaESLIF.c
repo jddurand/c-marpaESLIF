@@ -190,7 +190,7 @@ static const int utf8_table2[] = { 0,    0xc0, 0xe0, 0xf0, 0xf8, 0xfc};
 static const int utf8_table3[] = { 0xff, 0x1f, 0x0f, 0x07, 0x03, 0x01};
 
 /* C.f. https://stackoverflow.com/questions/10536207/ansi-c-maximum-number-of-characters-printing-a-decimal-int */
-#define MARPAESLIF_MAX_DECIMAL_DIGITS_TYPE(type) ((3 * sizeof(type) * CHAR_BIT / 8) + 1) /* Rounded-up approximation, without NUL */
+#define MARPAESLIF_MAX_DECIMAL_DIGITS_TYPE(type) ((3 * sizeof(type) * C_CHAR_BIT / 8) + 1) /* Rounded-up approximation, without NUL */
 #define MARPAESLIF_MAX_DECIMAL_DIGITS_CHAR     MARPAESLIF_MAX_DECIMAL_DIGITS_TYPE(char)
 #define MARPAESLIF_MAX_DECIMAL_DIGITS_SHORT    MARPAESLIF_MAX_DECIMAL_DIGITS_TYPE(short)
 #define MARPAESLIF_MAX_DECIMAL_DIGITS_INT      MARPAESLIF_MAX_DECIMAL_DIGITS_TYPE(int)

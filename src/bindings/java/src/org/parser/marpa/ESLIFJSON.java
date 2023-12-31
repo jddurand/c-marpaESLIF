@@ -10,7 +10,7 @@ package org.parser.marpa;
  * - C++ style comment
  * - InfinityUnlimited commas
  * - NaN
- * - Unicode's control characters (range C<[\x00-\x1F]>).
+ * - Unicode's control characters (range [\x00-\x1F]).
  * 
  * <pre>
  * ESLIF eslif = new ESLIF(...)
@@ -36,7 +36,7 @@ public class ESLIFJSON {
 	 * Creation of an ESLIFJSON instance
 	 * 
 	 * @param eslif an instance of ESLIF
-	 * @param strict optional strict mode
+	 * @param strict the strict mode
 	 * @throws ESLIFException if creation failed
 	 * 
 	 * default strict mode is true.
@@ -46,6 +46,14 @@ public class ESLIFJSON {
 		this.eslifJSONEncoder = new ESLIFJSONEncoder(eslif, strict);
 	}
 
+	/**
+	 * Creation of an ESLIFJSON instance
+	 * 
+	 * @param eslif an instance of ESLIF
+	 * @throws ESLIFException if creation failed
+	 * 
+	 * Strict mode defaults to true.
+	 */
 	public ESLIFJSON(ESLIF eslif) throws ESLIFException {
 		this(eslif, true);
 	}
@@ -65,6 +73,7 @@ public class ESLIFJSON {
 	 *
 	 * @param s the string to decode
 	 * @throws ESLIFException if the interface failed
+	 * @return the decode object
 	 */
 	public synchronized Object decode(String s) throws ESLIFException {
 		return this.eslifJSONDecoder.decode(s);
@@ -74,8 +83,9 @@ public class ESLIFJSON {
 	 * Decodes a string to a java object
 	 *
 	 * @param s the string to decode
-	 * @param eslifJSONDeoderOption the options for decoding
+	 * @param eslifJSONDecoderOption the options for decoding
 	 * @throws ESLIFException if the interface failed
+	 * @return the decode object
 	 */
 	public synchronized Object decode(String s, ESLIFJSONDecoderOption eslifJSONDecoderOption) throws ESLIFException {
 		return this.eslifJSONDecoder.decode(s, eslifJSONDecoderOption);
@@ -86,6 +96,7 @@ public class ESLIFJSON {
 	 *
 	 * @param o the object to encode
 	 * @throws ESLIFException if the interface failed
+	 * @return the encoded object
 	 */
 	public synchronized String encode(Object o) throws ESLIFException {
 		return this.eslifJSONEncoder.encode(o);

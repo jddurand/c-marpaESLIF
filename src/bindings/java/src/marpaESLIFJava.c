@@ -1,20 +1,33 @@
 /* Java JNI bindings for marpaESLIF */
 
+#include "marpaESLIFJava/internal/config.h"
 #include <jni.h>
+#ifdef HAVE_LIMITS_H
 #include <limits.h>
-/* Should never happen */
-#ifndef CHAR_BIT
-#define CHAR_BIT 8
 #endif
 #ifdef HAVE_STDINT_H
 #include <stdint.h>
 #endif
+#ifdef HAVE_SYS_STDINT_H
+#include <sys/stdint.h>
+#endif
+#ifdef HAVE_STDLIB_H
+#include <stdlib.h>
+#endif
+#ifdef HAVE_ERRNO_H
+#include <errno.h>
+#endif
+#ifdef HAVE_STRING_H
+#include <string.h>
+#endif
+#ifdef HAVE_STRINGS_H
+#include <strings.h>
+#endif
+#ifdef HAVE_FLOAT_H
+#include <float.h>
+#endif
 #include <marpaESLIF.h>
 #include <genericStack.h>
-#include <stdlib.h>
-#include <errno.h>
-#include <string.h>
-#include <float.h>
 #include <genericLogger.h>
 
 /* ---------------- */
@@ -1061,7 +1074,7 @@ fieldsValuesStorage_t fieldsValues[] = {
     }                                                                   \
   } while (0)
 
-#ifdef MARPAESLIF_HAVE_LONG_LONG
+#ifdef MARPAESLIF_HAVE_LONG_LONG /* It is defined by marpaESLIF.h */
 
 #  define MARPAESLIFJAVA_EXPORT_NUMBER_NOT_DECIMAL(envp, jni_type, jni_value, eslifb) do { \
     if (sizeof(jni_type) <= sizeof(char)) {                             \
@@ -6575,7 +6588,7 @@ static short marpaESLIFJava_importb(marpaESLIF_t *marpaESLIFp, genericStack_t *o
     marpaESLIF Type                    C type    C nb_bits      Java Type
     
     MARPAESLIF_VALUE_TYPE_UNDEF
-    MARPAESLIF_VALUE_TYPE_CHAR         char      CHAR_BIT       java.lang.Byte or java.lang.Short or java.lang.Integer or java.lang.Long or java.math.BigInteger
+    MARPAESLIF_VALUE_TYPE_CHAR         char      C_CHAR_BIT     java.lang.Byte or java.lang.Short or java.lang.Integer or java.lang.Long or java.math.BigInteger
     MARPAESLIF_VALUE_TYPE_SHORT        short     >= 16          java.lang.Byte or java.lang.Short or java.lang.Integer or java.lang.Long or java.math.BigInteger
     MARPAESLIF_VALUE_TYPE_INT          int       >= 16          java.lang.Byte or java.lang.Short or java.lang.Integer or java.lang.Long or java.math.BigInteger
     MARPAESLIF_VALUE_TYPE_LONG         long      >= 32          java.lang.Byte or java.lang.Short or java.lang.Integer or java.lang.Long or java.math.BigInteger
@@ -7137,7 +7150,7 @@ static short marpaESLIFJava_stack_setb(JNIEnv *envp, marpaESLIFValue_t *marpaESL
 
           marpaESLIFValueResultp->u.a.sizel    = (size_t) bytel;
           if (bytel > 0) {
-            if (CHAR_BIT == 8) { /* a char is the same as jbyte */
+            if (C_CHAR_BIT == 8) { /* a char is the same as jbyte */
               marpaESLIFValueResultp->u.a.p = (char *) malloc(bytel);
               if (marpaESLIFValueResultp->u.a.p == NULL) {
                 RAISEEXCEPTIONF(envp, "malloc failure, %s", strerror(errno));

@@ -95,12 +95,14 @@ public interface ESLIFRecognizerInterface {
 	 * All recognizer callbacks are executed using an instance of ESLIFRecognizerInterface.
 	 *
 	 * Whenever ESLIF executes them, it will call this method with a shallow copy of current ESLIFRecognizer.
+	 *
+	 * @param eslifRecognizer the ESLIFRecognizer instance
 	 */
 	public void setEslifRecognizer(ESLIFRecognizer eslifRecognizer);
 	/**
 	 * Get current recognizer
 	 * 
-	 * This method retrieve the current ESLIFRecognizer injected at every recognizer callback.
+	 * @return the ESLIFRecognizer injected at every recognizer callback
 	 */
 	public ESLIFRecognizer getEslifRecognizer();
 }

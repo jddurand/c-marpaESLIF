@@ -24,14 +24,15 @@
 #  define MARPAESLIF_FUNC_ATTRIBUTE_FLATTEN /* Define it to nothing */
 #endif
 
-#cmakedefine HAVE_SYS_TYPES_H  @HAVE_SYS_TYPES_H@
-#cmakedefine HAVE_STDINT_H     @HAVE_STDINT_H@
-#cmakedefine HAVE_STDDEF_H     @HAVE_STDDEF_H@
-#cmakedefine HAVE_MATH_H       @HAVE_MATH_H@
-#cmakedefine HAVE_LOCALE_H     @HAVE_LOCALE_H@
-#cmakedefine HAVE_FLOAT_H      @HAVE_FLOAT_H@
-#cmakedefine HAVE_LIMITS_H     @HAVE_LIMITS_H@
+#cmakedefine HAVE_SYS_TYPES
+#cmakedefine HAVE_STDINT_H
+#cmakedefine HAVE_STDDEF_H
+#cmakedefine HAVE_MATH_H
+#cmakedefine HAVE_LOCALE_H
+#cmakedefine HAVE_FLOAT_H
+#cmakedefine HAVE_LIMITS_H
 
+#cmakedefine C_CHAR_BIT        @C_CHAR_BIT@
 #cmakedefine SIZEOF_VOID_STAR  @SIZEOF_VOID_STAR@
 #cmakedefine SIZEOF_CHAR       @SIZEOF_CHAR@
 #cmakedefine SIZEOF_SHORT      @SIZEOF_SHORT@

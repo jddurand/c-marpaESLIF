@@ -265,6 +265,11 @@ public class ESLIF {
 	private static String getMarpaeslifjavaLibraryName() {
 		return MARPAESLIFJAVA_LIBRARY_NAME;
 	}
+	/**
+	 * Get logger interface
+	 * 
+	 * @return an ESLIFLoggerInterface interface
+	 */
 	protected ESLIFLoggerInterface getLoggerInterface() {
 		return loggerInterface;
 	}

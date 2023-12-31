@@ -195,7 +195,7 @@ public class ESLIFRecognizer {
 	
 	/**
 	 *
-	 * @param a flag indicating if exhaustion is supported
+	 * @param flag a flag indicating if exhaustion is supported
 	 * @throws ESLIFException if the interface failed
 	 */
 	public synchronized void setExhaustedFlag(boolean flag) throws ESLIFException {
@@ -491,6 +491,7 @@ public class ESLIFRecognizer {
 	 * An undefined output does not necessarily mean there is an error, but that the internal buffer is completely consumed.
 	 * It is recommended to set length parameter to a reasonable value, to prevent an internal copy of a potentially big number of bytes.
 	 * 
+	 * @param offset offset in byte unit
 	 * @return an array of bytes, or null
 	 * @throws ESLIFException if the interface failed
 	 */
@@ -504,6 +505,8 @@ public class ESLIFRecognizer {
 	 * An undefined output does not necessarily mean there is an error, but that the internal buffer is completely consumed.
 	 * It is recommended to set length parameter to a reasonable value, to prevent an internal copy of a potentially big number of bytes.
 	 * 
+	 * @param offset offset in byte unit
+	 * @param length length in byte unit
 	 * @return an array of bytes, or null
 	 * @throws ESLIFException if the interface failed
 	 */
@@ -592,7 +595,7 @@ public class ESLIFRecognizer {
 	/**
 	 * Try to match a symbol. 
 	 * 
-	 * @param the symbol
+	 * @param eslifSymbol the symbol
 	 * @throws ESLIFException if the interface failed
 	 * 
 	 * @return null if no match, else the matched bytes
@@ -628,9 +631,19 @@ public class ESLIFRecognizer {
 	private void setEslifRecognizerPeeked(ESLIFRecognizer eslifRecognizerPeeked) {
 		this.eslifRecognizerPeeked = eslifRecognizerPeeked;
 	}
+	/**
+	 * Get logger instance
+	 * 
+	 * @return an ESLIFLoggerInterface instance, which can be null
+	 */
 	protected ESLIFLoggerInterface getLoggerInterface() {
 		return (eslifGrammar != null) ? eslifGrammar.getLoggerInterface() : null;
 	}
+	/**
+	 * Get grammar instance
+	 * 
+	 * @return an ESLIFGrammar instance
+	 */
 	protected ESLIFGrammar getEslifGrammar() {
 		return eslifGrammar;
 	}

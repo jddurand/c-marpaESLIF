@@ -10,7 +10,7 @@ package org.parser.marpa;
  * - C++ style comment
  * - InfinityUnlimited commas
  * - NaN
- * - Unicode's control characters (range C<[\x00-\x1F]>).
+ * - Unicode's control characters (range [\x00-\x1F]).
  *
  * <pre>
  * ESLIF eslif = new ESLIF(...)
@@ -38,13 +38,20 @@ public class ESLIFJSONEncoder extends ESLIFGrammar {
 	 * @param strict optional strict mode
 	 * @throws ESLIFException if creation failed
 	 * 
-	 * default strict mode is true.
 	 */
 	public ESLIFJSONEncoder(ESLIF eslif, boolean strict) throws ESLIFException {
 		super(eslif);
 		jniNew(strict);
 	}
 
+	/**
+	 * Creation of an ESLIFJSONEncoder instance
+	 * 
+	 * @param eslif an instance of ESLIF
+	 * @throws ESLIFException if creation failed
+	 * 
+	 * Strict mode defaults to true.
+	 */
 	public ESLIFJSONEncoder(ESLIF eslif) throws ESLIFException {
 		this(eslif, true);
 	}
@@ -62,6 +69,7 @@ public class ESLIFJSONEncoder extends ESLIFGrammar {
 	 * Encodes java data to a JSON UTF-8 string
 	 * 
 	 * @param o the object to encode
+	 * @return the encoded string
 	 * @throws ESLIFException if the interface failed
 	 */
 	public synchronized String encode(Object o) throws ESLIFException {

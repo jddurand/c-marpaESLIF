@@ -13,7 +13,7 @@ import java.nio.charset.Charset;
  * - C++ style comment
  * - InfinityUnlimited commas
  * - NaN
- * - Unicode's control characters (range C<[\x00-\x1F]>).
+ * - Unicode's control characters (range [\x00-\x1F]).
  * 
  * <pre>
  * ESLIF eslif = new ESLIF(...)
@@ -116,13 +116,20 @@ public class ESLIFJSONDecoder extends ESLIFGrammar {
 	 * @param strict optional strict mode
 	 * @throws ESLIFException if creation failed
 	 * 
-	 * default strict mode is true.
 	 */
 	public ESLIFJSONDecoder(ESLIF eslif, boolean strict) throws ESLIFException {
 		super(eslif);
 		jniNew(strict);
 	}
 
+	/**
+	 * Creation of an ESLIFJSONDecoder instance
+	 * 
+	 * @param eslif an instance of ESLIF
+	 * @throws ESLIFException if creation failed
+	 * 
+	 * Strict mode defaults to true.
+	 */
 	public ESLIFJSONDecoder(ESLIF eslif) throws ESLIFException {
 		this(eslif, true);
 	}
@@ -141,6 +148,7 @@ public class ESLIFJSONDecoder extends ESLIFGrammar {
 	 *
 	 * @param s the string to decode
 	 * @throws ESLIFException if the interface failed
+	 * @return the decoded object
 	 */
 	public synchronized Object decode(String s) throws ESLIFException {
 		return decode(s, new ESLIFJSONDecoderOption());
@@ -150,8 +158,9 @@ public class ESLIFJSONDecoder extends ESLIFGrammar {
 	 * Decodes a string to a java object
 	 *
 	 * @param s the string to decode
-	 * @param eslifJSONDeoderOption the options for decoding
+	 * @param eslifJSONDecoderOption the options for decoding
 	 * @throws ESLIFException if the interface failed
+	 * @return the decoded object
 	 */
 	public synchronized Object decode(String s, ESLIFJSONDecoderOption eslifJSONDecoderOption) throws ESLIFException {
 		ESLIFJSONDecoderRecognizer eslifJSONDecoderRecognizer = new ESLIFJSONDecoderRecognizer(s);

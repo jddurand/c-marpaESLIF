@@ -63,7 +63,7 @@ public class ESLIFSymbol {
 	 * 
 	 * @param eslif an instance of ESLIF
 	 * @param eslifGrammar an instance of ESLIFGrammar
-	 * @param symbols is lexeme symbol
+	 * @param symbol the lexeme symbol
 	 * @throws ESLIFException in case of creation failure
 	 */
 	public ESLIFSymbol(ESLIF eslif, ESLIFGrammar eslifGrammar, String symbol) throws ESLIFException {
@@ -105,7 +105,14 @@ public class ESLIFSymbol {
 	}
 
 	/* For subclasses that need only eslif parameter */
-	protected ESLIFSymbol(ESLIF eslif) throws ESLIFException {
+	/**
+	 * Creation of an ESLIFSymbol instance for string and regex literals
+	 * 
+	 * @param eslif an instance of ESLIF
+	 * @throws ESLIFException if grammar parse failed
+	 * @throws IllegalArgumentException if eslif argument is null
+	 */
+	protected ESLIFSymbol(ESLIF eslif) throws ESLIFException, IllegalArgumentException {
 		if (eslif == null) {
 			throw new IllegalArgumentException("eslif must not be null");
 		}
@@ -122,7 +129,7 @@ public class ESLIFSymbol {
 	/**
 	 * Try to match the symbol on any input. 
 	 * 
-	 * @param the input bytes
+	 * @param bytes the input bytes
 	 * @throws ESLIFException if the interface failed
 	 * 
 	 * @return null if no match, else the matched bytes
@@ -135,24 +142,59 @@ public class ESLIFSymbol {
 	 * Private methods - used by the JNI
 	 * ********************************************
 	 */
+	/**
+	 * Get logger instance
+	 * 
+	 * @return the ESLIFLoggerInterface logger instance, which can be null
+	 */
 	protected ESLIFLoggerInterface getLoggerInterface() {
 		return (eslif != null) ? eslif.getLoggerInterface() : null;
 	}
+	/**
+	 * Get eslif
+	 * 
+	 * @return the ESLIF instance
+	 */
 	protected ESLIF getEslif() {
 		return eslif;
 	}
+	/**
+	 * Set eslif
+	 * 
+	 * @param eslif the ESLIF instance
+	 */
 	protected void setEslif(ESLIF eslif) {
 		this.eslif = eslif;
 	}
+	/**
+	 * Get ESLIF symbol internal pointer
+	 * 
+	 * @return the ESLIF symbol internal pointer
+	 */
 	protected ByteBuffer getMarpaESLIFSymbolp() {
 		return marpaESLIFSymbolp;
 	}
+	/**
+	 * Set ESLIF symbol internal pointer
+	 * 
+	 * @param marpaESLIFSymbolp the ESLIF symbol internal pointer
+	 */
 	protected void setMarpaESLIFSymbolp(ByteBuffer marpaESLIFSymbolp) {
 		this.marpaESLIFSymbolp = marpaESLIFSymbolp;
 	}
+	/**
+	 * Get ESLIF symbol internal context
+	 * 
+	 * @return the ESLIF symbol internal context
+	 */
 	private ByteBuffer getMarpaESLIFSymbolContextp() {
 		return marpaESLIFSymbolContextp;
 	}
+	/**
+	 * Set ESLIF symbol internal context
+	 * 
+	 * @param marpaESLIFSymbolContextp the ESLIF symbol internal context
+	 */
 	private void setMarpaESLIFSymbolContextp(ByteBuffer marpaESLIFSymbolContextp) {
 		this.marpaESLIFSymbolContextp = marpaESLIFSymbolContextp;
 	}

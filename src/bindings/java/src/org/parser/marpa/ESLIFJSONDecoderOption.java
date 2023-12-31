@@ -1,5 +1,14 @@
 package org.parser.marpa;
 
+/**
+ * ESLIFJSONDecoderOption controls the behaviour of decoding a JSON string to an object.
+ *
+ * Options affect:
+ * - Duplicated keys
+ * - Maximum depth
+ * - Replacement character
+ *
+ */
 public class ESLIFJSONDecoderOption {
 	private boolean disallowDupkeys = false;
 	private long maxDepth = 0;
