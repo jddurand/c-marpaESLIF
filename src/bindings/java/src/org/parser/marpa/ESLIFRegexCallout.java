@@ -5,7 +5,7 @@ import java.util.Arrays;
 /**
  * ESLIFRegexCallout is describing the callback properties of a regular expression.
  * 
- * If the grammar at level X has a :default setting like e.g. regex-action => RegexAction
+ * If the grammar at level X has a :default setting like e.g. regex-action =&gt; RegexAction
  * then it is required that the ESLIFRecognizerInterface instance implements a method
  * with this name, returning an integer and accepting a single argument of type ESLIFRegexCallout, i.e.:
  * 
