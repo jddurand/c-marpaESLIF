@@ -75,22 +75,41 @@ add_jar(${PROJECT_NAME}TestJar
 )
 add_dependencies(${PROJECT_NAME}TestJar ${PROJECT_NAME}Jar)
 #
-# Because we overwrite the test COMMAND we want to get outself the java library paths
-#
-set(_java_library_path $<TARGET_FILE_DIR:marpaESLIF> $<TARGET_FILE_DIR:marpaESLIFJava>)
-cmake_path(CONVERT "${_java_library_path}" TO_NATIVE_PATH_LIST _java_library_path)
-#
-# Set the cp argument
+# Recuperate our two jar files locations. It is hard to get rid of ";" interpretation if we play
+# with the -cp option, fortunately CLASSPATH environment variable exists.
 #
 get_target_property(${PROJECT_NAME}JarFile ${PROJECT_NAME}Jar JAR_FILE)
 get_target_property(${PROJECT_NAME}TestJarFile ${PROJECT_NAME}TestJar JAR_FILE)
-set(cp ${${PROJECT_NAME}JarFile} ${${PROJECT_NAME}TestJarFile})
-cmake_path(CONVERT "${cp}" TO_NATIVE_PATH_LIST cp)
 #
-# Declare the test
+# Recuperate path separator: if separator is ";" then we have to escape otherwise CTest will not understand
 #
+cmake_path(CONVERT "x;y" TO_NATIVE_PATH_LIST _xy)
+string(SUBSTRING "${_xy}" 1 1 _sep)
+if(_sep STREQUAL ";")
+  set(_sep "\\\\\\\\\;")
+endif()
+#
+# Declare the test. cmake_helpers_exe() has the logic to do path modifications. So we build
+# a fake binary and run test with a custom COMMAND
+#
+file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/marpaESLIFJavaTesterDummy.c [[
+#include <stdlib.h>
+
+int main(int argc, char **argv) {
+  exit(0);
+}
+]])
 include(CTest)
-add_test(
-  NAME marpaESLIFJavaTester
-  COMMAND ${CMAKE_COMMAND} -E env ${Java_JAVA_EXECUTABLE} -Djava.library.path=${_java_library_path} -cp ${cp} org.parser.marpa.AppParse
+cmake_helpers_exe(marpaESLIFJavaTester
+  INSTALL FALSE
+  TEST TRUE
+  SOURCES marpaESLIFJavaTesterDummy.c
+  DEPENDS
+    PUBLIC marpaESLIF
+    PUBLIC marpaESLIFJava
+  #
+  # Note how we play with ${_sep}
+  #
+  ENVIRONMENTS "CLASSPATH=set:${${PROJECT_NAME}JarFile}${_sep}${${PROJECT_NAME}TestJarFile}"
+  COMMAND ${CMAKE_COMMAND} -E env ${Java_JAVA_EXECUTABLE} org.parser.marpa.AppParse
 )
