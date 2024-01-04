@@ -264,27 +264,3 @@ cmake_helpers_exe(swiftTester                 INSTALL FALSE TEST TRUE SOURCES te
 # Package
 #
 cmake_helpers_package()
-#
-# Bindings
-#
-include(ExternalProject)
-#
-# Java binding
-#
-find_package(Java)
-find_package(JNI COMPONENTS JVM)
-if(JNI_FOUND AND JAVA_FOUND)
-  message(STATUS "")
-  message(STATUS "JAVA Setup:")
-  message(STATUS "----------")
-  message(STATUS "Path to javac    : " ${Java_JAVAC_EXECUTABLE})
-  message(STATUS "Path to javadoc  : " ${Java_JAVADOC_EXECUTABLE})
-  message(STATUS "Path to jar      : " ${Java_JAR_EXECUTABLE})
-  message(STATUS "")
-  message(STATUS "JNI Setup:")
-  message(STATUS "----------")
-  message(STATUS "Path to jni.h    : " ${JAVA_INCLUDE_PATH})
-  message(STATUS "Path to jni_md.h : " ${JAVA_INCLUDE_PATH2})
-  set(marpaESLIFJava_VERSION ${PROJECT_VERSION})
-  # add_subdirectory(src/bindings/java)
-endif()
