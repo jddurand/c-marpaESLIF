@@ -75,7 +75,7 @@ set(marpaESLIF_depends)
 set(marpaESLIF_depends_ext)
 set(marpaESLIF_find_dependencies)
 #
-# genericLogger dependency
+# genericLogger dependency : public
 #
 set(genericLogger_git https://github.com/jddurand/c-genericLogger.git)
 cmake_helpers_depend(genericLogger
@@ -88,57 +88,53 @@ cmake_helpers_depend(genericLogger
 list(APPEND marpaESLIF_find_dependencies "genericLogger REQUIRED CONFIG")
 list(APPEND marpaESLIF_depends PUBLIC genericLogger::genericLogger)
 #
-# genericStack dependency
+# genericStack dependency: internal dependency
 #
 set(genericStack_git https://github.com/jddurand/c-genericStack.git)
 cmake_helpers_depend(genericStack
   EXTERNALPROJECT_ADD_ARGS
     GIT_REPOSITORY ${genericStack_git}
     GIT_SHALLOW TRUE
-  FIND_PACKAGE_ARGS
-    REQUIRED CONFIG
 )
-list(APPEND marpaESLIF_find_dependencies "genericStack REQUIRED CONFIG")
-list(APPEND marpaESLIF_depends PUBLIC genericStack::genericStack)
+list(APPEND marpaESLIF_depends_ext PRIVATE BUILD_LOCAL_INTERFACE genericStack::genericStack)
 #
-# genericHash dependency
+# genericHash dependency: internal dependency
 #
 set(genericHash_git https://github.com/jddurand/c-genericHash.git)
 cmake_helpers_depend(genericHash
   EXTERNALPROJECT_ADD_ARGS
     GIT_REPOSITORY ${genericHash_git}
     GIT_SHALLOW TRUE
-  FIND_PACKAGE_ARGS
-    REQUIRED CONFIG
 )
-list(APPEND marpaESLIF_find_dependencies "genericHash REQUIRED CONFIG")
-list(APPEND marpaESLIF_depends PUBLIC genericHash::genericHash)
+list(APPEND marpaESLIF_depends_ext PRIVATE BUILD_LOCAL_INTERFACE genericHash::genericHash)
 #
-# marpaWrapper dependency
+# marpaWrapper dependency: embedded
 #
 set(marpaWrapper_git https://github.com/jddurand/c-marpaWrapper.git)
 cmake_helpers_depend(marpaWrapper
   EXTERNALPROJECT_ADD_ARGS
     GIT_REPOSITORY ${marpaWrapper_git}
     GIT_SHALLOW TRUE
-  FIND_PACKAGE_ARGS
-    REQUIRED CONFIG
+  FIND FALSE
+  INSTALL FALSE
+  MAKEAVAILABLE TRUE
+  EXCLUDE_FROM_ALL TRUE
 )
-list(APPEND marpaESLIF_find_dependencies "marpaWrapper REQUIRED CONFIG")
-list(APPEND marpaESLIF_depends PUBLIC marpaWrapper::marpaWrapper)
+list(APPEND marpaESLIF_depends_ext PRIVATE BUILD_LOCAL_INTERFACE marpaWrapper_static_iface)
 #
-# tconv dependency
+# tconv dependency: embedded
 #
 set(tconv_git https://github.com/jddurand/c-tconv.git)
 cmake_helpers_depend(tconv
   EXTERNALPROJECT_ADD_ARGS
     GIT_REPOSITORY ${tconv_git}
     GIT_SHALLOW TRUE
-  FIND_PACKAGE_ARGS
-  REQUIRED CONFIG
+  FIND FALSE
+  INSTALL FALSE
+  MAKEAVAILABLE TRUE
+  EXCLUDE_FROM_ALL TRUE
 )
-list(APPEND marpaESLIF_find_dependencies "tconv REQUIRED CONFIG")
-list(APPEND marpaESLIF_depends PUBLIC tconv::tconv)
+list(APPEND marpaESLIF_depends_ext PRIVATE BUILD_LOCAL_INTERFACE tconv_static_iface)
 #
 # pcre2 dependency: CMake's of pcre2 are quite catastrophic, fortunately this is ok because
 # we will embed PCRE2 in our object
@@ -182,7 +178,7 @@ add_library(pcre2-8-static_iface INTERFACE)
 target_link_libraries(pcre2-8-static_iface INTERFACE pcre2-8-static $<TARGET_OBJECTS:pcre2-8-static>)
 list(APPEND marpaESLIF_depends_ext PRIVATE BUILD_LOCAL_INTERFACE pcre2-8-static_iface)
 #
-# luaunpanic dependency: embedded inside marpaESLIF
+# luaunpanic dependency: there is a hook in marpaESLIFLua.c that is including it
 #
 set(luaunpanic_git https://github.com/jddurand/c-luaunpanic.git)
 cmake_helpers_depend(luaunpanic
@@ -193,8 +189,7 @@ cmake_helpers_depend(luaunpanic
   CONFIGURE FALSE
   BUILD FALSE
   INSTALL FALSE
-  MAKEAVAILABLE TRUE
-  EXCLUDE_FROM_ALL TRUE
+  MAKEAVAILABLE FALSE
   SOURCE_DIR_OUTVAR luaunpanic_source_dir
   BINARY_DIR_OUTVAR luaunpanic_binary_dir
 )
@@ -271,7 +266,7 @@ foreach(_target IN LISTS targets)
     ${luaunpanic_binary_dir}/include/luaunpanic/lua      # For luaconf.h
     ${luaunpanic_binary_dir}/include                     # For luaunpanic/export.h
     ${luaunpanic_source_dir}/include/luaunpanic/lua      # For lauxlib.h, lua.h, lualib.h
-    ${luaunpanic_source_dir}/src                         # For luaunpanic_amalgamation.c
+    ${luaunpanic_source_dir}/src                         # For luaunpanic_amalgamation.c, that is explicitly included by marpaESLIFLua.c thas has a hook
     ${luaunpanic_source_dir}/include                     # For luaunpanic.h
     ${marpaESLIFLua_source_dir}/src                      # For marpaESLIFLua.c
     ${marpaESLIFLua_source_dir}/include                  # For marpaESLIFLua.h
