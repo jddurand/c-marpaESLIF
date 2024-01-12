@@ -176,6 +176,13 @@ set(PCRE2_BUILD_TESTS OFF CACHE BOOL "" FORCE)
 add_subdirectory(${pcre2_source_dir} ${pcre2_binary_dir} EXCLUDE_FROM_ALL)
 add_library(pcre2-8-static_iface INTERFACE)
 target_link_libraries(pcre2-8-static_iface INTERFACE pcre2-8-static $<TARGET_OBJECTS:pcre2-8-static>)
+#
+# On old OSes there is no inttypes - cmake_helpers will generate it if absent
+#
+target_include_directories(pcre2-8-static PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_INSTALL_INCLUDEDIR})
+#
+# Use and forward object requirements using an interface on the static library
+#
 list(APPEND marpaESLIF_depends_ext PRIVATE BUILD_LOCAL_INTERFACE pcre2-8-static_iface)
 #
 # luaunpanic dependency: there is a hook in marpaESLIFLua.c that is including it
