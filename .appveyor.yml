@@ -10,6 +10,7 @@ clone_depth: 100     # For other git providers
 #
 environment:
   CTEST_OUTPUT_ON_FAILURE: 1
+  CMAKE_HELPERS_WIN32_PACKAGING: 1
   upload_token:
     secure: 
   matrix:
