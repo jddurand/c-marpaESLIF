@@ -79,8 +79,11 @@ set(marpaESLIF_find_dependencies)
 #
 set(genericLogger_git https://github.com/jddurand/c-genericLogger.git)
 cmake_helpers_depend(genericLogger
-  EXTERNALPROJECT_ADD_ARGS GIT_REPOSITORY ${genericLogger_git} GIT_SHALLOW TRUE
-  FIND_PACKAGE_ARGS REQUIRED CONFIG
+  EXTERNALPROJECT_ADD_ARGS
+    GIT_REPOSITORY ${genericLogger_git}
+    GIT_SHALLOW TRUE
+  FIND_PACKAGE_ARGS
+    REQUIRED CONFIG
 )
 list(APPEND marpaESLIF_find_dependencies "genericLogger REQUIRED CONFIG")
 list(APPEND marpaESLIF_depends PUBLIC genericLogger::genericLogger)
@@ -89,8 +92,11 @@ list(APPEND marpaESLIF_depends PUBLIC genericLogger::genericLogger)
 #
 set(genericStack_git https://github.com/jddurand/c-genericStack.git)
 cmake_helpers_depend(genericStack
-  EXTERNALPROJECT_ADD_ARGS GIT_REPOSITORY ${genericStack_git} GIT_SHALLOW TRUE
-  FIND_PACKAGE_ARGS REQUIRED CONFIG
+  EXTERNALPROJECT_ADD_ARGS
+    GIT_REPOSITORY ${genericStack_git}
+    GIT_SHALLOW TRUE
+  FIND_PACKAGE_ARGS
+    REQUIRED CONFIG
 )
 list(APPEND marpaESLIF_find_dependencies "genericStack REQUIRED CONFIG")
 list(APPEND marpaESLIF_depends PUBLIC genericStack::genericStack)
@@ -99,8 +105,11 @@ list(APPEND marpaESLIF_depends PUBLIC genericStack::genericStack)
 #
 set(genericHash_git https://github.com/jddurand/c-genericHash.git)
 cmake_helpers_depend(genericHash
-  EXTERNALPROJECT_ADD_ARGS GIT_REPOSITORY ${genericHash_git} GIT_SHALLOW TRUE
-  FIND_PACKAGE_ARGS REQUIRED CONFIG
+  EXTERNALPROJECT_ADD_ARGS
+    GIT_REPOSITORY ${genericHash_git}
+    GIT_SHALLOW TRUE
+  FIND_PACKAGE_ARGS
+    REQUIRED CONFIG
 )
 list(APPEND marpaESLIF_find_dependencies "genericHash REQUIRED CONFIG")
 list(APPEND marpaESLIF_depends PUBLIC genericHash::genericHash)
@@ -109,19 +118,24 @@ list(APPEND marpaESLIF_depends PUBLIC genericHash::genericHash)
 #
 set(marpaWrapper_git https://github.com/jddurand/c-marpaWrapper.git)
 cmake_helpers_depend(marpaWrapper
-  EXTERNALPROJECT_ADD_ARGS GIT_REPOSITORY ${marpaWrapper_git} GIT_SHALLOW TRUE
-  FIND_PACKAGE_ARGS REQUIRED CONFIG
+  EXTERNALPROJECT_ADD_ARGS
+    GIT_REPOSITORY ${marpaWrapper_git}
+    GIT_SHALLOW TRUE
+  FIND_PACKAGE_ARGS
+    REQUIRED CONFIG
 )
 list(APPEND marpaESLIF_find_dependencies "marpaWrapper REQUIRED CONFIG")
 list(APPEND marpaESLIF_depends PUBLIC marpaWrapper::marpaWrapper)
 #
-# tconv dependency: in order to have a coherent behaviour on all platforms, we require iconv and disable ICU explicitly
+# tconv dependency
 #
 set(tconv_git https://github.com/jddurand/c-tconv.git)
 cmake_helpers_depend(tconv
-  EXTERNALPROJECT_ADD_ARGS GIT_REPOSITORY ${tconv_git} GIT_SHALLOW TRUE
-  FIND_PACKAGE_ARGS REQUIRED CONFIG
-  CMAKE_ARGS -DTCONV_USE_ICU=OFF -DTCONV_USE_ICONV=ON
+  EXTERNALPROJECT_ADD_ARGS
+    GIT_REPOSITORY ${tconv_git}
+    GIT_SHALLOW TRUE
+  FIND_PACKAGE_ARGS
+  REQUIRED CONFIG
 )
 list(APPEND marpaESLIF_find_dependencies "tconv REQUIRED CONFIG")
 list(APPEND marpaESLIF_depends PUBLIC tconv::tconv)
@@ -133,7 +147,8 @@ set(pcre2_version 10.42)
 if(pcre2_version)
   set(pcre2_url https://github.com/PCRE2Project/pcre2/releases/download/pcre2-${pcre2_version}/pcre2-${pcre2_version}.tar.gz)
   cmake_helpers_depend(pcre2
-    EXTERNALPROJECT_ADD_ARGS URL ${pcre2_url}
+    EXTERNALPROJECT_ADD_ARGS
+      URL ${pcre2_url}
     FIND FALSE
     CONFIGURE FALSE
     BUILD FALSE
@@ -144,7 +159,9 @@ if(pcre2_version)
 else()
   set(pcre2_git https://github.com/PCRE2Project/pcre2.git)
   cmake_helpers_depend(pcre2
-    EXTERNALPROJECT_ADD_ARGS GIT_REPOSITORY ${pcre2_git} GIT_SHALLOW TRUE
+    EXTERNALPROJECT_ADD_ARGS
+      GIT_REPOSITORY ${pcre2_git}
+      GIT_SHALLOW TRUE
     FIND FALSE
     CONFIGURE FALSE
     BUILD FALSE
@@ -169,15 +186,34 @@ list(APPEND marpaESLIF_depends_ext PRIVATE BUILD_LOCAL_INTERFACE pcre2-8-static_
 #
 set(luaunpanic_git https://github.com/jddurand/c-luaunpanic.git)
 cmake_helpers_depend(luaunpanic
-  EXTERNALPROJECT_ADD_ARGS GIT_REPOSITORY ${luaunpanic_git} GIT_SHALLOW TRUE
+  EXTERNALPROJECT_ADD_ARGS
+    GIT_REPOSITORY ${luaunpanic_git}
+    GIT_SHALLOW TRUE
   FIND FALSE
   CONFIGURE FALSE
   BUILD FALSE
   INSTALL FALSE
+  MAKEAVAILABLE TRUE
+  EXCLUDE_FROM_ALL TRUE
   SOURCE_DIR_OUTVAR luaunpanic_source_dir
   BINARY_DIR_OUTVAR luaunpanic_binary_dir
 )
-add_subdirectory(${luaunpanic_source_dir} ${luaunpanic_binary_dir} EXCLUDE_FROM_ALL)
+#
+# marpaESLIFLua dependency: we just want the source
+#
+set(marpaESLIFLua_git https://github.com/jddurand/c-marpaESLIFLua.git)
+cmake_helpers_depend(marpaESLIFLua
+  EXTERNALPROJECT_ADD_ARGS
+    GIT_REPOSITORY ${marpaESLIFLua_git}
+    GIT_SHALLOW TRUE
+    GIT_TAG origin/main
+  FIND FALSE
+  CONFIGURE FALSE
+  BUILD FALSE
+  INSTALL FALSE
+  SOURCE_DIR_OUTVAR marpaESLIFLua_source_dir
+  BINARY_DIR_OUTVAR marpaESLIFLua_binary_dir
+)
 #
 # Math library
 #
@@ -237,7 +273,8 @@ foreach(_target IN LISTS targets)
     ${luaunpanic_source_dir}/include/luaunpanic/lua      # For lauxlib.h, lua.h, lualib.h
     ${luaunpanic_source_dir}/src                         # For luaunpanic_amalgamation.c
     ${luaunpanic_source_dir}/include                     # For luaunpanic.h
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/bindings/lua/include # For marpaESLIFLua.h
+    ${marpaESLIFLua_source_dir}/src                      # For marpaESLIFLua.c
+    ${marpaESLIFLua_source_dir}/include                  # For marpaESLIFLua.h
   )
 endforeach()
 #

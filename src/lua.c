@@ -99,7 +99,7 @@
 #define marpaESLIFLua_luaL_errorf(L, formatstring, ...) luaunpanicL_error(NULL, L, formatstring, __VA_ARGS__)
 #undef marpaESLIFLua_luaL_newlib
 #define marpaESLIFLua_luaL_newlib(L, l) (! luaunpanicL_newlib(L, l))
-#include "../src/bindings/lua/src/marpaESLIFLua.c"
+#include <marpaESLIFLua.c>
 
 #undef  FILENAMES
 #define FILENAMES "lua.c" /* For logging */
