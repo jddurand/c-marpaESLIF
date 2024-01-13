@@ -272,10 +272,6 @@ cmake_helpers_pod(INPUT ${CMAKE_CURRENT_SOURCE_DIR}/doc/BNF/README.pod NAME marp
 #
 foreach(_target IN LISTS targets)
   #
-  # Because of emebeded tconv static libraries
-  #
-  # set_target_properties(${_target} PROPERTIES LINKER_LANGUAGE CXX)
-  #
   # Lua embedded specifics:
   #
   if(WIN32 AND NOT CYGWIN)
