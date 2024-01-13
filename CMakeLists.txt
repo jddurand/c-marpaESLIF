@@ -24,7 +24,7 @@
 # Local tests done with: cmake -S c-marpaESLIF -B c-marpaESLIF-build -DCMAKE_HELPERS_DEBUG=OFF -DICU_ROOT=C:\icu4c-74_2-Win64-MSVC2019
 #
 cmake_minimum_required(VERSION 3.26.0 FATAL_ERROR)
-project(marpaESLIF VERSION 6.0.31 LANGUAGES C)
+project(marpaESLIF VERSION 6.0.31 LANGUAGES C CXX)
 #
 # Get library helper
 #
@@ -274,7 +274,7 @@ foreach(_target IN LISTS targets)
   #
   # Because of emebeded tconv static libraries
   #
-  set_target_properties(${_target} PROPERTIES LINKER_LANGUAGE CXX)
+  # set_target_properties(${_target} PROPERTIES LINKER_LANGUAGE CXX)
   #
   # Lua embedded specifics:
   #
