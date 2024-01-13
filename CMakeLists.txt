@@ -136,7 +136,9 @@ cmake_helpers_depend(marpaWrapper
 )
 list(APPEND marpaESLIF_depends_ext PRIVATE BUILD_LOCAL_INTERFACE marpaWrapper_static_iface)
 #
-# tconv dependency: embedded
+# tconv dependency: embedded.
+# Take care: tconv is compiling CXX objects, and we are a C project. This means that we
+# will have to explictly say that our linker is CXX
 #
 set(tconv_git https://github.com/jddurand/c-tconv.git)
 cmake_helpers_depend(tconv
@@ -269,9 +271,22 @@ cmake_helpers_pod(INPUT ${CMAKE_CURRENT_SOURCE_DIR}/doc/BNF/README.pod NAME marp
 # Private thingies
 #
 foreach(_target IN LISTS targets)
+  #
+  # Because of emebeded tconv static libraries
+  #
+  set_target_properties(${_target IN} PROPERTIES LINKER_LANGUAGE CXX)
+  #
+  # Lua embedded specifics:
+  #
   if(WIN32 AND NOT CYGWIN)
+    #
+    # Enable support for DLLs
+    #
     set(_lua_flags -DLUA_DL_DLL)
   else()
+    #
+    # Enable support for dlopen/dlclose
+    #
     set(_lua_flags -DLUA_USE_DLOPEN -DLUA_USE_POSIX)
   endif()
   target_compile_definitions(${_target} PRIVATE
