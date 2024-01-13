@@ -274,7 +274,7 @@ foreach(_target IN LISTS targets)
   #
   # Because of emebeded tconv static libraries
   #
-  set_target_properties(${_target IN} PROPERTIES LINKER_LANGUAGE CXX)
+  set_target_properties(${_target} PROPERTIES LINKER_LANGUAGE CXX)
   #
   # Lua embedded specifics:
   #
