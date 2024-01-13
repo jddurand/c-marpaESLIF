@@ -193,7 +193,8 @@ cmake_helpers_depend(luaunpanic
     GIT_REPOSITORY ${luaunpanic_git}
     GIT_SHALLOW TRUE
   FIND FALSE
-  CONFIGURE FALSE
+  # We need luaconf.h that is generated  
+  CONFIGURE TRUE
   BUILD FALSE
   INSTALL FALSE
   MAKEAVAILABLE FALSE
