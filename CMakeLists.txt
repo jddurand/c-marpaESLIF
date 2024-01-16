@@ -74,6 +74,7 @@ mark_as_advanced(WORDS_BIGENDIAN)
 set(marpaESLIF_depends)
 set(marpaESLIF_depends_ext)
 set(marpaESLIF_find_dependencies)
+set(marpaESLIF_extra_licenses)
 #
 # genericLogger dependency : public
 #
@@ -95,14 +96,14 @@ cmake_helpers_depend(genericStack
   EXTERNALPROJECT_ADD_ARGS
     GIT_REPOSITORY ${genericStack_git}
     GIT_SHALLOW TRUE
-  FIND FALSE
-  CONFIGURE FALSE
-  BUILD FALSE
-  INSTALL FALSE
-  MAKEAVAILABLE TRUE
-  EXCLUDE_FROM_ALL TRUE
+  FIND_PACKAGE_ARGS
+    REQUIRED CONFIG
+  ALWAYS_GET_SOURCES TRUE
+  MAKEAVAILABLE FALSE
+  SOURCE_DIR_OUTVAR genericStack_source_dir
 )
-list(APPEND marpaESLIF_depends_ext PRIVATE BUILD_LOCAL_INTERFACE genericStack)
+list(APPEND marpaESLIF_depends_ext PRIVATE BUILD_LOCAL_INTERFACE genericStack::genericStack)
+list(APPEND marpaESLIF_extra_licenses genericStack ${genericStack_source_dir}/LICENSE)
 #
 # genericHash dependency: internal dependency
 #
@@ -111,48 +112,40 @@ cmake_helpers_depend(genericHash
   EXTERNALPROJECT_ADD_ARGS
     GIT_REPOSITORY ${genericHash_git}
     GIT_SHALLOW TRUE
-  FIND FALSE
-  CONFIGURE FALSE
-  BUILD FALSE
-  INSTALL FALSE
-  MAKEAVAILABLE TRUE
-  EXCLUDE_FROM_ALL TRUE
+  FIND_PACKAGE_ARGS
+    REQUIRED CONFIG
+  ALWAYS_GET_SOURCES TRUE
+  MAKEAVAILABLE FALSE
+  SOURCE_DIR_OUTVAR genericHash_source_dir
 )
-list(APPEND marpaESLIF_depends_ext PRIVATE BUILD_LOCAL_INTERFACE genericHash)
+list(APPEND marpaESLIF_depends_ext PRIVATE BUILD_LOCAL_INTERFACE genericHash::genericHash)
+list(APPEND marpaESLIF_extra_licenses genericHash ${genericHash_source_dir}/LICENSE)
 #
-# marpaWrapper dependency: embedded
+# marpaWrapper dependency: public
 #
 set(marpaWrapper_git https://github.com/jddurand/c-marpaWrapper.git)
 cmake_helpers_depend(marpaWrapper
   EXTERNALPROJECT_ADD_ARGS
     GIT_REPOSITORY ${marpaWrapper_git}
     GIT_SHALLOW TRUE
-  FIND FALSE
-  CONFIGURE FALSE
-  BUILD FALSE
-  INSTALL FALSE
-  MAKEAVAILABLE TRUE
-  EXCLUDE_FROM_ALL TRUE
+  FIND_PACKAGE_ARGS
+    REQUIRED CONFIG
 )
-list(APPEND marpaESLIF_depends_ext PRIVATE BUILD_LOCAL_INTERFACE marpaWrapper_static_iface)
+list(APPEND marpaESLIF_find_dependencies "marpaWrapper REQUIRED CONFIG")
+list(APPEND marpaESLIF_depends PUBLIC marpaWrapper::marpaWrapper)
 #
-# tconv dependency: embedded.
-# Take care: tconv is compiling CXX objects, and we are a C project. This means that we
-# will have to explictly say that our linker is CXX
+# tconv dependency : public
 #
 set(tconv_git https://github.com/jddurand/c-tconv.git)
 cmake_helpers_depend(tconv
   EXTERNALPROJECT_ADD_ARGS
     GIT_REPOSITORY ${tconv_git}
     GIT_SHALLOW TRUE
-  FIND FALSE
-  CONFIGURE FALSE
-  BUILD FALSE
-  INSTALL FALSE
-  MAKEAVAILABLE TRUE
-  EXCLUDE_FROM_ALL TRUE
+  FIND_PACKAGE_ARGS
+    REQUIRED CONFIG
 )
-list(APPEND marpaESLIF_depends_ext PRIVATE BUILD_LOCAL_INTERFACE tconv_static_iface)
+list(APPEND marpaESLIF_find_dependencies "tconv REQUIRED CONFIG")
+list(APPEND marpaESLIF_depends PUBLIC tconv::tconv)
 #
 # pcre2 dependency: CMake's of pcre2 are quite catastrophic, fortunately this is ok because
 # we will embed PCRE2 in our object
@@ -197,17 +190,21 @@ block()
   set(PCRE2_BUILD_PCRE2GREP OFF CACHE BOOL "" FORCE)
   set(PCRE2_BUILD_TESTS OFF CACHE BOOL "" FORCE)
   add_subdirectory(${pcre2_source_dir} ${pcre2_binary_dir} EXCLUDE_FROM_ALL)
+  #
+  # Make an interface library out pcre2-8-static_iface
+  #
   add_library(pcre2-8-static_iface INTERFACE)
   target_link_libraries(pcre2-8-static_iface INTERFACE pcre2-8-static $<TARGET_OBJECTS:pcre2-8-static>)
   #
   # On old OSes there is no inttypes - cmake_helpers will generate it if absent
   #
   target_include_directories(pcre2-8-static PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_INSTALL_INCLUDEDIR})
-  #
-  # Use and forward object requirements using an interface on the static library
-  #
 endblock()
+#
+# Use and forward object requirements of pcre2-8-static
+#
 list(APPEND marpaESLIF_depends_ext PRIVATE BUILD_LOCAL_INTERFACE pcre2-8-static_iface)
+list(APPEND marpaESLIF_extra_licenses pcre2 ${pcre2_source_dir}/LICENCE)
 #
 # luaunpanic dependency: there is a hook in marpaESLIFLua.c that is including it
 #
@@ -217,7 +214,7 @@ cmake_helpers_depend(luaunpanic
     GIT_REPOSITORY ${luaunpanic_git}
     GIT_SHALLOW TRUE
   FIND FALSE
-  CONFIGURE TRUE
+  CONFIGURE FALSE
   BUILD FALSE
   INSTALL FALSE
   MAKEAVAILABLE TRUE
@@ -225,6 +222,7 @@ cmake_helpers_depend(luaunpanic
   SOURCE_DIR_OUTVAR luaunpanic_source_dir
   BINARY_DIR_OUTVAR luaunpanic_binary_dir
 )
+list(APPEND marpaESLIF_extra_licenses luaunpanic ${luaunpanic_source_dir}/LICENSE)
 #
 # marpaESLIFLua dependency: we just want the source
 #
@@ -243,6 +241,7 @@ cmake_helpers_depend(marpaESLIFLua
   SOURCE_DIR_OUTVAR marpaESLIFLua_source_dir
   BINARY_DIR_OUTVAR marpaESLIFLua_binary_dir
 )
+list(APPEND marpaESLIF_extra_licenses marpaESLIFLua ${marpaESLIFLua_source_dir}/LICENSE)
 #
 # Math library
 #
@@ -338,4 +337,6 @@ cmake_helpers_exe(swiftTester                 INSTALL FALSE TEST TRUE SOURCES te
 #
 # Package
 #
-cmake_helpers_package()
+cmake_helpers_package(
+  EXTRA_LICENSES ${marpaESLIF_extra_licenses}
+)
