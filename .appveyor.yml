@@ -12,7 +12,7 @@ environment:
   CTEST_OUTPUT_ON_FAILURE: 1
   CMAKE_HELPERS_WIN32_PACKAGING: 1
   upload_token:
-    secure: 
+    secure:
   matrix:
    - _CC: VS2022
      _ARCH: x86
@@ -83,8 +83,8 @@ build:
 
 clone_folder: C:\projects\%APPVEYOR_PROJECT_NAME%
 
-# matrix:
-#   fast_finish: true # Immediately finish build once one of the jobs fails
+matrix:
+  fast_finish: true # Immediately finish build once one of the jobs fails
 
 init:
   - IF "%_CC%" == "VS2022" IF "%_ARCH%" == "x86" call "C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Auxiliary\Build\vcvars32.bat"
@@ -108,6 +108,7 @@ init:
 
 #
 # We build using nmake, that is a multi-config generator, so we specify the build type using CMAKE_BUILD_TYPE
+#
 build_script:
   - cmake -S . -B build_folder -DCMAKE_BUILD_TYPE=RelWithDebInfo -G "NMake Makefiles"
   - cmake --build build_folder
@@ -125,6 +126,8 @@ test_script:
 on_failure:
   - ps: if(Test-Path build_folder\CMakeFiles\CMakeOutput.log) { cat build_folder\CMakeFiles\CMakeOutput.log }
   - ps: if(Test-Path build_folder\CMakeFiles\CMakeError.log) { cat build_folder\CMakeFiles\CMakeError.log }
+  - ps: if(Test-Path build_folder\_CPack_Packages\win32\NSIS\NSISOutput.log) { cat build_folder\_CPack_Packages\win32\NSIS\NSISOutput.log }
+  - ps: if(Test-Path build_folder\_CPack_Packages\win64\NSIS\NSISOutput.log) { cat build_folder\_CPack_Packages\win64\NSIS\NSISOutput.log }
 
 artifacts:
   - path: "build_folder/*-%_CC%.exe"
