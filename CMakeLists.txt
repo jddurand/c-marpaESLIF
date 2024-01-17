@@ -189,6 +189,12 @@ block()
   set(PCRE2_SUPPORT_JIT ON CACHE BOOL "" FORCE)
   set(PCRE2_BUILD_PCRE2GREP OFF CACHE BOOL "" FORCE)
   set(PCRE2_BUILD_TESTS OFF CACHE BOOL "" FORCE)
+  #
+  # On old OSes there is no inttypes.h and pcre2 needs this file - cmake-helpers will generate it if absent.
+  # We make sure the cmake-helpers options for generating missing files are ON
+  #
+  set(CMAKE_HELPERS_GENERATE_STDINT_H ON CACHE BOOL "Forced CMAKE_HELPERS_GENERATE_STDINT_H to ON" FORCE)
+  set(CMAKE_HELPERS_GENERATE_INTTYPES_H ON CACHE BOOL "Forced CMAKE_HELPERS_GENERATE_INTTYPES_H to ON" FORCE)
   add_subdirectory(${pcre2_source_dir} ${pcre2_binary_dir} EXCLUDE_FROM_ALL)
   #
   # Make an interface library out pcre2-8-static_iface
@@ -196,9 +202,12 @@ block()
   add_library(pcre2-8-static_iface INTERFACE)
   target_link_libraries(pcre2-8-static_iface INTERFACE pcre2-8-static $<TARGET_OBJECTS:pcre2-8-static>)
   #
-  # On old OSes there is no inttypes - cmake_helpers will generate it if absent
+  # Add where cmake will generate stdint.h or inttypes.h
   #
-  target_include_directories(pcre2-8-static PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_INSTALL_INCLUDEDIR})
+  if((EXISTS ${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_INSTALL_INCLUDEDIR}/stdint.h) OR (EXISTS ${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_INSTALL_INCLUDEDIR}/inttypes.h))
+    MESSAGE (STATUS "Adding ${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_INSTALL_INCLUDEDIR} to pcre2-8-static target")
+    target_include_directories(pcre2-8-static PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_INSTALL_INCLUDEDIR})
+  endif()
 endblock()
 #
 # Use and forward object requirements of pcre2-8-static
