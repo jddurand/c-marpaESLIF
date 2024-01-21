@@ -205,8 +205,8 @@ block()
   # Add where cmake will generate stdint.h or inttypes.h
   #
   if((EXISTS ${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_INSTALL_INCLUDEDIR}/stdint.h) OR (EXISTS ${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_INSTALL_INCLUDEDIR}/inttypes.h))
-    MESSAGE (STATUS "Adding ${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_INSTALL_INCLUDEDIR} to pcre2-8-static target")
-    target_include_directories(pcre2-8-static PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_INSTALL_INCLUDEDIR})
+    message(STATUS "Adding ${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_INSTALL_INCLUDEDIR} to pcre2-8-static target")
+    target_include_directories(pcre2-8-static PUBLIC ${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_INSTALL_INCLUDEDIR})
   endif()
 endblock()
 #
