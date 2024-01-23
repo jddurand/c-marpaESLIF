@@ -1,0 +1,251 @@
+diff -Naur pcre2-10.42.orig/src/pcre2_compile.c pcre2-10.42.new/src/pcre2_compile.c
+--- pcre2-10.42.orig/src/pcre2_compile.c	2022-12-06 16:30:03.000000000 +0100
++++ pcre2-10.42.new/src/pcre2_compile.c	2024-01-23 11:37:42.617280900 +0100
+@@ -5855,10 +5855,12 @@
+ 
+         if (taboffset >= 0)
+           {
+-          if (tabopt >= 0)
+-            for (int i = 0; i < 32; i++) pbits[i] |= cbits[(int)i + taboffset];
+-          else
+-            for (int i = 0; i < 32; i++) pbits[i] &= ~cbits[(int)i + taboffset];
++          if (tabopt >= 0) {
++            int i;
++            for (i = 0; i < 32; i++) pbits[i] |= cbits[(int)i + taboffset];
++          } else {
++            int i;
++            for (i = 0; i < 32; i++) pbits[i] &= ~cbits[(int)i + taboffset];
+           }
+ 
+         /* Now see if we need to remove any special characters. An option
+@@ -5871,10 +5873,13 @@
+         /* Add the POSIX table or its complement into the main table that is
+         being built and we are done. */
+ 
+-        if (local_negate)
+-          for (int i = 0; i < 32; i++) classbits[i] |= (uint8_t)(~pbits[i]);
+-        else
+-          for (int i = 0; i < 32; i++) classbits[i] |= pbits[i];
++        if (local_negate) {
++          int i;
++          for (i = 0; i < 32; i++) classbits[i] |= (uint8_t)(~pbits[i]);
++        } else {
++          int i;
++          for (i = 0; i < 32; i++) classbits[i] |= pbits[i];
++        }
+ 
+         /* Every class contains at least one < 256 character. */
+ 
+@@ -5913,7 +5918,10 @@
+         switch(escape)
+           {
+           case ESC_d:
+-          for (int i = 0; i < 32; i++) classbits[i] |= cbits[i+cbit_digit];
++          {
++            int i;
++            for (i = 0; i < 32; i++) classbits[i] |= cbits[i+cbit_digit];
++          }
+           break;
+ 
+           case ESC_D:
+@@ -5923,13 +5931,19 @@
+           break;
+ 
+           case ESC_w:
+-          for (int i = 0; i < 32; i++) classbits[i] |= cbits[i+cbit_word];
++          {
++            int i;
++            for (i = 0; i < 32; i++) classbits[i] |= cbits[i+cbit_word];
++          }
+           break;
+ 
+           case ESC_W:
+           should_flip_negation = TRUE;
+-          for (int i = 0; i < 32; i++)
+-            classbits[i] |= (uint8_t)(~cbits[i+cbit_word]);
++          {
++            int i;
++            for (i = 0; i < 32; i++)
++              classbits[i] |= (uint8_t)(~cbits[i+cbit_word]);
++          }
+           break;
+ 
+           /* Perl 5.004 onwards omitted VT from \s, but restored it at Perl
+@@ -5940,13 +5954,19 @@
+           longer treat \s and \S specially. */
+ 
+           case ESC_s:
+-          for (int i = 0; i < 32; i++) classbits[i] |= cbits[i+cbit_space];
++          {
++            int i;
++            for (i = 0; i < 32; i++) classbits[i] |= cbits[i+cbit_space];
++          }
+           break;
+ 
+           case ESC_S:
+           should_flip_negation = TRUE;
+-          for (int i = 0; i < 32; i++)
+-            classbits[i] |= (uint8_t)(~cbits[i+cbit_space]);
++          {
++            int i;
++            for (i = 0; i < 32; i++)
++              classbits[i] |= (uint8_t)(~cbits[i+cbit_space]);
++          }
+           break;
+ 
+           /* When adding the horizontal or vertical space lists to a class, or
+@@ -6186,8 +6206,9 @@
+           CU2BYTES(class_uchardata - code));
+         if (negate_class && !xclass_has_prop)
+           {
++          int i;
+           /* Using 255 ^ instead of ~ avoids clang sanitize warning. */
+-          for (int i = 0; i < 32; i++) classbits[i] = 255 ^ classbits[i];
++          for (i = 0; i < 32; i++) classbits[i] = 255 ^ classbits[i];
+           }
+         memcpy(code, classbits, 32);
+         code = class_uchardata + (32 / sizeof(PCRE2_UCHAR));
+@@ -6212,9 +6233,10 @@
+       {
+       if (negate_class)
+         {
+-       /* Using 255 ^ instead of ~ avoids clang sanitize warning. */
+-       for (int i = 0; i < 32; i++) classbits[i] = 255 ^ classbits[i];
+-       }
++        int i;
++        /* Using 255 ^ instead of ~ avoids clang sanitize warning. */
++        for (i = 0; i < 32; i++) classbits[i] = 255 ^ classbits[i];
++        }
+       memcpy(code, classbits, 32);
+       }
+     code += 32 / sizeof(PCRE2_UCHAR);
+@@ -6287,21 +6309,24 @@
+     verbarglen = *(++pptr);
+     verbculen = 0;
+     tempcode = code++;
+-    for (int i = 0; i < (int)verbarglen; i++)
+-      {
+-      meta = *(++pptr);
++    {
++      int i;
++      for (i = 0; i < (int)verbarglen; i++)
++        {
++        meta = *(++pptr);
+ #ifdef SUPPORT_UNICODE
+-      if (utf) mclength = PRIV(ord2utf)(meta, mcbuffer); else
++        if (utf) mclength = PRIV(ord2utf)(meta, mcbuffer); else
+ #endif
+-        {
+-        mclength = 1;
+-        mcbuffer[0] = meta;
+-        }
+-      if (lengthptr != NULL) *lengthptr += mclength; else
+-        {
+-        memcpy(code, mcbuffer, CU2BYTES(mclength));
+-        code += mclength;
+-        verbculen += mclength;
++          {
++          mclength = 1;
++          mcbuffer[0] = meta;
++          }
++        if (lengthptr != NULL) *lengthptr += mclength; else
++          {
++          memcpy(code, mcbuffer, CU2BYTES(mclength));
++          code += mclength;
++          verbculen += mclength;
++          }
+         }
+       }
+ 
+@@ -6756,6 +6781,7 @@
+     case META_RECURSE_BYNAME:
+       {
+       int count, index;
++      unsigned int i;
+       PCRE2_SPTR name;
+       BOOL is_dupname = FALSE;
+       named_group *ng = cb->named_groups;
+@@ -6770,7 +6796,7 @@
+       this name is duplicated. */
+ 
+       groupnumber = 0;
+-      for (unsigned int i = 0; i < cb->names_found; i++, ng++)
++      for (i = 0; i < cb->names_found; i++, ng++)
+         {
+         if (length == ng->length &&
+             PRIV(strncmp)(name, ng->name, length) == 0)
+@@ -7129,12 +7155,15 @@
+           *lengthptr += delta;
+           }
+ 
+-        else for (int i = 0; i < replicate; i++)
++        else {
++          int i;
++          for (i = 0; i < replicate; i++)
+           {
+           memcpy(code, previous, CU2BYTES(1 + LINK_SIZE));
+           previous = code;
+           code += 1 + LINK_SIZE;
+           }
++        }
+ 
+         /* If the number of repeats is fixed, we are done. Otherwise, adjust
+         the counts and fall through. */
+@@ -7305,12 +7334,13 @@
+ 
+             else
+               {
++              uint32_t i;
+               if (groupsetfirstcu && reqcuflags >= REQ_NONE)
+                 {
+                 reqcu = firstcu;
+                 reqcuflags = firstcuflags;
+                 }
+-              for (uint32_t i = 1; i < repeat_min; i++)
++              for (i = 1; i < repeat_min; i++)
+                 {
+                 memcpy(code, previous, CU2BYTES(len));
+                 code += len;
+@@ -7354,24 +7384,28 @@
+ 
+           /* This is compiling for real */
+ 
+-          else for (uint32_t i = repeat_max; i >= 1; i--)
++          else
+             {
+-            *code++ = OP_BRAZERO + repeat_type;
++              uint32_t i;
++              for (i = repeat_max; i >= 1; i--)
++              {
++              *code++ = OP_BRAZERO + repeat_type;
+ 
+-            /* All but the final copy start a new nesting, maintaining the
+-            chain of brackets outstanding. */
++              /* All but the final copy start a new nesting, maintaining the
++              chain of brackets outstanding. */
+ 
+-            if (i != 1)
+-              {
+-              int linkoffset;
+-              *code++ = OP_BRA;
+-              linkoffset = (bralink == NULL)? 0 : (int)(code - bralink);
+-              bralink = code;
+-              PUTINC(code, 0, linkoffset);
+-              }
++              if (i != 1)
++                {
++                int linkoffset;
++                *code++ = OP_BRA;
++                linkoffset = (bralink == NULL)? 0 : (int)(code - bralink);
++                bralink = code;
++                PUTINC(code, 0, linkoffset);
++                }
+ 
+-            memcpy(code, previous, CU2BYTES(len));
+-            code += len;
++              memcpy(code, previous, CU2BYTES(len));
++              code += len;
++              }
+             }
+ 
+           /* Now chain through the pending brackets, and fill in their length

@@ -1,0 +1,265 @@
+--- a/src/sljit/sljitConfigInternal.h
++++ b/src/sljit/sljitConfigInternal.h
+@@ -654,15 +654,15 @@
+ 
+ #define SLJIT_NUMBER_OF_REGISTERS 13
+ #define SLJIT_NUMBER_OF_FLOAT_REGISTERS 15
+-#ifndef _WIN64
++#if !defined _WIN64 && !defined __CYGWIN__
+ #define SLJIT_NUMBER_OF_SAVED_REGISTERS 6
+ #define SLJIT_NUMBER_OF_SAVED_FLOAT_REGISTERS 0
+ #define SLJIT_LOCALS_OFFSET_BASE 0
+-#else /* _WIN64 */
++#else /* _WIN64 || __CYGWIN__ */
+ #define SLJIT_NUMBER_OF_SAVED_REGISTERS 8
+ #define SLJIT_NUMBER_OF_SAVED_FLOAT_REGISTERS 10
+ #define SLJIT_LOCALS_OFFSET_BASE (4 * SSIZE_OF(sw))
+-#endif /* !_WIN64 */
++#endif /* !_WIN64 && !__CYGWIN__ */
+ #define SLJIT_PREF_SHIFT_REG SLJIT_R3
+ 
+ #elif (defined SLJIT_CONFIG_ARM_V5 && SLJIT_CONFIG_ARM_V5) || (defined SLJIT_CONFIG_ARM_V7 && SLJIT_CONFIG_ARM_V7)
+
+--- a/src/sljit/sljitNativeX86_64.c
++++ b/src/sljit/sljitNativeX86_64.c
+@@ -378,11 +378,11 @@
+ 	sljit_s32 word_arg_count = 0;
+ 	sljit_s32 saved_arg_count = SLJIT_KEPT_SAVEDS_COUNT(options);
+ 	sljit_s32 saved_regs_size, tmp, i;
+-#ifdef _WIN64
++#if defined _WIN64 || defined __CYGWIN__
+ 	sljit_s32 saved_float_regs_size;
+ 	sljit_s32 saved_float_regs_offset = 0;
+ 	sljit_s32 float_arg_count = 0;
+-#endif /* _WIN64 */
++#endif /* _WIN64 || __CYGWIN__ */
+ 	sljit_u8 *inst;
+ 
+ 	CHECK_ERROR();
+@@ -421,7 +421,7 @@
+ 		PUSH_REG(reg_lmap[i]);
+ 	}
+ 
+-#ifdef _WIN64
++#if defined _WIN64 || defined __CYGWIN__
+ 	local_size += SLJIT_LOCALS_OFFSET;
+ 	saved_float_regs_size = GET_SAVED_FLOAT_REGISTERS_SIZE(fscratches, fsaveds, 16);
+ 
+@@ -429,16 +429,16 @@
+ 		saved_float_regs_offset = ((local_size + 0xf) & ~0xf);
+ 		local_size = saved_float_regs_offset + saved_float_regs_size;
+ 	}
+-#else /* !_WIN64 */
++#else /* !_WIN64 && !__CYGWIN__ */
+ 	SLJIT_ASSERT(SLJIT_LOCALS_OFFSET == 0);
+-#endif /* _WIN64 */
++#endif /* _WIN64 || __CYGWIN__ */
+ 
+ 	arg_types >>= SLJIT_ARG_SHIFT;
+ 
+ 	while (arg_types > 0) {
+ 		if ((arg_types & SLJIT_ARG_MASK) < SLJIT_ARG_TYPE_F64) {
+ 			tmp = 0;
+-#ifndef _WIN64
++#if !defined _WIN64 && !defined __CYGWIN__
+ 			switch (word_arg_count) {
+ 			case 0:
+ 				tmp = SLJIT_R2;
+@@ -453,7 +453,7 @@
+ 				tmp = SLJIT_R3;
+ 				break;
+ 			}
+-#else /* !_WIN64 */
++#else /* _WIN64 || __CYGWIN__ */
+ 			switch (word_arg_count + float_arg_count) {
+ 			case 0:
+ 				tmp = SLJIT_R3;
+@@ -468,7 +468,7 @@
+ 				tmp = TMP_REG1;
+ 				break;
+ 			}
+-#endif /* _WIN64 */
++#endif /* !_WIN64 && !__CYGWIN__ */
+ 			if (arg_types & SLJIT_ARG_TYPE_SCRATCH_REG) {
+ 				if (tmp != SLJIT_R0 + word_arg_count)
+ 					EMIT_MOV(compiler, SLJIT_R0 + word_arg_count, 0, tmp, 0);
+@@ -478,13 +478,13 @@
+ 			}
+ 			word_arg_count++;
+ 		} else {
+-#ifdef _WIN64
++#if defined _WIN64 || defined __CYGWIN__
+ 			SLJIT_COMPILE_ASSERT(SLJIT_FR0 == 1, float_register_index_start);
+ 			float_arg_count++;
+ 			if (float_arg_count != float_arg_count + word_arg_count)
+ 				FAIL_IF(emit_sse2_load(compiler, (arg_types & SLJIT_ARG_MASK) == SLJIT_ARG_TYPE_F32,
+ 					float_arg_count, float_arg_count + word_arg_count, 0));
+-#endif /* _WIN64 */
++#endif /* _WIN64 || __CYGWIN__ */
+ 		}
+ 		arg_types >>= SLJIT_ARG_SHIFT;
+ 	}
+@@ -492,7 +492,7 @@
+ 	local_size = ((local_size + saved_regs_size + 0xf) & ~0xf) - saved_regs_size;
+ 	compiler->local_size = local_size;
+ 
+-#ifdef _WIN64
++#if defined _WIN64 || defined __CYGWIN__
+ 	if (local_size > 0) {
+ 		if (local_size <= 4 * 4096) {
+ 			if (local_size > 4096)
+@@ -521,12 +521,12 @@
+ 		if (local_size > 0)
+ 			EMIT_MOV(compiler, TMP_REG1, 0, SLJIT_MEM1(SLJIT_SP), -local_size);
+ 	}
+-#endif /* _WIN64 */
++#endif /* _WIN64 || __CYGWIN__ */
+ 
+ 	if (local_size > 0)
+ 		BINARY_IMM32(SUB, local_size, SLJIT_SP, 0);
+ 
+-#ifdef _WIN64
++#if defined _WIN64 || defined __CYGWIN__
+ 	if (saved_float_regs_size > 0) {
+ 		compiler->mode32 = 1;
+ 
+@@ -545,7 +545,7 @@
+ 			saved_float_regs_offset += 16;
+ 		}
+ 	}
+-#endif /* _WIN64 */
++#endif /* _WIN64 || __CYGWIN__ */
+ 
+ 	return SLJIT_SUCCESS;
+ }
+@@ -555,23 +555,23 @@
+ 	sljit_s32 fscratches, sljit_s32 fsaveds, sljit_s32 local_size)
+ {
+ 	sljit_s32 saved_regs_size;
+-#ifdef _WIN64
++#if defined _WIN64 || defined __CYGWIN__
+ 	sljit_s32 saved_float_regs_size;
+-#endif /* _WIN64 */
++#endif /* _WIN64 || __CYGWIN__ */
+ 
+ 	CHECK_ERROR();
+ 	CHECK(check_sljit_set_context(compiler, options, arg_types, scratches, saveds, fscratches, fsaveds, local_size));
+ 	set_set_context(compiler, options, arg_types, scratches, saveds, fscratches, fsaveds, local_size);
+ 
+-#ifdef _WIN64
++#if defined _WIN64 || defined __CYGWIN__
+ 	local_size += SLJIT_LOCALS_OFFSET;
+ 	saved_float_regs_size = GET_SAVED_FLOAT_REGISTERS_SIZE(fscratches, fsaveds, 16);
+ 
+ 	if (saved_float_regs_size > 0)
+ 		local_size = ((local_size + 0xf) & ~0xf) + saved_float_regs_size;
+-#else /* !_WIN64 */
++#else /* !_WIN64 && !__CYGWIN__ */
+ 	SLJIT_ASSERT(SLJIT_LOCALS_OFFSET == 0);
+-#endif /* _WIN64 */
++#endif /* _WIN64 || __CYGWIN__ */
+ 
+ 	/* Including the return address saved by the call instruction. */
+ 	saved_regs_size = GET_SAVED_REGISTERS_SIZE(scratches, saveds - SLJIT_KEPT_SAVEDS_COUNT(options), 1);
+@@ -584,13 +584,13 @@
+ 	sljit_uw size;
+ 	sljit_s32 local_size, i, tmp;
+ 	sljit_u8 *inst;
+-#ifdef _WIN64
++#if defined _WIN64 || defined __CYGWIN__
+ 	sljit_s32 saved_float_regs_offset;
+ 	sljit_s32 fscratches = compiler->fscratches;
+ 	sljit_s32 fsaveds = compiler->fsaveds;
+-#endif /* _WIN64 */
++#endif /* _WIN64 || __CYGWIN__ */
+ 
+-#ifdef _WIN64
++#if defined _WIN64 || defined __CYGWIN__
+ 	saved_float_regs_offset = GET_SAVED_FLOAT_REGISTERS_SIZE(fscratches, fsaveds, 16);
+ 
+ 	if (saved_float_regs_offset > 0) {
+@@ -614,7 +614,7 @@
+ 
+ 		compiler->mode32 = 0;
+ 	}
+-#endif /* _WIN64 */
++#endif /* _WIN64 || __CYGWIN__ */
+ 
+ 	local_size = compiler->local_size;
+ 
+@@ -698,7 +698,7 @@
+ /*  Call / return instructions                                           */
+ /* --------------------------------------------------------------------- */
+ 
+-#ifndef _WIN64
++#if !defined _WIN64 && !defined __CYGWIN__
+ 
+ static sljit_s32 call_with_args(struct sljit_compiler *compiler, sljit_s32 arg_types, sljit_s32 *src_ptr)
+ {
+
+--- a/src/sljit/sljitNativeX86_common.c
++++ b/src/sljit/sljitNativeX86_common.c
+@@ -88,7 +88,7 @@
+ /* Note: r12 & 0x7 == 0b100, which decoded as SIB byte present
+    Note: avoid to use r12 and r13 for memory addessing
+    therefore r12 is better to be a higher saved register. */
+-#ifndef _WIN64
++# if !defined _WIN64 && !defined __CYGWIN__
+ /* Args: rdi(=7), rsi(=6), rdx(=2), rcx(=1), r8, r9. Scratches: rax(=0), r10, r11 */
+ static const sljit_u8 reg_map[SLJIT_NUMBER_OF_REGISTERS + 4] = {
+ 	0, 0, 6, 7, 1, 8, 11, 10, 12, 5, 13, 14, 15, 3, 4, 2, 9
+@@ -123,7 +123,7 @@
+ #define REX_B		0x41
+ #define REX		0x40
+ 
+-#ifndef _WIN64
++# if !defined _WIN64 && !defined __CYGWIN__
+ #define HALFWORD_MAX 0x7fffffffl
+ #define HALFWORD_MIN -0x80000000l
+ #else
+@@ -1101,7 +1101,7 @@
+ 	case SLJIT_DIV_UW:
+ 	case SLJIT_DIV_SW:
+ #if (defined SLJIT_CONFIG_X86_64 && SLJIT_CONFIG_X86_64)
+-#ifdef _WIN64
++# if defined _WIN64 || defined __CYGWIN__
+ 		SLJIT_ASSERT(
+ 			reg_map[SLJIT_R0] == 0
+ 			&& reg_map[SLJIT_R1] == 2
+@@ -1118,7 +1118,7 @@
+ 
+ 		op = GET_OPCODE(op);
+ 		if ((op | 0x2) == SLJIT_DIV_UW) {
+-#if (defined SLJIT_CONFIG_X86_32 && SLJIT_CONFIG_X86_32) || defined(_WIN64)
++#if (defined SLJIT_CONFIG_X86_32 && SLJIT_CONFIG_X86_32) || defined(_WIN64) || defined(__CYGWIN__)
+ 			EMIT_MOV(compiler, TMP_REG1, 0, SLJIT_R1, 0);
+ 			inst = emit_x86_instruction(compiler, 1, SLJIT_R1, 0, SLJIT_R1, 0);
+ #else
+@@ -1129,7 +1129,7 @@
+ 		}
+ 
+ 		if ((op | 0x2) == SLJIT_DIV_SW) {
+-#if (defined SLJIT_CONFIG_X86_32 && SLJIT_CONFIG_X86_32) || defined(_WIN64)
++#if (defined SLJIT_CONFIG_X86_32 && SLJIT_CONFIG_X86_32) || defined(_WIN64) || defined(__CYGWIN__)
+ 			EMIT_MOV(compiler, TMP_REG1, 0, SLJIT_R1, 0);
+ #endif
+ 
+@@ -1161,7 +1161,7 @@
+ 		*inst++ = GROUP_F7;
+ 		*inst = MOD_REG | ((op >= SLJIT_DIVMOD_UW) ? reg_map[TMP_REG1] : reg_map[SLJIT_R1]);
+ #else
+-#ifdef _WIN64
++# if defined _WIN64 || defined __CYGWIN__
+ 		size = (!compiler->mode32 || op >= SLJIT_DIVMOD_UW) ? 3 : 2;
+ #else
+ 		size = (!compiler->mode32) ? 3 : 2;
+@@ -1169,7 +1169,7 @@
+ 		inst = (sljit_u8*)ensure_buf(compiler, 1 + size);
+ 		FAIL_IF(!inst);
+ 		INC_SIZE(size);
+-#ifdef _WIN64
++# if defined _WIN64 || defined __CYGWIN__
+ 		if (!compiler->mode32)
+ 			*inst++ = REX_W | ((op >= SLJIT_DIVMOD_UW) ? REX_B : 0);
+ 		else if (op >= SLJIT_DIVMOD_UW)
+

@@ -1,0 +1,65 @@
+From 457c0e69a8f78d32bc7d4b6422cd01e396a4cf5d Mon Sep 17 00:00:00 2001
+From: Philip Hazel <Philip.Hazel@gmail.com>
+Date: Tue, 3 Oct 2023 16:52:56 +0100
+Subject: [PATCH] Add more examples fixed by #300; update ChangeLog
+
+---
+ testdata/testinput1  |  8 ++++++++
+ testdata/testoutput1 | 22 ++++++++++++++++++++++
+ 3 files changed, 34 insertions(+)
+
+diff --git a/testdata/testinput1 b/testdata/testinput1
+index 3d75a35..533389d 100644
+--- a/testdata/testinput1
++++ b/testdata/testinput1
+@@ -4374,6 +4374,14 @@
+ 
+ /(?<all>(?:(?:a(?&all))|(b))(c?))/
+     aabc
++    
++/(a(b)|(c))(?1)/
++    abc
++    cab 
++
++/(?1)(a(b)|(c))/
++    abc
++    cab 
+ 
+ /(?<NAME>(?&NAME_PAT))\s+(?<ADDR>(?&ADDRESS_PAT))
+   (?(DEFINE)
+diff --git a/testdata/testoutput1 b/testdata/testoutput1
+index 26d3c83..bedd924 100644
+--- a/testdata/testoutput1
++++ b/testdata/testoutput1
+@@ -6954,6 +6954,28 @@ No match
+  1: aabc
+  2: <unset>
+  3: 
++    
++/(a(b)|(c))(?1)/
++    abc
++ 0: abc
++ 1: ab
++ 2: b
++    cab 
++ 0: cab
++ 1: c
++ 2: <unset>
++ 3: c
++
++/(?1)(a(b)|(c))/
++    abc
++ 0: abc
++ 1: c
++ 2: <unset>
++ 3: c
++    cab 
++ 0: cab
++ 1: ab
++ 2: b
+ 
+ /(?<NAME>(?&NAME_PAT))\s+(?<ADDR>(?&ADDRESS_PAT))
+   (?(DEFINE)
+-- 
+2.41.0
+
