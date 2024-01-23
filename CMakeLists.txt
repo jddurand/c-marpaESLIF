@@ -152,10 +152,11 @@ list(APPEND marpaESLIF_depends PUBLIC tconv::tconv)
 #
 set(pcre2_version 10.42)
 if(pcre2_version)
-  set(pcre2_url https://github.com/PCRE2Project/pcre2/releases/download/pcre2-${pcre2_version}/pcre2-${pcre2_version}.tar.gz)
+  # set(pcre2_url https://github.com/PCRE2Project/pcre2/releases/download/pcre2-${pcre2_version}/pcre2-${pcre2_version}.tar.gz)
+  set(pcre2_file ${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/tar/pcre2-${pcre2_version}-patched.tar.gz)
   cmake_helpers_depend(pcre2
-    EXTERNALPROJECT_ADD_ARGS
-      URL ${pcre2_url}
+    FILE ${pcre2_file}
+    # EXTERNALPROJECT_ADD_ARGS URL ${pcre2_url}
     FIND FALSE
     CONFIGURE FALSE
     BUILD FALSE

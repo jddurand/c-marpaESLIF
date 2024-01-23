@@ -1,7 +1,7 @@
 diff -Naur pcre2-10.42.orig/src/pcre2_compile.c pcre2-10.42.new/src/pcre2_compile.c
 --- pcre2-10.42.orig/src/pcre2_compile.c	2022-12-06 16:30:03.000000000 +0100
-+++ pcre2-10.42.new/src/pcre2_compile.c	2024-01-23 11:37:42.617280900 +0100
-@@ -5855,10 +5855,12 @@
++++ pcre2-10.42.new/src/pcre2_compile.c	2024-01-23 14:32:27.927334600 +0100
+@@ -5855,10 +5855,13 @@
  
          if (taboffset >= 0)
            {
@@ -9,16 +9,17 @@ diff -Naur pcre2-10.42.orig/src/pcre2_compile.c pcre2-10.42.new/src/pcre2_compil
 -            for (int i = 0; i < 32; i++) pbits[i] |= cbits[(int)i + taboffset];
 -          else
 -            for (int i = 0; i < 32; i++) pbits[i] &= ~cbits[(int)i + taboffset];
-+          if (tabopt >= 0) {
-+            int i;
-+            for (i = 0; i < 32; i++) pbits[i] |= cbits[(int)i + taboffset];
-+          } else {
-+            int i;
-+            for (i = 0; i < 32; i++) pbits[i] &= ~cbits[(int)i + taboffset];
++            if (tabopt >= 0) {
++              int i;
++              for (i = 0; i < 32; i++) pbits[i] |= cbits[(int)i + taboffset];
++            } else {
++              int i;
++              for (i = 0; i < 32; i++) pbits[i] &= ~cbits[(int)i + taboffset];
++            }
            }
  
          /* Now see if we need to remove any special characters. An option
-@@ -5871,10 +5873,13 @@
+@@ -5871,10 +5874,13 @@
          /* Add the POSIX table or its complement into the main table that is
          being built and we are done. */
  
@@ -36,7 +37,7 @@ diff -Naur pcre2-10.42.orig/src/pcre2_compile.c pcre2-10.42.new/src/pcre2_compil
  
          /* Every class contains at least one < 256 character. */
  
-@@ -5913,7 +5918,10 @@
+@@ -5913,23 +5919,35 @@
          switch(escape)
            {
            case ESC_d:
@@ -48,7 +49,15 @@ diff -Naur pcre2-10.42.orig/src/pcre2_compile.c pcre2-10.42.new/src/pcre2_compil
            break;
  
            case ESC_D:
-@@ -5923,13 +5931,19 @@
+-          should_flip_negation = TRUE;
+-          for (int i = 0; i < 32; i++)
+-            classbits[i] |= (uint8_t)(~cbits[i+cbit_digit]);
++          {
++            int i;
++            should_flip_negation = TRUE;
++            for (i = 0; i < 32; i++)
++              classbits[i] |= (uint8_t)(~cbits[i+cbit_digit]);
++          }
            break;
  
            case ESC_w:
@@ -60,18 +69,19 @@ diff -Naur pcre2-10.42.orig/src/pcre2_compile.c pcre2-10.42.new/src/pcre2_compil
            break;
  
            case ESC_W:
-           should_flip_negation = TRUE;
+-          should_flip_negation = TRUE;
 -          for (int i = 0; i < 32; i++)
 -            classbits[i] |= (uint8_t)(~cbits[i+cbit_word]);
 +          {
 +            int i;
++            should_flip_negation = TRUE;
 +            for (i = 0; i < 32; i++)
 +              classbits[i] |= (uint8_t)(~cbits[i+cbit_word]);
 +          }
            break;
  
            /* Perl 5.004 onwards omitted VT from \s, but restored it at Perl
-@@ -5940,13 +5954,19 @@
+@@ -5940,13 +5958,19 @@
            longer treat \s and \S specially. */
  
            case ESC_s:
@@ -83,18 +93,19 @@ diff -Naur pcre2-10.42.orig/src/pcre2_compile.c pcre2-10.42.new/src/pcre2_compil
            break;
  
            case ESC_S:
-           should_flip_negation = TRUE;
+-          should_flip_negation = TRUE;
 -          for (int i = 0; i < 32; i++)
 -            classbits[i] |= (uint8_t)(~cbits[i+cbit_space]);
 +          {
 +            int i;
++            should_flip_negation = TRUE;
 +            for (i = 0; i < 32; i++)
 +              classbits[i] |= (uint8_t)(~cbits[i+cbit_space]);
 +          }
            break;
  
            /* When adding the horizontal or vertical space lists to a class, or
-@@ -6186,8 +6206,9 @@
+@@ -6186,8 +6210,9 @@
            CU2BYTES(class_uchardata - code));
          if (negate_class && !xclass_has_prop)
            {
@@ -105,7 +116,7 @@ diff -Naur pcre2-10.42.orig/src/pcre2_compile.c pcre2-10.42.new/src/pcre2_compil
            }
          memcpy(code, classbits, 32);
          code = class_uchardata + (32 / sizeof(PCRE2_UCHAR));
-@@ -6212,9 +6233,10 @@
+@@ -6212,9 +6237,10 @@
        {
        if (negate_class)
          {
@@ -119,7 +130,7 @@ diff -Naur pcre2-10.42.orig/src/pcre2_compile.c pcre2-10.42.new/src/pcre2_compil
        memcpy(code, classbits, 32);
        }
      code += 32 / sizeof(PCRE2_UCHAR);
-@@ -6287,21 +6309,24 @@
+@@ -6287,23 +6313,26 @@
      verbarglen = *(++pptr);
      verbculen = 0;
      tempcode = code++;
@@ -155,9 +166,12 @@ diff -Naur pcre2-10.42.orig/src/pcre2_compile.c pcre2-10.42.new/src/pcre2_compil
 +          verbculen += mclength;
 +          }
          }
-       }
+-      }
++    }
  
-@@ -6756,6 +6781,7 @@
+     *tempcode = verbculen;   /* Fill in the code unit length */
+     *code++ = 0;             /* Terminating zero */
+@@ -6756,6 +6785,7 @@
      case META_RECURSE_BYNAME:
        {
        int count, index;
@@ -165,7 +179,7 @@ diff -Naur pcre2-10.42.orig/src/pcre2_compile.c pcre2-10.42.new/src/pcre2_compil
        PCRE2_SPTR name;
        BOOL is_dupname = FALSE;
        named_group *ng = cb->named_groups;
-@@ -6770,7 +6796,7 @@
+@@ -6770,7 +6800,7 @@
        this name is duplicated. */
  
        groupnumber = 0;
@@ -174,24 +188,24 @@ diff -Naur pcre2-10.42.orig/src/pcre2_compile.c pcre2-10.42.new/src/pcre2_compil
          {
          if (length == ng->length &&
              PRIV(strncmp)(name, ng->name, length) == 0)
-@@ -7129,12 +7155,15 @@
+@@ -7107,6 +7137,7 @@
+ 
+       if (repeat_min > 0 && (repeat_min != 1 || repeat_max != REPEAT_UNLIMITED))
+         {
++        int i;
+         int replicate = repeat_min;
+         if (repeat_min == repeat_max) replicate--;
+ 
+@@ -7129,7 +7160,7 @@
            *lengthptr += delta;
            }
  
 -        else for (int i = 0; i < replicate; i++)
-+        else {
-+          int i;
-+          for (i = 0; i < replicate; i++)
++        else for (i = 0; i < replicate; i++)
            {
            memcpy(code, previous, CU2BYTES(1 + LINK_SIZE));
            previous = code;
-           code += 1 + LINK_SIZE;
-           }
-+        }
- 
-         /* If the number of repeats is fixed, we are done. Otherwise, adjust
-         the counts and fall through. */
-@@ -7305,12 +7334,13 @@
+@@ -7305,12 +7336,13 @@
  
              else
                {
@@ -206,46 +220,20 @@ diff -Naur pcre2-10.42.orig/src/pcre2_compile.c pcre2-10.42.new/src/pcre2_compil
                  {
                  memcpy(code, previous, CU2BYTES(len));
                  code += len;
-@@ -7354,24 +7384,28 @@
+@@ -7330,6 +7362,7 @@
+ 
+         if (repeat_max != REPEAT_UNLIMITED)
+           {
++          uint32_t i;
+           /* In the pre-compile phase, we don't actually do the replication. We
+           just adjust the length as if we had. For each repetition we must add
+           1 to the length for BRAZERO and for all but the last repetition we
+@@ -7354,7 +7387,7 @@
  
            /* This is compiling for real */
  
 -          else for (uint32_t i = repeat_max; i >= 1; i--)
-+          else
++          else for (i = repeat_max; i >= 1; i--)
              {
--            *code++ = OP_BRAZERO + repeat_type;
-+              uint32_t i;
-+              for (i = repeat_max; i >= 1; i--)
-+              {
-+              *code++ = OP_BRAZERO + repeat_type;
+             *code++ = OP_BRAZERO + repeat_type;
  
--            /* All but the final copy start a new nesting, maintaining the
--            chain of brackets outstanding. */
-+              /* All but the final copy start a new nesting, maintaining the
-+              chain of brackets outstanding. */
- 
--            if (i != 1)
--              {
--              int linkoffset;
--              *code++ = OP_BRA;
--              linkoffset = (bralink == NULL)? 0 : (int)(code - bralink);
--              bralink = code;
--              PUTINC(code, 0, linkoffset);
--              }
-+              if (i != 1)
-+                {
-+                int linkoffset;
-+                *code++ = OP_BRA;
-+                linkoffset = (bralink == NULL)? 0 : (int)(code - bralink);
-+                bralink = code;
-+                PUTINC(code, 0, linkoffset);
-+                }
- 
--            memcpy(code, previous, CU2BYTES(len));
--            code += len;
-+              memcpy(code, previous, CU2BYTES(len));
-+              code += len;
-+              }
-             }
- 
-           /* Now chain through the pending brackets, and fill in their length
