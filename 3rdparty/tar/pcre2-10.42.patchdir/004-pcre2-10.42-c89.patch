@@ -237,3 +237,55 @@ diff -Naur pcre2-10.42.orig/src/pcre2_compile.c pcre2-10.42.new/src/pcre2_compil
              {
              *code++ = OP_BRAZERO + repeat_type;
  
+diff -Naur pcre2-10.42.orig/src/pcre2_script_run.c pcre2-10.42.new/src/pcre2_script_run.c
+--- pcre2-10.42.orig/src/pcre2_script_run.c	2022-01-12 18:00:34.000000000 +0100
++++ pcre2-10.42.new/src/pcre2_script_run.c	2024-01-23 18:26:33.433590000 +0100
+@@ -105,8 +105,10 @@
+ every script, as opposed to the maps in ucd_script_sets, which only have bits
+ for scripts less than ucp_Unknown - those that appear in script extension
+ lists. */
+-
+-for (int i = 0; i < FULL_MAPSIZE; i++) require_map[i] = 0;
++{
++  int i;
++  for (i = 0; i < FULL_MAPSIZE; i++) require_map[i] = 0;
++}
+ 
+ /* Scan strings of two or more characters, checking the Unicode characteristics
+ of each code point. There is special code for scripts that can be combined with
+@@ -245,14 +247,17 @@
+       case SCRIPT_MAP:
+       OK = FALSE;
+ 
+-      for (int i = 0; i < FULL_MAPSIZE; i++)
+-        {
+-        if ((require_map[i] & map[i]) != 0)
++      {
++        int i;
++        for (i = 0; i < FULL_MAPSIZE; i++)
+           {
+-          OK = TRUE;
+-          break;
++          if ((require_map[i] & map[i]) != 0)
++            {
++            OK = TRUE;
++            break;
++            }
+           }
+-        }
++      }
+ 
+       if (!OK) return FALSE;
+ 
+@@ -282,7 +287,10 @@
+         allowed scripts for this character. */
+ 
+         default:
+-        for (int i = 0; i < FULL_MAPSIZE; i++) require_map[i] &= map[i];
++	{
++          int i;
++          for (i = 0; i < FULL_MAPSIZE; i++) require_map[i] &= map[i];
++	}
+         break;
+         }
+ 
