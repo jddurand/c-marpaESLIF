@@ -11,13 +11,6 @@
 /*                                                                              */
 /* We put the flatten gcc attribute on them.                                    */
 
-#include <stdlib.h>
-#include <errno.h>
-#include <string.h>
-#include <ctype.h>
-#include <locale.h>
-#include <limits.h>
-#include <stddef.h>
 #include "marpaESLIF/internal/config.h"
 #include "marpaESLIF/internal/math.h"
 #include "marpaESLIF/internal/structures.h"
