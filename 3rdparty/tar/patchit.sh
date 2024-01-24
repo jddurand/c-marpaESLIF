@@ -24,16 +24,17 @@ PATCH="patch"
 TAR="tar"
 TAREXTRACT="tar"
 
+curdir=`pwd`
 tmpdir=`"${MKTEMP}" -d`
 tmpfile=`"${MKTEMP}" --suffix .tar.gz`
 
 echo "=== Extracting ${SOURCE} in ${tmpdir}"
 ${TAR} -C ${tmpdir} -zxf ${SOURCE}
 for i in `ls ${PATCHDIR}/*.patch`; do echo "=== Applying $i" && ${PATCH} -d ${tmpdir}/* -p1 < $i; done
-pushd ${tmpdir}
+cd ${tmpdir}
 echo "=== Producing new tarball in ${tmpfile}"
 ${TAR} -zcf ${tmpfile} *
-popd
+cd ${curdir}
 echo "=== Moving ${tmpfile} to ${DEST}"
 ${MV} ${tmpfile} ${DEST}
 
