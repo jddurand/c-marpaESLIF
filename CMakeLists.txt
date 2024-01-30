@@ -26,6 +26,11 @@
 cmake_minimum_required(VERSION 3.26.0 FATAL_ERROR)
 project(marpaESLIF VERSION 6.0.31 LANGUAGES C CXX)
 #
+# Specific options
+#
+option(PREFER_STATIC_DEPENDENCIES "Prefer static dependencies" OFF)
+message(STATUS "Prefer static dependencies: ${PREFER_STATIC_DEPENDENCIES}")
+#
 # Get library helper
 #
 include(FetchContent)
@@ -80,14 +85,15 @@ set(marpaESLIF_extra_licenses)
 #
 set(genericLogger_git https://github.com/jddurand/c-genericLogger.git)
 cmake_helpers_depend(genericLogger
-  EXTERNALPROJECT_ADD_ARGS
-    GIT_REPOSITORY ${genericLogger_git}
-    GIT_SHALLOW TRUE
-  FIND_PACKAGE_ARGS
-    REQUIRED CONFIG
+  EXTERNALPROJECT_ADD_ARGS GIT_REPOSITORY ${genericLogger_git} GIT_SHALLOW TRUE
+  FIND_PACKAGE_ARGS REQUIRED CONFIG
 )
 list(APPEND marpaESLIF_find_dependencies "genericLogger REQUIRED CONFIG")
-list(APPEND marpaESLIF_depends PUBLIC genericLogger::genericLogger)
+if(PREFER_STATIC_DEPENDENCIES)
+  list(APPEND marpaESLIF_depends PUBLIC genericLogger::genericLogger_static)
+else()
+  list(APPEND marpaESLIF_depends PUBLIC genericLogger::genericLogger)
+endif()
 #
 # genericStack dependency: internal dependency
 #
@@ -121,31 +127,35 @@ cmake_helpers_depend(genericHash
 list(APPEND marpaESLIF_depends_ext PRIVATE BUILD_LOCAL_INTERFACE genericHash::genericHash)
 list(APPEND marpaESLIF_extra_licenses genericHash ${genericHash_source_dir}/LICENSE)
 #
-# marpaWrapper dependency: public
+# marpaWrapper dependency: private
 #
 set(marpaWrapper_git https://github.com/jddurand/c-marpaWrapper.git)
 cmake_helpers_depend(marpaWrapper
-  EXTERNALPROJECT_ADD_ARGS
-    GIT_REPOSITORY ${marpaWrapper_git}
-    GIT_SHALLOW TRUE
-  FIND_PACKAGE_ARGS
-    REQUIRED CONFIG
+  EXTERNALPROJECT_ADD_ARGS GIT_REPOSITORY ${marpaWrapper_git} GIT_SHALLOW TRUE
+  CMAKE_ARGS               -DPREFER_STATIC_DEPENDENCIES=${PREFER_STATIC_DEPENDENCIES}
+  FIND_PACKAGE_ARGS        REQUIRED CONFIG
 )
 list(APPEND marpaESLIF_find_dependencies "marpaWrapper REQUIRED CONFIG")
-list(APPEND marpaESLIF_depends PUBLIC marpaWrapper::marpaWrapper)
+if(PREFER_STATIC_DEPENDENCIES)
+  list(APPEND marpaESLIF_depends PRIVATE marpaWrapper::marpaWrapper_static)
+else()
+  list(APPEND marpaESLIF_depends PRIVATE marpaWrapper::marpaWrapper)
+endif()
 #
-# tconv dependency : public
+# tconv dependency : private
 #
 set(tconv_git https://github.com/jddurand/c-tconv.git)
 cmake_helpers_depend(tconv
-  EXTERNALPROJECT_ADD_ARGS
-    GIT_REPOSITORY ${tconv_git}
-    GIT_SHALLOW TRUE
-  FIND_PACKAGE_ARGS
-    REQUIRED CONFIG
+  EXTERNALPROJECT_ADD_ARGS GIT_REPOSITORY ${tconv_git} GIT_SHALLOW TRUE
+  CMAKE_ARGS               -DPREFER_STATIC_DEPENDENCIES=${PREFER_STATIC_DEPENDENCIES}
+  FIND_PACKAGE_ARGS        REQUIRED CONFIG
 )
 list(APPEND marpaESLIF_find_dependencies "tconv REQUIRED CONFIG")
-list(APPEND marpaESLIF_depends PUBLIC tconv::tconv)
+if(PREFER_STATIC_DEPENDENCIES)
+  list(APPEND marpaESLIF_depends PRIVATE tconv::tconv_static)
+else()
+  list(APPEND marpaESLIF_depends PRIVATE tconv::tconv)
+endif()
 #
 # pcre2 dependency: CMake's of pcre2 are quite catastrophic, fortunately this is ok because
 # we will embed PCRE2 in our object
@@ -198,10 +208,10 @@ block()
   set(CMAKE_HELPERS_GENERATE_INTTYPES_H ON CACHE BOOL "Forced CMAKE_HELPERS_GENERATE_INTTYPES_H to ON" FORCE)
   add_subdirectory(${pcre2_source_dir} ${pcre2_binary_dir} EXCLUDE_FROM_ALL)
   #
-  # Make an interface library out pcre2-8-static_iface
+  # Make an interface library out of pcre2-8-static
   #
-  add_library(pcre2-8-static_iface INTERFACE)
-  target_link_libraries(pcre2-8-static_iface INTERFACE pcre2-8-static $<TARGET_OBJECTS:pcre2-8-static>)
+  # add_library(pcre2-8-static_iface INTERFACE)
+  # target_link_libraries(pcre2-8-static_iface INTERFACE pcre2-8-static $<TARGET_OBJECTS:pcre2-8-static>)
   #
   # Add where cmake will generate stdint.h or inttypes.h
   #
@@ -213,7 +223,10 @@ endblock()
 #
 # Use and forward object requirements of pcre2-8-static
 #
-list(APPEND marpaESLIF_depends_ext PRIVATE BUILD_LOCAL_INTERFACE pcre2-8-static_iface)
+# list(APPEND marpaESLIF_depends_ext PRIVATE BUILD_LOCAL_INTERFACE pcre2-8-static_iface)
+list(APPEND marpaESLIF_depends_ext PRIVATE BUILD_LOCAL_INTERFACE $<COMPILE_ONLY:pcre2-8-static>)
+list(APPEND marpaESLIF_depends PRIVATE $<TARGET_OBJECTS:pcre2-8-static>)
+# list(APPEND marpaESLIF_depends PRIVATE pcre2-8-static)
 list(APPEND marpaESLIF_extra_licenses pcre2 ${pcre2_source_dir}/LICENCE)
 #
 # luaunpanic dependency: there is a hook in marpaESLIFLua.c that is including it
@@ -328,22 +341,37 @@ endforeach()
 # Tests
 #
 include(CTest)
-cmake_helpers_exe(marpaESLIFTester            INSTALL FALSE TEST TRUE SOURCES test/marpaESLIFTester.c)
-cmake_helpers_exe(adventTester                INSTALL FALSE TEST TRUE SOURCES test/adventTester.c)
-cmake_helpers_exe(jsonTesterStrict            INSTALL FALSE TEST TRUE SOURCES test/jsonTesterStrict.c)
-cmake_helpers_exe(jsonTesterNotStrict         INSTALL FALSE TEST TRUE SOURCES test/jsonTesterNotStrict.c)
-cmake_helpers_exe(jsonTesterStrictExternal    INSTALL FALSE TEST TRUE SOURCES test/jsonTesterStrictExternal.c)
-cmake_helpers_exe(jsonTesterNotStrictExternal INSTALL FALSE TEST TRUE SOURCES test/jsonTesterNotStrictExternal.c)
-cmake_helpers_exe(jsonTesterLua               INSTALL FALSE TEST TRUE SOURCES test/jsonTesterLua.c)
-cmake_helpers_exe(jsonTesterWithSharedStream  INSTALL FALSE TEST TRUE SOURCES test/jsonTesterWithSharedStream.c)
-cmake_helpers_exe(selfTester                  INSTALL FALSE TEST TRUE SOURCES test/selfTester.c)
-cmake_helpers_exe(exceptionTester             INSTALL FALSE TEST TRUE SOURCES test/exceptionTester.c)
-cmake_helpers_exe(exceptionTester2            INSTALL FALSE TEST TRUE SOURCES test/exceptionTester2.c)
-cmake_helpers_exe(exceptionTester3            INSTALL FALSE TEST TRUE SOURCES test/exceptionTester3.c)
-cmake_helpers_exe(exceptionTester4            INSTALL FALSE TEST TRUE SOURCES test/exceptionTester4.c)
-cmake_helpers_exe(parameterizedTester         INSTALL FALSE TEST TRUE SOURCES test/parameterizedTester.c)
-cmake_helpers_exe(allluacallbacksTester       INSTALL FALSE TEST TRUE SOURCES test/allluacallbacksTester.c)
-cmake_helpers_exe(swiftTester                 INSTALL FALSE TEST TRUE SOURCES test/swiftTester.c)
+foreach(test
+    marpaESLIFTester
+    adventTester
+    jsonTesterStrict
+    jsonTesterNotStrict
+    jsonTesterStrictExternal
+    jsonTesterNotStrictExternal
+    jsonTesterLua
+    jsonTesterWithSharedStream
+    selfTester
+    exceptionTester
+    exceptionTester2
+    exceptionTester3
+    exceptionTester4
+    parameterizedTester
+    allluacallbacksTester
+    swiftTester)
+  cmake_helpers_exe(${test}
+    TARGETS_OUTVAR exe_targets
+    INSTALL FALSE
+    TEST TRUE
+    SOURCES test/${test}.c)
+  #
+  # adventTester uses genericStack
+  #
+  if(test STREQUAL "adventTester")
+    foreach(exe_target IN LISTS exe_targets)
+      target_link_libraries(${exe_target} PRIVATE genericStack::genericStack)
+    endforeach()
+  endif()
+endforeach()
 #
 # Package
 #
