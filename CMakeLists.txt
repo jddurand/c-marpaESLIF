@@ -34,6 +34,12 @@ message(STATUS "Prefer static dependencies: ${PREFER_STATIC_DEPENDENCIES}")
 # Get library helper
 #
 include(FetchContent)
+#
+# On old OSes there is no inttypes.h and pcre2 needs this file - cmake-helpers will generate it if absent.
+# We make sure the cmake-helpers options for generating missing files are ON
+#
+set(CMAKE_HELPERS_GENERATE_STDINT_H ON CACHE BOOL "Forced CMAKE_HELPERS_GENERATE_STDINT_H to ON" FORCE)
+set(CMAKE_HELPERS_GENERATE_INTTYPES_H ON CACHE BOOL "Forced CMAKE_HELPERS_GENERATE_INTTYPES_H to ON" FORCE)
 if("x$ENV{CMAKE_HELPERS_DEPEND_CMAKE_HELPERS_FILE}" STREQUAL "x")
   FetchContent_Declare(cmake-helpers GIT_REPOSITORY https://github.com/jddurand/cmake-helpers.git GIT_SHALLOW TRUE)
 else()
@@ -166,36 +172,24 @@ endif()
 #
 set(pcre2_version 10.42)
 if(pcre2_version)
-  # set(pcre2_url https://github.com/PCRE2Project/pcre2/releases/download/pcre2-${pcre2_version}/pcre2-${pcre2_version}.tar.gz)
-  set(pcre2_file ${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/tar/pcre2-${pcre2_version}-patched.tar.gz)
-  cmake_helpers_depend(pcre2
-    FILE ${pcre2_file}
-    # EXTERNALPROJECT_ADD_ARGS URL ${pcre2_url}
-    FIND FALSE
-    CONFIGURE FALSE
-    BUILD FALSE
-    INSTALL FALSE
-    MAKEAVAILABLE FALSE
-    EXCLUDE_FROM_ALL TRUE
-    SOURCE_DIR_OUTVAR pcre2_source_dir
-    BINARY_DIR_OUTVAR pcre2_binary_dir
-  )
+  set(pcre2_depend_args URL ${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/tar/pcre2-${pcre2_version}-patched.tar.gz)
 else()
-  set(pcre2_git https://github.com/PCRE2Project/pcre2.git)
-  cmake_helpers_depend(pcre2
-    EXTERNALPROJECT_ADD_ARGS
-      GIT_REPOSITORY ${pcre2_git}
-      GIT_SHALLOW TRUE
-    FIND FALSE
-    CONFIGURE FALSE
-    BUILD FALSE
-    INSTALL FALSE
-    MAKEAVAILABLE FALSE
-    EXCLUDE_FROM_ALL TRUE
-    SOURCE_DIR_OUTVAR pcre2_source_dir
-    BINARY_DIR_OUTVAR pcre2_binary_dir
-  )
+  set(pcre2_depend_args GIT_REPOSITORY pcre2_git https://github.com/PCRE2Project/pcre2.git GIT_SHALLOW TRUE)
 endif()
+cmake_helpers_depend(pcre2
+  EXTERNALPROJECT_ADD_ARGS ${pcre2_depend_args}
+    PATCH_COMMAND ${CMAKE_COMMAND} -E rm -rf CMakeLists.orig.txt
+          COMMAND ${CMAKE_COMMAND} -E copy CMakeLists.txt CMakeLists.orig.txt
+          COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_SOURCE_DIR}/cmake/pcre2/CMakeLists.txt CMakeLists.txt
+  FIND FALSE
+  CONFIGURE FALSE
+  BUILD FALSE
+  INSTALL FALSE
+  MAKEAVAILABLE FALSE # I do not know why it fails within the library - done explicitly below
+  EXCLUDE_FROM_ALL TRUE
+  SOURCE_DIR_OUTVAR pcre2_source_dir
+  BINARY_DIR_OUTVAR pcre2_binary_dir
+)
 block()
   set(BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)
   set(BUILD_STATIC_LIBS ON CACHE BOOL "" FORCE)
@@ -204,33 +198,19 @@ block()
   set(PCRE2_SUPPORT_JIT ON CACHE BOOL "" FORCE)
   set(PCRE2_BUILD_PCRE2GREP OFF CACHE BOOL "" FORCE)
   set(PCRE2_BUILD_TESTS OFF CACHE BOOL "" FORCE)
-  #
-  # On old OSes there is no inttypes.h and pcre2 needs this file - cmake-helpers will generate it if absent.
-  # We make sure the cmake-helpers options for generating missing files are ON
-  #
-  set(CMAKE_HELPERS_GENERATE_STDINT_H ON CACHE BOOL "Forced CMAKE_HELPERS_GENERATE_STDINT_H to ON" FORCE)
-  set(CMAKE_HELPERS_GENERATE_INTTYPES_H ON CACHE BOOL "Forced CMAKE_HELPERS_GENERATE_INTTYPES_H to ON" FORCE)
   add_subdirectory(${pcre2_source_dir} ${pcre2_binary_dir} EXCLUDE_FROM_ALL)
-  #
-  # Make an interface library out of pcre2-8-static
-  #
-  # add_library(pcre2-8-static_iface INTERFACE)
-  # target_link_libraries(pcre2-8-static_iface INTERFACE pcre2-8-static $<TARGET_OBJECTS:pcre2-8-static>)
-  #
-  # Add where cmake will generate stdint.h or inttypes.h
-  #
-  if((EXISTS ${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_INCLUDEDIR}/stdint.h) OR (EXISTS ${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_INCLUDEDIR}/inttypes.h))
-    message(STATUS "Adding ${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_INCLUDEDIR} to pcre2-8-static target")
-    target_include_directories(pcre2-8-static PUBLIC ${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_INCLUDEDIR})
-  endif()
 endblock()
 #
-# Use and forward object requirements of pcre2-8-static
+# Add where cmake will generate stdint.h or inttypes.h
 #
-# list(APPEND marpaESLIF_depends_ext PRIVATE BUILD_LOCAL_INTERFACE pcre2-8-static_iface)
-list(APPEND marpaESLIF_depends_ext PRIVATE BUILD_LOCAL_INTERFACE $<COMPILE_ONLY:pcre2-8-static>)
-list(APPEND marpaESLIF_depends PRIVATE $<TARGET_OBJECTS:pcre2-8-static>)
-# list(APPEND marpaESLIF_depends PRIVATE pcre2-8-static)
+if((EXISTS ${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_INCLUDEDIR}/stdint.h) OR (EXISTS ${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_INCLUDEDIR}/inttypes.h))
+  message(STATUS "Adding ${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_INCLUDEDIR} to objs_pcre2-8-static target")
+  target_include_directories(objs_pcre2-8-static PUBLIC ${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_INCLUDEDIR})
+endif()
+#
+# Use and forward object requirements of objs_pcre2-8-static
+#
+list(APPEND marpaESLIF_depends_ext PRIVATE BUILD_LOCAL_INTERFACE objs_pcre2-8-static)
 list(APPEND marpaESLIF_extra_licenses pcre2 ${pcre2_source_dir}/LICENCE)
 #
 # luaunpanic dependency: there is a hook in marpaESLIFLua.c that is including it
@@ -321,11 +301,6 @@ foreach(_target IN LISTS targets)
     -DMARPAESLIFLUA_VERSION="${${PROJECT_NAME}_VERSION}"
     -DMARPAESLIFLUA_EMBEDDED
     ${_lua_flags}
-    #
-    # Embedded pcre2
-    #
-    -DPCRE2_CODE_UNIT_WIDTH=8
-    -DPCRE2_STATIC
     #
     # Internal constant
     #
