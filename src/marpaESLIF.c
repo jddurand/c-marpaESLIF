@@ -6681,10 +6681,10 @@ static inline marpaESLIF_t *_marpaESLIF_newp(marpaESLIFOption_t *marpaESLIFOptio
   sprintf(tmps, MARPAESLIF_LONG_LONG_FMT, MARPAESLIF_LLONG_MAX);
   marpaESLIFp->llongmaxcharsl = strlen(tmps);
 #else
-  sprintf(tmps, MARPAESLIF_LONG_LONG_FMT, "%ld", LONG_MIN);
+  sprintf(tmps, "%ld", LONG_MIN);
   marpaESLIFp->longmincharsl = strlen(tmps);
 
-  sprintf(tmps, MARPAESLIF_LONG_LONG_FMT, "%ld", LONG_MAX);
+  sprintf(tmps, "%ld", LONG_MAX);
   marpaESLIFp->longmaxcharsl = strlen(tmps);
 #endif
 
