@@ -3638,7 +3638,7 @@ static inline short _marpaESLIF_numberb(marpaESLIF_t *marpaESLIFp, char *s, size
 #else
     if (charsl > marpaESLIFp->longmaxcharsl) {
       MARPAESLIF_TRACEF(marpaESLIFp, funcs, "%.*s: charsl is %ld > %ld (LONG_MAX) : go to proposal", (int) numberl, numbers, (unsigned long) charsl, (unsigned long) marpaESLIFp->longmaxcharsl);
-      goto parsing_to_double
+      goto parsing_to_double;
     }
 #endif
   }
