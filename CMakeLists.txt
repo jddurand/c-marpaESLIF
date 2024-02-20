@@ -24,7 +24,7 @@
 # Local tests done with: cmake -S c-marpaESLIF -B c-marpaESLIF-build -DCMAKE_HELPERS_DEBUG=OFF -DICU_ROOT=C:\icu4c-74_2-Win64-MSVC2019
 #
 cmake_minimum_required(VERSION 3.26.0 FATAL_ERROR)
-project(marpaESLIF VERSION 6.0.32 LANGUAGES C CXX)
+project(marpaESLIF VERSION 6.0.33 LANGUAGES C CXX)
 #
 # Specific options
 #
