@@ -9286,6 +9286,11 @@ static inline marpaESLIFGrammar_t *_marpaESLIFGrammar_newp(marpaESLIF_t *marpaES
   if (MARPAESLIF_UNLIKELY(marpaESLIFGrammarp->marpaESLIFGrammar_bootstrapp == NULL)) {
     goto err;
   }
+
+  /* If our context is another grammar, set the internal rule count to the next available value */
+  if (marpaESLIFGrammar_bootstrapOrigp != NULL) {
+    marpaESLIFGrammar_bootstrapp->internalRuleCounti = marpaESLIFGrammar_bootstrapOrigp->internalRuleCounti + 1;
+  }
   
   /* Our internal grammar reader callback */
   marpaESLIF_readerContext.marpaESLIFp              = marpaESLIFp;

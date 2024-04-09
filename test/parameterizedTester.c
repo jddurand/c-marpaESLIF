@@ -8,7 +8,7 @@
 static const char *ASCIIs = "ASCII";
 
 static short inputReaderb(void *userDatavp, char **inputsp, size_t *inputlp, short *eofbp, short *characterStreambp, char **encodingsp, size_t *encodinglp, marpaESLIFReaderDispose_t *disposeCallbackpp);
-static short rhsb(void *userDatavp, marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFValueResult_t *contextp, marpaESLIFValueResultString_t *marpaESLIFValueResultOutp);
+static short parameterizedRhsb(void *userDatavp, marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFValueResult_t *contextp, marpaESLIFValueResultString_t *marpaESLIFValueResultOutp);
 static marpaESLIFRecognizerGeneratorCallback_t generatorActionResolverp(void *userDatavp, marpaESLIFRecognizer_t *marpaESLIFRecognizerp, char *actions);
 static void  stringFreeCallbackv(void *userDatavp, marpaESLIFValueResult_t *marpaESLIFValueResultp);
 
@@ -16,26 +16,15 @@ typedef struct marpaESLIF_context {
   genericLogger_t *genericLoggerp;
   char            *inputs;
   size_t           inputl;
-  short            parsemodeb; /* Mark the test case using marpaESLIFGrammar_parseb */
-  int              parsemodei; /* To avoid ambiguity in the marpaESLIFGrammar_parseb case */
+  int              nbCalli;
 } marpaESLIF_context_t;
 
-const static char *grammars = "# Parameterized grammar\n"
-  ":discard ::= /[\\s]+/\n"
-  "\n"
-  "top  ::= rhs1\n"
-  "rhs1 ::= . => rhs-->(1, nil, String('Input should be \"1\"'))\n"
-  "       | . => rhs-->(2, nil, String('Input should be \"2\"'))\n"
-  "       | . => rhs-->(3, nil, String('Input should be \"3\"'))\n"
-  "       | . => rhs-->(4, nil, String('Input should be \"4\"'))\n"
-  "\n"
-  "<luascript>\n"
-  "function String(p_string, p_encoding)\n"
-  "  local output = p_string\n"
-  "  p_string:encoding(p_encoding or 'ASCII')\n"
-  "  return output\n"
-  "end\n"
-  "</luascript>\n"
+const static char *grammars = "\n"
+  "/*\n"
+  " * Example of parameterized rules\n"
+  "*/\n"
+  ":default ::= action => ::shift\n"
+  "top ::= . => parameterizedRhs->(1)\n"
   ;
 
 const static char *inputs = "5";
@@ -95,8 +84,7 @@ int main() {
   marpaESLIF_context.genericLoggerp = genericLoggerp;
   marpaESLIF_context.inputs         = (char *) inputs;
   marpaESLIF_context.inputl         = strlen(inputs);
-  marpaESLIF_context.parsemodeb     = 0;
-  marpaESLIF_context.parsemodei     = 0;
+  marpaESLIF_context.nbCalli        = 0;
 
   marpaESLIFRecognizerOption.userDatavp        = &marpaESLIF_context; /* User specific context */
   marpaESLIFRecognizerOption.readerCallbackp   = inputReaderb; /* Reader */
@@ -135,7 +123,7 @@ int main() {
   GENERICLOGGER_NOTICE(genericLoggerp, "Testing parse");
   marpaESLIF_context.inputs         = (char *) inputs;
   marpaESLIF_context.inputl         = strlen(inputs);
-  marpaESLIF_context.parsemodeb     = 1;
+  marpaESLIF_context.nbCalli        = 0;
   if (! marpaESLIFGrammar_parseb(marpaESLIFGrammarp, &marpaESLIFRecognizerOption, NULL /* marpaESLIFValueOptionp */, NULL /* exhaustedbp */)) {
     goto err;
   }
@@ -177,14 +165,12 @@ static short inputReaderb(void *userDatavp, char **inputsp, size_t *inputlp, sho
 }
 
 /*****************************************************************************/
-static short rhsb(void *userDatavp, marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFValueResult_t *contextp, marpaESLIFValueResultString_t *marpaESLIFValueResultOutp)
+static short parameterizedRhsb(void *userDatavp, marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFValueResult_t *contextp, marpaESLIFValueResultString_t *marpaESLIFValueResultOutp)
 /*****************************************************************************/
 {
   marpaESLIF_context_t *marpaESLIF_contextp = (marpaESLIF_context_t *) userDatavp;
   int                   parameteri;
   char                 *outputs;
-  char                 *explanations;
-  char                 *explanation_encodingasciis;
 
   /* ESLIF guarantees that contextp is not null and is a ROW */
   /* ESLIF always tries to put a number in the lowest storage that it fits into */
@@ -192,8 +178,8 @@ static short rhsb(void *userDatavp, marpaESLIFRecognizer_t *marpaESLIFRecognizer
     fprintf(stderr, "Unsupported type %d for first context argument\n", contextp[0].type);
     return 0;
   }
-  if (contextp->u.r.sizel != 3) {
-    fprintf(stderr, "Invalid number of items in context: got %ld, expected 3\n", (unsigned long) contextp->u.r.sizel);
+  if (contextp->u.r.sizel != 1) {
+    fprintf(stderr, "Invalid number of items in context: got %ld, expected 1\n", (unsigned long) contextp->u.r.sizel);
     return 0;
   }
 
@@ -209,42 +195,20 @@ static short rhsb(void *userDatavp, marpaESLIFRecognizer_t *marpaESLIFRecognizer
     return 0;
   }
 
-  switch (contextp->u.r.p[2].type) {
-  case MARPAESLIF_VALUE_TYPE_STRING:
-    explanations = (char *) contextp->u.r.p[2].u.s.p;
-    if (explanations == NULL) {
-      fprintf(stderr, "Explanation is NULL for third argument in context\n");
-    }
-    explanation_encodingasciis = contextp->u.r.p[2].u.s.encodingasciis;
-    if (explanation_encodingasciis == NULL) {
-      fprintf(stderr, "Explanation encoding is NULL for third argument in context\n");
-    }
-    break;
-  default:
-    fprintf(stderr, "Unsupported type %d for third argument in context\n", contextp->u.r.p[2].type);
-    return 0;
-  }
-
   outputs = (char *) malloc(1000);
   if (outputs == NULL) {
     fprintf(stderr, "malloc failure, %s\n", strerror(errno));
     return 0;
   }
 
-  if (parameteri > 4) {
-    /* To avoid ambiguity in the marpaESLIFGrammar_parse test case, we generate only once the rhs that will match */
-    if (marpaESLIF_contextp->parsemodeb) {
-      if (marpaESLIF_contextp->parsemodei++ == 0) {
-        sprintf(outputs, "'%d'", parameteri);
-      } else {
-        sprintf(outputs, "'%d'", -1);
-      }
-    } else {
-      /* Ambiguity is ok when we use the scan mode */
-      sprintf(outputs, "'%d'", parameteri);
-    }
+  /* Put \0 just to a nice log, we replace it with a newline just after logging */
+  marpaESLIF_contextp->nbCalli++;
+  if (marpaESLIF_contextp->nbCalli == 5) {
+    sprintf(outputs, "'5'\0");
+  } else if (marpaESLIF_contextp->nbCalli > 5) {
+    sprintf(outputs, "'no match'\0");
   } else {
-    sprintf(outputs, ". => rhs->(5, { x = 'Value of x', y = 'Value of y' }, String('Input should be 5'))");
+    sprintf(outputs, ". => parameterizedRhs->(%d)\0", parameteri + 1);
   }
 
   marpaESLIFValueResultOutp->p              = (unsigned char *) outputs;
@@ -254,7 +218,8 @@ static short rhsb(void *userDatavp, marpaESLIFRecognizer_t *marpaESLIFRecognizer
   marpaESLIFValueResultOutp->sizel          = strlen(outputs);
   marpaESLIFValueResultOutp->encodingasciis = (char *) ASCIIs;
 
-  fprintf(stdout, "[C] parameter=%d, explanation=%s [%s] => %s\n", parameteri, explanations, explanation_encodingasciis, outputs);
+  fprintf(stdout, "parameterizedRhs(%d) returns: %s\n", parameteri, outputs);
+  outputs[strlen(outputs)] = '\n';
 
   return 1;
 }
@@ -263,8 +228,8 @@ static short rhsb(void *userDatavp, marpaESLIFRecognizer_t *marpaESLIFRecognizer
 static marpaESLIFRecognizerGeneratorCallback_t generatorActionResolverp(void *userDatavp, marpaESLIFRecognizer_t *marpaESLIFRecognizerp, char *actions)
 /*****************************************************************************/
 {
-  if (strcmp(actions, "rhs") == 0) {
-    return rhsb;
+  if (strcmp(actions, "parameterizedRhs") == 0) {
+    return parameterizedRhsb;
   } else {
     fprintf(stderr, "Unsupported generator action \"%s\"\n", actions);
     return NULL;
