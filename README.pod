@@ -528,7 +528,7 @@ marpaESLIF follows the L<Semantic Versioning 2.0.0|https://semver.org/spec/v2.0.
 
 This project is L<CMake|http://cmake.org> based, version 3.26 at least. Recommended pattern is:
 
-  cmake -Wno-dev -S c-marpaESLIF -B c-marpaESLIF-build -DCMAKE_BUILD_TYPE=RelWithDebInfo -DTCONV_USE_ICU=NO 
+  cmake -Wno-dev -S c-marpaESLIF -B c-marpaESLIF-build -DCMAKE_BUILD_TYPE=RelWithDebInfo
   cmake --build c-marpaESLIF-build
   ctest --test-dir c-marpaESLIF-build
   # If you want the package (recommended on Windows)
