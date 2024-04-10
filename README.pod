@@ -528,9 +528,13 @@ marpaESLIF follows the L<Semantic Versioning 2.0.0|https://semver.org/spec/v2.0.
 
 You must use a L<CMake|http://cmake.org> version 3 at least. Recommended pattern is:
 
-  cmake -Wno-dev -DCMAKE_BUILD_TYPE=RelWithDebInfo -DTCONV_USE_ICU=NO .
-  make
-  make check
+  cmake -Wno-dev -S c-marpaESLIF -B c-marpaESLIF-build -DCMAKE_BUILD_TYPE=RelWithDebInfo -DTCONV_USE_ICU=NO 
+  cmake --build c-marpaESLIF-build
+  ctest --test-dir c-marpaESLIF-build
+  # If you want the package (recommended on Windows)
+  cmake --build c-marpaESLIF-build --target package
+  # If you want to install (not recommended on Windows)
+  cmake --install c-marpaESLIF-build
 
 If you use valgrind, the recommended C<cmake> arguments are:
 
