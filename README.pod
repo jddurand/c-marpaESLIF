@@ -526,7 +526,7 @@ marpaESLIF follows the L<Semantic Versioning 2.0.0|https://semver.org/spec/v2.0.
 
 =head1 BUILD
 
-You must use a L<CMake|http://cmake.org> version 3.26 at least. Recommended pattern is:
+This project is L<CMake|http://cmake.org> based, version 3.26 at least. Recommended pattern is:
 
   cmake -Wno-dev -S c-marpaESLIF -B c-marpaESLIF-build -DCMAKE_BUILD_TYPE=RelWithDebInfo -DTCONV_USE_ICU=NO 
   cmake --build c-marpaESLIF-build
