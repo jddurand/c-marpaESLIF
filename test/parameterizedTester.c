@@ -11,6 +11,7 @@ static short inputReaderb(void *userDatavp, char **inputsp, size_t *inputlp, sho
 static short parameterizedRhsb(void *userDatavp, marpaESLIFRecognizer_t *marpaESLIFRecognizerp, marpaESLIFValueResult_t *contextp, marpaESLIFValueResultString_t *marpaESLIFValueResultOutp);
 static marpaESLIFRecognizerGeneratorCallback_t generatorActionResolverp(void *userDatavp, marpaESLIFRecognizer_t *marpaESLIFRecognizerp, char *actions);
 static void  stringFreeCallbackv(void *userDatavp, marpaESLIFValueResult_t *marpaESLIFValueResultp);
+static short valueImportb(marpaESLIFValue_t *marpaESLIFValuep, void *userDatavp, marpaESLIFValueResult_t *marpaESLIFValueResultp, short haveUndefb);
 
 typedef struct marpaESLIF_context {
   genericLogger_t *genericLoggerp;
@@ -41,12 +42,14 @@ int main() {
   genericLogger_t             *genericLoggerp;
   marpaESLIF_context_t         marpaESLIF_context;
   marpaESLIFRecognizerOption_t marpaESLIFRecognizerOption;
+  marpaESLIFValueOption_t      marpaESLIFValueOption;
   char                        *grammarscripts;
   marpaESLIFSymbol_t          *stringSymbolp = NULL;
   marpaESLIFSymbol_t          *stringSymbol2p = NULL;
   marpaESLIFSymbol_t          *regexSymbolp = NULL;
   marpaESLIFString_t           string;
   marpaESLIFRecognizer_t      *marpaESLIFRecognizerp = NULL;
+  marpaESLIFValue_t           *marpaESLIFValuep = NULL;
   short                        continueb;
   short                        exhaustedb;
 
@@ -101,6 +104,17 @@ int main() {
   marpaESLIFRecognizerOption.generatorActionResolverp = generatorActionResolverp;
   marpaESLIFRecognizerOption.importerp                = NULL;
 
+  /* Get eventual value */
+  marpaESLIFValueOption.userDatavp             = genericLoggerp;
+  marpaESLIFValueOption.ruleActionResolverp    = NULL;
+  marpaESLIFValueOption.symbolActionResolverp  = NULL;
+  marpaESLIFValueOption.importerp              = &valueImportb;
+  marpaESLIFValueOption.highRankOnlyb          = 1;
+  marpaESLIFValueOption.orderByRankb           = 1;
+  marpaESLIFValueOption.ambiguousb             = 0;
+  marpaESLIFValueOption.nullb                  = 0;
+  marpaESLIFValueOption.maxParsesi             = 0;
+
   GENERICLOGGER_LEVEL_SET(genericLoggerp, GENERICLOGGER_LOGLEVEL_TRACE);
   GENERICLOGGER_NOTICE(genericLoggerp, "Testing interactive recognizer");
   marpaESLIFRecognizerp = marpaESLIFRecognizer_newp(marpaESLIFGrammarp, &marpaESLIFRecognizerOption);
@@ -117,6 +131,21 @@ int main() {
     }
     GENERICLOGGER_INFOF(genericLoggerp, "After resume: continueb=%d, exhaustedb=%d", (int) continueb, (int) exhaustedb);
   }
+  marpaESLIFValuep = marpaESLIFValue_newp(marpaESLIFRecognizerp, &marpaESLIFValueOption);
+  if (marpaESLIFValuep == NULL) {
+    goto err;
+  }
+  while (1) {
+    short rcValueb = marpaESLIFValue_valueb(marpaESLIFValuep);
+    if (rcValueb < 0) {
+      goto err;
+    } else if (rcValueb == 0) {
+      break;
+    }
+  }
+
+  marpaESLIFValue_freev(marpaESLIFValuep);
+  marpaESLIFValuep = NULL;
   marpaESLIFRecognizer_freev(marpaESLIFRecognizerp);
   marpaESLIFRecognizerp = NULL;
 
@@ -124,7 +153,7 @@ int main() {
   marpaESLIF_context.inputs         = (char *) inputs;
   marpaESLIF_context.inputl         = strlen(inputs);
   marpaESLIF_context.nbCalli        = 0;
-  if (! marpaESLIFGrammar_parseb(marpaESLIFGrammarp, &marpaESLIFRecognizerOption, NULL /* marpaESLIFValueOptionp */, NULL /* exhaustedbp */)) {
+  if (! marpaESLIFGrammar_parseb(marpaESLIFGrammarp, &marpaESLIFRecognizerOption, &marpaESLIFValueOption, NULL /* exhaustedbp */)) {
     goto err;
   }
 
@@ -135,6 +164,9 @@ int main() {
   exiti = 1;
 
  done:
+  if (marpaESLIFValuep != NULL) {
+    marpaESLIFValue_freev(marpaESLIFValuep);
+  }
   if (marpaESLIFRecognizerp != NULL) {
     marpaESLIFRecognizer_freev(marpaESLIFRecognizerp);
   }
@@ -244,4 +276,78 @@ static void stringFreeCallbackv(void *userDatavp, marpaESLIFValueResult_t *marpa
   if ((marpaESLIFValueResultp->u.s.encodingasciis != NULL) && (marpaESLIFValueResultp->u.s.encodingasciis != ASCIIs)) {
     free(marpaESLIFValueResultp->u.s.encodingasciis);
   }
+}
+
+/*****************************************************************************/
+static short valueImportb(marpaESLIFValue_t *marpaESLIFValuep, void *userDatavp, marpaESLIFValueResult_t *marpaESLIFValueResultp, short haveUndefb)
+/*****************************************************************************/
+{
+  genericLogger_t *genericLoggerp = (genericLogger_t *) userDatavp;
+  size_t           i;
+  short            rcb = 0;
+
+  /* Result MUST be array with value '5' */
+
+  switch (marpaESLIFValueResultp->type) {
+  case MARPAESLIF_VALUE_TYPE_UNDEF:
+    GENERICLOGGER_ERROR(genericLoggerp, "Result type is undef");
+    break;
+  case MARPAESLIF_VALUE_TYPE_CHAR:
+    GENERICLOGGER_ERRORF(genericLoggerp, "Result type is char: %c", marpaESLIFValueResultp->u.c);
+    break;
+  case MARPAESLIF_VALUE_TYPE_SHORT:
+    GENERICLOGGER_ERRORF(genericLoggerp, "Result type is short: %d", (int) marpaESLIFValueResultp->u.b);
+    break;
+  case MARPAESLIF_VALUE_TYPE_INT:
+    GENERICLOGGER_ERRORF(genericLoggerp, "Result type is int: %d", marpaESLIFValueResultp->u.i);
+    break;
+  case MARPAESLIF_VALUE_TYPE_LONG:
+    GENERICLOGGER_ERRORF(genericLoggerp, "Result type is long: %ld", marpaESLIFValueResultp->u.l);
+    break;
+  case MARPAESLIF_VALUE_TYPE_FLOAT:
+    GENERICLOGGER_ERRORF(genericLoggerp, "Result type is float: %f", (double) marpaESLIFValueResultp->u.f);
+    break;
+  case MARPAESLIF_VALUE_TYPE_DOUBLE:
+    GENERICLOGGER_ERRORF(genericLoggerp, "Result type is double: %f", marpaESLIFValueResultp->u.d);
+    break;
+  case MARPAESLIF_VALUE_TYPE_PTR:
+    GENERICLOGGER_ERRORF(genericLoggerp, "Result type is ptr: %p", marpaESLIFValueResultp->u.p.p);
+    break;
+  case MARPAESLIF_VALUE_TYPE_ARRAY:
+    if (marpaESLIFValueResultp->u.a.sizel > 0) {
+      GENERICLOGGER_NOTICEF(genericLoggerp, "Result type is array: {%p,%ld}", marpaESLIFValueResultp->u.a.p, (unsigned long) marpaESLIFValueResultp->u.a.sizel);
+    } else {
+      GENERICLOGGER_ERRORF(genericLoggerp, "Result type is array: {%p,%ld}", marpaESLIFValueResultp->u.a.p, (unsigned long) marpaESLIFValueResultp->u.a.sizel);
+    }
+    for (i = 0; i < marpaESLIFValueResultp->u.a.sizel; i++) {
+      if (i == 0) {
+        if (marpaESLIFValueResultp->u.a.p[i] == '5') {
+          GENERICLOGGER_NOTICEF(genericLoggerp, "  array[%ld] = '%c'", (unsigned long) i, marpaESLIFValueResultp->u.a.p[i]);
+          rcb = 1;
+        } else {
+          GENERICLOGGER_ERRORF(genericLoggerp, "  array[%ld] = '%c'", (unsigned long) i, marpaESLIFValueResultp->u.a.p[i]);
+        }
+      } else {
+        GENERICLOGGER_ERRORF(genericLoggerp, "  array[%ld] = '%c'", (unsigned long) i, marpaESLIFValueResultp->u.a.p[i]);
+      }
+    }
+    break;
+  case MARPAESLIF_VALUE_TYPE_BOOL:
+    GENERICLOGGER_ERRORF(genericLoggerp, "Result type is bool: %d", (int) marpaESLIFValueResultp->u.b);
+    break;
+  case MARPAESLIF_VALUE_TYPE_STRING:
+    GENERICLOGGER_ERRORF(genericLoggerp, "Result type is string: %s, encoding: %s", marpaESLIFValueResultp->u.s.p, marpaESLIFValueResultp->u.s.encodingasciis);
+    break;
+  case MARPAESLIF_VALUE_TYPE_ROW:
+    GENERICLOGGER_ERRORF(genericLoggerp, "Result type is row: {%p,%ld}", marpaESLIFValueResultp->u.r.p, (unsigned long) marpaESLIFValueResultp->u.r.sizel);
+    break;
+  case MARPAESLIF_VALUE_TYPE_TABLE:
+    GENERICLOGGER_ERRORF(genericLoggerp, "Result type is table: {%p,%ld}", marpaESLIFValueResultp->u.t.p, (unsigned long) marpaESLIFValueResultp->u.t.sizel);
+    break;
+  default:
+    GENERICLOGGER_ERRORF(genericLoggerp, "Unsupported result type %d", marpaESLIFValueResultp->type);
+    break;
+  }
+
+  return rcb;
 }
