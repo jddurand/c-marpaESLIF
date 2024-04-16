@@ -1,0 +1,1566 @@
+<div>
+    <a href="https://travis-ci.org/jddurand/c-marpaESLIF"><img src="https://travis-ci.org/jddurand/c-marpaESLIF.svg?branch=master" alt="Travis CI build status" height="18"></a> <a href="https://badge.fury.io/gh/jddurand%2Fc-marpaESLIF"><img src="https://badge.fury.io/gh/jddurand%2Fc-marpaESLIF.svg" alt="GitHub version" height="18"></a> <a href="http://opensource.org/licenses/MIT" rel="nofollow noreferrer"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="License MIT" height="18"></a>
+</div>
+
+# NAME
+
+marpaESLIF\_BNF - Domain Specific Language (DSL)
+
+# DESCRIPTION
+
+marpaESLIF is a Scanless Interface expressed in a BNF format, that is using [marpaWrapper](https://github.com/jddurand/c-marpaWrapper), itself being a thin interface on top of [libmarpa](https://jeffreykegler.github.io/Marpa-web-site/libmarpa.html) parser.
+
+## CONVENTIONS
+
+The marpaESLIF BNF is composed of unicode characters, in any encoding supported by the underlying convertor ([ICU](http://site.icu-project.org/) or iconv, in order of preference). Unsignificant whitespaces, Perl-like comments and C++-like comments are discarded.
+
+- Symbol names
+
+    They consist of `bare names`, or can be enclosed in angle brackets if whitespace if desired. They are case sensitive, and can be composed only of ASCII characters. There is no attempt to discard any leading, trailing, or repeated whitespace in angle brackets version, i.e. all the followings are different symbol names:
+
+    ```
+    this
+    <this >
+    < this
+      >
+    ```
+
+- Levels
+
+    The grammar can contain multiple levels, the level syntax being:
+
+    ```
+    ::=           # Alias for level 0
+      ~           # Alias for level 1
+    :\[[\d]+\]:=  # General form
+    ```
+
+    The level 0 must exist. We will use only `::=` and/or `~` in the rest of this document for conveniene, though we are adressing any possible level.
+
+- Rules
+
+    A rule consist of a left symbol, followed by the level, followed by one or more symbols, or a single quantified symbol:
+
+    ```
+    leftsymbol1 ::=  # Nothing
+    leftsymbol2 ::= rightSymbol
+    leftsymbol3 ::= quantifiedSymbol*
+    ```
+
+- Terminals
+
+    There are four types of explicit terminals.
+
+    - Pseudo terminals
+        - :eof
+
+            A zero-length terminal that matches only at the of the stream.
+
+        - :eol
+
+            A zero-length terminal that matches only before a newline.
+
+        - :sol
+
+            A zero-length terminal that matches only after a newline.
+
+        - :empty
+
+            A zero-length terminal that always match the empty string.
+
+            Note that the newline is hardcoded to be any unicode newline, i.e. `(*BSR_UNICODE)\R` in PCRE2 terminology.
+
+            The presence of :eol or :sol pseudo-terminal anywhere in the grammar enforces the `newlineb` flag in recognizers. On the contrary `:eof` and `:eol` work regardless of recognizer's `newlineb` flag.
+    - Strings
+
+        They can be single (`'`), double-quoted (`"`), or LEFT DOUBLE QUOTATION MARK (`“`) then RIGHT DOUBLE QUOTATION MARK (`”`) enclosed. The content is any valid unicode character, and the `\` character can be used to escape the expected right-side quote character (i.e. `'`, `"`, or `”`) or `\` itself. The `i` modifier can be used to force case-insensitive match:
+
+        ```
+        'string'
+        'string':i
+        'string\'s'
+        "string\"s\\"
+        “str'"\”ing”:i
+        ```
+
+        and the modifier `c` to force unicode character mode. Internally a string is nothing else but a regular expression, so the exact implementation of the `i` and `c` modifiers correspond to the PCRE2 flags listed below in the _Regular expression_ section. A string created with no modifier is faster when doing comparison (internally marpaESLIF will switch to a brutal memory comparison instead of calling the PCRE2 engine).
+        Please note this is really a _quoted string_, **not** a string terminal. I.e. everything inside the quote is taken as-is, with no interpretation.
+
+    - Character classes
+
+        They are always enclosed with left and right brackets `[]`. Modifiers can start after a `:` character. A character class class is nothing else but a lexically restricted regular expression.
+
+    - Regular expression
+
+        They are always enclosed within slashes `//`, and the content must be valid as per the [PCRE2 Perl Compatible Regular Expression](http://www.pcre.org/) library. Modifiers can start after the slash on the right. Regular expression patterns are by default anchored. The slash character itself must be preceeded by a backslash, i.e. `\/` in the string _seen_ by the parser (so, in practice, it is coded like this: `"\\/"`).
+
+        Regular expressions must be used with care in the two following scenarios:
+
+        - Quantifiers at the end
+
+            If the regular expression ends with an unlimited quantifier at the end, i.e. `*` or `+`, it is very likely that the data will match partially until the whole input is read, effectively forcing ESLIF to read the entire input. This can break the _streaming_ nature of your implementation.
+
+        - Negative lookahead at the end
+
+            If the regular expression ends with a negative lookahead, it can match when you think it should not. This is because negative lookahead does not trigger a partial match. In such a case, you should ensure that your regular expression forces a minimum number of characters in the subject string.
+
+    The PCRE2 syntax is supported in its entirety, this include any PCRE2 add-on. Character classes and regular expression share the same set of modifiers, executed in order of appearance, that are:
+
+    ```perl
+    ----------------------------------------------------------------
+    Modifiers   Explanation
+    ----------------------------------------------------------------
+    e           Unset back-references in the pattern will match to empty strings
+    i           Case-insensitive
+    j           \u, \U and \x and unset back-references will act as JavaScript standard
+    m           Multi-line regex
+    n           Enable Unicode properties and extend meaning of meta-characters
+    s           A dot meta-character in the pattern matches all characters, including newlines
+    x           Enable comments. This has some limitation due marpaESLIF semantics
+    D           A dollar meta-character matches only at the end of the subject string
+    J           Allow duplicate names for sub-patterns
+    U           Inverts the "greediness" of the quantifiers
+    a           Meta-characters will be limited to their ASCII equivalent
+    u           Forces support of large codepoints
+    b           Could mean "forced binary" mode
+    c           Could mean "forced unicode character" mode
+    A           Remove the systematic anchoring
+    ----------------------------------------------------------------
+    ```
+
+    Internally this correspond to this set of options in PCRE2:
+
+    ```
+    ----------------------------------------------------------------
+    Modifiers         PCRE2 flag unset   PCR2 flag set
+    ----------------------------------------------------------------
+    e                                    PCRE2_MATCH_UNSET_BACKREF
+    i                                    PCRE2_CASELESS
+    j                                    PCRE2_ALT_BSUX|PCRE2_MATCH_UNSET_BACKREF
+    m                                    PCRE2_MULTILINE
+    n                                    PCRE2_UCP
+    s                                    PCRE2_DOTALL
+    x                                    PCRE2_EXTENDED
+    D                                    PCRE2_DOLLAR_ENDONLY
+    J                                    PCRE2_DUPNAMES
+    U                                    PCRE2_UNGREEDY
+    a                 PCRE2_UTF
+    N                 PCRE2_UCP
+    u                                    PCRE2_UTF
+    b                 PCRE2_UTF          PCRE2_NEVER_UTF
+    c                 PCRE2_NEVER_UTF    PCRE2_UTF
+    A                 PCRE2_ANCHORED
+    ----------------------------------------------------------------
+    ```
+
+    Substitution modifiers are:
+
+    ```perl
+    ----------------------------------------------------------------
+    Modifiers   Explanation
+    ----------------------------------------------------------------
+    x           Extended substitution pattern
+    g           Global substitution
+    l           Literal substitution
+    !           Support of unknown set
+    f           Support of empty set
+    ----------------------------------------------------------------
+    ```
+
+    Internally this correspond to this set of options in PCRE2:
+
+    ```
+    ----------------------------------------------------------------
+    Modifiers         PCRE2 flag unset   PCR2 flag set
+    ----------------------------------------------------------------
+    x                                    PCRE2_SUBSTITUTE_EXTENDED
+    g                                    PCRE2_SUBSTITUTE_GLOBAL
+    l                                    PCRE2_SUBSTITUTE_LITERAL
+    !                                    PCRE2_SUBSTITUTE_UNKNOWN_UNSET
+    f                                    PCRE2_SUBSTITUTE_UNSET_EMPTY
+    ----------------------------------------------------------------
+    ```
+
+- Lexemes and Terminals
+
+    Lexemes are meta-symbols that does appear as the LHS symbol anywhere within the current grammar. Therefore they behave like terminals, except that their definition is not in the current grammar. By default such meta-symbol is looked up at the next level. For example:
+
+    ```
+    rule      ::= something
+    something   ~ [\d]
+    ```
+
+    say that symbol `something` at grammar level `0` is a reference to `something` at grammar level `1`. It is important to notice that:
+
+    - A lexeme match respects the `:discard` rules at its corresponding grammar level. Nevertheless no event can happen, except the internal `:discard[switch]`, `:discard[on]` and `:discard[off]` events.
+    - A lexeme match is successful only if the valuation starting at this symbol is successful and unambiguous
+    - The result of a lexeme match is always of type `MARPAESLIF_VALUE_TYPE_ARRAY` pointing to raw bytes that matched, these raw bytes will include discarded data.
+
+    In contrast a terminal is an explicit quoted string, character class or regular expression, e.g.:
+
+    ```
+    the_rhs_is_a_terminal ::= '"'
+    ```
+
+    Lexemes can be references:
+
+    - implicitely
+
+        Without any indication, a lexeme is always assumed to be at the grammar of the next level
+
+    - explicity by grammar description
+
+        ```
+        X ::= Y@'Grammar Description'
+        ```
+
+        This is working because a grammar description is unique across all sub-grammars. Note that when accessing a grammar by description, the later must have been declared before, using the `:desc` rule. Therefore a good practice is to forward declare all grammars at the beginning, e.g.:
+
+        ```
+        :desc    ::= 'Main Grammar'
+        :desc      ~ 'Sub Grammar 1'
+        :desc :[2]:= 'Sub Grammar 2'
+        :desc :[3]:= 'Sub Grammar 3'
+        ```
+
+    - explicitely by relative level
+
+        ```
+        X ::= Y@+1
+        X ::= Y@-2
+        X ::= Y@3
+        ```
+
+        The signed integer is interpreted as a delta with current grammar level.
+
+    - explicitely by absolute level
+
+        ```
+        X ::= Y@=1
+        ```
+
+        The unsigned integer is interpreted as an explicit grammar level.
+
+- Discard
+
+    Everytime expected terminals cannot be match, marpaESLIF will try to match the special rule `:discard`. The `:discard` rule also have precedence if it matches longer than the longest acceptable lexeme or terminal. and can not be ambiguous (else discard silently fail).
+
+- Parameterized Rules
+
+    The important thing to remember is that parameterized rules parameters and expressions follow the lua semantics.
+
+    A parameterized LHS must be writen in the form
+
+    ```
+    LHS<-(lua optional parameter list)
+    ```
+
+    or
+
+    ```
+    LHS<--(lua optional parameter list)
+    ```
+
+    A parameterized RHS must be writen in the form
+
+    ```
+    RHS->(lua optional expression list)
+    ```
+
+    or
+
+    ```
+    RHS-->(lua optional expression list)
+    ```
+
+    The `--` indicates if the internal processing of context passing is a precompiled lua byte chunk or not. Most of the times you want to use the `--` notation, as if it you would have been writen like a lua library that is loaded once, this is also the fastest mode. Otherwise the context passing is recompiled everytime, allowing to have runtime dependencies, sometimes useful for debugging, sometimes necessary for your application.
+
+    The parameter and expression processings are done using an _internal_ lua interpreter, embedded into marpaESLIF. The output of this internal interpreter is then injected into host's VM using the language bindings.
+
+    it is important to note that marpaESLIF will _always_ consider a parameterized RHS like a _lexeme_, i.e. a grammar terminal bound to a sub-grammar. Therefore no interaction with the recognizer is possible until the lexeme sub-grammar is processed, with one exception: the dynamic lexeme, which is where the end-user may implement specific functionality with respect to parameters and expressions.
+    This mean a parameterized rhs can also be writen in the form of a generation action name, e.g.:
+
+    ```perl
+    /* Call host's recognizer action "external_action" */
+    LHS<-(x,y) ::= . => external_action->(x+1, y+2)
+
+    /* Embedded anonymous lua function */
+    LHS<-(x,y) ::= . => ::lua->function(x, y) return "read below!" end -> (x+1, y+2)
+
+    /* Embedded explicit lua function name "lua_action" writen inside your grammar */
+    LHS<-(x,y) ::= . => ::lua->lua_action->(x+1, y+2)
+    ```
+
+    &lt;luascript>
+    function lua\_action(x,y)
+      return "
+    &lt;/luascript>
+
+    In any of these cases, the call must be successful a return a string that is compatible with an RHS, that ESLIF execute as a lexeme. ESLIF will be try to clever to not recompile grammars everytime, though it will use a very basic check: the whole UTF-8 version of the generated RHS, together with an internally generated hook on grammar level, will be kept in memory, and only grammars with a different UTF-8 version at different grammar levels will be recompiled.
+
+    End-user must take care, because infinite recursivity is very easy with parameterized rules, and ESLIF is not protected against that.
+
+    A concrete lua example is e.g.:
+
+    ```perl
+    local recognizerInterface = {
+       ["init"] = function(self, input)
+          self._input = input
+          self._nbParameterizedRhsCalls = 0
+       end,
+       ["read"]                   = function(self) self._data = self._input return true end,
+       ["isEof"]                  = function(self) return true end,
+       ["isCharacterStream"]      = function(self) return true end,
+       ["encoding"]               = function(self) return nil end,
+       ["data"]                   = function(self) return self._data end,
+       ["isWithDisableThreshold"] = function(self) return false end,
+       ["isWithExhaustion"]       = function(self) return false end,
+       ["isWithNewline"]          = function(self) return true end,
+       ["isWithTrack"]            = function(self) return false end,
+       ["parameterizedRhs"]       = function(self, parameter)
+          self._nbParameterizedRhsCalls = self._nbParameterizedRhsCalls + 1
+
+          local output
+          if (self._nbParameterizedRhsCalls == 5) then
+            output = "'5'"
+          elseif (self._nbParameterizedRhsCalls > 5) then
+            output = "'no match'"
+          else
+            parameter = parameter + 1
+            output = ". => parameterizedRhs->("..parameter..")"
+          end
+          return output
+       end
+    }
+
+    local valueInterface = {
+       ["isWithHighRankOnly"] = function(self) return true end,
+       ["isWithOrderByRank"]  = function(self) return true end,
+       ["isWithAmbiguous"]    = function(self) return false end,
+       ["isWithNull"]         = function(self) return false end,
+       ["maxParses"]          = function(self) return 0 end,
+       ["getResult"]          = function(self) return self._result end,
+       ["setResult"]          = function(self, result) self._result = result end,
+    }
+
+    local logger = {
+       ["trace"]     = function(self, msgs) self:tracef("%s", msgs) end,
+       ["debug"]     = function(self, msgs) self:debugf("%s", msgs) end,
+       ["info"]      = function(self, msgs) self:infof("%s", msgs) end,
+       ["notice"]    = function(self, msgs) self:noticef("%s", msgs) end,
+       ["warning"]   = function(self, msgs) self:warningf("%s", msgs) end,
+       ["error"]     = function(self, msgs) self:errorf("%s", msgs) end,
+       ["critical"]  = function(self, msgs) self:criticalf("%s", msgs) end,
+       ["emergency"] = function(self, msgs) self:emergencyf("%s", msgs) end,
+       --
+       -- Used by us
+       --
+       ["tracef"]     = function(self, fmts, ...) print(string.format("%-9s "..fmts, 'TRACE', ...)) end,
+       ["debugf"]     = function(self, fmts, ...) print(string.format("%-9s "..fmts, 'DEBUG', ...)) end,
+       ["infof"]      = function(self, fmts, ...) print(string.format("%-9s "..fmts, 'INFO', ...)) end,
+       ["noticef"]    = function(self, fmts, ...) print(string.format("%-9s "..fmts, 'NOTICE', ...)) end,
+       ["warningf"]   = function(self, fmts, ...) print(string.format("%-9s "..fmts, 'WARN', ...)) end,
+       ["errorf"]     = function(self, fmts, ...) print(string.format("%-9s "..fmts, 'ERROR', ...)) end,
+       ["criticalf"]  = function(self, fmts, ...) print(string.format("%-9s "..fmts, 'CRITICAL', ...)) end,
+       ["emergencyf"] = function(self, fmts, ...) print(string.format("%-9s "..fmts, 'EMERGENCY', ...)) end
+    }
+
+    local marpaESLIFLua = require 'marpaESLIFLua'
+    local marpaESLIFp = marpaESLIFLua.marpaESLIF_new(logger)
+
+    marpaESLIFGrammarp = marpaESLIFp:marpaESLIFGrammar_new([[
+    :default ::= action => ::shift
+    top ::= . => parameterizedRhs->(1)
+          | . => parameterizedRhs->(2)
+          | . => parameterizedRhs->(3)
+          | . => parameterizedRhs->(4)
+          | . => ::luac->function(x)
+                           return "'will not match'"
+                         end
+                 ->(5)
+          | . => ::luac->function(x)
+                           print('Called with x='..x)
+                           return "'will not match'"
+                         end
+                 ->(15)
+          | . => ::lua->grammar_ok->(10,12)
+          | . => ::lua->grammar_ko->(10,12)
+          | . => ::lua->action_raising_error->(10,12)
+          | . => ::lua->unknown_action->(10,12)
+
+    <luascript>
+    function grammar_ok(x,y)
+      return "'Y'"
+    end
+    function grammar_ko(x,y)
+      return "Y"
+    end
+    function action_raising_error(x,y)
+      error('Errors are trapped...')
+    end
+    </luascript>
+    ]])
+
+    recognizerInterface:init('5')
+    marpaESLIFGrammarp:parse(recognizerInterface, valueInterface)
+    logger:noticef('... Grammar parse result: %s', valueInterface:getResult())
+    ```
+
+    Output is:
+
+    ```
+    Called with x=15
+    ERROR     Looking at rules in grammar level 0 (Grammar level 0): symbol 1 (Y) must be resolved as <Y> in grammar at level 0 or 1
+    ERROR     grammar_ko callback returned a string that cannot be converted to a grammar
+    ERROR     <luascript/>:9: Errors are trapped...
+    ERROR     action_raising_error callback failed
+    ERROR     <luascript/>:9: No such function unknown_action
+    ERROR     unknown_action callback failed
+    NOTICE    ... Grammar parse result: 5
+    ```
+
+- Lookahead
+
+    Any RHS surrounded by `(?=...)` or `(?!...)` is interpreted to a positive or negative lookahead, respectively. Internally, it is processed like a lexeme, and will result in a zero-length lexeme in case of match. You can skip it in the rule valuation by surrounding again with `(-...-)`, e.g.:
+
+    ```
+    lhs ::= (-(?= /anything/ )-)
+    ```
+
+    will do a positive lookahead of regular expression `/anything/` and skip it in the rule's valuation.
+
+## Grammar meta settings
+
+- Start rule
+
+    By default, the first symbol of a grammar of level `n` is its start symbol. This can be set once with e.g.:
+
+    ```
+    :start ::= symbolname
+    ```
+
+- Grammar description
+
+    By default, a grammar of level `n` has the description `Grammar level n`. This can be set once with e.g.:
+
+    ```
+    :desc ::= 'A single-quoted string'
+    ```
+
+- Settings sub grammar
+
+    Any setting consist of a reserved keyword, followed by `=>` or the Rightwards Double Arrow UTF-8 character `⇒`, followed by a setting-specific value:
+
+    ```perl
+    action => myAction
+    action ⇒ myAction
+    ```
+
+    When you use the `⇒` UTF-8 character, it is recommended to say that the grammar itself is encoded in UTF-8 (c.f. `marpaESLIFGrammarOption` structure).
+
+- Defaults
+
+    By default, symbol action is `::transfer` and rule action is `::concat`, i.e. the parse tree value of a grammar is a binary concatenation of every input representation (see the _representation_ section below), without the eventual discard. Stack manipulation may require the trigger of a _free_ function, and this has no default. Only expected terminals or lexemes are looked up, this is the Longest Acceptable Token Match (LATM) setting, defaulting to a true value. You should not change that. Defaults can be set once, for example like this:
+
+    ```perl
+    :default ::= action              => defaultRuleAction
+                 latm                => 1
+                 discard-is-fallback => 0
+                 symbol-action       => defaultSymbolAction
+                 regex-action        => defaultRegexAction
+                 default-encoding    => UTF-8
+                 fallback-encoding   => UTF-16
+    ```
+
+    Predefined actions are available for rules and symbols. Please refer the API documentation to know more about value types.
+
+    The `symbol-action` adverb is how a match within a sub-grammar is transfered.
+
+    The `default-encoding` adverb gives default encoding when the recognizer runs in character mode and the end-user gave no encoding.
+
+    The `fallback-encoding` adverb gives fallback encoding when the recognizer runs in character mode and the end-user gave no encoding nor `default-encoding`. Then marpaESLIF will try to _guess_ the encoding, and if this fail, will fallback to this setting. This is the desired setting when you grammar accept input in different encoding, and defaults to a given encoding if the guess fail. Please note that, when guessing an encoding, marpaESLIF takes into account an eventual BOM, retreiving the later from input characters if it exists.
+
+    The `discard-is-fallback` adverb indicates ESLIF that `:discard` should not be tried whenever scan/resume is entered. The default is the safe implementation, i.e. it is always tried, and no grammar terminal will match if `:discard` matches an equal number of bytes or longer. Nevertheless, if you are sure that the grammar's `:discard` cannot conflict with any other grammar terminal, then `:discard`, if successful, will always hit as a fallback alternative. The `discard-is-fallback` enforces this mode, providing a safe performance improvement for grammars that has no conflict between `:discard` and any other grammar terminal.
+
+- Meta actions
+    - `::undef`
+
+        Creates a value of type UNDEF.
+
+        Meaningful for both rule and symbol actions.
+
+    - `::ascii`
+
+        Creates a value of type STRING, with encoding "ASCII", from the right-hand side representation, guaranteed to be a NUL byte terminated sequence of ASCII characters, or UNDEF if representation is empty. Please refer to the _representation_ section below.
+
+        Meaningful for both rule and symbol actions.
+
+    - `::convert[[^]]+]`
+
+        Creates a value of type STRING from the right-hand side representation encoded in the charset specified within the brackets, or UNDEF if representation is empty. _iconv_ convention is used for the charset, i.e. a charset name, followed by eventual options like `//TRANSLIT` and/or `//IGNORE`. Any other option depend on how the [tconv](https://github.com/jddurand/c-tconv) library is built, and may probably not be supported. Note that using the _iconv_ notation does not mean that this is iconv running behind.
+
+        Please refer to the _representation_ section below.
+
+        Meaningful for both rule and symbol actions.
+
+    - `::concat`
+
+        Creates a value of type ARRAY from the binary concatenatation all the RHS's representation, or UNDEF if representation is empty.
+
+        Please refer to the _representation_ section below.
+
+        Meaningful for both rule and symbol actions, and is the **default rule action**.
+
+    - `::copy[x]`
+
+        Copies the RHS number `x` (first RHS is at indice `0`), putting UNDEF if it does not exist. This action is the only one that guarantees that the nature of the RHS value is unchanged.
+
+        Meaningful only for rule actions.
+
+    - `::shift`
+
+        Alias for `::copy[0]`.
+
+    - `::transfer`
+
+        Copies the single RHS number value. This action guarantees that the nature of the RHS value is unchanged.
+
+        Meaningful only for symbol actions, and is the **default symbol action**.
+
+    - `::true`
+
+        Creates a value of type BOOL, containing a true value.
+
+        Meaningful for both rule and symbol actions.
+
+    - `::false`
+
+        Creates a value of type BOOL, containing a false value.
+
+        Meaningful for both rule and symbol actions.
+
+    - `::json`
+
+        Creates a value of type STRING in the UTF-8 encoding, containing a strict JSON string as per original JSON specification, i.e. it is using UTF-16 surrogates to describe characters above 0xFFFF.
+
+        Meaningful for both rule and symbol actions.
+
+    - `::jsonf`
+
+        Creates a value of type STRING in the UTF-8 encoding, containing a JSON string as per original JSON specification plus infinity and nan extensions. Without these extensions, infinity and nan are writen as "null".
+
+        Meaningful for both rule and symbol actions.
+
+    - `::row`
+
+        Creates a value of type ROW, that contains all RHS's values.
+
+        Meaningful only for rule actions.
+
+    - `::table`
+
+        Creates a value of type TABLE, that contains all RHS's values. The number of RHS must be odd.
+
+        Meaningful only for rule actions.
+
+    - `::ast`
+
+        Creates a value of type TABLE, where the single key is a string containing the lhs name, and the single value is a row containing all RHS's values, or UNDEF if rule is nullable.
+
+        Meaningful only for rule actions.
+- Discard
+
+    The `:discard` symbol, despite belonging to a given grammar, is not accessible directly, and can only be set as a meta setting. An event can be associated upon discard completion, there can be multiple `:discard` statements:
+
+    ```perl
+    :discard ::= symbolname1 event => discard_symbolname1$
+    :discard ::= symbolname2 event => discard_symbolname2$
+    ```
+
+    Note than when an event is set, this will be triggered only on the `:discard`'s RHS completion, therefore the RHS of the `:discard` must be an LHS in the same grammar when there is an event setting and when `:discard` refers to a symbol.
+
+    An explicit terminal can also be set directly, e.g.:
+
+    ```perl
+    :discard ::= /[\s]+/                                    event => whitespace$
+    :discard ::= /#[^\n]*/u                                 event => perl_comment$
+    :discard ::= /\/\/[^\n]*|\/\*(?:[^\*]+|\*(?!\/))*\*\//u event => cplusplus_comment$
+    ```
+
+    this form is highly recommended, because ESLIF recognizes the case where `:discard` consist only of explicit terminals, and applies an optimization that prevent the intanciation of an internal parse.
+
+- Events
+
+    - Event names
+
+        They are composed of a restricted set of the ASCII graph characters. Special cases are:
+
+        - `:symbol`
+
+            Transformed to the symbol name for which the event is triggered.
+
+        - `:discard[on]`
+
+            Hook that is disabling `:discard` rule for the current recognizer. Equivalent to a call to `marpaESLIF_recognizer_hook_discardb(1)`. Not propagated. Take care, this is a permanent setting.
+
+        - `:discard[off]`
+
+            Hook that is enabling `:discard` rule for the current recognizer. Equivalent to a call to `marpaESLIF_recognizer_hook_discardb(0)`. Not propagated. Take care, this is a permanent setting.
+
+        - `:discard[switch]`
+
+            Hook that is switching `:discard` rule for the current recognizer. Equivalent to a call to `marpaESLIF_recognizer_hook_discard_switchb()`. Not propagated. Take care, this is a permanent setting.
+
+        Please note that the `:discard[on]`, `:discard[off]` and `:discard[switch]` events will _always_ happen if specified in the grammar with an true initial state and if associated to lexemes or terminals. No callback to the end user will happen. This is because these are internal events, categorized as parsing hooks.
+
+    - Event initializers
+
+        By default, events are on, this is equivalent to appending `=on` after the event name. The `=off` characters are putting event off at startup.
+
+    Lexemes are different than non-lexeme symbols because they are treated in the grammar as _terminals_, others are not.
+
+    - Pause events
+
+        Symbols that are lexemes or terminals (i.e. they are grammar terminals in the common terminology) can have pause events, `before` mean that the scanning recognized them, `after` mean they have been consumed, e.g.:
+
+        ```perl
+        :symbol ::= symbolname pause => before event => ^symbolname
+        :symbol ::= symbolname pause => after  event =>  symbolname$
+        ```
+
+    - Pause actions
+        - `symbol-action`
+
+            The grammar's `symbol-action` can be overwritten by setting such a `:symbol` adverb, e.g.:
+
+            ```perl
+            :symbol ::= symbolname     symbol-action => ::u8"Custom String"
+            :symbol ::= symbolname     symbol-action => Custom_action
+            :symbol ::= 'ThisTerminal' symbol-action => ::lua->lua_custom_action
+            ```
+
+        - `if-action`
+
+            Itapplies _only_ when the symbol is discovered via the automatic scan, or if it is an external symbol: The `if-action` must refer to a callback in user-land's recognizer interface or in embedded lua interpreter, and must return a boolean:
+
+            ```perl
+            :symbol   ::= symbolname if-action => Custom_action1
+            :symbol   ::= symbolname if-action => ::lua->Custom_action2
+            ```
+
+            Please note that the `if-action` will always be called with an argument of type ARRAY (i.e. up to the implementation to convert that to a multibyte string, if any).
+
+        - `regex-action`
+
+            A regex callout is in the form `(?CX)` (where `X` is a number or a double-quoted string). The grammar's `regex-action` is called with a _marpaESLIFCalloutBlockp_ argument that is of type `MARPAESLIF_VALUE_TYPE_TABLE`, i.e. a hash in perl, a table in lua, and an _ESLIFRegexCallout_ instance in java.
+    - Meta symbols events
+
+        For any other symbol that is not a lexeme nor a terminal, completion, predicted or nulled events are supported, targetting a meta symbol name. These are _grammar_ events.
+
+        For example:
+
+        ```
+        event symbolname$      = completed symbolname
+        event symbolname[]=off = nulled    symbolname
+        event ^symbolname=on   = predicted symbolname
+        ```
+
+    - Generic event callback
+
+        The grammar, in `:default` meta rule, can have an _event action_ callback that will end into user-land's recognizer interface or in the embedded lua interpreter, e.g.
+
+        ```perl
+        :default event-action => Custom_action1
+        ```
+
+        or
+
+        ```perl
+        :default event-action => ::lua->Custom_action2
+
+        <luascript>
+
+          -- In the embedded lua, globals are automatically
+          -- created. During parsing phase, they are:
+          -- marpaESLIF
+          -- marpaESLIFGrammar
+          -- marpaESLIFRecognizer
+
+          function Custom_action2(events)
+            -- "events" is a table, exactly like the output
+            -- of marpaESLIFRecognizer.events()
+            -- This function must return a boolean
+            return true
+          end
+
+        </luascript>
+        ```
+
+        The event callback must return a boolean, a false value indicates that the parsing failed.
+
+- Autoranking
+
+    Rules can be autoranked, the higest of a set of alternative having the highest rank, default is off:
+
+    ```
+    autorank is on by default
+    autorank is off by default
+    ```
+
+- Inaccessible statements
+
+    Inaccessible statements can generate warnings, can be ignored, or be error on demand, default is to ignore them:
+
+    ```
+    inaccessible is warn by default
+    inaccessible is ok by default
+    inaccessible is fatal by default
+    ```
+
+## Statements
+
+A statement have a symbol name on the left-hand side (LHS) and zero or more symbol names, or terminals, on the right-hand side (RHS):
+
+```
+LHS ::= RHS1 RHS2 etc...
+```
+
+There are two exceptions:
+
+- The _exception statement_
+
+    Its semantic is a single symbol name following by another single symbol name, with `-` in the middle:
+
+    ```
+    LHS ::= RHS1 - RHS2
+    ```
+
+    Constraints are:
+
+    - Both `RHS1` and `RHS2` must be a lexeme or a terminal
+    - Both `RHS1` and `RHS2` must not contain sub-lexemes
+
+    This mean that the `LHS` of an exception statement can never be nullable. You must explicitely declare so if this is wanted, i.e.:
+
+    ```
+    LHS ::=
+    ```
+
+    To understand how ESLIF proceeds, everytime the left-side of an exception reaches the start completion, the left-side match is checked against the right-side of the exception. The longest match that does not match the exception is the winner.
+
+    Simple case is when a exception applies to a full match, e.g. the PITarget of XML language:
+
+    ```
+    <PITarget>              ::= <NAME> - 'xml':i
+    <NAME>                   ~ /[:A-Z_a-z\x{C0}-\x{D6}\x{D8}-\x{F6}\x{F8}-\x{2FF}\x{370}-\x{37D}\x{37F}-\x{1FFF}\x{200C}-\x{200D}\x{2070}-\x{218F}\x{2C00}-\x{2FEF}\x{3001}-\x{D7FF}\x{F900}-\x{FDCF}\x{FDF0}-\x{FFFD}\x{10000}-\x{EFFFF}][:A-Z_a-z\x{C0}-\x{D6}\x{D8}-\x{F6}\x{F8}-\x{2FF}\x{370}-\x{37D}\x{37F}-\x{1FFF}\x{200C}-\x{200D}\x{2070}-\x{218F}\x{2C00}-\x{2FEF}\x{3001}-\x{D7FF}\x{F900}-\x{FDCF}\x{FDF0}-\x{FFFD}\x{10000}-\x{EFFFF}\-.0-9\x{B7}\x{0300}-\x{036F}\x{203F}-\x{2040}]*/u
+    ```
+
+    Or any number but '23':
+
+    ```
+    number ::= /\\d+/ - '23'
+    ```
+
+    More complex is when the exception is floating, e.g. the CData of XML language:
+
+    ```
+    CData           ::= CHARDATA - CHARDATAEXCEPTION
+    CData           ::= # Using CHARDATA removed CData nullable aspect
+    CHARDATA          ~ [\x{9}\x{A}\x{D}\x{20}-\x{D7FF}\x{E000}-\x{FFFD}\x{10000}-\x{10FFFF}]:u*
+    CHARDATAEXCEPTION ~ CHARDATA ']]>' CHARDATA
+    ```
+
+    In the above example note that CHARDATA is writen as a sequence rule, allowing ESLIF to detect every CHARDATA completion, and match it against CHARDATAEXCEPTION. Although very closed, the following would _not_ work:
+
+    ```
+    CData           ::= CHARDATA - CHARDATAEXCEPTION
+    CData           ::= # Using CHARDATA removed CData nullable aspect
+    CHARDATA          ~ /[\x{9}\x{A}\x{D}\x{20}-\x{D7FF}\x{E000}-\x{FFFD}\x{10000}-\x{10FFFF}]*/u
+    CHARDATAEXCEPTION ~ CHARDATA ']]>' CHARDATA
+    ```
+
+    An exception can be consuming, eventually reading the whole data if it is writen without special care. Trying to minimize the number of characters needed and/or using well-thinked regular expressions often lead to the same result with better performance.
+
+    Internally, the longest `RHS1` is first matched, then ESLIF rollbacks to every previous `RHS1`'s completion as long as `RHS2` matches.
+
+- The _sequence statement_
+
+    This is a single symbol name following by the `*` or the `+` character:
+
+    ```
+    LHS1 ::= RHS1*
+    LHS2 ::= RHS2+
+    ```
+
+Empty rule have no RHS:
+
+```
+EMPTYRULE ::=
+```
+
+Eventual ambiguities in the grammar itself may be solved by adding the `;` character at the end of a rule, or by enclosing zero or more statements within `{` and `}` characters:
+
+```
+EMPTYRULE ::= ;
+{
+  LHS1 ::= RHS1
+  LHS2 ::= RHS2 - RHS3
+}
+```
+
+- Alternatives
+
+    There are two types of alternatives: the standard `|` meaning this is an _or_, or the _loosen_ character `||` meaning that this is an alternative starting a _prioritized_ group of alternatives, for example the calculator grammar is:
+
+    ```perl
+    Expression  ::=  /[\d]+/
+                  | '(' Expression ')'              assoc => group
+                  ||    Expression '**' Expression  assoc => right
+                  ||    Expression  '*' Expression
+                  |     Expression  '/' Expression
+                  ||    Expression  '+' Expression
+                  |     Expression  '-' Expression
+    ```
+
+    which is strictly equivalent, in traditional BNF syntax to:
+
+    ```
+    Expression  ::= Expression0
+    Expression0 ::= Expression1
+    Expression1 ::= Expression2
+    Expression2 ::= Expression3
+
+    Expression3 ::= /[\d]+/
+                  | '(' Expression0 ')'
+    Expression2 ::=  Expression3 '**' Expression2
+    Expression1 ::=  Expression1  '*' Expression2
+                  |  Expression1  '/' Expression2
+    Expression0 ::=  Expression0  '+' Expression1
+    Expression0 ::=  Expression0  '-' Expression1
+    ```
+
+    As you can see statements has been grouped at every occurence of `||` operator. Therefore the _loosen_ operator `||` is a _convenience_ operator, it is always possible to write an equivalent grammar without it, though this can become quite tedious. The `assoc` adverb has a meaning only in the presence of prioritized alternatives, else it has no effect.
+
+    The following is copied almost verbatim from the [Marpa::R2 section on precedence](https://metacpan.org/pod/distribution/Marpa-R2/pod/Scanless/DSL.pod#Precedence):
+
+    In prioritized statements, every alternative has an _arity_. The arity is the number of times an operand appears on the RHS.  A RHS symbol is an _operand_ if and only if it is the same as the LHS symbol.  Anything else is considered as an _operator_. When the arity is `0`, precedence and associativy are meaningless and ignored. When the arity is `1`, precedence has effect, but not left nor right associativity.
+
+    If arity is 2 or more and the alternative is left associative, the leftmost operand associates and operands after the first will have the next-tighest priority level. If arity is 2 or more and the alternative is right associative, the last operand associates and operands before the last will have the next-tighest priority level. In group associativity, all operands associate at the lowest priority.
+
+- Adverbs
+
+    Any rule can be followed by zero or more of these adverbs, if an adverb appears more than once, the latest is the winner:
+
+    - Action
+
+        During valuation, a specific action can be associated to a rule:
+
+        ```perl
+        action => my_action
+        ```
+
+        It is possible to set a hardcoded UTF-8 string as result, using a string literal:
+
+        ```perl
+        action => ::u8"string literal, supporting \x{0D}, \u{0972} and \U{0001F600}"
+        ```
+
+        where `\x{hh}` will translate to a byte having the hexadecimal value `hh`, and `\u{uuuu}` and `\U{uuuuuuuu}` will translate to the UTF-8 version of `uuuu` unicode code point, `uuuuuuuu` is for the very large, less common, code points.
+
+        Actions can be be writen in plain lua, conforming to the lua version embedded by ESLIF, e:g:
+
+        ```perl
+        action => action => ::lua->function(x,y) return x^y end
+        action => action => ::luac->function(x,y) return x^y end
+        ```
+
+        The lua semantics apply immediately after the first opening pathenthesis, up to the end of the function body:
+
+        ```perl
+        action => action => ::lua->function(x,y)
+                                     --[=[ Lua semantics here ]=]
+                                     return x^y
+                                   end
+        ```
+
+        The workflow for lua actions is:
+
+        1. Content of grammar's luascript is always loaded first
+        2. Lua actions are loaded dynamcally and can have two forms:
+
+            - `::lua->function`
+
+                The actions starting with `::lua->function` are always loaded as string, i.e. compiled and then executed
+
+            - `::luac->function`
+
+                The actions starting with `::luac->function` are compiled once if needed, and the binary chunk is re-injected as is for execution.
+
+            Internally ESLIF creates a function that returns the user function, e.g. if in your grammar you have:
+
+            ```perl
+            action => action => ::lua->function(x,y) return true end
+            ```
+
+            then ESLIF will inject this:
+
+            ```
+            return function(x,y) return true end
+            ```
+
+            The top of the lua stack is then executed, leaving to user's wanted anonymous function.
+
+    - Left association
+
+        In a prioritized statement, associate with the left-most operand:
+
+        ```perl
+        assoc => left
+        ```
+
+    - Right association
+
+        In a prioritized statement, associate with the right-most operand:
+
+        ```perl
+        assoc => right
+        ```
+
+    - Group association
+
+        All operands associate at the lowest priority:
+
+        ```perl
+        assoc => group
+        ```
+
+    - Separator
+
+        Sequence rules can have a separator, that can be a symbol name, a string, a character class or a regular expression.
+
+        ```perl
+        separator => comma
+        separator => ','
+        separator => [,]
+        separator => /,/
+        ```
+
+        Modifiers are allowed after string, character class or regular expressions.
+
+    - Proper specification
+
+        Sequence rules can be _proper_, i.e. without trailing separator:
+
+        ```perl
+        proper => 1
+        proper => true
+        proper => 0
+        proper => false
+        ```
+
+    - Hiding separator specification
+
+        Default for sequence rules actions is to always include the separator in the stack. This may be changed in the grammar using:
+
+        ```perl
+        hide-separator => 1
+        hide-separator => true
+        hide-separator => 0
+        hide-separator => false
+        ```
+
+    - Rank specification
+
+        During valuation, rules can have a rank to get prioritized. Rank is a signed integer and default to `0`:
+
+        ```perl
+        rank => -2
+        ```
+
+        Any other value but `0` is not allowed if autoranking is set to a true value.
+
+    - Null-ranking specification
+
+        Nulling symbols can rank high low, the default is low.
+
+        ```perl
+        null-ranking => 'low'
+        null-ranking => 'high'
+        ```
+
+    - Priority specification
+
+        Lexemes and terminals can be prioritized, using a signed integer:
+
+        ```perl
+        priority => 15
+        ```
+
+    - Verbose specification
+
+        Lexemes can be verbose when they fail to parse:
+
+        ```perl
+        verbose => 1
+        verbose => true
+        verbose => 0
+        verbose => false
+        ```
+
+        If `verbose` is a true value, ESLIF will printout the sub-recognizer state and stream if the lexeme valuation fails.
+
+    - Pause specification
+
+        Scanner can be paused before a lexeme or a terminal is recognized, or just after it has been completed:
+
+        ```perl
+        pause => before
+        pause => after
+        ```
+
+    - Event specification
+
+        Events can be specified, with an eventual initializer, given that default initialization is `=on`:
+
+        ```perl
+        event => eventName
+        event => eventName=on
+        event => eventName=off
+        ```
+
+    - Naming
+
+        A name can be associated to a rule, in the form:
+
+        ```perl
+        LHS ::= etc... RHS etc... name => something
+        LHS ::= etc... RHS etc... name => 'quoted string literal'  # No modifier is allowed after the string
+        LHS ::= etc... RHS etc... name => "quoted string literal"  # No modifier is allowed after the string
+        ```
+
+        and to terminals in the form:
+
+        ```perl
+        :symbol ::= /X/ name => XRegexp
+        ```
+
+        A terminal that has the name adverb can be accessed later in the grammar at the same level using the name preceded by the dollar sign `$`, e.g;:
+
+        ```
+        LHS ::= etc... $XRegexp ...
+        ```
+
+        Note that two terminals cannot share the same name adverb.
+
+# BNF
+
+marpaESLIF BNF can be expressed in itself:
+
+```perl
+#######################################################
+
+:desc ::= 'G1'
+:start ::= <statements>
+
+:discard ::= /[\s]+/u
+:discard ::= /#[^\n]*/u
+:discard ::= /\/\/[^\n]*|\/\*(?:[^\*]+|\*(?!\/))*\*\//u
+
+:symbol  ::= /::luac?\->function\(/ pause => after event => :discard[switch]
+:symbol  ::= /\-\-?>\(/' pause => after event => :discard[switch]
+:symbol   ::= <lua funcbody after lparen>@+2 pause => after event => :discard[switch] verbose => 1
+:symbol   ::= <lua args after lparen>@+2 pause => after event => :discard[switch] verbose => 1
+
+event :discard[on]  = nulled <discard on>
+event :discard[off] = nulled <discard off>
+
+<statements>                   ::= <statement>*
+<statement>                    ::= <start rule>
+                                 | <desc rule>
+                                 | <empty rule>
+                                 | <null statement>
+                                 | <statement group>
+                                 | <priority rule>
+                                 | <quantified rule>
+                                 | <discard rule>
+                                 | <default rule>
+                                 | <lexeme rule>
+                                 | <completion event declaration>
+                                 | <nulled event declaration>
+                                 | <prediction event declaration>
+                                 | <inaccessible statement>
+                                 | <exception statement>
+                                 | <autorank statement>
+                                 | <lua script statement>
+                                 | <terminal rule>
+                                 | <symbol rule>
+<start rule>                   ::= ':start' <op declare> <start symbol>
+<start symbol>                 ::= <symbol>
+                                 | <start symbol> <lua functioncall>
+<desc rule>                    ::= ':desc' <op declare> <quoted string literal>
+<empty rule>                   ::= <lhs> <op declare> <adverb list>
+<null statement>               ::= ';'
+<statement group>              ::= '{' <statements> '}'
+<priority rule>                ::= <lhs> <op declare> <priorities>
+<quantified rule>              ::= <lhs> <op declare> <rhs primary> <quantifier> <adverb list>
+<discard rule>                 ::= ':discard' <op declare> <rhs primary> <adverb list>
+<default rule>                 ::= ':default' <op declare> <adverb list>
+<lexeme rule>                  ::= ':lexeme' <op declare> <rhs primary no parameter> <adverb list> /* Deprecated, use :symbol */
+<terminal rule>                ::= ':terminal' <op declare> <terminal> <adverb list> /* Deprecated, use :symbol */
+<symbol rule>                  ::= ':symbol' <op declare> <rhs primary no parameter> <adverb list>
+<completion event declaration> ::= 'event' <event initialization> '=' 'completed' <lhs>
+                                 | 'event' <event initialization> <op declare> 'completed' <lhs>
+<nulled event declaration> ::= 'event' <event initialization> '=' 'nulled' <lhs>
+                                 | 'event' <event initialization> <op declare> 'nulled' <lhs>
+<prediction event declaration> ::= 'event' <event initialization> '=' 'predicted' <lhs>
+                                 | 'event' <event initialization> <op declare> 'predicted' <lhs>
+<inaccessible statement>       ::= 'inaccessible' 'is' <inaccessible treatment> 'by' 'default'
+<inaccessible treatment>       ::= 'warn'
+                                 | 'ok'
+                                 | 'fatal'
+<exception statement>          ::= <lhs> <op declare> <rhs primary> '-' <rhs primary> <adverb list>
+<autorank statement>           ::= 'autorank' 'is' <on or off> 'by' 'default'
+<op declare>                   ::= <op declare top grammar>
+                                 | <op declare lex grammar>
+                                 | <op declare any grammar>
+<priorities>                   ::= <alternatives>+ separator => <op loosen> proper => 1 hide-separator => 1
+<alternatives>                 ::= <alternative>+ separator => <op equal priority> proper => 1 hide-separator => 1
+<alternative>                  ::= <rhs> <adverb list>
+<adverb list>                  ::= <adverb list items>
+<adverb list items>            ::= <adverb item>*
+<adverb item>                  ::= <action>
+                                 | <left association>
+                                 | <right association>
+                                 | <group association>
+                                 | <separator specification>
+                                 | <proper specification>
+                                 | <rank specification>
+                                 | <null ranking specification>
+                                 | <priority specification>
+                                 | <pause specification>
+                                 | <latm specification>
+                                 | <discard is fallback specification>
+                                 | <naming>
+                                 | <null adverb>
+                                 | <symbol action>
+                                 | <event specification>
+                                 | <hide separator specification>
+                                 | <if action>
+                                 | <event action>
+                                 | <default encoding>
+                                 | <fallback encoding>
+                                 | <regex action>
+                                 | <verbose specification>
+<action>                       ::= 'action' /=>|\x{21D2}/u <action name>
+                                 | 'action' /=>|\x{21D2}/u <string literal>
+                                 | 'action' /=>|\x{21D2}/u <quoted string literal>
+<left association>             ::= 'assoc' /=>|\x{21D2}/u 'left'
+<right association>            ::= 'assoc' /=>|\x{21D2}/u 'right'
+<group association>            ::= 'assoc' /=>|\x{21D2}/u 'group'
+<separator specification>      ::= 'separator' /=>|\x{21D2}/u <rhs primary>
+<proper specification>         ::= 'proper' /=>|\x{21D2}/u <false>
+                                 | 'proper' /=>|\x{21D2}/u <true>
+<hide separator specification> ::= 'hide-separator' /=>|\x{21D2}/u <false>
+                                 | 'hide-separator' /=>|\x{21D2}/u <true>
+<rank specification>           ::= 'rank' /=>|\x{21D2}/u <signed integer>
+<null ranking specification>   ::= 'null-ranking' /=>|\x{21D2}/u <null ranking constant>
+                                 | 'null' 'rank' /=>|\x{21D2}/u <null ranking constant>
+<null ranking constant>        ::= 'low'
+                                 | 'high'
+<priority specification>       ::= 'priority' /=>|\x{21D2}/u <signed integer>
+<pause specification>          ::= 'pause' /=>|\x{21D2}/u 'before'
+                                 | 'pause' /=>|\x{21D2}/u 'after'
+<event specification>          ::= 'event' /=>|\x{21D2}/u <event initialization>
+<event initialization>         ::= <event name> <event initializer>
+<verbose specification>        ::= 'verbose' /=>|\x{21D2}/u <false>
+                                 | 'verbose' /=>|\x{21D2}/u <true>
+<event initializer>            ::= '=' <on or off>
+<on or off>                    ::= 'on'
+                                 | 'off'
+<event initializer> ::=
+<latm specification>           ::= 'latm' /=>|\x{21D2}/u <false>
+                                 | 'latm' /=>|\x{21D2}/u <true>
+<discard is fallback specification> ::= 'discard-is-fallback' /=>|\x{21D2}/u <false>
+                                      | 'discard-is-fallback' /=>|\x{21D2}/u <true>
+<naming>                       ::= 'name' /=>|\x{21D2}/u <alternative name>
+<null adverb>                  ::= ','
+<symbol action>                ::= 'symbol-action' /=>|\x{21D2}/u <symbol action name>
+                                 | 'symbol-action' /=>|\x{21D2}/u <string literal>
+                                 | 'symbol-action' /=>|\x{21D2}/u <quoted string literal>
+<if action>                    ::= 'if-action' /=>|\x{21D2}/u <if action name>
+<regex action>                 ::= 'regex-action' /=>|\x{21D2}/u <regex action name>
+<generator action>             ::= '.' /=>|\x{21D2}/u <generator action name>
+<alternative name>             ::= <standard name>
+                                 | <quoted string literal>
+<event name>                   ::= <restricted ascii graph name>
+                                 | ':symbol'
+                                 | ':discard[on]'
+                                 | ':discard[off]'
+                                 | ':discard[switch]'
+<lhs>                          ::= <symbol name>
+                                 | <lhs> <lua functiondecl>
+<rhs>                          ::= <rhs alternative>+
+<rhs alternative>              ::= <rhs primary>
+                                 | '(-' <priorities> '-)'
+                                 | '(' <priorities> ')'
+                                 | '(-' <rhs primary> '-' <rhs primary> <adverb list> '-)'
+                                 | '(' <rhs primary> '-' <rhs primary> <adverb list> ')'
+                                 | '(-' <rhs primary> <quantifier> <adverb list> '-)'
+                                 | '(' <rhs primary> <quantifier> <adverb list> ')'
+                                 | /\(\?[=!]/ <priorities> ')'
+                                 | /\(\?[=!]/ <rhs primary> '-' <rhs primary> <adverb list> ')'
+                                 | /\(\?[=!]/ <rhs primary> <quantifier> <adverb list> ')'
+<rhs primary no parameter>     ::= <single symbol>
+                                 | <symbol> '@' <grammar reference>
+                                 | '$' <alternative name>
+<rhs primary>                  ::= <rhs primary no parameter>
+                                 | <rhs primary no parameter> <lua functioncall>
+                                 | <generator action> <lua functioncall>
+<single symbol>                ::= <symbol>
+                                 | <terminal>
+<terminal>                     ::= <character class>
+                                 | <regular expression>
+                                 | <quoted string>
+                                 | ':eof'
+                                 | ':eol'
+                                 | ':sol'
+                                 | ':empty'
+                                 | <regular expression>
+                                 | <regular expression> '->' <regular substitution>
+<symbol>                       ::= <symbol name>
+<symbol name>                  ::= <bare name>
+                                 | <bracketed name>
+<action name>                  ::= <restricted ascii graph name>
+                                 | '::shift'
+                                 | '::undef'
+                                 | '::ascii'
+                                 | /::convert\[[^\]]+\]/
+                                 | '::concat'
+                                 | /::copy\[\d+\]/
+                                 | <lua action name>
+                                 | '::true'
+                                 | '::false'
+                                 | '::json'
+                                 | '::jsonf'
+                                 | '::row'
+                                 | '::table'
+                                 | '::ast'
+                                 | <lua function>
+<symbol action name>           ::= <restricted ascii graph name>
+                                 | '::transfer'
+                                 | '::undef'
+                                 | '::ascii'
+                                 | /::convert\[[^\]]+\]/
+                                 | '::concat'
+                                 | <lua action name>
+                                 | '::true'
+                                 | '::false'
+                                 | '::json'
+                                 | '::jsonf'
+                                 | <lua function>
+<if action name>               ::= <restricted ascii graph name>
+                                 | <lua action name>
+                                 | <lua function>
+<generator action name>        ::= <restricted ascii graph name>
+                                 | <lua action name>
+                                 | <lua function>
+<regex action name>            ::= <restricted ascii graph name>
+                                 | <lua action name>
+                                 | <lua function>
+<quantifier>                   ::= '*'
+                                 | '+'
+<signed integer>               ::= /[+-]?\d+/
+<unsigned integer>             ::= /\d+/
+<grammar reference>            ::= <quoted string>
+                                 | <signed integer>
+                                 | '=' <unsigned integer>
+<string literal>               ::= <string literal unit>+ proper => 1
+<string literal unit>          ::= '::u8"' <discard off> <string literal inside any> '"' <discard on>
+<discard on>                   ::=
+<discard off>                  ::=
+<string literal inside any>    ::= <string literal inside>* proper => 1
+<string literal inside>        ::= /[^"\\\n]/
+                                 | '\\' /["'?\\abfnrtve]/
+                                 | '\\' /x\{[a-fA-F0-9]{2}\}/
+                                 | '\\' /u\{[a-fA-F0-9]{4}\}/
+                                 | '\\' /U\{[a-fA-F0-9]{8}\}/
+<lua script statement>         ::= '<luascript>' <discard off> <lua script source> '</luascript>' <discard on>
+<lua script source>            ::= /[\s\S]/*
+<event action>                 ::= 'event-action' /=>|\x{21D2}/u <event action name>
+<event action name>            ::= <restricted ascii graph name>
+                                 | <lua action name>
+                                 | <lua function>
+<default encoding>             ::= 'default-encoding' /=>|\x{21D2}/u <default encoding name>
+<default encoding name>        ::= <graph ascii name>
+<fallback encoding>            ::= 'fallback-encoding' /=>|\x{21D2}/u <fallback encoding name>
+<fallback encoding name>       ::= <graph ascii name>
+<lua function>                 ::= /::luac?\->function\(/ <lua funcbody after lparen>@+2
+<lua functioncall>             ::= /\-\-?>\(/' <lua args after lparen>@+2
+<lua functiondecl>             ::= /<\-\-?\(/ <lua optional parlist after lparen>@+2
+
+#######################################################
+
+:desc ~ 'L0'
+<op declare any grammar>       ~ /:\[[\d]+\]:=/
+<op declare top grammar>       ~ '::='
+<op declare lex grammar>       ~ '~'
+<op loosen>                    ~ '||'
+<op equal priority>            ~ '|'
+<true>                         ~ '1'
+<false>                        ~ '0'
+<word character>               ~ /[\w]/
+<one or more word characters>  ~ <word character>+ proper => 1
+<zero or more word characters> ~ <word character>* proper => 1
+<restricted ascii graph name>  ~ /[!#$%&*+.\/;?\[\\\]^_`~A-Za-z0-9]+/
+<lua action name>              ~ /::lua->[a-zA-Z_][a-zA-Z0-9_]*/
+<bare name>                    ~ <word character>+ proper => 1
+<standard name>                ~ /[a-zA-Z]/ <zero or more word characters>
+<bracketed name>               ~ '<' <bracketed name string> '>'
+<bracketed name string>        ~ /[\\s\\w\\[\\]]+/
+<quoted string>                ~ /'(?:[^\\']*(?:\\.[^\\']*)*)'|"(?:[^\\"]*(?:\\.[^\\"]*)*)"|\x{201C}(?:[^\\\x{201D}]*(?:\\.[^\\\x{201D}]*)*)\x{201D}/su
+                               | /'(?:[^\\']*(?:\\.[^\\']*)*)'|"(?:[^\\"]*(?:\\.[^\\"]*)*)"|\x{201C}(?:[^\\\x{201D}]*(?:\\.[^\\\x{201D}]*)*)\x{201D}/su ':' /ic?/
+<quoted string literal>        ~ /'(?:[^\\']*(?:\\.[^\\']*)*)'|"(?:[^\\"]*(?:\\.[^\\"]*)*)"|\x{201C}(?:[^\\\x{201D}]*(?:\\.[^\\\x{201D}]*)*)\x{201D}/su
+<character class>              ~ /((?:\[(?:(?>[^\[\]]+)|(?-1))*\]))/
+                               | /((?:\[(?:(?>[^\[\]]+)|(?-1))*\]))/ ':' /[eijmnsxDJUuaNbcA]+/
+<regular expression>           ~ /\/(?![*\/])(?:[^\\\/]*(?:\\.[^\\\/]*)*)\//su
+                               | /\/(?![*\/])(?:[^\\\/]*(?:\\.[^\\\/]*)*)\//su /[eijmnsxDJUuaNbcA]+/
+<regular substitution>         ~ /'(?:[^\\']*(?:\\.[^\\']*)*)'|"(?:[^\\"]*(?:\\.[^\\"]*)*)"|\x{201C}(?:[^\\\x{201D}]*(?:\\.[^\\\x{201D}]*)*)\x{201D}/su
+                               | /'(?:[^\\']*(?:\\.[^\\']*)*)'|"(?:[^\\"]*(?:\\.[^\\"]*)*)"|\x{201C}(?:[^\\\x{201D}]*(?:\\.[^\\\x{201D}]*)*)\x{201D}/su ':' /[xgl!f]+/
+<graph ascii name>             ~ /[[:graph:]]+/
+
+#######################################################
+
+:desc                                  :[2]:= 'Lua 5.3'
+:discard                               :[2]:= /\s+/
+:discard                               :[2]:= /--(?:\[(?!=*\[)|(?!\[))[^\n]*/
+:discard                               :[2]:= /--\[(=*)\[.*?\]\1\]/s
+#
+# -----------------------------------------------------------------------
+# Lua 5.3.4 grammar. Based on perl package MarpaX::Languages::Lua::Parser
+# -----------------------------------------------------------------------
+#
+
+#
+# Special entries used to hook the lua grammar in ESLIF
+#
+<lua funcbody after lparen>            :[2]:= <lua optional parlist> ')' <lua block> <lua keyword end>
+<lua args after lparen>                :[2]:= <lua optional explist> ')'
+<lua optional parlist after lparen>    :[2]:= <lua optional parlist> ')'
+
+<lua chunk>                            :[2]:=
+<lua chunk>                            :[2]:= <lua stat list>
+                                            | <lua stat list> <lua laststat>
+                                            | <lua stat list> <lua laststat> ';'
+                                            | <lua laststat> ';'
+                                            | <lua laststat>
+<lua stat list>                        :[2]:= <lua stat>
+                                            | <lua stat> ';'
+                                            | <lua stat list> <lua stat> rank => -1
+                                            | <lua stat list> <lua stat> ';'
+<lua block>                            :[2]:= <lua chunk>
+<lua stat>                             :[2]:= <lua varlist> '=' <lua explist>
+                                            | <lua functioncall> rank => -1
+                                            | <lua label>
+                                            | <lua keyword goto> <lua Name>
+                                            | <lua keyword do> <lua block> <lua keyword end>
+                                            | <lua keyword while> <lua exp> <lua keyword do> <lua block> <lua keyword end>
+                                            | <lua keyword repeat> <lua block> <lua keyword until> <lua exp>
+                                            | <lua keyword if> <lua exp> <lua keyword then> <lua block> <lua elseif sequence> <lua optional else block> <lua keyword end>
+                                            | <lua keyword for> <lua Name> '=' <lua exp> ',' <lua exp> ',' <lua exp> <lua keyword do> <lua block> <lua keyword end>
+                                            | <lua keyword for> <lua Name> '=' <lua exp> ',' <lua exp> <lua keyword do> <lua block> <lua keyword end>
+                                            | <lua keyword for> <lua namelist> <lua keyword in> <lua explist> <lua keyword do> <lua block> <lua keyword end>
+                                            | <lua keyword function> <lua funcname> <lua funcbody>
+                                            | <lua keyword local> <lua keyword function> <lua Name> <lua funcbody>
+                                            | <lua keyword local> <lua namelist> <lua optional namelist initialization>
+                                            | ';'
+<lua elseif sequence>                  :[2]:=
+<lua elseif sequence>                  :[2]:= <lua elseif sequence> <lua elseif block>
+<lua elseif block>                     :[2]:= <lua keyword elseif> <lua exp> <lua keyword then> <lua block>
+<lua optional else block>              :[2]:=
+<lua optional else block>              :[2]:= <lua keyword else> <lua block>
+<lua optional namelist initialization> :[2]:=
+<lua optional namelist initialization> :[2]:= '=' <lua explist>
+<lua laststat>                         :[2]:= <lua keyword return> <lua optional explist>
+                                            | <lua keyword break>
+<lua optional explist>                 :[2]:=
+<lua optional explist>                 :[2]:= <lua explist>
+<lua funcname>                         :[2]:= <lua dotted name> <lua optional colon name element>
+<lua dotted name>                      :[2]:= <lua Name>+ separator => '.' proper => 1
+<lua optional colon name element>      :[2]:=
+<lua optional colon name element>      :[2]:= ':' <lua Name>
+<lua varlist>                          :[2]:= <lua var>+ separator => ',' proper => 1
+<lua var>                              :[2]:= <lua Name>
+                                            | <lua prefixexp> '[' <lua exp> ']'
+                                            | <lua prefixexp> '.' <lua Name>
+<lua namelist>                         :[2]:= <lua Name>+ separator => ',' proper => 1
+<lua explist>                          :[2]:= <lua exp>+ separator => ',' proper => 1
+<lua exp>                              :[2]:= <lua var>
+                                            | '(' <lua exp> ')' assoc => group
+                                           || <lua exp> <lua args> assoc => right
+                                           || <lua exp> ':' <lua Name> <lua args> assoc => right
+                                            | <lua keyword nil>
+                                            | <lua keyword false>
+                                            | <lua keyword true>
+                                            | <lua Number>
+                                            | <lua String>
+                                            | '...'
+                                            | <lua tableconstructor>
+                                            | <lua function>
+                                           || <lua exp> '^' <exponent> assoc => right
+                                           || '-' <lua exp>
+                                            | <lua keyword not> <lua exp>
+                                            | '#' <lua exp>
+                                            | '~' <lua exp>
+                                           || <lua exp> '*' <lua exp>
+                                            | <lua exp> '/' <lua exp>
+                                            | <lua exp> '//' <lua exp>
+                                            | <lua exp> '%' <lua exp>
+                                           || <lua exp> '+' <lua exp>
+                                            | <lua exp> '-' <lua exp>
+                                           || <lua exp> '..' <lua exp> assoc => right
+                                           || <lua exp> '<<' <lua exp>
+                                            | <lua exp> '>>' <lua exp>
+                                           || <lua exp> '&' <lua exp>
+                                           || <lua exp> '~' <lua exp>
+                                           || <lua exp> '|' <lua exp>
+                                           || <lua exp> '<' <lua exp>
+                                            | <lua exp> '<=' <lua exp>
+                                            | <lua exp> '>' <lua exp>
+                                            | <lua exp> '>=' <lua exp>
+                                            | <lua exp> '==' <lua exp> rank => 1
+                                            | <lua exp> '~=' <lua exp>
+                                           || <lua exp> <lua keyword and> <lua exp> rank => 1
+                                           || <lua exp> <lua keyword or> <lua exp>
+<exponent>                             :[2]:= <lua var>
+                                            | '(' <lua exp> ')'
+                                           || <exponent> <lua args>
+                                           || <exponent> ':' <lua Name> <lua args>
+                                            | <lua keyword nil>
+                                            | <lua keyword false>
+                                            | <lua keyword true>
+                                            | <lua Number>
+                                            | <lua String>
+                                            | '...'
+                                            | <lua tableconstructor>
+                                            | <lua function>
+                                           || <lua keyword not> <exponent>
+                                            | '#' <exponent>
+                                            | '-' <exponent>
+<lua prefixexp>                        :[2]:= <lua var>
+                                            | <lua functioncall>
+                                            | '(' <lua exp> ')'
+<lua functioncall>                     :[2]:= <lua prefixexp> <lua args>
+                                            | <lua prefixexp> ':' <lua Name> <lua args>
+<lua args>                             :[2]:= '(' <lua optional explist> ')'
+                                            | <lua tableconstructor>
+                                            | <lua String>
+<lua function>                         :[2]:= <lua keyword function> <lua funcbody>
+<lua funcbody>                         :[2]:= '(' <lua optional parlist> ')' <lua block> <lua keyword end>
+<lua optional parlist>                 :[2]:=
+<lua optional parlist>                 :[2]:= <lua namelist>
+                                            | <lua namelist> ',' '...'
+                                            | '...'
+
+# A lone comma is not allowed in an empty fieldlist,
+# apparently. This is why I use a dedicated rule
+# for an empty table and a '+' sequence,
+# instead of a '*' sequence.
+
+<lua tableconstructor>                 :[2]:= '{' '}'
+                                            | '{' <lua fieldlist> '}'
+<lua fieldlist>                        :[2]:= <lua field>+ separator => [,;]
+<lua field>                            :[2]:= '[' <lua exp> ']' '=' <lua exp>
+                                            | <lua Name> '=' <lua exp>
+                                            | <lua exp>
+<lua label>                            :[2]:= '::' <lua Name> '::'
+<lua Name>                             :[2]:= <LUA NAME> - <LUA RESERVED KEYWORDS>
+<lua String>                           :[2]:= /'(?:[^\\']*(?:\\.[^\\']*)*)'|"(?:[^\\"]*(?:\\.[^\\"]*)*)"|\[(=*)\[.*?\]\1\]/su
+
+# A lua number can start with '.' if the later is followed by at least one (hex) digit
+<lua Number>                           :[2]:= /(?:\.[0-9]+|[0-9]+(?:\.[0-9]*)?)(?:[eE][+-]?[0-9]+)?/
+                                            | /0[xX](?:\.[a-fA-F0-9]+|[a-fA-F0-9]+(?:\.[a-fA-F0-9]*)?)(?:\.[a-fA-F0-9]*)?(?:[pP][+-]?[0-9]+)?/
+
+
+#######################################################
+
+<lua keyword and>                      :[3]:= 'and'
+<lua keyword break>                    :[3]:= 'break'
+<lua keyword do>                       :[3]:= 'do'
+<lua keyword else>                     :[3]:= 'else'
+<lua keyword elseif>                   :[3]:= 'elseif'
+<lua keyword end>                      :[3]:= 'end'
+<lua keyword false>                    :[3]:= 'false'
+<lua keyword for>                      :[3]:= 'for'
+<lua keyword function>                 :[3]:= 'function'
+<lua keyword if>                       :[3]:= 'if'
+<lua keyword in>                       :[3]:= 'in'
+<lua keyword local>                    :[3]:= 'local'
+<lua keyword nil>                      :[3]:= 'nil'
+<lua keyword not>                      :[3]:= 'not'
+<lua keyword or>                       :[3]:= 'or'
+<lua keyword repeat>                   :[3]:= 'repeat'
+<lua keyword return>                   :[3]:= 'return'
+<lua keyword then>                     :[3]:= 'then'
+<lua keyword true>                     :[3]:= 'true'
+<lua keyword until>                    :[3]:= 'until'
+<lua keyword while>                    :[3]:= 'while'
+<lua keyword goto>                     :[3]:= 'goto'
+
+<LUA NAME>                             :[3]:= /[a-zA-Z_][a-zA-Z_0-9]*/
+<LUA RESERVED KEYWORDS>                :[3]:= 'and'
+                                            | 'break'
+                                            | 'do'
+                                            | 'else'
+                                            | 'elseif'
+                                            | 'end'
+                                            | 'false'
+                                            | 'for'
+                                            | 'function'
+                                            | 'if'
+                                            | 'in'
+                                            | 'local'
+                                            | 'nil'
+                                            | 'not'
+                                            | 'or'
+                                            | 'repeat'
+                                            | 'return'
+                                            | 'then'
+                                            | 'true'
+                                            | 'until'
+                                            | 'while'
+                                            | 'goto'
+```
+
+# NOTES
+
+- Embedded lua language globals
+
+    Every call to embedded lua provide the following globals:
+
+    - marpaESLIF
+
+        Lua object representing current marpaESLIF instance.
+
+    - marpaESLIFGrammar
+
+        Lua object representing current marpaESLIFGrammar instance.
+
+    - marpaESLIFRecognizer
+
+        Lua object representing current marpaESLIFRecognizer instance.
+
+    - marpaESLIFValue
+
+        Lua object representing current marpaESLIFValue instance, when doing valuation.
+
+- Grammar events
+
+    The predicted, completed and nulled grammar events have a cost, and when possible lexeme or terminal events should be prefered.
+
+- Hiden RHSs
+
+    Using `hide-separator` and `(-...-)`, although convenient, are likely to be less performant than by taking that into account in your own actions.
+
+# SEE ALSO
+
+[marpaESLIF](https://github.com/jddurand/c-marpaESLIF), [tconv](https://github.com/jddurand/c-tconv), [ICU](http://site.icu-project.org/)
