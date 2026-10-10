@@ -3,8 +3,8 @@ clone_depth: 100     # For other git providers
 
 # -------------------------------------------------------------------------------------------------------------------
 #
-#  Image       "Visual Studio 2013"  "Visual Studio 2015"      "Visual Studio 2017" "Visual Studio 2019" "Visual Studio 2022"
-#  Visual C++  2008/2010/2012/2013   2008/2010/2012/2013/2015  2015/2017            2019                 2022
+#  Image       "Visual Studio 2013"  "Visual Studio 2015"      "Visual Studio 2017" "Visual Studio 2019" "Visual Studio 2022" "Visual Studio 2026"
+#  Visual C++  2008/2010/2012/2013   2008/2010/2012/2013/2015  2015/2017            2019                 2022                 2026
 #
 # -------------------------------------------------------------------------------------------------------------------
 #
@@ -14,6 +14,12 @@ environment:
   upload_token:
     secure:
   matrix:
+   - _CC: VS2026
+     _ARCH: x86
+     APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2026
+   - _CC: VS2026
+     _ARCH: x64
+     APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2026
    - _CC: VS2022
      _ARCH: x86
      APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2022
@@ -85,6 +91,8 @@ matrix:
   fast_finish: true # Immediately finish build once one of the jobs fails
 
 init:
+  - IF "%_CC%" == "VS2026" IF "%_ARCH%" == "x86" call "C:\Program Files\Microsoft Visual Studio\2026\Community\VC\Auxiliary\Build\vcvars32.bat"
+  - IF "%_CC%" == "VS2026" IF "%_ARCH%" == "x64" call "C:\Program Files\Microsoft Visual Studio\2026\Community\VC\Auxiliary\Build\vcvars64.bat"
   - IF "%_CC%" == "VS2022" IF "%_ARCH%" == "x86" call "C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Auxiliary\Build\vcvars32.bat"
   - IF "%_CC%" == "VS2022" IF "%_ARCH%" == "x64" call "C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Auxiliary\Build\vcvars64.bat"
   - IF "%_CC%" == "VS2019" IF "%_ARCH%" == "x86" call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvars32.bat"
