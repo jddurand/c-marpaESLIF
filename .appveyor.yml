@@ -77,9 +77,7 @@ install:
   - cmd: set PATH=C:\Program Files\CMake\bin;%PATH%
   - cmake --version
 
-# build:
-#   verbosity: detailed
-#   parallel: true
+build: off
 
 clone_folder: C:\projects\%APPVEYOR_PROJECT_NAME%
 
