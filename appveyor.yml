@@ -1,6 +1,10 @@
 shallow_clone: true  # For GitHub abd BitBucket
 clone_depth: 100     # For other git providers
 
+branches:
+  only:
+    - master
+
 # -------------------------------------------------------------------------------------------------------------------
 #
 #  Image       "Visual Studio 2013"  "Visual Studio 2015"      "Visual Studio 2017" "Visual Studio 2019" "Visual Studio 2022" "Visual Studio 2026"
