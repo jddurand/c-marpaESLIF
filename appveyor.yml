@@ -11,8 +11,6 @@ clone_depth: 100     # For other git providers
 environment:
   CTEST_OUTPUT_ON_FAILURE: 1
   CMAKE_HELPERS_WIN32_PACKAGING: 1
-  upload_token:
-    secure:
   matrix:
    - _CC: VS2022
      _ARCH: x86
@@ -76,8 +74,6 @@ install:
   - cmd: cinst cmake
   - cmd: set PATH=C:\Program Files\CMake\bin;%PATH%
   - cmake --version
-
-build: off
 
 clone_folder: C:\projects\%APPVEYOR_PROJECT_NAME%
 
