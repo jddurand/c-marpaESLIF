@@ -95,8 +95,8 @@ matrix:
   fast_finish: true # Immediately finish build once one of the jobs fails
 
 init:
-  - IF "%_CC%" == "VS2026" IF "%_ARCH%" == "x86" call "C:\Program Files\Microsoft Visual Studio\2026\Community\VC\Auxiliary\Build\vcvars32.bat"
-  - IF "%_CC%" == "VS2026" IF "%_ARCH%" == "x64" call "C:\Program Files\Microsoft Visual Studio\2026\Community\VC\Auxiliary\Build\vcvars64.bat"
+  - IF "%_CC%" == "VS2026" IF "%_ARCH%" == "x86" call "C:\Program Files\Microsoft Visual Studio\18\Community\VC\Auxiliary\Build\vcvars32.bat"
+  - IF "%_CC%" == "VS2026" IF "%_ARCH%" == "x64" call "C:\Program Files\Microsoft Visual Studio\18\Community\VC\Auxiliary\Build\vcvars64.bat"
   - IF "%_CC%" == "VS2022" IF "%_ARCH%" == "x86" call "C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Auxiliary\Build\vcvars32.bat"
   - IF "%_CC%" == "VS2022" IF "%_ARCH%" == "x64" call "C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Auxiliary\Build\vcvars64.bat"
   - IF "%_CC%" == "VS2019" IF "%_ARCH%" == "x86" call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvars32.bat"
