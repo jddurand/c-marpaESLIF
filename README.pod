@@ -218,14 +218,14 @@ and any child recognizer is that a child recognizer
 is always doing an internal valuation to retreive the span in the input stream for,
 and give that back to its parent.
 
-The internal valuation is a forced mode that concatenates all matched bytes in the input stream.
+The internal valuation is a forced mode that concatenates all matched characters (since UTF-8 may have multiple bytes per character) in the input stream.
 
 =head3 Discard and sub-recognizers
 
 You might ask, "Why explicitly do an internal valuation?"
 After all, the match is where sub-recognizer started and where it ended.
 But an explicit internal valuation is needed because any grammar can have it own I<discard> mechanism.
-This mean that what a sub-recognizer matched may be shorter
+This means that what a sub-recognizer matched may be shorter
 than the number of bytes effectively consumed from the input stream.
 
 This raises the issue of the I<discard> mechanism.
@@ -239,8 +239,8 @@ For example:
 This means that the grammar at level 0 tries to match the C<whitespace> symbol
 when it fails to match any of the expected terminals.
 
-As soon as there is no match, and if C<:discard> rule exist, any recognizer is always trying to get a match on it using a sub-recognizer, exactly like when it is executing a sub-recognizer for a terminal referencing a symbol in another grammar.
-Furthermore nothing distinguishes the special symbol C<:discard> from the others: it can also reference any symbol in any other sub-grammar. Though there is one major difference between discard sub-recognizers and terminal sub-recognizers: a discard sub-recognizer will never instantiate another discard sub-sub-recognizer.
+As soon as there is no match, and if a C<:discard> rule exists, any recognizer is always trying to get a match on it using a sub-recognizer, exactly like when it is executing a sub-recognizer for a terminal referencing a symbol in another grammar.
+Furthermore, nothing distinguishes the special symbol C<:discard> from the others: it can also reference any symbol in any other sub-grammar. Though there is one major difference between discard sub-recognizers and terminal sub-recognizers: a discard sub-recognizer will never instantiate another discard sub-sub-recognizer.
 This means that in the following:
 
   :discard    ::= whitespace
@@ -248,11 +248,11 @@ This means that in the following:
   whitespace    ~ /[\s]+/
   somethingelse ~ 'a string'
 
-if a discard tentative is instantiated on grammar at level 0 using the symbol C<whitespace> of level 1, and if C<whitespace> of level 1 does not match, there will be no tentative for try to discard in level 1, even it is has a C<:discard> rule that is defined to be C<somethingelse>.
+if a discard tentative is instantiated on grammar at level 0 using the symbol C<whitespace> of level 1, and if C<whitespace> of level 1 does not match, there will be no tentative effort to try to discard in level 1, even it has a C<:discard> rule that is defined to be C<somethingelse>.
 
 =head1 STREAMING, CHARACTER AND BINARY MODES
 
-Everytime any recognizer need more data, a callback to userspace is triggered. It is legal to not give the encoding when it is a character stream, then the engine will guess (the user should give enough data so that the guess is correct, though).
+Everytime any recognizer needs more data, a callback to userspace is triggered. It is legal to not give the encoding when it is a character stream, as then the engine will guess (the user should give enough data so that the guess is correct, though).
 
 Internally, all chunks of characters are converted to UTF-8. This guarantees three things:
 
@@ -272,7 +272,7 @@ A recognizer always owns a stream, the later is shared in two cases:
 
 =item Lexeme search
 
-A sub-recognizer is started, and it shares the stream with its parent. Nevertheless parent stream is guaranteed to never crunch any data until this sub-recognizer finishes. At most, new data may be appended. When this sub-recognizer finishes, it updates the parent position in the stream if the lexeme it was looking for is found. The end-user never has control on such sub-recognizer.
+A sub-recognizer is started, and it shares the stream with its parent. Nevertheless the parent stream is guaranteed to never crunch any data until this sub-recognizer finishes. At most, new data may be appended. When this sub-recognizer finishes, it updates the parent position in the stream if the lexeme it was looking for is found. The end-user never has control on such sub-recognizer.
 
 =item Shared top-level recognizer
 
@@ -282,7 +282,7 @@ The end-user can create a new top-level recognizer that shares the stream with a
 
 =head1 TERMINALS AND REGULAR EXPRESSIONS
 
-As mentionned above, regular expression are totally handled using L<PCRE2|http://www.pcre.org/>. Therefore the syntax of regular expression is the PCRE2 syntax. It is obvious that a regular expression define an internal "terminal", and there are three ways to define such a terminal, all of them being converted to a regular expression:
+As mentionned above, regular expressions are totally handled using L<PCRE2|http://www.pcre.org/>. Therefore, the syntax of regular expression is the PCRE2 syntax. It is obvious that a regular expression defines an internal "terminal", and there are three ways to define such a terminal, all of them being converted to a regular expression:
 
 =over
 
@@ -294,13 +294,13 @@ As mentionned above, regular expression are totally handled using L<PCRE2|http:/
 
 =back
 
-Each of these three terminal types support eventual modifiers. The most central modifier is the need or not of having the notion of "valid characters", especially outside of the ASCII range. This is called the PCRE2_UTF flag, and is mentionned thoroughly in the next sections.
+Each of these three terminal types support eventual modifiers. The most central modifier is the need or not of having the notion of "valid characters", especially outside of the ASCII range. This is called the PCRE2_UTF flag, and is mentioned thoroughly in the next sections.
 
 =over
 
 =item String
 
-A string is delimited expression in the grammar, where allowed start/and delimiters are C<''> and C<"">. When a string is recognized in the grammar, escaping is allowed using the backslash C<\> character, and only the start delimited or backslash itself can be escaped. Absolutely any other character is taken C<as is>, eventually internally escaped by marpaESLIF to remove its signification in PCRE2, when there is one. For example:
+A string is a delimited expression in the grammar, where allowed start/and delimiters are C<''> and C<"">. When a string is recognized in the grammar, escaping is allowed using the backslash C<\> character, and only the start delimited or backslash itself can be escaped. Absolutely any other character is taken C<as is>, eventually internally escaped by marpaESLIF to remove its signification in PCRE2, when there is one. For example:
 
 =over
 
@@ -310,11 +310,11 @@ is translated to the UTF-8 pattern C<Example>
 
 =item '{Example}'
 
-is translated to the UTF-8 pattern C<\{Example>
+is translated to the UTF-8 pattern C<\{Example\}>
 
 =item "{Example}"
 
-is translated to the UTF-8 pattern C<\{Example>
+is translated to the UTF-8 pattern C<\{Example\}>
 
 =item '{Example[]\}'
 
@@ -330,9 +330,9 @@ is translated to the UTF-8 pattern C<Black Heart Suite Character: \x{2665}>
 
 =back
 
-A string is always scanned character per character by marpaESLIF, and an ASCII compatible pattern is generated, using \x{...} codepoint notation whenever this is an ASCII special character or a character outside of original ASCII 7-bits character set. So marpaESLIF know if there is need for unicode support or not in PCRE2 terminology (which is: any code point greater than 255, else byte matching is enough). This is important because PCRE2 yells if a pattern is using a large codepoint and if this internal PCRE2_UTF flag is not set accordingly.
+A string is always scanned character per character by marpaESLIF, and an ASCII compatible pattern is generated, using the \x{...} codepoint notation whenever this is an ASCII special character or a character outside of the original ASCII 7-bits character set. So marpaESLIF knows if there is the need for unicode support or not in PCRE2 terminology (which is: any code point greater than 255, else byte matching is enough). This is important because PCRE2 yells if a pattern is using a large codepoint and if this internal PCRE2_UTF flag is not set accordingly.
 
-The presence of this flag has an important consequence: if at least one string in the grammar implied the PCRE2_UTF flag, then the whole remaining chunk of data is translated and validated as an UTF-8 sequence of bytes. In such a case, either the user input reader informed that this is stream of characters, then marpaESLIF prepared in advance the conversion/validation to UTF-8, either this is done lazily as soon as a match is attempted using a string requiring the PCRE2_UTF flag.
+The presence of this flag has an important consequence: if at least one string in the grammar implied the PCRE2_UTF flag, then the whole remaining chunk of data is translated and validated as a UTF-8 sequence of bytes. In such a case, either the user input reader is informed that this is a stream of characters, then marpaESLIF prepared in advance the conversion/validation to UTF-8, or this is done lazily as soon as a match is attempted using a string requiring the PCRE2_UTF flag.
 
 =item String modifiers
 
@@ -357,7 +357,7 @@ Strings are always anchored at the point where match is attempted.
 
 =item C<PCRE2_UTF>
 
-This flag is automatically set when the scanning of the string that is in the grammar, done internally by marpaESLIF, reveal the need for it.
+This flag is automatically set when scanning of the string that is in the grammar, done internally by marpaESLIF, reveals the need for it.
 
 =back
 
@@ -373,7 +373,7 @@ would give the following dump:
 
 =item Character class
 
-A character class is very closed to a regular expression (see later), except that it looks like a string, with start/end delimiters being C<[]>, and that the pattern is NOT scanned. marpaESLIF will lets PCRE2 eventually yell if there is a use of codepoints and if the internal PCRE2_UTF flag is not set.
+A character class is very closed to a regular expression (see later), except that it looks like a string, with start/end delimiters being C<[]>, and that the pattern is NOT scanned. marpaESLIF will lets PCRE2 eventually yell if there is a use of codepoints but the internal PCRE2_UTF flag is not set.
 
 marpaESLIF will try to guess the need for PCRE2_UTF flag by scanning the UTF-8 bytes composing the character class, but will do I<no modification>. For example:
 
@@ -417,7 +417,7 @@ leaving to the following dump:
 
 =item Regular expression
 
-Nothing really distinguished regular expression and character classes in the grammar, except that I<sequence modifiers> can be embedded directly in a regular expression, so that they are managed by PCRE2 instead of marpaESLIF, i.e:
+Nothing really distinguished the regular expression and the character classes in the grammar, except that I<sequence modifiers> can be embedded directly in a regular expression, so that they are managed by PCRE2 instead of marpaESLIF, i.e:
 
 =over
 
@@ -427,20 +427,20 @@ is stricly equivalent to the character C<[a-z]>.
 
 =item /[a-z]+/
 
-really mean that the sequence is embedded in the regular expression. The dump of the later would say:
+really means that the sequence is embedded in the regular expression. The dump of the later would say:
 
   #      Pattern:
   #     0x000000: 5b 61 2d 7a 5d 2b                               [a-z]+
 
 =back
 
-In conclusion determining the need of the PCRE2_UTF will always be exact: either marpaESLIF will detect it correctly, either PCRE2 will yell, and you will have to explicitely set it using modifiers. Since character class is nothing else but a regular expression limited to a range of character, they both share the same possible set of modifiers.
+In conclusion, determining the need of the PCRE2_UTF will always be exact: either marpaESLIF will detect it correctly, either PCRE2 will yell, and you will have to explicitely set it using modifiers. Since a character class is nothing else but a regular expression limited to a range of characters, they both share the same possible set of modifiers.
 
 =item Character class and Regular expression modifiers
 
-The only difference between the twos is how modifiers are expressed: for a character class they must be preceeded by the C<:> character, while for a regular expression they can be set directly after the C</> end delimiter (as in the Perl language).
+The only difference between the two is how modifiers are expressed: for a character class they must be preceeded by the C<:> character, while for a regular expression they can be set directly after the C</> end delimiter (as in the Perl language).
 
-The explicit regular expression, being sent directly as-is to PCRE2, support de-facto all of the native PCRE2 pattern language, i.e. one can set regular expression options that have no single option equivalent when using a regular expression, for example:
+The explicit regular expression, being sent directly as-is to PCRE2, supports de-facto all of the native PCRE2 pattern language, i.e. one can set regular expression options that have no single option equivalent when using a regular expression, for example:
 
 =over
 
@@ -456,7 +456,7 @@ is setting an internal PCRE2 match limit to 15. The dump does not show that as a
 
 =back
 
-It is highly recommended to read the L<pcre2pattern|http://www.pcre.org/current/doc/html/pcre2pattern.html> documentation to know all the possible settings that can be I<embedded> into the regular expression. Explicit modifiers are insipired by the L<jpcre2|https://github.com/jpcre2/jpcre2> and L<Perl language|http://www.perl.org> (most of the descriptions below are copy/pasted from jpcre2). Please refer to L<marpaESLIF BNF|https://github.com/jddurand/c-marpaESLIF/tree/master/doc/BNF> for the exhaustive list of modifiers.
+It is highly recommended to read the L<pcre2pattern|http://www.pcre.org/current/doc/html/pcre2pattern.html> documentation to know all the possible settings that can be I<embedded> into the regular expression. Explicit modifiers are inspired by the L<jpcre2|https://github.com/jpcre2/jpcre2> and L<Perl language|http://www.perl.org> (most of the descriptions below are copy/pasted from jpcre2). Please refer to L<marpaESLIF BNF|https://github.com/jddurand/c-marpaESLIF/tree/master/doc/BNF> for the exhaustive list of modifiers.
 
 =back
 
@@ -466,13 +466,13 @@ All the logging is done via L<genericLogger|https://github.com/jddurand/c-generi
 
 =head1 GRAMMAR
 
-Please refer to L<marpaESLIF BNF|https://github.com/jddurand/c-marpaESLIF/tree/master/doc/BNF> for the ESLIF BNF expressed with itself. Fundamentals of the ESLIF grammar are the followings (incompatible change v.s. L<Marpa::R2's DSL|https://metacpan.org/pod/distribution/Marpa-R2/pod/Scanless/DSL.pod> are highlighted):
+Please refer to L<marpaESLIF BNF|https://github.com/jddurand/c-marpaESLIF/tree/master/doc/BNF> for the ESLIF BNF expressed with itself. Fundamentals of the ESLIF grammar are the following: (incompatible changes v.s. L<Marpa::R2's DSL|https://metacpan.org/pod/distribution/Marpa-R2/pod/Scanless/DSL.pod> are highlighted):
 
 =over
 
 =item Grammar levels
 
-The number of levels is only limited by memory for your program -; Any symbol that have an impact on grammar at level C<n> must be defined with such level explicitely:
+The number of levels is only limited by memory for your program -; Any symbol that has an impact on the grammar at level C<n> must be defined with such level explicitly:
 
 =over
 
@@ -484,15 +484,15 @@ The number of levels is only limited by memory for your program -; Any symbol th
 
 =back
 
-As a consequence the definition of a C<:discard> symbol is incompatible with L<Marpa::R2's DSL|https://metacpan.org/pod/distribution/Marpa-R2/pod/Scanless/DSL.pod>, in which a discard rule affecting level 0 have the alias C<~>, for ESLIF it is C<::=>.
+As a consequence, the definition of a C<:discard> symbol is incompatible with L<Marpa::R2's DSL|https://metacpan.org/pod/distribution/Marpa-R2/pod/Scanless/DSL.pod>, in which a discard rule affecting level 0 has the alias C<~>, for ESLIF it is C<::=>.
 
 =item built-in actions and adverb lists
 
-Any L<Marpa::R2|https://metacpan.org/pod/distribution/Marpa-R2/pod/Scanless/DSL.pod>'s action or adverb list that require the Perl langage has been removed, for example C<::array>, C<::bless>
+Any L<Marpa::R2|https://metacpan.org/pod/distribution/Marpa-R2/pod/Scanless/DSL.pod>'s action or adverb list that requires the Perl langage has been removed, for example C<::array>, C<::bless>
 
 =item LATM is true by default
 
-LATM (Longest Acceptable Token Match) is preventing the scanner to push alternatives of lower length than the longest of the alternatives.
+LATM (Longest Acceptable Token Match) is preventing the ability of the scanner to push alternatives of lower length than the longest of the alternatives.
 
 =item pausing is allowed with discard events
 
@@ -512,7 +512,7 @@ LATM (Longest Acceptable Token Match) is preventing the scanner to push alternat
 
 =head1 VERSIONING
 
-marpaESLIF follows the L<Semantic Versioning 2.0.0|https://semver.org/spec/v2.0.0.html>, i:e:
+marpaESLIF follows L<Semantic Versioning 2.0.0|https://semver.org/spec/v2.0.0.html>, i:e:
 
 =over
 
@@ -526,7 +526,7 @@ marpaESLIF follows the L<Semantic Versioning 2.0.0|https://semver.org/spec/v2.0.
 
 =head1 BUILD
 
-This project is L<CMake|http://cmake.org> based, version 3.26 at least. Recommended pattern is:
+This project must be at least L<CMake|http://cmake.org> based, version 3.26 . Recommended pattern is:
 
   cmake -Wno-dev -S c-marpaESLIF -B c-marpaESLIF-build -DCMAKE_BUILD_TYPE=RelWithDebInfo
   cmake --build c-marpaESLIF-build
