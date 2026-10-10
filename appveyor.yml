@@ -73,13 +73,13 @@ environment:
 # Make sure we always have (a decent) perl
 #
 install:
-  - cmd: if not exist "C:\strawberry" cinst strawberryperl
-  - cmd: set PATH=C:\strawberry\perl\bin;C:\strawberry\perl\site\bin;C:\strawberry\c\bin;%PATH%
+  - cmd: where perl >nul 2>&1 || choco install strawberryperl -y --no-progress
+  - cmd: if exist "C:\strawberry" set PATH=C:\strawberry\perl\bin;C:\strawberry\perl\site\bin;C:\strawberry\c\bin;%PATH%
   - perl -v
 #
 # Make sure we always have (a decent) CMake
 #
-  - cmd: cinst cmake
+  - cmd: where cmake >nul 2>&1 || choco install cmake -y --no-progress
   - cmd: set PATH=C:\Program Files\CMake\bin;%PATH%
   - cmake --version
 
